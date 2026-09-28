@@ -43,7 +43,9 @@ class NewWorkspace(BaseModel):
 
 class NewStandalone(BaseModel):
     workspace: str
-    profile: str
+    profile: str = ""
+    new_profile: str = ""  # create this (empty) profile first
+    sensitive_terms: str = ""  # comma-separated names that must never reach a web search
 
 
 class OpenWorkspace(BaseModel):
@@ -116,10 +118,21 @@ def create_app(
     @app.post("/api/standalone")
     async def new_standalone(body: NewStandalone) -> dict[str, str]:
         try:
-            workspace = await manager.new_standalone(Path(body.workspace), body.profile)
+            profile = body.profile
+            if body.new_profile.strip():
+                # The whole standalone flow in the browser: an empty profile Forge fills in by asking.
+                from forge.modeb.profile import ProfileStore
+
+                terms = [t.strip() for t in body.sensitive_terms.split(",") if t.strip()]
+                profile = ProfileStore(manager.home).create(body.new_profile.strip(), terms).name
+            if not profile:
+                raise ValueError("Choose a host profile or enter a name for a new one.")
+            workspace = await manager.new_standalone(Path(body.workspace), profile)
         except (ForgeError, OSError, ValueError) as error:
             raise HTTPException(400, str(error)) from error
-        return {"path": str(workspace.root)}
+        from forge.modeb.workspace import test_runner_note
+
+        return {"path": str(workspace.root), "test_runner": test_runner_note(workspace)}
 
     @app.get("/api/learning")
     async def learning() -> dict[str, Any]:

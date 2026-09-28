@@ -895,3 +895,27 @@ cp313 wheel, offline-installable), (c) disable verification (rejected: insecure)
 FORGE_SYSTEM_CERTS=0 to opt out; injected at CLI start before any HTTPS client exists. Connection errors now
 carry the innermost cause (e.g. SSLCertVerificationError, getaddrinfo, ConnectTimeout, 407) and a one-line
 next step; `forge doctor` shows which certificate store is in use.
+
+### D-111 — Standalone workflow for free-hand builds and pasted signatures · Decided (2026-09-28)
+The user's main use is Mode B: build something new, often from signatures/snippets they paste. Three gaps:
+(1) a profile could only be created in a terminal — the web UI's standalone form now also takes a new profile
+name and sensitive terms and creates the (empty) profile with the workspace; (2) nothing told the agent to fill
+an empty profile or how to treat pasted code — the Mode B prompt now says: ask only what this requirement needs
+and save answers with profile_update; for a free-hand build choose conventional options and record them as
+assumptions; pasted signatures are authoritative (exact names/params/types), go into INTERFACE_CONTRACT, are
+stubbed in the harness, and may be kept as exemplars with approval; (3) the new workspace venv was empty, so
+pytest was missing and a live headless run blocked every task (the live Mode B test had swapped in a ready venv
+and hid this). Options: (a) keep asking to `pip install pytest` in the first task, (b) install pytest when the
+workspace is created, (c) ship pytest inside Forge and point the workspace at it. Chose (b): creating the
+workspace is the user's own action and pytest changes nothing on the host; the result is shown ("pytest:
+installed" / why not), and if it failed the test tool tells the agent to ask for the install.
+
+### D-112 — The interface contract always lists the host symbols the code imports · Decided (2026-09-28)
+Live standalone run (pasted signature + existing host helper): the code and its 16 tests were right, but the
+agent wrote no INTERFACE_CONTRACT and the export's default text claimed "no host symbols" while the code called
+the host's `payments.audit.log_event`. modeb/contract_scan.py finds, from the delivered (non-test) code's imports,
+every symbol from a package shared with the host that isn't new code in project/, with its signature from the
+harness stub (or "no stub: signature unknown"). The export generates the contract from them when the agent wrote
+none, and appends any the agent's contract doesn't mention. Live result after D-111 on a new empty profile:
+exit 0, the pasted signature used exactly, log_event called with the digit count only, the host helper stubbed
+in the harness and not delivered, 16 tests passing.

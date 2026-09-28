@@ -219,3 +219,27 @@ def test_standalone_workspace_from_the_web_api(
         client.post("/api/standalone", json={"workspace": str(tmp_path / "x"), "profile": "nope"}).status_code
         == 400
     )
+
+
+def test_standalone_workspace_with_a_new_profile_from_the_browser(
+    client: TestClient, security: ServerSecurity, isolated_forge_home: Path, tmp_path: Path
+) -> None:
+    # The standalone flow without a terminal: the profile is created in the same form.
+    from forge.modeb.profile import ProfileStore
+
+    login(client, security)
+    response = client.post(
+        "/api/standalone",
+        json={
+            "workspace": str(tmp_path / "wsn"),
+            "new_profile": "office-app",
+            "sensitive_terms": "Acme, Zeta ",
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert client.get("/api/profiles").json() == ["office-app"]
+    assert ProfileStore(isolated_forge_home).open("office-app").sensitive_terms == ["Acme", "Zeta"]
+    bad = client.post("/api/standalone", json={"workspace": str(tmp_path / "y"), "new_profile": "bad name!"})
+    assert bad.status_code == 400 and "letters, digits" in bad.json()["detail"]
+    empty = client.post("/api/standalone", json={"workspace": str(tmp_path / "z")})
+    assert empty.status_code == 400 and "Choose a host profile" in empty.json()["detail"]

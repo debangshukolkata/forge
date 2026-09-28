@@ -385,9 +385,11 @@ def _new_standalone(workspace_path: Path, profile_name: str | None, python: str 
     except (ProfileError, WorkspaceError, OSError) as error:
         console.print(str(error), markup=False)
         return 1
+    from forge.modeb.workspace import test_runner_note
+
     console.print(
-        f"Standalone workspace created at {workspace.root} (profile {profile.name} v{profile.version}). "
-        f"Start with: forge --workspace {workspace.root}",
+        f"Standalone workspace created at {workspace.root} (profile {profile.name} v{profile.version}); "
+        f"pytest: {test_runner_note(workspace)}. Start with: forge --workspace {workspace.root}",
         markup=False,
     )
     return 0

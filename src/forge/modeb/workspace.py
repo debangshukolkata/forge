@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime
@@ -73,6 +74,8 @@ def create_standalone_workspace(
     (root / "_harness" / "run_app.py").write_text(RUN_APP, encoding="utf-8")
     (root / "_harness" / "host_stubs" / "README.md").write_text(STUBS_README, encoding="utf-8")
     python = _create_venv(root / ".venv", base_python or sys.executable)
+    setup_note = install_test_runner(python)
+    (root / ".forge" / "setup.json").write_text(json.dumps({"test_runner": setup_note}), encoding="utf-8")
     env = PythonEnvironment(
         python=str(python),
         venv=str(root / ".venv"),
@@ -100,6 +103,39 @@ def _create_venv(folder: Path, base_python: str) -> Path:
     """An empty venv; the host's package versions are installed with the user's approval (pip install)."""
     subprocess.run([base_python, "-m", "venv", str(folder)], check=True, capture_output=True, timeout=300)
     return venv_python(folder)
+
+
+TEST_RUNNER = "pytest"
+PIP_TIMEOUT_S = 600
+
+
+def install_test_runner(python: Path) -> str:
+    """pytest into the new, empty workspace venv (DECISIONS D-111). Without it no task can be verified, and
+    in a headless run the approval for `pip install` can't be given, so every task blocked (seen live).
+    Creating the workspace is the user's own action and pytest changes nothing on the host.
+    Returns "installed" or why not."""
+    if os.environ.get("FORGE_SKIP_TEST_RUNNER_INSTALL"):
+        return "skipped (FORGE_SKIP_TEST_RUNNER_INSTALL)"
+    try:
+        result = subprocess.run(
+            [str(python), "-m", "pip", "install", "--disable-pip-version-check", "-q", TEST_RUNNER],
+            capture_output=True,
+            text=True,
+            timeout=PIP_TIMEOUT_S,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        return f"not installed: {error}"
+    if result.returncode != 0:
+        return "not installed: " + (result.stderr or result.stdout).strip()[-300:]
+    return "installed"
+
+
+def test_runner_note(workspace: Workspace) -> str:
+    path = workspace.forge_dir / "setup.json"
+    try:
+        return str(json.loads(path.read_text(encoding="utf-8")).get("test_runner", ""))
+    except (OSError, ValueError):
+        return ""
 
 
 EXTEND_PATH_LINE = '__path__ = __import__("pkgutil").extend_path(__path__, __name__)'

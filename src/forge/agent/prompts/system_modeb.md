@@ -12,6 +12,15 @@ Rules
   say how a host piece works (DB session, config, auth, logging, app/blueprint registration, LLM clients),
   depend on a small, clearly marked adapter module (e.g. <package>/<feature>/_host_adapter.py) instead of
   guessing, and list every such function in INTERFACE_CONTRACT.md.
+- A new profile starts with its sections marked "(unknown)". In the clarify phase ask only what THIS
+  requirement needs (Python version and key libraries, where the new code goes, naming/error conventions, data
+  access, how tests are written); save the answers with profile_update (the user approves) so later work
+  reuses them. When the user says there is no existing host to fit (a free-hand build), say so in the
+  requirements, choose simple, conventional choices yourself, and record them as assumptions.
+- Code, signatures or interfaces the user pastes are authoritative: use the names, parameters, types and
+  return shapes exactly, never "improve" them; put anything the new code relies on in INTERFACE_CONTRACT, stub
+  it in _harness/host_stubs/ to test against, and offer to keep a reusable example with profile_add_exemplar
+  (the user approves the cleaned version).
 - Record every assumption about the host with assumption_add (with how the user can verify it). Raise
   high-impact ones with ask_user. Never present an assumption as a fact.
 - Keep business logic free of host specifics so it is testable here and survives wrong assumptions.

@@ -157,7 +157,14 @@ class VerifyLadder:
             ok, summary = exited_ok, ("pytest passed" if exited_ok else output[-1200:])
         nothing_ran = "no tests ran" in output or "collected 0 items" in output
         collection_errors = "ERROR collecting" in output or re.search(r"\b\d+ errors?\b", output)
-        if not ok and nothing_ran and collection_errors:
+        if not ok and "No module named pytest" in output:
+            summary = (
+                "pytest isn't installed in this workspace's Python environment, so nothing can be verified. "
+                "Run `python -m pip install pytest` with run_command (the user is asked to approve it); if "
+                "the user can't allow installs, mark the task blocked and say that pytest is needed.\n"
+                + summary[-300:]
+            )
+        elif not ok and nothing_ran and collection_errors:
             # Seen live: "no tests ran, 1 error" read as "write tests" sent the agent round in circles.
             summary = (
                 "pytest could not COLLECT the tests (import or setup errors below): fix those first; "

@@ -13,6 +13,7 @@ import shutil
 from pathlib import Path
 
 from forge.modeb.assumptions import AssumptionRegister
+from forge.modeb.contract_scan import contract_with_host_symbols, host_symbols_used
 from forge.safety.paths import os_path
 from forge.workspace.output import OutputManifest, build_db_changes, compute_changes
 from forge.workspace.workspace import Workspace
@@ -82,10 +83,8 @@ def build_modeb_output(workspace: Workspace) -> OutputManifest:
     db_changes = build_db_changes(workspace, changes)
     if db_changes:
         _write(workspace, "DB_CHANGES.sql", db_changes)
-    contract = read_document(workspace, "INTERFACE_CONTRACT") or (
-        "# Interface contract\n\nThe new code relies on no host symbols beyond those listed in the "
-        "integration guide.\n"
-    )
+    symbols = host_symbols_used(workspace, [c.path for c in changes])
+    contract = contract_with_host_symbols(read_document(workspace, "INTERFACE_CONTRACT"), symbols)
     _write(workspace, "INTERFACE_CONTRACT.md", contract)
     _write(workspace, "ASSUMPTIONS.md", AssumptionRegister(workspace).markdown())
     _write(

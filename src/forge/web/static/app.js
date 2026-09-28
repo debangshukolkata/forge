@@ -41,7 +41,9 @@ class App {
     this.$("home").hidden = false;
     this.$("chat-view").hidden = true;
     api("/api/profiles").then((names) => {
-      this.$("profile-select").replaceChildren(...names.map((n) => el("option", { value: n }, n)));
+      const none = el("option", { value: "" }, "(new profile below)");
+      this.$("profile-select").replaceChildren(none, ...names.map((n) => el("option", { value: n }, n)));
+      if (names.length) this.$("profile-select").value = names[0];
     }).catch(() => {});
     api("/api/doctor").then((results) => {
       this.$("doctor").replaceChildren(...results.map((r) => el("li", { class: r.status }, `${r.name}: ${r.detail}`)));
@@ -229,7 +231,12 @@ class App {
       const form = new FormData(event.target);
       this.$("standalone-error").textContent = "Creating the workspace and its venv…";
       try {
-        await api("/api/standalone", { method: "POST", body: { workspace: form.get("workspace"), profile: form.get("profile") } });
+        await api("/api/standalone", { method: "POST", body: {
+          workspace: form.get("workspace"),
+          profile: form.get("profile") || "",
+          new_profile: form.get("new_profile") || "",
+          sensitive_terms: form.get("sensitive_terms") || "",
+        } });
         this.$("standalone-error").textContent = "";
         await this.loadState();
         this.showChat();

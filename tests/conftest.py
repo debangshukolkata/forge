@@ -15,6 +15,9 @@ def isolated_forge_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
     home = tmp_path / "forge_home"
     home.mkdir()
     monkeypatch.setenv("FORGE_HOME", str(home))
+    # New standalone workspaces install pytest from the network; tests create many, so they skip it
+    # (test_modeb covers the install itself).
+    monkeypatch.setenv("FORGE_SKIP_TEST_RUNNER_INSTALL", "1")
     return home
 
 

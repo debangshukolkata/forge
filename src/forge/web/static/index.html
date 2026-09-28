@@ -46,10 +46,13 @@
         </form>
         <form id="new-standalone" class="card">
           <h3>New standalone workspace (Mode B — Forge never sees the host code)</h3>
-          <label>Host profile <select name="profile" id="profile-select"></select></label>
+          <label>Host profile <select name="profile" id="profile-select"><option value="">(new profile below)</option></select></label>
+          <label>…or a new profile <input name="new_profile" placeholder="e.g. claims-platform (letters, digits, - _)"></label>
+          <label>Sensitive terms for the new profile (optional) <input name="sensitive_terms" placeholder="company, product or project names, comma-separated"></label>
           <label>Workspace folder <input name="workspace" required placeholder="C:\forge\ws\export-feature"></label>
-          <p class="muted">No profile yet? In a terminal: <code>forge profile new &lt;name&gt;</code>, then
-            <code>forge profile export-script</code> to describe the host without sharing its code.</p>
+          <p class="muted">A new profile starts empty: Forge asks about your stack and conventions while working on
+            the first requirement. Paste signatures or snippets in the chat — Forge uses them exactly and asks
+            before saving them to the profile. Sensitive terms never go into web searches.</p>
           <button type="submit">Create and open</button>
           <p class="form-error" id="standalone-error"></p>
         </form>

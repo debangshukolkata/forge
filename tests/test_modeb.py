@@ -361,3 +361,52 @@ def test_tests_using_host_db_setup_must_request_a_host_fixture(workspace: Worksp
     findings = check_fixture_use(workspace)
     assert [f.test for f in findings] == ["test_direct", "test_through_service"]
     assert findings[0].blocking and "client" in findings[0].problem
+
+
+def test_new_standalone_venv_gets_the_test_runner(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Seen live: the empty venv had no pytest, pip install needs approval, and a headless run blocked every task.
+    import subprocess
+
+    from forge.modeb import workspace as modeb_workspace
+
+    calls: list[list[str]] = []
+
+    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        failing = "pytest" in command and len(calls) > 1
+        return subprocess.CompletedProcess(
+            command, 1 if failing else 0, "", "network down" if failing else ""
+        )
+
+    monkeypatch.delenv("FORGE_SKIP_TEST_RUNNER_INSTALL")
+    monkeypatch.setattr(modeb_workspace.subprocess, "run", fake_run)
+    assert modeb_workspace.install_test_runner(Path("py.exe")) == "installed"
+    assert calls[0][1:] == ["-m", "pip", "install", "--disable-pip-version-check", "-q", "pytest"]
+    assert modeb_workspace.install_test_runner(Path("py.exe")) == "not installed: network down"
+
+
+def test_contract_lists_the_host_symbols_the_code_imports(workspace: Workspace) -> None:
+    # Seen live: no INTERFACE_CONTRACT written, and the default text claimed no host symbols were used.
+    from forge.modeb.contract_scan import contract_with_host_symbols, host_symbols_used
+
+    workspace.write_text("_harness/host_stubs/payments/__init__.py", "")
+    workspace.write_text(
+        "_harness/host_stubs/payments/audit.py", "def log_event(event: str, **fields: object) -> None: ...\n"
+    )
+    workspace.write_text(
+        "payments/security/masking.py",
+        "import json\nfrom payments.audit import log_event\nfrom payments.security.helpers import digits\n"
+        "from payments.ledger import Ledger\n",
+    )
+    workspace.write_text("payments/security/helpers.py", "def digits(s): return s\n")
+    symbols = host_symbols_used(workspace, ["payments/security/masking.py", "payments/security/helpers.py"])
+    assert [(s.module, s.name) for s in symbols] == [
+        ("payments.audit", "log_event"),
+        ("payments.ledger", "Ledger"),
+    ]
+    contract = contract_with_host_symbols("", symbols)
+    assert "def log_event(event: str, **fields: object) -> None" in contract
+    assert "no stub: signature unknown" in contract
+    written = contract_with_host_symbols("# Interface contract\n\nlog_event: audit helper\n", symbols)
+    assert "Also used" in written and "Ledger" in written.split("Also used")[1]
+    assert "log_event" not in written.split("Also used")[1]
