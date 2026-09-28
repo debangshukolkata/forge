@@ -202,3 +202,20 @@ async def test_served_model_is_looked_up_once_when_response_names_the_deployment
 
     assert first.served_model == second.served_model == "gpt-5.1"
     assert info_requests == ["/openai/deployments/primary-deployment"]
+
+
+def test_connection_errors_name_the_real_cause() -> None:
+    # Seen on the office laptop: doctor said only "Connection error." for both models.
+    import ssl
+
+    import openai
+
+    from forge.llm.azure_errors import map_openai_error
+    from forge.net import connection_hint
+
+    error = openai.APIConnectionError(request=httpx2.Request("POST", "https://x.openai.azure.com/"))
+    error.__cause__ = ssl.SSLCertVerificationError("certificate verify failed: unable to get local issuer")
+    mapped = str(map_openai_error(error))
+    assert "SSLCertVerificationError" in mapped and "Windows certificate store" in mapped
+    assert "resolved" in connection_hint("getaddrinfo failed")
+    assert "HTTPS_PROXY" in connection_hint("ConnectTimeout: timed out")

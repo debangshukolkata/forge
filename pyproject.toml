@@ -27,6 +27,7 @@ dependencies = [
     "websockets>=13",
     "pillow>=10",
     "pypdfium2>=4",
+    "truststore>=0.9",  # MIT, pure Python: trust the Windows certificate store (company TLS inspection, D-110)
 ]
 
 [project.optional-dependencies]

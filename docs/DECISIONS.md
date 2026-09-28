@@ -885,3 +885,13 @@ in the host in revision 1 and none in the passing revision 2.
 Live result (2026-09-28, after D-108/D-109): the Mode B live acceptance passed with the FIRST delivery passing
 in the clean host copy (previous four runs all needed a pasted-failure revision); fixture evals 02 and 04 still
 pass their hidden tests, and the evidence check downgraded two unfounded "blocking" findings.
+
+### D-110 — Company networks: Windows certificate store and real connection causes · Decided (2026-09-28)
+First run on the office laptop: `forge doctor` reported only "Could not reach the endpoint: Connection error."
+for both models. On company networks the usual causes are HTTPS inspection (a company root certificate Windows
+trusts but Python's bundled list doesn't), a required proxy, or DNS/VPN. Options for certificates: (a) ask
+users to export the company CA and set SSL_CERT_FILE, (b) use the OS store via `truststore` (MIT, pure Python,
+cp313 wheel, offline-installable), (c) disable verification (rejected: insecure). Chose (b), on by default,
+FORGE_SYSTEM_CERTS=0 to opt out; injected at CLI start before any HTTPS client exists. Connection errors now
+carry the innermost cause (e.g. SSLCertVerificationError, getaddrinfo, ConnectTimeout, 407) and a one-line
+next step; `forge doctor` shows which certificate store is in use.

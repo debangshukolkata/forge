@@ -17,6 +17,7 @@ from forge.errors import (
     LLMRateLimitError,
     LLMServerError,
 )
+from forge.net import connection_hint, root_cause
 from forge.safety.redact import default_redactor
 
 _CONTEXT_MARKERS = (
@@ -33,7 +34,11 @@ def map_openai_error(error: Exception) -> LLMError:
     if isinstance(error, openai.APITimeoutError):
         return LLMConnectionError(f"Request timed out: {message}")
     if isinstance(error, openai.APIConnectionError):
-        return LLMConnectionError(f"Could not reach the endpoint: {message}")
+        # openai's own message is just "Connection error."; the cause says whether it's TLS, DNS or a proxy.
+        cause = default_redactor.redact(root_cause(error))[:400]
+        return LLMConnectionError(
+            f"Could not reach the endpoint: {message} Cause: {cause}. Next step: {connection_hint(cause)}."
+        )
     if not isinstance(error, openai.APIStatusError):
         return LLMError(message)
 

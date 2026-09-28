@@ -89,6 +89,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    from forge.net import use_system_certificates
+
+    use_system_certificates()  # before any HTTPS client exists (company TLS inspection, D-110)
     if args.command == "doctor":
         return asyncio.run(_doctor(args.offline))
     if args.command == "new":

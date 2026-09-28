@@ -70,6 +70,21 @@ def check_tokenizer() -> CheckResult:
     return CheckResult("Tokenizer (offline)", "ok", f"o200k_base loaded from the package ({count} tokens)")
 
 
+def check_certificates() -> CheckResult:
+    from forge.net import use_system_certificates
+
+    if use_system_certificates():
+        return CheckResult(
+            "Certificates", "ok", "Windows/OS certificate store (company HTTPS inspection works)"
+        )
+    return CheckResult(
+        "Certificates",
+        "warn",
+        "Python's bundled list only: behind company HTTPS inspection model calls fail with a certificate "
+        "error. Install 'truststore' (it ships with Forge) and leave FORGE_SYSTEM_CERTS unset.",
+    )
+
+
 def check_forge_home(home: Path) -> CheckResult:
     try:
         home.mkdir(parents=True, exist_ok=True)
@@ -154,7 +169,13 @@ def _models_in_use(config: ForgeConfig) -> list[str]:
 
 async def run_doctor(offline: bool = False) -> list[CheckResult]:
     home = forge_home()
-    results = [check_python(), check_packages(), check_tokenizer(), check_forge_home(home)]
+    results = [
+        check_python(),
+        check_packages(),
+        check_tokenizer(),
+        check_certificates(),
+        check_forge_home(home),
+    ]
     try:
         config = load_config(home)
     except ForgeError as error:
