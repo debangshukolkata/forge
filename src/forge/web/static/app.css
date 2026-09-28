@@ -35,8 +35,11 @@ pre { background: var(--code); padding: 8px; border-radius: 6px; overflow-x: aut
 #home { padding: 16px; overflow-y: auto; }
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0 0 12px; }
 .card h3 { margin: 0 0 8px; font-size: 14px; }
-#new-workspace label { display: block; margin: 6px 0; }
-#new-workspace input { width: 100%; }
+#new-project label { display: block; margin: 6px 0; }
+#new-project .mode-choice { border: 0; padding: 0; margin: 0 0 8px; }
+#new-project .mode-choice label { display: inline-block; margin-right: 18px; }
+[hidden] { display: none !important; }
+#new-project input:not([type=radio]) { width: 100%; }
 .form-error { color: var(--bad); }
 .checklist { list-style: none; padding: 0; margin: 0; }
 .checklist li { padding: 3px 0; }

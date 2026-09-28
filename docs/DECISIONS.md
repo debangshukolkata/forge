@@ -919,3 +919,13 @@ harness stub (or "no stub: signature unknown"). The export generates the contrac
 none, and appends any the agent's contract doesn't mention. Live result after D-111 on a new empty profile:
 exit 0, the pasted signature used exactly, log_event called with the digit count only, the host helper stubbed
 in the harness and not delivered, 16 tests passing.
+
+### D-113 — One "New project" form: project name + project folder (+ existing repo in Mode A) · Decided (2026-09-28)
+The user's direction: both modes ask for a new project name and a new project folder; Mode A also asks for the
+existing project/repository path; everything after that happens in the chat (Claude Code style). Options for
+collecting them: (a) asked in the chat, (b) a small form, then chat — the user chose (b). The web start page now
+has one form with a mode choice; POST /api/projects creates the workspace in the given folder and stores the
+project name in workspace.json (`project`, shown in the sidebar). In Mode B the project name IS the host
+profile (slugged, e.g. "Payments Masking" -> payments-masking): created on first use, reused when the name comes
+back, so users never deal with "profiles"; existing projects are suggested as they type. Mode A's app sub-folder
+is detected and only asked for when ambiguous. CLI: `forge new --project NAME` (Mode B: --profile optional).

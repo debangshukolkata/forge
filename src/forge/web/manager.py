@@ -42,7 +42,9 @@ class WebSessionManager:
         self._remember(workspace)
         return workspace
 
-    async def new_workspace(self, repo: Path, path: Path, app_folder: str | None) -> Workspace:
+    async def new_workspace(
+        self, repo: Path, path: Path, app_folder: str | None, project: str = ""
+    ) -> Workspace:
         if not repo.is_dir():
             raise ValueError(f"{repo} is not a folder")
         folder = app_folder or remembered_app_folder(self.home, repo)
@@ -54,15 +56,17 @@ class WebSessionManager:
                 )
             folder = candidates[0]
         workspace = await asyncio.to_thread(create_workspace, repo, path, folder)
+        _set_project(workspace, project)
         return await self.open_workspace(workspace.root)
 
-    async def new_standalone(self, path: Path, profile_name: str) -> Workspace:
+    async def new_standalone(self, path: Path, profile_name: str, project: str = "") -> Workspace:
         """Mode B: no repository; the host profile describes the host."""
         from forge.modeb.profile import ProfileStore
         from forge.modeb.workspace import create_standalone_workspace
 
         profile = ProfileStore(self.home).open(profile_name)
         workspace = await asyncio.to_thread(create_standalone_workspace, path, profile)
+        _set_project(workspace, project)
         return await self.open_workspace(workspace.root)
 
     async def close_session(self) -> None:
@@ -102,10 +106,16 @@ class WebSessionManager:
     def _remember(self, workspace: Workspace) -> None:
         entry = {
             "path": str(workspace.root),
-            "name": workspace.info.name,
+            "name": workspace.info.project or workspace.info.name,
             "repo": workspace.info.repo_path or "standalone (Mode B)",
             "app_folder": workspace.info.app_subfolder,
         }
         entries = [entry, *[e for e in self.recent() if e["path"] != entry["path"]]][:MAX_RECENT]
         self._recent_file.parent.mkdir(parents=True, exist_ok=True)
         self._recent_file.write_text(json.dumps(entries, indent=1), encoding="utf-8")
+
+
+def _set_project(workspace: Workspace, project: str) -> None:
+    if project:
+        workspace.info.project = project
+        workspace.save_info()

@@ -14,7 +14,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import asdict
 from importlib import resources
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -41,11 +41,18 @@ class NewWorkspace(BaseModel):
     app_folder: str | None = None
 
 
+class NewProject(BaseModel):
+    mode: Literal["A", "B"] = "B"
+    project: str
+    folder: str
+    repo: str = ""  # Mode A: the existing project / repository (read only)
+    app_folder: str = ""  # Mode A: only when Forge can't tell which sub-folder holds the Python app
+    sensitive_terms: str = ""  # Mode B, new project: names that must never reach a web search
+
+
 class NewStandalone(BaseModel):
     workspace: str
-    profile: str = ""
-    new_profile: str = ""  # create this (empty) profile first
-    sensitive_terms: str = ""  # comma-separated names that must never reach a web search
+    profile: str
 
 
 class OpenWorkspace(BaseModel):
@@ -115,19 +122,40 @@ def create_app(
             raise HTTPException(400, str(error)) from error
         return {"path": str(workspace.root)}
 
+    @app.post("/api/projects")
+    async def new_project(body: NewProject) -> dict[str, str]:
+        """The start form: project name + project folder in both modes, plus the existing repo in Mode A."""
+        from forge.modeb.profile import ProfileStore, project_slug
+
+        try:
+            name = body.project.strip()
+            if not name:
+                raise ValueError("Enter a project name.")
+            if not body.folder.strip():
+                raise ValueError("Enter the project folder (a new, empty folder).")
+            if body.mode == "A":
+                if not body.repo.strip():
+                    raise ValueError("Enter the path of the existing project / repository.")
+                workspace = await manager.new_workspace(
+                    Path(body.repo.strip()), Path(body.folder.strip()), body.app_folder.strip() or None, name
+                )
+                return {"path": str(workspace.root)}
+            # Mode B: the project's knowledge (its profile) is reused when the same name comes back.
+            store, slug = ProfileStore(manager.home), project_slug(name)
+            if slug not in store.names():
+                terms = [t.strip() for t in body.sensitive_terms.split(",") if t.strip()]
+                store.create(slug, terms)
+            workspace = await manager.new_standalone(Path(body.folder.strip()), slug, name)
+        except (ForgeError, OSError, ValueError) as error:
+            raise HTTPException(400, str(error)) from error
+        from forge.modeb.workspace import test_runner_note
+
+        return {"path": str(workspace.root), "test_runner": test_runner_note(workspace)}
+
     @app.post("/api/standalone")
     async def new_standalone(body: NewStandalone) -> dict[str, str]:
         try:
-            profile = body.profile
-            if body.new_profile.strip():
-                # The whole standalone flow in the browser: an empty profile Forge fills in by asking.
-                from forge.modeb.profile import ProfileStore
-
-                terms = [t.strip() for t in body.sensitive_terms.split(",") if t.strip()]
-                profile = ProfileStore(manager.home).create(body.new_profile.strip(), terms).name
-            if not profile:
-                raise ValueError("Choose a host profile or enter a name for a new one.")
-            workspace = await manager.new_standalone(Path(body.workspace), profile)
+            workspace = await manager.new_standalone(Path(body.workspace), body.profile)
         except (ForgeError, OSError, ValueError) as error:
             raise HTTPException(400, str(error)) from error
         from forge.modeb.workspace import test_runner_note

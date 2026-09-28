@@ -51,10 +51,10 @@ no admin rights. If Python's installer isn't allowed either, ask IT for "Python 
 ## 3. Use it
 
 ```powershell
-forge ui                                   # the web UI (opens Edge on 127.0.0.1)
+forge ui                                   # the web UI (opens Edge on 127.0.0.1): New project = name + folder (+ repo in Mode A)
 forge                                      # the terminal UI: asks Mode A (a repository) or Mode B (standalone)
-forge new --repo C:\src\myrepo --workspace C:\forge-ws\req1 --app-folder backend   # Mode A: works on a copy
-forge new --standalone --workspace C:\forge-ws\tool1                                # Mode B: never sees the host code
+forge new --project claims-export --repo C:\src\myrepo --workspace C:\forge-ws\req1   # Mode A: works on a copy
+forge new --standalone --project payments-masking --workspace C:\forge-ws\pm1       # Mode B: never sees your code
 forge run --workspace C:\forge-ws\req1 -p "the requirement text"                  # headless
 forge doctor                               # check the setup any time
 ```

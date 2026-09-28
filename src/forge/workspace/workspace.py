@@ -37,6 +37,7 @@ class WorkspaceInfo(BaseModel):
     format_version: int = WORKSPACE_FORMAT_VERSION
     mode: Literal["A", "B"] = "A"
     name: str
+    project: str = ""  # the project name the user gave (web UI / --project); "" for older workspaces
     repo_path: str
     app_subfolder: str
     created: str

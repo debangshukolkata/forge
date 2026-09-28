@@ -121,3 +121,27 @@ def test_web_ui_mechanics_in_edge(page, server: ServerSecurity, workspace: Works
     page.click("#btn-stop")  # nothing running: the engine takes it without error
     time.sleep(0.5)
     assert page.problems == [], page.problems  # type: ignore[attr-defined]
+
+
+def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, original_repo: Path) -> None:  # type: ignore[no-untyped-def]
+    # The start form: project name + folder (both modes); the repository field appears only in Mode A.
+    page.goto(server.url())
+    page.wait_for_selector("#home:not([hidden])")
+    assert page.is_hidden("#new-project input[name=repo]")
+    page.fill("#new-project input[name=project]", "Payments Masking")
+    page.fill("#new-project input[name=folder]", str(tmp_path / "pm"))
+    page.click("#new-project button[type=submit]")
+    page.wait_for_selector("#chat-view:not([hidden])")
+    assert "Payments Masking" in page.inner_text("#recent")
+
+    page.click("#btn-home")
+    page.wait_for_selector("#home:not([hidden])")
+    page.check("#new-project input[name=mode][value=A]")
+    assert page.is_visible("#new-project input[name=repo]")
+    assert page.is_hidden("#new-project input[name=sensitive_terms]")
+    page.fill("#new-project input[name=project]", "Claims export")
+    page.fill("#new-project input[name=folder]", str(tmp_path / "ce"))
+    page.fill("#new-project input[name=repo]", str(original_repo))
+    page.click("#new-project button[type=submit]")
+    page.wait_for_selector("#chat-view:not([hidden])")
+    assert not page.problems, page.problems  # type: ignore[attr-defined]

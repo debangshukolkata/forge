@@ -297,6 +297,14 @@ class ProfileStore:
         return profile
 
 
+def project_slug(name: str) -> str:
+    """A project name as a profile name: 'Payments Masking' -> 'payments-masking'."""
+    slug = re.sub(r"[^a-z0-9_-]+", "-", name.strip().lower()).strip("-_")[:49]
+    if not slug or not _NAME.match(slug):
+        raise ProfileError("Use letters or digits in the project name.")
+    return slug
+
+
 def host_identifying_terms(profile: HostProfile | None) -> tuple[str, ...]:
     """Words a web query must never contain (spec §6A.8): the profile's sensitive terms, the host's top-level
     package names and its table names (from the structure export)."""

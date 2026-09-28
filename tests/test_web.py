@@ -221,25 +221,50 @@ def test_standalone_workspace_from_the_web_api(
     )
 
 
-def test_standalone_workspace_with_a_new_profile_from_the_browser(
-    client: TestClient, security: ServerSecurity, isolated_forge_home: Path, tmp_path: Path
+def test_new_project_from_the_start_form_in_both_modes(
+    client: TestClient,
+    security: ServerSecurity,
+    isolated_forge_home: Path,
+    tmp_path: Path,
+    original_repo: Path,
 ) -> None:
-    # The standalone flow without a terminal: the profile is created in the same form.
+    # One form: project name + project folder in both modes, plus the existing repo in Mode A.
     from forge.modeb.profile import ProfileStore
 
     login(client, security)
-    response = client.post(
-        "/api/standalone",
+    created = client.post(
+        "/api/projects",
         json={
-            "workspace": str(tmp_path / "wsn"),
-            "new_profile": "office-app",
-            "sensitive_terms": "Acme, Zeta ",
+            "mode": "B",
+            "project": "Payments Masking",
+            "folder": str(tmp_path / "pm1"),
+            "sensitive_terms": "Acme",
         },
     )
-    assert response.status_code == 200, response.text
-    assert client.get("/api/profiles").json() == ["office-app"]
-    assert ProfileStore(isolated_forge_home).open("office-app").sensitive_terms == ["Acme", "Zeta"]
-    bad = client.post("/api/standalone", json={"workspace": str(tmp_path / "y"), "new_profile": "bad name!"})
-    assert bad.status_code == 400 and "letters, digits" in bad.json()["detail"]
-    empty = client.post("/api/standalone", json={"workspace": str(tmp_path / "z")})
-    assert empty.status_code == 400 and "Choose a host profile" in empty.json()["detail"]
+    assert created.status_code == 200, created.text
+    state = client.get("/api/state").json()
+    assert state["workspace"]["mode"] == "B" and state["recent"][0]["name"] == "Payments Masking"
+    assert ProfileStore(isolated_forge_home).open("payments-masking").sensitive_terms == ["Acme"]
+    again = client.post(
+        "/api/projects", json={"mode": "B", "project": "payments masking", "folder": str(tmp_path / "pm2")}
+    )
+    assert again.status_code == 200 and ProfileStore(isolated_forge_home).names() == ["payments-masking"]
+
+    repo_based = client.post(
+        "/api/projects",
+        json={
+            "mode": "A",
+            "project": "Claims export",
+            "folder": str(tmp_path / "ce"),
+            "repo": str(original_repo),
+        },
+    )
+    assert repo_based.status_code == 200, repo_based.text
+    assert client.get("/api/state").json()["workspace"]["mode"] == "A"
+
+    missing_repo = client.post(
+        "/api/projects", json={"mode": "A", "project": "x", "folder": str(tmp_path / "x")}
+    )
+    assert missing_repo.status_code == 400 and "existing project" in missing_repo.json()["detail"]
+    no_name = client.post("/api/projects", json={"mode": "B", "project": " ", "folder": str(tmp_path / "y")})
+    assert no_name.status_code == 400 and "project name" in no_name.json()["detail"]

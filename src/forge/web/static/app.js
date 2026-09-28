@@ -41,9 +41,8 @@ class App {
     this.$("home").hidden = false;
     this.$("chat-view").hidden = true;
     api("/api/profiles").then((names) => {
-      const none = el("option", { value: "" }, "(new profile below)");
-      this.$("profile-select").replaceChildren(none, ...names.map((n) => el("option", { value: n }, n)));
-      if (names.length) this.$("profile-select").value = names[0];
+      // Existing standalone projects (their saved knowledge is reused when the name is picked again).
+      this.$("known-projects").replaceChildren(...names.map((n) => el("option", { value: n })));
     }).catch(() => {});
     api("/api/doctor").then((results) => {
       this.$("doctor").replaceChildren(...results.map((r) => el("li", { class: r.status }, `${r.name}: ${r.detail}`)));
@@ -226,36 +225,41 @@ class App {
       await api("/api/quit", { method: "POST" }).catch(() => {});
       document.body.replaceChildren(el("p", { class: "notice" }, "Forge has stopped. You can close this tab."));
     });
-    this.$("new-standalone").addEventListener("submit", async (event) => {
+    const form = this.$("new-project");
+    const showMode = () => {
+      const mode = new FormData(form).get("mode");
+      form.querySelectorAll(".mode-a").forEach((node) => { node.hidden = mode !== "A"; });
+      form.querySelectorAll(".mode-b").forEach((node) => { node.hidden = mode !== "B"; });
+      if (mode === "A") form.querySelector(".app-folder").hidden = !form.elements.app_folder.value;
+      form.elements.repo.required = mode === "A";
+    };
+    form.querySelectorAll("input[name=mode]").forEach((radio) => radio.addEventListener("change", showMode));
+    showMode();
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const form = new FormData(event.target);
-      this.$("standalone-error").textContent = "Creating the workspace and its venv…";
+      const data = new FormData(form);
+      const mode = data.get("mode");
+      this.$("new-error").textContent = mode === "A"
+        ? "Creating the project (copying the repository)…"
+        : "Creating the project and its Python environment (installing pytest)…";
       try {
-        await api("/api/standalone", { method: "POST", body: {
-          workspace: form.get("workspace"),
-          profile: form.get("profile") || "",
-          new_profile: form.get("new_profile") || "",
-          sensitive_terms: form.get("sensitive_terms") || "",
+        await api("/api/projects", { method: "POST", body: {
+          mode,
+          project: data.get("project"),
+          folder: data.get("folder"),
+          repo: data.get("repo") || "",
+          app_folder: data.get("app_folder") || "",
+          sensitive_terms: data.get("sensitive_terms") || "",
         } });
-        this.$("standalone-error").textContent = "";
-        await this.loadState();
-        this.showChat();
-      } catch (error) {
-        this.$("standalone-error").textContent = error.message;
-      }
-    });
-    this.$("new-workspace").addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const form = new FormData(event.target);
-      this.$("new-error").textContent = "Creating the workspace (copying the repository)…";
-      try {
-        await api("/api/workspaces", { method: "POST", body: {
-          repo: form.get("repo"), workspace: form.get("workspace"), app_folder: form.get("app_folder") || null } });
         this.$("new-error").textContent = "";
         await this.loadState();
         this.showChat();
       } catch (error) {
         this.$("new-error").textContent = error.message;
+        // Forge couldn't tell which sub-folder holds the Python app: let the user say.
+        if (mode === "A" && /Which folder is the Python app/.test(error.message)) {
+          form.querySelector(".app-folder").hidden = false;
+        }
       }
     });
   }

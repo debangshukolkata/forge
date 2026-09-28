@@ -29,7 +29,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     new.add_argument("--repo", type=Path, help="Mode A: the repository to copy")
     new.add_argument("--standalone", action="store_true", help="Mode B: never sees the host code")
-    new.add_argument("--profile", help="Mode B: the host profile to use (forge profile new <name>)")
+    new.add_argument("--project", help="the project name (Mode B: its saved knowledge is reused by name)")
+    new.add_argument("--profile", help="Mode B: an existing host profile (default: from --project)")
     new.add_argument("--python", help="Mode B: base interpreter for the workspace venv (default: this one)")
     new.add_argument("--workspace", type=Path, required=True, dest="new_workspace")
     new.add_argument("--app-folder", help="the sub-folder holding the Python app, e.g. backend")
@@ -96,10 +97,10 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_doctor(args.offline))
     if args.command == "new":
         if args.standalone:
-            return _new_standalone(args.new_workspace, args.profile, args.python)
+            return _new_standalone(args.new_workspace, args.profile, args.python, args.project or "")
         if args.repo is None:
-            build_parser().error("forge new needs --repo (Mode A) or --standalone --profile NAME (Mode B)")
-        return _new(args.repo, args.new_workspace, args.app_folder)
+            build_parser().error("forge new needs --repo (Mode A) or --standalone --project NAME (Mode B)")
+        return _new(args.repo, args.new_workspace, args.app_folder, args.project or "")
     if args.command == "profile":
         return _profile(args)
     if args.command == "export":
@@ -243,7 +244,7 @@ async def _kb(action: str, repo: Path, app_folder: str | None) -> int:
     return 0
 
 
-def _new(repo: Path, workspace_path: Path, app_folder: str | None) -> int:
+def _new(repo: Path, workspace_path: Path, app_folder: str | None, project: str = "") -> int:
     from forge.config import forge_home
     from forge.workspace.create import create_workspace
     from forge.workspace.pyenv import find_app_folder_candidates
@@ -269,6 +270,9 @@ def _new(repo: Path, workspace_path: Path, app_folder: str | None) -> int:
         console.print(f"Could not create the workspace: {error}", markup=False)
         return 1
     remember_app_folder(home, repo, app_folder)
+    if project:
+        workspace.info.project = project
+        workspace.save_info()
     report = workspace.info.copy_report
     env = workspace.info.python_env
     console.print(f"Workspace ready: {workspace.root}", markup=False)
@@ -367,21 +371,29 @@ async def _diagnose(workspace_path: Path, pasted_error: str | None, fresh_run: b
     return 2 if result.integrity.problems or tests_failed else 0
 
 
-def _new_standalone(workspace_path: Path, profile_name: str | None, python: str | None) -> int:
+def _new_standalone(
+    workspace_path: Path, profile_name: str | None, python: str | None, project: str = ""
+) -> int:
     from forge.config import forge_home
-    from forge.modeb.profile import ProfileError, ProfileStore
+    from forge.modeb.profile import ProfileError, ProfileStore, project_slug
     from forge.modeb.workspace import create_standalone_workspace
     from forge.workspace.workspace import WorkspaceError
 
     console = Console()
-    if not profile_name:
-        console.print(
-            "Mode B needs a host profile: forge profile new <name>, then --profile <name>.", markup=False
-        )
+    if not profile_name and not project:
+        console.print("Mode B needs a project name: --project <name>.", markup=False)
         return 2
     try:
-        profile = ProfileStore(forge_home()).open(profile_name)
+        store = ProfileStore(forge_home())
+        if profile_name:
+            profile = store.open(profile_name)
+        else:  # the project's knowledge is its profile: created the first time, reused after
+            slug = project_slug(project)
+            profile = store.open(slug) if slug in store.names() else store.create(slug)
         workspace = create_standalone_workspace(workspace_path, profile, python)
+        if project:
+            workspace.info.project = project
+            workspace.save_info()
     except (ProfileError, WorkspaceError, OSError) as error:
         console.print(str(error), markup=False)
         return 1

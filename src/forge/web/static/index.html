@@ -36,25 +36,25 @@
     <main id="center">
       <section id="home" hidden>
         <h2>Start</h2>
-        <form id="new-workspace" class="card">
-          <h3>New workspace (from a repository)</h3>
-          <label>Repository folder <input name="repo" required placeholder="C:\work\claims-repo"></label>
-          <label>Workspace folder <input name="workspace" required placeholder="C:\forge\ws\claims-export"></label>
-          <label>App folder (optional) <input name="app_folder" placeholder="backend"></label>
+        <form id="new-project" class="card">
+          <h3>New project</h3>
+          <fieldset class="mode-choice">
+            <label><input type="radio" name="mode" value="B" checked> Standalone — Forge never sees your code</label>
+            <label><input type="radio" name="mode" value="A"> From an existing project / repository</label>
+          </fieldset>
+          <label>Project name <input name="project" required list="known-projects" placeholder="e.g. payments-masking"></label>
+          <datalist id="known-projects"></datalist>
+          <label>Project folder <input name="folder" required placeholder="C:\Work\LocalDevelopment\payments-masking"></label>
+          <label class="mode-a" hidden>Existing project / repository path <input name="repo" placeholder="C:\Work\LocalDevelopment\claims-repo"></label>
+          <label class="mode-a app-folder" hidden>App sub-folder <input name="app_folder" placeholder="backend"></label>
+          <label class="mode-b">Sensitive terms (optional) <input name="sensitive_terms" placeholder="company, product or client names — never used in web searches"></label>
+          <p class="muted mode-b">The project folder is new and empty: Forge works there and puts the result in its
+            <code>output</code> folder. Reusing a project name reuses what Forge learned about it. Paste signatures or
+            snippets in the chat — Forge uses them exactly.</p>
+          <p class="muted mode-a" hidden>Forge copies the repository into the project folder and never writes to the
+            original; the result is in the project folder's <code>output</code> folder with copy instructions.</p>
           <button type="submit">Create and open</button>
           <p class="form-error" id="new-error"></p>
-        </form>
-        <form id="new-standalone" class="card">
-          <h3>New standalone workspace (Mode B — Forge never sees the host code)</h3>
-          <label>Host profile <select name="profile" id="profile-select"><option value="">(new profile below)</option></select></label>
-          <label>…or a new profile <input name="new_profile" placeholder="e.g. claims-platform (letters, digits, - _)"></label>
-          <label>Sensitive terms for the new profile (optional) <input name="sensitive_terms" placeholder="company, product or project names, comma-separated"></label>
-          <label>Workspace folder <input name="workspace" required placeholder="C:\forge\ws\export-feature"></label>
-          <p class="muted">A new profile starts empty: Forge asks about your stack and conventions while working on
-            the first requirement. Paste signatures or snippets in the chat — Forge uses them exactly and asks
-            before saving them to the profile. Sensitive terms never go into web searches.</p>
-          <button type="submit">Create and open</button>
-          <p class="form-error" id="standalone-error"></p>
         </form>
         <div class="card">
           <h3>Environment check</h3>
