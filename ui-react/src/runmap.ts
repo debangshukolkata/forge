@@ -19,7 +19,7 @@ export interface Span {
   start: number;
   end: number | null; // null = still running
   seq: number;
-  tone: "phase" | "task" | "agent" | "agent-failed";
+  tone: "phase" | "task" | "agent" | "agent-failed" | "waiting";
 }
 
 export interface Agent {
@@ -33,6 +33,42 @@ export interface Agent {
   toolCalls: number;
   failedCalls: number;
   seq: number;
+}
+
+export type FailureKind = "tests" | "edit" | "command" | "blocked" | "tool";
+export type FailureOutcome = "fixed" | "task-done" | "open";
+
+export interface Failure {
+  seq: number; // the tool_call_finished event
+  startSeq: number | null; // its tool_call_started event (the chat row)
+  at: number;
+  task: string | null;
+  phase: string | null;
+  tool: string;
+  summary: string; // what it tried ("run tests tests/test_invoice.py")
+  output: string; // start and end of the result, as the engine kept it
+  kind: FailureKind;
+  outcome: FailureOutcome;
+}
+
+export const FAILURE_KIND_LABEL: Record<FailureKind, string> = {
+  tests: "Tests failed",
+  edit: "Edit didn't apply",
+  command: "Command failed",
+  blocked: "Blocked or declined",
+  tool: "Tool error",
+};
+
+const TEST_TOOLS = new Set(["run_tests", "verify", "run_eval"]);
+const EDIT_TOOLS = new Set(["edit_file", "multi_edit", "write_file", "notebook_edit_cell", "delete_file", "move_file"]);
+const COMMAND_TOOLS = new Set(["run_command", "python_run", "start_background", "scratch_exec", "db_query"]);
+
+function failureKind(tool: string, output: string): FailureKind {
+  if (/declined|not allowed|denied|outside the (workspace|write jail)|refus/i.test(output.slice(0, 400))) return "blocked";
+  if (TEST_TOOLS.has(tool)) return "tests";
+  if (EDIT_TOOLS.has(tool)) return "edit";
+  if (COMMAND_TOOLS.has(tool)) return "command";
+  return "tool";
 }
 
 export interface TaskStats {
@@ -50,7 +86,9 @@ export interface RunModel {
   agents: Agent[];
   spans: Span[];
   markers: Marker[];
-  lanes: { id: string; label: string; group: "phase" | "task" | "agent" }[];
+  failures: Failure[];
+  lanes: { id: string; label: string; group: "phase" | "you" | "task" | "agent" }[];
+  waitingSince: number | null; // seq of the request Forge is still waiting on, if any
   start: number | null;
   end: number | null;
 }
@@ -88,16 +126,26 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
   const spans: Span[] = [];
   const markers: Marker[] = [];
   const toolNames = new Map<string, string>();
+  const toolStarts = new Map<string, number>();
+  const failures: Failure[] = [];
+  // Successful calls per task and tool, in order, to tell whether a failure was fixed later.
+  const successes: { seq: number; task: string | null; tool: string }[] = [];
   let phaseSpan = null as Span | null;
   let taskSpan = null as Span | null;
   let start: number | null = null;
   let end: number | null = null;
 
+  // Forge blocks on a request: whatever event comes next means you answered, so the wait ends there.
+  let waitSpan = null as Span | null;
   for (const event of events) {
     const at = time(event);
     if (!at) continue;
     start ??= at;
     end = at;
+    if (waitSpan) {
+      waitSpan.end = at;
+      waitSpan = null;
+    }
     const p = event.payload;
     const where = event.where ?? null;
     const task = where?.task ?? null;
@@ -124,9 +172,17 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
         break;
       case "tool_call_started":
         toolNames.set(p.id, p.summary || p.name);
+        toolStarts.set(p.id, event.seq);
         break;
       case "tool_call_finished":
+        if (p.ok !== false) successes.push({ seq: event.seq, task, tool: p.name });
         if (p.ok === false) {
+          const output = String(p.preview ?? "");
+          failures.push({
+            seq: event.seq, startSeq: toolStarts.get(p.id) ?? null, at, task, phase: where?.phase ?? null,
+            tool: p.name ?? "tool", summary: toolNames.get(p.id) ?? p.summary ?? p.name ?? "", output,
+            kind: failureKind(p.name ?? "", output), outcome: "open",
+          });
           if (task) statsOf(task).failures += 1;
           markers.push({ kind: "failure", at, seq: event.seq, lane, label: `Failed: ${toolNames.get(p.id) ?? p.name ?? "tool call"}` });
         }
@@ -140,8 +196,13 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
       case "approval_requested":
       case "question_asked":
       case "user_action_requested":
-        markers.push({ kind: "waiting", at, seq: event.seq, lane, label: String(p.title || p.question || WAITING[event.type]).split("\n")[0] });
+      {
+        const label = String(p.title || p.question || WAITING[event.type]).split("\n")[0];
+        markers.push({ kind: "waiting", at, seq: event.seq, lane: "you", label });
+        waitSpan = { lane: "you", label: `${WAITING[event.type]}: ${label}`, start: at, end: null, seq: event.seq, tone: "waiting" };
+        spans.push(waitSpan);
         break;
+      }
       case "agent_started": {
         const agent: Agent = {
           id: p.id, role: p.role || "helper", purpose: p.purpose || "", task, start: at, end: null, ok: null,
@@ -168,6 +229,12 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
     }
   }
 
+  const statusOf = new Map(tasks.map((t) => [t.id, t.status]));
+  for (const failure of failures) {
+    const later = successes.some((s) => s.seq > failure.seq && s.tool === failure.tool && s.task === failure.task);
+    failure.outcome = later ? "fixed" : failure.task && statusOf.get(failure.task) === "done" ? "task-done" : "open";
+  }
+
   // Open spans (end null) are drawn up to the map's end.
   if (live !== null && end !== null) end = Math.max(end, live);
   for (const agent of agents) {
@@ -182,10 +249,12 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
   const roles = [...new Set(agents.map((a) => a.role))];
   const lanes: RunModel["lanes"] = [
     { id: "phase", label: "Phases", group: "phase" },
+    ...(markers.some((m) => m.kind === "waiting") ? [{ id: "you", label: "Waiting for you", group: "you" as const }] : []),
     ...laneTaskIds.map((id) => ({ id: `task:${id}`, label: id, group: "task" as const })),
     ...roles.map((role) => ({ id: `agent:${role}`, label: role.charAt(0).toUpperCase() + role.slice(1), group: "agent" as const })),
   ];
-  return { tasks, phase, currentTask, stats, agents, spans, markers, lanes, start, end };
+  const waitingSince = waitSpan ? waitSpan.seq : null;
+  return { tasks, phase, currentTask, stats, agents, spans, markers, failures, lanes, start, end, waitingSince };
 }
 
 export interface GraphNodeData {

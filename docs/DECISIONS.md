@@ -1024,3 +1024,26 @@ User asked for animation on the active phase circle (e.g. Build) while it runs. 
 accent arc and a soft expanding halo while Forge works (same signal as the live status line), and an amber
 pulsing ring while it waits for the user; the step number stays readable inside. CSS only; stopped under
 prefers-reduced-motion.
+
+### D-122 — Failures drawer on the Run map · Decided (2026-09-28, discussed)
+User asked to see what the "N failed calls" were (chose: a drawer sliding in from the right; summary plus
+expandable output). Options considered: right drawer (chosen: room for error text, filterable, stays in the
+Run map), popover at the click (cramped), a "Problems" tab in the side panel (hidden in the Run map view).
+The drawer opens from the failed-calls chip (all), a task card's ✕ count (that task) or a ✕ timeline marker
+(that failure highlighted); Esc/backdrop closes it. Each entry: plain-language kind (tests failed / edit didn't
+apply / command failed / blocked or declined / tool error, from the tool name and output), outcome ("Fixed
+later" = a later successful call of the same tool in the same task; "Task finished"; "Not fixed yet"), time,
+what it tried, the last 6 lines of output (the error is usually last) with "Show more", and "Show in chat".
+Engine: a failed call's event preview now keeps the first 400 and last 1,500 characters (was the first 1,500),
+so the error at the end survives. Also fixed: React Flow disabled pointer events on non-draggable nodes, so task
+cards weren't clickable; blocked cards now show their counts as well as the reason.
+
+### D-123 — Run map: waiting-for-you bars, self-fitting graph, non-overlapping time labels · Decided (2026-09-28)
+From the user's first real run: (1) waiting for approval wasn't visible on the map — a "Waiting for you" lane now
+draws a bar from each request to the next event (Forge blocks until you answer, so the next event is the
+answer), the open one growing until answered, and the summary strip gets an amber "Approval needed — open in
+chat" button; (2) the graph was blank at the end of a live run — it fitted the view only once; it now refits when
+its cards are measured and whenever the plan's shape or the area's size changes (not on every status update, so
+a manual zoom/pan stays); (3) axis labels overlapped — labels that would collide are dropped (their dashed break
+line stays), and dates appear when a run crosses days. Phase row redesign for multi-day runs: deferred by the
+user ("we will redesign this phase"); options offered were scroll + zoom, a phase summary strip, group by day.

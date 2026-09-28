@@ -2,27 +2,45 @@
 // helper agents (plain SVG) with failure, stuck and waiting markers. Everything is derived from the project's
 // events, so it works the same live and after a replay. Clicking a task or a marker jumps to it in the chat.
 import dagre from "@dagrejs/dagre";
-import { Background, Controls, Handle, Position, ReactFlow, type Edge, type Node, type NodeProps } from "@xyflow/react";
+import {
+  Background,
+  Controls,
+  Handle,
+  Position,
+  ReactFlow,
+  useNodesInitialized,
+  useReactFlow,
+  type Edge,
+  type Node,
+  type NodeProps,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { AlertTriangle, Bot, CheckCircle2, CircleDashed, Flag, Hand, ListChecks, Repeat, Search, XCircle } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { AlertTriangle, Bot, ChevronRight, CheckCircle2, CircleDashed, Flag, Hand, ListChecks, Repeat, Search, XCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cx } from "../lib";
 import { PHASE_LABEL, buildRunModel, planGraph, type GraphNodeData, type Marker, type RunModel, type Span } from "../runmap";
 import type { CostLimits, UsageBucket } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
+import { FailureDrawer, type DrawerRequest } from "./FailureDrawer";
 import { Badge, Empty } from "./ui";
 
 const TASK_W = 212;
-const TASK_H = 108;
+const TASK_H = 118;
 const STEP_W = 108;
 const STEP_H = 44;
 
-type FlowData = GraphNodeData & { usage?: UsageBucket; limits?: CostLimits; onJump?: () => void } & Record<string, unknown>;
+type FlowData = GraphNodeData & {
+  usage?: UsageBucket;
+  limits?: CostLimits;
+  onJump?: () => void;
+  onFailures?: () => void;
+} & Record<string, unknown>;
+type OpenFailures = (request: DrawerRequest) => void;
 type FlowNode = Node<FlowData>;
 
 export function RunMap({ forge, onJump }: { forge: Forge; onJump: (seq: number) => void }) {
-  const busy = !!forge.state.busy;
+  const busy = !!forge.state.busy || forge.activity.kind !== "idle";
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     if (!busy) return;
@@ -30,6 +48,8 @@ export function RunMap({ forge, onJump }: { forge: Forge; onJump: (seq: number) 
     return () => window.clearInterval(timer);
   }, [busy]);
 
+  const [drawer, setDrawer] = useState<DrawerRequest | null>(null);
+  const closeDrawer = useCallback(() => setDrawer(null), []);
   const model = useMemo(
     () => buildRunModel(forge.events, forge.state.tasks ?? [], busy ? now : null),
     [forge.events, forge.state.tasks, busy, now],
@@ -46,22 +66,40 @@ export function RunMap({ forge, onJump }: { forge: Forge; onJump: (seq: number) 
   }
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="run-map">
-      <Summary model={model} />
+      <Summary
+        model={model}
+        waiting={forge.activity.kind === "waiting" ? forge.waiting ?? "Waiting for you" : null}
+        onFailures={() => setDrawer({ task: null, highlight: null })}
+        onOpenRequest={() => onJump(model.waitingSince ?? Number.MAX_SAFE_INTEGER)}
+      />
       <div className="min-h-[220px] flex-[3] border-b border-border">
         {model.tasks.length ? (
-          <TaskGraph model={model} forge={forge} onJump={onJump} />
+          <TaskGraph model={model} forge={forge} onJump={onJump} onFailures={setDrawer} />
         ) : (
           <div className="flex h-full items-center justify-center text-[13px] text-fg-muted">No plan yet — the timeline below shows what has happened so far.</div>
         )}
       </div>
       <div className="min-h-[160px] flex-[2] overflow-auto">
-        <Timeline model={model} onJump={onJump} />
+        <Timeline model={model} onJump={onJump} onFailures={setDrawer} />
       </div>
+      {drawer && (
+        <FailureDrawer failures={model.failures} tasks={model.tasks} request={drawer} onClose={closeDrawer} onJump={onJump} />
+      )}
     </div>
   );
 }
 
-function Summary({ model }: { model: RunModel }) {
+function Summary({
+  model,
+  waiting,
+  onFailures,
+  onOpenRequest,
+}: {
+  model: RunModel;
+  waiting: string | null;
+  onFailures: () => void;
+  onOpenRequest: () => void;
+}) {
   const done = model.tasks.filter((t) => t.status === "done").length;
   const blocked = model.tasks.filter((t) => t.status === "blocked").length;
   const failures = model.markers.filter((m) => m.kind === "failure").length;
@@ -69,14 +107,40 @@ function Summary({ model }: { model: RunModel }) {
   const running = model.agents.filter((a) => a.end === null).length;
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-[12.5px]">
+      {waiting && (
+        <button
+          type="button"
+          onClick={onOpenRequest}
+          data-testid="run-map-waiting"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-warn/50 bg-warn-soft px-2.5 py-0.5 text-[12px] font-medium text-warn transition-[filter] duration-150 hover:brightness-95"
+        >
+          <Hand className="run-live h-3.5 w-3.5" aria-hidden />
+          {waiting} — open in chat
+          <ChevronRight className="h-3 w-3" aria-hidden />
+        </button>
+      )}
       <Badge tone="neutral">
         <ListChecks className="h-3.5 w-3.5" aria-hidden /> {done}/{model.tasks.length} tasks done
       </Badge>
       {model.phase && <Badge tone="info">Phase: {PHASE_LABEL[model.phase] ?? model.phase}</Badge>}
       {blocked > 0 && <Badge tone="danger">{blocked} blocked</Badge>}
-      <Badge tone={failures ? "danger" : "neutral"}>
-        <XCircle className="h-3.5 w-3.5" aria-hidden /> {failures} failed call{failures === 1 ? "" : "s"}
-      </Badge>
+      {failures ? (
+        <button
+          type="button"
+          onClick={onFailures}
+          title="See what failed"
+          className="cursor-pointer rounded-full transition-[filter] duration-150 hover:brightness-95 focus-visible:outline-2 focus-visible:outline-danger"
+        >
+          <Badge tone="danger">
+            <XCircle className="h-3.5 w-3.5" aria-hidden /> {failures} failed call{failures === 1 ? "" : "s"}
+            <ChevronRight className="h-3 w-3" aria-hidden />
+          </Badge>
+        </button>
+      ) : (
+        <Badge tone="neutral">
+          <XCircle className="h-3.5 w-3.5" aria-hidden /> 0 failed calls
+        </Badge>
+      )}
       {stuck > 0 && (
         <Badge tone="warn">
           <AlertTriangle className="h-3.5 w-3.5" aria-hidden /> {stuck} stuck warning{stuck === 1 ? "" : "s"}
@@ -92,7 +156,12 @@ function Summary({ model }: { model: RunModel }) {
 
 // ---------------------------------------------------------------- task graph
 
-function layout(model: RunModel, forge: Forge, onJump: (seq: number) => void): { nodes: FlowNode[]; edges: Edge[] } {
+function layout(
+  model: RunModel,
+  forge: Forge,
+  onJump: (seq: number) => void,
+  onFailures: OpenFailures,
+): { nodes: FlowNode[]; edges: Edge[] } {
   const { nodes, edges } = planGraph(model);
   const graph = new dagre.graphlib.Graph();
   graph.setGraph({ rankdir: "LR", nodesep: 20, ranksep: 40, marginx: 16, marginy: 16 });
@@ -118,6 +187,7 @@ function layout(model: RunModel, forge: Forge, onJump: (seq: number) => void): {
         usage: task ? byTask[node.id] : undefined,
         limits: forge.costColors?.task,
         onJump: firstSeq != null ? () => onJump(firstSeq) : undefined,
+        onFailures: task ? () => onFailures({ task: node.id, highlight: null }) : undefined,
       },
       draggable: false,
       connectable: false,
@@ -134,12 +204,21 @@ function layout(model: RunModel, forge: Forge, onJump: (seq: number) => void): {
   return { nodes: flowNodes, edges: flowEdges };
 }
 
-function TaskGraph({ model, forge, onJump }: { model: RunModel; forge: Forge; onJump: (seq: number) => void }) {
-  const { nodes, edges } = useMemo(() => layout(model, forge, onJump), [model, forge, onJump]);
-  const shape = nodes.map((n) => n.id).join("|"); // refit only when the plan's shape changes
+function TaskGraph({
+  model,
+  forge,
+  onJump,
+  onFailures,
+}: {
+  model: RunModel;
+  forge: Forge;
+  onJump: (seq: number) => void;
+  onFailures: OpenFailures;
+}) {
+  const { nodes, edges } = useMemo(() => layout(model, forge, onJump, onFailures), [model, forge, onJump, onFailures]);
+  const shape = nodes.map((n) => n.id).join("|");
   return (
     <ReactFlow
-      key={shape}
       nodes={nodes}
       edges={edges}
       nodeTypes={NODE_TYPES}
@@ -152,10 +231,30 @@ function TaskGraph({ model, forge, onJump }: { model: RunModel; forge: Forge; on
       elementsSelectable={false}
       proOptions={{ hideAttribution: true }}
     >
+      <AutoFit shape={shape} />
       <Background gap={20} size={1} />
       <Controls showInteractive={false} position="bottom-right" />
     </ReactFlow>
   );
+}
+
+/** Fits the plan into view once its cards are measured, and again when the plan's shape or the area's size
+ * changes (window, side panel) — but not on every status update, so a zoom or pan you made stays. */
+function AutoFit({ shape }: { shape: string }) {
+  const { fitView } = useReactFlow();
+  const measured = useNodesInitialized();
+  const [size, setSize] = useState("");
+  useEffect(() => {
+    const pane = document.querySelector(".react-flow");
+    if (!pane) return;
+    const observer = new ResizeObserver(([entry]) => setSize(`${Math.round(entry.contentRect.width)}x${Math.round(entry.contentRect.height)}`));
+    observer.observe(pane);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    if (measured) void fitView({ padding: 0.12, maxZoom: 1, duration: 200 });
+  }, [measured, shape, size, fitView]);
+  return null;
 }
 
 const STATUS_TONE: Record<string, "neutral" | "accent" | "danger" | "warn" | "info"> = {
@@ -171,10 +270,17 @@ function TaskNode({ id, data }: NodeProps<FlowNode>) {
   const stats = data.stats;
   const fix = /^FIX/i.test(id);
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={data.onJump ? 0 : -1}
+      aria-disabled={!data.onJump}
       onClick={data.onJump}
-      disabled={!data.onJump}
+      onKeyDown={(e) => {
+        if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) {
+          e.preventDefault();
+          data.onJump?.();
+        }
+      }}
       data-task={id}
       data-status={task.status}
       title={data.onJump ? "Show this task in the chat" : undefined}
@@ -195,17 +301,30 @@ function TaskNode({ id, data }: NodeProps<FlowNode>) {
         </Badge>
       </div>
       <div className="line-clamp-2 text-[12.5px] leading-snug font-medium text-fg">{task.title}</div>
-      {task.status === "blocked" && task.blocked_reason ? (
+      {task.status === "blocked" && task.blocked_reason && (
         <div className="truncate text-[11.5px] text-danger" title={task.blocked_reason}>
           Blocked: {task.blocked_reason}
         </div>
-      ) : (
+      )}
+      {
         <div className="mt-auto flex items-center gap-2.5 text-[11.5px] text-fg-muted">
           {(task.attempts ?? 0) > 1 && (
             <Stat icon={<Repeat className="h-3 w-3" />} title="Attempts">{task.attempts}</Stat>
           )}
           {!!stats?.failures && (
-            <Stat icon={<XCircle className="h-3 w-3" />} title="Failed tool calls" className="text-danger">{stats.failures}</Stat>
+            <button
+              type="button"
+              title="Failed tool calls"
+              aria-label={`See the ${stats.failures} failed call${stats.failures === 1 ? "" : "s"} of ${id}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onFailures?.();
+              }}
+              className="nodrag inline-flex cursor-pointer items-center gap-1 rounded px-1 tabular-nums text-danger hover:bg-danger-soft"
+            >
+              <XCircle className="h-3 w-3" aria-hidden />
+              {stats.failures}
+            </button>
           )}
           {!!stats?.stuck && (
             <Stat icon={<AlertTriangle className="h-3 w-3" />} title="Stuck warnings" className="text-warn">{stats.stuck}</Stat>
@@ -215,9 +334,9 @@ function TaskNode({ id, data }: NodeProps<FlowNode>) {
           )}
           {data.usage && <UsageBadge className="ml-auto" bucket={data.usage} limits={data.limits} compact />}
         </div>
-      )}
+      }
       <Handle type="source" position={Position.Right} className="!opacity-0" />
-    </button>
+    </div>
   );
 }
 
@@ -292,7 +411,29 @@ function clock(ms: number): string {
   return new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function Timeline({ model, onJump }: { model: RunModel; onJump: (seq: number) => void }) {
+function stamp(ms: number, withDate: boolean): string {
+  const date = new Date(ms).toLocaleDateString([], { day: "numeric", month: "short" });
+  return withDate ? `${date} ${clock(ms)}` : clock(ms);
+}
+
+const LABEL_GAP = 84; // px between axis labels
+
+function axisLabels(start: number, end: number, breaks: { at: number; resume: number }[], width: number) {
+  const day = (ms: number) => new Date(ms).toDateString();
+  const multiDay = day(start) !== day(end);
+  const labels: { x: number; text: string; anchor: "start" | "end"; at: number }[] = [
+    { x: 0, text: stamp(start, multiDay), anchor: "start", at: start },
+  ];
+  const last = { x: width, text: stamp(end, multiDay && day(end) !== day(start)), anchor: "end" as const, at: end };
+  for (const b of breaks) {
+    const previous = labels[labels.length - 1];
+    if (b.at - previous.x < LABEL_GAP || width - b.at < LABEL_GAP + 20) continue;
+    labels.push({ x: b.at + 3, text: `≈ ${stamp(b.resume, day(b.resume) !== day(previous.at))}`, anchor: "start", at: b.resume });
+  }
+  return [...labels, last];
+}
+
+function Timeline({ model, onJump, onFailures }: { model: RunModel; onJump: (seq: number) => void; onFailures: OpenFailures }) {
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(800);
   useEffect(() => {
@@ -322,29 +463,39 @@ function Timeline({ model, onJump }: { model: RunModel; onJump: (seq: number) =>
         {model.lanes.map((lane, index) => (
           <g key={lane.id}>
             <rect x={0} y={AXIS_H + index * LANE_H} width={width} height={LANE_H} className={index % 2 ? "fill-transparent" : "fill-raised/40"} />
-            <text x={4} y={AXIS_H + index * LANE_H + LANE_H / 2 + 4} className={cx("text-[11.5px]", lane.group === "task" ? "fill-fg font-mono" : "fill-fg-muted")}>
+            <text x={4} y={AXIS_H + index * LANE_H + LANE_H / 2 + 4} className={cx("text-[11.5px]", lane.group === "task" ? "fill-fg font-mono" : lane.group === "you" ? "fill-warn" : "fill-fg-muted")}>
               {lane.group === "agent" ? `⤷ ${lane.label}` : lane.label}
             </text>
           </g>
         ))}
         <g transform={`translate(${LABEL_W},0)`}>
-          {/* axis: start, end, and the clock time after each squeezed pause */}
-          <text x={0} y={14} className="fill-fg-muted text-[10.5px]">{clock(start)}</text>
-          <text x={plotW} y={14} textAnchor="end" className="fill-fg-muted text-[10.5px]">{clock(end)}</text>
+          {/* axis: start, end, and the clock time after each squeezed pause; labels that would collide are
+              dropped (their dashed line stays), and the date is shown whenever the day changes */}
           {scale.breaks.map((b, index) => (
-            <g key={index}>
-              <line x1={b.at} x2={b.at} y1={AXIS_H - 4} y2={height} className="stroke-border-strong" strokeDasharray="2 3" />
-              <text x={b.at + 3} y={14} className="fill-fg-muted text-[10px]">
-                <title>A long pause (usually waiting for you) is shortened here</title>
-                ≈ {clock(b.resume)}
-              </text>
-            </g>
+            <line key={index} x1={b.at} x2={b.at} y1={AXIS_H - 4} y2={height} className="stroke-border-strong" strokeDasharray="2 3">
+              <title>{`A long pause is shortened here; work resumed at ${stamp(b.resume, true)}`}</title>
+            </line>
+          ))}
+          {axisLabels(start, end, scale.breaks, plotW).map((label, index) => (
+            <text key={index} x={label.x} y={14} textAnchor={label.anchor} className="fill-fg-muted text-[10.5px]">
+              {label.text}
+            </text>
           ))}
           {model.spans.map((span, index) => (
             <SpanBar key={index} span={span} x={scale.x} end={end} y={yOf(span.lane)} onJump={onJump} />
           ))}
           {model.markers.map((marker, index) => (
-            <MarkerGlyph key={index} marker={marker} x={scale.x(marker.at)} y={yOf(marker.lane)} onJump={onJump} />
+            <MarkerGlyph
+              key={index}
+              marker={marker}
+              x={scale.x(marker.at)}
+              y={yOf(marker.lane)}
+              onClick={() =>
+                marker.kind === "failure"
+                  ? onFailures({ task: marker.lane.startsWith("task:") ? marker.lane.slice(5) : null, highlight: marker.seq })
+                  : onJump(marker.seq)
+              }
+            />
           ))}
         </g>
       </svg>
@@ -358,6 +509,7 @@ const SPAN_CLASS: Record<Span["tone"], string> = {
   task: "fill-accent/25 stroke-accent/60",
   agent: "fill-fg-muted/20 stroke-fg-muted/50",
   "agent-failed": "fill-danger/20 stroke-danger/60",
+  waiting: "fill-warn/25 stroke-warn/70",
 };
 
 function SpanBar({ span, x, end, y, onJump }: { span: Span; x: (t: number) => number; end: number; y: number; onJump: (seq: number) => void }) {
@@ -367,7 +519,7 @@ function SpanBar({ span, x, end, y, onJump }: { span: Span; x: (t: number) => nu
   const label = span.tone === "phase" ? PHASE_LABEL[span.label] ?? span.label : span.label;
   return (
     <g className="cursor-pointer" onClick={() => onJump(span.seq)} data-span={span.tone}>
-      <title>{`${label} · ${clock(span.start)}${span.end === null ? " – now" : ""}`}</title>
+      <title>{`${label} · ${clock(span.start)}${span.end === null ? " – now" : ` – ${clock(span.end)}`}`}</title>
       <rect x={left} y={y + 5} width={width} height={LANE_H - 10} rx={3} className={cx(SPAN_CLASS[span.tone], span.end === null && "run-live")} strokeWidth={1} />
       {width > 60 && span.tone === "phase" && (
         <text x={left + 5} y={y + LANE_H / 2 + 3.5} className="pointer-events-none fill-fg text-[10.5px]">{label}</text>
@@ -376,11 +528,11 @@ function SpanBar({ span, x, end, y, onJump }: { span: Span; x: (t: number) => nu
   );
 }
 
-function MarkerGlyph({ marker, x, y, onJump }: { marker: Marker; x: number; y: number; onJump: (seq: number) => void }) {
+function MarkerGlyph({ marker, x, y, onClick }: { marker: Marker; x: number; y: number; onClick: () => void }) {
   const middle = y + LANE_H / 2;
   return (
-    <g className="cursor-pointer" onClick={() => onJump(marker.seq)} data-marker={marker.kind}>
-      <title>{`${marker.label} · ${clock(marker.at)} (click to see it in the chat)`}</title>
+    <g className="cursor-pointer" onClick={onClick} data-marker={marker.kind}>
+      <title>{`${marker.label} · ${clock(marker.at)} (click ${marker.kind === "failure" ? "for the details" : "to see it in the chat"})`}</title>
       {marker.kind === "failure" && (
         <path d={`M${x - 4} ${middle - 4} L${x + 4} ${middle + 4} M${x + 4} ${middle - 4} L${x - 4} ${middle + 4}`} className="stroke-danger" strokeWidth={2.2} strokeLinecap="round" />
       )}
@@ -405,7 +557,7 @@ function Legend() {
       {item(<span className="h-2.5 w-4 rounded-sm border border-fg-muted/50 bg-fg-muted/20" />, "Helper agent")}
       {item(<XCircle className="h-3.5 w-3.5 text-danger" aria-hidden />, "Failed tool call")}
       {item(<AlertTriangle className="h-3.5 w-3.5 text-warn" aria-hidden />, "Stuck warning")}
-      {item(<Hand className="h-3.5 w-3.5 text-warn" aria-hidden />, "Waiting for you")}
+      {item(<span className="h-2.5 w-4 rounded-sm border border-warn/70 bg-warn/25" />, "Waiting for you")}
     </div>
   );
 }

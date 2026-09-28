@@ -572,7 +572,21 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
         )
         publish(
             EventType.TOOL_CALL_FINISHED,
-            {"id": "c1", "name": "run_tests", "ok": False, "summary": "run tests"},
+            {
+                "id": "c1",
+                "name": "run_tests",
+                "ok": False,
+                "summary": "run tests",
+                "preview": "collected 9 items\n"
+                + "\n".join(f"line {n}" for n in range(12))
+                + "\nE   AssertionError: '4111********1111' != '4111 **** **** 1111'\n1 failed, 8 passed",
+            },
+        )
+        # the same tool succeeds later in T1: that failure was fixed
+        publish(EventType.TOOL_CALL_STARTED, {"id": "c2", "name": "run_tests", "summary": "run tests"})
+        publish(
+            EventType.TOOL_CALL_FINISHED,
+            {"id": "c2", "name": "run_tests", "ok": True, "summary": "run tests", "preview": "9 passed"},
         )
         publish(
             EventType.AGENT_STARTED,
@@ -591,6 +605,17 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
         )
         at(Phase.EXECUTE, "T2")
         publish(EventType.NOTICE, {"kind": "stuck", "text": "The same edit failed three times."})
+        publish(EventType.TOOL_CALL_STARTED, {"id": "c3", "name": "edit_file", "summary": "edit src/mask.py"})
+        publish(
+            EventType.TOOL_CALL_FINISHED,
+            {
+                "id": "c3",
+                "name": "edit_file",
+                "ok": False,
+                "summary": "edit",
+                "preview": "The user declined this action.",
+            },
+        )
         at(Phase.EXECUTE, "T3")
         publish(EventType.STATUS_CHANGED, {"state": "working"})
         publish(
@@ -598,6 +623,10 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
             {"id": "agent-2", "role": "helper", "purpose": "Helper task: find the audit call"},
         )
         publish(EventType.TASK_LIST_UPDATED, {"phase": "execute", "current_task": "T3", "tasks": tasks})
+        publish(
+            EventType.APPROVAL_REQUESTED,
+            {"id": "A7", "title": "Approve the audit change", "body": "…", "options": ["approve", "reject"]},
+        )
 
         page.click("[role=tab]:has-text('Run map')")
         page.wait_for_selector("[data-testid=run-map]")
@@ -613,12 +642,16 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
         assert page.locator(".run-edge-fix").count() == 1
         assert page.locator("[data-task=T1] [title='Failed tool calls']").inner_text().strip() == "1"
         assert page.locator("[data-task=T1] [title='Helper agents']").inner_text().strip() == "1"
-        assert page.locator("[data-marker=failure]").count() == 1
+        assert page.locator("[data-marker=failure]").count() == 2
         assert page.locator("[data-marker=stuck]").count() == 1
-        assert page.locator("[data-marker=waiting]").count() == 1
+        # Waiting for you: a bar from each request to your answer; the open one grows until you answer (D-123)
+        assert page.locator("[data-marker=waiting]").count() == 2
+        assert page.locator("[data-span=waiting]").count() == 2
         timeline = page.inner_text("[data-testid=run-timeline]")
         assert "Debugger" in timeline and "Helper" in timeline and "T3" in timeline
-        page.wait_for_selector("text=1 failed call")
+        assert "Waiting for you" in timeline
+        page.wait_for_selector("[data-testid=run-map-waiting]:has-text('Approval needed')")
+        page.wait_for_selector("text=2 failed calls")
         page.wait_for_selector("text=2 agents · 1 running")
         page.wait_for_timeout(600)
         page.screenshot(path=str(shots / "run-map-dark.png"))
@@ -626,8 +659,38 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
         page.wait_for_timeout(300)
         page.screenshot(path=str(shots / "run-map-light.png"))
 
-        # A marker jumps to its event in the chat.
-        page.locator("[data-marker=failure]").click()
+        # What failed (D-122): the chip opens a drawer with every failure, grouped by task.
+        page.click("button[title='See what failed']")
+        drawer = page.locator("[data-testid=failure-drawer]")
+        drawer.wait_for()
+        assert drawer.locator("[data-failure]").count() == 2
+        fixed = drawer.locator("[data-outcome=fixed]")
+        assert "Tests failed" in fixed.inner_text() and "Fixed later" in fixed.inner_text()
+        # the error is at the end of the output: the preview shows the last lines, Show more the rest
+        assert "AssertionError" in fixed.inner_text() and "collected 9 items" not in fixed.inner_text()
+        fixed.locator("text=Show more").click()
+        assert "collected 9 items" in fixed.inner_text()
+        blocked = drawer.locator("[data-outcome=open]")
+        assert "Blocked or declined" in blocked.inner_text() and "Not fixed yet" in blocked.inner_text()
+        page.wait_for_timeout(400)
+        page.screenshot(path=str(shots / "failures-drawer-light.png"))
+        page.keyboard.press("Escape")
+        drawer.wait_for(state="detached")
+        # A task's failure count opens the drawer for that task only.
+        page.click("[aria-label='See the 1 failed call of T2']")
+        drawer.wait_for()
+        assert drawer.locator("[data-failure]").count() == 1
+        assert "edit src/mask.py" in drawer.inner_text()
+        page.keyboard.press("Escape")
+        # Clicking a task card jumps to its first event in the chat.
+        page.click("[data-task=T1]")
+        page.wait_for_selector(".jump-flash")
+        page.click("[role=tab]:has-text('Run map')")
+        page.wait_for_selector("[data-testid=run-map]")
+        # A failure marker opens the drawer on that failure; "Show in chat" jumps to its row.
+        page.locator("[data-marker=failure]").first.click()
+        drawer.wait_for()
+        drawer.locator("li.ring-2 >> text=Show in chat").click()
         page.wait_for_selector("textarea[aria-label=Message]")
         page.wait_for_selector(".jump-flash")
         assert "run tests" in page.inner_text(".jump-flash").lower()

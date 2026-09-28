@@ -9,7 +9,7 @@ from pathlib import Path
 
 import httpx2
 
-from forge.agent.loop import CUT_OFF_NOTE
+from forge.agent.loop import CUT_OFF_NOTE, FAILURE_HEAD_CHARS, FAILURE_TAIL_CHARS, _preview
 from forge.engine.events import EventBus, EventType
 from forge.engine.inputs import SendMessage
 from forge.engine.session_host import SessionHost
@@ -69,3 +69,14 @@ async def test_cancelling_the_session_mid_turn_ends_it(original_repo: Path, tmp_
         with contextlib.suppress(asyncio.CancelledError):
             await runner
     assert runner.done()
+
+
+def test_failure_preview_keeps_the_end_where_the_error_is() -> None:
+    # The Run map's failures drawer (D-122) shows the error, which test runners print last.
+    output = "collected 9 items\n" + "." * 5000 + "\nE   AssertionError: 12.35 != 12.36\n1 failed, 8 passed"
+    preview = _preview(output, ok=False)
+    assert preview.startswith("collected 9 items")
+    assert preview.endswith("1 failed, 8 passed") and "AssertionError: 12.35 != 12.36" in preview
+    assert len(preview) <= FAILURE_HEAD_CHARS + FAILURE_TAIL_CHARS + 3
+    assert _preview("short failure", ok=False) == "short failure"
+    assert _preview(output, ok=True) == output[:1500]

@@ -48,6 +48,16 @@ CUT_OFF_NOTE = (
     "Your previous reply was cut off at the output limit. Continue exactly where you stopped: keep it "
     "short, and use tool calls if work remains."
 )
+FAILURE_HEAD_CHARS = 400
+FAILURE_TAIL_CHARS = 1500
+
+
+def _preview(content: str, ok: bool) -> str:
+    """The start of a result for the UI. A failure keeps its end too: test runners and tracebacks put the
+    actual error last, and the Run map's failures drawer (D-122) shows it."""
+    if ok or len(content) <= FAILURE_HEAD_CHARS + FAILURE_TAIL_CHARS:
+        return content[:PREVIEW_CHARS] if ok else content
+    return content[:FAILURE_HEAD_CHARS] + "\n…\n" + content[-FAILURE_TAIL_CHARS:]
 
 
 def system_prompt(workspace: Workspace) -> str:
@@ -269,7 +279,7 @@ class AgentLoop:
                 "name": call.name,
                 "ok": result.ok,
                 "summary": summary,
-                "preview": result.content[:PREVIEW_CHARS],
+                "preview": _preview(result.content, result.ok),
                 "duration_s": round(time.perf_counter() - started, 2),
             },
         )
