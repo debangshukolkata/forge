@@ -87,3 +87,22 @@ export function storageSet(key: string, value: string): void {
     /* ignore */
   }
 }
+
+export interface Attachment {
+  path: string; // @-mention path, e.g. .forge/inputs/20260928-101500123456-scan.png
+  name: string;
+  kind: "image" | "pdf" | "text" | "file";
+}
+
+/** Sends a file to Forge (raw body, the name in the query); Forge stores it in the project's .forge/inputs/. */
+export async function uploadFile(file: File): Promise<Attachment> {
+  const response = await fetch(`/api/upload?name=${encodeURIComponent(file.name || "pasted.png")}`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.detail || data.error || `Upload failed (HTTP ${response.status})`);
+  return data as Attachment;
+}

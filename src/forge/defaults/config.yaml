@@ -55,6 +55,10 @@ limits:
 cost:
   display_currency: USD           # USD | INR
   inr_per_usd: 88.0
+  colors:                         # web UI badges: green below the 1st value, yellow below the 2nd, red above
+    reply: {usd: [0.01, 0.05], tokens: [20000, 100000]}
+    task:  {usd: [0.10, 0.50], tokens: [150000, 600000]}
+    phase: {usd: [0.10, 0.50], tokens: [150000, 600000]}
 
 web:
   search_provider: auto            # auto (search_order with fallback) | duckduckgo | serpapi | tavily | azure | off

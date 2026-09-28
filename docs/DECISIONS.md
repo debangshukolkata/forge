@@ -945,3 +945,53 @@ system: Minimalism & Swiss Style, dark first + light theme, slate/green palette,
 (ligatures off in code). Verified in headless Edge: home, New project flow, slash command, all eight tabs, theme
 switch and a replayed conversation (tool cards, Markdown table, highlighted code, plan approval, question) with
 zero console errors (so no CSP violations).
+
+### D-115 — React UI functionality: attachments, @-files, mode cycling, history · Decided (2026-09-28)
+The user: design later, functionality now. Found by comparing the engine with the UI: an `Upload` input was
+declared but never handled, so no UI could attach a file. Added: POST /api/upload (raw body — no multipart
+dependency; 25 MB cap; name sanitised; stored as .forge/inputs/<timestamp>-<name> inside the jail) and mentions
+of `@.forge/inputs/<file>` (only files directly in that folder): images are attached for view_image, PDFs point
+to pdf_render, text files are included, other formats are named with a note that Forge can't read them.
+GET /api/files?q= lists matching project files for @-autocomplete (secret files never). React composer: attach
+by paperclip, paste (Ctrl+V a screenshot) or drag-and-drop onto the chat, removable chips; one suggestion list
+for "/" commands and "@" files; Shift+Tab cycles the permission mode (default → auto → plan) with an indicator;
+Up/Down recalls earlier messages (per project, browser storage); slash commands are echoed in the chat; the
+Evals tab refreshes on eval_report_ready; copy instructions get tick boxes. The classic UI is unchanged.
+Cards carry data-card / data-pending / data-recommended for automation.
+
+### D-116 — Live progress in the React UI · Decided (2026-09-28, discussed with the user)
+Options discussed: (a) an activity line only (Claude Code style), (b) a progress header (phase stepper + task bar)
+plus the activity line, (c) (b) plus an Activity tab with a timeline. The user chose (b), with plain-language
+status and an animated indicator per kind of activity; no loader library (CSS animations + lucide icons: small,
+offline, CSP-safe). Only real counts get progress bars — phases (six user-facing steps mapped from the engine's
+phases) and tasks (one segment per task: done / in progress with a shimmer / blocked / pending); nothing
+invents a percentage or an ETA. The activity line says what Forge is doing now from live events: the tool in
+plain words with its target ("Running tests · tests/test_masking.py"), "Writing the reply" while streaming,
+"Waiting for your approval/answer", or a phase-specific "thinking" text ("Planning the tasks", "Working on:
+<task>"), each with its own indicator (ring, dots, scan, caret, test bars, globe, amber pulse) and an elapsed
+timer; the header shows the elapsed time of the current run. task_list_updated now updates phase/tasks at once.
+
+### D-117 — The React UI replaces the classic UI · Decided (2026-09-28, the user's call)
+After testing, the user asked to remove the classic UI and keep the React one. `forge ui` now serves the React
+build on the default port 8765 (the only UI); `forge ui --dev` accepts the Vite dev server; `--react` is kept as
+a hidden, harmless alias. Deleted: src/forge/web/static (index.html, app.js, chat.js, panels.js, util.js,
+app.css and the vendored marked/DOMPurify/highlight.js/diff2html files — the React build bundles its own
+copies). create_app has no UI switch any more. Browser tests were ported to the React UI (mechanics: token
+login, /help, Files/Diffs/Learning/Settings tabs, reload replay, output download; New project form in both
+modes; the live Mode A run through the web UI). Projects are unaffected: all state lives in the project folder,
+so a half-done project resumes in the React UI (auto-resume on open when it stopped mid-phase).
+
+### D-118 — Tokens and cost per reply, task and phase; animated cost counter · Decided (2026-09-28, discussed)
+The user asked for a cost indicator that moves as cost increases (chose: an animated counter only, USD) and for
+tokens and cost per phase, per task and per reply with green / yellow / red (chose: all four places — task list,
+phase stepper, each reply, a Usage tab; colours by fixed limits in config). Engine: every model call is filed
+under the phase and task active when it was made (CostTracker.ledger + where; the reviewer, debugger and
+summaries count where they ran) in a per-project UsageLedger, .forge/usage.json (input/output tokens, cost,
+calls; totals add up across sessions and survive restarts). The router's per-call "usage" notice now carries the
+updated summary (so numbers move per call, not per turn) and MESSAGE_DONE carries the reply's cost_usd.
+Config: cost.colors.{reply,task,phase} = {usd: [green_below, yellow_below], tokens: [...]}; defaults reply
+$0.01/$0.05 and 20k/100k tokens, task and phase $0.10/$0.50 and 150k/600k; the worse of the two colours wins;
+exposed via /api/config. UI: the top-bar cost counts up (ease-out, 700 ms, jumps under reduced motion) with a
+brief green highlight; badges on replies, task rows and stepper steps; the Context tab became Usage (context
+window, this session, per-phase and per-task tables with totals). All figures are labelled estimates (tokens x
+configured prices), not the Azure bill.

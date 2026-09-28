@@ -51,7 +51,7 @@ forge = "forge.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-forge = ["py.typed", "data/tiktoken/*", "defaults/*.yaml", "agent/prompts/*.md", "context/prompts/*.md", "kb/prompts/*.md", "web/static/*", "web/static/vendor/*", "skills/*/SKILL.md", "modeb/forge_structure_export.py", "vision/static/*", "web/react/*", "web/react/assets/*"]
+forge = ["py.typed", "data/tiktoken/*", "defaults/*.yaml", "agent/prompts/*.md", "context/prompts/*.md", "kb/prompts/*.md", "skills/*/SKILL.md", "modeb/forge_structure_export.py", "vision/static/*", "web/react/*", "web/react/assets/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -91,6 +91,8 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
 "src/forge/tools/vision.py" = ["E501"]
 "tests/test_hardening.py" = ["E501"]  # one secret fixture per line
 "tests/test_web_e2e.py" = ["E501"]  # scripted event payloads
+"tests/test_live_web_react.py" = ["E501"]  # requirement text
+"tests/test_live_web_e2e.py" = ["E501"]
 "src/forge/safety/injection.py" = ["E501"]
 "tests/test_vision.py" = ["E501"]
 "tests/test_live_vision.py" = ["E501"]

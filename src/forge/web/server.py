@@ -30,9 +30,10 @@ from forge.workspace.output import build_output, build_patch, compute_changes
 from forge.workspace.text_format import decode_text, detect_format
 from forge.workspace.workspace import Workspace
 
-STATIC = Path(str(resources.files("forge.web") / "static"))
-REACT = Path(str(resources.files("forge.web") / "react"))  # built by ui-react (npm run build)
+UI = Path(str(resources.files("forge.web") / "react"))  # the React UI, built by ui-react (npm run build)
 MAX_FILE_BYTES = 1_000_000
+MAX_UPLOAD_BYTES = 25 * 1_048_576  # attachments (images, PDFs, documents)
+MAX_FILE_MATCHES = 20  # @-mention suggestions
 Stopper = Callable[[], Awaitable[None]]
 
 
@@ -64,7 +65,6 @@ def create_app(
     manager: WebSessionManager,
     security: ServerSecurity,
     on_quit: Stopper | None = None,
-    ui: Literal["classic", "react"] = "classic",
 ) -> FastAPI:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -91,21 +91,17 @@ def create_app(
                 security.cookie_name, security.token, httponly=True, samesite="strict", path="/"
             )
             return redirect
-        if ui == "react":
-            if not (REACT / "index.html").exists():
-                return JSONResponse(
-                    {"error": "The React UI isn't built: cd ui-react; npm run build"}, status_code=503
-                )
-            return FileResponse(REACT / "index.html", media_type="text/html")
-        return FileResponse(STATIC / "index.html", media_type="text/html")
+        if not (UI / "index.html").exists():
+            missing = {"error": "The web UI isn't built: cd ui-react; npm run build"}
+            return JSONResponse(missing, status_code=503)
+        return FileResponse(UI / "index.html", media_type="text/html")
 
-    app.mount("/static", StaticFiles(directory=STATIC), name="static")
-    if ui == "react" and (REACT / "assets").is_dir():
-        app.mount("/assets", StaticFiles(directory=REACT / "assets"), name="assets")
+    if (UI / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=UI / "assets"), name="assets")
 
-        @app.get("/favicon.svg")
-        async def favicon() -> Response:
-            return FileResponse(REACT / "favicon.svg", media_type="image/svg+xml")
+    @app.get("/favicon.svg")
+    async def favicon() -> Response:
+        return FileResponse(UI / "favicon.svg", media_type="image/svg+xml")
 
     # --- state and workspaces ---
 
@@ -300,6 +296,38 @@ def create_app(
             "text": decode_text(data[:MAX_FILE_BYTES], file_format),
         }
 
+    @app.post("/api/upload")
+    async def upload(request: Request, name: str) -> dict[str, str]:
+        """An attachment (file picker, paste or drag-and-drop): stored in .forge/inputs/ and referenced in the
+        message as @.forge/inputs/<file>. Raw body (no multipart dependency); size-capped; never executed."""
+        from forge.parity.mentions import store_input
+
+        data = await request.body()
+        if not data:
+            raise HTTPException(400, "Empty file.")
+        if len(data) > MAX_UPLOAD_BYTES:
+            raise HTTPException(413, f"Files up to {MAX_UPLOAD_BYTES // 1_048_576} MB can be attached.")
+        try:
+            stored = store_input(current(), name, data)
+        except (ForgeError, OSError, ValueError) as error:
+            raise HTTPException(400, str(error)) from error
+        return stored
+
+    @app.get("/api/files")
+    async def find_files(q: str = "") -> list[str]:
+        """@-mention autocomplete: project files whose path contains the query (never ignored/secret ones)."""
+        from forge.tools.search import workspace_files
+
+        workspace = current()
+        needle = q.lower().replace("\\", "/")
+        found = []
+        for path in workspace_files(workspace):
+            if needle in path.lower() and not workspace.is_secret(path):
+                found.append(path)
+                if len(found) >= MAX_FILE_MATCHES:
+                    break
+        return sorted(found, key=lambda p: (not p.lower().endswith(needle), len(p)))
+
     @app.get("/api/changes")
     async def changes() -> list[dict[str, Any]]:
         return [c.model_dump() for c in compute_changes(current())]
@@ -335,7 +363,9 @@ def create_app(
     async def config() -> dict[str, Any]:
         host = manager.host
         if host is None:
-            return {"roles": {}, "models": []}
+            from forge.config import CostColors
+
+            return {"roles": {}, "models": [], "cost_colors": CostColors().model_dump()}
         router = host.router
         return {
             "roles": {role: router.model_for_role(role) for role in ROLES},
@@ -343,6 +373,7 @@ def create_app(
             "permission_mode": host.agent.gate.mode if host.agent else None,
             "sandbox": router.config.shell.sandbox,
             "limits": router.config.limits.model_dump(),
+            "cost_colors": router.config.cost.colors.model_dump(),
         }
 
     @app.get("/api/doctor")

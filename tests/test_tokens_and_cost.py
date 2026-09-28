@@ -60,3 +60,28 @@ def test_money_display() -> None:
     config = default_config().cost
     assert format_money(1.5, config) == "$1.5000"
     assert format_money(1.0, config.model_copy(update={"display_currency": "INR"})) == "₹88.00"
+
+
+def test_calls_are_filed_under_phase_and_task_and_persist(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    # D-118: tokens and cost per phase and task, kept in the project so they add up across sessions.
+    from forge.llm.usage_ledger import UsageLedger
+
+    config = default_config()
+    tracker = CostTracker(config.llm.models, 20.0)
+    model = next(iter(config.llm.models))
+    tracker.ledger = UsageLedger(tmp_path / "usage.json")
+    where = {"value": ("clarify", None)}
+    tracker.where = lambda: where["value"]  # type: ignore[assignment,return-value]
+    tracker.record(model, "coder", Usage(input_tokens=1000, output_tokens=100))
+    where["value"] = ("execute", "T1")
+    tracker.record(model, "coder", Usage(input_tokens=5000, output_tokens=500))
+    tracker.record(model, "reviewer", Usage(input_tokens=2000, output_tokens=200))
+
+    project = tracker.summary()["project"]
+    assert project["by_phase"]["clarify"]["input_tokens"] == 1000
+    assert project["by_phase"]["execute"]["calls"] == 2 and project["by_task"]["T1"]["output_tokens"] == 700
+    assert project["total"]["calls"] == 3
+    assert abs(project["total"]["cost_usd"] - round(tracker.total_usd, 6)) < 1e-6
+
+    reopened = UsageLedger(tmp_path / "usage.json")  # a later session of the same project
+    assert reopened.summary()["by_task"]["T1"]["calls"] == 2

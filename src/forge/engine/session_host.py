@@ -18,6 +18,7 @@ import psycopg
 
 from forge.agent.loop import AgentLoop, system_prompt
 from forge.agent.orchestrator import Orchestrator
+from forge.agent.state import Phase
 from forge.config import Secrets, forge_home
 from forge.context.manager import ContextManager
 from forge.db.access import AccessLevel
@@ -33,6 +34,7 @@ from forge.kb.knowledge import KnowledgeBase
 from forge.kb.store import kb_dir_for
 from forge.llm.base import ChatRequest, Message
 from forge.llm.router import LLMRouter
+from forge.llm.usage_ledger import UsageLedger
 from forge.memory.store import MemoryStore
 from forge.modeb.profile import HostProfile, ProfileError, ProfileStore, host_identifying_terms
 from forge.modeb.workspace import profile_ref
@@ -93,6 +95,11 @@ class SessionHost:
         # Orchestrated sessions run the requirement workflow (spec §7); otherwise messages go straight to
         # the tool-using agent ("direct" mode).
         self.orchestrator: Orchestrator | None = Orchestrator(self) if orchestrated and self.agent else None
+        if self.workspace is not None:  # tokens and cost per phase and task of this project (D-118)
+            self.router.cost.ledger = UsageLedger(
+                self.workspace.jail.check(self.workspace.forge_dir / "usage.json")
+            )
+            self.router.cost.where = self._usage_where
         if workspace is not None:
             self.refresh_instructions()
 
@@ -554,8 +561,16 @@ class SessionHost:
                 "served_model": response.served_model,
                 "finish_reason": response.finish_reason,
                 "usage": response.usage.model_dump(),
+                "cost_usd": round(self.router.cost.cost_of(model_key, response.usage), 6),
             },
         )
+
+    def _usage_where(self) -> tuple[str, str | None]:
+        """The phase and task a model call is filed under (a task only while tasks are being built)."""
+        if self.orchestrator is None:
+            return "direct", None
+        state = self.orchestrator.state
+        return state.phase.value, state.current_task if state.phase == Phase.EXECUTE else None
 
     async def publish_cost(self) -> None:
         await self.bus.publish(EventType.COST_UPDATED, self.router.cost.summary())

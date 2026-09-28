@@ -99,9 +99,23 @@ class LimitsConfig(_Strict):
     max_fix_attempts: int = 5
 
 
+class CostLimits(_Strict):
+    """Green below the first value, yellow below the second, red above (cost and tokens: the worse wins)."""
+
+    usd: tuple[float, float]
+    tokens: tuple[int, int]
+
+
+class CostColors(_Strict):
+    reply: CostLimits = CostLimits(usd=(0.01, 0.05), tokens=(20_000, 100_000))
+    task: CostLimits = CostLimits(usd=(0.10, 0.50), tokens=(150_000, 600_000))
+    phase: CostLimits = CostLimits(usd=(0.10, 0.50), tokens=(150_000, 600_000))
+
+
 class CostConfig(_Strict):
     display_currency: Literal["USD", "INR"] = "USD"
     inr_per_usd: float = 88.0
+    colors: CostColors = CostColors()
 
 
 SandboxMode = Literal["low_integrity", "off"]

@@ -19,7 +19,6 @@ from forge.web.security import ServerSecurity, check_bind_host, check_dev_origin
 from forge.web.server import create_app
 
 DEFAULT_PORT = 8765
-DEFAULT_REACT_PORT = 8766  # the React UI runs next to the classic one until it replaces it
 DEV_ORIGIN = "http://127.0.0.1:5173"  # `npm run dev` (ui-react/vite.config.ts)
 
 
@@ -52,11 +51,10 @@ async def serve(
     port: int | None,
     host: str = "127.0.0.1",
     no_browser: bool = False,
-    react: bool = False,
     dev: bool = False,
 ) -> None:
     bind = check_bind_host(host)
-    chosen = free_port(port or (DEFAULT_REACT_PORT if react else DEFAULT_PORT))
+    chosen = free_port(port or DEFAULT_PORT)
     security = ServerSecurity(port=chosen, dev_origin=check_dev_origin(DEV_ORIGIN) if dev else None)
     manager = WebSessionManager(forge_home(), lambda ws: build_session(workspace=ws, orchestrated=True))
     config = uvicorn.Config(None, host=bind, port=chosen, log_level="warning", ws="websockets-sansio")  # type: ignore[arg-type]
@@ -65,10 +63,10 @@ async def serve(
     async def stop() -> None:
         server.should_exit = True
 
-    config.app = create_app(manager, security, on_quit=stop, ui="react" if react else "classic")
+    config.app = create_app(manager, security, on_quit=stop)
     if workspace is not None:
         await manager.open_workspace(workspace)
-    print(f"Forge web UI{' (React)' if react else ''}: {security.url()}")
+    print(f"Forge web UI: {security.url()}")
     if dev:
         print(f"Dev mode: start the React dev server (cd ui-react; npm run dev); the link opens {DEV_ORIGIN}")
     print("Keep this window open; Ctrl+C stops Forge.")
@@ -86,9 +84,8 @@ def run_ui(
     port: int | None,
     host: str,
     no_browser: bool,
-    react: bool = False,
     dev: bool = False,
 ) -> int:
     with contextlib.suppress(KeyboardInterrupt):
-        asyncio.run(serve(workspace, port, host, no_browser, react, dev))
+        asyncio.run(serve(workspace, port, host, no_browser, dev))
     return 0

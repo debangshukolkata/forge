@@ -1,6 +1,6 @@
-import { Anvil, Coins, Gauge, Home, Moon, Power, Sun } from "lucide-react";
-import { money } from "../lib";
+import { Anvil, Gauge, Home, Moon, Power, Sun } from "lucide-react";
 import type { Forge } from "../useForge";
+import { AnimatedCost } from "./AnimatedCost";
 import { Badge, Button, IconButton, Spinner } from "./ui";
 
 export function TopBar({
@@ -56,12 +56,7 @@ export function TopBar({
           <span className="tabular-nums">{context.percent}%</span>
         </span>
       )}
-      {cost && (
-        <span className="hidden items-center gap-1.5 text-[12.5px] text-fg-muted md:flex" title="Cost so far">
-          <Coins className="h-3.5 w-3.5" aria-hidden />
-          <span className="font-mono tabular-nums">{money(cost.total_usd)}</span>
-        </span>
-      )}
+      {cost && <AnimatedCost total={cost.total_usd} />}
       <IconButton label={theme === "dark" ? "Light theme" : "Dark theme"} onClick={onToggleTheme}>
         {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </IconButton>

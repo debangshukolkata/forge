@@ -67,7 +67,7 @@ def test_requests_without_the_token_are_refused(client: TestClient, security: Se
     assert client.get("/").status_code == 403
     assert client.get("/api/state").status_code == 403
     assert client.get("/?t=wrong-token").status_code == 403
-    assert client.get("/static/app.js").status_code == 403
+    assert client.get("/assets/anything.js").status_code == 403
     login(client, security)
     page = client.get("/")
     assert page.status_code == 200 and "<title>Forge</title>" in page.text
@@ -268,3 +268,45 @@ def test_new_project_from_the_start_form_in_both_modes(
     assert missing_repo.status_code == 400 and "existing project" in missing_repo.json()["detail"]
     no_name = client.post("/api/projects", json={"mode": "B", "project": " ", "folder": str(tmp_path / "y")})
     assert no_name.status_code == 400 and "project name" in no_name.json()["detail"]
+
+
+def test_attachments_upload_and_resolve_in_a_message(
+    client: TestClient, security: ServerSecurity, workspace: Workspace
+) -> None:
+    # Attach (button / paste / drag-and-drop): stored in .forge/inputs/, referenced as @.forge/inputs/<file>.
+    from forge.parity.mentions import expand
+
+    login(client, security)
+    client.post("/api/open", json={"workspace": str(workspace.root)})
+    text = client.post(
+        "/api/upload", params={"name": "../sig nature.py"}, content=b"def mask_pan(pan: str) -> str: ...\n"
+    )
+    assert text.status_code == 200, text.text
+    stored = text.json()
+    assert (
+        stored["kind"] == "text"
+        and stored["path"].startswith(".forge/inputs/")
+        and ".." not in stored["path"]
+    )
+    assert stored["path"].endswith("sig-nature.py")
+    image = client.post("/api/upload", params={"name": "scan.png"}, content=b"\x89PNG fake").json()
+    pdf = client.post("/api/upload", params={"name": "spec.pdf"}, content=b"%PDF-1.4").json()
+    other = client.post("/api/upload", params={"name": "notes.docx"}, content=b"PK..").json()
+    assert (image["kind"], pdf["kind"], other["kind"]) == ("image", "pdf", "file")
+    assert client.post("/api/upload", params={"name": "empty.txt"}, content=b"").status_code == 400
+
+    mentions = " ".join(f"@{item['path']}" for item in (stored, image, pdf, other))
+    message = f"Use these: {mentions} and @.forge/inputs/../state.json"
+    expanded = expand(message, workspace)
+    assert "def mask_pan(pan: str) -> str" in expanded.text
+    assert "look at it with view_image" in expanded.text and len(expanded.images) == 1
+    assert "pdf_render" in expanded.text and "can't read this format directly" in expanded.text
+    assert "state.json" not in "".join(expanded.notes)  # only files directly in .forge/inputs/
+
+
+def test_file_search_for_mentions(client: TestClient, security: ServerSecurity, workspace: Workspace) -> None:
+    login(client, security)
+    client.post("/api/open", json={"workspace": str(workspace.root)})
+    found = client.get("/api/files", params={"q": "claims_service"}).json()
+    assert found and all("claims_service" in path for path in found)
+    assert not [p for p in client.get("/api/files", params={"q": ".env"}).json() if p.endswith(".env")]

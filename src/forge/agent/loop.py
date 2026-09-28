@@ -117,6 +117,7 @@ class AgentLoop:
                         "served_model": response.served_model,
                         "finish_reason": response.finish_reason,
                         "usage": response.usage.model_dump(),
+                        "cost_usd": round(self.router.cost.cost_of(model_key, response.usage), 6),
                     },
                 )
             if not response.tool_calls:

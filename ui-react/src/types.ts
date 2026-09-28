@@ -83,17 +83,37 @@ export interface ContextInfo {
   compactions: number;
 }
 
+export interface UsageBucket {
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number;
+  calls: number;
+}
+
 export interface CostInfo {
   total_usd: number;
   budget_usd: number;
   calls: number;
   cost_by_role?: Record<string, number>;
+  // Per project (all sessions): tokens and cost per phase and per task (D-118).
+  project?: { total: UsageBucket; by_phase: Record<string, UsageBucket>; by_task: Record<string, UsageBucket> } | null;
+}
+
+export interface CostLimits {
+  usd: [number, number];
+  tokens: [number, number];
+}
+
+export interface CostColors {
+  reply: CostLimits;
+  task: CostLimits;
+  phase: CostLimits;
 }
 
 /** One entry in the chat timeline, derived from events. */
 export type ChatItem =
   | { key: string; kind: "user"; text: string }
-  | { key: string; kind: "assistant"; text: string; streaming?: boolean }
+  | { key: string; kind: "assistant"; text: string; streaming?: boolean; usage?: { input: number; output: number; cost: number } }
   | {
       key: string;
       kind: "tool";

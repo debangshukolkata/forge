@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 
 from forge.config import CostConfig, ModelConfig
 from forge.errors import BudgetExceededError
 from forge.llm.base import Usage
+from forge.llm.usage_ledger import UsageLedger
 
 TOKENS_PER_PRICE_UNIT = 1_000_000
 
@@ -19,6 +21,9 @@ class CostTracker:
         self.calls = 0
         self.usage_by_model: dict[str, Usage] = defaultdict(Usage)
         self.cost_by_role: dict[str, float] = defaultdict(float)
+        # Set by the session when a project is open: per-phase/per-task tokens and cost (D-118).
+        self.ledger: UsageLedger | None = None
+        self.where: Callable[[], tuple[str, str | None]] | None = None
 
     def cost_of(self, model_key: str, usage: Usage) -> float:
         price = self._models[model_key].price_per_mtok
@@ -33,6 +38,9 @@ class CostTracker:
         self.calls += 1
         self.usage_by_model[model_key] = self.usage_by_model[model_key] + usage
         self.cost_by_role[role] += cost
+        if self.ledger is not None:
+            phase, task = self.where() if self.where is not None else ("direct", None)
+            self.ledger.add(phase, task, usage, cost)
         return cost
 
     def check_budget(self) -> None:
@@ -53,6 +61,7 @@ class CostTracker:
             "calls": self.calls,
             "cost_by_role": {role: round(cost, 6) for role, cost in self.cost_by_role.items()},
             "usage_by_model": {key: usage.model_dump() for key, usage in self.usage_by_model.items()},
+            "project": self.ledger.summary() if self.ledger is not None else None,
         }
 
 

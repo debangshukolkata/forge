@@ -72,12 +72,16 @@ def server(isolated_forge_home: Path, workspace: Workspace) -> Iterator[ServerSe
 def answer_waiting_cards(page) -> int:  # type: ignore[no-untyped-def]
     """Clicks through whatever Forge is waiting for, like a user accepting the recommendations."""
     clicked = 0
-    for card in page.query_selector_all(".ask:not(.done)"):
-        classes = card.get_attribute("class") or ""
-        if "question" in classes:
-            button = card.query_selector(".option button.primary") or card.query_selector(".option button")
-        elif "approval" in classes:
-            button = card.query_selector("button.primary")
+    for card in page.query_selector_all("[data-card][data-pending]"):
+        kind = card.get_attribute("data-card")
+        if kind == "question":
+            button = card.query_selector("button[data-recommended]") or card.query_selector(
+                "button:has(span)"
+            )
+        elif kind == "approval":
+            button = card.query_selector("button:has-text('Approve')") or card.query_selector(
+                "button:has-text('Allow once')"
+            )
         else:  # user action: this test can't do OS-level steps
             button = card.query_selector('button:has-text("I can\'t")')
         if button is not None and button.is_enabled():
@@ -91,7 +95,7 @@ def keep_evidence(page, workspace: Workspace) -> Path:  # type: ignore[no-untype
     folder = REPO_ROOT / "test-artifacts" / f"web-e2e-{time.strftime('%Y%m%d-%H%M%S')}"
     folder.mkdir(parents=True, exist_ok=True)
     page.screenshot(path=str(folder / "page.png"), full_page=True)
-    (folder / "chat.txt").write_text(page.inner_text("#chat")[-20_000:], encoding="utf-8")
+    (folder / "chat.txt").write_text(page.inner_text("main")[-20_000:], encoding="utf-8")
     events = workspace.forge_dir / "transcripts" / "events.jsonl"
     if events.exists():
         (folder / "events.jsonl").write_bytes(events.read_bytes())
@@ -108,10 +112,14 @@ def test_requirement_through_the_web_ui(server: ServerSecurity, workspace: Works
         problems: list[str] = []
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("#home:not([hidden])")
-        page.evaluate("p => window.forgeApp.open(p)", str(workspace.root))
-        page.wait_for_selector("#chat-view:not([hidden])")
-        page.fill("#input", REQUIREMENT)
+        page.wait_for_selector("text=Start a project")
+        page.evaluate(
+            "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
+            str(workspace.root),
+        )
+        page.reload()
+        box = page.locator("textarea[aria-label=Message]")
+        box.fill(REQUIREMENT)
         page.keyboard.press("Enter")
 
         deadline = time.monotonic() + RUN_TIMEOUT_S
@@ -120,19 +128,20 @@ def test_requirement_through_the_web_ui(server: ServerSecurity, workspace: Works
         replies = 0
         while time.monotonic() < deadline:
             clicked = answer_waiting_cards(page)
-            text = page.inner_text("#chat")
+            text = page.inner_text("main")
             # Forge sometimes asks in plain chat text and waits: reply like a user would (in the composer).
-            idle = page.inner_text("#st-busy") == "idle" and not page.query_selector(".ask:not(.done)")
+            state = page.evaluate("() => fetch('/api/state').then(r => r.json())")
+            idle = not state.get("busy") and not page.query_selector("[data-card][data-pending]")
             idle_since = (idle_since or time.monotonic()) if idle and not clicked else None
             if idle_since and time.monotonic() - idle_since > 20 and replies < 4 and "Done:" not in text:
-                page.fill("#input", USER_REPLY)
+                box.fill(USER_REPLY)
                 page.keyboard.press("Enter")
                 replies += 1
                 idle_since = None
-            if not reloaded and page.query_selector(".ask.approval.done"):
+            if not reloaded and page.query_selector("[data-card=approval]:not([data-pending])"):
                 page.reload()  # mid-run: the chat is rebuilt from the event log
-                page.wait_for_selector("#chat .ask.approval.done", timeout=30_000)
-                assert REQUIREMENT[:40] in page.inner_text("#chat")
+                page.wait_for_selector("[data-card=approval]:not([data-pending])", timeout=30_000)
+                assert REQUIREMENT[:40] in page.inner_text("main")
                 reloaded = True
             if "Done:" in text and "COPY_INSTRUCTIONS" in text:
                 break
@@ -143,24 +152,24 @@ def test_requirement_through_the_web_ui(server: ServerSecurity, workspace: Works
             )
 
         assert reloaded
-        page.click("#tabs button[data-tab=tasks]")
-        page.wait_for_selector(".tasklist .st.done")
-        assert not page.query_selector(".tasklist .st.pending")
-        page.click("#tabs button[data-tab=diffs]")
+        page.click("[role=tab]:has-text('Tasks')")
+        page.wait_for_selector("[role=tabpanel] span:text-is('done')")
+        assert not page.query_selector("[role=tabpanel] span:text-is('pending')")
+        page.click("[role=tab]:has-text('Diffs')")
         page.wait_for_selector(".d2h-wrapper")
-        assert "claims" in page.inner_text("#tab-body").lower()
-        page.click("#tabs button[data-tab=files]")
+        assert "claims" in page.inner_text("[role=tabpanel]").lower()
+        page.click("[role=tab]:has-text('Files')")
         with page.expect_download() as download:
-            page.click("text=Download output.zip")
+            page.click("text=Download output")
         archive = zipfile.ZipFile(io.BytesIO(Path(download.value.path()).read_bytes()))
         assert "COPY_INSTRUCTIONS.md" in archive.namelist()
         assert any(name.startswith("backend/claims_app/") for name in archive.namelist())
 
         # Stop: a change request is interrupted.
-        page.fill("#input", "Also add the count to the policy detail response.")
+        box.fill("Also add the count to the policy detail response.")
         page.keyboard.press("Enter")
-        page.wait_for_selector("#st-busy.busy", timeout=60_000)
-        page.click("#btn-stop")
-        page.wait_for_selector("#chat .notice:has-text('Interrupted')", timeout=60_000)
+        page.wait_for_selector("button:has-text('Stop')", timeout=60_000)
+        page.click("button:has-text('Stop')")
+        page.wait_for_selector("text=Interrupted", timeout=60_000)
         assert problems == [], problems
         browser.close()

@@ -5,9 +5,11 @@ import {
   Brain, ChevronDown, ChevronRight, Columns2, Database, Download, FileCode2, FileText, Folder, FolderOpen, Gauge,
   GitCompareArrows, ListChecks, RotateCcw, Rows2, Settings2, Target,
 } from "lucide-react";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Badge, Button, Card, CopyButton, Empty, KeyValues, SectionTitle, Spinner, Textarea } from "../components/ui";
 import { Code, Markdown, api, cx, languageOf, money, storageGet, storageSet } from "../lib";
+import { UsageBadge, compactTokens, usd as usdText } from "../usage";
+import type { CostLimits, UsageBucket } from "../types";
 import type { Forge } from "../useForge";
 
 type Tab = "tasks" | "files" | "diffs" | "db" | "evals" | "learning" | "context" | "settings";
@@ -19,7 +21,7 @@ const TABS: Array<{ id: Tab; label: string; icon: ReactNode }> = [
   { id: "db", label: "DB", icon: <Database className="h-4 w-4" /> },
   { id: "evals", label: "Evals", icon: <Target className="h-4 w-4" /> },
   { id: "learning", label: "Learning", icon: <Brain className="h-4 w-4" /> },
-  { id: "context", label: "Context", icon: <Gauge className="h-4 w-4" /> },
+  { id: "context", label: "Usage", icon: <Gauge className="h-4 w-4" /> },
   { id: "settings", label: "Settings", icon: <Settings2 className="h-4 w-4" /> },
 ];
 
@@ -114,6 +116,9 @@ function TasksTab({ forge }: { forge: Forge }) {
                 <Badge tone={STATUS_TONE[task.status] ?? "neutral"}>{task.status.replace("_", " ")}</Badge>
               </div>
               {(task.attempts ?? 0) > 1 && <div className="mt-1 text-[12px] text-fg-muted">Attempt {task.attempts}</div>}
+              {forge.cost?.project?.by_task[task.id] && (
+                <UsageBadge className="mt-1.5" bucket={forge.cost.project.by_task[task.id]} limits={forge.costColors?.task} />
+              )}
               {task.blocked_reason && <div className="mt-1 text-[12px] text-danger">{task.blocked_reason}</div>}
             </li>
           ))}
@@ -150,7 +155,7 @@ function FilesTab({ forge }: { forge: Forge }) {
   const instructions = async () => {
     try {
       const file = await api<{ text: string }>("/api/file?root=output&path=COPY_INSTRUCTIONS.md");
-      setViewer(<Markdown text={file.text} />);
+      setViewer(<Checklist text={file.text} storageKey={`forge-copy-${forge.state.workspace?.path}`} />);
     } catch {
       setViewer(<p className="text-[13px] text-fg-muted">No output yet: it is built at the end of a requirement, or with /export.</p>);
     }
@@ -171,6 +176,30 @@ function FilesTab({ forge }: { forge: Forge }) {
         </div>
       ))}
       {viewer && <div className="border-t border-border pt-4">{viewer}</div>}
+    </div>
+  );
+}
+
+/** The copy instructions with a tick box per step, remembered per project (like the classic UI). */
+function Checklist({ text, storageKey }: { text: string; storageKey: string }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const items = box.current?.querySelectorAll("li") ?? [];
+    items.forEach((item, index) => {
+      if (item.querySelector("input[type=checkbox]")) return;
+      const key = `${storageKey}-${index}`;
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.className = "mr-2 cursor-pointer accent-[var(--accent)]";
+      check.setAttribute("aria-label", "Done");
+      check.checked = storageGet(key) === "1";
+      check.addEventListener("change", () => storageSet(key, check.checked ? "1" : "0"));
+      item.prepend(check);
+    });
+  }, [text, storageKey]);
+  return (
+    <div ref={box}>
+      <Markdown text={text} />
     </div>
   );
 }
@@ -437,12 +466,80 @@ function ContextTab({ forge }: { forge: Forge }) {
       )}
       {cost && (
         <>
-          <SectionTitle>Cost</SectionTitle>
-          <KeyValues rows={[["Total", money(cost.total_usd)], ["Budget", money(cost.budget_usd)], ["Calls", cost.calls], ...Object.entries(cost.cost_by_role || {}).map(([role, usd]) => [role, money(usd)] as [string, string])]} />
+          <SectionTitle>This session</SectionTitle>
+          <KeyValues rows={[["Cost", money(cost.total_usd)], ["Budget", money(cost.budget_usd)], ["Model calls", cost.calls], ...Object.entries(cost.cost_by_role || {}).map(([role, usd]) => [role, money(usd)] as [string, string])]} />
         </>
       )}
+      <UsageTables forge={forge} />
       <Button size="sm" className="mt-4" onClick={() => forge.command("/compact")}>Compact now</Button>
     </div>
+  );
+}
+
+const PHASE_NAMES: Record<string, string> = {
+  intake: "Intake", clarify: "Clarify", kb_check: "Knowledge check", explore: "Explore", plan: "Plan", execute: "Build",
+  restructure: "Restructure", review: "Review", export: "Deliver", handoff: "Hand-over", done: "Wrap-up", direct: "Chat",
+};
+const PHASE_ORDER = Object.keys(PHASE_NAMES);
+
+/** Tokens and cost per phase and per task of the whole project (all sessions), colour-coded (D-118). */
+function UsageTables({ forge }: { forge: Forge }) {
+  const project = forge.cost?.project;
+  if (!project || !project.total.calls) {
+    return (
+      <>
+        <SectionTitle>This project</SectionTitle>
+        <p className="text-[13px] text-fg-muted">No model calls recorded for this project yet.</p>
+      </>
+    );
+  }
+  const titles = Object.fromEntries((forge.state.tasks || []).map((t) => [t.id, t.title]));
+  const phases = Object.entries(project.by_phase).sort(([a], [b]) => PHASE_ORDER.indexOf(a) - PHASE_ORDER.indexOf(b));
+  const tasks = Object.entries(project.by_task).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }));
+  const row = (label: string, bucket: UsageBucket, limits?: CostLimits, hint?: string) => (
+    <tr key={label} className="border-t border-border">
+      <td className="max-w-40 truncate py-1.5 pr-2" title={hint ?? label}>{label}</td>
+      <td className="py-1.5 pr-2 text-right font-mono text-[12px] tabular-nums text-fg-muted">{compactTokens(bucket.input_tokens)}</td>
+      <td className="py-1.5 pr-2 text-right font-mono text-[12px] tabular-nums text-fg-muted">{compactTokens(bucket.output_tokens)}</td>
+      <td className="py-1.5 text-right"><UsageBadge compact bucket={bucket} limits={limits} /></td>
+    </tr>
+  );
+  const table = (rows: ReactNode) => (
+    <table className="w-full text-[13px]">
+      <thead>
+        <tr className="text-left text-[11.5px] text-fg-muted">
+          <th className="pb-1 font-medium" /> <th className="pb-1 pr-2 text-right font-medium">in</th>
+          <th className="pb-1 pr-2 text-right font-medium">out</th> <th className="pb-1 text-right font-medium">cost</th>
+        </tr>
+      </thead>
+      <tbody>{rows}</tbody>
+    </table>
+  );
+  return (
+    <>
+      <SectionTitle>This project · per phase</SectionTitle>
+      {table(
+        <>
+          {phases.map(([phase, bucket]) => row(PHASE_NAMES[phase] ?? phase, bucket, forge.costColors?.phase))}
+          <tr className="border-t border-border-strong font-medium">
+            <td className="py-1.5">Total</td>
+            <td className="py-1.5 pr-2 text-right font-mono text-[12px] tabular-nums">{compactTokens(project.total.input_tokens)}</td>
+            <td className="py-1.5 pr-2 text-right font-mono text-[12px] tabular-nums">{compactTokens(project.total.output_tokens)}</td>
+            <td className="py-1.5 text-right font-mono text-[12px] tabular-nums">{usdText(project.total.cost_usd)}</td>
+          </tr>
+        </>,
+      )}
+      {tasks.length > 0 && (
+        <>
+          <SectionTitle>Per task</SectionTitle>
+          {table(tasks.map(([id, bucket]) => row(`${id} ${titles[id] ?? ""}`.trim(), bucket, forge.costColors?.task)))}
+        </>
+      )}
+      <p className="mt-3 text-[11.5px] text-fg-muted">
+        Estimates from token counts × the prices in Forge's config. Colours: green / yellow / red by the limits in
+        config (cost.colors).
+      </p>
+    </>
   );
 }
 

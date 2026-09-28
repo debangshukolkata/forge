@@ -67,6 +67,8 @@ def _resolve(token: str, workspace: Workspace, lookup: dict[str, object], result
             result.notes.append(f"@{token}")
             return f"[@{token}]\n{text}"
         return None
+    if token.replace("\\", "/").startswith(INPUTS_PREFIX):
+        return _resolve_input(token.replace("\\", "/")[len(INPUTS_PREFIX) :], workspace, result)
     path_text, _, span = token.partition(":") if re.search(r":\d+-\d+$", token) else (token, "", "")
     candidate = Path(path_text)
     if candidate.suffix.lower() in IMAGE_SUFFIXES:
@@ -106,6 +108,85 @@ def _attach_image(candidate: Path, workspace: Workspace, result: Expanded) -> st
     relative = target.relative_to(workspace.root).as_posix()
     result.notes.append(f"image attached: {relative}")
     return f"[image attached: {relative} — look at it with view_image]"
+
+
+INPUTS_PREFIX = ".forge/inputs/"
+TEXT_SUFFIXES = {
+    ".txt",
+    ".md",
+    ".py",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".csv",
+    ".sql",
+    ".xml",
+    ".html",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".css",
+    ".ps1",
+    ".sh",
+    ".java",
+    ".cs",
+    ".go",
+    ".rs",
+    ".log",
+    ".env.example",
+}
+MAX_INPUT_NAME = 80
+
+
+def store_input(workspace: Workspace, name: str, data: bytes) -> dict[str, str]:
+    """An attachment from the UI, saved as .forge/inputs/<timestamp>-<name> (inside the workspace jail).
+    Returns its mention path and kind; the UI puts `@<path>` in the message."""
+    clean = re.sub(r"[^A-Za-z0-9._-]+", "-", Path(name).name).strip("-.")[:MAX_INPUT_NAME] or "attachment"
+    inputs = workspace.jail.check(workspace.forge_dir / "inputs")
+    inputs.mkdir(parents=True, exist_ok=True)
+    target = workspace.jail.check(inputs / f"{datetime.now():%Y%m%d-%H%M%S%f}-{clean}")
+    target.write_bytes(data)
+    return {"path": INPUTS_PREFIX + target.name, "name": clean, "kind": _input_kind(target)}
+
+
+def _input_kind(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix in IMAGE_SUFFIXES:
+        return "image"
+    if suffix == ".pdf":
+        return "pdf"
+    return "text" if suffix in TEXT_SUFFIXES else "file"
+
+
+def _resolve_input(name: str, workspace: Workspace, result: Expanded) -> str | None:
+    """@.forge/inputs/<file>: an attachment the UI uploaded (only that folder, no sub-paths)."""
+    if not name or "/" in name or ".." in name:
+        return None
+    path = workspace.forge_dir / "inputs" / name
+    if not path.is_file():
+        return None
+    relative = INPUTS_PREFIX + name
+    kind = _input_kind(path)
+    if kind == "image":
+        result.images.append(path)
+        result.notes.append(f"image attached: {relative}")
+        return f"[image attached: {relative} — look at it with view_image]"
+    if kind == "pdf":
+        result.notes.append(f"PDF attached: {relative}")
+        return f"[PDF attached: {relative} — render its pages with pdf_render, then view_image them]"
+    if kind == "text":
+        body = path.read_text(encoding="utf-8", errors="replace")[:MAX_FILE_CHARS]
+        result.notes.append(f"file attached: {relative}")
+        return f"[@{relative}]\n```\n{body}\n```"
+    result.notes.append(f"file attached: {relative}")
+    return (
+        f"[file attached: {relative} ({path.stat().st_size} bytes) — Forge can't read this format directly; "
+        "ask the user to paste the relevant text if you need it]"
+    )
 
 
 def _store_long_paste(message: str, workspace: Workspace) -> Path | None:

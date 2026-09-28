@@ -1,24 +1,23 @@
 import {
-  AlertOctagon, ArrowUp, Bot, CheckCircle2, ChevronRight, CircleStop, Hand, HelpCircle, Info, ShieldQuestion,
-  Terminal, User, Wrench, XCircle,
+  AlertOctagon, Bot, CheckCircle2, ChevronRight, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload, User,
+  Wrench, XCircle,
 } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Code, Markdown, cx } from "../lib";
 import type { ChatItem, UserInput } from "../types";
 import type { Forge } from "../useForge";
+import { UsageBadge } from "../usage";
+import { ProgressHeader } from "./Activity";
+import { Composer, useAttachments } from "./Composer";
 import { Badge, Button, CopyButton, Spinner, Textarea } from "./ui";
 
-const SLASH = [
-  "/help", "/model", "/cost", "/clear", "/context", "/compact", "/checkpoints", "/undo", "/rewind", "/export", "/mode",
-  "/requirements", "/plan", "/tasks", "/restructure", "/kb status", "/kb build", "/kb refresh", "/db", "/db requests",
-  "/db done", "/db cant", "/db cleanup", "/diagnose", "/remember", "/memory", "/profile", "/assumptions", "/contract",
-  "/revision", "/forget-snippet", "/library", "/lessons", "/retro", "/stats", "/improve",
-];
 
 export function Chat({ forge }: { forge: Forge }) {
   const scroller = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const { items } = forge.timeline;
+  const attachments = useAttachments();
+  const [dragging, setDragging] = useState(false);
 
   useLayoutEffect(() => {
     const box = scroller.current;
@@ -26,7 +25,30 @@ export function Chat({ forge }: { forge: Forge }) {
   }, [items, forge.replaying]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div
+      className="relative flex min-h-0 flex-1 flex-col"
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("Files")) {
+          e.preventDefault();
+          setDragging(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target) setDragging(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        if (e.dataTransfer.files.length && forge.controls) void attachments.add(e.dataTransfer.files);
+      }}
+    >
+      {dragging && (
+        <div className="pointer-events-none absolute inset-3 z-10 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-accent bg-bg/85 text-accent">
+          <Upload className="h-8 w-8" aria-hidden />
+          <span className="font-medium">Drop files or images to attach them</span>
+        </div>
+      )}
+      <ProgressHeader forge={forge} />
       <div
         ref={scroller}
         onScroll={(e) => {
@@ -51,7 +73,7 @@ export function Chat({ forge }: { forge: Forge }) {
           ))}
         </div>
       </div>
-      <Composer forge={forge} />
+      <Composer forge={forge} attachments={attachments} />
     </div>
   );
 }
@@ -87,6 +109,13 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
             <div className="caret whitespace-pre-wrap break-words">{item.text}</div>
           ) : (
             <Markdown text={item.text} />
+          )}
+          {!item.streaming && item.usage && (item.usage.input > 0 || item.usage.cost > 0) && (
+            <UsageBadge
+              className="mt-1.5"
+              bucket={{ input_tokens: item.usage.input, output_tokens: item.usage.output, cost_usd: item.usage.cost }}
+              limits={forge.costColors?.reply}
+            />
           )}
         </Row>
       );
@@ -168,9 +197,9 @@ function Notice({ kind, text }: { kind: string; text: string }) {
 
 // --- cards that wait for the user ---
 
-function AskCard({ icon, title, answered, children }: { icon: ReactNode; title: ReactNode; answered?: string; children: ReactNode }) {
+function AskCard({ kind, icon, title, answered, children }: { kind: "approval" | "question" | "action"; icon: ReactNode; title: ReactNode; answered?: string; children: ReactNode }) {
   return (
-    <div className={cx("rounded-xl border bg-surface p-4", answered === undefined ? "border-warn/60 shadow-[0_0_0_3px_var(--warn-soft)]" : "border-border opacity-80")}>
+    <div data-card={kind} data-pending={answered === undefined ? "" : undefined} className={cx("rounded-xl border bg-surface p-4", answered === undefined ? "border-warn/60 shadow-[0_0_0_3px_var(--warn-soft)]" : "border-border opacity-80")}>
       <div className="mb-3 flex items-center gap-2">
         <span className={cx("flex h-7 w-7 items-center justify-center rounded-full", answered === undefined ? "bg-warn-soft text-warn" : "bg-raised text-fg-muted")}>
           {icon}
@@ -193,7 +222,7 @@ function ApprovalCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
   const reply = (input: UserInput, label: string) => forge.answer(id, input, label);
   if (p.kind) {
     return (
-      <AskCard icon={<ShieldQuestion className="h-4 w-4" />} title={`Approve the ${p.kind}?`} answered={answered}>
+      <AskCard kind="approval" icon={<ShieldQuestion className="h-4 w-4" />} title={`Approve the ${p.kind}?`} answered={answered}>
         <div className="max-h-[480px] overflow-y-auto rounded-lg border border-border bg-bg p-4">
           <Markdown text={p.markdown || p.summary || ""} />
         </div>
@@ -214,7 +243,7 @@ function ApprovalCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
   }
   const prefix = p.can_remember_prefix && !p.always_ask ? String(p.can_remember_prefix) : null;
   return (
-    <AskCard icon={<Terminal className="h-4 w-4" />} title={<>Allow <span className="font-mono">{p.tool}</span>?</>} answered={answered}>
+    <AskCard kind="approval" icon={<Terminal className="h-4 w-4" />} title={<>Allow <span className="font-mono">{p.tool}</span>?</>} answered={answered}>
       {p.command ? <Code text={p.command} language="powershell" /> : <div className="text-[13px]">{p.summary}</div>}
       {p.reason && <div className="text-[12.5px] text-fg-muted">{p.reason}</div>}
       <Textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="If you deny: tell Forge what to do instead (optional)" />
@@ -246,7 +275,7 @@ function QuestionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
   };
   return (
     <div tabIndex={0} onKeyDown={onKey} className="rounded-xl outline-none">
-      <AskCard icon={<HelpCircle className="h-4 w-4" />} title={p.question} answered={answered}>
+      <AskCard kind="question" icon={<HelpCircle className="h-4 w-4" />} title={p.question} answered={answered}>
         {p.context && <Markdown text={p.context} className="text-fg-muted" />}
         <div className="space-y-2">
           {options.map((option, index) => {
@@ -255,6 +284,7 @@ function QuestionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
               <button
                 key={option.label}
                 type="button"
+                data-recommended={recommended ? "" : undefined}
                 onClick={() => choose(option.label)}
                 className={cx(
                   "flex w-full cursor-pointer gap-3 rounded-lg border p-3 text-left transition-colors duration-150",
@@ -302,7 +332,7 @@ function ActionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
   const choose = (choice: string, label: string) =>
     forge.answer(id, { kind: "answer", question_id: p.id, choice, text: note.trim() || null }, label);
   return (
-    <AskCard icon={<Hand className="h-4 w-4" />} title={p.title || "A step for you"} answered={answered}>
+    <AskCard kind="action" icon={<Hand className="h-4 w-4" />} title={p.title || "A step for you"} answered={answered}>
       <ol className="space-y-2">
         {(p.steps || []).map((step: string, index: number) => (
           <li key={index} className="flex items-start gap-2 rounded-md bg-bg px-3 py-2 text-[13px]">
@@ -332,113 +362,3 @@ function ActionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
   );
 }
 
-// --- composer ---
-
-function Composer({ forge }: { forge: Forge }) {
-  const [text, setText] = useState("");
-  const [hint, setHint] = useState(0);
-  const area = useRef<HTMLTextAreaElement>(null);
-  const busy = Boolean(forge.state.busy);
-
-  const matches = useMemo(() => {
-    if (!text.startsWith("/") || text.includes("\n")) return [];
-    const head = text.split(" ")[0];
-    const found = SLASH.filter((c) => c.startsWith(head));
-    return SLASH.includes(text.trim()) ? [] : found.slice(0, 8);
-  }, [text]);
-
-  useEffect(() => setHint(0), [matches.length]);
-
-  useLayoutEffect(() => {
-    const box = area.current;
-    if (!box) return;
-    box.style.height = "auto";
-    box.style.height = `${Math.min(box.scrollHeight, 240)}px`;
-  }, [text]);
-
-  useEffect(() => {
-    const onEscape = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape" && forge.state.workspace && busy) forge.send({ kind: "interrupt" });
-    };
-    document.addEventListener("keydown", onEscape);
-    return () => document.removeEventListener("keydown", onEscape);
-  }, [forge, busy]);
-
-  const submit = () => {
-    const value = text.trim();
-    if (!value) return;
-    if (value.startsWith("/")) forge.command(value);
-    else forge.send({ kind: "send_message", text: value });
-    setText("");
-    if ("Notification" in window && Notification.permission === "default") void Notification.requestPermission();
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (matches.length && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
-      event.preventDefault();
-      setHint((i) => (i + (event.key === "ArrowDown" ? 1 : -1) + matches.length) % matches.length);
-      return;
-    }
-    if (matches.length && event.key === "Tab") {
-      event.preventDefault();
-      setText(`${matches[hint]} `);
-      return;
-    }
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      submit();
-    }
-  };
-
-  return (
-    <div className="shrink-0 border-t border-border bg-bg px-6 pb-4 pt-3">
-      <div className="relative mx-auto max-w-3xl">
-        {matches.length > 0 && (
-          <ul role="listbox" aria-label="Commands" className="absolute bottom-full mb-2 w-72 overflow-hidden rounded-lg border border-border bg-surface py-1 shadow-lg">
-            {matches.map((command, index) => (
-              <li key={command} role="option" aria-selected={index === hint}>
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    setText(`${command} `);
-                    area.current?.focus();
-                  }}
-                  className={cx("w-full cursor-pointer px-3 py-1.5 text-left font-mono text-[12.5px]", index === hint ? "bg-accent-soft text-accent" : "hover:bg-raised")}
-                >
-                  {command}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="flex items-end gap-2 rounded-xl border border-border bg-surface p-2 transition-colors duration-150 focus-within:border-accent/70">
-          <textarea
-            ref={area}
-            rows={1}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={onKeyDown}
-            disabled={!forge.controls}
-            placeholder="Describe the requirement, reply, or type / for commands"
-            aria-label="Message"
-            className="max-h-60 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-[14px] leading-relaxed text-fg placeholder:text-fg-muted/70 focus:outline-none"
-          />
-          {busy ? (
-            <Button variant="danger" onClick={() => forge.send({ kind: "interrupt" })} icon={<CircleStop className="h-4 w-4" />} aria-label="Stop (Esc)">
-              Stop
-            </Button>
-          ) : (
-            <Button variant="primary" onClick={submit} disabled={!text.trim() || !forge.controls} icon={<ArrowUp className="h-4 w-4" />} aria-label="Send (Enter)">
-              Send
-            </Button>
-          )}
-        </div>
-        <div className="mt-1.5 px-1 text-[11.5px] text-fg-muted">
-          <kbd className="font-mono">Enter</kbd> sends · <kbd className="font-mono">Shift+Enter</kbd> new line · <kbd className="font-mono">/</kbd> commands ·{" "}
-          <kbd className="font-mono">Esc</kbd> stops
-        </div>
-      </div>
-    </div>
-  );
-}

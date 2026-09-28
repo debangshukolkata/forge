@@ -2,7 +2,7 @@
 // last one seen, so a reload or reconnect never loses anything) and turns events into the chat timeline.
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { api } from "./lib";
-import type { AppState, ChatItem, ContextInfo, CostInfo, ForgeEvent, ServerMessage, UserInput } from "./types";
+import type { AppState, ChatItem, ContextInfo, CostColors, CostInfo, ForgeEvent, ServerMessage, UserInput } from "./types";
 
 interface Timeline {
   items: ChatItem[];
@@ -57,7 +57,10 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
     case "message_done": {
       const withoutStream = last && last.kind === "assistant" && last.streaming ? items.slice(0, -1) : items;
       if (!p.text || !String(p.text).trim()) return { ...state, items: withoutStream };
-      return { ...state, items: [...withoutStream, { key, kind: "assistant", text: p.text }] };
+      const usage = p.usage
+        ? { input: p.usage.input_tokens ?? 0, output: p.usage.output_tokens ?? 0, cost: p.cost_usd ?? 0 }
+        : undefined;
+      return { ...state, items: [...withoutStream, { key, kind: "assistant", text: p.text, usage }] };
     }
     case "tool_call_started":
       return {
@@ -82,7 +85,7 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
       return { ...state, items: [...endStream(kept), { key, kind, id: p.id, payload: p } as ChatItem] };
     }
     case "notice":
-      if (p.kind === "usage") return state;
+      if (p.kind === "usage") return state; // shown as cost/usage, not as a chat line
       return { ...state, items: [...items, { key, kind: "notice", noticeKind: p.kind || "", text: p.text || p.kind || "" }] };
     case "error":
       return { ...state, items: [...items, { key, kind: "error", text: p.message || "Error" }] };
@@ -96,6 +99,14 @@ function endStream(items: ChatItem[]): ChatItem[] {
   return last && last.kind === "assistant" && last.streaming ? [...items.slice(0, -1), { ...last, streaming: false }] : items;
 }
 
+/** What Forge is doing right now (labels are derived in the UI from the tool name and phase). */
+export interface LiveActivity {
+  kind: "idle" | "thinking" | "tool" | "writing" | "waiting";
+  tool?: { name: string; summary: string };
+  waitingFor?: string;
+  since: number;
+}
+
 export interface Forge {
   state: AppState;
   timeline: Timeline;
@@ -106,6 +117,9 @@ export interface Forge {
   context: ContextInfo | null;
   cost: CostInfo | null;
   changeTick: number; // increments on file/task/learning changes so panels can refresh
+  costColors: CostColors | null; // green / yellow / red limits from Forge's config (cost.colors)
+  activity: LiveActivity;
+  runStartedAt: number | null; // when the current stretch of work began (for the elapsed timer)
   reload: () => Promise<AppState>;
   send: (input: UserInput) => void;
   command: (text: string) => void;
@@ -125,6 +139,15 @@ export function useForge(): Forge {
   const [context, setContext] = useState<ContextInfo | null>(null);
   const [cost, setCost] = useState<CostInfo | null>(null);
   const [changeTick, setChangeTick] = useState(0);
+  const [activity, setActivity] = useState<LiveActivity>({ kind: "idle", since: Date.now() });
+  const [runStartedAt, setRunStartedAt] = useState<number | null>(null);
+  const [costColors, setCostColors] = useState<CostColors | null>(null);
+
+  useEffect(() => {
+    api<{ cost_colors?: CostColors }>("/api/config")
+      .then((config) => setCostColors(config.cost_colors ?? null))
+      .catch(() => setCostColors(null));
+  }, [state.workspace?.path]);
   const socketRef = useRef<WebSocket | null>(null);
   const lastSeq = useRef(0);
   const replayUntil = useRef(0);
@@ -145,6 +168,10 @@ export function useForge(): Forge {
     replayingRef.current = false;
     setReplaying(false);
     const next = await reload();
+    // After a reload the true start times are unknown: count from now.
+    const now = Date.now();
+    setActivity(next.busy ? { kind: "thinking", since: now } : { kind: "idle", since: now });
+    setRunStartedAt(next.busy ? now : null);
     dispatch({ type: "settle", pending: next.pending || [] });
     bump();
   }, [reload]);
@@ -154,6 +181,7 @@ export function useForge(): Forge {
       dispatch({ type: "event", event });
       const p = event.payload;
       const live = !replayingRef.current;
+      if (live) trackActivity(event.type, p);
       switch (event.type) {
         case "status_changed":
           setState((s) => ({ ...s, busy: p.state === "working" }));
@@ -165,6 +193,10 @@ export function useForge(): Forge {
           break;
         case "cost_updated":
           setCost(p as CostInfo);
+          break;
+        case "notice":
+          // Every model call reports its usage with the updated summary: cost moves live, not per turn.
+          if (p.kind === "usage" && p.summary) setCost(p.summary as CostInfo);
           break;
         case "approval_requested":
         case "question_asked":
@@ -179,11 +211,16 @@ export function useForge(): Forge {
           }
           break;
         case "task_list_updated":
+          // Phase and tasks arrive with the event: show them at once, then refresh the rest.
+          setState((s) => ({ ...s, phase: p.phase ?? s.phase, current_task: p.current_task ?? null, tasks: p.tasks ?? s.tasks }));
+          if (live) void reload().then(bump);
+          break;
         case "db_request_created":
         case "db_request_updated":
           if (live) void reload().then(bump);
           break;
         case "file_changed":
+        case "eval_report_ready":
         case "lesson_proposed":
         case "improvement_proposed":
           if (live) bump();
@@ -194,6 +231,38 @@ export function useForge(): Forge {
     },
     [reload],
   );
+
+  function trackActivity(type: string, p: Record<string, any>) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    const now = Date.now();
+    switch (type) {
+      case "status_changed":
+        if (p.state === "working") {
+          setRunStartedAt((started) => started ?? now);
+          setActivity((a) => (a.kind === "idle" ? { kind: "thinking", since: now } : a));
+        } else {
+          setRunStartedAt(null);
+          setActivity({ kind: "idle", since: now });
+        }
+        break;
+      case "tool_call_started":
+        setActivity({ kind: "tool", tool: { name: p.name, summary: p.summary || "" }, since: now });
+        break;
+      case "tool_call_finished":
+      case "message_done":
+        setActivity((a) => (a.kind === "idle" || a.kind === "waiting" ? a : { kind: "thinking", since: now }));
+        break;
+      case "message_delta":
+        setActivity((a) => (a.kind === "writing" ? a : { kind: "writing", since: now }));
+        break;
+      case "approval_requested":
+      case "question_asked":
+      case "user_action_requested":
+        setActivity({ kind: "waiting", waitingFor: type === "approval_requested" ? "your approval" : type === "question_asked" ? "your answer" : "a step from you", since: now });
+        break;
+      default:
+        break;
+    }
+  }
 
   const connect = useCallback(() => {
     socketRef.current?.close();
@@ -258,13 +327,21 @@ export function useForge(): Forge {
     socket.send(JSON.stringify({ type: "input", input }));
   }, []);
 
-  const command = useCallback((text: string) => send({ kind: "slash_command", text }), [send]);
+  const command = useCallback(
+    (text: string) => {
+      // Slash commands aren't events, so echo them locally to keep the conversation readable.
+      dispatch({ type: "local", item: { key: `c${Date.now()}`, kind: "user", text } });
+      send({ kind: "slash_command", text });
+    },
+    [send],
+  );
 
   const answer = useCallback(
     (id: string, input: UserInput, label: string) => {
       send(input);
       dispatch({ type: "answered", id, label });
       setWaiting(null);
+      setActivity({ kind: "thinking", since: Date.now() });
     },
     [send],
   );
@@ -286,7 +363,7 @@ export function useForge(): Forge {
   }, [reload, startSession]);
 
   return {
-    state, timeline, connected, controls, replaying, waiting, context, cost, changeTick,
+    state, timeline, connected, controls, replaying, waiting, context, cost, changeTick, activity, runStartedAt, costColors,
     reload, send, command, answer, takeControl, openWorkspace, enter,
   };
 }

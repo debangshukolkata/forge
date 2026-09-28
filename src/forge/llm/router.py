@@ -96,6 +96,7 @@ class LLMRouter:
                 "usage": response.usage.model_dump(),
                 "cost_usd": cost,
                 "total_usd": self.cost.total_usd,
+                "summary": self.cost.summary(),
             },
         )
         return response

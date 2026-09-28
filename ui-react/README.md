@@ -1,22 +1,17 @@
-# Forge React UI
+# Forge web UI
 
-The new web UI (React 19 + TypeScript + Tailwind CSS 4, built with Vite). It runs **next to** the classic UI
-until it has been tested; both talk to the same Forge API.
-
-| | Classic UI | React UI |
-|---|---|---|
-| Start | `forge ui` | `forge ui --react` |
-| Port | 8765 | 8766 |
-| Needs Node.js to use? | no | no — the built files ship inside Forge (`src/forge/web/react/`) |
+Forge's only web UI (React 19 + TypeScript + Tailwind CSS 4, built with Vite). The older classic UI was removed
+on 2026-09-28 (DECISIONS D-117).
 
 ## Using it
 
 ```powershell
-forge ui --react
+forge ui
 ```
 
-Edge opens `http://127.0.0.1:8766`. Everything else (token, cookie, security policy, loopback only) works exactly
-like the classic UI; each UI has its own session cookie, so both can run at the same time.
+Edge opens `http://127.0.0.1:8765`. No Node.js is needed: the built files ship inside Forge
+(`src/forge/web/react/`). Loopback only, a per-run session token in an HttpOnly cookie, Host/Origin checks and
+a strict Content-Security-Policy (`'self'` only).
 
 ## Changing it (needs Node.js 20+ and access to the npm registry)
 
@@ -24,13 +19,13 @@ like the classic UI; each UI has its own session cookie, so both can run at the 
 cd ui-react
 npm install
 # terminal 1: Forge, accepting the Vite dev server as a second origin (loopback only)
-forge ui --react --dev
+forge ui --dev
 # terminal 2: the dev server with hot reload on http://127.0.0.1:5173
 npm run dev
 ```
 
 Open the link Forge prints once (it sets the session cookie and forwards you to the dev server). Vite forwards
-`/api` and `/ws` to Forge on 8766.
+`/api` and `/ws` to Forge on 8765.
 
 When you're done:
 
@@ -58,3 +53,8 @@ every model/tool text rendered as text or as Markdown sanitised with DOMPurify.
 - `src/components/` — TopBar, Sidebar (projects), Home (New project form + environment check), Chat
   (timeline, tool cards, approval / question / action cards, composer with slash-command hints), `ui.tsx`.
 - `src/panels/Panels.tsx` — Tasks, Files, Diffs, DB, Evals, Learning, Context, Settings.
+
+## Licences of what ships in the build
+
+react, react-dom (MIT) · lucide-react (ISC) · marked (MIT) · dompurify (MPL-2.0 or Apache-2.0) · highlight.js
+(BSD-3-Clause) · diff2html (MIT) · IBM Plex Sans, JetBrains Mono via @fontsource (SIL OFL 1.1).
