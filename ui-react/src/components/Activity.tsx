@@ -2,7 +2,7 @@
 // an activity line above the message box saying what Forge is doing right now, with an animated indicator per
 // kind of activity and an elapsed timer.
 import { Check, FileSearch, Globe, Hand, PenLine, Terminal } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { STEPS, STEP_OF_PHASE, elapsed, stepOf, thinkingLabel, toolActivity, type LoaderStyle } from "../activity";
 import type { UsageBucket } from "../types";
 import { UsageBadge } from "../usage";
@@ -26,6 +26,25 @@ function useNow(active: boolean): number {
     return () => window.clearInterval(timer);
   }, [active]);
   return now;
+}
+
+/** True once the observed element is at least `minPx` wide. Element-relative (not viewport-relative)
+ * so the stepper adapts to the chat column's own width, not the window's — a `@container` query would
+ * do this in CSS, but it isn't reliably supported in every Edge build we test on (headless or not). */
+function useMinWidth<T extends Element>(minPx: number): [React.RefObject<T | null>, boolean] {
+  const ref = useRef<T | null>(null);
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      setWide(width >= minPx);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [minPx]);
+  return [ref, wide];
 }
 
 export function Loader({ style }: { style: LoaderStyle }) {
@@ -126,66 +145,74 @@ export function ProgressHeader({ forge }: { forge: Forge }) {
   }
   const current = tasks.find((t) => t.id === state.current_task);
   const currentIndex = current ? tasks.indexOf(current) : -1;
+  // Below this width there isn't room for six even columns with legible labels (sidebar
+  // collapsed, narrow window, etc), so the stepper switches to a vertical stack instead.
+  const [stepperRef, wide] = useMinWidth<HTMLOListElement>(420);
   return (
     <div className="shrink-0 border-b border-border bg-surface px-6 py-3">
       <div className="mx-auto max-w-3xl">
-        <ol className="@container flex items-start" aria-label="Progress">
+        <ol
+          ref={stepperRef}
+          className={cx("grid items-stretch", wide ? "grid-cols-6 gap-y-0" : "grid-cols-1 gap-y-3")}
+          aria-label="Progress"
+        >
           {STEPS.map((name, index) => {
             const complete = index < step;
             const active = index === step;
             // The current step animates while Forge works on it; amber and gently pulsing while it waits for you.
             const motion = active ? (forge.activity.kind === "waiting" ? "step-waiting" : forge.activity.kind !== "idle" ? "step-working" : "") : "";
+            const meta = (stepUsage[index] || stepTime[index]) && (
+              <span className="flex items-center gap-1 whitespace-nowrap text-[11px]" data-step-meta>
+                {stepUsage[index] && <UsageBadge compact bucket={stepUsage[index]} limits={forge.costColors?.phase} />}
+                {stepUsage[index] && stepTime[index] ? <span className="text-fg-muted">·</span> : null}
+                {stepTime[index] ? (
+                  <span className="font-mono tabular-nums text-fg-muted" title="Working time (waiting for you not counted)">
+                    {duration(stepTime[index])}
+                  </span>
+                ) : null}
+              </span>
+            );
+            const circle = (
+              <span
+                data-motion={motion || undefined}
+                className={cx(
+                  "relative isolate z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border bg-surface text-[10px] font-semibold transition-colors duration-300",
+                  complete && "border-accent bg-accent text-accent-fg",
+                  active && (motion === "step-waiting" ? "border-warn text-warn" : "border-accent text-accent"),
+                  motion,
+                  !complete && !active && "border-border-strong text-fg-muted",
+                )}
+              >
+                {complete ? <Check className="h-3 w-3" /> : index + 1}
+              </span>
+            );
             return (
-              <li key={name} className="flex flex-1 items-start last:flex-none">
-                <span
-                  className="flex shrink-0 items-start gap-1.5"
-                  aria-current={active ? "step" : undefined}
-                  title={stepUsage[index] || stepTime[index] ? stepTitle(name, stepUsage[index], stepTime[index]) : undefined}
-                >
+              <li
+                key={name}
+                className={cx("relative flex items-center gap-2", wide && "flex-col items-center gap-1.5")}
+                aria-current={active ? "step" : undefined}
+                title={stepUsage[index] || stepTime[index] ? stepTitle(name, stepUsage[index], stepTime[index]) : undefined}
+              >
+                {/* connector to the previous step: a vertical bar to its left when stacked, a
+                    horizontal bar centered through the circles' row when in columns — drawn as
+                    its own full-width/height line so its length never depends on label width. */}
+                {index > 0 && (
                   <span
-                    data-motion={motion || undefined}
                     className={cx(
-                      "relative isolate flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors duration-300",
-                      complete && "border-accent bg-accent text-accent-fg",
-                      active && (motion === "step-waiting" ? "border-warn text-warn" : "border-accent text-accent"),
-                      motion,
-                      !complete && !active && "border-border-strong text-fg-muted",
+                      "absolute bg-border transition-colors duration-300",
+                      wide ? "top-2.5 right-1/2 h-px w-full" : "top-0 left-2.5 -mt-3 h-3 w-px",
+                      complete && "bg-accent",
                     )}
-                  >
-                    {complete ? <Check className="h-3 w-3" /> : index + 1}
-                  </span>
-                  {/* name on top; cost and working time underneath, so six steps fit side by side */}
-                  <span className="flex flex-col leading-tight">
-                    <span
-                      className={cx(
-                        "text-[12px] font-medium whitespace-nowrap leading-5",
-                        active ? "text-fg" : "hidden text-fg-muted @[600px]:inline",
-                      )}
-                    >
-                      {name}
-                    </span>
-                    {(stepUsage[index] || stepTime[index]) && (
-                      <span
-                        className={cx("items-center gap-1 whitespace-nowrap text-[11px]", active ? "flex" : "hidden @[680px]:flex")}
-                        data-step-meta
-                      >
-                        {stepUsage[index] && <UsageBadge compact bucket={stepUsage[index]} limits={forge.costColors?.phase} />}
-                        {stepUsage[index] && stepTime[index] ? <span className="text-fg-muted">·</span> : null}
-                        {stepTime[index] ? (
-                          <span className="font-mono tabular-nums text-fg-muted" title="Working time (waiting for you not counted)">
-                            {duration(stepTime[index])}
-                          </span>
-                        ) : null}
-                      </span>
-                    )}
-                  </span>
-                </span>
-                {index < STEPS.length - 1 && (
-                  <span
-                    className={cx("mx-1.5 mt-2.5 h-px min-w-2 flex-1 transition-colors duration-300", complete ? "bg-accent" : "bg-border")}
                     aria-hidden
                   />
                 )}
+                {circle}
+                {/* name and, underneath, cost/working time; centered under the circle in column
+                    mode, to the right of it when stacked. Always visible — no hiding at width. */}
+                <span className={cx("flex flex-col leading-tight", wide && "items-center")}>
+                  <span className={cx("text-[12px] font-medium whitespace-nowrap leading-5", active ? "text-fg" : "text-fg-muted")}>{name}</span>
+                  {meta}
+                </span>
               </li>
             );
           })}

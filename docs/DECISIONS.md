@@ -1054,6 +1054,7 @@ time underneath ("● $0.39 · 7m"); working time sums the gaps after each event
 the user. The stepper adapts to its own width (container queries): below 680 px only the current step shows cost
 and time; below 600 px only the current step shows its name; everything is in the step's tooltip. Chosen over
 tooltip-only (hides the numbers) and a separate row of numbers (loses the association with the step).
+**Superseded by [D-127](#d-127).**
 
 ### D-125 — Light theme is the default · Decided (2026-09-28, user request)
 The web UI opens in the light theme; the top-bar button still switches to dark. The choice is kept under a new
@@ -1071,3 +1072,27 @@ the standard properties). Each theme now declares `color-scheme`, so native cont
 OS theme. Separate fix: a horizontal scrollbar appeared under the chat because a `<fieldset>`'s default min-width
 is its widest content, so a long code line in an approval card widened the whole chat. The card's fieldset is now
 `min-w-0`, and a browser test checks that the chat has no horizontal overflow.
+
+### D-127 — Progress stepper: even spacing, always-visible labels, drop container queries · Decided (2026-09-28, user-reported bug)
+Two bugs from D-124's layout: (1) uneven gaps between circles — each step's `<li>` was `flex-1` sized by its own
+content, so a step with a longer cost/time subtitle (e.g. Build's "$0.39 · 7m") pushed its neighbours' connector
+lines out of line with the rest; (2) at typical chat-column widths the container-query breakpoints (`@[600px]`,
+`@[680px]`) hid step names and cost/time entirely, leaving bare numbered circles with no way to tell what phase
+they represented. Options given to the user: (A) switch to a vertical stack below a width, with fixed-width
+grid columns above it, no library — chosen; (B) horizontal always, only the active step ever labelled; (C)
+horizontal always, inactive labels behind a hover tooltip only. The user picked A on all three sub-questions
+(collapse to vertical, fix spacing with fixed columns, no new stepper library).
+
+Implementation: the `<ol>` is a CSS grid, `grid-cols-6` (even columns) at ≥420 px measured width, `grid-cols-1`
+(stacked rows) below it; the connector between steps is drawn as its own absolutely-positioned line (horizontal,
+centred through the circles' row, or vertical, to the left of a stacked row) so its length never depends on label
+width. Labels and the cost/time subtitle are always rendered, never hidden by breakpoint.
+
+The breakpoint is driven by a `ResizeObserver` on the `<ol>` (a `useMinWidth` hook), not a CSS `@container` query
+as D-124 used. While diagnosing screenshots that still showed the old bug after code changes, isolated test pages
+confirmed `@container` conditions were never matching in our headless-Edge test harness (Chromium 154, both the
+`msedge` channel and plain bundled Chromium) even for a trivial `width >= 420px` rule with plain `container-type:
+inline-size` — while an equivalent `@media` query worked fine. Cause not fully root-caused (suspect a headless
+rendering flag), but since it left the feature untestable in our own e2e suite and unverifiable on whatever Edge
+build ships on the target enterprise laptop, `ResizeObserver` was used instead: broadly supported since 2020,
+and it let the browser test in `test_web_e2e.py` actually exercise both layouts.
