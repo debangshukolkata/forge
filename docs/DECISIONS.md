@@ -1047,3 +1047,10 @@ its cards are measured and whenever the plan's shape or the area's size changes 
 a manual zoom/pan stays); (3) axis labels overlapped — labels that would collide are dropped (their dashed break
 line stays), and dates appear when a run crosses days. Phase row redesign for multi-day runs: deferred by the
 user ("we will redesign this phase"); options offered were scroll + zoom, a phase summary strip, group by day.
+
+### D-124 — Progress stepper: cost and working time under each step · Decided (2026-09-28, user suggestion)
+The per-step cost badges pushed "Deliver" out of the header. Each step now shows its name with cost and working
+time underneath ("● $0.39 · 7m"); working time sums the gaps after each event of that phase, excluding waits for
+the user. The stepper adapts to its own width (container queries): below 680 px only the current step shows cost
+and time; below 600 px only the current step shows its name; everything is in the step's tooltip. Chosen over
+tooltip-only (hides the numbers) and a separate row of numbers (loses the association with the step).

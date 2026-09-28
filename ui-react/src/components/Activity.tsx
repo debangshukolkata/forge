@@ -7,7 +7,15 @@ import { STEPS, STEP_OF_PHASE, elapsed, stepOf, thinkingLabel, toolActivity, typ
 import type { UsageBucket } from "../types";
 import { UsageBadge } from "../usage";
 import { cx } from "../lib";
+import { duration, phaseWorkMs } from "../runmap";
 import type { Forge } from "../useForge";
+
+function stepTitle(name: string, usage: UsageBucket | undefined, ms: number | undefined): string {
+  const parts = [name];
+  if (usage) parts.push(`$${usage.cost_usd.toFixed(4)} · ${(usage.input_tokens + usage.output_tokens).toLocaleString()} tokens`);
+  if (ms) parts.push(`${duration(ms)} working`);
+  return parts.join(" — ");
+}
 
 /** Re-renders every second while `active` (for timers). */
 function useNow(active: boolean): number {
@@ -109,20 +117,31 @@ export function ProgressHeader({ forge }: { forge: Forge }) {
     sum.cost_usd += bucket.cost_usd;
     sum.calls += bucket.calls;
   }
+  // Working time per step (time spent waiting for you excluded), summed like the usage.
+  const stepTime: Record<number, number> = {};
+  const working = forge.activity.kind !== "idle" && forge.activity.kind !== "waiting";
+  for (const [phase, ms] of Object.entries(phaseWorkMs(forge.events, working ? now : null))) {
+    const index = STEP_OF_PHASE[phase];
+    if (index !== undefined && index <= 5) stepTime[index] = (stepTime[index] ?? 0) + ms;
+  }
   const current = tasks.find((t) => t.id === state.current_task);
   const currentIndex = current ? tasks.indexOf(current) : -1;
   return (
     <div className="shrink-0 border-b border-border bg-surface px-6 py-3">
       <div className="mx-auto max-w-3xl">
-        <ol className="flex items-center" aria-label="Progress">
+        <ol className="@container flex items-start" aria-label="Progress">
           {STEPS.map((name, index) => {
             const complete = index < step;
             const active = index === step;
             // The current step animates while Forge works on it; amber and gently pulsing while it waits for you.
             const motion = active ? (forge.activity.kind === "waiting" ? "step-waiting" : forge.activity.kind !== "idle" ? "step-working" : "") : "";
             return (
-              <li key={name} className="flex flex-1 items-center last:flex-none">
-                <span className="flex items-center gap-1.5" aria-current={active ? "step" : undefined}>
+              <li key={name} className="flex flex-1 items-start last:flex-none">
+                <span
+                  className="flex shrink-0 items-start gap-1.5"
+                  aria-current={active ? "step" : undefined}
+                  title={stepUsage[index] || stepTime[index] ? stepTitle(name, stepUsage[index], stepTime[index]) : undefined}
+                >
                   <span
                     data-motion={motion || undefined}
                     className={cx(
@@ -135,11 +154,37 @@ export function ProgressHeader({ forge }: { forge: Forge }) {
                   >
                     {complete ? <Check className="h-3 w-3" /> : index + 1}
                   </span>
-                  <span className={cx("text-[12px] font-medium", active ? "text-fg" : "text-fg-muted")}>{name}</span>
-                  {stepUsage[index] && <UsageBadge compact bucket={stepUsage[index]} limits={forge.costColors?.phase} />}
+                  {/* name on top; cost and working time underneath, so six steps fit side by side */}
+                  <span className="flex flex-col leading-tight">
+                    <span
+                      className={cx(
+                        "text-[12px] font-medium whitespace-nowrap leading-5",
+                        active ? "text-fg" : "hidden text-fg-muted @[600px]:inline",
+                      )}
+                    >
+                      {name}
+                    </span>
+                    {(stepUsage[index] || stepTime[index]) && (
+                      <span
+                        className={cx("items-center gap-1 whitespace-nowrap text-[11px]", active ? "flex" : "hidden @[680px]:flex")}
+                        data-step-meta
+                      >
+                        {stepUsage[index] && <UsageBadge compact bucket={stepUsage[index]} limits={forge.costColors?.phase} />}
+                        {stepUsage[index] && stepTime[index] ? <span className="text-fg-muted">·</span> : null}
+                        {stepTime[index] ? (
+                          <span className="font-mono tabular-nums text-fg-muted" title="Working time (waiting for you not counted)">
+                            {duration(stepTime[index])}
+                          </span>
+                        ) : null}
+                      </span>
+                    )}
+                  </span>
                 </span>
                 {index < STEPS.length - 1 && (
-                  <span className={cx("mx-2 h-px flex-1 transition-colors duration-300", complete ? "bg-accent" : "bg-border")} aria-hidden />
+                  <span
+                    className={cx("mx-1.5 mt-2.5 h-px min-w-2 flex-1 transition-colors duration-300", complete ? "bg-accent" : "bg-border")}
+                    aria-hidden
+                  />
                 )}
               </li>
             );

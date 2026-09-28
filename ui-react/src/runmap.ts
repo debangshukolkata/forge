@@ -311,3 +311,29 @@ export function planGraph(model: RunModel): { nodes: { id: string; data: GraphNo
   if (fixes.length === 0) edges.push({ from: "@review", to: "@deliver", kind: "flow" });
   return { nodes, edges };
 }
+
+const REQUESTS = new Set(["approval_requested", "question_asked", "user_action_requested"]);
+
+/** Working time per engine phase: the gap after each event counts for that event's phase, except the gaps
+ * where Forge waited for you (after a request, until the next event). `live` adds the running gap to now. */
+export function phaseWorkMs(events: ForgeEvent[], live: number | null = null): Record<string, number> {
+  const totals: Record<string, number> = {};
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    const phase = event.where?.phase;
+    if (!phase || REQUESTS.has(event.type)) continue;
+    const next = i + 1 < events.length ? time(events[i + 1]) : live;
+    const at = time(event);
+    if (next && at && next > at) totals[phase] = (totals[phase] ?? 0) + (next - at);
+  }
+  return totals;
+}
+
+export function duration(ms: number): string {
+  const minutes = Math.round(ms / 60_000);
+  if (ms < 60_000) return `${Math.max(1, Math.round(ms / 1000))}s`;
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ${String(minutes % 60).padStart(2, "0")}m`;
+  return `${Math.floor(hours / 24)}d ${hours % 24}h`;
+}
