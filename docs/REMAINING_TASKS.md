@@ -64,5 +64,5 @@ Details of every choice go to docs/DECISIONS.md; open issues to TODO.md / RISKS.
 - [x] Tables-exist-in-scratch check (D-107)
 - [x] Reviewer: evidence-checked findings, at most 5 blocking (D-108) — live: 2/2 fixture evals pass
 - [x] Mode B: tests using host setup must request a host fixture (D-109) — live: first delivery passes in host
-- [ ] Chatbot change request 4 (vision probe bug, tighter signature crop) — running
-- [ ] Final offline suites on 3.13 and 3.14, then commit and push
+- [x] Chatbot change requests 4–5: vision probe bug FIXED (works on the real deployment); signature crop NOT improved on the real photo (still 406,907–600,1045: scribble + printed caption, handwritten number missed) although Forge's new synthetic tests pass — synthetic samples didn't transfer to the real photo
+- [x] Final offline suites on 3.13 and 3.14 (432 passed each), committed and pushed (a3c6819)
