@@ -1,0 +1,25 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+# The fixture repo's .env holds deliberately fake values and is part of the test data.
+!tests/fixtures/sample_repo/backend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv*/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Forge runtime data in dev
+.forge_home/
+wheels/
+test-artifacts/

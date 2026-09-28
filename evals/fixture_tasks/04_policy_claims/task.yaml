@@ -1,0 +1,4 @@
+requirement: Add GET /api/policies/<policy_id>/claims (authenticated) that lists the claims of one policy, newest
+  first, using the claim schema; 404 in the host's error format when the policy does not exist; an empty list for
+  a policy without claims. Add tests.
+app_folder: backend

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forge — label samples</title>
+  <script type="module" src="/label.js"></script>
+</head>
+<body>
+  <header>
+    <strong>Forge labelling</strong>
+    <span id="progress"></span>
+    <button id="prev" type="button">◀ Previous</button>
+    <button id="next" type="button">Next ▶</button>
+    <button id="save" type="button">Save (Ctrl+S)</button>
+    <span id="status"></span>
+  </header>
+  <main>
+    <div id="canvas-wrap"><canvas id="canvas"></canvas></div>
+    <aside>
+      <h3 id="sample-name"></h3>
+      <p id="verified"></p>
+      <label>Box label for new boxes <input id="box-label" value="signature"></label>
+      <p class="hint">Drag on the image to draw a box. Click a box in the list to delete it.</p>
+      <ul id="boxes"></ul>
+      <h4>Fields</h4>
+      <div id="fields"></div>
+      <button id="add-field" type="button">+ field</button>
+      <label><input type="checkbox" id="sensitive" checked> contains personal data (sensitive)</label>
+    </aside>
+  </main>
+</body>
+</html>

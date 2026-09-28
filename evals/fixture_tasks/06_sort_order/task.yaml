@@ -1,0 +1,3 @@
+requirement: 'Add an optional `sort` query parameter to GET /api/claims/: `desc` (default, newest first, as today)
+  or `asc` (oldest first). Any other value is rejected with 422 by schema validation. Add tests.'
+app_folder: backend

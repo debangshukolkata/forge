@@ -1,0 +1,8 @@
+# Keep files byte-identical on every checkout (core.autocrlf would rewrite them on Windows).
+* text=auto eol=lf
+*.ps1 text eol=crlf
+# Vendored tokenizer data and the fixture repo are test data: never convert them.
+src/forge/data/tiktoken/** -text
+tests/fixtures/** -text
+*.png binary
+*.jpg binary

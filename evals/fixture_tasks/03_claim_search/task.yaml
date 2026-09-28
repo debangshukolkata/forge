@@ -1,0 +1,4 @@
+requirement: Add an optional query parameter `q` to GET /api/claims/ that keeps only claims whose description contains
+  `q`, case-insensitively. `total` must count the filtered claims. It combines with the existing status filter and
+  pagination. Add tests.
+app_folder: backend

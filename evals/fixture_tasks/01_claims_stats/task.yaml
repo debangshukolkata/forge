@@ -1,0 +1,4 @@
+requirement: 'Add an authenticated endpoint GET /api/claims/stats that returns the number of claims per status and
+  the total, as {"by_status": {"<status>": <count>, ...}, "total": <n>}. Only statuses that have claims need to
+  appear. Follow the existing layering (route -> service -> raw-SQL repository) and add tests.'
+app_folder: backend

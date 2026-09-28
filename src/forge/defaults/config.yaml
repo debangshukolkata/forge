@@ -1,0 +1,80 @@
+# Built-in defaults. Users override any key in <forge_home>/config.yaml (deep-merged).
+# Model names never appear in code — only here and in the user's config (DECISIONS D-014).
+
+llm:
+  providers:
+    azure:
+      endpoint_env: AZURE_OPENAI_ENDPOINT
+      api_key_env: AZURE_OPENAI_API_KEY
+      api_version_env: AZURE_OPENAI_API_VERSION
+      api: responses              # responses | chat_completions (auto-fallback if responses is unavailable)
+      timeout_s: 180
+
+  models:
+    gpt51:
+      provider: azure
+      label: gpt-5.1
+      deployment_env: AZURE_OPENAI_DEPLOYMENT
+      context_window: 272000      # input tokens
+      max_output: 32000
+      reasoning_effort: medium
+      vision: true
+      price_per_mtok: { input: 1.25, cached_input: 0.125, output: 10.0 }   # USD; confirm tenant pricing
+    gpt41:
+      provider: azure
+      label: gpt-4.1
+      deployment_env: AZURE_OPENAI_SECONDARY_DEPLOYMENT
+      context_window: 1000000
+      max_output: 32000
+      reasoning_effort: null      # not a reasoning model
+      vision: true
+      price_per_mtok: { input: 2.0, cached_input: 0.5, output: 8.0 }
+
+  roles:                          # DECISIONS D-024
+    coder: gpt51
+    kb_builder: gpt51
+    summariser: gpt51
+    vision: gpt51
+    reviewer: gpt41
+    judge: gpt41
+    fallback: gpt41
+
+  role_reasoning_effort:          # overrides the model's default effort for a role
+    summariser: low
+
+  retry:
+    max_attempts: 6
+    base_delay_s: 1.0
+    max_delay_s: 60.0
+
+limits:
+  session_budget_usd: 20.0
+  max_iterations_per_task: 40
+  max_fix_attempts: 5
+
+cost:
+  display_currency: USD           # USD | INR
+  inr_per_usd: 88.0
+
+web:
+  search_provider: auto            # auto (search_order with fallback) | duckduckgo | serpapi | tavily | azure | off
+  search_order: [duckduckgo, serpapi, azure, tavily]   # providers without a key are skipped
+  azure_search_role: summariser    # azure: this role's model runs Azure OpenAI's built-in web_search (extra per-search fee)
+
+hooks:
+  post_edit: []                    # e.g. ["ruff format {file}"] — runs after every file edit ({file} = edited path)
+
+shell:
+  sandbox: low_integrity          # low_integrity (Windows blocks writes outside the workspace) | off
+  timeout_s: 120
+  permission_mode: default        # plan | default | auto
+
+context:                          # spec §10; token caps are o200k tokens
+  safety_fraction: 0.05
+  pinned_cap_fraction: 0.08
+  micro_compact_at: 0.6           # share of the history budget: stub old tool outputs
+  auto_compact_at: 0.8            # summarise older history
+  keep_recent_turns: 6
+  keep_recent_tool_results: 8
+  tool_output_cap: 6000
+  shell_output_cap: 4000

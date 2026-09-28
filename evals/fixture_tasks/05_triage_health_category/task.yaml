@@ -1,0 +1,4 @@
+requirement: 'Add a new triage category `health` (medical expenses) to the triage graph: the classifier may return
+  it and it is kept rather than mapped to `other`. Update the triage prompt so the model knows the category. Add
+  tests using the fake LLM.'
+app_folder: backend

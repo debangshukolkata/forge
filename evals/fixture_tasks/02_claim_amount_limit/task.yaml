@@ -1,0 +1,4 @@
+requirement: 'Claims above 500000 must be rejected: POST /api/claims/ with an amount greater than 500000 returns
+  422 with a message that mentions the limit. Amounts up to and including 500000 keep working. Put the rule where
+  the other claim business rules live and add tests.'
+app_folder: backend
