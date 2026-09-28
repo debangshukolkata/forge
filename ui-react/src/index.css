@@ -420,3 +420,32 @@ kbd,
     background-position: -200% 0;
   }
 }
+
+/* Run map (D-119): React Flow in the app's colours; edges by kind; a gentle pulse for what is running now. */
+.react-flow {
+  --xy-background-color: var(--bg);
+  --xy-background-pattern-color: var(--border);
+  --xy-edge-stroke: var(--border-strong);
+  --xy-controls-button-background-color: var(--surface);
+  --xy-controls-button-background-color-hover: var(--raised);
+  --xy-controls-button-color: var(--fg-muted);
+  --xy-controls-button-border-color: var(--border);
+  --xy-node-border-radius: 8px;
+}
+.react-flow__node { font-family: var(--font-sans); }
+.run-edge-depends path { stroke: var(--border-strong); }
+.run-edge-flow path { stroke: var(--border-strong); stroke-dasharray: 3 4; }
+.run-edge-fix path { stroke: var(--warn); stroke-dasharray: 6 4; }
+.react-flow__edge.animated path { stroke: var(--info); }
+.run-live { animation: run-live 1.6s ease-in-out infinite; }
+@keyframes run-live {
+  50% { opacity: 0.45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .run-live, .react-flow__edge.animated path { animation: none; }
+}
+.jump-flash { animation: jump-flash 1.8s ease-out; border-radius: 10px; }
+@keyframes jump-flash {
+  0%, 30% { box-shadow: 0 0 0 2px var(--info); background: var(--info-soft); }
+  100% { box-shadow: 0 0 0 2px transparent; }
+}

@@ -27,6 +27,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] **M10E** Claude Code parity — done 2026-09-28 (D-095; offline gate 10 pass)
 - [x] **M10D** Multimodal & evals (general) — done 2026-09-28 (D-097)
 - [x] **M11** Hardening & packaging — done 2026-09-28 (D-098..D-106); open: "tables exist in scratch" check (SPEC_DEVIATIONS)
+- [x] **UI** React web UI (only UI) — project form, uploads, live progress, cost counter, per-phase/task usage,
+  Run map (task graph + timeline) — done 2026-09-28 (D-113..D-119)
 
 ## Open items
 - M7: embedded-Postgres fallback (`pgserver`) not built (SPEC_DEVIATIONS); "every table the code touches

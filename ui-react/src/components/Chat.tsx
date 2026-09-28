@@ -69,7 +69,9 @@ export function Chat({ forge }: { forge: Forge }) {
             </div>
           )}
           {items.map((item) => (
-            <Item key={item.key} item={item} forge={forge} />
+            <div key={item.key} data-seq={/^e\d+$/.test(item.key) ? item.key.slice(1) : undefined}>
+              <Item item={item} forge={forge} />
+            </div>
           ))}
         </div>
       </div>

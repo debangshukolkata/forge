@@ -100,6 +100,8 @@ class SessionHost:
                 self.workspace.jail.check(self.workspace.forge_dir / "usage.json")
             )
             self.router.cost.where = self._usage_where
+        if self.orchestrator is not None:  # every event says which phase/task it belongs to (Run map)
+            self.bus.stamp = lambda: dict(zip(("phase", "task"), self._usage_where(), strict=True))
         if workspace is not None:
             self.refresh_instructions()
 

@@ -10,6 +10,7 @@ export interface WorkspaceSummary {
 export interface Task {
   id: string;
   title: string;
+  depends_on?: string[];
   status: "pending" | "in_progress" | "done" | "blocked" | "skipped" | string;
   attempts?: number;
   blocked_reason?: string | null;
@@ -51,6 +52,7 @@ export interface ForgeEvent {
   type: string;
   ts: string;
   payload: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  where?: { phase: string | null; task: string | null } | null; // phase/task when it happened (D-119)
 }
 
 export type ServerMessage =

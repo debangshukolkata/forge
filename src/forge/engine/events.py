@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -38,6 +39,10 @@ class EventType(StrEnum):
     EVAL_REPORT_READY = "eval_report_ready"
     LESSON_PROPOSED = "lesson_proposed"
     IMPROVEMENT_PROPOSED = "improvement_proposed"
+    AGENT_STARTED = (
+        "agent_started"  # a subagent (reviewer, debugger, helper, analysis) began (Run map, D-119)
+    )
+    AGENT_FINISHED = "agent_finished"
     NOTICE = "notice"  # informational: retries, fallbacks, queued input, slash-command output
     ERROR = "error"
 
@@ -47,6 +52,9 @@ class Event(BaseModel):
     type: EventType
     ts: str
     payload: dict[str, Any]
+    # The phase and task active when the event happened (the Run map groups events by them); None when the
+    # session doesn't follow phases.
+    where: dict[str, str | None] | None = None
 
 
 class EventBus:
@@ -55,6 +63,7 @@ class EventBus:
         self._redactor = redactor
         self._events: list[Event] = []
         self._subscribers: set[asyncio.Queue[Event]] = set()
+        self.stamp: Callable[[], dict[str, str | None]] | None = None  # set by the session (phase/task)
         if log_path is not None:
             log_path.parent.mkdir(parents=True, exist_ok=True)
             if log_path.exists():
@@ -70,6 +79,7 @@ class EventBus:
             type=event_type,
             ts=datetime.now(UTC).isoformat(timespec="milliseconds"),
             payload=self._redactor.redact_data(payload or {}),
+            where=self.stamp() if self.stamp is not None else None,
         )
         self._events.append(event)
         if self._log_path is not None:

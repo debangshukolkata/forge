@@ -57,4 +57,4 @@ every model/tool text rendered as text or as Markdown sanitised with DOMPurify.
 ## Licences of what ships in the build
 
 react, react-dom (MIT) · lucide-react (ISC) · marked (MIT) · dompurify (MPL-2.0 or Apache-2.0) · highlight.js
-(BSD-3-Clause) · diff2html (MIT) · IBM Plex Sans, JetBrains Mono via @fontsource (SIL OFL 1.1).
+(BSD-3-Clause) · diff2html (MIT) · @xyflow/react (MIT) · @dagrejs/dagre (MIT) · IBM Plex Sans, JetBrains Mono via @fontsource (SIL OFL 1.1).

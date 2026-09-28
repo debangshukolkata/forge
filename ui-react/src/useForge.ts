@@ -118,6 +118,7 @@ export interface Forge {
   cost: CostInfo | null;
   changeTick: number; // increments on file/task/learning changes so panels can refresh
   costColors: CostColors | null; // green / yellow / red limits from Forge's config (cost.colors)
+  events: ForgeEvent[]; // every event of the project (replayed + live), for the Run map
   activity: LiveActivity;
   runStartedAt: number | null; // when the current stretch of work began (for the elapsed timer)
   reload: () => Promise<AppState>;
@@ -142,6 +143,7 @@ export function useForge(): Forge {
   const [activity, setActivity] = useState<LiveActivity>({ kind: "idle", since: Date.now() });
   const [runStartedAt, setRunStartedAt] = useState<number | null>(null);
   const [costColors, setCostColors] = useState<CostColors | null>(null);
+  const [events, setEvents] = useState<ForgeEvent[]>([]);
 
   useEffect(() => {
     api<{ cost_colors?: CostColors }>("/api/config")
@@ -179,6 +181,7 @@ export function useForge(): Forge {
   const onEvent = useCallback(
     (event: ForgeEvent) => {
       dispatch({ type: "event", event });
+      setEvents((list) => [...list, event]);
       const p = event.payload;
       const live = !replayingRef.current;
       if (live) trackActivity(event.type, p);
@@ -300,6 +303,7 @@ export function useForge(): Forge {
 
   const startSession = useCallback(() => {
     dispatch({ type: "reset" });
+    setEvents([]);
     lastSeq.current = 0;
     setContext(null);
     setCost(null);
@@ -363,7 +367,7 @@ export function useForge(): Forge {
   }, [reload, startSession]);
 
   return {
-    state, timeline, connected, controls, replaying, waiting, context, cost, changeTick, activity, runStartedAt, costColors,
+    state, timeline, connected, controls, replaying, waiting, context, cost, changeTick, activity, runStartedAt, costColors, events,
     reload, send, command, answer, takeControl, openWorkspace, enter,
   };
 }

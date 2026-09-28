@@ -995,3 +995,20 @@ exposed via /api/config. UI: the top-bar cost counts up (ease-out, 700 ms, jumps
 brief green highlight; badges on replies, task rows and stepper steps; the Context tab became Usage (context
 window, this session, per-phase and per-task tables with totals). All figures are labelled estimates (tokens x
 configured prices), not the Azure bill.
+
+### D-119 — Run map: task graph + timeline of phases, tasks, agents and failures · Decided (2026-09-28, discussed)
+The user asked for a graphical view of the plan, the tasks, blockers, spawned agents and failures (chose: task
+graph + timeline, as a full-width "Run map" view next to Chat). Options considered: (a) React Flow + dagre for
+the graph and a hand-drawn SVG timeline — chosen; (b) Mermaid rendered from text — static, no live state or
+click-through, heavier bundle; (c) vis-timeline / a Gantt library — extra dependency for what is ~150 lines of
+SVG, and harder to theme. New deps (UI only, bundled at build time, nothing at runtime on the laptop):
+@xyflow/react 12 (MIT) and @dagrejs/dagre 3 (MIT). Engine: every event now carries `where` {phase, task} (the
+bus stamps it when the session is orchestrated) and subagents emit `agent_started` {id, role, purpose} /
+`agent_finished` {id, role, ok, tool_calls, failed_calls, duration_s}; the subagent's own events stay on its
+private bus. UI: the map is derived only from the event list (live and replayed alike). Graph: Plan → tasks by
+depends_on → Review → FIX tasks → Deliver; each card shows status, attempts, failed calls, stuck warnings,
+helper agents, task cost badge and the blocked reason; the current task is ringed and its incoming edge
+animated. Timeline: lanes for phases, each task and each agent role; red ✕ failed tool call, amber ▲ stuck,
+amber ◆ waiting for the user; pauses longer than 45 s are squeezed (dashed break with the resume time) so hours
+of waiting don't flatten the work. Clicking a card, bar or marker switches to Chat and flashes that event's row.
+The Panels sidebar is hidden while the map is shown, to give it the full width.
