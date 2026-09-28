@@ -538,6 +538,13 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
     shots = REPO_ROOT / "test-artifacts" / "react-ui"
     with playwright_api.sync_playwright() as p:
         browser, page = open_in_edge(p, live_server, workspace)
+        # The side panel collapses to a rail of tab icons; an icon reopens it on that tab; the choice survives a reload.
+        page.click("[aria-label='Hide the side panel']")
+        page.wait_for_selector("aside[aria-label='Details (collapsed)']")
+        page.reload()
+        page.wait_for_selector("aside[aria-label='Details (collapsed)']")
+        page.click("[aria-label='Open Usage']")
+        page.wait_for_selector("aside[aria-label=Details] [role=tab][aria-selected=true]:has-text('Usage')")
         assert live_server.manager.host is not None and live_server.manager.host.orchestrator is not None
         state = live_server.manager.host.orchestrator.state
 

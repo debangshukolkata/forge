@@ -1012,3 +1012,9 @@ animated. Timeline: lanes for phases, each task and each agent role; red ✕ fai
 amber ◆ waiting for the user; pauses longer than 45 s are squeezed (dashed break with the resume time) so hours
 of waiting don't flatten the work. Clicking a card, bar or marker switches to Chat and flashes that event's row.
 The Panels sidebar is hidden while the map is shown, to give it the full width.
+
+### D-120 — Collapsible side panel · Decided (2026-09-28, small UI choice)
+User asked to be able to collapse the right panel (Tasks, Files, …). A button at the right of the Chat | Run map
+switch hides it to a 48 px rail of the tab icons (clicking one reopens the panel on that tab); the state is
+remembered per browser (localStorage). Options: hide completely (loses the quick way back to a tab) or a rail —
+chose the rail.

@@ -1,8 +1,9 @@
-import { MessagesSquare, Network } from "lucide-react";
+import { MessagesSquare, Network, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Chat } from "./components/Chat";
 import { RunMap } from "./components/RunMap";
 import { Home } from "./components/Home";
+import { IconButton } from "./components/ui";
 import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { api, cx, storageGet, storageSet } from "./lib";
@@ -15,6 +16,11 @@ export function App() {
   const [theme, setTheme] = useState<"dark" | "light">(storageGet("forge-theme") === "light" ? "light" : "dark");
   const [stopped, setStopped] = useState(false);
   const [surface, setSurface] = useState<Surface>("chat");
+  const [panelsCollapsed, setPanelsCollapsed] = useState(storageGet("forge-panels-collapsed") === "1");
+  const collapsePanels = (collapsed: boolean) => {
+    setPanelsCollapsed(collapsed);
+    storageSet("forge-panels-collapsed", collapsed ? "1" : "0");
+  };
 
   // From the Run map to the chat: show the row of that event (or the last row before it) and flash it.
   const jump = useCallback((seq: number) => {
@@ -70,12 +76,19 @@ export function App() {
             </div>
           ) : (
             <>
-              <ViewSwitch surface={surface} onChange={setSurface} />
+              <ViewSwitch
+                surface={surface}
+                onChange={setSurface}
+                panelsCollapsed={surface === "chat" ? panelsCollapsed : null}
+                onTogglePanels={() => collapsePanels(!panelsCollapsed)}
+              />
               {surface === "map" ? <RunMap forge={forge} onJump={jump} /> : <Chat forge={forge} />}
             </>
           )}
         </main>
-        {view === "chat" && surface === "chat" && forge.state.workspace && <Panels forge={forge} />}
+        {view === "chat" && surface === "chat" && forge.state.workspace && (
+          <Panels forge={forge} collapsed={panelsCollapsed} onExpand={() => collapsePanels(false)} />
+        )}
       </div>
     </div>
   );
@@ -83,7 +96,17 @@ export function App() {
 
 type Surface = "chat" | "map";
 
-function ViewSwitch({ surface, onChange }: { surface: Surface; onChange: (surface: Surface) => void }) {
+function ViewSwitch({
+  surface,
+  onChange,
+  panelsCollapsed,
+  onTogglePanels,
+}: {
+  surface: Surface;
+  onChange: (surface: Surface) => void;
+  panelsCollapsed: boolean | null; // null: no side panel in this view
+  onTogglePanels: () => void;
+}) {
   const tab = (value: Surface, icon: ReactNode, label: string) => (
     <button
       type="button"
@@ -105,6 +128,16 @@ function ViewSwitch({ surface, onChange }: { surface: Surface; onChange: (surfac
         {tab("chat", <MessagesSquare className="h-3.5 w-3.5" aria-hidden />, "Chat")}
         {tab("map", <Network className="h-3.5 w-3.5" aria-hidden />, "Run map")}
       </div>
+      {panelsCollapsed !== null && (
+        <IconButton
+          label={panelsCollapsed ? "Show the side panel" : "Hide the side panel"}
+          aria-expanded={!panelsCollapsed}
+          onClick={onTogglePanels}
+          className="ml-auto"
+        >
+          {panelsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
+        </IconButton>
+      )}
     </div>
   );
 }

@@ -25,12 +25,37 @@ const TABS: Array<{ id: Tab; label: string; icon: ReactNode }> = [
   { id: "settings", label: "Settings", icon: <Settings2 className="h-4 w-4" /> },
 ];
 
-export function Panels({ forge }: { forge: Forge }) {
+export function Panels({ forge, collapsed, onExpand }: { forge: Forge; collapsed: boolean; onExpand: () => void }) {
   const [tab, setTab] = useState<Tab>((storageGet("forge-react-tab") as Tab) || "tasks");
   const select = (next: Tab) => {
     setTab(next);
     storageSet("forge-react-tab", next);
   };
+  if (collapsed) {
+    // A thin rail of the tab icons: one click reopens the panel on that tab.
+    return (
+      <aside aria-label="Details (collapsed)" className="flex w-12 shrink-0 flex-col items-center gap-1 border-l border-border bg-surface py-2">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            aria-label={`Open ${t.label}`}
+            title={t.label}
+            onClick={() => {
+              select(t.id);
+              onExpand();
+            }}
+            className={cx(
+              "flex h-9 w-9 cursor-pointer items-center justify-center rounded-md transition-colors duration-150 hover:bg-raised hover:text-fg",
+              tab === t.id ? "text-accent" : "text-fg-muted",
+            )}
+          >
+            {t.icon}
+          </button>
+        ))}
+      </aside>
+    );
+  }
   return (
     <aside aria-label="Details" className="flex w-[440px] shrink-0 flex-col border-l border-border bg-surface">
       {/* Eight tabs in one row that always fits: icon above a short label, no hidden overflow. */}
