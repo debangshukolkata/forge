@@ -50,9 +50,12 @@ every model/tool text rendered as text or as Markdown sanitised with DOMPurify.
 ## Layout
 
 - `src/useForge.ts` — the connection: `/api/state`, the WebSocket with replay, events → chat timeline.
-- `src/components/` — TopBar, Sidebar (projects), Home (New project form + environment check), Chat
-  (timeline, tool cards, approval / question / action cards, composer with slash-command hints), `ui.tsx`.
-- `src/panels/Panels.tsx` — Tasks, Files, Diffs, DB, Evals, Learning, Context, Settings.
+- `src/components/` — TopBar (animated cost), Sidebar (projects), Home (New project form + environment
+  check), Chat (timeline, tool cards, approval / question / action cards), Composer (attachments, `/` and `@`
+  suggestions, history), Activity (progress stepper with cost/time per step, live activity line), RunMap (task
+  graph with React Flow + dagre, SVG timeline), FailureDrawer, `ui.tsx`.
+- `src/runmap.ts` — the Run map's model, derived only from the event list (so replay and live draw the same).
+- `src/panels/Panels.tsx` — Tasks, Files, Diffs, DB, Evals, Learning, Usage, Settings; collapses to an icon rail.
 
 ## Licences of what ships in the build
 

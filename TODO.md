@@ -28,8 +28,13 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] **M10D** Multimodal & evals (general) — done 2026-09-28 (D-097)
 - [x] **M11** Hardening & packaging — done 2026-09-28 (D-098..D-106); open: "tables exist in scratch" check (SPEC_DEVIATIONS)
 - [x] **UI** React web UI (only UI) — project form, uploads, live progress, cost counter, per-phase/task usage,
-  Run map (task graph + timeline) — done 2026-09-28 (D-113..D-119)
+  Run map (task graph + timeline, failures drawer, waiting bars), stepper with cost/time per step, collapsible
+  side panel — done 2026-09-28 (D-113..D-124)
 
 ## Open items
+- UI: redesign the Run map's phase row for large / multi-day runs — the user will redesign it (D-123; options
+  offered: scroll + zoom, phase summary strip, group by day).
+- UI: the chat column showed a horizontal scrollbar in the user's runmap-demo (some wide content); not yet
+  investigated.
 - M7: embedded-Postgres fallback (`pgserver`) not built (SPEC_DEVIATIONS); "every table the code touches
   exists in scratch before DB-backed runs" check not built; `db_schema` results not yet cached into the KB.

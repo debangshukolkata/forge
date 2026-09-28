@@ -25,6 +25,8 @@ The rules below still describe what goes into briefs and summaries.
 - End of each milestone: real test output, what was built, deviations, limitations/tech debt/new risks,
   manual Windows test steps with exact commands. **Wait for sign-off.**
 - Small reversible choices: decide, record in docs/DECISIONS.md, mention in the summary.
+- New UI features: the user wants the options discussed first (2–3 options, with previews, recommendation);
+  fixes to what they report from screenshots go straight in. Design theme changes are deferred to the user.
 - Keep updated: this file, TODO.md, docs/DECISIONS.md, docs/RISKS.md, docs/SPEC_DEVIATIONS.md.
 - Be honest about anything unrealistic; propose the best achievable alternative.
 
@@ -38,6 +40,10 @@ The rules below still describe what goes into briefs and summaries.
 - `src/` layout: package at `src/forge/`. Module map follows spec §4.
 - The **engine is UI-agnostic**: it emits typed events and receives inputs through one interface
   (spec §15A.2). Terminal UI and web UI are thin clients. No `print()` in engine code.
+- Web UI = React in `ui-react/` (D-117); `npm run build` writes `src/forge/web/react/`; commit source and build
+  together. UI views derive their state from events (the Run map replays the event list), so a reopened
+  project looks the same as a live one. Browser tests (`tests/test_web_e2e.py`, headless Edge) take screenshots
+  to `test-artifacts/react-ui/` — look at them before reporting UI work done.
 - Plain Python agent loop. **No LangChain/LangGraph inside Forge** (the fixture repo uses them; Forge doesn't).
 - Modules stay under ~500 lines; split by responsibility, not by line count alone.
 - Pydantic v2 models for tool args, config and events; JSON schemas generated from them.
