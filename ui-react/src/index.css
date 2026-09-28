@@ -54,6 +54,8 @@
   --info: #0369a1;
   --info-soft: #e0f2fe;
   --ring: #0f172a;
+  /* Native controls and scrollbars follow Forge's theme, not the OS theme. */
+  color-scheme: light;
 }
 
 .dark {
@@ -75,6 +77,7 @@
   --info: #38bdf8;
   --info-soft: rgb(56 189 248 / 0.14);
   --ring: #f8fafc;
+  color-scheme: dark;
 }
 
 html,
@@ -92,6 +95,34 @@ body {
 :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+/* Scrollbars (D-126): slim rounded thumb in the border colour, no track or arrow buttons, darker on hover.
+   Chromium (Edge, the target) uses the ::-webkit-scrollbar rules; Firefox gets the standard properties.
+   The standard ones are only set where ::-webkit-scrollbar is unsupported, because Chromium ignores the
+   pseudo-elements on any element that has scrollbar-color or scrollbar-width. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--fg-muted);
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

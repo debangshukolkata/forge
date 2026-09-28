@@ -1060,3 +1060,14 @@ The web UI opens in the light theme; the top-bar button still switches to dark. 
 browser-storage key (`forge-theme-choice`), written only when the user toggles: the old `forge-theme` key was
 saved on every load, so it recorded the old dark default rather than a real choice, and honouring it would have
 kept existing browsers dark. Cost: anyone who had deliberately chosen dark sees light once and toggles again.
+
+### D-126 — Styled scrollbars; chat never scrolls sideways · Decided (2026-09-28, user choice)
+The UI used unstyled OS scrollbars, which showed as black Windows bars with arrow buttons inside the light theme.
+Options shown to the user with previews: (A) slim neutral: a 10 px rounded thumb in `--border-strong`, no track or
+arrows, darker on hover; (B) overlay shown only on hover; (C) green accent thumb. The user chose A. It applies to
+every scroll area. Edge gets `::-webkit-scrollbar` rules, and Firefox gets `scrollbar-width: thin` plus
+`scrollbar-color`, set only where the pseudo-elements are unsupported (Chromium ignores them on elements that have
+the standard properties). Each theme now declares `color-scheme`, so native controls follow Forge's theme, not the
+OS theme. Separate fix: a horizontal scrollbar appeared under the chat because a `<fieldset>`'s default min-width
+is its widest content, so a long code line in an approval card widened the whole chat. The card's fieldset is now
+`min-w-0`, and a browser test checks that the chat has no horizontal overflow.

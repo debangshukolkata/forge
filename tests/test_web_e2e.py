@@ -187,7 +187,8 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         page.reload()
         page.wait_for_selector("button[aria-label='Light theme']")
         assert page.evaluate("document.documentElement.classList.contains('dark')") is True
-        assert "Payments Masking" in page.inner_text("nav[aria-label=Projects]")
+        # The recent list loads after the reload, so wait for it rather than read it at once.
+        page.wait_for_selector("nav[aria-label=Projects] >> text=Payments Masking", timeout=5000)
         browser.close()
     assert not problems, problems
 
@@ -250,7 +251,14 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
             },
         )
         await bus.publish(
-            EventType.APPROVAL_REQUESTED, {"id": "A1", "kind": "plan", "markdown": PLAN, "summary": "plan"}
+            EventType.APPROVAL_REQUESTED,
+            {
+                "id": "A1",
+                "kind": "plan",
+                # A long unbroken code line must scroll inside its block, not widen the chat.
+                "markdown": PLAN + "\n\n```\n" + "assert_masked_" * 40 + "\n```",
+                "summary": "plan",
+            },
         )
         await bus.publish(
             EventType.QUESTION_ASKED,
@@ -294,6 +302,11 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
         page.wait_for_selector("td:has-text('masking.py')")  # markdown table rendered (sanitised)
         page.click("button:has-text('run_tests')")
         page.wait_for_selector("pre:has-text('1 failed')")
+        overflow = page.evaluate(
+            "() => { const box = document.querySelector('[aria-live=polite]');"
+            " return box.scrollWidth - box.clientWidth; }"
+        )
+        assert overflow <= 0, f"chat scrolls sideways by {overflow}px"
         page.screenshot(path=str(shots / "cards-light.png"), full_page=True)
         browser.close()
     assert not problems, problems

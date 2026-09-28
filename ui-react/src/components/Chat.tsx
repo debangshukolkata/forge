@@ -209,7 +209,8 @@ function AskCard({ kind, icon, title, answered, children }: { kind: "approval" |
         <h4 className="min-w-0 flex-1 font-semibold">{title}</h4>
         {answered !== undefined && <Badge>{answered || "Answered"}</Badge>}
       </div>
-      <fieldset disabled={answered !== undefined} className="space-y-3">
+      {/* min-w-0: a fieldset's default min-width is its widest content, so a long code line would widen the whole chat. */}
+      <fieldset disabled={answered !== undefined} className="min-w-0 space-y-3">
         {children}
       </fieldset>
     </div>
