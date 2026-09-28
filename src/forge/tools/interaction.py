@@ -1,5 +1,7 @@
-"""Planning and interaction tools (spec §9.4): ask_user, propose_requirements, propose_plan, task_update,
-update_plan, request_user_action. They talk to the orchestrator through the Interaction protocol."""
+"""Planning and interaction tools (spec §9.4, D-128): ask_user, propose_requirements, propose_plan,
+task_update, update_plan, request_user_action. They talk to the orchestrator through the Interaction
+protocol. propose_requirements/propose_plan are optional records, not approval gates — Forge calls them
+when it judges a written-down requirement or plan is worth having, not on every turn."""
 
 from __future__ import annotations
 
@@ -93,9 +95,9 @@ class ProposeRequirements(Tool):
     name = "propose_requirements"
     read_only = True
     description = (
-        "Submit REQUIREMENTS.md for the user's approval once the requirement is clear: scope, "
-        "endpoints/data, "
-        "acceptance criteria, edge cases, out of scope. Returns approval or the user's requested changes."
+        "Write REQUIREMENTS.md for the record: scope, endpoints/data, acceptance criteria, edge cases, out "
+        "of scope. Optional — use it for a larger requirement or when the user asks to see one; it doesn't "
+        "block you from proceeding."
     )
 
     class Args(ToolArgs):
@@ -113,10 +115,10 @@ class ProposePlan(Tool):
     name = "propose_plan"
     read_only = True
     description = (
-        "Submit PLAN.md and the task list for approval. The plan names every file to add or change (with the "
-        "existing file each new file mirrors), endpoints, DB changes, tests, risks and anything the user "
-        "must do. "
-        "Tasks are small and independently verifiable."
+        "Write PLAN.md and set the task list. Not an approval gate — call it when you're ready to break the "
+        "work into small, independently verifiable tasks, whether or not you wrote a plan down first. The "
+        "plan, if you write one, names every file to add or change (with the existing file each new file "
+        "mirrors), endpoints, DB changes, tests, risks and anything the user must do."
     )
 
     class Args(ToolArgs):

@@ -18,7 +18,6 @@ import psycopg
 
 from forge.agent.loop import AgentLoop, system_prompt
 from forge.agent.orchestrator import Orchestrator
-from forge.agent.state import Phase
 from forge.config import Secrets, forge_home
 from forge.context.manager import ContextManager
 from forge.db.access import AccessLevel
@@ -100,7 +99,7 @@ class SessionHost:
                 self.workspace.jail.check(self.workspace.forge_dir / "usage.json")
             )
             self.router.cost.where = self._usage_where
-        if self.orchestrator is not None:  # every event says which phase/task it belongs to (Run map)
+        if self.orchestrator is not None:  # every event says which task it belongs to (usage ledger)
             self.bus.stamp = lambda: dict(zip(("phase", "task"), self._usage_where(), strict=True))
         if workspace is not None:
             self.refresh_instructions()
@@ -111,11 +110,19 @@ class SessionHost:
         return kb_dir_for(forge_home(), self.workspace.info.repo_path, self.workspace.info.app_subfolder)
 
     def open_kb(self) -> KnowledgeBase | None:
-        """The repo's KB (shared by all workspaces for it); its essentials go into the pinned context."""
+        """The repo's KB (shared by all workspaces for it); its essentials go into the pinned context.
+        Mode B also pins active interface contracts (§6A.2A, D-129) alongside the profile essentials."""
         kb_dir = self.kb_dir()
         kb = KnowledgeBase.open(kb_dir) if kb_dir else None
         profile = self.host_profile()
-        essentials = profile.essentials() if profile is not None else (kb.essentials() if kb else None)
+        essentials: str | None
+        if profile is not None:
+            from forge.modeb.contracts import ContractRegister
+
+            contracts = ContractRegister(profile).essentials()
+            essentials = profile.essentials() + (f"\n\n{contracts}" if contracts else "")
+        else:
+            essentials = kb.essentials() if kb else None
         self.context_manager.pinned.set("kb_essentials", essentials)
         return kb
 
@@ -568,11 +575,14 @@ class SessionHost:
         )
 
     def _usage_where(self) -> tuple[str, str | None]:
-        """The phase and task a model call is filed under (a task only while tasks are being built)."""
+        """The activity and task a model call is filed under (spec §7, D-128/D-131: no fixed phase — a
+        loose label for the usage ledger, not control flow)."""
         if self.orchestrator is None:
             return "direct", None
         state = self.orchestrator.state
-        return state.phase.value, state.current_task if state.phase == Phase.EXECUTE else None
+        if state.current_task:
+            return "execute", state.current_task
+        return "working" if state.started and not state.exported else "requirement", None
 
     async def publish_cost(self) -> None:
         await self.bus.publish(EventType.COST_UPDATED, self.router.cost.summary())

@@ -1,8 +1,10 @@
 """Headless runs (spec §8, §13B): `forge run --workspace W --requirement-file F --auto-approve`.
 
---auto-approve approves the requirements and plan gates, picks the recommended option at design forks and
-approves ordinary commands — but never the always-ask list (A-9): those are refused and the task is marked
-blocked. Requests for the user to do something are answered "can't" for the same reason.
+--auto-approve is the free-hand cadence (D-130) for the whole run: Forge picks the recommended option at
+design forks and approves ordinary commands — but never the always-ask list (A-9): those are refused and
+the task is marked blocked. Requests for the user to do something are answered "can't" for the same reason.
+Without --auto-approve, a question a headless run can't answer just gets Forge's best judgement (there is
+no approval gate to refuse, per D-128 — Forge proceeds and states its assumptions).
 """
 
 from __future__ import annotations
@@ -11,7 +13,6 @@ import asyncio
 import contextlib
 from dataclasses import dataclass
 
-from forge.agent.state import Phase
 from forge.engine.events import Event, EventType
 from forge.engine.inputs import Answer, Approve, Reject, SendMessage, UserInput
 from forge.engine.session_host import SessionHost
@@ -32,7 +33,7 @@ EXIT_OK, EXIT_FAILED, EXIT_BLOCKED = 0, 1, 2
 @dataclass
 class HeadlessResult:
     exit_code: int
-    phase: str
+    activity: str
     tasks: list[dict[str, str]]
     errors: list[str]
 
@@ -40,15 +41,6 @@ class HeadlessResult:
 def auto_reply(event: Event, auto_approve: bool) -> UserInput | None:
     payload = event.payload
     if event.type == EventType.APPROVAL_REQUESTED:
-        if payload.get("kind") in ("requirements", "plan"):
-            return (
-                Approve(request_id=payload["id"])
-                if auto_approve
-                else Reject(
-                    request_id=payload["id"],
-                    instruction="Headless run without --auto-approve: stopping here.",
-                )
-            )
         if payload.get("always_ask") or not auto_approve:
             return Reject(request_id=payload["id"], instruction=HEADLESS_REFUSAL)
         return Approve(request_id=payload["id"])
@@ -65,6 +57,8 @@ async def run_headless(host: SessionHost, requirement: str | None, auto_approve:
     assert host.orchestrator is not None
     errors: list[str] = []
     subscription = host.bus.subscribe(since_seq=host.bus.last_seq)
+    if auto_approve:  # --auto-approve is the free-hand cadence (D-130) for the whole run
+        host.orchestrator.set_cadence("free_hand")
 
     async def respond() -> None:
         async for event in subscription:
@@ -81,8 +75,7 @@ async def run_headless(host: SessionHost, requirement: str | None, auto_approve:
             await host.submit(SendMessage(text=requirement))
         for nudge in range(MAX_PROCEED_NUDGES + 1):
             await _wait_until_idle(host)
-            phase = host.orchestrator.state.phase
-            if phase in (Phase.DONE, Phase.HANDOFF) or errors or nudge == MAX_PROCEED_NUDGES:
+            if host.orchestrator.state.exported or errors or nudge == MAX_PROCEED_NUDGES:
                 break
             await host.submit(SendMessage(text=PROCEED))  # the model asked something in plain text
     finally:
@@ -98,9 +91,8 @@ async def run_headless(host: SessionHost, requirement: str | None, auto_approve:
         for t in state.tasks
     ]
     blocked = any(t.status == "blocked" for t in state.tasks)
-    finished = state.phase in (Phase.DONE, Phase.HANDOFF)
-    code = EXIT_FAILED if errors else EXIT_OK if finished and not blocked else EXIT_BLOCKED
-    return HeadlessResult(code, state.phase.value, tasks, errors)
+    code = EXIT_FAILED if errors else EXIT_OK if state.exported and not blocked else EXIT_BLOCKED
+    return HeadlessResult(code, state.resume_summary(), tasks, errors)
 
 
 async def _wait_until_idle(host: SessionHost) -> None:

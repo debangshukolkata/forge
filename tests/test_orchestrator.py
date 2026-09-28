@@ -1,4 +1,5 @@
-"""M6 orchestrator mechanics without the model: state, gates, evidence rule, questions, headless."""
+"""Orchestrator mechanics without the model: state, the flat loop, evidence rule, questions, cadence,
+headless (spec §7, D-128/D-130/D-132)."""
 
 from __future__ import annotations
 
@@ -7,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from forge.agent.orchestrator import Orchestrator, phase_instructions
-from forge.agent.state import OrchestratorState, Phase, StateStore, Task
+from forge.agent.orchestrator import Orchestrator, detect_cadence, requirement_instructions
+from forge.agent.state import OrchestratorState, StateStore, Task
 from forge.engine.events import Event, EventBus, EventType
 from forge.engine.headless import HEADLESS_REFUSAL, auto_reply
 from forge.engine.inputs import Answer, Approve, Reject
@@ -78,58 +79,94 @@ def test_tasks_follow_dependencies() -> None:
 
 
 def test_state_survives_a_restart(host: SessionHost) -> None:
+    """No phase field (D-131): what survives a restart is the task list, current task and cadence."""
     store = StateStore(orchestrator(host).workspace)
     state = OrchestratorState(
-        phase=Phase.EXECUTE,
+        started=True,
         requirement="Export claims",
         current_task="T2",
+        cadence="free_hand",
         tasks=[Task(id="T1", title="a", status="done"), Task(id="T2", title="b", status="in_progress")],
     )
     store.save(state)
 
     loaded = StateStore(orchestrator(host).workspace).load()
 
-    assert loaded.phase == Phase.EXECUTE and loaded.current_task == "T2"
+    assert loaded.current_task == "T2" and loaded.cadence == "free_hand"
     assert store.write_document("notes/explore.md", "notes").exists()  # sub-folders are created
     assert store.write_document("reports/final.md", "report").exists()
     assert (orchestrator(host).workspace.forge_dir / "tasks.json").exists()
 
 
-def test_phase_instructions_have_every_section() -> None:
-    sections = phase_instructions()
-    assert {"clarify", "plan", "execute", "change", "restructure"} <= set(sections)
-    assert "{requirement}" in sections["clarify"] and "{test_command}" in sections["execute"]
+def test_resume_summary_is_honest_without_a_phase() -> None:
+    fresh = OrchestratorState()
+    assert fresh.resume_summary() == "No requirement given yet."
+
+    mid = OrchestratorState(
+        started=True,
+        current_task="T2",
+        cadence="ask_every_step",
+        tasks=[Task(id="T1", title="a", status="done"), Task(id="T2", title="b", status="in_progress")],
+    )
+    summary = mid.resume_summary()
+    assert "1 done" in summary and "1 pending" in summary and "T2" in summary and "ask every step" in summary
 
 
-# --- gates ---
+def test_requirement_instructions_have_every_section() -> None:
+    sections = requirement_instructions()
+    assert {"requirement", "change", "restructure"} <= set(sections)
+    assert "{requirement}" in sections["requirement"] and "{test_command}" in sections["requirement"]
 
 
-async def test_requirements_gate(host: SessionHost) -> None:
-    runner = asyncio.create_task(host.run())
+# --- cadence (D-130) ---
+
+
+def test_detect_cadence_recognises_the_worked_example() -> None:
+    assert (
+        detect_cadence("go ahead with the recommended option, don't ask me, I'm going to sleep")
+        == "free_hand"
+    )
+    assert detect_cadence("ask me before every step from now on please") == "ask_every_step"
+    assert detect_cadence("please fix the login bug") is None
+
+
+async def test_cadence_instruction_sets_permission_gate_and_persists(host: SessionHost) -> None:
+    """Cadence detection itself doesn't need a live agent turn, so this calls set_cadence (what
+    handle_message calls internally after detect_cadence) rather than running the whole loop through the
+    KB check and the model — that's exercised end-to-end by the live tests."""
+    orch = orchestrator(host)
+    assert host.agent is not None
+    assert detect_cadence("go ahead with the recommended option, don't ask me") == "free_hand"
+
+    orch.set_cadence("free_hand")
+
+    assert orch.state.cadence == "free_hand"
+    assert host.agent.gate.mode == "auto"
+    reloaded = StateStore(orch.workspace).load()
+    assert reloaded.cadence == "free_hand"  # survives a reload, i.e. a restart (D-132)
+
+
+# --- propose_requirements / propose_plan: optional, not gates (D-128) ---
+
+
+async def test_propose_requirements_is_not_a_gate(host: SessionHost) -> None:
+    """No approval round-trip: it just writes the document and returns immediately."""
     orch = orchestrator(host)
 
-    answer_next(host, lambda i: Reject(request_id=i, instruction="Add CSV headers."))
-    rejected = await orch.propose_requirements("# Export\n- CSV of claims")
-    answer_next(host, lambda i: Approve(request_id=i))
-    approved = await orch.propose_requirements("# Export\n- CSV of claims with headers")
-    runner.cancel()
+    result = await orch.propose_requirements("# Export\n- CSV of claims with headers")
 
-    assert "The user requested changes: Add CSV headers." in rejected.content
-    assert approved.content == "Requirements approved." and orch.context.end_turn
+    assert result.ok and "Saved REQUIREMENTS.md" in result.content
     assert (orch.workspace.forge_dir / "REQUIREMENTS.md").read_text(encoding="utf-8").startswith("# Export")
     assert "CSV of claims with headers" in (host.context_manager.pinned.get("requirement") or "")
 
 
-async def test_plan_gate_creates_tasks(host: SessionHost) -> None:
-    runner = asyncio.create_task(host.run())
+async def test_propose_plan_sets_tasks_without_approval(host: SessionHost) -> None:
     orch = orchestrator(host)
-    answer_next(host, lambda i: Approve(request_id=i))
 
     result = await orch.propose_plan(
         "# Plan",
         [TaskSpec(id="T1", title="Repository function"), TaskSpec(id="T2", title="Route", depends_on=["T1"])],
     )
-    runner.cancel()
 
     assert result.ok and [t.id for t in orch.state.tasks] == ["T1", "T2"]
     assert "[ ] T2 Route" in (host.context_manager.pinned.get("phase_and_tasks") or "")
@@ -199,7 +236,7 @@ def event(event_type: EventType, **payload: object) -> Event:
 
 
 def test_headless_replies() -> None:
-    plan = auto_reply(event(EventType.APPROVAL_REQUESTED, kind="plan"), auto_approve=True)
+    """No requirements/plan gate any more (D-128): every APPROVAL_REQUESTED is treated the same way."""
     pip = auto_reply(event(EventType.APPROVAL_REQUESTED, always_ask=True), auto_approve=True)
     command = auto_reply(event(EventType.APPROVAL_REQUESTED, always_ask=False), auto_approve=True)
     question = auto_reply(
@@ -207,13 +244,13 @@ def test_headless_replies() -> None:
         auto_approve=True,
     )
     action = auto_reply(event(EventType.USER_ACTION_REQUESTED), auto_approve=True)
-    no_flag = auto_reply(event(EventType.APPROVAL_REQUESTED, kind="plan"), auto_approve=False)
+    no_flag = auto_reply(event(EventType.APPROVAL_REQUESTED, always_ask=False), auto_approve=False)
 
-    assert isinstance(plan, Approve) and isinstance(command, Approve)
+    assert isinstance(command, Approve)
     assert isinstance(pip, Reject) and pip.instruction == HEADLESS_REFUSAL  # never the always-ask list (A-9)
     assert isinstance(question, Answer) and question.choice == "B"
     assert isinstance(action, Answer) and action.choice == "cant"
-    assert isinstance(no_flag, Reject)
+    assert isinstance(no_flag, Reject)  # not auto_approve: nothing is approved either
 
 
 def test_command_classification_for_evidence() -> None:
@@ -222,15 +259,17 @@ def test_command_classification_for_evidence() -> None:
     assert looks_like_write("python -m ruff format .") and not looks_like_write("python -m pytest -q")
 
 
-async def test_messages_after_done_start_a_change_request(host: SessionHost) -> None:
+async def test_messages_after_export_start_a_change_request(host: SessionHost) -> None:
     orch = orchestrator(host)
-    orch.state.phase = Phase.DONE
+    orch.state.started = True
+    orch.state.exported = True
     orch.state.requirement = "Export claims"
 
     orch._start_change("Also include the policy number", restructure=False)
 
-    assert orch.state.phase == Phase.PLAN and orch.state.change_request == "Also include the policy number"
-    assert orch._plan_kind() == "change"
+    assert orch.state.change_request == "Also include the policy number"
+    assert orch.state.exported is False  # a new cycle starts
+    assert orch._change_kind() == "change"
     assert "Change request: Also include the policy number" in orch.state.requirement
 
 

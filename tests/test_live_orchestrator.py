@@ -1,5 +1,6 @@
-"""M6 live acceptance: the real model drives SETUP -> EXPORT on the fixture, a killed run resumes at the same
-task, and a restructure keeps the tests passing. Slow (several minutes each). Run with: pytest -m live"""
+"""Live acceptance (spec §7, D-128): the real model drives a requirement to export on the fixture, a
+killed run resumes at the same task, and a restructure keeps the tests passing. Slow (several minutes
+each). Run with: pytest -m live"""
 
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ from pathlib import Path
 import psutil
 import pytest
 
-from forge.agent.state import Phase, StateStore
+from forge.agent.state import StateStore
 from forge.cli import _cleanup
 from forge.engine.events import EventType
 from forge.engine.headless import EXIT_OK, auto_reply, run_headless
@@ -78,8 +79,9 @@ async def test_requirement_runs_from_clarify_to_export_then_restructures(
 
     result = await asyncio.wait_for(run_headless(host, REQUIREMENT, auto_approve=True), timeout=1500)
 
-    assert result.exit_code == EXIT_OK, (result.phase, result.tasks, result.errors)
-    assert result.phase == Phase.DONE.value and all(t["status"] == "done" for t in result.tasks)
+    assert result.exit_code == EXIT_OK, (result.activity, result.tasks, result.errors)
+    assert host.orchestrator is not None and host.orchestrator.state.exported
+    assert all(t["status"] == "done" for t in result.tasks)
     forge = workspace.forge_dir
     for name in (
         "REQUIREMENTS.md",
@@ -119,10 +121,11 @@ async def test_requirement_runs_from_clarify_to_export_then_restructures(
         )
     )
     async with asyncio.timeout(1200):
-        # The command is queued first: wait for the restructure to start, then for it to finish.
-        while host.orchestrator is None or host.orchestrator.state.phase == Phase.DONE:
+        # The command is queued first: wait for the restructure to start (exported flips back to False,
+        # D-132), then for it to finish (exported again, and the run is idle).
+        while host.orchestrator is None or host.orchestrator.state.exported:
             await asyncio.sleep(1)
-        while host.orchestrator.state.phase != Phase.DONE or host.busy or not host.inputs_empty:
+        while not host.orchestrator.state.exported or host.busy or not host.inputs_empty:
             await asyncio.sleep(2)
     subscription.close()
     await host.close()
@@ -157,7 +160,7 @@ def test_killed_run_resumes_the_same_task(live_env: Path, tmp_path: Path) -> Non
             continue
         state = store.load()
         done = [t for t in state.tasks if t.status == "done"]
-        if done and state.current_task and state.phase == Phase.EXECUTE:
+        if done and state.current_task:
             killed_during = state.current_task
             for child in psutil.Process(process.pid).children(recursive=True):
                 child.kill()
@@ -187,7 +190,7 @@ def test_killed_run_resumes_the_same_task(live_env: Path, tmp_path: Path) -> Non
 
     assert report["exit_code"] == EXIT_OK, report
     after = store.load()
-    assert after.phase == Phase.DONE
+    assert after.exported
     assert finished_before <= {t.id for t in after.tasks if t.status == "done"}
     events = [
         json.loads(line)
@@ -198,7 +201,7 @@ def test_killed_run_resumes_the_same_task(live_env: Path, tmp_path: Path) -> Non
     resume_notices = [
         e for e in events if e["type"] == EventType.NOTICE.value and e["payload"].get("kind") == "resume"
     ]
-    assert resume_notices and f"task {killed_during}" in resume_notices[0]["payload"]["text"]
+    assert resume_notices and f"on {killed_during}" in resume_notices[0]["payload"]["text"]
     progress = (workspace.forge_dir / "PROGRESS.md").read_text(encoding="utf-8")
     for task_id in finished_before:  # finished tasks were not redone after the restart
         assert progress.count(f"{task_id} ") == 1, task_id

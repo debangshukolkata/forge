@@ -1096,3 +1096,162 @@ inline-size` — while an equivalent `@media` query worked fine. Cause not fully
 rendering flag), but since it left the feature untestable in our own e2e suite and unverifiable on whatever Edge
 build ships on the target enterprise laptop, `ResizeObserver` was used instead: broadly supported since 2020,
 and it let the browser test in `test_web_e2e.py` actually exercise both layouts.
+
+### D-128 — Drop the fixed phase pipeline; run a flat Claude-Code-style loop · Agreed (2026-09-28)
+The user corrected the premise behind spec §7 (the SETUP→INTAKE→CLARIFY→KB CHECK→EXPLORE→PLAN→TASKS→
+EXECUTE/VERIFY→REVIEW→EXPORT→RESTRUCTURE→HANDOFF→RETRO state machine, with mandatory approval gates at
+REQUIREMENTS.md and PLAN.md): that design assumed Forge runs detached/unattended, but Forge runs live in
+front of the user on their laptop, the same way Claude Code does. Options considered:
+(a) keep the phase pipeline as-is; (b) keep phases but make each one's gate optional/configurable;
+(c) drop the fixed pipeline entirely — a single agent loop (read request → act with tools → respond),
+with inline judgment-based clarification and plan checks instead of mandatory named phases, exactly
+mirroring how Claude Code itself behaves.
+Chosen: **(c)**, replacing spec §7 (workflow/approvals) and the phase-filtered toolset in §8/§9.
+Reasoning, resolved point by point:
+- **Requirements confirmation**: no mandatory CLARIFY phase or signed-off REQUIREMENTS.md. Forge asks
+  inline, only when the request is ambiguous or has a consequential fork — the same judgment call this
+  assistant makes with the user, not a forced ≤5-question round every time.
+- **Plan/design confirmation**: no mandatory PLAN phase or signed-off PLAN.md. Forge proceeds directly for
+  small/clear changes; for a genuine design fork (architecture choice, hard-to-reverse decision, touches
+  shared code) it still stops, lays out options with a recommendation, and waits — same trigger list as
+  CLAUDE.md's existing "stop and discuss when" rules, just not gated behind a named phase.
+- **Artifact trail / resumability**: no mandatory REQUIREMENTS.md/PLAN.md/tasks.json. Resumability instead
+  comes from (1) the conversation/event transcript, (2) a lightweight in-session task list for visible
+  progress on multi-step work (not an approval-gated artifact), and (3) the existing memory/lessons
+  mechanism (§12), written as a deliberate action rather than a required phase output. The library
+  requirement-card + retro can still be produced, but as an explicit end-of-work step the user or Forge
+  triggers, not a phase-machine output.
+- **Safety invariants**: nothing here weakens them. The write jail, DB scratch-schema guard, Mode B
+  isolation and redaction (CLAUDE.md "Safety invariants") are already code-level checks independent of
+  phase, not phase-enforced — they continue to run on every write/tool-call regardless of loop structure.
+- **Sign-off cadence**: not fixed by which phase is active; expected to become a configurable mode (free
+  hand vs. per-step approval vs. Claude-Code-default judgment) — to be recorded as its own decision once
+  agreed with the user (this thread's point 3, not yet settled).
+Rejected (a): too slow/heavy for live, in-front-of-the-user use (the user's own assessment). Rejected (b):
+keeping the phase machine but making gates optional still carries the state-machine complexity and the
+phase-filtered toolset for no remaining benefit once gates are judgment-based.
+Consequence: spec §7 (Workflow & Approvals) and the phase list in §8 are being rewritten; `spawn_subagent`
+types (explore, planner, reviewer, test_writer, debugger, §9.10) are no longer tied to specific phases —
+Forge can call any of them at any point in the loop, same as this assistant's own Agent tool. Still to be
+worked through point by point with the user: sign-off/approval modes (point 3) and Mode A/B execution
+details (point 2).
+
+### D-129 — Mode B: user-pinned interface contracts, learned over time · Agreed (2026-09-28)
+User requirement: in Mode B, Forge has a free hand to design the solution, but the user may pin a specific
+signature/contract upfront (e.g. the LLM call wrapper's signature, a file read/write helper's signature) so
+generated code is easy to retrofit into the host repo by hand — and may change a contract mid-way, after
+seeing generated code, with Forge accommodating the change from that point on.
+Options considered for where the user provides this: (a) a dedicated Contracts panel/store in the
+workspace (web UI side panel + a `CONTRACTS.md`-style file), always pinned into context like the Host
+Profile, in addition to accepting it via chat at any time; (b) chat only, filed into pinned context/memory;
+(c) folded into the existing Mode B Host Profile interview (§6A.2) only, asked once at setup.
+Chosen: **(a)**, with chat also accepted as an entry point into the same store. Rejected (b): nothing keeps
+track of which contracts are currently active across a long session, and no single place to review/edit
+them. Rejected (c) alone: the profile interview is a setup-time flow; it doesn't cover changing a contract
+mid-way after the user has seen generated code, which is a stated requirement.
+Additional user requirement: Forge should **learn** contracts the user pins or repeatedly corrects, and
+proactively recommend them on later, similar requirements — routed through the existing lessons mechanism
+(§12: proposed, reviewed, approved, scoped same-repo/profile or promoted to global), not a new mechanism.
+Consequence: spec §6A (Mode B) gets a new subsection for the Contracts store; §6A.5's plan step lists which
+contract each new file's interface conforms to, alongside the existing profile-exemplar mirroring; the
+Contracts store is added to §10.2's pinned context (alongside the Host Profile); lesson proposals (§12.2)
+can originate from a corrected/repeated contract, not only from retro.
+Confirms (no change from current spec, restated for this decision thread): §6A.7 (chat-driven diagnose)
+already covers post-retrofit error handling — user pastes errors, Forge classifies and fixes, revises
+output; A-11's fallback chain already covers dependency installs — Forge installs freely; if blocked by
+something only the user can do (e.g. enterprise policy), Forge asks the user, and if the user can't either,
+proposes a workaround or states plainly the requirement can't be met as specified so the user can descope.
+
+### D-130 — Sign-off cadence is a live conversational instruction, not a config setting · Agreed (2026-09-28)
+Closes the open point from [D-128] (sign-off cadence). Options considered: (a) global config default
+(`config.yaml`/`/config`), overridable per workspace; (b) chosen once per workspace at SETUP, no global
+default; (c) no config surface at all — cadence is an ordinary instruction the user gives Forge in
+conversation, exactly the way this assistant is told "go ahead with the recommended option, don't ask me"
+or "ask me before every step" mid-session, and Forge follows it from that point until told otherwise.
+Chosen: **(c)**, per explicit user instruction ("should work exactly like Claude Code... do it how Claude
+does it today"). Worked example given by the user: told "go ahead with the recommended option, I'm going
+to sleep," Forge proceeds unattended overnight applying its own recommended choices; the next morning, told
+"ask me before every step," it switches to asking before each action from then on. No workspace-setup
+question, no config key, no per-workspace default — the instruction is just conversation state, same as it
+is for this assistant.
+Default absent any instruction: the same judgment-based behaviour already specified — CLAUDE.md's
+"Stop and discuss when" list and spec §7's discussion points (design forks, shared/core code touched, new
+dependency/DB/config, wrong assumption, escalation reached, neither party can act) — i.e. Forge starts in
+"ask when it matters" mode, same as this assistant's own default, until the user grants a free hand or
+asks for tighter/looser cadence.
+**Critical-case override, never skippable regardless of any "go ahead" grant:** the existing safety
+invariants (CLAUDE.md: write jail, Mode B isolation, secrets/redaction, DB scratch-schema-only writes,
+Forge can't modify its own install/config) and A-9's always-ask list (headless `--auto-approve` never
+covers always-ask actions) — generalised from headless mode to every mode. A free hand covers Forge's
+*design and implementation* choices; it never covers an irreversible or destructive action, a request that
+would touch the user's original repo or secrets, or anything already on the always-ask list. This mirrors
+exactly how a blanket "go ahead" from the user does not authorise this assistant to skip its own hardcoded
+safety checks (e.g. `git push --force`, deleting files outside its own session's work, secrets handling).
+Consequence: no new config key or SETUP question is added. The orchestrator (already being reworked per
+[D-128]) tracks the current cadence as session/conversation state (default: judgment-based) that the user
+can change at any time by saying so, the same way slash-command-free instructions already work for this
+assistant. Spec §7's "Discussion points" section gets a short note on this; §14 (Permissions) gets the
+critical/always-ask list consolidated in one place so it's enforceable in code, not just prose.
+
+### D-131 — Orchestrator state.json drops the Phase field entirely; Run map/stepper UI deferred · Agreed (2026-09-28)
+Implementing [D-128] required deciding what replaces `Phase` (the enum currently driving
+`agent/orchestrator.py`'s control-flow switch) in `OrchestratorState`/`state.json`. Options: (a) keep a
+narrow, non-driving `activity` label purely for display (Run map/stepper, resume message), updated by the
+model as a side effect but not read by control flow; (b) drop phase/activity entirely — `state.json` keeps
+only `requirement`, `change_request`, `restructuring`, `tasks`, `current_task`; resume message becomes
+generic ("resuming; N tasks pending, currently on T3") instead of phase-based.
+Chosen: **(b)**, per the user ("drop phase/activity entirely — we will take up the Run map/stepper later").
+Rejected (a): still carries a field the model must remember to keep current, and half-adapts the existing
+Run map/stepper (D-118..D-127) to a vocabulary that's likely to change again once that UI is redesigned —
+cleaner to cut it now and redesign the UI as its own later task than to carry a stopgap field.
+Consequence: `status_changed`'s `phase` payload field is removed; the Run map/stepper UI (which reads it)
+is explicitly out of scope for this pass and will show stale/fixed/missing phase state until redesigned —
+tracked as a follow-up in TODO.md, not a regression to fix now.
+
+### D-132 — Verification becomes judgment-based; sessions persist and resume like a reopened chat; cadence persists · Agreed (2026-09-28)
+Three follow-on decisions, closing gaps found while re-checking "is this exactly like Claude Code" before
+writing code.
+
+**Verification (replaces §13's mandatory verify ladder + reviewer subagent + bounded fix rounds as a gate
+before a task/requirement can close):** Options: (a) judgment-based, like this assistant — Forge runs
+tests/checks when it judges them warranted (after a meaningful change, before claiming something works,
+when something seems risky), no mandatory full-suite-plus-reviewer-subagent checkpoint; the verify ladder
+and reviewer subagent tools still exist and Forge can invoke them anytime, just not as a forced gate;
+(b) keep the full ladder mandatory by default, relaxed only under an explicit free-hand grant.
+Chosen: **(a)**, per the user ("I want exactly as you do... rigorous tests every time makes development
+very slow"). This is a further cut beyond [D-128]: D-128 only removed the CLARIFY/PLAN *approval* gates;
+this removes the REVIEW phase's mandatory verification gate too. §13's ladder and §9.8's verification tools
+are unchanged as *available* tools — only their mandatory, blocking use before EXPORT is removed.
+
+**Persistence & resume:** the user corrected the premise that "live, one conversation" (point 1 of the
+earlier Claude-Code-parity gap list) meant Forge has no persistence gap to close — it does, but the fix is
+that Forge already needs to behave like *reopening a chat with this assistant*: laptop dies, network drops,
+user returns after 7 days, or a token/context limit is hit — reopening the workspace continues where it
+left off. Options for how: (a) auto-resume silently (task list, cadence, conversation context restored,
+with a brief "here's what was in progress" note, no prompt) — the same experience as reopening a
+conversation with this assistant; (b) always show a summary and ask the user to confirm resume vs. start
+fresh, in case they've forgotten the workspace's purpose after a long gap.
+Chosen: **(a)**. This confirms and generalizes what `Orchestrator.needs_resume`/`resume()` already do in
+the current code (spec §7, §12.6) — state.json survives a kill and a workspace reopen continues at the
+same task — extended to the flat-loop design being built for [D-128]: resumability is not phase-dependent
+and must survive the phase field's removal ([D-131]).
+
+**Cadence persistence:** does a "go ahead, don't ask me" or "ask me before every step" instruction
+(§7, [D-130]) survive a killed/resumed session, or reset to default judgment-based on reopen? Options:
+(a) persist it in state.json, consistent with (a) above and the overnight-build example in [D-130] (the
+user shouldn't have to re-grant free hand after every restart); (b) reset to default on every resume as a
+safety-conscious default.
+Chosen: **(a)**. This corrects [D-130]'s original framing ("cadence is conversational state, not a config
+setting") — it is still not a config *setting* (no config key, no SETUP question, changed only by the user
+saying so in chat), but because Forge sessions can be killed and resumed days later (unlike a single
+terminal invocation), the *current value* of that conversational state must be persisted in state.json
+alongside the task list, or a "go ahead while I sleep" grant would silently evaporate on any interruption —
+defeating the example [D-130] was written around. The always-ask/critical list is still never waived by a
+persisted free hand, same as before.
+
+Consequence for the orchestrator rewrite in progress: `OrchestratorState`/`state.json` (already losing the
+`Phase` field per [D-131]) keeps or gains: the task list (unchanged), a persisted `cadence` field
+(`default` / `free_hand` / `ask_every_step`), and enough of a resume summary to greet the user accurately
+on reopen ("N tasks pending, currently on T3, cadence: free hand" style) — without reintroducing a
+phase-driven control flow. The REVIEW step's mandatory gate logic in `orchestrator.py` (`_review`,
+`MAX_REVIEW_FIX_ROUNDS`) is being removed as part of the same rewrite, not kept as dead code.

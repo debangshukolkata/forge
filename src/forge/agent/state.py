@@ -1,14 +1,17 @@
-"""Persistent orchestrator state (spec §7, §12.6): phase, tasks, approvals — everything needed to resume.
+"""Persistent orchestrator state (spec §7, §12.6, D-128/D-131/D-132): tasks and cadence — everything needed
+to resume. There is no phase field: Forge runs a flat loop, not a fixed phase state machine (D-128, D-131).
 
-Stored in <workspace>/.forge/state.json and rewritten after every transition, so a killed run resumes at
-the same phase and task. Human-readable companions live next to it: REQUIREMENTS.md, PLAN.md, tasks.json,
-PROGRESS.md, DECISIONS.md, DISCUSSIONS.md.
+Stored in <workspace>/.forge/state.json and rewritten after every change, so a killed run resumes
+automatically and silently, the way reopening a conversation with this assistant does — no "resume or
+start fresh?" prompt (D-132). Cadence (D-130) is persisted here too, so a "go ahead, don't ask me" grant
+survives a crash, a dropped network, or the user returning days later (D-132) — it is still never a config
+key, only ever set by the user saying so in chat. Human-readable companions live next to it: REQUIREMENTS.md,
+PLAN.md, tasks.json, PROGRESS.md, DECISIONS.md, DISCUSSIONS.md.
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from enum import StrEnum
 from pathlib import Path
 from typing import Literal
 
@@ -16,22 +19,8 @@ from pydantic import BaseModel, Field
 
 from forge.workspace.workspace import Workspace
 
-
-class Phase(StrEnum):
-    INTAKE = "intake"
-    CLARIFY = "clarify"
-    KB_CHECK = "kb_check"
-    EXPLORE = "explore"
-    PLAN = "plan"
-    EXECUTE = "execute"
-    REVIEW = "review"
-    EXPORT = "export"
-    HANDOFF = "handoff"
-    RESTRUCTURE = "restructure"
-    DONE = "done"
-
-
 TaskStatus = Literal["pending", "in_progress", "done", "blocked"]
+Cadence = Literal["default", "free_hand", "ask_every_step"]
 
 
 class Task(BaseModel):
@@ -48,17 +37,33 @@ class Task(BaseModel):
 
 
 class OrchestratorState(BaseModel):
-    phase: Phase = Phase.INTAKE
     requirement: str = ""
-    requirements_approved: bool = False
-    plan_approved: bool = False
+    started: bool = False  # the requirement has been given; distinguishes a fresh workspace from resuming
+    exported: bool = False  # output/ has been built at least once; a later message is a change request
     tasks: list[Task] = Field(default_factory=list)
     current_task: str | None = None
     explore_notes: str = ""
-    change_request: str = ""  # set while a change request or restructure is being planned/executed
+    change_request: str = ""  # set while a change request or restructure is being worked on
     restructuring: bool = False
-    clarify_rounds: int = 0
+    cadence: Cadence = "default"  # D-130/D-132: persisted, set only by the user saying so in chat
     updated: str = ""
+
+    def resume_summary(self) -> str:
+        """A short, honest status for the auto-resume greeting (D-132) — no phase to name, just what's
+        actually true: what's pending, what's in progress, and the cadence still in force."""
+        if not self.started:
+            return "No requirement given yet."
+        pending = sum(1 for t in self.tasks if t.status in ("pending", "in_progress"))
+        blocked = sum(1 for t in self.tasks if t.status == "blocked")
+        done = sum(1 for t in self.tasks if t.status == "done")
+        bits = [f"{done} done", f"{pending} pending"]
+        if blocked:
+            bits.append(f"{blocked} blocked")
+        current = f", currently on {self.current_task}" if self.current_task else ""
+        cadence_note = "" if self.cadence == "default" else f"; cadence: {self.cadence.replace('_', ' ')}"
+        if not self.tasks:
+            return f"Understanding the requirement{cadence_note}."
+        return f"{', '.join(bits)}{current}{cadence_note}."
 
     def task(self, task_id: str) -> Task | None:
         return next((t for t in self.tasks if t.id == task_id), None)

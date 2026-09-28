@@ -92,13 +92,20 @@ async def test_post_edit_hooks_run_and_report(original_repo: Path, tmp_path: Pat
 
 
 def test_status_bar_follows_the_session(original_repo: Path, tmp_path: Path) -> None:
+    """No fixed phase any more (D-128/D-131): the status bar shows the current task and cadence instead."""
     host = host_for(original_repo, tmp_path)
     state = ConsoleState()
     for kind, payload in [
         (EventType.STATUS_CHANGED, {"state": "working", "permission_mode": "default"}),
         (EventType.CONTEXT_UPDATED, {"percent": 42.4}),
-        (EventType.TASK_LIST_UPDATED, {"phase": "execute", "current_task": "T2", "tasks": []}),
+        (EventType.TASK_LIST_UPDATED, {"current_task": "T2", "cadence": "free_hand", "tasks": []}),
     ]:
         track_status(Event(seq=1, type=kind, ts="", payload=payload), state)
     bar = status_bar(host, state)
-    assert "phase execute · T2" in bar and "working" in bar and "ctx 42%" in bar and "mode default" in bar
+    assert (
+        "task T2" in bar
+        and "cadence free hand" in bar
+        and "working" in bar
+        and "ctx 42%" in bar
+        and "mode default" in bar
+    )

@@ -1,5 +1,6 @@
 """Mode B tools (spec §6A): the host profile (search / read / propose an update), the assumption register,
-and the contract/integration documents. Only offered in Mode B sessions."""
+user-pinned interface contracts (§6A.2A, D-129), and the contract/integration documents. Only offered in
+Mode B sessions."""
 
 from __future__ import annotations
 
@@ -8,6 +9,7 @@ from typing import Any, Literal
 from pydantic import Field
 
 from forge.modeb.assumptions import AssumptionRegister
+from forge.modeb.contracts import ContractError, ContractRegister
 from forge.modeb.output import DOCUMENT_NAMES, read_document, write_document
 from forge.safety.redact import default_redactor
 from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
@@ -15,6 +17,24 @@ from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
 
 def _profile(context: ToolContext) -> Any:
     return context.profile
+
+
+def _propose_contract_lesson(context: ToolContext, contract: Any) -> None:
+    """D-129: a pinned/revised contract becomes a lesson proposal, scoped to this host profile, so Forge
+    recommends it on a later, similar requirement instead of re-deriving or re-asking (spec §12)."""
+    from forge.config import forge_home
+    from forge.learning.lessons import LessonStore
+    from forge.learning.scope import scope_of
+
+    scope = scope_of(context.workspace, forge_home())
+    LessonStore(forge_home()).propose(
+        f"For the '{contract.seam}' seam on this host, build to this exact signature: {contract.signature}"
+        + (f" ({contract.note})" if contract.note else ""),
+        scope,
+        source="contract",
+        evidence=contract.id,
+        confidence="high",  # the user stated it directly, not inferred
+    )
 
 
 class ProfileSearch(Tool):
@@ -160,6 +180,61 @@ class AssumptionAdd(Tool):
         return ToolResult(ok=True, content=f"Recorded {item.id}.")
 
 
+class ContractRead(Tool):
+    name = "contract_read"
+    read_only = True
+    description = (
+        "List the interface contracts the user pinned for this host (a seam's exact signature, e.g. the "
+        "LLM call wrapper or a file read/write helper) — build new code at these seams to match them "
+        "exactly. Empty when the user hasn't pinned any: use your own judgement for those seams."
+    )
+
+    class Args(ToolArgs):
+        pass
+
+    async def run(self, args: ContractRead.Args, context: ToolContext) -> ToolResult:
+        profile = _profile(context)
+        if profile is None:
+            return ToolResult(ok=False, content="No host profile is attached to this workspace.")
+        items = ContractRegister(profile).all()
+        if not items:
+            return ToolResult(ok=True, content="No contracts pinned yet.")
+        return ToolResult(
+            ok=True,
+            content="\n".join(
+                f"{c.id} {c.seam}: {c.signature}" + (f" — {c.note}" if c.note else "") for c in items
+            ),
+        )
+
+
+class ContractPin(Tool):
+    name = "contract_pin"
+    read_only = True  # Forge Home only (the profile), never the workspace
+    description = (
+        "Record a user-pinned interface contract for a seam (e.g. seam='llm_call_wrapper', "
+        "signature='def call_llm(prompt: str, **kwargs) -> LLMResponse'). Use this when the user tells "
+        "you the exact signature/shape to build a seam to, so the result is easy to retrofit into their "
+        "repository by hand. Pinning an existing seam again revises it — the user may change their mind "
+        "after seeing generated code."
+    )
+
+    class Args(ToolArgs):
+        seam: str = Field(description="Short lowercase id, e.g. 'llm_call_wrapper', 'file_read_write'")
+        signature: str = Field(description="The exact signature/contract text the user gave")
+        note: str = Field(default="", description="Why, or how it's used")
+
+    async def run(self, args: ContractPin.Args, context: ToolContext) -> ToolResult:
+        profile = _profile(context)
+        if profile is None:
+            return ToolResult(ok=False, content="No host profile is attached to this workspace.")
+        try:
+            contract = ContractRegister(profile).pin(args.seam, args.signature, args.note)
+        except ContractError as error:
+            return ToolResult(ok=False, content=str(error))
+        _propose_contract_lesson(context, contract)
+        return ToolResult(ok=True, content=f"Pinned {contract.id} ({contract.seam}).")
+
+
 class ModebDocument(Tool):
     name = "modeb_document"
     read_only = True  # .forge/modeb/, assembled into output/ at EXPORT
@@ -190,5 +265,7 @@ def modeb_tools() -> list[Tool]:
         ProfileUpdate(),
         ProfileAddExemplar(),
         AssumptionAdd(),
+        ContractRead(),
+        ContractPin(),
         ModebDocument(),
     ]

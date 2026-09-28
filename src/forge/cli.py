@@ -178,7 +178,7 @@ async def _run(workspace_path: Path, requirement: str | None, auto_approve: bool
             json.dumps(
                 {
                     "exit_code": result.exit_code,
-                    "phase": result.phase,
+                    "status": result.activity,
                     "tasks": result.tasks,
                     "errors": result.errors,
                     "output": str(workspace_path / "output"),
@@ -187,7 +187,7 @@ async def _run(workspace_path: Path, requirement: str | None, auto_approve: bool
             )
         )
     else:
-        console.print(f"Phase: {result.phase}", markup=False)
+        console.print(f"Status: {result.activity}", markup=False)
         for task in result.tasks:
             console.print(f"  [{task['status']}] {task['id']} {task['title']} — {task['note']}", markup=False)
         for message in result.errors:

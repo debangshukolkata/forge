@@ -1,9 +1,11 @@
-"""The requirement workflow (spec §7): CLARIFY -> KB CHECK -> EXPLORE -> PLAN -> [approve] -> EXECUTE (task by
-task) -> REVIEW -> EXPORT -> HANDOFF, plus change requests and RESTRUCTURE (§6.7).
+"""The requirement workflow (spec §7, D-128/D-130/D-132): a flat agent loop, not a fixed phase state
+machine. Forge understands, explores, plans and executes a requirement using its own judgment about when to
+ask the user or check in — the same way this assistant works — instead of marching through mandatory
+CLARIFY/PLAN/REVIEW gates. Change requests and RESTRUCTURE (§6.7) reuse the same loop with a smaller brief.
 
-The engine drives the phases, not the model: each phase runs the agent loop with its own tools and
-instructions, and ends only when its phase tool succeeds (propose_requirements / propose_plan approved,
-task_update). State is saved after every transition, so a killed run resumes where it stopped.
+State is saved after every change, so a killed run resumes automatically and silently on reopen (D-132):
+no "resume or start fresh?" prompt, no phase to restore — just the task list, the requirement, and the
+cadence (D-130) the user last asked for, which persists across the interruption.
 """
 
 from __future__ import annotations
@@ -15,9 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 from forge.agent.learning_hooks import after_export, pin_lessons, related_cards_note
 from forge.agent.reports import closing_message, final_report
-from forge.agent.review import run_reviewer
-from forge.agent.state import Phase, StateStore, Task
-from forge.agent.subagent import run_explore
+from forge.agent.state import Cadence, StateStore, Task
 from forge.config import forge_home
 from forge.engine.events import EventType
 from forge.kb.builder import build as kb_build
@@ -26,7 +26,6 @@ from forge.kb.narrative import llm_writer
 from forge.learning.improve import prompt_override
 from forge.llm.base import Message
 from forge.modeb.assumptions import AssumptionRegister
-from forge.modeb.fixture_check import check_fixture_use
 from forge.modeb.output import build_modeb_output
 from forge.parity.history import History
 from forge.tools.base import Tool, ToolContext, ToolResult
@@ -43,14 +42,12 @@ from forge.tools.interaction import (
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
 from forge.tools.shell import execute
 from forge.verify.ladder import VerifyLadder
-from forge.verify.test_guard import check_stubs, check_tests
 from forge.workspace.output import build_output
 
 if TYPE_CHECKING:
     from forge.engine.session_host import SessionHost
 
 MAX_NUDGES = 1
-MAX_REVIEW_FIX_ROUNDS = 2
 RESUMED_NOTE = (
     "\n\nResumed after an interruption: first check what is already done (files modified are pinned)."
 )
@@ -58,9 +55,26 @@ NUDGE = (
     "Finish the current step: verify and call task_update, or ask the user if you are blocked. "
     "Don't stop without one of these."
 )
+FREE_HAND_PHRASES = (
+    "don't ask me",
+    "dont ask me",
+    "go ahead with the recommended",
+    "you have a free hand",
+    "free hand",
+    "proceed without asking",
+    "don't wait for my approval",
+)
+ASK_EVERY_STEP_PHRASES = (
+    "ask me before every step",
+    "ask me every step",
+    "ask before every step",
+    "check with me",
+    "check in with me",
+    "ask me first from now on",
+)
 
 
-def phase_instructions() -> dict[str, str]:
+def requirement_instructions() -> dict[str, str]:
     text = resources.files("forge").joinpath("agent/prompts/phases.md").read_text(encoding="utf-8")
     override = prompt_override(forge_home(), "phases")  # approved tier-2 tweaks (spec §12.5)
     sections: dict[str, str] = {}
@@ -72,6 +86,18 @@ def phase_instructions() -> dict[str, str]:
     return sections
 
 
+def detect_cadence(text: str) -> Cadence | None:
+    """Recognises a cadence instruction in a chat message (D-130) — the same way this assistant follows a
+    mid-conversation 'go ahead, don't ask me' or 'ask me before every step' until told otherwise. Returns
+    None when the message doesn't look like a cadence instruction, so the caller leaves cadence unchanged."""
+    lowered = text.lower()
+    if any(phrase in lowered for phrase in FREE_HAND_PHRASES):
+        return "free_hand"
+    if any(phrase in lowered for phrase in ASK_EVERY_STEP_PHRASES):
+        return "ask_every_step"
+    return None
+
+
 class Orchestrator:
     def __init__(self, host: SessionHost) -> None:
         assert host.workspace is not None and host.agent is not None
@@ -79,46 +105,45 @@ class Orchestrator:
         self.workspace = host.workspace
         self.store = StateStore(self.workspace)
         self.state = self.store.load()
-        self.instructions = phase_instructions()
+        self.instructions = requirement_instructions()
         self.context: ToolContext = host.agent.context
         self.context.interaction = self
-        self._task_start_step = 0
-        self._baseline_tests: tuple[bool, str] | None = None
-        self._review_rounds = 0
         self._publishing: set[asyncio.Task[Any]] = set()
+        self._task_start_step = 0
+        self._restructure_baseline: tuple[bool, str] | None = None
+        self._apply_cadence()
         self._refresh_pinned()
 
     # --- entry points ---
 
     @property
     def needs_resume(self) -> bool:
-        return self.state.phase not in (Phase.INTAKE, Phase.DONE, Phase.HANDOFF)
+        return self.state.started and not self.state.exported
 
     async def handle_message(self, text: str) -> None:
-        if self.state.phase in (Phase.INTAKE,):
+        cadence = detect_cadence(text)
+        if cadence is not None:
+            self.set_cadence(cadence)
+        if not self.state.started:
             self.state.requirement = text
-            self._enter(Phase.CLARIFY)
-        elif self.state.phase in (Phase.DONE, Phase.HANDOFF):
+            self.state.started = True
+            self._save()
+        elif self.state.exported:
             self._start_change(text, restructure=False)
         else:
             self.host.history.append(Message.user(text))
         await self.advance()
 
     async def resume(self) -> None:
-        await self._notice(
-            "resume",
-            f"Resuming at phase {self.state.phase.value}"
-            + (f", task {self.state.current_task}" if self.state.current_task else "")
-            + ".",
-        )
+        await self._notice("resume", f"Resuming: {self.state.resume_summary()}")
         await self.host.prepare_database()
-        if self.state.phase == Phase.EXECUTE and self.state.current_task:
+        if self.state.current_task:
             self._start_task(self.state.task(self.state.current_task), resumed=True)  # type: ignore[arg-type]
         await self.advance()
 
     async def restructure(self, instruction: str) -> None:
-        passed, summary = await self._run_tests()
-        self._baseline_tests = (passed, summary)
+        """§6.7: behaviour must not change, so the tests are run before and after and compared."""
+        self._restructure_baseline = await self._run_tests()
         self._start_change(instruction, restructure=True)
         await self.advance()
 
@@ -136,105 +161,33 @@ class Orchestrator:
                     "Find a workaround that doesn't need it (e.g. keep the change in DB_CHANGES.sql "
                     "and mark the check server-run), or ask the user."
                 )
-        if waiting and self.state.phase in (Phase.REVIEW, Phase.EXPORT, Phase.DONE):
-            self.state.phase = Phase.EXECUTE
+        if waiting and self.state.exported:  # work resumes: this is no longer a finished, resume-safe state
+            self.state.exported = False
         self._save()
         return bool(waiting)
 
-    # --- the phase machine ---
+    # --- the flat loop (spec §7, D-128) ---
 
     async def advance(self) -> None:
-        while True:
-            phase = self.state.phase
-            if phase == Phase.CLARIFY:
-                if not await self._conversation_phase(
-                    "clarify", self._planning_tools(ProposeRequirements()), "plan"
-                ):
-                    return
-                self._enter(Phase.KB_CHECK)
-            elif phase == Phase.KB_CHECK:
-                if not self.workspace.mode_b:  # Mode B has a host profile instead of a KB (spec §6A.5)
-                    await self._kb_check()
-                await self.host.prepare_database()
-                self._enter(Phase.EXPLORE)
-            elif phase == Phase.EXPLORE and self.workspace.mode_b:
-                self.state.explore_notes = (
-                    "Mode B: there is no repository to explore. Use the pinned host profile, profile_search "
-                    "and profile_read; ask the user for gaps."
-                )
-                self._enter(Phase.PLAN)
-            elif phase == Phase.EXPLORE:
-                await self._notice("explore", "Exploring the codebase for this requirement…")
-                self.state.explore_notes = await run_explore(
-                    self.host.router, self.context, self._requirement_text()
-                )
-                self.store.write_document("notes/explore.md", self.state.explore_notes)
-                self._enter(Phase.PLAN)
-            elif phase in (Phase.PLAN, Phase.RESTRUCTURE):
-                if not await self._conversation_phase(
-                    self._plan_kind(), self._planning_tools(ProposePlan()), "plan"
-                ):
-                    return
-                self._enter(Phase.EXECUTE)
-            elif phase == Phase.EXECUTE:
-                if not await self._execute_tasks():
-                    return
-                self._enter(Phase.REVIEW)
-            elif phase == Phase.REVIEW:
-                if await self._review():
-                    self._enter(Phase.EXPORT)
-                else:
-                    self._enter(Phase.EXECUTE)
-            elif phase == Phase.EXPORT:
-                await self._export()
-                self.state.change_request, self.state.restructuring = "", False
-                await after_export(self)  # library card, metrics, RETRO (spec §12)
-                self._enter(Phase.DONE)
-            else:
-                return
-
-    async def _conversation_phase(self, kind: str, tools: ToolRegistry, mode: str) -> bool:
-        """Runs a talking phase until its phase tool succeeds (True) or the model waits for the user
-        (False)."""
-        if not self._phase_started(kind):
-            values = {"requirement": self.state.change_request} if kind in ("change", "restructure") else {}
-            text = self._format(kind, **values)
-            if kind in ("plan", "change"):
-                text += related_cards_note(self)  # the library: earlier requirements to reuse and cite
+        """Runs (or continues) the requirement: brief the model once, then let it work — reading,
+        exploring, planning out loud only at real forks, executing tasks — using its own judgment about
+        when to check in, until it ends its turn to wait for the user or every task is settled."""
+        if not self.state.started:
+            return
+        first_brief = not self._briefed()
+        kind = self._change_kind()
+        if first_brief and not kind and not self.workspace.mode_b:
+            await self._kb_check()  # Mode A: keep the KB fresh before the model relies on it, once
+            await self.host.prepare_database()
+        if first_brief:
+            text = self._format(kind or "requirement")
+            if kind == "change":
+                text += related_cards_note(self)
             self.host.history.append(Message.system(text))
-        return await self._run_agent(tools, mode)
-
-    async def _execute_tasks(self) -> bool:
-        while (task := self.state.next_task()) is not None:
-            if self.state.current_task != task.id or task.status != "in_progress":
-                self._start_task(task)
-            if not await self._run_agent(self._execution_tools(), "default"):
-                return False
-        return True
-
-    async def _run_agent(self, tools: ToolRegistry, mode: str) -> bool:
-        agent = self.host.agent
-        assert agent is not None
-        agent.tools = tools
-        previous_mode = agent.gate.mode
-        if mode == "plan":
-            agent.gate.mode = "plan"
-        self.context.end_turn = False
-        try:
-            for nudge in range(MAX_NUDGES + 1):
-                await agent.run(self.host.history, self.host.stream_delta)
-                if self.context.end_turn:
-                    return True
-                if self.state.phase != Phase.EXECUTE or nudge == MAX_NUDGES:
-                    return False  # waiting for the user's reply
-                self.host.history.append(Message.system(NUDGE))
-            return False
-        finally:
-            self.context.end_turn = False
-            agent.gate.mode = previous_mode
-            self._save()
-
-    # --- phases ---
+        if not await self._run_agent(self._tools()):
+            return  # waiting for the user's reply
+        if self.state.tasks and self.state.next_task() is None and not self._has_open_tasks():
+            await self._export()
 
     async def _kb_check(self) -> None:
         kb_dir = self.host.kb_dir()
@@ -252,13 +205,69 @@ class Orchestrator:
         await kb_build(repo, app, kb_dir, llm_writer(self.host.router))
         self.host.reload_kb()
 
+    def _has_open_tasks(self) -> bool:
+        return any(t.status in ("pending", "in_progress") for t in self.state.tasks)
+
+    async def _run_agent(self, tools: ToolRegistry) -> bool:
+        agent = self.host.agent
+        assert agent is not None
+        agent.tools = tools
+        self.context.end_turn = False
+        try:
+            while (task := self.state.next_task()) is not None or not self.state.tasks:
+                if task is not None and (self.state.current_task != task.id or task.status != "in_progress"):
+                    self._start_task(task)
+                for nudge in range(MAX_NUDGES + 1):
+                    await agent.run(self.host.history, self.host.stream_delta)
+                    if self.context.end_turn:
+                        break
+                    if nudge == MAX_NUDGES:
+                        return False  # waiting for the user's reply
+                    self.host.history.append(Message.system(NUDGE))
+                self.context.end_turn = False
+                if not self.state.tasks:  # the model hasn't broken the work into tasks yet
+                    return True
+            return True
+        finally:
+            self.context.end_turn = False
+            self._save()
+
+    # --- helpers used by the loop ---
+
+    def _tools(self) -> ToolRegistry:
+        return ToolRegistry(
+            [
+                *default_tools(),
+                *self._db_tools(),
+                *self.host.extra_tools,  # Mode B profile/contract tools, MCP server tools
+                AskUser(),
+                ProposeRequirements(),
+                ProposePlan(),
+                UpdatePlan(),
+                TaskUpdate(),
+                RequestUserAction(),
+            ]
+        )
+
+    def _db_tools(self) -> list[Tool]:
+        return db_tools() if self.host.db is not None else []
+
+    def _briefed(self) -> bool:
+        marker = self.instructions[self._change_kind() or "requirement"][:40]
+        return any(m.role == "system" and m.content.startswith(marker) for m in self.host.history)
+
+    def _change_kind(self) -> str:
+        if self.state.restructuring:
+            return "restructure"
+        return "change" if self.state.change_request else ""
+
     def _start_task(self, task: Task, resumed: bool = False) -> None:
         previous = [t for t in self.state.tasks if t.status == "done"]
         handoff = previous[-1].handoff_note if previous else None
         task.status = "in_progress"
         task.attempts += 1
         self.state.current_task = task.id
-        brief = self._format("execute", task=self._task_text(task))
+        brief = self._format(self._change_kind() or "requirement", task=self._task_text(task))
         if resumed:
             brief += RESUMED_NOTE
         self.host.context_manager.reset_for_task(self.host.history, brief, handoff)
@@ -268,56 +277,6 @@ class Orchestrator:
             self.host.agent.stuck.reset()
             self.host.agent.escalator.reset()
         self._save()
-
-    async def _review(self) -> bool:
-        """Spec §13: the full suite, then — when it passes — the test guard (weakened tests) and the reviewer
-        subagent. Failures or blocking findings become one fix task (bounded rounds)."""
-        passed, summary = await self._run_tests()
-        report = [f"# Review\n\nFull test suite: {'PASSED' if passed else 'FAILED'}\n\n```\n{summary}\n```\n"]
-        if self._baseline_tests is not None:
-            same = self._baseline_tests[0] == passed
-            report.append(
-                f"\nRestructure check — tests before: {'PASSED' if self._baseline_tests[0] else 'FAILED'}; "
-                f"after: {'PASSED' if passed else 'FAILED'} ({'same' if same else 'DIFFERENT'}).\n"
-            )
-        problems: list[str] = []
-        if passed:
-            guard = (
-                check_tests(self.workspace) + check_stubs(self.workspace) + check_fixture_use(self.workspace)
-            )
-            report.append(
-                "\n## Test guard\n\n" + ("\n".join(f"- {g.render()}" for g in guard) or "No weakened tests.")
-            )
-            problems += [g.render() for g in guard if g.blocking]
-            await self._notice("review", "Tests pass; the reviewer is reading the change…")
-            review = await run_reviewer(self.host.router, self.context, self._requirement_text())
-            if review is not None:
-                report.append("\n## Reviewer\n\n" + review.report)
-                problems += [f.render() for f in review.blocking]
-        self.store.write_document("reports/review.md", "\n".join(report))
-        if (passed and not problems) or self._review_rounds >= MAX_REVIEW_FIX_ROUNDS:
-            outcome = "passed" if passed and not problems else "has open findings — reported"
-            await self._notice("review", f"Review {outcome}.")
-            self._baseline_tests = None if passed else self._baseline_tests
-            return True
-        self._review_rounds += 1
-        if not passed:
-            title, detail = (
-                "Fix the failing tests from the full-suite run",
-                f"The full test suite failed:\n{summary}",
-            )
-        else:
-            title = "Address the review findings"
-            detail = "Review findings to fix (blocking):\n" + "\n".join(f"- {p}" for p in problems)
-        fix = Task(
-            id=_unique_id("FIX1", {t.id for t in self.state.tasks}),
-            title=title,
-            description=detail[-4000:],
-            acceptance="The full test suite passes and the findings are resolved (tests are never weakened).",
-        )
-        self.state.tasks.append(fix)
-        await self._notice("review", f"{title}: added task {fix.id}.")
-        return False
 
     def block_current_task(self, reason: str) -> None:
         """Escalation's last step (spec §13.3): the task is blocked and work moves on."""
@@ -329,12 +288,28 @@ class Orchestrator:
             self._save()
 
     async def _export(self) -> None:
+        """Builds output/ once every task is settled (done or blocked). Judgment-based, not a mandatory
+        gated REVIEW step (D-132): Forge has already verified as it went; this just packages the result."""
         output = build_modeb_output(self.workspace) if self.workspace.mode_b else build_output(self.workspace)
         report = final_report(self.state, self._requirement_text(), output, self.workspace, self.host.db)
+        if self._restructure_baseline is not None:
+            passed_before, _ = self._restructure_baseline
+            passed_after, summary_after = await self._run_tests()
+            same = passed_before == passed_after
+            report += (
+                f"\n\n## Restructure check\n\nTests before: {'PASSED' if passed_before else 'FAILED'}; "
+                f"after: {'PASSED' if passed_after else 'FAILED'} ({'same' if same else 'DIFFERENT'}).\n"
+                f"```\n{summary_after}\n```\n"
+            )
+            self._restructure_baseline = None
         self.store.write_document("reports/final.md", report)
         await self.host.bus.publish(
             EventType.MESSAGE_DONE, {"text": closing_message(self.state, output), "model": "forge"}
         )
+        self.state.change_request, self.state.restructuring = "", False
+        self.state.exported = True
+        await after_export(self)  # library card, metrics, RETRO (spec §12)
+        self._save()
 
     # --- Interaction protocol (called by the phase tools) ---
 
@@ -369,31 +344,24 @@ class Orchestrator:
         return result
 
     async def propose_requirements(self, markdown: str) -> ToolResult:
-        answer = await self._approve("requirements", "Approve REQUIREMENTS.md?", markdown)
-        if not answer[0]:
-            return ToolResult(
-                ok=True, content=f"The user requested changes: {answer[1]}. Revise and propose again."
-            )
+        """Optional (D-128): writes REQUIREMENTS.md for the record. Not a turn-blocking approval gate —
+        Forge can keep working without calling this at all for a small requirement."""
         self.store.write_document("REQUIREMENTS.md", markdown)
-        self.state.requirements_approved = True
-        self.context.end_turn = True
         self._refresh_pinned()
-        return ToolResult(ok=True, content="Requirements approved.")
+        return ToolResult(ok=True, content="Saved REQUIREMENTS.md.")
 
     async def approve_profile_change(self, document: str, markdown: str, change: str) -> tuple[bool, str]:
         """Mode B: every host-profile change is shown to the user first (spec §6A.2)."""
         return await self._approve("profile", f"Update the host profile ({document})? {change}", markdown)
 
     async def propose_plan(self, markdown: str, tasks: list[TaskSpec]) -> ToolResult:
+        """Optional (D-128): writes PLAN.md and sets the task list. Not a turn-blocking approval gate —
+        used when Forge judges a written plan is worth having (a real design fork, or a larger requirement),
+        or when the user asks to see one first."""
         if self.workspace.mode_b:  # surface the assumptions at plan approval (spec §6A.2)
             open_assumptions = AssumptionRegister(self.workspace).summary_for_plan()
             if open_assumptions and open_assumptions not in markdown:
                 markdown = f"{markdown}\n\n## {open_assumptions}"
-        approved, feedback = await self._approve("plan", f"Approve PLAN.md ({len(tasks)} tasks)?", markdown)
-        if not approved:
-            return ToolResult(
-                ok=True, content=f"The user requested changes: {feedback}. Revise and propose again."
-            )
         self.store.write_document("PLAN.md", markdown)
         kept = [t for t in self.state.tasks if t.status == "done"]
         # A change request's plan often reuses T1, T2…: rename those so finished tasks stay finished and
@@ -401,17 +369,11 @@ class Orchestrator:
         self.state.tasks = kept + _renumbered(
             [Task(**spec.model_dump()) for spec in tasks], {t.id for t in kept}
         )
-        self.state.plan_approved = True
-        self.context.end_turn = True
         self._refresh_pinned()
-        return ToolResult(ok=True, content="Plan approved. Implementation starts now, task by task.")
+        self._save()
+        return ToolResult(ok=True, content=f"Saved PLAN.md with {len(tasks)} task(s). Work on them now.")
 
     async def update_plan(self, markdown: str, tasks: list[TaskSpec], reason: str) -> ToolResult:
-        approved, feedback = await self._approve(
-            "plan", f"Approve the changed plan? Reason: {reason}", markdown
-        )
-        if not approved:
-            return ToolResult(ok=True, content=f"The user rejected the change: {feedback}")
         status = {t.id: t for t in self.state.tasks}
         self.store.write_document("PLAN.md", markdown)
         self.state.tasks = [
@@ -420,7 +382,7 @@ class Orchestrator:
         ]
         self._refresh_pinned()
         self._save()
-        return ToolResult(ok=True, content="The updated plan is approved.")
+        return ToolResult(ok=True, content=f"Plan updated ({reason}).")
 
     async def task_update(
         self,
@@ -441,10 +403,10 @@ class Orchestrator:
             return ToolResult(
                 ok=False,
                 content=(
-                    "Not accepted: no passing test run since your last edit. Run the tests "
-                    "(verify or run_tests) and call task_update again when they pass. If there are no "
-                    "tests for this code yet, write them now as part of this task (in the project's "
-                    "test style): a task without a passing test isn't done, and it isn't blocked either."
+                    "Not accepted: no passing test run since your last edit. Run the tests (verify or "
+                    "run_tests) and call task_update again when they pass. If there are no tests for this "
+                    "code yet, write them now as part of this task (in the project's test style): a task "
+                    "without a passing test isn't done, and it isn't blocked either."
                 ),
             )
         task.status = "done" if status == "done" else "blocked"
@@ -485,7 +447,28 @@ class Orchestrator:
             ok=True, content=f"The user answered: {choice or 'skip'}. {answer.text or ''}".strip()
         )
 
-    # --- helpers ---
+    # --- cadence (D-130, D-132) ---
+
+    def set_cadence(self, cadence: Cadence) -> None:
+        """Sets and persists the cadence (D-132) — called when the user says so in chat (detect_cadence),
+        or by a headless run's --auto-approve (spec §8, A-9: still never covers the always-ask list)."""
+        self.state.cadence = cadence
+        self._apply_cadence()
+        self._save()
+
+    def _apply_cadence(self) -> None:
+        """Maps the persisted cadence onto the permission gate's mode (§14.2). Free hand runs everything
+        except the always-ask/critical list; ask-every-step tightens to 'default' (confirm before writes);
+        the default cadence leaves the gate at whatever mode the session already has."""
+        agent = self.host.agent
+        if agent is None:
+            return
+        if self.state.cadence == "free_hand":
+            agent.gate.mode = "auto"
+        elif self.state.cadence == "ask_every_step":
+            agent.gate.mode = "default"
+
+    # --- misc helpers ---
 
     async def _approve(self, kind: str, summary: str, markdown: str) -> tuple[bool, str]:
         answer = await self.host.approvals.request(
@@ -494,7 +477,7 @@ class Orchestrator:
                 "kind": kind,
                 "summary": summary,
                 "markdown": markdown,
-                "reason": f"{kind} approval gate",
+                "reason": f"{kind} approval",
             }
         )
         return answer.approved, answer.instruction or "no details given"
@@ -502,40 +485,10 @@ class Orchestrator:
     def _start_change(self, text: str, restructure: bool) -> None:
         if not restructure:
             self.state.requirement = f"{self.state.requirement}\n\nChange request: {text}"
-        self.state.plan_approved = False
         self.state.change_request = text
         self.state.restructuring = restructure
-        self._review_rounds = 0
-        self._enter(Phase.RESTRUCTURE if restructure else Phase.PLAN)
-
-    def _plan_kind(self) -> str:
-        if self.state.restructuring:
-            return "restructure"
-        return "change" if self.state.change_request else "plan"
-
-    def _phase_started(self, kind: str) -> bool:
-        marker = self.instructions[kind][:40]
-        return any(m.role == "system" and m.content.startswith(marker) for m in self.host.history)
-
-    def _planning_tools(self, phase_tool: object) -> ToolRegistry:
-        read_only = [t for t in [*default_tools(), *self._db_tools(), *self.host.extra_tools] if t.read_only]
-        return ToolRegistry([*read_only, AskUser(), phase_tool])  # type: ignore[list-item]
-
-    def _execution_tools(self) -> ToolRegistry:
-        return ToolRegistry(
-            [
-                *default_tools(),
-                *self._db_tools(),
-                *self.host.extra_tools,  # Mode B profile/contract tools, MCP server tools
-                AskUser(),
-                TaskUpdate(),
-                UpdatePlan(),
-                RequestUserAction(),
-            ]
-        )
-
-    def _db_tools(self) -> list[Tool]:
-        return db_tools() if self.host.db is not None else []
+        self.state.exported = False
+        self.host.history.append(Message.system(self._format("restructure" if restructure else "change")))
 
     def _format(self, kind: str, **values: str) -> str:
         defaults = {
@@ -556,10 +509,6 @@ class Orchestrator:
             f"{task.id}: {task.title}\n{task.description}\nDone when: {task.acceptance or 'its tests pass'}"
         )
 
-    def _enter(self, phase: Phase) -> None:
-        self.state.phase = phase
-        self._save()
-
     def _save(self) -> None:
         self.store.save(self.state)
         self._refresh_pinned()
@@ -572,8 +521,8 @@ class Orchestrator:
         except RuntimeError:
             return
         payload = {
-            "phase": self.state.phase.value,
             "current_task": self.state.current_task,
+            "cadence": self.state.cadence,
             "tasks": [t.model_dump() for t in self.state.tasks],
         }
         task = loop.create_task(self.host.bus.publish(EventType.TASK_LIST_UPDATED, payload))
@@ -586,9 +535,7 @@ class Orchestrator:
         current = self.state.task(self.state.current_task) if self.state.current_task else None
         pinned.set(
             "phase_and_tasks",
-            f"Phase: {self.state.phase.value}\n"
-            + (f"Current task: {current.id} {current.title}\n" if current else "")
-            + self.state.task_board(),
+            (f"Current task: {current.id} {current.title}\n" if current else "") + self.state.task_board(),
         )
 
     async def _notice(self, kind: str, text: str) -> None:

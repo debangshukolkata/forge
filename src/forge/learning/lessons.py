@@ -31,7 +31,7 @@ class Lesson(BaseModel):
     scope: str  # repo:<slug> | profile:<name> | global | user
     keywords: list[str] = []
     evidence: str = ""  # workspace / step / report that produced it
-    source: str = "retro"  # retro | fix | stuck | correction | diagnose | review | mid-run
+    source: str = "retro"  # retro | fix | stuck | correction | diagnose | review | mid-run | contract
     confidence: Literal["high", "medium", "low"] = "medium"
     status: Status = "proposed"
     uses: int = 0

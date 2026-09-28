@@ -87,6 +87,11 @@ class HostProfile:
     def set_sensitive_terms(self, terms: list[str]) -> None:
         self._bump("sensitive terms updated", sensitive_terms=sorted({t.strip() for t in terms if t.strip()}))
 
+    def record_change(self, change: str) -> None:
+        """Bumps the version and logs a change made by another module's data (e.g. contracts.py's
+        ContractRegister, which keeps its own file rather than a profile document)."""
+        self._bump(change)
+
     def _bump(self, change: str, **fields: Any) -> None:
         meta = self.meta() | fields
         meta["version"] = int(meta.get("version", 0)) + 1

@@ -16,7 +16,7 @@ import psycopg
 import pytest
 from dotenv import dotenv_values
 
-from forge.agent.state import Phase, Task
+from forge.agent.state import Task
 from forge.cli import _cleanup
 from forge.config import PostgresConfig, Secrets
 from forge.db.access import AccessLevel, detect
@@ -377,18 +377,20 @@ def _orchestrated_host(workspace: Workspace, secrets: Secrets | None) -> Session
 
 
 def test_resolving_a_db_request_unblocks_only_the_tasks_waiting_on_it(workspace: Workspace) -> None:
+    """No phase to reset any more (D-131): unblocking makes the task pending again, and clears `exported`
+    so the workspace is correctly seen as not-yet-resume-safe (needs_resume) until it's re-exported."""
     host = _orchestrated_host(workspace, None)
     assert host.orchestrator is not None
     state = host.orchestrator.state
+    state.started, state.exported = True, True
     state.tasks = [
         Task(id="T1", title="tables", status="blocked", blocked_reason="needs DBR-1"),
         Task(id="T2", title="other", status="blocked", blocked_reason="DBR-2"),
     ]
-    state.phase = Phase.DONE
     assert host.orchestrator.db_request_resolved("DBR-1", done=False, note="no DBA today")
     assert state.tasks[0].status == "pending" and "no DBA today" in state.tasks[0].description
     assert state.tasks[1].status == "blocked"
-    assert state.phase == Phase.EXECUTE
+    assert state.exported is False and host.orchestrator.needs_resume
     assert not host.orchestrator.db_request_resolved("DBR-9", done=True, note="")
 
 

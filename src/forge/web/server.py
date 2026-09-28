@@ -122,7 +122,10 @@ def create_app(
             "busy": host.busy,
             "pending": [*host.approvals.pending_ids, *host.questions.pending_ids],
             "last_seq": host.bus.last_seq,
-            "phase": orchestrator.state.phase.value if orchestrator else "direct",
+            # No fixed phase any more (D-128/D-131): "phase" is kept as a coarse status string so the
+            # (not-yet-redesigned, D-131) React UI degrades instead of breaking; prefer "cadence"/"tasks".
+            "phase": orchestrator.state.resume_summary() if orchestrator else "direct",
+            "cadence": orchestrator.state.cadence if orchestrator else "default",
             "tasks": [t.model_dump() for t in orchestrator.state.tasks] if orchestrator else [],
             "current_task": orchestrator.state.current_task if orchestrator else None,
             "mode": host.agent.gate.mode if host.agent else None,

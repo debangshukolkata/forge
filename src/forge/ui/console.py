@@ -33,8 +33,8 @@ class ConsoleState:
         self.question_options: list[str] = []
         self.pending_action: str | None = None
         # The status bar (spec M10): kept current from events.
-        self.phase: str = ""
         self.current_task: str | None = None
+        self.cadence: str = ""
         self.context_percent: float | None = None
         self.busy = False
         self.permission_mode: str = ""
@@ -48,15 +48,17 @@ def track_status(event: Event, state: ConsoleState) -> None:
     elif event.type == EventType.CONTEXT_UPDATED:
         state.context_percent = payload.get("percent")
     elif event.type == EventType.TASK_LIST_UPDATED:
-        state.phase = str(payload.get("phase") or "")
         state.current_task = payload.get("current_task")
+        state.cadence = str(payload.get("cadence") or "")
 
 
 def status_bar(host: SessionHost, state: ConsoleState) -> str:
-    """One line under the prompt: phase and task, working/idle, context use, cost, permission mode."""
+    """One line under the prompt: task, working/idle, context use, cost, permission mode."""
     parts = []
-    if state.phase:
-        parts.append(f"phase {state.phase}" + (f" · {state.current_task}" if state.current_task else ""))
+    if state.current_task:
+        parts.append(f"task {state.current_task}")
+    if state.cadence and state.cadence != "default":
+        parts.append(f"cadence {state.cadence.replace('_', ' ')}")
     parts.append("working… (Esc stops)" if state.busy else "idle")
     if state.context_percent is not None:
         parts.append(f"ctx {state.context_percent:.0f}%")

@@ -88,11 +88,15 @@ Inline changes are tagged `[A-n]`. Details and rationale are in docs/DECISIONS.m
 | A-6 | Runtime target is Python 3.13. The wheelhouse targets cp313 win_amd64. |
 | A-7 | Model per role (coder, kb_builder, reviewer, summariser, vision, judge, fallback) is configurable via config, `/model <role> <model>`, and the web UI settings. Default: Azure OpenAI for every role. The Gemini adapter is optional and built when keys are available. |
 | A-8 | No FakeLLM. Real Azure for agent-behaviour tests; transport-level mocks only for failure injection; deterministic logic tested without an LLM. |
-| A-9 | Headless mode never auto-approves always-ask actions; it asks the user to confirm or to run the step themselves, or marks the task blocked. |
+| A-9 | The always-ask/critical list (§14.2) is never auto-approved by any mode, including a user-granted free hand [D-130] — not only headless mode. Headless mode asks the user to confirm or to run the step themselves, or marks the task blocked. |
 | A-10 | The workspace git history (§13B) excludes secret files via `.gitignore`. |
 | A-11 | Access fallback chain: when Forge can't run something (DB, network, privileges, tools), it asks the user to run it; if the user can't either, Forge proposes a workaround or a code change as a design-fork discussion. |
 | A-12 | Multimodal (§13A) is general: the prescription task is one example requirement, not a special case. |
 | A-13 | No JWT or other auth implementation in generated code: the host repo already has JWT; generated code reuses the host's existing auth decorators/dependencies. Forge's own web UI uses a random localhost session token, not JWT. |
+| A-14 | Forge runs live in front of the user, not detached. The fixed phase pipeline (§7) is replaced by a flat Claude-Code-style agent loop: no mandatory CLARIFY/PLAN gates or REQUIREMENTS.md/PLAN.md artifacts; Forge asks inline only when a request is ambiguous or a design fork is consequential, same judgment this assistant applies. Resumability comes from the transcript, an in-session task list, and the existing memory/lessons store, not phase artifacts. Safety invariants (write jail, DB guard, Mode B isolation, redaction) are unaffected — they are already code-level checks, not phase-enforced. See D-128. |
+| D-129 | In Mode B, the user may pin an interface contract (e.g. an LLM call wrapper's signature) upfront via a Contracts panel/`CONTRACTS.md`, or in chat; Forge builds to it, lets the user change it mid-way, and proposes pinned/repeatedly-corrected contracts as lessons so it recommends them on later similar requirements (§6A.2A). |
+| D-130 | Sign-off cadence (free hand / per-step / default) is a live conversational instruction, not a config key or SETUP question — Forge follows whichever cadence the user last stated in chat, the same way this assistant does, and never lets it waive the always-ask/critical list (§14.2). |
+| D-132 | Verification (§13) becomes judgment-based — no mandatory full-suite-plus-reviewer gate before a task/requirement closes, Forge runs the ladder when it judges warranted, same as this assistant. Resume is automatic on reopening a workspace (crash, network drop, days away, or a context limit hit), with cadence (D-130) persisted in state.json so a free-hand grant survives an interruption. |
 
 ---
 
@@ -113,10 +117,10 @@ Everything else is shared by both modes: agent loop, tools, context management, 
 **Mode A flow.** Forge is run on the developer's laptop against an existing codebase. For each requirement it:
 
 1. Asks for a **workspace folder path** (one workspace per requirement).
-2. Understands and clarifies the requirement with the user.
+2. Understands the requirement with the user, asking inline only when it's ambiguous or genuinely consequential [A-14].
 3. Uses a persistent, per-repo **Knowledge Base** (built once, refreshed incrementally) to understand the codebase.
 4. **Copies the repo** into the workspace and does all work in that copy.
-5. Plans, gets approval, breaks work into tasks, and discusses options with the user at design forks.
+5. Works task by task, surfacing a plan and discussing options with the user only at real design forks [A-14].
 6. Writes code in the exact structure and conventions of the existing repo, and runs and tests it in the copy (including a scratch PostgreSQL schema).
 7. Produces an **output folder** containing only new and modified files at identical relative paths, plus step-by-step copy-in instructions. On request, restructures the output to fit the repo (§6.7) [A-3].
 8. After the user copies the code in, runs **Diagnose mode** to find out why anything isn't working.
@@ -157,7 +161,7 @@ CLI/TUI (rich + prompt_toolkit) and Web UI (§15A): chat, slash commands, stream
         │
 Engine event bus + input interface (§15A.2)
         │
-Orchestrator (phase state machine, approvals, discussions)            §7
+Orchestrator (flat agent loop, inline clarify/plan, discussions)      §7 [A-14]
         │
 Agent Loop (plain Python ReAct loop with tool calls)                  §8
    ├── Context Manager (budget, pinned blocks, compaction)            §10
@@ -385,12 +389,34 @@ A reusable, versioned description of a host codebase, built from chat. It lives 
 - `PROFILE.md`: the structured answers.
 - `exemplars/*.py`: snippets the user approved, each with a note on what it demonstrates.
 - `CONVENTIONS.md`, `INTERFACES.md`: known host symbols and signatures.
+- `CONTRACTS.md`: user-pinned interface contracts (§6A.2A) — separate from `INTERFACES.md`, which records what Forge *learned* about the host; `CONTRACTS.md` records what the user *told Forge to build to*.
 - `structure_export.json`, `structure.sqlite`: the latest imported structure export and its search index.
 - `CHANGELOG.md`.
 
 Profiles are updated as new facts come in, and every change is shown to the user for approval. `/profile show|edit|update|list|use <name>`.
 
 **Assumption register.** Anything Forge had to assume (not stated by the user) is recorded with a confidence level and is surfaced at plan approval. High-impact assumptions are raised as design-fork questions.
+
+### 6A.2A User-pinned interface contracts [D-129]
+In Mode B, Forge has a free hand to design the solution — except where the user pins a specific
+signature/contract for a seam (e.g. "the LLM call wrapper must be `def call_llm(prompt: str, **kwargs) ->
+LLMResponse`", or a file read/write helper's exact shape) so the generated code is easy to retrofit into
+the host repo by hand. Forge builds to a pinned contract instead of inventing its own for that seam.
+
+- **Where it's entered:** a dedicated **Contracts** panel in the web UI (workspace-scoped), backed by
+  `CONTRACTS.md` in the profile; also accepted as a normal chat message at any time, which Forge files into
+  the same store after confirming it understood the contract correctly. Both routes are equivalent.
+- **Pinned into context** alongside the Host Profile (§10.2), so every file Forge writes for a seam with a
+  pinned contract conforms to it, not to a guessed convention.
+- **Changeable mid-way.** The user may pin or change a contract after seeing generated code. Forge
+  reconciles already-written files that used the old shape as part of its next task on that seam, and
+  notes the change in `CHANGELOG.md`.
+- **Learned over time.** A contract the user pins, or repeatedly corrects Forge toward, is proposed as a
+  **lesson** (§12) the same way other lessons are — reviewed and approved by the user, scoped to the
+  profile or promoted to global — so Forge recommends a known contract on a later, similar requirement
+  instead of re-deriving or re-asking.
+- The plan step (§6A.5) lists, for each new file, which pinned contract (if any) its interface conforms to,
+  alongside the exemplar it mirrors.
 
 ### 6A.3 Design for portability (how the code is shaped)
 - **Ports & adapters at the boundary.** The new code touches the host through a small number of explicit seams: the DB session/connection, config access, auth, logging, the app/blueprint registration, and LLM client creation.
@@ -409,10 +435,15 @@ Profiles are updated as new facts come in, and every change is shown to the user
 - **Verification** uses the same ladder as §13: compile, lint, unit tests, `_harness/run_app.py` smoke plus the OpenAPI check, and a LangGraph compile/run with fake LLMs (fakes inside the *generated* code's tests are fine; §0 rule 6 applies to Forge's own tests).
 - **Contract tests:** small tests that pin each INTERFACE_CONTRACT assumption (e.g. "`get_db()` returns an object with `.execute()` that returns rows as dicts"). They're delivered in `output/` so the user can run them inside the host to validate assumptions quickly.
 
-### 6A.5 Workflow differences
-SETUP (choose or create the Host Profile, create the venv) → INTAKE → CLARIFY (includes profile gaps relevant to this requirement) → PLAN. The plan must list the seams, the assumptions, and which exemplars from the profile each new file mirrors. After that: [APPROVE] → TASKS → EXECUTE/VERIFY in the harness → REVIEW → EXPORT → HANDOFF.
+### 6A.5 Workflow differences [A-14, D-128]
+Setup (choose or create the Host Profile, create the venv), then Forge understands the requirement inline
+with the user — including any profile gaps relevant to it — the same judgment-based way as §7, not a
+forced CLARIFY round. Before or during implementation Forge still needs a plan for Mode B specifically
+(it lists the seams, the assumptions, and which exemplars from the profile each new file mirrors); when
+and how that plan is surfaced to the user for Mode B is still to be agreed (open point in D-128's thread).
+After that: task breakdown → execute/verify in the harness → review → export → handoff.
 
-There's no KB CHECK or EXPLORE of a repo. Explore subagents only read the profile and the workspace.
+There's no KB, and no repo to explore. Explore subagents only read the profile and the workspace.
 
 ### 6A.6 Deliverable: INTEGRATION_GUIDE.md
 1. Files to add, with the destination path in the host (identical relative paths).
@@ -440,36 +471,53 @@ There's no KB CHECK or EXPLORE of a repo. Explore subagents only read the profil
 
 ---
 
-## 7. Workflow & Approvals (Orchestrator)
+## 7. Workflow & Approvals (Orchestrator) [A-14, D-128]
 
-```
-SETUP → INTAKE → CLARIFY ⟲ → KB CHECK → EXPLORE → PLAN ⟲ → [APPROVE] → TASKS → EXECUTE ⇄ VERIFY → REVIEW → EXPORT → (RESTRUCTURE ⟲) → [HANDOFF] → RETRO → (DIAGNOSE → RETRO)
-```
+Forge runs a **flat agent loop**, not a fixed phase state machine: read the request → act with tools →
+respond, live in front of the user, the same way Claude Code itself works. There is no mandatory CLARIFY
+or PLAN gate and no required REQUIREMENTS.md/PLAN.md artifact. Instead, Forge asks inline — only when a
+request is ambiguous or a design choice is genuinely consequential — and otherwise proceeds directly.
 
-| Phase | What happens | Output |
+SETUP (choosing Mode A/B, workspace, KB/Host Profile, DB target) still happens once per workspace, and a
+lightweight in-session **task list** (visible progress, not an approval-gated artifact) is used for
+multi-step work. The activities the old phases named still happen, just as loop behaviour rather than
+enforced stages:
+
+| Activity | When it happens | Output |
 |---|---|---|
-| SETUP | Choose **Mode A or B**. Mode A: repo path, workspace path, project root, interpreter, env probe, copy repo, baseline. Mode B: workspace path, Host Profile (new interview or reuse), workspace venv (§6A). Both: DB target detection (local vs remote, access level) and scratch-schema request [A-4][A-5]. | workspace.json, ENVIRONMENT.md |
-| INTAKE | User describes the requirement. | — |
-| CLARIFY | Focused questions (≤5 per round, options + a recommended choice) on scope, APIs, data model, acceptance criteria, edge cases. **User approves REQUIREMENTS.md.** | REQUIREMENTS.md |
-| KB CHECK | Ensure the KB is fresh (§11.4); refresh incrementally if stale. | — |
-| EXPLORE | Explore subagent finds the relevant modules, exemplar files, blueprints, models, graphs and tables for this requirement. | notes → PLAN input |
-| PLAN | Plan mode (read-only tools). Approach, exact files to add/modify, exemplar for each new file, endpoints (method/path/schemas), DB changes, LangGraph changes, test plan, risks, anything the user must do. **User approves or edits.** | PLAN.md |
-| TASKS | Small, independently verifiable tasks with dependencies and acceptance checks. | tasks.json |
-| EXECUTE/VERIFY | Per task: focused context → implement → verify ladder (§13) → self-correct. | code in repo/ |
-| REVIEW | Reviewer subagent checks the diff against requirements, conventions and exemplars; fixes are made; then the full test suite and app smoke run. | reports/review.md |
-| EXPORT | Build output/ and instructions (§6.2–6.4); final report. | output/, reports/final.md |
-| RESTRUCTURE | Optional, on the user's instruction: reshape the code to fit the repo with behaviour unchanged (§6.7) [A-3]. | updated output/ |
-| HANDOFF | Walk the user through COPY_INSTRUCTIONS; offer Diagnose mode. | — |
-| RETRO | Write the requirement card and retrospective; propose lessons and improvements for approval (§12). | library card, retros/, lessons, improvements/ |
+| Setup | Once per workspace: Mode A/B, repo copy or Host Profile, venv, DB target detection, scratch-schema request [A-4][A-5]. | workspace.json, ENVIRONMENT.md |
+| Understanding the requirement | Inline, as needed — Forge asks only when scope/APIs/data model/acceptance criteria/edge cases are genuinely unclear, not a forced round. | condensed requirement (pinned context, §10.2) |
+| Exploring the codebase/profile | Forge reads the KB (Mode A) or Host Profile (Mode B) directly, or spawns an `explore` subagent (§9.10) for a focused search, whenever it needs to before or during implementation — not as a separate mandatory stage. | notes used immediately |
+| Planning | Surfaced in chat only for real design forks (see below) or on request; otherwise Forge just proceeds task by task. A short plan may still be written to the workspace for the user's reference, but it is not an approval gate. | plan notes (optional), tasks.json |
+| Task breakdown | Small, independently verifiable tasks with dependencies and acceptance checks, created and updated as work proceeds. | tasks.json |
+| Execute/verify | Per task: focused context → implement → verify ladder, run when warranted (§13, [D-132]) → self-correct. | code in repo/ |
+| Review | Judgment-based, not a mandatory gate [D-132]: Forge checks its diff against the requirement, conventions and exemplars — directly, or via a `reviewer` subagent when it judges that useful — and runs whatever of the verify ladder it judges warranted before calling work done. | reports/review.md (when produced) |
+| Export | Build output/ and instructions (§6.2–6.4); final report. | output/, reports/final.md |
+| Restructure | Optional, on the user's instruction: reshape the code to fit the repo with behaviour unchanged (§6.7) [A-3]. | updated output/ |
+| Handoff | Walk the user through COPY_INSTRUCTIONS; offer Diagnose mode. | — |
+| Retro | Deliberate, triggered action (by the user or Forge offering) once work is done: write the requirement card and retrospective, propose lessons/improvements (§12) — not a phase every requirement is forced through. | library card, retros/, lessons, improvements/ |
+
+`spawn_subagent` (§9.10; types `explore`, `planner`, `reviewer`, `test_writer`, `debugger`) is callable at
+any point in the loop, not restricted to specific stages.
 
 ### Discussion points (asking for approval "as and when required")
-Besides the fixed gates (requirements, plan, handoff), the agent **must pause and discuss** when:
+The fixed gates (requirements approval, plan approval, handoff) are gone; approval is judgment-based
+instead, per [D-128]. By default (no cadence instruction given) the agent **must pause and discuss** when:
 - there are two or more reasonable designs (schema shape, new table vs. column, sync vs. async, new graph node vs. extending one, library choice);
 - a change touches shared or core code (app factory, base models, auth, common utils);
 - a new dependency, DB change, env var or config key is needed;
 - an assumption in the approved plan turns out to be wrong (replan);
 - self-correction escalation is reached (§13.3);
 - neither Forge nor the user can perform a needed step, and a workaround or code change is required [A-11].
+
+**Cadence is a live conversational instruction, not a setting [D-130].** There is no config key or
+per-workspace choice for this. The user tells Forge, in chat, at any point: "go ahead with the recommended
+option each time, don't ask me" (free hand — Forge decides and proceeds through everything except the
+always-ask/critical list, §14.2) or "ask me before every step" (per-step — Forge confirms before each
+action). Forge follows whichever instruction was given most recently, exactly as this assistant follows a
+mid-session "you have a free hand tonight" or "check with me from now on." Absent any such instruction,
+Forge uses the default judgment-based list above. No instruction, free hand included, ever waives the
+always-ask/critical list (§14.2) — see [A-9], generalised from headless mode to every mode.
 
 The format is always: the context in 2–3 lines, options A/B/(C) with trade-offs, a recommendation, then wait. The user's choice goes to DECISIONS.md. For small reversible choices the agent decides, notes it in DECISIONS.md, and mentions it in the next check-in. After each task it posts a ≤5-line check-in (done / verified how / next).
 
@@ -480,14 +528,16 @@ The format is always: the context in 2–3 lines, options A/B/(C) with trade-off
 ```
 while not done:
     msgs = context.assemble()                        # §10, always within budget
-    resp = llm.chat(msgs, tools=tools_for(phase, mode), stream=True)
+    resp = llm.chat(msgs, tools=tools_for(plan_mode, mode), stream=True)
     for call in resp.tool_calls:                     # read-only calls run in parallel
         validate → permission gate → pre-hooks → execute(timeout) → post-hooks
         → redact → truncate/persist → record checkpoint if a file changed
     stuck_detector.observe(...)
     context.maybe_compact()
-    if no tool calls: end turn (wait for the user, or advance the orchestrator)
+    if no tool calls: end turn (wait for the user)
 ```
+`plan_mode` is an optional, explicitly-entered read-only mode (user- or Forge-invoked for a genuine design
+fork, §7), not a mandatory pipeline stage [A-14, D-128]. `mode` is Mode A/B.
 
 Behaviours copied from Claude Code:
 - **Read before edit.** Editing a file that hasn't been read, or that changed on disk since it was read, fails and tells the model to read it.
@@ -501,7 +551,7 @@ Behaviours copied from Claude Code:
 
 ## 9. Tools
 
-All tools have pydantic argument models, auto-generated JSON schemas, and carefully written descriptions (the descriptions are prompts). They return `ToolResult(ok, content, meta, full_output_path?)`. The toolset is filtered by phase: plan mode gets read-only tools only.
+All tools have pydantic argument models, auto-generated JSON schemas, and carefully written descriptions (the descriptions are prompts). They return `ToolResult(ok, content, meta, full_output_path?)`. The toolset is filtered by whether plan mode (read-only) is active, not by pipeline phase [A-14, D-128].
 
 ### 9.1 Files (writes jailed to `<workspace>/repo`, `<workspace>/output`, `<workspace>/.forge`)
 | Tool | Behaviour |
@@ -648,8 +698,9 @@ Tokens are counted before every call. The status bar shows `ctx 41% · T3/8 · �
 
 ### 10.2 Pinned (re-injected every call, never compacted)
 - The condensed requirement and its acceptance criteria.
-- Phase, current task, task list (ids, titles, statuses).
-- KB essentials (≤1.5k tokens: stack, structure rules, commands, top conventions).
+- Current activity, current task, task list (ids, titles, statuses) [A-14].
+- KB essentials (Mode A, ≤1.5k tokens: stack, structure rules, commands, top conventions) or Host Profile
+  essentials including active `CONTRACTS.md` entries (Mode B, §6A.2A) [D-129].
 - The memory index (titles only).
 - Top-k approved lessons relevant to the current task, capped at ~800 tokens (§12.3).
 - Files modified so far (paths only).
@@ -792,7 +843,7 @@ Workspaces **reference** the KB, profile and library; they don't copy them. The 
 
 ### 12.4 Retrospective & metrics
 - **Metrics** logged per task and per run: iterations, tool calls, tokens and cost, fix attempts, stuck events, compactions, user corrections, plan rejections, the reviewer issue count, and diagnose issues after integration, with their cause category.
-- **RETRO phase** (after EXPORT, and again after any diagnose): Forge writes `retros/<id>.md` covering what went well, what went wrong, root causes, proposed lessons, and proposed improvements. The user reviews it in one short approval step (it can be skipped).
+- **Retro** (triggered after export, and again after any diagnose, not a mandatory phase — §7 [A-14]): Forge writes `retros/<id>.md` covering what went well, what went wrong, root causes, proposed lessons, and proposed improvements. The user reviews it in one short approval step (it can be skipped).
 - `/stats` shows trends across requirements: cost per requirement, first-pass test success rate, the most common failure causes, and integration issues per requirement.
 
 ### 12.5 Self-improvement proposals (Forge changing itself, with the user in control)
@@ -822,17 +873,27 @@ Forge tells the user in one line ("I've drafted IP-4: a parser for your custom t
 
 **Versioning:** Forge records its own version in every card and metric. After the user upgrades Forge, the retro compares metrics before and after the change to show whether the improvement helped.
 
-### 12.6 Memory & state (carried over)
+### 12.6 Memory & state (carried over) [D-132]
 - **User memory** (`memory/`): preferences across all repos, e.g. "always ask before new deps", "use type hints".
-- **Workspace state:** the `.forge/*.md` files (§6.2), updated continuously so a human can follow along and Forge can resume.
+- **Workspace state:** the `.forge/*.md` files (§6.2) and `state.json`, updated continuously so a human can follow along and Forge can resume.
 - `/remember <text>` saves a memory; `/memory` lists and edits memories.
-- Sessions resume from transcripts and state (`forge resume --workspace W`), including tasks, compaction summary, background-process definitions and the scratch-object registry.
+- **Resume is automatic, like reopening a chat with this assistant** — a laptop crash, a dropped network, the user returning after days away, or a context/token limit being hit are all the same case: opening the workspace again just continues where it left off (task list, cadence, conversation context), with a brief note of what was in progress. No "resume or start fresh?" prompt. `forge resume --workspace W` (and reopening in the web UI) restores tasks, the current cadence (below), the compaction summary, background-process definitions and the scratch-object registry.
+- **Cadence persists across resume.** A "go ahead with the recommended option, don't ask me" or "ask me before every step" instruction (§7, [D-130]) is saved in `state.json` and still in force after a restart — the user shouldn't have to re-grant a free hand after every interruption. It is still never a config key or SETUP question, and it never waives the always-ask/critical list (§14.2), persisted or not.
 
 ---
 
-## 13. Verification & Self-Correction
+## 13. Verification & Self-Correction [D-132]
 
-### 13.1 Verify ladder (after edits)
+Verification is **judgment-based**, like this assistant: Forge runs the ladder below when it judges it
+warranted — after a meaningful change, before claiming something works, when something seems risky — not
+as a mandatory, blocking gate before a task or requirement can close. There is no forced full-suite-plus-
+reviewer-subagent checkpoint at the end of REVIEW; the reviewer subagent and every ladder step remain
+available tools Forge can reach for at any point, exactly like `spawn_subagent(reviewer, ...)` being
+callable any time (§9.10) rather than only inside a REVIEW phase. Forge still never claims something works
+without having verified it (§8, "no claim without evidence") — the change is that *which* checks to run and
+*when* is Forge's judgment call, not a fixed, always-maximal ladder with bounded fix-round bookkeeping.
+
+### 13.1 Verify ladder (steps Forge draws on, run when warranted)
 1. `py_compile` on the changed files.
 2. Lint/format check with the repo's tools.
 3. mypy, if the repo uses it.
@@ -841,7 +902,7 @@ Forge tells the user in one line ("I've drafted IP-4: a parser for your custom t
 6. **App smoke:** start the app in the background and hit the new endpoints with `http_request`.
 7. **OpenAPI check:** generate the spec (`flask openapi write` or the `/openapi.json` route) and confirm the new endpoints and schemas appear.
 8. A LangGraph check: compile the graph, assert its nodes and edges, and run it with fake LLMs.
-9. The full test suite at phase end.
+9. The full test suite, when Forge judges the change warrants it (no longer a forced end-of-phase step).
 10. For requirements with accuracy targets (vision, extraction, RAG answers): the eval runner (§13A.3). A task isn't done until its eval targets are met or the user has accepted the gap.
 
 ### 13.2 Self-correction
@@ -999,12 +1060,14 @@ Forge should feel like Claude Code. These are the features not already covered a
   - `.env`-type files show key names only.
 - Generated code never implements its own authentication; it reuses the host's existing auth (JWT) mechanisms [A-13].
 
-### 14.2 Permission modes (`/mode`)
+### 14.2 Permission modes (`/mode`) [D-130]
 - **plan:** read-only.
-- **default:** edits are shown as a diff and applied (workspace only). Shell commands that aren't allowlisted need approval.
-- **auto:** everything within the workspace runs without asking, except the always-ask list.
+- **default:** edits are shown as a diff and applied (workspace only). Shell commands that aren't allowlisted need approval. This is also the state Forge starts a workspace in, and the state it returns to unless the user has given a cadence instruction (§7) currently in force.
+- **auto (free hand):** everything within the workspace runs without asking, except the always-ask/critical list below. Entered and left by the user saying so in chat ("go ahead with the recommended option, don't ask me" / "ask me before every step"), not by a config setting — the same way this assistant is told to proceed unattended or to check in, and follows that instruction until told otherwise.
 
-**Always ask:** pip installs, deleting files, DB sample-data copies, network calls other than LLM/Tavily, anything touching paths outside the workspace. In headless mode these are never auto-approved [A-9].
+`/mode` remains available as an explicit command for the same effect, for users who prefer typing a command over a sentence; both routes set the same session state.
+
+**Always ask / critical — never skippable, free hand included:** pip installs, deleting files, DB sample-data copies, network calls other than LLM/Tavily, anything touching paths outside the workspace, and every hard rule in §14.1 (original repo read-only, DB writes outside scratch, secrets, no auth reimplementation). In headless mode these are never auto-approved [A-9]. This mirrors how a blanket "go ahead" given to this assistant never authorises it to skip its own hardcoded safety checks (e.g. force-push, deleting files outside its own session's work, mishandling secrets).
 
 ### 14.3 Shell classifier
 Compound commands are parsed, handling PowerShell `;`, `|`, `&&`.
@@ -1073,7 +1136,7 @@ Forge's main interaction screen is a local web page, served by Forge's own Pytho
   - `approval_requested`, `question_asked` (options + recommended);
   - `user_action_requested`, `db_request_created`/`updated`;
   - `task_list_updated`, `file_changed` (with the diff);
-  - `context_updated` (ctx %, compaction), `cost_updated`, `status_changed` (phase, mode A/B, DB level);
+  - `context_updated` (ctx %, compaction), `cost_updated`, `status_changed` (current activity — setup/understanding/exploring/planning/executing/reviewing/exporting/handoff/retro, per §7 [A-14] — mode A/B, DB level);
   - `eval_report_ready`, `lesson_proposed`, `improvement_proposed`;
   - `error`.
 - **Inputs** go back through one interface: `send_message`, `answer(question_id, choice|text)`, `approve(id)`, `reject(id, instruction?)`, `interrupt()`, `slash_command(text)`, `upload(file)`.

@@ -50,6 +50,7 @@ HELP_TEXT = """Available commands:
   /profile [show|list|terms <t1,t2,...>]   Mode B: the host profile (sensitive terms masked everywhere)
   /assumptions [confirm|wrong <id> [note]] Mode B: what Forge assumed about the host
   /contract | /revision     Mode B: the interface contract; the current revision and what changed
+  /contracts [pin <seam> <signature> | forget <seam|id>]   Mode B: user-pinned interface contracts (D-129)
   /forget-snippet <id>      Mode B: remove a pasted snippet (exemplar) from the profile
   /library [search <text> | show <REQ-n>]   earlier requirements on this codebase
   /lessons [approve|reject|delete|promote <id> | edit <id> <text>]
@@ -118,6 +119,7 @@ class SlashCommandHandler:
             "/improve": self._improve,
             "/assumptions": self._assumptions,
             "/contract": self._contract,
+            "/contracts": self._contracts,
             "/revision": self._revision,
             "/forget-snippet": self._forget_snippet,
             "/memory": self._memory,
@@ -176,7 +178,7 @@ class SlashCommandHandler:
         if orchestrator is None:
             raise WorkspaceError("Tasks exist in orchestrated workspace sessions only.")
         state = orchestrator.state
-        await self._say(f"Phase: {state.phase.value}\n{state.task_board()}")
+        await self._say(f"{state.resume_summary()}\n{state.task_board()}")
 
     async def _show_document(self, name: str, missing: str) -> None:
         path = self._workspace().forge_dir / name
@@ -416,6 +418,43 @@ class SlashCommandHandler:
         from forge.modeb.output import read_document
 
         await self._say(read_document(self._modeb(), "INTERFACE_CONTRACT") or "No interface contract yet.")
+
+    async def _contracts(self, args: list[str]) -> None:
+        """User-pinned interface contracts (§6A.2A, D-129) — not INTERFACE_CONTRACT.md (/contract), which
+        is what the delivered code ended up using."""
+        from forge.modeb.contracts import ContractError, ContractRegister
+
+        self._modeb()
+        profile = self.host.host_profile()
+        if profile is None:
+            await self._say("This workspace's host profile is missing.")
+            return
+        register = ContractRegister(profile)
+        if len(args) >= 2 and args[0] == "pin":
+            seam, signature = args[1], " ".join(args[2:])
+            if not signature:
+                await self._say("Usage: /contracts pin <seam> <signature>")
+                return
+            try:
+                contract = register.pin(seam, signature, "")
+            except ContractError as error:
+                await self._say(str(error))
+                return
+            await self._say(f"Pinned {contract.id} ({contract.seam}): {contract.signature}")
+            return
+        if len(args) == 2 and args[0] == "forget":
+            removed = register.forget(args[1])
+            await self._say(f"{args[1]} forgotten." if removed else f"No contract {args[1]}.")
+            return
+        items = register.all()
+        if not items:
+            await self._say("No contracts pinned yet. Usage: /contracts pin <seam> <signature>")
+            return
+        await self._say(
+            "\n".join(
+                f"  {c.id}  {c.seam}: {c.signature}" + (f" — {c.note}" if c.note else "") for c in items
+            )
+        )
 
     async def _revision(self, args: list[str]) -> None:
         from forge.modeb.output import current_revision
