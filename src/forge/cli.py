@@ -79,6 +79,10 @@ def build_parser() -> argparse.ArgumentParser:
     ui.add_argument("--port", type=int, help="default 8765 (the next free one if taken)")
     ui.add_argument("--host", default="127.0.0.1", help="only 127.0.0.1 is allowed")
     ui.add_argument("--no-browser", action="store_true", help="print the URL instead of opening Edge")
+    ui.add_argument("--react", action="store_true", help="the new React UI (default port 8766)")
+    ui.add_argument(
+        "--dev", action="store_true", help="with --react: accept the Vite dev server (127.0.0.1:5173)"
+    )
     kb = subcommands.add_parser("kb", help="build or refresh a repository's knowledge base")
     kb.add_argument("action", choices=["build", "refresh", "rebuild", "status"])
     kb.add_argument("--repo", type=Path, required=True, dest="kb_repo")
@@ -120,7 +124,7 @@ def main(argv: list[str] | None = None) -> int:
         from forge.web.security import BindError
 
         try:
-            return run_ui(args.ui_workspace, args.port, args.host, args.no_browser)
+            return run_ui(args.ui_workspace, args.port, args.host, args.no_browser, args.react, args.dev)
         except BindError as error:
             Console().print(str(error), markup=False)
             return 2

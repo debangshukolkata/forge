@@ -52,6 +52,7 @@ no admin rights. If Python's installer isn't allowed either, ask IT for "Python 
 
 ```powershell
 forge ui                                   # the web UI (opens Edge on 127.0.0.1): New project = name + folder (+ repo in Mode A)
+forge ui --react                           # the new React UI on port 8766 (the classic one stays on 8765)
 forge                                      # the terminal UI: asks Mode A (a repository) or Mode B (standalone)
 forge new --project claims-export --repo C:\src\myrepo --workspace C:\forge-ws\req1   # Mode A: works on a copy
 forge new --standalone --project payments-masking --workspace C:\forge-ws\pm1       # Mode B: never sees your code

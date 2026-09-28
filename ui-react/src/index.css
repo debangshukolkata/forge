@@ -1,0 +1,255 @@
+/* Forge design system (ui-ux-pro-max: "Minimalism & Swiss Style", developer-tool palette "code dark + run
+   green", IBM Plex Sans + JetBrains Mono). Dark first; the light theme swaps the same semantic tokens.
+   Fonts are bundled (no Google Fonts): the laptop may be offline and the CSP only allows 'self'. */
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-500.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/jetbrains-mono/latin-400.css";
+@import "@fontsource/jetbrains-mono/latin-500.css";
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-muted: var(--muted);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-ring: var(--ring);
+}
+
+:root {
+  /* light */
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --raised: #f1f5f9;
+  --muted: #e2e8f0;
+  --fg: #0f172a;
+  --fg-muted: #475569;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --accent: #16a34a;
+  --accent-fg: #ffffff;
+  --accent-soft: #dcfce7;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --warn: #b45309;
+  --warn-soft: #fef3c7;
+  --info: #0369a1;
+  --info-soft: #e0f2fe;
+  --ring: #0f172a;
+}
+
+.dark {
+  --bg: #0f172a;
+  --surface: #1b2336;
+  --raised: #222b40;
+  --muted: #272f42;
+  --fg: #f8fafc;
+  --fg-muted: #94a3b8;
+  --border: #334155;
+  --border-strong: #475569;
+  --accent: #22c55e;
+  --accent-fg: #0f172a;
+  --accent-soft: rgb(34 197 94 / 0.14);
+  --danger: #ef4444;
+  --danger-soft: rgb(239 68 68 / 0.14);
+  --warn: #f59e0b;
+  --warn-soft: rgb(245 158 11 / 0.14);
+  --info: #38bdf8;
+  --info-soft: rgb(56 189 248 / 0.14);
+  --ring: #f8fafc;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-bg text-fg font-sans antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Rendered Markdown (model output, requirements, plans): sanitised HTML, so styled here, not with classes. */
+.md {
+  @apply text-[14px] leading-relaxed break-words;
+}
+.md > * + * {
+  margin-top: 0.6rem;
+}
+.md h1,
+.md h2,
+.md h3,
+.md h4 {
+  @apply font-semibold text-fg;
+}
+.md h1 {
+  font-size: 1.15rem;
+}
+.md h2 {
+  font-size: 1.05rem;
+}
+.md h3,
+.md h4 {
+  font-size: 0.95rem;
+}
+.md ul {
+  @apply list-disc pl-5;
+}
+.md ol {
+  @apply list-decimal pl-5;
+}
+.md li + li {
+  margin-top: 0.2rem;
+}
+.md a {
+  @apply text-accent underline underline-offset-2;
+}
+.md code {
+  @apply font-mono text-[12.5px] rounded bg-muted px-1 py-0.5;
+}
+.md pre {
+  @apply rounded-lg border border-border bg-bg p-3 overflow-x-auto;
+}
+.md pre code {
+  @apply bg-transparent p-0;
+}
+.md table {
+  @apply w-full border-collapse text-[13px];
+}
+.md th,
+.md td {
+  @apply border border-border px-2 py-1 text-left align-top;
+}
+.md blockquote {
+  @apply border-l-2 border-border-strong pl-3 text-fg-muted;
+}
+
+/* highlight.js tokens mapped to the palette (works in both themes). */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in {
+  color: #c084fc;
+}
+.hljs-string,
+.hljs-attr,
+.hljs-template-tag {
+  color: #4ade80;
+}
+.hljs-number,
+.hljs-literal {
+  color: #fb923c;
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+.hljs-title,
+.hljs-section,
+.hljs-function .hljs-title {
+  color: #60a5fa;
+}
+.hljs-type,
+.hljs-class .hljs-title {
+  color: #f472b6;
+}
+:root:not(.dark) .hljs-string,
+:root:not(.dark) .hljs-attr {
+  color: #15803d;
+}
+:root:not(.dark) .hljs-keyword,
+:root:not(.dark) .hljs-built_in {
+  color: #7e22ce;
+}
+:root:not(.dark) .hljs-number {
+  color: #c2410c;
+}
+:root:not(.dark) .hljs-title {
+  color: #1d4ed8;
+}
+
+/* diff2html inside the Diffs tab: keep its structure, adopt the theme. */
+.diff-view .d2h-wrapper {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.dark .diff-view .d2h-file-header,
+.dark .diff-view .d2h-file-wrapper,
+.dark .diff-view .d2h-code-linenumber,
+.dark .diff-view .d2h-code-side-linenumber,
+.dark .diff-view .d2h-diff-table {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--fg);
+}
+.dark .diff-view .d2h-ins,
+.dark .diff-view .d2h-ins .d2h-code-line-ctn {
+  background: rgb(34 197 94 / 0.12);
+}
+.dark .diff-view .d2h-del,
+.dark .diff-view .d2h-del .d2h-code-line-ctn {
+  background: rgb(239 68 68 / 0.12);
+}
+.dark .diff-view .d2h-info {
+  background: var(--raised);
+  color: var(--fg-muted);
+}
+.dark .diff-view .d2h-file-list-wrapper,
+.dark .diff-view .d2h-file-list {
+  color: var(--fg);
+}
+
+.caret::after {
+  content: "▍";
+  margin-left: 1px;
+  animation: blink 1s steps(2) infinite;
+  color: var(--accent);
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Code must show exactly what is typed: no ligatures ("->" stays two characters). */
+code,
+pre,
+kbd,
+.font-mono {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}

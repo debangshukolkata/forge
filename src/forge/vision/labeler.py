@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
-from forge.web.security import COOKIE, ServerSecurity
+from forge.web.security import ServerSecurity
 
 STATIC = Path(str(resources.files("forge.vision") / "static"))
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}
@@ -48,7 +48,9 @@ def create_label_app(eval_dir: Path, security: ServerSecurity) -> FastAPI:
     async def index(request: Request) -> Response:
         if request.query_params.get("t"):
             redirect = RedirectResponse("/", status_code=303)
-            redirect.set_cookie(COOKIE, security.token, httponly=True, samesite="strict", path="/")
+            redirect.set_cookie(
+                security.cookie_name, security.token, httponly=True, samesite="strict", path="/"
+            )
             return redirect
         return FileResponse(STATIC / "label.html", media_type="text/html")
 

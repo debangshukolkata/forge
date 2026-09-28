@@ -25,12 +25,13 @@ from forge.config import ROLES
 from forge.engine.inputs import parse_user_input
 from forge.errors import ForgeError
 from forge.web.manager import WebSessionManager
-from forge.web.security import COOKIE, ServerSecurity
+from forge.web.security import ServerSecurity
 from forge.workspace.output import build_output, build_patch, compute_changes
 from forge.workspace.text_format import decode_text, detect_format
 from forge.workspace.workspace import Workspace
 
 STATIC = Path(str(resources.files("forge.web") / "static"))
+REACT = Path(str(resources.files("forge.web") / "react"))  # built by ui-react (npm run build)
 MAX_FILE_BYTES = 1_000_000
 Stopper = Callable[[], Awaitable[None]]
 
@@ -60,7 +61,10 @@ class OpenWorkspace(BaseModel):
 
 
 def create_app(
-    manager: WebSessionManager, security: ServerSecurity, on_quit: Stopper | None = None
+    manager: WebSessionManager,
+    security: ServerSecurity,
+    on_quit: Stopper | None = None,
+    ui: Literal["classic", "react"] = "classic",
 ) -> FastAPI:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -79,12 +83,29 @@ def create_app(
     @app.get("/")
     async def index(request: Request) -> Response:
         if request.query_params.get("t"):  # first load: move the token into the cookie, off the URL
-            redirect = RedirectResponse("/", status_code=303)
-            redirect.set_cookie(COOKIE, security.token, httponly=True, samesite="strict", path="/")
+            # React dev mode: the page itself comes from the Vite dev server (same host: it gets the cookie).
+            redirect = RedirectResponse(
+                f"{security.dev_origin}/" if security.dev_origin else "/", status_code=303
+            )
+            redirect.set_cookie(
+                security.cookie_name, security.token, httponly=True, samesite="strict", path="/"
+            )
             return redirect
+        if ui == "react":
+            if not (REACT / "index.html").exists():
+                return JSONResponse(
+                    {"error": "The React UI isn't built: cd ui-react; npm run build"}, status_code=503
+                )
+            return FileResponse(REACT / "index.html", media_type="text/html")
         return FileResponse(STATIC / "index.html", media_type="text/html")
 
     app.mount("/static", StaticFiles(directory=STATIC), name="static")
+    if ui == "react" and (REACT / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=REACT / "assets"), name="assets")
+
+        @app.get("/favicon.svg")
+        async def favicon() -> Response:
+            return FileResponse(REACT / "favicon.svg", media_type="image/svg+xml")
 
     # --- state and workspaces ---
 
@@ -97,7 +118,7 @@ def create_app(
         return {
             "workspace": {
                 "path": str(workspace.root),
-                "name": workspace.info.name,
+                "name": workspace.info.project or workspace.info.name,
                 "repo": workspace.info.repo_path or "standalone (Mode B)",
                 "mode": workspace.info.mode,
                 "app_folder": workspace.info.app_subfolder,

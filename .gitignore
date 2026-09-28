@@ -23,3 +23,6 @@ htmlcov/
 .forge_home/
 wheels/
 test-artifacts/
+
+# React UI build tooling (the built files in src/forge/web/react ARE committed)
+ui-react/node_modules/

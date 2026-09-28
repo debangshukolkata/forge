@@ -929,3 +929,19 @@ project name in workspace.json (`project`, shown in the sidebar). In Mode B the 
 profile (slugged, e.g. "Payments Masking" -> payments-masking): created on first use, reused when the name comes
 back, so users never deal with "profiles"; existing projects are suggested as they type. Mode A's app sub-folder
 is detected and only asked for when ambiguous. CLI: `forge new --project NAME` (Mode B: --profile optional).
+
+### D-114 — React UI next to the classic UI · Decided (2026-09-28)
+The user asked for a React UI on a different port, keeping the classic UI until the new one is tested; built
+here with the built files committed (the office laptop needs only Python), React + Tailwind, "very
+professional", designed with the ui-ux-pro-max skill. Stack: React 19 + TypeScript + Tailwind CSS 4 + Vite,
+lucide icons (ISC), marked + DOMPurify + highlight.js + diff2html (as in the classic UI), fonts bundled via
+@fontsource (OFL) — no CDN or Google Fonts. Source in ui-react/, build output in src/forge/web/react/ (package
+data). `forge ui --react` serves it on 8766 with the same API, token, CSP and Host/Origin checks; the classic
+`forge ui` on 8765 is unchanged. Security-relevant changes: (1) the session cookie is now per port
+(`forge_token_<port>`) — browsers share cookies across ports of 127.0.0.1, so two UIs would overwrite each
+other's token; (2) `forge ui --react --dev` accepts exactly one extra Origin, the Vite dev server
+http://127.0.0.1:5173 (loopback, explicit flag, validated), and the token link then forwards to it. Design
+system: Minimalism & Swiss Style, dark first + light theme, slate/green palette, IBM Plex Sans + JetBrains Mono
+(ligatures off in code). Verified in headless Edge: home, New project flow, slash command, all eight tabs, theme
+switch and a replayed conversation (tool cards, Markdown table, highlighted code, plan approval, question) with
+zero console errors (so no CSP violations).

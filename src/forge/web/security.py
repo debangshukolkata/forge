@@ -8,8 +8,9 @@ import ipaddress
 import secrets
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from urllib.parse import urlsplit
 
-COOKIE = "forge_token"
+COOKIE = "forge_token"  # base name; the real cookie is per port (see cookie_name)
 LOOPBACK_NAMES = ("127.0.0.1", "localhost")
 
 
@@ -30,10 +31,31 @@ def check_bind_host(host: str) -> str:
     return host
 
 
+def check_dev_origin(origin: str) -> str:
+    """`forge ui --react --dev`: the Vite dev server's origin — loopback http only, with an explicit port."""
+    parsed = urlsplit(origin)
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname not in LOOPBACK_NAMES
+        or not parsed.port
+        or parsed.path not in ("", "/")
+    ):
+        raise BindError(f"Refusing dev origin {origin!r}: use http://127.0.0.1:<port>")
+    return f"http://{parsed.hostname}:{parsed.port}"
+
+
 @dataclass
 class ServerSecurity:
     port: int
     token: str = field(default_factory=lambda: secrets.token_urlsafe(32))
+    # Only for `forge ui --react --dev`: the Vite dev server that forwards API/WebSocket calls here.
+    dev_origin: str | None = None
+
+    @property
+    def cookie_name(self) -> str:
+        # Browsers share cookies across all ports of 127.0.0.1: the classic UI (8765) and the React UI (8766)
+        # would overwrite each other's token with one name.
+        return f"{COOKIE}_{self.port}"
 
     @property
     def allowed_hosts(self) -> set[str]:
@@ -41,7 +63,8 @@ class ServerSecurity:
 
     @property
     def allowed_origins(self) -> set[str]:
-        return {f"http://{host}" for host in self.allowed_hosts}
+        origins = {f"http://{host}" for host in self.allowed_hosts}
+        return origins | ({self.dev_origin} if self.dev_origin else set())
 
     def token_ok(self, candidate: str | None) -> bool:
         if not candidate:
@@ -57,7 +80,7 @@ class ServerSecurity:
         origin = headers.get("origin")
         if origin is not None and origin not in self.allowed_origins:
             return "foreign Origin"
-        if not (self.token_ok(cookies.get(COOKIE)) or self.token_ok(query_token)):
+        if not (self.token_ok(cookies.get(self.cookie_name)) or self.token_ok(query_token)):
             return "missing or wrong session token"
         return None
 

@@ -16,7 +16,7 @@ from forge.engine.events import EventBus
 from forge.engine.session_host import SessionHost
 from forge.safety.redact import Redactor
 from forge.web.manager import WebSessionManager
-from forge.web.security import COOKIE, BindError, ServerSecurity, check_bind_host
+from forge.web.security import BindError, ServerSecurity, check_bind_host
 from forge.web.server import create_app
 from forge.workspace.create import create_workspace
 from forge.workspace.workspace import Workspace
@@ -71,7 +71,7 @@ def test_requests_without_the_token_are_refused(client: TestClient, security: Se
     login(client, security)
     page = client.get("/")
     assert page.status_code == 200 and "<title>Forge</title>" in page.text
-    assert client.cookies.get(COOKIE) == security.token
+    assert client.cookies.get(security.cookie_name) == security.token
 
 
 def test_foreign_origin_and_host_are_refused(client: TestClient, security: ServerSecurity) -> None:
