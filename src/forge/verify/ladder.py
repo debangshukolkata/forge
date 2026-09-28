@@ -5,12 +5,14 @@ later rungs would only repeat the same problem."""
 
 from __future__ import annotations
 
+import asyncio
 import configparser
 import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from forge.db.table_check import TableCheck, check_tables
 from forge.tools.base import ToolContext
 from forge.tools.powershell import ps_quote
 from forge.tools.shell import execute
@@ -139,6 +141,12 @@ class VerifyLadder:
             from forge.modeb.workspace import ensure_shared_stub_packages
 
             ensure_shared_stub_packages(self.context.workspace)
+        table_note = ""
+        tables = await self._table_check()
+        if tables is not None and tables.refusal:
+            return StepResult(name, False, tables.refusal), TestReport()
+        if tables is not None and tables.missing:
+            table_note = tables.note(self.context.db.scratch.schema) + "\n"
         output, exited_ok = await self._run(
             f"-m pytest {PYTEST_ARGS}{harness} {selector}".rstrip(), timeout_s
         )
@@ -163,7 +171,14 @@ class VerifyLadder:
                 "project's test style), then run verify again: the change isn't verified without them.\n"
                 + summary[-400:]
             )
-        return StepResult(name, ok, summary), tests
+        return StepResult(name, ok, table_note + summary), tests
+
+    async def _table_check(self) -> TableCheck | None:
+        """Spec §9.5: tables the code uses must exist in the scratch schema before DB-backed runs."""
+        try:
+            return await asyncio.to_thread(check_tables, self.context.workspace, self.context.db)
+        except Exception:  # an unreachable DB mustn't stop the tests; they report it themselves
+            return None
 
     async def _run(self, arguments: str, timeout_s: int) -> tuple[str, bool]:
         result = await execute(

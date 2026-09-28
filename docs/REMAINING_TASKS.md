@@ -4,7 +4,7 @@ Started 2026-09-28 ~00:50 IST. Worked through top to bottom; each item is ticked
 Details of every choice go to docs/DECISIONS.md; open issues to TODO.md / RISKS.md / SPEC_DEVIATIONS.md.
 
 ## 1. M10B — Mode B (standalone): close it
-- [x] Live acceptance 1+2 (harness: passes; clean host copy on the FIRST attempt: 2 contract tests failed on a wrong assumption — see acceptance 3)
+- [x] Live acceptance 1+2 (harness passes; since D-109 the FIRST delivery also passes in the clean host copy)
       (rerun after the sandbox/.venv fix; evidence saved to test-artifacts/ on failure)
 - [x] Live acceptance 3 (2026-09-28 07:50 run: revision 2 passes 13/13 in a fresh host copy; notes = exactly the 2 changed files): a wrong assumption fails a contract test in the host; the pasted
       failure produces a revision that passes; REVISION_NOTES lists only the changed files
@@ -45,7 +45,7 @@ Details of every choice go to docs/DECISIONS.md; open issues to TODO.md / RISKS.
 - [x] evals/ folder: 6 fixture tasks with hidden acceptance tests + scripts/run_fixture_evals.py — live: 6/6 hidden tests pass, full suite green 6/6
 - [x] Carried-over items: embedded-Postgres fallback → documented deviation (no cp313 wheel); web search as
       stuck-escalation step 3 (built); app smoke in Diagnose (built, in-process)
-- [ ] "tables exist in scratch before DB-backed runs" check (still open — see SPEC_DEVIATIONS)
+- [x] "tables exist in scratch before DB-backed runs" check (D-107: reported before each test run; schema-qualified writes on the shared DB refused)
 
 ## 6. After development: the user's end-to-end check
 - [x] Run Forge (new-project workspace, Mode A on an empty repo) and ask it to build a Python **multimodal RAG chatbot** using **FAISS**
@@ -58,3 +58,11 @@ Details of every choice go to docs/DECISIONS.md; open issues to TODO.md / RISKS.
 - The prescription image is personal health data: it is only sent to the user's own Azure OpenAI deployment
   (as the user asked), never to web search, and the generated app keeps no copy outside its workspace.
 - If a model token/rate limit stops work, retry later (the user said 05:20 IST is fine).
+
+## 7. Follow-ups after the overnight run (2026-09-28, daytime)
+- [x] Full offline suite baseline (3.13): 427 passed
+- [x] Tables-exist-in-scratch check (D-107)
+- [x] Reviewer: evidence-checked findings, at most 5 blocking (D-108) — live: 2/2 fixture evals pass
+- [x] Mode B: tests using host setup must request a host fixture (D-109) — live: first delivery passes in host
+- [ ] Chatbot change request 4 (vision probe bug, tighter signature crop) — running
+- [ ] Final offline suites on 3.13 and 3.14, then commit and push

@@ -26,6 +26,7 @@ from forge.kb.narrative import llm_writer
 from forge.learning.improve import prompt_override
 from forge.llm.base import Message
 from forge.modeb.assumptions import AssumptionRegister
+from forge.modeb.fixture_check import check_fixture_use
 from forge.modeb.output import build_modeb_output
 from forge.parity.history import History
 from forge.tools.base import Tool, ToolContext, ToolResult
@@ -281,7 +282,9 @@ class Orchestrator:
             )
         problems: list[str] = []
         if passed:
-            guard = check_tests(self.workspace) + check_stubs(self.workspace)
+            guard = (
+                check_tests(self.workspace) + check_stubs(self.workspace) + check_fixture_use(self.workspace)
+            )
             report.append(
                 "\n## Test guard\n\n" + ("\n".join(f"- {g.render()}" for g in guard) or "No weakened tests.")
             )

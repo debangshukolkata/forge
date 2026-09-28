@@ -333,3 +333,31 @@ async def test_project_prefix_is_rejected_in_mode_b(workspace: Workspace) -> Non
         ok, message = False, str(error)
     assert not ok and "Drop the 'project/' prefix" in message
     assert not (workspace.repo_dir / "project").exists()
+
+
+def test_tests_using_host_db_setup_must_request_a_host_fixture(workspace: Workspace) -> None:
+    # Seen in every live Mode B run: contract tests called session_scope() with no fixture; the stub worked,
+    # the real host (engine set up by the app fixture) did not.
+    from forge.modeb.fixture_check import check_fixture_use
+
+    workspace.write_text(
+        "_harness/harness_conftest.py",
+        "import pytest\n\n\n@pytest.fixture\ndef app():\n    return None\n\n\n"
+        "@pytest.fixture\ndef client(app):\n    return None\n",
+    )
+    workspace.write_text(
+        "demo_host/services/stats_service.py",
+        "from demo_host.db import session_scope\n\n\ndef count():\n    with session_scope() as s:\n"
+        "        return 1\n\n\ndef label(n):\n    return str(n)\n",
+    )
+    workspace.write_text(
+        "tests/test_stats.py",
+        "from demo_host.db import session_scope\nfrom demo_host.services.stats_service import count, label\n\n\n"
+        "def test_direct():\n    with session_scope():\n        pass\n\n\n"
+        "def test_through_service():\n    assert count() == 1\n\n\n"
+        "def test_with_fixture(client):\n    assert count() == 1\n\n\n"
+        "def test_pure():\n    assert label(1) == '1'\n",
+    )
+    findings = check_fixture_use(workspace)
+    assert [f.test for f in findings] == ["test_direct", "test_through_service"]
+    assert findings[0].blocking and "client" in findings[0].problem

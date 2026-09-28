@@ -481,3 +481,52 @@ def test_cleanup_drops_referencing_tables_before_the_ones_they_reference(
     assert not any("not dropped" in d for d in dropped), dropped
     assert not _schema_exists(admin_url, schema)
     assert registry.load() == {}
+
+
+# --- tables the code touches must exist in scratch (spec §9.5, D-107) ---
+
+
+def test_code_tables_come_from_models_and_raw_sql(workspace: Workspace) -> None:
+    from forge.db.table_check import code_tables
+
+    code = code_tables(workspace)
+    assert {"claims", "policies"} <= code.tables
+    assert code.qualified_writes == []
+
+
+def test_schema_qualified_writes_are_refused_on_the_shared_database(workspace: Workspace) -> None:
+    from types import SimpleNamespace
+
+    from forge.db.table_check import check_tables
+
+    workspace.write_text(
+        "backend/claims_app/repositories/archive_repository.py",
+        "from sqlalchemy import text\n\n\ndef archive(session):\n"
+        '    session.execute(text("INSERT INTO public.claims_archive SELECT * FROM claims"))\n',
+    )
+    shared = SimpleNamespace(scratch=SimpleNamespace(target=DbTarget("dev", "DEV_PG_URL"), schema="forge_x"))
+    result = check_tables(workspace, shared)
+    assert result is not None and result.refusal and "archive_repository.py" in result.refusal
+    assert check_tables(workspace, SimpleNamespace(scratch=None)) is None
+
+
+@pytest.mark.pg
+def test_missing_scratch_tables_are_reported(
+    workspace: Workspace, local_secrets: Secrets, admin_url: str, cleanup_schemas: list[str]
+) -> None:
+    from types import SimpleNamespace
+
+    from forge.db.table_check import check_tables
+
+    schema = f"forge_tc_{uuid.uuid4().hex[:6]}"
+    cleanup_schemas.append(schema)
+    with _admin(admin_url) as connection:
+        connection.execute(f'CREATE SCHEMA "{schema}"')
+        connection.execute(f'CREATE TABLE "{schema}".policies (id int)')
+    db = SimpleNamespace(
+        scratch=SimpleNamespace(target=LOCAL, secrets=local_secrets, schema=schema), deny_tables=[]
+    )
+    result = check_tables(workspace, db)
+    assert result is not None and result.refusal is None
+    assert "claims" in result.missing and "policies" not in result.missing
+    assert "relation does not exist" in result.note(schema)

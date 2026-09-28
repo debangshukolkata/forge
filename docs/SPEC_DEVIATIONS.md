@@ -36,7 +36,7 @@ are folded into the spec itself as amendments (§0.2, tags `[A-n]`) and listed h
 | D-071 | Registry lock + Postgres advisory lock | Registry lock only | An advisory lock needs a connection held for the whole session | D-071 |
 | D-071 | Cleanup at workspace completion | `/db cleanup` / `forge cleanup` on request; reported in the final report | Change requests after DONE still need the scratch tables | D-071 |
 | M7 | Embedded Postgres fallback (`pgserver`) at L1 | Not built; L1 uses DB requests, mocks and server-run marking | pgserver publishes no cp313 win_amd64 wheel (checked 2026-09-28), so it can't go in the offline wheelhouse; local Postgres (L3) or DB requests instead | D-072, D-099 |
-| M7 | Refuse DB-backed runs until every table the code touches exists in scratch | Not built yet | Needs the M8 verify ladder's test selection | TODO |
+| M7 | Refuse DB-backed runs until every table the code touches exists in scratch | Missing tables are reported before each test run (with how to create them); only schema-qualified writes against the shared DB are refused | Many suites use SQLite fixtures and never touch scratch, so refusing would block safe runs | D-107 |
 | M8 | Verify rung 6: app smoke via http_request | Not built; the OpenAPI check builds the app in-process | http_request/browser tools are M10 | D-075 |
 | M8 | Debugger subagent's model from its own role | Uses the `reviewer` role (a second model) | Keeps the role list stable; configurable via /model reviewer | D-076 |
 | M8 | Verify rung 8: run the graph with fake LLMs | Compile + nodes/edges check; running with fakes is the agent's test to write | Invocation needs app-specific state | D-075 |

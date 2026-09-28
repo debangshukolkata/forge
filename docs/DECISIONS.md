@@ -851,3 +851,37 @@ model confidence 0.98) but still includes part of the printed caption and cuts o
 (IoU ≈ 0.36 against a hand-estimated box). Round 4 also introduced a bug only a real run shows: a "vision
 capability" probe sends `max_tokens`/`temperature=0` (rejected by the newer deployment) and reports the
 error as "deployment doesn't support images"; RAG_VISION_VALIDATE=0 bypasses it.
+
+### D-107 — Tables the code touches vs the scratch schema · Decided (2026-09-28)
+Spec §9.5: "every table the code touches must exist in scratch before DB-backed runs; Forge checks this and
+refuses the run otherwise", and schema-qualified writes must not reach the shared DB. Options: (a) refuse every
+test run while a table is missing, (b) report missing tables before each run and refuse only the dangerous case,
+(c) report only. Chose (b): Forge can't tell whether a test run actually uses the database (the fixture suite,
+like many, uses SQLite), so (a) would block safe runs. db/table_check.py reads the tables the app's non-test
+code uses (SQLAlchemy models + raw SQL, via the KB extractors, fresh from the workspace copy, cached by file
+mtimes) and compares them with the scratch schema before every verify/run_tests pytest run; missing ones are
+prepended to the result with how to create them. When non-test code WRITES to a schema-qualified table and the
+scratch schema lives on a non-local database, the run is refused (R28 → mitigated). A DB error during the check
+never blocks the tests.
+
+### D-108 — Reviewer findings must carry evidence; at most 5 blocking · Decided (2026-09-28)
+Seen in the end-to-end runs: blocking findings about code that wasn't there (stale diffs, masked text) and
+wish-lists of extra hardening ("add retries", README wording) consumed both fix rounds while real problems
+waited. Options: (a) prompt only, (b) a second LLM pass to judge findings, (c) prompt + deterministic evidence
+check. Chose (c): a blocking finding must end with `evidence: \`…\`` quoting the offending code (or, for
+something missing, the requirement's words); Forge checks the quote against the named file (raw and redacted
+text) or the requirement and downgrades unverifiable findings to minor, with the reason in the report. At most
+5 findings stay blocking. The prompt also tells the reviewer to read the current file (the diff may be older)
+and that hardening the requirement didn't ask for is minor.
+
+### D-109 — Mode B: tests that use host setup must request a host fixture · Decided (2026-09-28)
+Every live Mode B run's first delivery failed in the host the same way: contract tests called
+`session_scope()` (directly or via the new service) without a fixture; the stub worked, the host's engine only
+exists inside the app fixture. modeb/fixture_check.py flags (blocking, in the review's test guard) any delivered
+test that uses host infrastructure (`db`/`database`/`session`/`extensions` modules, `session_scope`-like names,
+or new functions that use them) but requests none of the fixtures harness_conftest.py recreates (skipped when
+the harness has an autouse fixture). Replayed on last night's evidence: it flags exactly the 6 tests that failed
+in the host in revision 1 and none in the passing revision 2.
+Live result (2026-09-28, after D-108/D-109): the Mode B live acceptance passed with the FIRST delivery passing
+in the clean host copy (previous four runs all needed a pasted-failure revision); fixture evals 02 and 04 still
+pass their hidden tests, and the evidence check downgraded two unfounded "blocking" findings.
