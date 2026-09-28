@@ -118,18 +118,22 @@ export function ProgressHeader({ forge }: { forge: Forge }) {
           {STEPS.map((name, index) => {
             const complete = index < step;
             const active = index === step;
+            // The current step animates while Forge works on it; amber and gently pulsing while it waits for you.
+            const motion = active ? (forge.activity.kind === "waiting" ? "step-waiting" : forge.activity.kind !== "idle" ? "step-working" : "") : "";
             return (
               <li key={name} className="flex flex-1 items-center last:flex-none">
                 <span className="flex items-center gap-1.5" aria-current={active ? "step" : undefined}>
                   <span
+                    data-motion={motion || undefined}
                     className={cx(
-                      "flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors duration-300",
+                      "relative isolate flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-semibold transition-colors duration-300",
                       complete && "border-accent bg-accent text-accent-fg",
-                      active && "border-accent text-accent",
+                      active && (motion === "step-waiting" ? "border-warn text-warn" : "border-accent text-accent"),
+                      motion,
                       !complete && !active && "border-border-strong text-fg-muted",
                     )}
                   >
-                    {complete ? <Check className="h-3 w-3" /> : active && busy ? <span className="h-2 w-2 animate-pulse rounded-full bg-accent" /> : index + 1}
+                    {complete ? <Check className="h-3 w-3" /> : index + 1}
                   </span>
                   <span className={cx("text-[12px] font-medium", active ? "text-fg" : "text-fg-muted")}>{name}</span>
                   {stepUsage[index] && <UsageBadge compact bucket={stepUsage[index]} limits={forge.costColors?.phase} />}

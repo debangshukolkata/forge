@@ -1018,3 +1018,9 @@ User asked to be able to collapse the right panel (Tasks, Files, …). A button 
 switch hides it to a 48 px rail of the tab icons (clicking one reopens the panel on that tab); the state is
 remembered per browser (localStorage). Options: hide completely (loses the quick way back to a tab) or a rail —
 chose the rail.
+
+### D-121 — Animated current step in the progress header · Decided (2026-09-28, small UI choice)
+User asked for animation on the active phase circle (e.g. Build) while it runs. The current step gets a spinning
+accent arc and a soft expanding halo while Forge works (same signal as the live status line), and an amber
+pulsing ring while it waits for the user; the step number stays readable inside. CSS only; stopped under
+prefers-reduced-motion.

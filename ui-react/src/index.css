@@ -449,3 +449,42 @@ kbd,
   0%, 30% { box-shadow: 0 0 0 2px var(--info); background: var(--info-soft); }
   100% { box-shadow: 0 0 0 2px transparent; }
 }
+
+/* The current step in the progress header: a spinning arc and a soft halo while Forge works on it, an amber
+   pulse while it waits for you. */
+.step-working::after,
+.step-waiting::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+}
+.step-working::after {
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
+  animation: loader-spin 1s linear infinite;
+}
+.step-working::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  background: var(--accent);
+  animation: step-halo 1.8s ease-out infinite;
+  z-index: -1;
+}
+.step-waiting::after {
+  border-color: var(--warn);
+  animation: step-wait 1.6s ease-in-out infinite;
+}
+@keyframes step-halo {
+  0% { transform: scale(1); opacity: 0.35; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+@keyframes step-wait {
+  50% { opacity: 0.25; transform: scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-working::after, .step-working::before, .step-waiting::after { animation: none; }
+}

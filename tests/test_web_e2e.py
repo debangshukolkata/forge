@@ -451,6 +451,8 @@ def test_react_live_progress_and_activity(live_server: LiveServer, workspace: Wo
             {"id": "t1", "name": "run_tests", "summary": "run tests tests/test_masking.py"},
         )
         page.wait_for_selector("[role=status]:has-text('Running tests')")
+        # The current step animates while Forge works on it (D-121).
+        page.wait_for_selector("[aria-current=step] [data-motion=step-working]")
         assert "tests/test_masking.py" in page.inner_text("[role=status]")
         page.wait_for_timeout(1200)
         page.screenshot(path=str(shots / "activity-dark.png"))
@@ -463,6 +465,7 @@ def test_react_live_progress_and_activity(live_server: LiveServer, workspace: Wo
             {"id": "Q9", "question": "Keep the BIN?", "options": [{"label": "No"}], "recommended": "No"},
         )
         page.wait_for_selector("[role=status]:has-text('Waiting for your answer')")
+        page.wait_for_selector("[aria-current=step] [data-motion=step-waiting]")
         # The cost counts up to each new total (animated), then settles on the exact value.
         publish(EventType.COST_UPDATED, {"total_usd": 0.0125, "budget_usd": 5.0, "calls": 3})
         page.wait_for_selector("span[title^='Estimated cost'] >> text=$0.0125")
