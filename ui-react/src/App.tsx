@@ -13,7 +13,14 @@ import { useForge } from "./useForge";
 export function App() {
   const forge = useForge();
   const [view, setView] = useState<"home" | "chat">("home");
-  const [theme, setTheme] = useState<"dark" | "light">(storageGet("forge-theme") === "light" ? "light" : "dark");
+  // Light is the default (D-125). A new key, written only when the user toggles: the old "forge-theme" was
+  // saved on every load, so it can't tell a real choice of dark from the old default.
+  const [theme, setTheme] = useState<"dark" | "light">(storageGet("forge-theme-choice") === "dark" ? "dark" : "light");
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    storageSet("forge-theme-choice", next);
+  };
   const [stopped, setStopped] = useState(false);
   const [surface, setSurface] = useState<Surface>("chat");
   const [panelsCollapsed, setPanelsCollapsed] = useState(storageGet("forge-panels-collapsed") === "1");
@@ -38,7 +45,6 @@ export function App() {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
-    storageSet("forge-theme", theme);
   }, [theme]);
 
   useEffect(() => {
@@ -66,7 +72,7 @@ export function App() {
 
   return (
     <div className="flex h-full flex-col">
-      <TopBar forge={forge} theme={theme} onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} onHome={() => setView("home")} onQuit={quit} />
+      <TopBar forge={forge} theme={theme} onToggleTheme={toggleTheme} onHome={() => setView("home")} onQuit={quit} />
       <div className="flex min-h-0 flex-1">
         <Sidebar forge={forge} onNew={() => setView("home")} onOpen={open} />
         <main className="flex min-w-0 flex-1 flex-col">

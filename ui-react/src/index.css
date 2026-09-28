@@ -1,5 +1,5 @@
 /* Forge design system (ui-ux-pro-max: "Minimalism & Swiss Style", developer-tool palette "code dark + run
-   green", IBM Plex Sans + JetBrains Mono). Dark first; the light theme swaps the same semantic tokens.
+   green", IBM Plex Sans + JetBrains Mono). Light by default (D-125); the dark theme swaps the same semantic tokens.
    Fonts are bundled (no Google Fonts): the laptop may be offline and the CSP only allows 'self'. */
 @import "@fontsource/ibm-plex-sans/latin-400.css";
 @import "@fontsource/ibm-plex-sans/latin-500.css";

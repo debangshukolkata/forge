@@ -1054,3 +1054,9 @@ time underneath ("● $0.39 · 7m"); working time sums the gaps after each event
 the user. The stepper adapts to its own width (container queries): below 680 px only the current step shows cost
 and time; below 600 px only the current step shows its name; everything is in the step's tooltip. Chosen over
 tooltip-only (hides the numbers) and a separate row of numbers (loses the association with the step).
+
+### D-125 — Light theme is the default · Decided (2026-09-28, user request)
+The web UI opens in the light theme; the top-bar button still switches to dark. The choice is kept under a new
+browser-storage key (`forge-theme-choice`), written only when the user toggles: the old `forge-theme` key was
+saved on every load, so it recorded the old dark default rather than a real choice, and honouring it would have
+kept existing browsers dark. Cost: anyone who had deliberately chosen dark sees light once and toggles again.

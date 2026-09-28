@@ -166,7 +166,9 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         page.goto(server.url())
         page.wait_for_selector("text=Start a project")
         page.wait_for_selector("text=Environment check")
-        page.screenshot(path=str(shots / "home-dark.png"))
+        # Light is the default theme (D-125).
+        assert page.evaluate("document.documentElement.classList.contains('dark')") is False
+        page.screenshot(path=str(shots / "home-light.png"))
         page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
         page.fill("input[placeholder*='payments-masking'][placeholder^='C:']", str(tmp_path / "pm"))
         page.click("button:has-text('Create and open')")
@@ -177,10 +179,14 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         for tab in ("Files", "Diffs", "Learning", "Usage", "Settings", "Tasks"):
             page.click(f"[role=tab]:has-text('{tab}')")
         page.wait_for_selector("text=Phase")
-        page.screenshot(path=str(shots / "chat-dark.png"))
-        page.click("button[aria-label='Light theme']")
-        page.wait_for_timeout(400)  # let the 150 ms colour transitions finish
         page.screenshot(path=str(shots / "chat-light.png"))
+        page.click("button[aria-label='Dark theme']")
+        page.wait_for_timeout(400)  # let the 150 ms colour transitions finish
+        page.screenshot(path=str(shots / "chat-dark.png"))
+        # the choice of dark is remembered across reloads
+        page.reload()
+        page.wait_for_selector("button[aria-label='Light theme']")
+        assert page.evaluate("document.documentElement.classList.contains('dark')") is True
         assert "Payments Masking" in page.inner_text("nav[aria-label=Projects]")
         browser.close()
     assert not problems, problems
@@ -288,7 +294,7 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
         page.wait_for_selector("td:has-text('masking.py')")  # markdown table rendered (sanitised)
         page.click("button:has-text('run_tests')")
         page.wait_for_selector("pre:has-text('1 failed')")
-        page.screenshot(path=str(shots / "cards-dark.png"), full_page=True)
+        page.screenshot(path=str(shots / "cards-light.png"), full_page=True)
         browser.close()
     assert not problems, problems
 
@@ -455,7 +461,7 @@ def test_react_live_progress_and_activity(live_server: LiveServer, workspace: Wo
         page.wait_for_selector("[aria-current=step] [data-motion=step-working]")
         assert "tests/test_masking.py" in page.inner_text("[role=status]")
         page.wait_for_timeout(1200)
-        page.screenshot(path=str(shots / "activity-dark.png"))
+        page.screenshot(path=str(shots / "activity-light.png"))
         publish(
             EventType.TOOL_CALL_FINISHED,
             {"id": "t1", "name": "run_tests", "ok": True, "summary": "run tests", "duration_s": 3.1},
@@ -513,7 +519,7 @@ def test_react_live_progress_and_activity(live_server: LiveServer, workspace: Wo
         page.click("[role=tab]:has-text('Usage')")
         page.wait_for_selector("[role=tabpanel] td:has-text('Build')")
         page.wait_for_selector("[role=tabpanel] td:has-text('T3 Audit call without the PAN')")
-        page.screenshot(path=str(shots / "usage-dark.png"))
+        page.screenshot(path=str(shots / "usage-light.png"))
         publish(EventType.STATUS_CHANGED, {"state": "idle"})
         page.wait_for_selector("[role=status]", state="detached")
         browser.close()
@@ -654,10 +660,10 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
         page.wait_for_selector("text=2 failed calls")
         page.wait_for_selector("text=2 agents · 1 running")
         page.wait_for_timeout(600)
-        page.screenshot(path=str(shots / "run-map-dark.png"))
-        page.click("[aria-label='Light theme']")
-        page.wait_for_timeout(300)
         page.screenshot(path=str(shots / "run-map-light.png"))
+        page.click("[aria-label='Dark theme']")
+        page.wait_for_timeout(300)
+        page.screenshot(path=str(shots / "run-map-dark.png"))
 
         # What failed (D-122): the chip opens a drawer with every failure, grouped by task.
         page.click("button[title='See what failed']")
@@ -673,7 +679,7 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
         blocked = drawer.locator("[data-outcome=open]")
         assert "Blocked or declined" in blocked.inner_text() and "Not fixed yet" in blocked.inner_text()
         page.wait_for_timeout(400)
-        page.screenshot(path=str(shots / "failures-drawer-light.png"))
+        page.screenshot(path=str(shots / "failures-drawer-dark.png"))
         page.keyboard.press("Escape")
         drawer.wait_for(state="detached")
         # A task's failure count opens the drawer for that task only.
