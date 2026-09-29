@@ -1970,3 +1970,111 @@ and an explicit React-project-unaffected regression test asserting the plain `te
 no `--watch=false` anywhere in any command seen. Targeted run (`pytest -q -k "react_ladder or nodeenv or
 angular or ladder" --ignore=tests/test_web_e2e.py`): 43 passed, no regressions. `scripts/check_secrets.py`:
 0 findings. Full non-live/non-pg suite run at milestone end.
+
+### D-145 — Guided first-run setup: single script, UI-driven keys, live connectivity check · Agreed (2026-09-29)
+Prompted by a real install confusion hit live: the office laptop had a stray `forge` install at
+`%LOCALAPPDATA%\Forge\venv` (from an earlier `install_forge.ps1` run) shadowing the one in a freshly replaced
+`forge-main` folder on PATH — `forge ui` silently ran the old code with no signal anything was wrong. That
+specific bug is fixed by deleting the stray install, but it exposed a broader gap: no single guided path from
+"I have the Forge folder" to "the UI is open and I know my keys work."
+
+**What already exists, confirmed by reading the code, not assumed**: `scripts/install_forge.ps1` already
+creates a private venv, installs Forge, writes a `%USERPROFILE%\.forge\.env` template, and adds a PATH shim —
+but requires a pre-built offline wheelhouse as input, has no "open the UI at the end" step, and has no
+connectivity check. `src/forge/doctor.py` already has real, working checks — `check_secrets` (are the required
+env names present), `check_models` (a live call to each configured Azure deployment, ok/warn/fail per model),
+`check_databases` (live Postgres reachability, access level) — already wired to `GET /api/doctor` and rendered
+as a list in `Home.tsx`. The green-tick-per-key idea the user asked for is **not a new capability**, it already
+exists; it just isn't part of a guided flow and isn't reachable before the user already has keys in a `.env`.
+Config/secrets loading (`config.py`'s `Secrets`/`load_secrets`) is read-only today — there is no existing
+"write a value into .env" function; this is the one genuinely new piece of surface being added.
+
+**Agreed flow**, per the user: on open (first run or any run), Forge checks whether the required env values
+already exist. If they do, it goes straight to testing connectivity (the existing `check_models`/
+`check_databases` logic) and proceeds directly into the app on success — no setup screen shown at all when
+everything's already configured (most runs, once set up once). If required values are missing, the user may
+either supply them (a form, written to the `.env` Forge already uses) or explicitly ignore/skip and proceed
+without them (consistent with Forge's existing philosophy of never blocking on what it can't do — DECISIONS
+D-011, "if the user can't act either, Forge proposes a workaround"). On a successful connectivity check, Forge
+proceeds directly — no extra confirmation step, no separate "you're all set, click continue."
+
+**Scope for the install script side** (companion to the UI change, smaller piece): the user does the
+zip-download-and-unzip manually — no script needed for that part. What needs to be one script is everything
+after: venv creation/install from the unzipped folder itself (not `%LOCALAPPDATA%`, sidestepping the exact
+PATH-shadowing class of bug just hit, by design — a plain unzipped folder is not a git-cloned repo the way
+`forge-main` was, so there is no existing venv to reuse or confuse), then launching `forge ui` automatically at
+the end so the very first thing the user sees is the guided setup screen above, not a blank terminal. Prefers
+a bundled wheelhouse if present next to the script (offline-capable, matching the real office-laptop
+constraint) else installs from the unzipped source directly (online) — this was clarified with the user as not
+really an online-vs-offline design fork at all, since the manual download/unzip step already happened before
+the script runs either way.
+
+**Not yet decided in this pass** (next implementation step): the exact new backend endpoint(s) for writing a
+submitted key into `.env` (must go through the same redaction-registration path `load_secrets`'s
+`register_secret_values` already uses, so a freshly-entered key is masked from logs/events immediately, not
+only after the next process restart re-reads the file); the exact UI form's field list (presumably the same
+required-name set `check_secrets` already computes from `config.llm.providers.azure`, not a hardcoded
+duplicate list); the installer script's exact venv/install mechanics (reusing `install_forge.ps1`'s proven
+logic for the pieces that transfer, not rewritten from scratch).
+
+**Resolved**: no restart — writing a key reloads `Secrets` in the current process immediately, per the user,
+so submit-then-see-green-ticks feels like one continuous flow rather than being interrupted right at the
+first-run moment. Implementation needs whatever holds the live `Secrets`/`LLMRouter` instance (check
+`engine/session_host.py`/wherever `load_secrets` is currently called once at startup) to support being handed
+a freshly-updated `Secrets` object without a full process restart — the exact mechanism (re-run `load_secrets`
+and swap it in vs. a narrower "just update these names" path) is left to implementation to work out against
+the real startup code, not prescribed here.
+
+### D-146 — D-145 implemented: guided setup screen, .env write endpoint, no-restart live check · Decided (2026-09-29)
+Implements D-145's UI/backend piece only (the installer-script piece — one script, bundled wheelhouse,
+`forge ui` auto-launch at the end — is separate and still open; see TODO.md).
+
+**Backend**: `config.py` gains `write_secret_values(values, home, redactor)` — the one genuinely new piece of
+surface D-145 called out. It reads the existing `.env` line by line, replaces the value on any line whose
+name matches a submitted key (regex on `NAME=`), appends lines for submitted names not already present, and
+leaves every other line (comments, blanks, unrelated values) untouched; creates the file/parent folder if
+missing. It calls `register_secret_values` (the same function `load_secrets` already uses) before returning,
+so a value just typed into the browser is masked from logs/events immediately, not only after the next
+`load_secrets` call. `doctor.py` gains `required_secret_names(config)` (extracted from `check_secrets`'s own
+computation, unchanged behaviour) and `missing_secret_names(config, secrets)` — both the write endpoint's
+allowlist and the setup screen's field list derive from these, no duplicate list anywhere.
+
+**Confirmed, not assumed**: read `web/manager.py` in full — `WebSessionManager` holds no `Secrets`/`LLMRouter`
+instance until `open_workspace`/`new_workspace`/`new_standalone` runs (i.e. a project already exists). Before
+that point, nothing in the process caches secrets, so "no restart" needed no reload mechanism at all: every
+`load_secrets(home)` call already re-reads `.env` from disk. `test_freshly_written_value_is_immediately_
+visible_with_no_restart` in `tests/test_config.py` asserts this directly (write, then `load_secrets` again in
+the same process, no monkeypatching of any cache).
+
+**Endpoints** (`web/server.py`): `GET /api/doctor` gained a query param, `offline: bool = True` — the existing
+cheap fast path (used by `Home.tsx` today) is the unchanged default; `?offline=false` runs the full live
+connectivity check (`run_doctor(offline=False)`), used by the setup screen right after a submit. New
+`GET /api/setup` — cheap, no live calls — returns `{missing: string[], config_error: string | null}` from
+`missing_secret_names`, so the frontend can decide before rendering anything whether to show the setup screen
+at all. New `POST /api/setup/secrets`, body `{values: {name: value}}` — validates every submitted name against
+`required_secret_names(config)` and returns 400 listing the unrecognised name(s) if any are outside that set
+(never an arbitrary-file-write primitive); on success calls `write_secret_values` and returns `{ok: true}` —
+no submitted value is ever echoed back, matching `doctor.py`'s existing never-print-secrets discipline.
+
+**Frontend**: new `ui-react/src/components/Setup.tsx`. `App.tsx` calls `GET /api/setup` once on load before
+rendering Home/Chat (a brief spinner, not the setup screen, while that single request is in flight — no flash
+of the setup UI on the common already-configured path); an empty `missing` list skips straight past it. The
+form fields are exactly `missing`'s names (no hardcoded duplicate on the frontend); submitting posts to
+`/api/setup/secrets`, then immediately calls `GET /api/doctor?offline=false` in the same handler and renders
+the result list with the same OK/warn/fail icon convention `Home.tsx`'s existing "Environment check" card
+already established (reused, not reinvented). If the Secrets check comes back non-failing, it proceeds
+straight into the app with no extra confirmation click; a "Skip for now" button does the same unconditionally,
+consistent with D-011 (Forge never blocks on what it can't do).
+
+**Tests**: `tests/test_config.py` — write-into-fresh-file, preserves-unrelated-lines, appends-new-names,
+rejects-nothing-itself (validation lives in the endpoint, tested there), the load-bearing no-restart assertion,
+and redaction-registration-is-immediate. `tests/test_web.py` — `/api/setup` reports missing names,
+`/api/setup/secrets` writes the file and never echoes the value back (asserted against the raw response text),
+and rejects an unrecognised field name with no write occurring. `scripts/check_secrets.py`: 0 findings.
+`ruff check`/`ruff format --check` clean on every touched backend file; `mypy src/forge` clean; `npm run build`
+clean (no new TypeScript errors).
+
+**Left open** (D-145's other, smaller piece — not attempted in this pass): the installer script changes —
+`install_forge.ps1` (or a new sibling script) launching `forge ui` automatically at the end so the setup
+screen above is the very first thing a fresh unzip-and-run shows, plus its "prefer a bundled wheelhouse next
+to the script, else install from the unzipped source" logic. Tracked in TODO.md.

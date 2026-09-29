@@ -91,6 +91,58 @@ def test_strict_content_security_policy(client: TestClient, security: ServerSecu
     )
 
 
+def test_setup_reports_missing_required_secrets(
+    client: TestClient, security: ServerSecurity, isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
+    login(client, security)
+
+    status = client.get("/api/setup", headers=ORIGIN)
+
+    assert status.status_code == 200
+    assert "AZURE_OPENAI_API_KEY" in status.json()["missing"]
+
+
+def test_setup_secrets_writes_the_env_file_and_never_echoes_the_value(
+    client: TestClient, security: ServerSecurity, isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    login(client, security)
+    secret = "typed-in-the-browser-0123456789"  # check_secrets: fake
+
+    response = client.post(
+        "/api/setup/secrets", headers=ORIGIN, json={"values": {"AZURE_OPENAI_API_KEY": secret}}
+    )
+
+    assert response.status_code == 200
+    assert secret not in response.text
+    from forge.config import env_file_path
+
+    env_text = env_file_path(isolated_forge_home).read_text(encoding="utf-8")
+    assert f"AZURE_OPENAI_API_KEY={secret}" in env_text
+
+
+def test_setup_secrets_rejects_an_unrecognized_field_name(
+    client: TestClient, security: ServerSecurity, isolated_forge_home: Path
+) -> None:
+    login(client, security)
+
+    response = client.post(
+        "/api/setup/secrets", headers=ORIGIN, json={"values": {"SOME_RANDOM_FILE_PATH": "/etc/passwd"}}
+    )
+
+    assert response.status_code == 400
+    assert "SOME_RANDOM_FILE_PATH" not in (env_file_path_text(isolated_forge_home))
+
+
+def env_file_path_text(home: Path) -> str:
+    from forge.config import env_file_path
+
+    path = env_file_path(home)
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
 def test_only_loopback_binding_is_allowed() -> None:
     for host in ("0.0.0.0", "192.168.1.5", "::", "example.com"):
         with pytest.raises(BindError):

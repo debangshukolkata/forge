@@ -75,6 +75,13 @@ export interface DoctorResult {
   detail: string;
 }
 
+/** GET /api/setup: which required env values are missing, so the app can decide whether to show the
+ * guided first-run setup screen at all (D-145/D-146) before rendering anything else. */
+export interface SetupStatus {
+  missing: string[];
+  config_error: string | null;
+}
+
 export interface ContextInfo {
   percent: number;
   fixed: number;

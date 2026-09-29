@@ -299,3 +299,31 @@ def register_secret_values(values: dict[str, str], redactor: Redactor) -> None:
         url_password = _URL_PASSWORD.search(value)
         if url_password:
             redactor.register(url_password.group(1), f"{name}:password")
+
+
+def write_secret_values(
+    values: dict[str, str], home: Path | None = None, redactor: Redactor = default_redactor
+) -> None:
+    """Writes name->value pairs into Forge's own .env, preserving every unrelated line untouched
+    (comments, blank lines, values for names not being written). Creates the file if needed.
+
+    Registers the new values for redaction immediately (D-145/D-146): a key just typed into the setup
+    screen must be masked from any subsequent log/event right away, not only after the next process
+    restart re-reads the file via load_secrets.
+    """
+    path = env_file_path(home)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    existing_lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+    remaining = dict(values)
+    updated_lines = []
+    for line in existing_lines:
+        match = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=", line)
+        name = match.group(1) if match else None
+        if name is not None and name in remaining:
+            updated_lines.append(f"{name}={remaining.pop(name)}")
+        else:
+            updated_lines.append(line)
+    for name, value in remaining.items():  # names not already present in the file: appended
+        updated_lines.append(f"{name}={value}")
+    path.write_text("\n".join(updated_lines) + "\n", encoding="utf-8")
+    register_secret_values(values, redactor)

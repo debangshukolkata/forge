@@ -61,6 +61,13 @@ class OpenWorkspace(BaseModel):
     workspace: str
 
 
+class SetupSecrets(BaseModel):
+    """Body for POST /api/setup/secrets: name -> value, restricted to doctor's own required-names list
+    (never an arbitrary-file-write primitive — see the handler)."""
+
+    values: dict[str, str]
+
+
 def create_app(
     manager: WebSessionManager,
     security: ServerSecurity,
@@ -386,10 +393,50 @@ def create_app(
         }
 
     @app.get("/api/doctor")
-    async def doctor() -> list[dict[str, str]]:
+    async def doctor(offline: bool = True) -> list[dict[str, str]]:
+        # offline=True (default): the existing cheap fast path other callers rely on (no live network calls).
+        # offline=False: D-145's guided setup screen, run once after the user submits keys (or on first load
+        # when secrets already look present) so the connectivity check feels like one continuous flow.
         from forge.doctor import run_doctor
 
-        return [asdict(result) for result in await run_doctor(offline=True)]
+        return [asdict(result) for result in await run_doctor(offline=offline)]
+
+    @app.get("/api/setup")
+    async def setup_status() -> dict[str, Any]:
+        """Cheap (no live network calls): which required env values are missing, so the frontend can decide
+        whether to show the setup screen at all before doing anything else (D-145 — no flash of UI when
+        everything's already configured)."""
+        from forge.config import forge_home, load_config, load_secrets
+        from forge.doctor import missing_secret_names
+
+        home = forge_home()
+        try:
+            config = load_config(home)
+        except ForgeError as error:
+            return {"missing": [], "config_error": str(error)[:500]}
+        secrets = load_secrets(home)
+        return {"missing": missing_secret_names(config, secrets), "config_error": None}
+
+    @app.post("/api/setup/secrets")
+    async def setup_secrets(body: SetupSecrets) -> dict[str, bool]:
+        """Writes submitted values into Forge's .env. Only names doctor itself lists as required are
+        accepted (validated against missing_secret_names/required_secret_names — never an arbitrary-file-
+        write primitive). Never echoes a value back, on success or failure."""
+        from forge.config import forge_home, load_config, write_secret_values
+        from forge.doctor import required_secret_names
+
+        home = forge_home()
+        try:
+            config = load_config(home)
+        except ForgeError as error:
+            raise HTTPException(400, str(error)) from error
+        allowed = required_secret_names(config)
+        unknown = sorted(set(body.values) - allowed)
+        if unknown:
+            raise HTTPException(400, f"Unrecognized field(s): {', '.join(unknown)}")
+        submitted = {name: value for name, value in body.values.items() if value.strip()}
+        write_secret_values(submitted, home)
+        return {"ok": True}
 
     @app.post("/api/quit")
     async def quit_server() -> dict[str, bool]:

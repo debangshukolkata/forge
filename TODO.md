@@ -177,3 +177,14 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
   at the app root, so an Nx workspace falls through to the React ladder — no worse than before this pass, but
   still wrong); Mode B Angular support (only Mode A is in scope here, matching D-137's original React scoping);
   no real Angular CLI/npm was exercised (mocked throughout, per the task brief).
+
+- D-145/D-146 (2026-09-29): **Guided first-run setup screen built** — the UI/backend piece of D-145.
+  New `config.write_secret_values`, new `doctor.required_secret_names`/`missing_secret_names`, new endpoints
+  `GET /api/setup` and `POST /api/setup/secrets`, `GET /api/doctor` gained `?offline=` (default unchanged),
+  new `ui-react/src/components/Setup.tsx` shown by `App.tsx` before Home/Chat only when required secrets are
+  missing (zero-flash on the already-configured path). No restart needed: confirmed `WebSessionManager` caches
+  no `Secrets`/`LLMRouter` before a project is opened, so `load_secrets` re-reading `.env` from disk is already
+  sufficient. Tests, ruff, mypy, `npm run build`, `check_secrets.py` all clean — see D-146 for full detail.
+  **Still open**: the installer-script half of D-145 — making `install_forge.ps1` (or a new sibling script)
+  launch `forge ui` automatically at the end of a fresh unzip-and-run, and its "prefer a bundled wheelhouse
+  next to the script, else install from the unzipped source" logic. Not attempted in this pass.

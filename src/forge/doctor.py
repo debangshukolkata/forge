@@ -95,14 +95,27 @@ def check_forge_home(home: Path) -> CheckResult:
     return CheckResult("Forge home", "ok", str(home))
 
 
-def check_secrets(config: ForgeConfig, secrets: Secrets, home: Path) -> CheckResult:
+def required_secret_names(config: ForgeConfig) -> set[str]:
+    """The env var names Forge needs to talk to its configured models (spec §15/D-145's setup screen and
+    check_secrets share this one computation — no duplicate list anywhere else)."""
     provider = config.llm.providers.azure
     needed = {provider.endpoint_env, provider.api_key_env, provider.api_version_env}
     needed |= {config.llm.models[key].deployment_env for key in _models_in_use(config)}
-    missing = sorted(name for name in needed if not secrets.get(name))
+    return needed
+
+
+def missing_secret_names(config: ForgeConfig, secrets: Secrets) -> list[str]:
+    """The subset of required_secret_names not currently set — the setup screen's field list (D-145/D-146)
+    and the write endpoint's allowlist both derive from this, never a hardcoded duplicate."""
+    return sorted(name for name in required_secret_names(config) if not secrets.get(name))
+
+
+def check_secrets(config: ForgeConfig, secrets: Secrets, home: Path) -> CheckResult:
+    missing = missing_secret_names(config, secrets)
     source = secrets.source or env_file_path(home)
     if missing:
         return CheckResult("Secrets", "fail", f"missing in {source}: {', '.join(missing)}")
+    needed = required_secret_names(config)
     return CheckResult("Secrets", "ok", f"{len(needed)} required values present in {source}")
 
 

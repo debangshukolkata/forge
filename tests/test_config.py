@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from forge.config import load_config, load_secrets
+from forge.config import env_file_path, load_config, load_secrets, write_secret_values
 from forge.errors import ConfigError
 from forge.safety.redact import Redactor
 
@@ -87,3 +87,88 @@ def test_missing_secret_explains_where_to_put_it(
 
     with pytest.raises(ConfigError, match=r"AZURE_OPENAI_API_KEY is not set.*\.env\.example"):
         secrets.require("AZURE_OPENAI_API_KEY")
+
+
+def test_write_secret_values_creates_a_fresh_env_file(
+    isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    path = env_file_path(isolated_forge_home)
+    assert not path.exists()
+
+    write_secret_values(
+        {"AZURE_OPENAI_API_KEY": "fresh-key-0123456789"}, isolated_forge_home, redactor=Redactor()
+    )
+
+    assert path.exists()
+    assert "AZURE_OPENAI_API_KEY=fresh-key-0123456789" in path.read_text(encoding="utf-8").splitlines()
+
+
+def test_write_secret_values_preserves_unrelated_existing_lines(
+    isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    path = env_file_path(isolated_forge_home)
+    pg_line = "LOCAL_PG_URL=postgresql://u:p@localhost/db"  # check_secrets: fake
+    path.write_text(f"# a comment\n{pg_line}\nAZURE_OPENAI_API_KEY=old-key-0123456789\n", encoding="utf-8")
+
+    write_secret_values(
+        {"AZURE_OPENAI_API_KEY": "new-key-0123456789"}, isolated_forge_home, redactor=Redactor()
+    )
+
+    lines = path.read_text(encoding="utf-8").splitlines()
+    assert "# a comment" in lines
+    assert pg_line in lines
+    assert "AZURE_OPENAI_API_KEY=new-key-0123456789" in lines
+    assert "AZURE_OPENAI_API_KEY=old-key-0123456789" not in lines
+
+
+def test_write_secret_values_appends_names_not_already_present(
+    isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    path = env_file_path(isolated_forge_home)
+    path.write_text("AZURE_OPENAI_API_KEY=old-key-0123456789\n", encoding="utf-8")
+
+    write_secret_values(
+        {"AZURE_OPENAI_ENDPOINT": "https://example.openai.azure.com/"},
+        isolated_forge_home,
+        redactor=Redactor(),
+    )
+
+    lines = path.read_text(encoding="utf-8").splitlines()
+    assert "AZURE_OPENAI_API_KEY=old-key-0123456789" in lines
+    assert "AZURE_OPENAI_ENDPOINT=https://example.openai.azure.com/" in lines
+
+
+def test_freshly_written_value_is_immediately_visible_with_no_restart(
+    isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The load-bearing D-145/D-146 requirement: submit-then-see-green-ticks is one continuous flow because
+    load_secrets always re-reads the file from disk — there is no cached Secrets/LLMRouter instance to
+    reload, since none exists until a workspace is opened (confirmed by reading web/manager.py)."""
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
+    redactor = Redactor()
+    before = load_secrets(isolated_forge_home, redactor=redactor)
+    assert before.get("AZURE_OPENAI_API_KEY") is None
+
+    write_secret_values(
+        {"AZURE_OPENAI_API_KEY": "just-typed-key-0123456789"}, isolated_forge_home, redactor=redactor
+    )
+
+    after = load_secrets(isolated_forge_home, redactor=redactor)  # no restart, no process-wide cache to bust
+    assert after.get("AZURE_OPENAI_API_KEY") == "just-typed-key-0123456789"
+
+
+def test_write_secret_values_registers_for_redaction_immediately(
+    isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    redactor = Redactor()
+
+    write_secret_values(
+        {"AZURE_OPENAI_API_KEY": "typed-just-now-0123456789"}, isolated_forge_home, redactor=redactor
+    )
+
+    assert redactor.redact("key typed-just-now-0123456789") == "key [REDACTED:AZURE_OPENAI_API_KEY]"

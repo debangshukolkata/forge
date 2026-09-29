@@ -3,16 +3,26 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Chat } from "./components/Chat";
 import { RunMap } from "./components/RunMap";
 import { Home } from "./components/Home";
-import { IconButton } from "./components/ui";
+import { Setup } from "./components/Setup";
+import { IconButton, Spinner } from "./components/ui";
 import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { api, cx, storageGet, storageSet } from "./lib";
 import { Panels } from "./panels/Panels";
+import type { SetupStatus } from "./types";
 import { useForge } from "./useForge";
 
 export function App() {
   const forge = useForge();
   const [view, setView] = useState<"home" | "chat">("home");
+  // D-145/D-146: null while the one-time check is in flight (nothing renders yet, so there's no flash of
+  // the setup screen when everything's already configured — the common case on every run after the first).
+  const [missingSecrets, setMissingSecrets] = useState<string[] | null>(null);
+  useEffect(() => {
+    api<SetupStatus>("/api/setup")
+      .then((status) => setMissingSecrets(status.missing))
+      .catch(() => setMissingSecrets([])); // can't tell: don't block the app on a broken check
+  }, []);
   // Light is the default (D-125). A new key, written only when the user toggles: the old "forge-theme" was
   // saved on every load, so it can't tell a real choice of dark from the old default.
   const [theme, setTheme] = useState<"dark" | "light">(storageGet("forge-theme-choice") === "dark" ? "dark" : "light");
@@ -68,6 +78,18 @@ export function App() {
 
   if (stopped) {
     return <div className="flex h-full items-center justify-center text-fg-muted">Forge has stopped. You can close this tab.</div>;
+  }
+
+  if (missingSecrets === null) {
+    return (
+      <div className="flex h-full items-center justify-center text-fg-muted">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (missingSecrets.length > 0) {
+    return <Setup missing={missingSecrets} onDone={() => setMissingSecrets([])} />;
   }
 
   return (
