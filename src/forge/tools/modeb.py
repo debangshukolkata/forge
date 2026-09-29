@@ -13,6 +13,7 @@ from forge.modeb.contracts import ContractError, ContractRegister
 from forge.modeb.output import DOCUMENT_NAMES, read_document, write_document
 from forge.safety.redact import default_redactor
 from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.frontend_setup import SetupFrontend
 
 
 def _profile(context: ToolContext) -> Any:
@@ -268,4 +269,5 @@ def modeb_tools() -> list[Tool]:
         ContractRead(),
         ContractPin(),
         ModebDocument(),
+        SetupFrontend(),
     ]

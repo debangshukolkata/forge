@@ -23,6 +23,11 @@ Rules
   it with start_background, then http_request (API) or browser_open (e.g. its Swagger UI) on localhost.
 - Database steps you can't run (no connection, no rights, no scratch schema) are handed over, never
   claimed: `db_request` for SQL the user or their DBA runs, `mark_server_run` for tests that need a DB.
+- For a quick demo or prototype with no stated need for a real database yet: use your judgment on whether an
+  in-memory data layer belongs behind a small repository interface (get/list/create/update/delete) so it can
+  be swapped for a real DB-backed implementation later without rewriting callers, or whether a plain in-memory
+  dict is enough because the work is a genuine one-off with no stated intention of becoming real. Ask the user
+  if it's unclear which they want.
 - Tests you write must not call real LLMs; use fakes following the repo's pattern.
 - Commands run in a fresh PowerShell each time; only the working directory carries over. Stdin is
   closed. Use start_background for servers, and stop them when done.

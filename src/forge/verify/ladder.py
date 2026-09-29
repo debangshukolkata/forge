@@ -11,6 +11,7 @@ import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from forge.db.table_check import TableCheck, check_tables
 from forge.tools.base import ToolContext
@@ -27,10 +28,16 @@ from forge.verify.parsers import (
 )
 from forge.workspace.output import compute_changes
 
+if TYPE_CHECKING:
+    from forge.workspace.nodeenv import NodeEnvironment
+
 # No -q: repos often set it in addopts, and -qq hides the summary line the parser reads.
 PYTEST_ARGS = "-rfE --tb=short --no-header -p no:cacheprovider"
 STEP_TIMEOUT_S = 300
 FULL_SUITE_TIMEOUT_S = 900
+
+# D-138: extensions that route a changed file to the React/TS ladder instead of the Python one.
+FRONTEND_EXTENSIONS = (".ts", ".tsx", ".js", ".jsx", ".css")
 
 
 @dataclass
@@ -62,16 +69,34 @@ class LadderReport:
 
 def changed_python_files(context: ToolContext) -> list[str]:
     """App-relative paths of added/modified .py files (baseline diff, so shell edits count too)."""
+    return _changed_files_with_suffix(context, (".py",))
+
+
+def changed_frontend_files(context: ToolContext) -> list[str]:
+    """App-relative paths of added/modified React/TS/JS/CSS files (D-138's dispatcher)."""
+    return _changed_files_with_suffix(context, FRONTEND_EXTENSIONS)
+
+
+def _changed_files_with_suffix(context: ToolContext, suffixes: tuple[str, ...]) -> list[str]:
     app = context.workspace.info.app_subfolder.strip("/")
     prefix = f"{app}/" if app else ""
     return sorted(
         change.path[len(prefix) :]
         for change in compute_changes(context.workspace)
-        if change.status != "deleted" and change.path.endswith(".py") and change.path.startswith(prefix)
+        if change.status != "deleted" and change.path.endswith(suffixes) and change.path.startswith(prefix)
     )
 
 
 class VerifyLadder:
+    """Dispatches to the Python rungs and, when the workspace has a detected Node environment AND frontend
+    files actually changed, also to a frontend ladder — combining both reports into one. Which frontend
+    ladder is picked is itself a dispatch (D-144): `ReactVerifyLadder` (D-138) by default, or
+    `AngularVerifyLadder` when the app folder has its own `angular.json` (an Angular-CLI project's default
+    test command hangs in watch mode unless run through Angular's own CI-mode invocation, which the React
+    ladder doesn't know to do). A Python-only workspace (no node_env, or node_env present but nothing
+    frontend touched) runs exactly as before: no frontend ladder is even instantiated, so behaviour there is
+    unchanged."""
+
     def __init__(self, context: ToolContext) -> None:
         assert context.shell is not None
         self.context = context
@@ -80,6 +105,41 @@ class VerifyLadder:
         self.python = context.shell.python or "python"
 
     async def run(self, full: bool = False, paths: list[str] | None = None) -> LadderReport:
+        if paths is not None:
+            # An explicit path list (targeted re-verify) is stack-agnostic: split it by extension the same
+            # way changed-file detection would, so callers passing a mix of .py and frontend files still work.
+            python_paths = [p for p in paths if p.endswith(".py")]
+            frontend_paths = [p for p in paths if p.endswith(FRONTEND_EXTENSIONS)]
+        else:
+            python_paths = None
+            frontend_paths = changed_frontend_files(self.context)
+        report = await self._run_python(full=full, paths=python_paths)
+        if not report.ok:
+            return report  # first failing rung stops the climb, same as before the dispatcher existed
+        node_env = self.context.workspace.info.node_env
+        if node_env is not None and frontend_paths:
+            frontend_report = await self._run_frontend(node_env)
+            report.steps.extend(frontend_report.steps)
+            if not frontend_report.ok:
+                report.signature = frontend_report.signature
+        return report
+
+    async def _run_frontend(self, node_env: NodeEnvironment) -> LadderReport:
+        """D-144: an Angular-CLI app (angular.json present) gets the Angular-aware ladder — its default test
+        command hangs in watch mode against a real browser unless CI flags are appended, which the plain
+        React ladder does not know to do, so routing this wrong is a real hang risk, not just a wrong-rung
+        cosmetic issue. Everything else keeps using the React/TS ladder unchanged."""
+        from forge.verify.angular_ladder import AngularVerifyLadder, is_angular_project
+        from forge.verify.react_ladder import ReactVerifyLadder
+
+        if is_angular_project(self.app_dir):
+            return await AngularVerifyLadder(self.context, node_env).run()
+        return await ReactVerifyLadder(self.context, node_env).run()
+
+    async def run_tests(self, selector: str) -> tuple[StepResult, TestReport]:
+        return await self._pytest("tests", selector, FULL_SUITE_TIMEOUT_S if not selector else STEP_TIMEOUT_S)
+
+    async def _run_python(self, full: bool, paths: list[str] | None) -> LadderReport:
         report = LadderReport()
         files = paths if paths is not None else changed_python_files(self.context)
         code = [f for f in files if not _is_test_file(f)]
@@ -104,9 +164,6 @@ class VerifyLadder:
         if not step.ok:
             report.signature = error_signature(step.summary)
         return report
-
-    async def run_tests(self, selector: str) -> tuple[StepResult, TestReport]:
-        return await self._pytest("tests", selector, FULL_SUITE_TIMEOUT_S if not selector else STEP_TIMEOUT_S)
 
     # --- rungs ---
 

@@ -21,6 +21,7 @@ from forge.workspace.checkpoints import Checkpoint, CheckpointStore
 from forge.workspace.copy_repo import CopyReport
 from forge.workspace.ignore import IgnoreRules
 from forge.workspace.manifest import BaselineManifest
+from forge.workspace.nodeenv import NodeEnvironment
 from forge.workspace.pyenv import PythonEnvironment
 from forge.workspace.text_format import FileFormat, Newline, decode_text, detect_format, encode_text
 
@@ -43,6 +44,7 @@ class WorkspaceInfo(BaseModel):
     created: str
     default_newline: Newline = "lf"
     python_env: PythonEnvironment | None = None
+    node_env: NodeEnvironment | None = None
     copy_report: CopyReport = CopyReport()
     status: str = "created"
 

@@ -49,4 +49,12 @@ Rules
   without a check that proves it. Report failures honestly. Never weaken or skip tests.
 - Web searches must never contain host names, package names, table names or the profile's sensitive terms.
 - Database steps you can't run are handed over (db_request / mark_server_run), never claimed.
+- For a quick demo or prototype with no stated need for a real database yet: use your judgment on whether an
+  in-memory data layer belongs behind a small repository interface (get/list/create/update/delete) so it can
+  be swapped for a real DB-backed implementation later without rewriting callers, or whether a plain in-memory
+  dict is enough because the work is a genuine one-off with no stated intention of becoming real. Ask the user
+  if it's unclear which they want.
+- When a requirement needs a UI and no frontend exists yet in this workspace, use setup_frontend to scaffold
+  one (your choice of framework/TypeScript, translated into the real scaffolder command) rather than
+  hand-writing package.json/build config yourself; it wires the result up for verify automatically.
 - Be concise. When a task is done, say what changed and how it was verified.

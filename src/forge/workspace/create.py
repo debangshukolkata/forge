@@ -11,6 +11,7 @@ from forge.safety.paths import is_within, real_path
 from forge.workspace.copy_repo import ProgressCallback, copy_app_folder
 from forge.workspace.ignore import IgnoreRules
 from forge.workspace.manifest import BaselineManifest, ManifestEntry, sha256_of
+from forge.workspace.nodeenv import detect_node_environment
 from forge.workspace.pyenv import (
     PythonEnvironment,
     find_top_packages,
@@ -67,6 +68,9 @@ def create_workspace(
     info.copy_report = report
     info.default_newline = dominant_newline(manifest)
     info.python_env = setup_python_environment(workspace, repo / app_subfolder)
+    # Phase 1 (D-137/D-138): detect only within the same app_subfolder the user already gave; a separate
+    # frontend folder in a monorepo (e.g. backend/ + frontend/) is deferred to a later auto-discovery pass.
+    info.node_env = detect_node_environment(workspace.app_dir)
     info.status = "ready"
     workspace.save_info()
     return workspace

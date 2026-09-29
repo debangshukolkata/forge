@@ -1255,3 +1255,718 @@ Consequence for the orchestrator rewrite in progress: `OrchestratorState`/`state
 on reopen ("N tasks pending, currently on T3, cadence: free hand" style) — without reintroducing a
 phase-driven control flow. The REVIEW step's mandatory gate logic in `orchestrator.py` (`_review`,
 `MAX_REVIEW_FIX_ROUNDS`) is being removed as part of the same rewrite, not kept as dead code.
+
+### D-133 — Run map/stepper redesign for the flat loop (closes the [D-131] follow-up) · Agreed (2026-09-29)
+Closes the Run map/stepper redesign item left open by [D-131] (TODO.md): the old 6-step `ProgressHeader`
+phase stepper reads a `phase` field that no longer drives control flow, and the two-pane Run map (task DAG
++ separate SVG timeline) was designed around the old fixed pipeline. Discussed with the user across several
+rounds; final shape below replaces both.
+
+**Activity/stepper screen:** delete `ProgressHeader` (the 6-step phase stepper) entirely — there is no phase
+state left to represent honestly. Keep `ActivityLine` (already phase-independent: driven by `activity.kind`
+and `state.current_task`, not by phase) as the one live indicator, and extend it with:
+- a compact trailing badge on the current step showing running cost + elapsed time for the *current task*
+  (from `cost.project.by_task[current_task]` and a task-start timestamp), in the existing `UsageBadge` style;
+- a small persistent strip above the activity line for the *whole run's* total cost + elapsed time (using
+  `runStartedAt`, which `ProgressHeader` used to surface and needs a new home for).
+
+**Run map screen:** replace the fixed `planGraph()` skeleton (`@plan → tasks → @review → @deliver`, laid out
+from a `phaseOrder` array) with a single live-growing DAG, React Flow + dagre as today, built incrementally
+from the event stream rather than pre-drawn:
+- nodes appear only when their start event fires: `start` once, a `task` node on that task id's first
+  appearance in `task_list_updated` (so `update_plan` adding tasks later visibly extends the graph, not just
+  the initial plan), an `agent` node on `agent_started` (explorer/debugger/reviewer) attached by a `spawned`
+  edge to the task that triggered it (or to `start` if none), and a `deliver` node on export;
+- `depends_on` edges between tasks as today; failure/stuck markers (currently timeline-only) move onto the
+  DAG nodes themselves as small badges/icons, so no signal is lost;
+- each task/agent node carries its own cost + time badge, matching the activity-line treatment, using
+  existing data (`by_task`, `agent_finished`'s `duration_s`); per-agent *cost* (not just duration) needs a
+  small backend addition (`agent_finished` payload gaining `cost_usd`, summed in `subagent.py`'s
+  `_tracked_run` the way `MESSAGE_DONE` already does) — treated as a fast-follow, not a blocker, so the UI
+  ships first against what already exists;
+- layout: full dagre relayout on every structural change (node/edge count changes, not every event), with
+  animated position transitions rather than a hand-rolled incremental/position-preserving layout — decided
+  against the incremental approach as the riskier build (dagre isn't designed for it; edge crossings/overlap
+  regressions are likely the first time a late dependency or a subagent attaches to an old task). A full
+  relayout with an animated transition also more honestly reflects that the plan itself is being revised,
+  not just extended.
+
+**Dropped from the design:** the separate SVG timeline pane (chronological view, idle-gap compression) is
+removed, not kept alongside the DAG — one primary view, not two competing ones; its only distinct value
+(failure/stuck markers, "when did this happen") is preserved by moving those markers onto DAG nodes. Also
+dropped: auto-fit fighting the user — `fitView` (already used for the DAG's initial/grown layout) keeps
+re-fitting automatically only until the user manually zooms or pans; after that, React Flow's built-in +/−
+`Controls` (already free) take over, with a recenter affordance to return to live auto-fit.
+
+Options considered and rejected: keeping both DAG and timeline (two first-class views judged unnecessary —
+the DAG-with-live-growth plus per-node time/cost subsumes most of the timeline's value); position-preserving
+incremental dagre layout (rejected as the highest-risk, hand-rolled part of the original proposal); bundling
+the `agent_finished` cost-field backend change into the same milestone as the UI rewrite (deferred to a
+fast-follow so the visible UI work isn't gated on an invisible backend change).
+
+Build order: (1) `runmap.ts` — incremental DAG builder off first-seen events, replacing `planGraph()`;
+(2) `RunMap.tsx` — full-relayout-on-structural-change + animated transitions, node cost/time badges, markers
+moved onto nodes, auto-fit-until-user-touches-it + recenter; (3) `Activity.tsx` — delete `ProgressHeader`,
+add the run-total strip, extend `ActivityLine` with the per-task badge; (4) remove now-dead phase plumbing
+(`STEPS`/`STEP_OF_PHASE` in `activity.ts`, `PHASE_LABEL`/`phaseWorkMs` in `runmap.ts`, `stepOf`) once nothing
+reads it; (5) fast-follow: per-agent `cost_usd` in `agent_finished`. Re-enables the two `test_web_e2e.py`
+Run-map/stepper tests skipped under [D-131] once the new design is in place, and folds in the pre-existing
+D-123 multi-day-runs redesign (was going to touch the same stepper/timeline code — the growing DAG with a
+recenter control addresses it: old runs simply load with their full graph already laid out, no separate
+"group by day" mechanism needed).
+
+### D-133a — `task_list_updated` gains an `exported` field for the Run map's Deliver node · Agreed (2026-09-29)
+Implementing milestone 1 of [D-133] (`runmap.ts`'s incremental DAG builder) needed a live, replay-safe signal
+for "the run has actually exported" to gate the `deliver` node — D-133 flagged this as open ("no explicit
+`exported` bool right now in RunModel") and left the exact source to be found during the build. The frontend
+already carries a stale, free-text `phase` string from `/api/state` (`resume_summary()`, D-128/D-131) that
+must not be used; there is no `session_ended` event type in `engine/events.py` (the old `runmap.ts` switch
+case for it was dead code, never firing). `OrchestratorState.exported` (`agent/state.py`) is the real signal,
+already flipped to `True` at the end of `Orchestrator._export()` right before `_save()` calls `_publish_tasks()`.
+
+Options considered: (a) add `exported` to the existing `task_list_updated` payload in `_publish_tasks()` —
+one field on an event the frontend already consumes and that fires immediately after `_export()` sets the
+flag, so it's visible live and on replay with no new event type; (b) a new `EventType.SESSION_ENDED` event —
+more explicit but a new wire type for one boolean, and every existing consumer (console UI, replay) would need
+to learn it; (c) surface it only via `/api/state`'s polled snapshot — breaks replay (events are the source of
+truth for a reopened project per D-119) and adds a state field alongside the already-flagged-stale `phase`.
+Chose (a): smallest change, reuses an event both live and replayed sessions already see, no new wire type.
+
+Change: `Orchestrator._publish_tasks()` (`agent/orchestrator.py`) adds `"exported": self.state.exported` to
+the `task_list_updated` payload. `runmap.ts`'s `buildRunModel` sets `RunModel.exported = true` once it sees
+that field true on any `task_list_updated` event; `buildGraph` adds the `@deliver` node only once `exported`
+is true. No new event type, no change to `/api/state`.
+
+### D-134 — Chat: a failed tool call the model immediately self-corrected renders de-emphasised, not red · Agreed (2026-09-29)
+User feedback from testing the new empty-project flow: the model wrote `write_file` with a `project/`-prefixed
+path (paths are already relative to the workspace's `project/` root), got a correct, specific rejection, and
+retried with the fixed path seconds later — but the chat showed the corrected first attempt as a full alarming
+red-X failure row, indistinguishable from a failure that never got fixed. Confirmed via
+`.forge/transcripts/events.jsonl` that Forge's behaviour itself was correct (the write jail's error message did
+its job; the retried write succeeded) — this was a display-only problem, not a functional bug.
+
+Options considered: (a) auto-collapse/de-emphasise a failed call once a later same-tool call succeeds — muted
+styling, an "retried" badge, no red, while a failure with no successful retry keeps full red; (b) group a
+failed attempt and its retry into a single collapsible row; (c) just recolor failed-then-retried rows amber
+without any other change. Chosen: **(a)**, per the user, as it fixes the actual annoyance (red alarm fatigue
+for normal model self-correction) without changing the transcript's one-event-one-row model or hiding any
+information — every row a user could want is still there, just visually right-sized to whether it turned out
+to matter. Matches the spirit of the existing `Failure.outcome === "fixed"` classification already used by the
+Run map's failure drawer ([D-133]), extended to the chat view; not literally reused since chat's `ChatItem`
+model and `runmap.ts`'s `RunModel` are built by separate reducers over the same event stream.
+
+Implementation: `ChatItem`'s `tool` variant (`types.ts`) gains an optional `retried?: boolean`. `useForge.ts`'s
+`tool_call_finished` reducer case: on a successful call, walks backward through the timeline for the nearest
+earlier call of the *same tool name* — if that call is a `fail` not already marked `retried`, marks it so and
+stops (an earlier `ok` of that tool means any failure before it was already resolved by a prior success, so
+the walk stops there too). Matches on tool name only, not exact arguments/path — exact matching is unreliable
+by construction in the triggering case itself (the retried call's path differs from the failed one). This is a
+heuristic: a failure genuinely unrelated to a same-tool success that happens to follow it shortly after would
+also be marked "retried" even though the two aren't actually connected. Judged acceptable — false positives
+only ever soften a failure's visual weight, never hide it (the row and its full error preview stay, expandable,
+just less alarming), and the common real case (mis-call → clear error → immediate correct retry) is exactly
+what this is for.
+
+`Chat.tsx`'s `ToolCard`: a `retried` failure shows a muted border/opacity, a neutral "retried" badge, and a
+neutral `AlertOctagon` icon instead of the red `XCircle` — an unresolved failure (no later same-tool success)
+is untouched. `npm run build` clean.
+
+### D-135 — Bug fix: `propose_plan`/`update_plan` must end the turn so the orchestrator can start the first task · Agreed (2026-09-29)
+Found while testing the `new-demo` project (the empty-folder todo-CLI run from earlier today): all 5 tasks sat
+at `pending` forever, every `task_update` call was rejected with "The current task is None, not T1" (and later
+T5), and the model eventually gave up, reported itself blocked in a chat message, and went idle — which from
+the UI looked indistinguishable from the app being stuck (no waiting-card, just "Idle" with 0/5 done).
+
+Root cause, traced via `.forge/transcripts/events.jsonl`: `Orchestrator._run_agent()`'s `while` loop only calls
+`_start_task(task)` between calls to `agent.run()` — it can't see a task appear *during* one. `propose_plan`
+populates `self.state.tasks` as a tool call from inside an in-progress `agent.run()`, but nothing in it signals
+the loop to stop and re-check `next_task()`; only a successful `task_update` (or the escalator) currently sets
+`context.end_turn = True` to force that. So when the model calls `propose_plan` and then, in the same
+uninterrupted turn, goes on to do all the actual work (write files, run tests) without a natural stopping
+point, `_start_task` never runs for any task, `current_task` stays `None` all session, and every later
+`task_update` is rejected — reproduced exactly in the captured transcript (three `task_update` calls, T1, T1
+again, then T5, all "current task is None").
+
+This is a real control-flow bug (D-128's flat loop still depends on `_start_task`/`current_task` bookkeeping
+being correct for `task_update`/handoff notes/per-task context resets to work at all), not a display issue —
+though it manifested to the user as a UI problem (idle-looking-stuck), which is why it surfaced during Run map
+testing. Fixed in `agent/orchestrator.py`: `propose_plan` now sets `context.end_turn = True` after saving the
+task list, exactly mirroring how `task_update` already ends a turn — `AgentLoop.run()`'s existing
+`if self.context.end_turn: return` (loop.py) safely stops after the current tool-call batch finishes (so
+`propose_plan`'s own result is still correctly paired before the turn ends), handing control back to
+`_run_agent`'s `while`, which then calls `_start_task` on the first pending task before the model's next reply.
+`update_plan` gets the same fix, since it can equally reshuffle/rename tasks out from under an in-progress
+`current_task` mid-turn — additionally, it now clears `current_task` if the updated task list no longer
+contains that id, rather than leaving a stale reference that could later mismatch or misattach.
+
+No options considered beyond this — the fix directly restores the invariant `task_update`'s check already
+assumes (`current_task` reflects a real, currently-started task) using the same mechanism the codebase already
+established for it. Verified: targeted tests (`-k "orchestrator or propose_plan or update_plan or task_update"`,
+15 passed), full `test_orchestrator.py` + `test_m10_wiring.py` (20 passed), ruff/ruff format/mypy clean on
+`orchestrator.py`. Separately, the idle-looks-stuck *display* problem this bug exposed is still open — noted
+in TODO.md as its own item, since even a correctly-running requirement can legitimately go idle after a final
+reply with no further action, and the UI currently gives no visual cue distinguishing that from being stuck.
+
+### D-136 — Project-creation setup shows real phases instead of one static label · Agreed (2026-09-29)
+User feedback: the "Setting up the project and its Python environment…" text on the start form (Mode B) never
+changes for however long setup takes — no visibility into what's actually happening (folder/harness creation,
+venv creation, `pip install pytest`), which reads as possibly-stuck for a slow install. Same problem in Mode A
+("Copying the repository…", though that one at least had an unused `on_progress` callback already wired
+through `copy_app_folder` — just never surfaced past the backend).
+
+Root cause: `create_standalone_workspace`/`create_workspace` both run as one blocking call via
+`asyncio.to_thread`, called directly from an HTTP POST handler (`/api/projects`) *before* the project's own
+session/WebSocket exists — so there is no event bus yet to publish progress into, unlike everything else in
+the running app (spec's event-sourced UI, D-119). Options considered: (a) a small polling GET endpoint
+(`/api/setup-progress`) backed by a plain string on `WebSessionManager`, updated by a progress callback thread
+ed through the setup calls, polled by the start form every 400ms while busy; (b) open the session/WebSocket
+before setup finishes so progress could ride the existing event-bus machinery; (c) Server-Sent Events for this
+one endpoint. Chosen: **(a)** — matches the requested granularity (a few coarse phase labels, not per-command
+streaming or just an elapsed timer — the other two options offered and declined), smallest change, no new
+transport, reuses the exact `ProgressCallback` pattern `copy_repo.py` already established for Mode A. Rejected
+(b): opening a session before the workspace it's for actually exists is a bigger structural change than this
+feature warrants. Rejected (c): a new transport mechanism for one short-lived, low-frequency status value.
+
+Implementation: `modeb/workspace.py`'s `create_standalone_workspace` gains an `on_progress: SetupProgressCallback
+| None` param, called at its three real phase boundaries ("Creating workspace folders…", "Creating the Python
+environment…", "Installing the test runner (pytest)…"). `WebSessionManager` (`web/manager.py`) gains a plain
+`setup_progress: str | None` field, set by a callback passed into both `new_workspace` (reusing the existing
+`copy_repo.py` `on_progress(count, path)` callback, formatted as "Copying the repository… (N files: path)")
+and `new_standalone`, and cleared in a `finally` once setup finishes either way. New `GET /api/setup-progress`
+(`web/server.py`) returns `{"phase": manager.setup_progress}` — covered by the existing security middleware
+like every other route, no separate auth wiring needed. `Home.tsx`: the static label is replaced by a `setupPhase`
+state string, updated on submit and by a 400ms `setInterval` poll of the new endpoint while `busy`, cleared
+when the request settles either way.
+
+Verified: ruff/ruff format/mypy clean on the three touched backend files; `npm run build` clean; targeted
+tests (`test_contracts.py`, `test_modeb.py`, `test_learning.py`, `test_live_modeb.py`'s non-live cases) — all
+existing `create_standalone_workspace(...)` call sites pass at most 3 positional args, so the new `on_progress`
+param (a plain optional positional-or-keyword param appended last, defaulting to `None`) doesn't break any of
+them.
+
+### D-137 — Frontend support (React/Angular/CSS) scoped down to a React + Mode A proving slice first · Agreed (2026-09-29)
+User asked for Forge to build a full 3-tier app on its own — frontend designed from scratch (not just
+extending an existing repo), verified the way this assistant verifies its own UI work (build/lint/test plus
+headless-browser checks), and broad tech coverage (React, Angular, CSS) via one tech-agnostic layer designed
+up front, matching Claude Code's generality.
+
+Assessed against the current codebase: Forge is Python-specific at multiple layers, not just "the tools happen
+to default to Python" — `workspace/pyenv.py`/`modeb/workspace.py` (venv creation, `pip install`, interpreter
+discovery), `verify/ladder.py` (py_compile, ruff/flake8/mypy config detection, pytest output parsing, a Python
+import-graph walk for targeted test selection — see `_affected_modules`/`targeted_tests`), and Mode B's whole
+host-profile/contract model (`modeb/profile.py`; D-129's Contracts panel) which is built around stubbing the
+host's Python import paths and symbols, a concept with no direct analogue for a frontend being designed from
+nothing (there's no "host" to stub against). None of this transfers to JS/TS/Angular even as a shared base
+class beyond the outermost `StepResult`/`LadderReport` shapes.
+
+Options considered for how to proceed: (a) design the full tech-agnostic abstraction (a "verify rung," an
+"environment," a "host contract" concept general enough for Python + React + Angular + CSS) before writing any
+frontend-specific code, as its own spec-writing pass; (b) scope down to a single proving slice — React support
+in Mode A only (extending an existing repo, not designing from scratch) — get a real, working, tested ladder
+and tool set for it, and only then design the general abstraction from two real data points (the existing
+Python ladder and the new React one) instead of from speculation about ecosystems Forge hasn't touched yet;
+(c) build React and Angular support in parallel from day one.
+
+Chosen: **(b)**, per the user ("For now lets make the way you suggest") after being shown the honest scale of
+the full request — a genuinely stack-agnostic layer answering "what is a verify rung/environment/contract
+across ecosystems with fundamentally different shapes" up front would be a multi-month design program built
+on guesses, since TypeScript has no separate compile step the way Python does, Angular's CLI bundles
+build+test+lint in ways that don't decompose like `ruff`/`mypy`/`pytest`, and Node's install/lockfile model
+differs from a venv in ways that would bias any abstraction designed before real evidence exists. This mirrors
+how Forge's own architecture was actually built: D-128's flat-loop rewrite was itself a correction made after
+live use showed the original phased-pipeline design was wrong — abstracting from real, working code beats
+abstracting from speculation. Rejected (a): high risk of locking in wrong abstractions with no working code to
+validate them against. Rejected (c): doubles the unproven design surface before either stack has a single
+working milestone.
+
+**What phase 1 (React + Mode A) covers, explicitly**: extending an *existing* React app already in the user's
+repo — Forge reads its existing `package.json`/build tooling/test setup the way it already reads a Python
+repo's `pyproject.toml`/`ruff`/`mypy` config in `VerifyLadder._configured`, rather than inventing a frontend
+architecture from nothing. Browser-verification (headless, Playwright — the same tool Forge's own
+`tests/test_web_e2e.py` already uses to test Forge's UI) is in scope for phase 1, per the user's answer to the
+frontend-verify design question, not deferred.
+
+**Explicitly deferred to a later, separately-designed phase 2** (not decided now, not scoped): Angular support;
+any other framework; Mode B (designing a frontend from scratch with no existing repo/host to read conventions
+from) for the frontend side; the general tech-agnostic verify-rung/environment/contract abstraction itself.
+Each of those still needs its own options-and-recommendation discussion before being built, per this file's
+standing rule for hard-to-reverse choices (new tool interfaces, folder layout, prompt structure) — this entry
+records only the decision to scope down and start with React + Mode A, not a design for that slice itself,
+which is the next thing to work through.
+
+### D-138 — React + Mode A design: node environment, verify ladder shape, smoke-check cadence · Agreed (2026-09-29)
+First concrete design pass for [D-137] phase 1. Grounded in what already exists rather than assumed: Mode A's
+`WorkspaceInfo.python_env`/`workspace/pyenv.py` (venv detection, never copies the venv itself),
+`verify/ladder.py` (Python-only rungs: compile/lint/typecheck/targeted-tests/full-suite, first failure stops
+the climb, config-detected via `_configured` reading the repo's own `pyproject.toml`/dedicated files — Forge
+never introduces a tool the repo doesn't already use), and `find_app_folder_candidates` (already excludes
+`node_modules` when scanning for the Python app folder — pre-existing awareness of adjacent JS folders, never
+acted on). Also found: `tools/browser.py` already has a working, generic Playwright-backed browser tool
+(headless Edge/Chrome/Chromium, console/network capture, accessibility snapshots, localhost-only guard) built
+for checking Forge's own Swagger UI — nothing in it is backend-specific, so it needed no new infrastructure to
+reuse for verifying a React app renders, only a new call site in the React verify ladder.
+
+**Node environment**: `WorkspaceInfo` gains a sibling `node_env: NodeEnvironment | None` field (new
+`workspace/nodeenv.py`, mirroring `pyenv.py`'s shape: detect `package.json`, the package manager via lockfile
+presence — npm/yarn/pnpm — and the node binary) rather than folding it into `python_env`, since the two are
+independent environments with different env-var shapes (`PythonEnvironment.command_env()` sets
+`PYTHONPATH`/`VIRTUAL_ENV`; Node needs none of that) and a workspace may have either, both, or neither.
+
+**`node_modules` handling**: excluded from Mode A's repo copy (`copy_app_folder`'s ignore rules extended the
+same way `.venv`/`.git` already are), with `npm install` run fresh in the workspace copy through the normal
+approval gate — chosen over copying an existing `node_modules`, per the user, matching how Python already
+works (the venv itself is never copied; Mode B installs pytest fresh) and avoiding copying a huge, fragile
+tree with native bindings/symlinks that may not survive relocation.
+
+**Verify ladder shape for React/TS** (`verify/react_ladder.py`, new — not a subclass of `VerifyLadder`, since
+the rungs don't decompose the same way; see below): typecheck (`tsc --noEmit`) → lint (ESLint) → unit tests
+(Jest or Vitest, whichever the repo already has) → build (`npm run build`/`vite build`) → browser smoke check
+(new rung, checkpoint-only — see below). Two structural differences from the Python ladder, noted so they
+aren't mistaken for oversights later: (1) TS has no separate "compile" step the way Python's `py_compile` is —
+`tsc` covers parse+typecheck in one rung; (2) a build rung has no Python equivalent (Python code doesn't need
+bundling to "work"), but is a real distinct failure mode for React (e.g. a broken asset import that no
+typecheck/lint/test rung would catch).
+
+**Smoke-check cadence**: runs only at task/export checkpoints, not on every `verify` call — chosen per the
+user, mirroring how Python's own slow rung (the full test suite, `full=True`) is likewise reserved for
+checkpoints rather than run on every targeted-verify call, keeping fast iteration fast while still catching
+real rendering failures before a task is marked done.
+
+**Vite**: explicitly in scope as a supported build tool (alongside CRA/webpack-based setups) for the React
+ladder's build rung — `nodeenv.py`'s environment detection must read the actual `scripts.build`/`scripts.test`
+commands from the repo's own `package.json` (Vite projects typically run `vite build`, CRA `react-scripts
+build`) rather than assuming one bundler's command names, the same "read the repo's own config, never impose
+a convention" principle the Python ladder's `_configured` already follows for ruff/mypy.
+
+**Demo UX (client-side dummy data, in-memory backend data)**: raised by the user as a follow-up — fast-to-demo
+apps that store dummy data in the browser (localStorage/sessionStorage/React state) before a real backend
+exists, and a Python-side in-memory data layer that can later be swapped for a real DB-backed one. Split into
+two decisions:
+- **Frontend client-side demo data**: no new Forge tooling or scaffold. This is ordinary application code the
+  model already knows how to write with its own judgment (localStorage, in-memory React state, whatever fits
+  the requirement) — per the user ("Just as claude-code would do"), the same way this assistant writes such
+  code today with no dedicated pattern imposed. Nothing to build.
+- **Python-side in-memory data layer**: per the user ("Both options should be available as per Forge decision
+  or user requirements"), Forge is not locked into one mandated shape. Two available approaches, chosen by
+  judgment based on the requirement (mirroring how verification cadence and plan-writing are already
+  judgment-based per D-128/D-132, not forced gates): (a) a repository-pattern interface (a Python
+  Protocol/ABC with get/list/create/update/delete) with an in-memory implementation for demos and a real
+  DB-backed one built the same way Forge already builds DB code — appropriate when the work is likely to
+  graduate to a real backend later, since swapping is one line of wiring, not a rewrite; (b) a simpler
+  flag/in-memory-dict approach for a genuine one-off demo with no stated intention of becoming real. Forge
+  picks between them the way it already picks a written-plan-or-not (D-128): judgment, or the user says which
+  they want. No new tool or scaffold needed for either — both are within what the model can already write;
+  this is guidance for the model's judgment (to be added to a relevant prompt/instructions file), not new
+  product surface.
+
+**Targeted-test detection**: Python's `targeted_tests`/`_affected_modules` does real import-graph analysis.
+For React, proposed starting point is simpler — colocated test files (`Button.tsx` → `Button.test.tsx` in the
+same folder) plus direct relative-import matching — deferring import-graph depth until evidence (from real use)
+shows it's needed, consistent with [D-137]'s "build from evidence, not speculation" reasoning. Not yet
+implemented; flagged here as the chosen starting approach, to be built alongside the rest of this ladder.
+
+Not yet decided/built in this pass (tracked as the next steps under this same phase): the actual
+`workspace/nodeenv.py` module, `verify/react_ladder.py`'s rungs, the `copy_app_folder` ignore-rule addition,
+and how `VerifyLadder`'s caller (`orchestrator.py`'s `_run_tests`, the `verify`/`run_tests` tools) picks which
+ladder(s) to run for a workspace that may have a Python backend, a React frontend, or both.
+
+**Resolved while starting implementation**: the `verify`/`run_tests` tools (`tools/verify.py`) call
+`VerifyLadder(context)` generically — the model just says "verify," with no notion of which stack it touched.
+`VerifyLadder.run()` becomes a small dispatcher: it looks at which changed files exist (reusing
+`workspace/output.py`'s already-stack-agnostic `compute_changes`, the same way `changed_python_files` already
+filters that list to `.py`) — `.py` files route to the existing Python ladder, `.ts`/`.tsx`/`.jsx`/`.css` files
+route to the new React ladder — and runs whichever stack(s) were actually touched, combining their reports
+into one `LadderReport`. A workspace with only a Python backend touched behaves exactly as today (no React
+ladder invoked); a task touching both a new backend endpoint and its frontend wiring runs both ladders and
+reports both — matching the earlier "one unified workspace, one task board" choice rather than needing the
+model to know or declare which stack it's verifying.
+
+### D-139 — D-137/D-138 phase 1 built: nodeenv, react_ladder, VerifyLadder dispatcher · Decided (2026-09-29)
+Implements the design D-138 already agreed. `workspace/nodeenv.py` (new): `NodeEnvironment` (pydantic v2,
+mirrors `PythonEnvironment`'s shape) with `node`, `package_manager` (npm/yarn/pnpm, from lockfile presence,
+npm default), `app_dir`, and `install_command`/`build_command`/`test_command`/`lint_command`/
+`typecheck_command` read from the app's own `package.json` "scripts" section (never assumed literally —
+`typecheck_command` accepts either `typecheck` or `type-check` as the script name, since both are common).
+`detect_node_environment(app_dir)` returns `None` when there's no `package.json` or no `node` on PATH
+(`shutil.which`), the same "nothing to run against" contract as `setup_python_environment`.
+`find_node_app_candidates` mirrors `find_app_folder_candidates`, ranking folders with a `build`/`start` script
+first. `WorkspaceInfo.node_env: NodeEnvironment | None` added next to `python_env`; `create_workspace` detects
+it in the same `app_subfolder` the user already gave (monorepo auto-discovery of a separate frontend folder is
+explicitly deferred, per the task scope). `node_modules/` was already in `ignore.py`'s `DEFAULT_EXCLUDES`
+(pre-existing, per D-138's own finding) — no change needed there.
+
+`verify/react_ladder.py` (new, not a `VerifyLadder` subclass, per D-138): `ReactVerifyLadder` runs typecheck
+(`npx tsc --noEmit`, skipped without a `tsconfig.json`) → lint (the repo's own lint script, else `npx eslint .`,
+skipped without any of `.eslintrc*`/`eslint.config.*`/an `eslintConfig` key) → unit tests (Jest or Vitest,
+detected from `package.json` `dependencies`/`devDependencies`; skipped if neither is present; a regex on the
+Jest "Tests: N passed, M total" / Vitest "Test Files N passed (M)" summary line, deliberately simple per D-138)
+→ build (the repo's own build script; skipped if none). Reuses `StepResult`/`LadderReport` from `ladder.py`
+rather than redefining them, so both ladders combine into one report. The browser smoke-check rung is
+deliberately NOT here — left as a comment pointing at `Orchestrator._export`/task completion as its future
+call site, using the existing `tools/browser.py` (D-083) — not built in this pass.
+
+`verify/ladder.py`: `VerifyLadder.run()` is now a small dispatcher. The former body became `_run_python`
+(unchanged logic). `run()` always runs `_run_python` first (unchanged call, unchanged return on failure — the
+"first failing rung stops the climb" behaviour is preserved exactly); only when `workspace.info.node_env is
+not None` AND `changed_frontend_files` (new helper, mirrors `changed_python_files`, filtering
+`compute_changes` to `.ts`/`.tsx`/`.js`/`.jsx`/`.css`) is non-empty does it additionally instantiate
+`ReactVerifyLadder` and append its steps. A Python-only workspace (no `node_env`) never even imports
+`react_ladder.py` (the import is local to that branch) and produces byte-identical `LadderReport`s to before —
+verified by a dedicated regression test that monkeypatches `ReactVerifyLadder` to raise if instantiated and
+confirms the ordinary Python-only run never touches it.
+
+Verified: `ruff check`/`ruff format --check` clean on all five touched/new source files; `mypy src/forge`
+clean (153 files, no new errors); new `tests/test_nodeenv.py` (9 tests: detection, lockfile-driven package
+manager selection, missing package.json/node binary, script-name discovery, candidate ranking) and
+`tests/test_react_ladder.py` (9 tests: each rung's skip condition, a lint/build/test rung actually running via
+a monkeypatched `execute`, and three dispatcher tests — Python-only never instantiates the React ladder,
+node_env-present-but-nothing-changed also skips it, and a real frontend change runs and combines it) all pass.
+Full non-live suite (`pytest -q -k "not live and not pg" tests/ --ignore=tests/test_web_e2e.py`): 455 passed,
+46 deselected, no regressions. `scripts/check_secrets.py`: 0 findings.
+
+Left open for phase 2 (explicitly out of scope here, per D-137): the browser smoke-check rung's actual
+call site and cadence wiring; `npm install`/yarn/pnpm-install automation (the agent runs it itself via the
+existing `run_command` tool, through the normal approval gate — consistent with how Mode B already leaves
+`pip install pytest` to an approved shell command); Angular; Mode B frontend support; monorepo auto-discovery
+of a frontend folder separate from the Python `app_subfolder`; real import-graph-based targeted-test selection
+for React (the colocated-test/relative-import starting point from D-138 is likewise not yet built — the
+current React ladder always runs its unit-test rung against the whole test command, not a targeted selector,
+matching how `run()`'s dispatcher only decides WHICH ladders run, not per-ladder targeting depth).
+
+**Follow-up**: D-138's "Python-side in-memory data layer" judgment guidance (repository-interface vs. plain
+in-memory dict, chosen by judgment or the user's stated intent) is added verbatim to both `agent/prompts/
+system.md` (Mode A) and `agent/prompts/system_modeb.md` (Mode B) — a short bullet next to the existing
+database-handoff rule in each, since it's the same kind of judgment call ("hand off what you can't run") as
+what's already there. No code change; prompt-only, per D-138's own framing ("guidance for the model's
+judgment... not new product surface"). Verified both templates still `.format()` correctly (no stray braces
+introduced) and `scripts/check_secrets.py` stays clean.
+
+### D-140 — Browser smoke-check rung built: call site, mechanism, pass/fail/skip · Decided (2026-09-29)
+Builds the piece D-138 designed and D-139 deliberately left as a comment: the checkpoint-only browser
+smoke check for a React frontend, wired into `Orchestrator._export()` (agent/orchestrator.py).
+
+**New module, not inlined into orchestrator.py**: `agent/frontend_smoke.py` (`run_frontend_smoke_check`,
+`render_smoke_check_section`), following the existing pattern of `orchestrator.py` delegating related
+concerns to sibling modules (`learning_hooks.py`, `reports.py`) rather than growing the already-large
+`_export()` method in place.
+
+**Where it hooks in**: `_export()` runs it only when `workspace.info.node_env is not None` — a Python-only
+workspace never imports or calls into `frontend_smoke.py` at all (regression-tested, same discipline as
+D-139's Python-only VerifyLadder guard). It is informational only, per D-132: the result is appended as a
+`## Frontend smoke check` markdown section to the export report, exactly mirroring the existing
+`## Restructure check` block's style (URL checked, PASSED/FAILED/SKIPPED, a short error excerpt on
+failure) — it never raises, blocks, or fails `_export()` itself.
+
+**Starting the app**: `NodeEnvironment` gains a `dev_command` field (`workspace/nodeenv.py`), read from the
+repo's own `package.json` scripts in order `dev` → `start` → `preview` (never a literal `npm run dev`
+assumed, the same rule D-139 already applied to build/test/lint/typecheck). `frontend_smoke.py` starts it as
+a background process directly via `tools/powershell.py`'s `build_script`/`start_process` — the same
+mechanics `tools/background.py`'s `StartBackground.run()` uses — rather than going through the `Tool`
+wrapper or `BackgroundManager`, since this is a system-triggered check with no model tool call and no
+approval to ask for. A free port comes from `tools/background.py`'s existing `free_port()`; readiness is
+polled with the same module's `port_open()` (a `{port}`-style timeout loop, 45s default) rather than
+`StartBackground`'s own ready-wait helper, since there is no `BackgroundProcess` registered in the session's
+`BackgroundManager` for this one-off check to reuse that helper against.
+
+**Checking the app**: once the port is open, `tools/browser.py`'s existing `BrowserSession` (D-083) loads
+the URL directly (`page.goto`), reusing its already-wired `console` capture for `[pageerror]` entries — no
+new browser infrastructure, exactly as D-138 anticipated.
+
+**Pass/fail/skip, decided for v1**: PASS = an HTTP response under 400, zero `[pageerror]` console entries,
+and the page body has at least 40 characters of visible text (`page.inner_text("body")`) — a minimal
+"isn't blank" bar, not a DOM-structure heuristic, per the task brief's "don't over-engineer this" guidance.
+FAIL = a 4xx/5xx response, any `[pageerror]` entry, or a near-empty body — these are real problems worth
+surfacing but must never stop export. SKIP = everything that must never count as a frontend defect: no
+dev/start/preview script in the repo, the process failing to start, the port never opening within the
+timeout, or no browser available at all (Edge/Chrome/bundled Chromium all failing to launch, the same
+fallback chain `BrowserSession.ensure()` already tries) — each produces a `SmokeCheckResult(skipped=True)`
+with a one-line reason, mirroring `verify/ladder.py`'s `StepResult.skipped` concept and wording style even
+though this isn't a `StepResult`.
+
+**Cleanup**: the dev server started for this one check is always stopped right after (`kill_tree` in a
+`finally`), regardless of outcome — it is never registered in the session's long-lived `BackgroundManager`,
+so it needs no wait for `SessionHost`'s end-of-session `stop_all()` and nothing is left running once
+`_export()` returns.
+
+**Left out of scope for this pass** (not a regression, a deliberate v1 boundary): a smarter "is this page
+meaningfully rendered" heuristic beyond the body-text-length check; retrying a flaky dev-server start;
+running the smoke check at task-completion checkpoints in addition to export (D-138 named both task and
+export checkpoints — this pass wires export only, the more clearly-bounded of the two; task-checkpoint wiring
+is left for evidence from real use, consistent with D-137's "build from evidence" principle); and surfacing
+the smoke-check result anywhere in the UI beyond the export report text (no new event type, no Run map node).
+
+Verified: `ruff check`/`ruff format --check` clean on all touched/new files (`agent/frontend_smoke.py`,
+`agent/orchestrator.py`, `workspace/nodeenv.py`, `verify/react_ladder.py`'s updated comment,
+`tests/test_frontend_smoke.py`); `mypy src/forge` clean (154 files, no new errors). New
+`tests/test_frontend_smoke.py` (13 tests): `_export()` regression guard for a Python-only workspace (the
+check function is never called), `_export()` wiring for pass/fail/skip sections with a mocked check
+function, and `run_frontend_smoke_check` itself exercised in isolation with mocked `start_process`/
+`_wait_for_port`/`BrowserSession` (no real Node/Chromium needed). Targeted run (`-k "orchestrator or export
+or react_ladder or nodeenv"`, excluding `test_web_e2e.py`): 42 passed. Full non-live, non-pg suite: run at
+milestone end alongside `scripts/check_secrets.py` (0 findings).
+
+### D-141 — Phase 2 design: Mode B frontend from scratch (no host to conform to) · Agreed (2026-09-29)
+User chose Mode B frontend-from-scratch as phase 2's first direction (over Angular support or small phase-1
+gap fixes). Clarified first: Mode B's existing model (`modeb/profile.py`'s `HostProfile`, the interview,
+CONVENTIONS/INTERFACES documents, exemplar snippets) exists to make Forge's *output* integrate into a real
+host codebase it never sees — there is a host to conform to, just not a visible one. A "frontend from scratch"
+request is structurally different: per the user, this is a brand-new standalone frontend (like the existing
+todo-CLI standalone demo, but a web UI) with **no host at all** to integrate with or interview about. This
+rules out reusing the host-profile/interview/contract machinery for the frontend side — that system solves a
+different problem than the one being asked for here.
+
+**Node/React setup is lazy, not eager.** `modeb/workspace.py`'s `create_standalone_workspace` unconditionally
+sets up a Python venv today because every Mode B project needs the harness; a React frontend is not similarly
+guaranteed needed by every standalone project, so workspace creation stays Python-only. Node environment setup
+happens later, on demand, the first time the model decides a requirement needs a frontend — via a new tool
+(name TBD at implementation, e.g. `setup_frontend`) that scaffolds a `project/frontend/`-style subfolder,
+installs dependencies, and populates `WorkspaceInfo.node_env` (reusing phase 1's `NodeEnvironment` model from
+`workspace/nodeenv.py` unchanged — it was built detection-based, not Mode-A-specific, so it transfers as-is
+once populated by scaffolding instead of detected from an existing repo).
+
+**Stack choice is per-project judgment, not one fixed default.** Options considered: (a) one fixed default
+(Vite + React + TypeScript + plain CSS/CSS Modules) every time, for predictability and a verify ladder that
+always knows what it's dealing with; (b) Forge decides per-project based on what the requirement actually
+needs (a simple demo gets a plain setup; something that calls for a component library gets one). Chosen:
+**(b)**, per the user, consistent with how plan-writing and verification cadence are already judgment-based
+rather than forced (D-128/D-132) — this is the same kind of call. Consequence: the verify ladder must stay
+stack-*detection*-based (already true of phase 1's `react_ladder.py`/`nodeenv.py` — they read the actual
+`package.json`, never assume one toolchain), not stack-*assumption*-based, so this choice adds no new
+constraint on what phase 1 already built; it only means the scaffolding tool can't hardcode one fixed
+`package.json` template and call it done — it needs to generate (or invoke a scaffolder for) whatever stack
+the model decides fits, and phase 1's ladder picks it up from the result either way.
+
+**Not yet decided in this pass** (next implementation step): the exact scaffolding mechanism (run `npm create
+vite@latest` live, which needs network access and behaves like any other install the user must approve, vs.
+Forge hand-writing a minimal scaffold itself to avoid a network dependency — each has real trade-offs: the
+former matches real-world convention and gets Vite's own templates for free but fails offline or behind a
+restrictive proxy; the latter works offline but means Forge maintaining its own scaffold templates); the exact
+new tool's name/interface; how `HostProfile`/`sensitive_terms` still apply (Mode B's redaction/sensitive-term
+rules are about the user's own business domain, not about a host codebase, so they likely still apply
+unchanged to a from-scratch frontend — needs confirming during implementation, not assumed).
+
+**Resolved**: scaffolding runs the real `npm create vite@latest` (or the equivalent for whatever stack the
+model decides on, per the per-project-judgment choice above), through the normal shell-command approval gate
+like any other install — chosen over Forge maintaining its own offline scaffold template, per the user.
+Accepted trade-off: this fails if the machine is offline or behind a restrictive proxy at scaffold time, the
+same risk class Forge already accepts for every other `npm install`/`pip install` it depends on (Mode B's own
+`pip install pytest`, D-111, already carries this same risk and is accepted); no special-casing needed for
+frontend scaffolding specifically, it's ordinary install-time risk. Forge takes on no template-maintenance
+burden as a result.
+
+### D-142 — D-141 phase 2 piece built: `setup_frontend` tool, Mode B frontend-from-scratch scaffolding · Decided (2026-09-29)
+Implements D-141's design. New `tools/frontend_setup.py` (`SetupFrontend`, tool name `setup_frontend`,
+~150 lines, well under the module-size guideline).
+
+**Args, chosen interface**: `folder: str` (default `"frontend"`), `framework: Literal["react", "vue",
+"svelte", "preact", "vanilla", "other"]` (default `"react"`), `typescript: bool` (default `True`), and
+`create_command: str | None` — a free-form escape hatch. The common case (`framework` != `"other"`) is
+translated into `npm create vite@latest . -- --template <name>[-ts]`, matching Vite's own real template
+names, so the model never has to spell out the scaffold invocation for the case D-141 said to make easy.
+`framework: "other"` requires `create_command` (a pydantic `model_validator`, so a missing command is
+rejected before any shell call, not discovered after) — this is the path to Angular's own CLI or any
+scaffolder Vite doesn't template, without Forge hand-listing every ecosystem's invocation. Chosen over pure
+free-text-only (would make the common React+TS case more typing for every call) and over structured-only
+with no escape hatch (would block Angular/anything else entirely, contradicting D-141's "no one fixed
+default stack" — every alternative considered was rejected for narrowing the very flexibility D-141 asked
+for).
+
+**Mode-B-only gating**: matches the existing pattern exactly, not a new one. `tools/registry.py`'s
+`default_tools()` has no Mode-B conditional today (confirmed by reading it) — Mode-B-only tools instead live
+in `tools/modeb.py` and are added via `modeb_tools()`, which `engine/session_host.py`'s `_build_agent` only
+includes `if workspace.mode_b`. `SetupFrontend` is registered by adding it to `modeb_tools()`'s return list
+in `tools/modeb.py` — in Mode A it is never constructed, let alone offered to the model. As defense in depth
+(the same style `ProfileSearch`/`ProfileRead` already use, checking `_profile(context) is None` even though
+they're only ever registered in Mode B), `run()` also checks `context.workspace.mode_b` itself and returns
+`ToolResult(ok=False, ...)` if it's ever called in Mode A by some future wiring path.
+
+**Scaffold mechanism and node_env wiring**: `run()` creates the empty target folder, builds the scaffold
+command, and calls the existing `tools/shell.py` `execute()` — the identical function `run_command`/
+`python_run` use — with `cwd` set to `args.folder` (host-relative; `Workspace.path_of` resolves it under
+`project/` in Mode B, the same convention `run_command`'s own `cwd` argument already follows). This goes
+through the ordinary shell/approval flow, per D-141, not a bypass. On a non-`ok` result, the tool returns
+`ok=False` with the scaffold's own error output and touches `WorkspaceInfo` not at all. On success, it calls
+`detect_node_environment()` (phase 1's, unmodified) against the new folder; if that returns `None` (the
+scaffolder exited 0 but left no real `package.json`/node found — a command that lied about succeeding), the
+tool still returns `ok=False` rather than claiming success with nothing to show for it. Only when detection
+succeeds does it set `workspace.info.node_env` and call `workspace.save_info()` — the same persistence path
+every other `WorkspaceInfo` mutation in the codebase already uses (`create_standalone_workspace` itself
+calls it the same way), so a reopened workspace sees the same `node_env` (verified by a dedicated test that
+reopens the workspace after a successful scaffold).
+
+**Idempotency, chosen**: reject a second call outright rather than silently overwriting — checked two ways:
+`workspace.info.node_env is not None` (a frontend was already wired up, regardless of folder name) and the
+target folder already existing and non-empty (covers a folder created outside `setup_frontend`, e.g. by hand
+or a different tool). Both return `ok=False` with a message telling the model to work in the existing folder
+or ask the user before replacing it. Chosen over silent overwrite (would risk destroying a working
+scaffold/dependencies over one bad tool call) or a `force: bool` flag (adds an untested destructive path for
+a case the task brief didn't ask for; the model can already just ask the user, which is the documented
+answer for anything Forge can't decide alone, D-011).
+
+**Sensitive-terms/redaction, confirmed not assumed**: read `agent/loop.py`'s `_run_one` — `flag()`
+(`safety/redact.py`) runs on every tool's `content` after every call, unconditionally, keyed off nothing
+tool-specific. `ToolContext.sensitive_terms` and the profile-based redaction Mode B tools use
+(`default_redactor`/`profile.clean`) are likewise applied at the loop/profile level, not opted into per
+tool. `setup_frontend`'s own output (shell text from `npm create`, package names, folder paths) therefore
+needed zero special handling to be covered — confirmed by inspection, not guessed; no code change was
+needed or made for this.
+
+**Prompt guidance**: one bullet added to `agent/prompts/system_modeb.md`, next to the existing in-memory-
+data-layer judgment bullet (D-139's follow-up), in the same terse style: use `setup_frontend` instead of
+hand-writing `package.json`/build config when a requirement needs a UI and none exists yet.
+
+**Left open, not built in this pass** (see TODO.md's D-141/D-142 entry for the full list): no UI-component-
+library auto-setup beyond whatever the chosen scaffolder's own template provides; Angular's own CLI is only
+exercised through the `create_command` escape hatch in a unit test with a mocked shell call, never against
+the real Angular CLI; real npm/network was never exercised (per the task brief, tests mock the shell call);
+no monorepo-layout question actually arose — a scaffolded frontend just lands at `project/<folder>/` beside
+the Python code, which the Mode B harness already treats as ordinary project content.
+
+Verified: `ruff check`/`ruff format --check` clean on `tools/frontend_setup.py`, `tools/modeb.py`,
+`tests/test_frontend_setup.py`; `mypy src/forge` clean (155 source files, no new errors). New
+`tests/test_frontend_setup.py` (7 tests, `npm create` mocked throughout): unusable outside Mode B, a
+successful scaffold populates and persists `node_env` (with the real translated Vite command asserted), a
+free-form `create_command` is passed through verbatim, `framework: "other"` without `create_command` is
+rejected by the pydantic validator before any shell call, an already-set-up workspace rejects a second call
+without touching the shell, a failing scaffold command returns `ok=False` and leaves `node_env` untouched and
+reopenable cleanly, and a scaffolder that exits 0 but leaves no detectable node app is not treated as success.
+Targeted run (`pytest -q -k "modeb or frontend_setup or nodeenv" --ignore=tests/test_web_e2e.py`): 36 passed,
+480 deselected, no regressions to existing Mode B/nodeenv tests. `scripts/check_secrets.py`: 0 findings.
+
+### D-143 — Dedicated Angular support in the verify ladder (structured, not fully agnostic) · Agreed (2026-09-29)
+User asked whether Forge should become fully technology-agnostic like this assistant (no structured verify
+ladder — the model just runs whatever command it decides and reads raw output). Two different things were
+disentangled: (1) adding dedicated, tested support for more stacks within Forge's existing structured-ladder
+system; (2) dropping the ladder concept for frontend work entirely. Chosen: **(1)**, per the user — Forge's
+ladder (parsed pass/fail, `task_update`'s "no passing test since last edit" gate) is a deliberate property for
+a less-supervised agent, not incidental scaffolding; giving it up for arbitrary-stack generality was judged a
+real regression risk, not a neutral simplification, since Forge runs with materially less live supervision than
+an interactive session of this assistant and leans on structured signals to know when to trust its own claims.
+
+**What's actually needed for Angular, found by reading `workspace/nodeenv.py` and `verify/react_ladder.py`
+in full before designing**: `NodeEnvironment`/`nodeenv.py` need **no changes** — detection already reads the
+repo's own `package.json` scripts generically (build/test/lint/typecheck/dev, whatever names the repo uses),
+and a standard Angular-CLI project exposes exactly these as npm scripts (`ng build`/`ng test`/`ng lint` wrapped
+by `package.json`), so it already works for Angular's shape today. The real gap is `react_ladder.py`, which has
+three React/TS-specific assumptions:
+1. **Typecheck** hardcodes bare `npx tsc --noEmit`. An Angular project typically has multiple
+   `tsconfig.*.json` files (app/spec/e2e) and template type-checking (Angular's compiler, `strictTemplates`)
+   that plain `tsc` doesn't exercise — an Angular-aware typecheck rung should prefer the Angular CLI's own
+   build/typecheck path when `angular.json` is present, not bare `tsc`.
+2. **Test-framework detection** only recognises Jest/Vitest (`_test_framework`). Angular's default is
+   Karma+Jasmine (`ng test`), though newer Angular versions increasingly support Jest — both need detecting.
+3. **The dangerous one, found while designing this, not yet a bug in production**: `ng test`'s default
+   behaviour is watch mode against a REAL browser, not a one-shot CI run. Naively running `node_env.test_command`
+   (which resolves to the repo's plain `npm run test` → `ng test`) risks hanging indefinitely waiting for a
+   watcher/browser rather than exiting — the ladder rung must append Angular's own CI-mode flags
+   (`--watch=false --browsers=ChromeHeadless`, or read the repo's own CI test script if it defines one
+   separately, the same "prefer the repo's own convention" rule already used everywhere else) rather than
+   invoking the bare test script and assuming it behaves like Jest's default one-shot run.
+
+Lint and build are expected to work unchanged (Angular's lint is still an ordinary npm script; `ng build` needs
+no special handling), but this needs confirming during implementation, not assumed, the same discipline
+D-138/D-141 already applied to their own open questions.
+
+Not yet decided in this pass (implementation's job): whether Angular gets a fourth ladder module
+(`angular_ladder.py`, parallel to `react_ladder.py`) or `react_ladder.py` grows Angular-aware branches
+internally — given `react_ladder.py`'s own docstring already explains why it isn't a `VerifyLadder` subclass
+("these rungs don't decompose the same way"), a similar "Angular's rungs don't decompose the same way as
+React's" argument likely favours a separate module again, but this is left for whoever implements it to judge
+once the exact shared-vs-different rung logic is worked out in code, not speculated here.
+
+### D-144 — D-143 implemented: dedicated Angular verify ladder, new module, dispatcher routes by angular.json · Decided (2026-09-29)
+Implements D-143's design. New `verify/angular_ladder.py` (`AngularVerifyLadder`, `is_angular_project`), not
+Angular-aware branches inside `react_ladder.py`.
+
+**Structural choice**: separate module, per the analogy D-143 itself named — `react_ladder.py`'s own docstring
+explains it isn't a `VerifyLadder` subclass because React's rungs don't decompose the same way Python's do;
+the same argument applies one level down: Angular's typecheck and test rungs don't decompose the same way
+React's do (Angular typecheck goes through the CLI's build/compiler, not bare `tsc`; Angular's default test
+runner needs CI-mode flags appended or it hangs, with no React/Jest/Vitest equivalent). Branching every rung
+five ways inside `react_ladder.py` would have reintroduced exactly the shape-mismatch problem D-138 used to
+justify a dedicated module in the first place. Lint and build ARE thin, framework-agnostic wrappers (confirmed
+below) with no Angular-specific logic to justify their own functions, so `AngularVerifyLadder` still has its
+own `_lint`/`_build` methods (mirroring `ReactVerifyLadder`'s shape) but their bodies are functionally
+identical — duplicated rather than shared via inheritance, since a shared base class for two near-identical
+methods out of four would add more indirection than the few lines saved. `_read_package_json` and
+`_parse_js_test_summary` ARE reused directly from `react_ladder.py` (plain function imports) rather than
+duplicated, since those two are pure, framework-agnostic helpers (JSON reading, regex summary parsing) with
+no React-specific assumptions baked in.
+
+**Typecheck, chosen invocation**: `ng build` (via `node_env.build_command`, falling back to `npx ng build` if
+the repo has no `build` script), with `--configuration=development` appended when `angular.json` declares
+that configuration name (read generically from every project's `architect.build.configurations`, not assuming
+the default CLI project name). Reasoning: the Angular CLI has no dedicated typecheck-only command (checked —
+`ng build`/`test`/`lint`/`e2e`/`serve` are the CLI's build-related commands; no separate `ng typecheck`);
+`ng build` runs the full Angular compiler (ngc) against the app's real tsconfig, which does template
+type-checking (`strictTemplates`) that bare `tsc --noEmit` skips entirely — this was the actual defect D-143
+found in `react_ladder.py`'s hardcoded `npx tsc --noEmit`. `--configuration=development` is preferred over the
+(slower, minifying) production default when available, purely to keep the rung fast; it still only checks for
+errors, since the separate `_build` rung below performs the real (typically production) build. Trade-off
+accepted: this rung is slower than a real `tsc --noEmit` pass would be (a full build vs. a type-check-only
+pass) — no faster CLI-native alternative exists today; noted as a possible future gap if Angular ever ships a
+lighter typecheck-only command.
+
+**Test-framework detection**: Karma is detected via `karma`/`jasmine-core` in dependencies OR a
+`karma.conf.js` file present (covers a repo declaring Karma only as a transitive/global dependency); Jest is
+detected via `jest` in dependencies (Angular's newer versions support swapping in Jest, checked and confirmed
+this is a real, documented Angular CLI builder option, not speculative).
+
+**THE critical rung — Karma CI-mode flags, always appended, never optional**: for a Karma-detected project,
+the test rung is `{node_env.test_command or "npx ng test"} --watch=false --browsers={launcher}`, NEVER the
+bare `test_command` — confirmed via Angular's own documented `ng test` default (watch mode, real-browser Karma
+launcher, does not exit on its own), a genuine hang risk if the ladder ran it unmodified, exactly as D-143
+flagged. Launcher name: prefers a custom launcher name found in the repo's own `karma.conf.js`
+(`customLaunchers: { <Name>: { base: 'ChromeHeadless', ... } }`, read via a regex on the raw file text rather
+than executing the JS config, since Forge does not run arbitrary repo JS to introspect config — commonly
+`ChromeHeadlessCI`, which repos define to add `--no-sandbox` for CI containers) — falls back to Forge's own
+generic `ChromeHeadless` when no `karma.conf.js` or no `customLaunchers` block is found. Jest-detected Angular
+projects are explicitly NOT given this rewrite (Jest's own default is already one-shot) — regression-tested to
+confirm the Karma-only flag rewrite doesn't leak onto Jest.
+
+**Lint and build, confirmed not assumed**: both ARE ordinary `npm run <script>` invocations once wrapped —
+`ng lint` and `ng build` are themselves already package.json scripts in a standard Angular-CLI project
+(`ng generate`'s own default `package.json` wires exactly this), so `AngularVerifyLadder._lint`/`_build` reuse
+`node_env.lint_command`/`build_command` (or `npx ng lint` as a lint fallback) with the identical skip-when-
+absent logic `ReactVerifyLadder` already has. Confirmed by reasoning through Angular CLI's own script wiring,
+not assumed — no correction needed to D-143's expectation here.
+
+**Dispatcher wiring (`verify/ladder.py`)**: `VerifyLadder.run()`'s existing "node_env present AND frontend
+files changed" gate is unchanged; a new private `_run_frontend()` sits behind it and decides Angular vs. React
+by calling `angular_ladder.is_angular_project(self.app_dir)` (an `angular.json` file at the app root) —
+Angular when true, `ReactVerifyLadder` otherwise (the previous, only, behaviour). Both ladder imports stay
+local to `_run_frontend()`, matching the existing lazy-import style `run()` already used for
+`ReactVerifyLadder`. A plain React/TS project (no `angular.json` anywhere) is unaffected: the same
+`ReactVerifyLadder` runs, with the same rung names and invocations as before this pass — regression-tested
+explicitly, same discipline D-139/D-140 already applied to "Python-only workspace unaffected".
+
+**`workspace/nodeenv.py`**: confirmed, not just accepted on faith, that D-143's "no changes needed" holds —
+`detect_node_environment()` reads `build`/`test`/`lint`/`typecheck`/`dev` script names generically from
+whatever `package.json` the repo actually has; a standard `ng generate`'s scaffolded `package.json` defines
+exactly `build`/`test`/`lint` (via `@angular-eslint`) in that shape, so detection already works unmodified. No
+change made to this file.
+
+**Left open, not built in this pass** (real gaps, out of scope here): Angular's newer esbuild-based/
+Vitest-backed test runner and the `@angular/build:karma` vs. legacy `@angular-devkit/build-angular:karma`
+builder distinction were not specifically probed — the Karma detection here is dependency/config-file based
+and framework-invocation-based, not builder-aware, so an unusual builder setup could in theory need its own
+flags this pass doesn't know about; Nx monorepo conventions (Nx wraps `ng` commands differently and often puts
+`angular.json`-equivalent config in `project.json` per-app instead) are not handled — `is_angular_project` only
+checks for a literal `angular.json` at the app root, so an Nx workspace would currently fall through to the
+React ladder, which is wrong but no worse than before this pass (Nx wasn't handled by anything previously
+either); no real Angular CLI or npm was exercised — all tests mock the shell call, per the task brief.
+
+Verified: `ruff check`/`ruff format --check` clean on `verify/angular_ladder.py` (new), `verify/ladder.py`,
+`verify/react_ladder.py`, `tests/test_angular_ladder.py` (new); `mypy src/forge` clean (156 source files, no
+new errors). New `tests/test_angular_ladder.py` (24 tests): Angular detection via `angular.json`; typecheck
+rung uses `ng build` (not bare `tsc`), picks up a `development` configuration when declared, and falls back to
+`npx ng build` without a build script; Karma/Jasmine and Jest framework detection (dependencies and
+`karma.conf.js`-alone); the critical Karma CI-flag test asserting the EXACT command string (`"...
+--watch=false --browsers=ChromeHeadless"`) and explicitly asserting the bare command is never used; a custom
+`karma.conf.js` launcher name (`ChromeHeadlessCI`) picked up and preferred; Jest explicitly NOT getting the
+Karma flag rewrite; lint/build confirmed as thin script wrappers; dispatcher routing tests in both directions
+(Angular project never invokes `ReactVerifyLadder`, non-Angular project never invokes `AngularVerifyLadder`);
+and an explicit React-project-unaffected regression test asserting the plain `test_command` runs verbatim with
+no `--watch=false` anywhere in any command seen. Targeted run (`pytest -q -k "react_ladder or nodeenv or
+angular or ladder" --ignore=tests/test_web_e2e.py`): 43 passed, no regressions. `scripts/check_secrets.py`:
+0 findings. Full non-live/non-pg suite run at milestone end.
