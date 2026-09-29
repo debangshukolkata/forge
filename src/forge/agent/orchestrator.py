@@ -183,8 +183,11 @@ class Orchestrator:
             await self.host.prepare_database()
         if first_brief:
             text = self._format(kind or "requirement")
-            if kind == "change":
-                text += related_cards_note(self)
+            # Earlier related requirements in this repo/profile are worth surfacing on any fresh brief, not
+            # only a change request on the same workspace — a new requirement is the common case where a
+            # past card (reusable pattern, prior design decision) actually helps, and library search already
+            # excludes this workspace's own card so it can't cite itself.
+            text += related_cards_note(self)
             self.host.history.append(Message.system(text))
         if not await self._run_agent(self._tools()):
             return  # waiting for the user's reply

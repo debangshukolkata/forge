@@ -30,7 +30,8 @@ code, no data values. If there is nothing worth keeping, write '- none'."""
 
 
 def related_cards_note(orchestrator: Orchestrator) -> str:
-    """For the PLAN phase: earlier requirements in the same repo/profile (never other scopes)."""
+    """Earlier requirements in the same repo/profile (never other scopes) — appended to any fresh brief,
+    not only a change request, since a new requirement is the common case where citing a past card helps."""
     home = forge_home()
     scope = scope_of(orchestrator.workspace, home)
     hits = Library(home).search(

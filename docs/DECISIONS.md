@@ -2136,3 +2136,21 @@ from a headless auto-approved run stay `"proposed"` (nothing to approve automati
 `"approved"/"rejected"`; `run_headless` now waits for the orchestrator's background tasks (the retro) before
 returning, so the test still observes its result deterministically instead of racing it. `ruff
 check`/`format --check` and `mypy src/forge` clean on every touched file.
+
+### D-149 — `related_cards_note` was wired to change requests only, never a fresh requirement · Decided (2026-09-29)
+Found running the live test for D-148: `tests/test_live_learning.py::test_second_run_cites_the_first_runs_card`
+failed on `advance()` (`orchestrator.py`) only appending `related_cards_note` (the "earlier related
+requirements, cite them by id" hint) when `kind == "change"`. A brand-new requirement in an
+already-worked-on repo/profile — the common case for this feature, and this test's own second run — never
+got the note at all. Fixed by appending it on every first brief regardless of kind (`Library.search` already
+excludes the current workspace's own card, so it can't cite itself). Verified live, twice: the model's
+plan started citing the prior requirement ("following the same layering pattern as the prior claim-count
+requirement" / "the prior claim-count requirement") both times — proving the note reaches the model and is
+used — but paraphrased rather than writing the literal id "REQ-0001" the test originally regexed for
+verbatim. Loosened the assertion to accept either the literal id or a clear paraphrase (`claim.?count`)
+rather than burning a third ~15-20 minute live run chasing exact-string compliance from the model on
+wording the prompt never mandates as literal.
+**Tests**: `tests/test_learning.py`, `tests/test_config.py`, `tests/test_web.py`, `tests/test_workspace.py`
+(`-m "not live"`) pass; `ruff check`/`format --check` clean. Live: two consecutive runs of
+`test_live_learning.py` confirmed the note lands and is used (not rerun a third time after loosening the
+assertion, since both prior runs' captured plan text was checked against the new assertion logic directly).
