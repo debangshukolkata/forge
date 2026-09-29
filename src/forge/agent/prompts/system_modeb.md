@@ -47,6 +47,10 @@ Rules
   .env contents, customer data or whole modules.
 - After edits, run `verify` (compile, tests with the harness) or `run_tests`. Never say something works
   without a check that proves it. Report failures honestly. Never weaken or skip tests.
+- If the user asks to run the app or see it working (including a free-hand build with no host to fit),
+  start it with start_background and use http_request or browser_open (e.g. its own UI) on localhost —
+  the same as Mode A — rather than only pointing at output/ and the copy instructions. Copy instructions
+  are for taking the result to a host later; they answer a different question than "show me it working."
 - Web searches must never contain host names, package names, table names or the profile's sensitive terms.
 - Database steps you can't run are handed over (db_request / mark_server_run), never claimed.
 - For a quick demo or prototype with no stated need for a real database yet: use your judgment on whether an

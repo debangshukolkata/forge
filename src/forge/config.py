@@ -187,7 +187,7 @@ class HooksConfig(_Strict):
 
 
 class LearningConfig(_Strict):
-    retro: Literal["prompt", "auto", "off"] = "prompt"  # prompt: one approval of the proposed lessons
+    retro: Literal["prompt", "auto", "off"] = "auto"  # prompt: one approval of the proposed lessons
     lessons_top_k: int = 5
     lessons_token_cap: int = 800
 

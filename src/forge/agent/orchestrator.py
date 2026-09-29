@@ -110,6 +110,7 @@ class Orchestrator:
         self.context: ToolContext = host.agent.context
         self.context.interaction = self
         self._publishing: set[asyncio.Task[Any]] = set()
+        self._background_tasks: set[asyncio.Task[Any]] = set()
         self._task_start_step = 0
         self._restructure_baseline: tuple[bool, str] | None = None
         self._apply_cadence()
@@ -564,6 +565,18 @@ class Orchestrator:
             "phase_and_tasks",
             (f"Current task: {current.id} {current.title}\n" if current else "") + self.state.task_board(),
         )
+
+    def _background(self, task: asyncio.Task[Any]) -> None:
+        """Runs a task (e.g. the retro) alongside the input loop instead of inside a turn, so it can never
+        block the user's next message. Errors are reported as a notice rather than propagating unseen."""
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    async def wait_idle(self) -> None:
+        """Lets a caller (headless run, shutdown) observe the settled state after background work like the
+        retro finishes, without making the user's own turn wait for it."""
+        while self._background_tasks:
+            await asyncio.gather(*self._background_tasks, return_exceptions=True)
 
     async def _notice(self, kind: str, text: str) -> None:
         await self.host.bus.publish(EventType.NOTICE, {"kind": kind, "text": text})

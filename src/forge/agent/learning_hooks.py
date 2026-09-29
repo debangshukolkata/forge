@@ -4,6 +4,7 @@ the user approves in one step)."""
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 from forge.config import forge_home
@@ -112,7 +113,15 @@ async def after_export(orchestrator: Orchestrator) -> None:
     await orchestrator._notice("library", f"Saved this requirement to the library as {card_id}.")
     mode = orchestrator.host.router.config.learning.retro
     if mode != "off":
-        await _retro(orchestrator, card_id, scope, review, problems, stuck_events, ask=mode == "prompt")
+        # Fire-and-forget: the retro (an LLM call) and, in "prompt" mode, its lesson approval must never
+        # gate the turn. Forge has already told the user the requirement is done and is free to take their
+        # next message immediately, the same way this assistant doesn't block on a wrap-up aside — a
+        # pending approval card the user hasn't noticed used to sit in front of every later chat message
+        # (D-128's "not a turn-blocking approval gate" applied to PLAN/REQUIREMENTS but not to this).
+        retro_task = asyncio.create_task(
+            _retro(orchestrator, card_id, scope, review, problems, stuck_events, ask=mode == "prompt")
+        )
+        orchestrator._background(retro_task)
 
 
 async def _retro(

@@ -2106,3 +2106,33 @@ session, not just "the script didn't crash"). `scripts/check_secrets.py`: 0 find
 Not built: `install_forge.ps1` itself is unchanged — it remains the right tool for a stable per-user install
 outside any working folder; `run_forge.ps1` is for the "I just unzipped this and want it running" case
 specifically, and the two are not meant to converge into one script, per the reasoning above.
+
+### D-148 — End-of-requirement retro/lesson approval must not block the next message · Decided (2026-09-29)
+User report: Mode B, a from-scratch React attendance app, 4 tasks done; asking Forge to "run it and show
+me" got no response — Forge kept repeating "4 tasks completed" and asking for lesson approval instead.
+Root cause: `_export()` awaited `after_export()` inline, which (with `learning.retro` defaulting to
+`"prompt"`) awaited an approval future for the proposed lessons before the turn ended. `SessionHost.run()`
+processes one turn at a time from a single input queue, so the user's next chat message queued silently
+behind that unresolved approval card — the same "not a turn-blocking approval gate" principle D-128 applied
+to `propose_requirements`/`propose_plan` had not been applied to the retro's lesson approval.
+Options considered: (a) leave `retro: "prompt"` as default but make `_export` return before awaiting it
+(still gates lesson approval when the user does opt into "prompt"); (b) default `retro` to `"auto"` (lessons
+proposed silently, reviewed later via `/lessons`) and always run the retro as a background task decoupled
+from the turn. Chosen: **(b)**, both together — matches how this assistant itself handles an end-of-task
+retrospective (it doesn't block the next ask on it), and removes the failure mode entirely rather than just
+shrinking its window. `learning.retro: "prompt"` remains available for anyone who wants the approval card;
+it no longer blocks the input queue either way, since the retro now always runs as a tracked background
+task (`Orchestrator._background`/`wait_idle`), awaited only by callers that need the settled result
+(`run_headless`, `SessionHost.close`).
+Also fixed in the same pass, same underlying complaint ("behave exactly like Claude Code — build it, then
+show it to me when I ask, copy instructions only when I ask for them"): the closing message no longer pushes
+`output/COPY_INSTRUCTIONS.md` as the default next step (it now says to ask for a run or for copy
+instructions); Mode B's system prompt (`system_modeb.md`) gained the same "start it with start_background,
+then http_request/browser_open" instruction Mode A already had, since a free-hand Mode B build (no host to
+fit) is exactly the case where the user wants to see the running app, not integration steps.
+**Tests**: `tests/test_learning.py`, `tests/test_config.py`, `tests/test_web.py`, `tests/test_workspace.py`
+(`-m "not live"`) pass. `tests/test_live_learning.py` updated: with `retro: "auto"` as the default, lessons
+from a headless auto-approved run stay `"proposed"` (nothing to approve automatically) rather than
+`"approved"/"rejected"`; `run_headless` now waits for the orchestrator's background tasks (the retro) before
+returning, so the test still observes its result deterministically instead of racing it. `ruff
+check`/`format --check` and `mypy src/forge` clean on every touched file.

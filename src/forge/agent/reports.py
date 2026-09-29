@@ -32,7 +32,7 @@ def closing_message(state: OrchestratorState, output: OutputManifest) -> str:
     return (
         f"Done: {len(done)} task(s) completed{blocked_note}. "
         f"output/ has {counts['added']} new and {counts['modified']} modified file(s){deleted_note}. "
-        "Follow output/COPY_INSTRUCTIONS.md to copy them into your repository."
+        "Ask me to run it, or for the copy instructions when you want them."
     )
 
 

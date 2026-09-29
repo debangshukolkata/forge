@@ -603,6 +603,8 @@ class SessionHost:
         if self._current_turn is not None:
             with contextlib.suppress(asyncio.CancelledError):
                 await self._current_turn
+        if self.orchestrator is not None:
+            await self.orchestrator.wait_idle()
         if self.agent is not None and self.agent.context.background is not None:
             await self.agent.context.background.stop_all()
         hub = getattr(self, "mcp_hub", None)

@@ -45,9 +45,9 @@ async def test_second_run_cites_the_first_runs_card(
     assert [c["id"] for c in cards] == ["REQ-0001"]
     assert (isolated_forge_home / "learning" / "metrics.jsonl").exists()
     lessons = LessonStore(isolated_forge_home).all()
-    assert all(
-        lesson.status in ("approved", "rejected") for lesson in lessons
-    )  # the retro asked (auto-approved)
+    # learning.retro defaults to "auto": the retro proposes lessons without blocking the run on an
+    # approval nobody is there to answer (D-128) — they stay "proposed" until reviewed via /lessons.
+    assert all(lesson.status == "proposed" for lesson in lessons)
 
     second = create_workspace(FIXTURE_REPO, tmp_path / "ws2", "backend")
     result = await run_headless(build_session(workspace=second, orchestrated=True), SECOND, auto_approve=True)
