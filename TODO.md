@@ -185,6 +185,10 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
   missing (zero-flash on the already-configured path). No restart needed: confirmed `WebSessionManager` caches
   no `Secrets`/`LLMRouter` before a project is opened, so `load_secrets` re-reading `.env` from disk is already
   sufficient. Tests, ruff, mypy, `npm run build`, `check_secrets.py` all clean — see D-146 for full detail.
-  **Still open**: the installer-script half of D-145 — making `install_forge.ps1` (or a new sibling script)
-  launch `forge ui` automatically at the end of a fresh unzip-and-run, and its "prefer a bundled wheelhouse
-  next to the script, else install from the unzipped source" logic. Not attempted in this pass.
+  **Done 2026-09-29 (D-147)**: `scripts/run_forge.ps1`, a new sibling script (not a rewrite of
+  `install_forge.ps1`, kept separate on purpose — see D-147) — creates/reuses a `.venv` inside the unzipped
+  folder itself (no PATH shim, no shared install location, so it can't shadow or be shadowed the way the
+  triggering bug happened), installs from the unzipped source (or a bundled wheelhouse if present), and
+  launches `forge ui` directly into D-146's setup screen. Actually run end-to-end against this build machine's
+  repo, not just written: caught and fixed a real failure (a previous `forge ui` window locking its own
+  `forge.exe` during reinstall) with a clear error message instead of a raw pip WinError.

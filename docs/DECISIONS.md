@@ -2078,3 +2078,31 @@ clean (no new TypeScript errors).
 `install_forge.ps1` (or a new sibling script) launching `forge ui` automatically at the end so the setup
 screen above is the very first thing a fresh unzip-and-run shows, plus its "prefer a bundled wheelhouse next
 to the script, else install from the unzipped source" logic. Tracked in TODO.md.
+
+### D-147 — Installer-script piece of D-145: `scripts/run_forge.ps1`, a new sibling script · Decided (2026-09-29)
+Completes the last open piece of [D-145]. `install_forge.ps1` was judged the wrong script to extend, not a
+base to build on: it installs into `%LOCALAPPDATA%\Forge\venv` (a shared per-user location, outside any
+repository, with a PATH shim) — the right model for a stable, long-lived install, but structurally the exact
+setup that caused the PATH-shadowing bug that motivated this whole feature ([D-145]'s background) when a
+second, different Forge folder existed on the same machine. A freshly unzipped folder has no earlier install
+to reuse or collide with, so a new sibling script, `scripts/run_forge.ps1`, creates its venv **inside that same
+folder** (`.venv`) instead — nothing to shim onto PATH, nothing that can later shadow or be shadowed by another
+copy. It deliberately does not write a `.env` template itself (`install_forge.ps1`'s own job for its own use
+case) — [D-146]'s setup screen already covers entering and verifying keys, so this script's only job is
+getting to that screen: create/reuse the venv, `pip install -e .` from the unzipped source (or `--no-index
+--find-links <wheelhouse>` if one is bundled alongside, for the real office-laptop-may-be-offline case), then
+launch `forge ui` directly.
+
+Verified by actually running it against this build machine's own repo (not just written and assumed correct):
+first run failed with a raw `WinError 32` — a previous `forge ui` process from earlier in this session was
+still holding its own `forge.exe` open, so `pip install -e .` couldn't replace it. This is a realistic scenario
+(re-running the script while an earlier window is still open), not an edge case to ignore, so the script now
+checks the file lock explicitly before installing and raises a clear message ("Forge is still running from
+this folder... close that window or stop the process first") instead of surfacing pip's confusing internal
+error. Re-tested after stopping the stray process: reuses the existing `.venv` correctly, installs cleanly,
+and reaches a real running server (confirmed via the same 403-means-alive auth-gate check used earlier in this
+session, not just "the script didn't crash"). `scripts/check_secrets.py`: 0 findings.
+
+Not built: `install_forge.ps1` itself is unchanged — it remains the right tool for a stable per-user install
+outside any working folder; `run_forge.ps1` is for the "I just unzipped this and want it running" case
+specifically, and the two are not meant to converge into one script, per the reasoning above.
