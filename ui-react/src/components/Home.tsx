@@ -15,6 +15,7 @@ export function Home({ onCreated }: { onCreated: () => void }) {
   const [askAppFolder, setAskAppFolder] = useState(false);
   const [terms, setTerms] = useState("");
   const [busy, setBusy] = useState(false);
+  const [setupPhase, setSetupPhase] = useState("");
   const [error, setError] = useState("");
   const [known, setKnown] = useState<string[]>([]);
   const [doctor, setDoctor] = useState<DoctorResult[] | null>(null);
@@ -28,6 +29,14 @@ export function Home({ onCreated }: { onCreated: () => void }) {
     event.preventDefault();
     setBusy(true);
     setError("");
+    setSetupPhase(mode === "A" ? "Copying the repository…" : "Setting up the project…");
+    // Setup runs as one blocking backend call, before this project's own session/WebSocket exists to carry
+    // progress events — so the only way to show real steps is to poll a small status endpoint meanwhile.
+    const poll = window.setInterval(() => {
+      api<{ phase: string | null }>("/api/setup-progress")
+        .then(({ phase }) => phase && setSetupPhase(phase))
+        .catch(() => undefined);
+    }, 400);
     try {
       await api("/api/projects", {
         method: "POST",
@@ -39,6 +48,7 @@ export function Home({ onCreated }: { onCreated: () => void }) {
       setError(message);
       if (mode === "A" && /Which folder is the Python app/.test(message)) setAskAppFolder(true);
     } finally {
+      window.clearInterval(poll);
       setBusy(false);
     }
   };
@@ -108,11 +118,7 @@ export function Home({ onCreated }: { onCreated: () => void }) {
               {busy && <Spinner />}
               Create and open
             </Button>
-            {busy && (
-              <span className="text-[13px] text-fg-muted">
-                {mode === "A" ? "Copying the repository…" : "Setting up the project and its Python environment…"}
-              </span>
-            )}
+            {busy && <span className="text-[13px] text-fg-muted">{setupPhase}</span>}
           </div>
         </form>
       </Card>

@@ -7,7 +7,6 @@ import { Code, Markdown, cx } from "../lib";
 import type { ChatItem, UserInput } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
-import { ProgressHeader } from "./Activity";
 import { Composer, useAttachments } from "./Composer";
 import { Badge, Button, CopyButton, Spinner, Textarea } from "./ui";
 
@@ -48,7 +47,6 @@ export function Chat({ forge }: { forge: Forge }) {
           <span className="font-medium">Drop files or images to attach them</span>
         </div>
       )}
-      <ProgressHeader forge={forge} />
       <div
         ref={scroller}
         onScroll={(e) => {
@@ -160,22 +158,29 @@ function Row({ icon, tone, children }: { icon: ReactNode; tone: "user" | "assist
 
 function ToolCard({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
   const [open, setOpen] = useState(false);
+  const retried = item.state === "fail" && item.retried;
   return (
-    <div className="ml-10 rounded-lg border border-border bg-surface">
+    <div className={cx("ml-10 rounded-lg border bg-surface", retried ? "border-border/60" : "border-border")}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 hover:bg-raised rounded-lg"
+        className={cx(
+          "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 hover:bg-raised rounded-lg",
+          retried && "opacity-70",
+        )}
       >
         <ChevronRight className={cx("h-3.5 w-3.5 shrink-0 text-fg-muted transition-transform duration-150", open && "rotate-90")} aria-hidden />
         <Wrench className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden />
         <span className="shrink-0 font-mono text-[12.5px] font-medium">{item.name}</span>
         <span className="min-w-0 flex-1 truncate text-fg-muted">{item.summary}</span>
+        {retried && <Badge tone="neutral">retried</Badge>}
         {item.state === "running" ? (
           <Spinner className="h-3.5 w-3.5 text-accent" />
         ) : item.state === "ok" ? (
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-accent" aria-label="Succeeded" />
+        ) : retried ? (
+          <AlertOctagon className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-label="Failed, then retried successfully" />
         ) : (
           <XCircle className="h-3.5 w-3.5 shrink-0 text-danger" aria-label="Failed" />
         )}

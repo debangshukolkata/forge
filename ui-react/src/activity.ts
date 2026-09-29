@@ -83,18 +83,6 @@ export function thinkingLabel(phase: string | undefined, taskTitle?: string): st
   return PHASE_THINKING[phase ?? "direct"] ?? "Thinking";
 }
 
-// The six steps users see; engine phases map onto them.
-export const STEPS = ["Clarify", "Explore", "Plan", "Build", "Review", "Deliver"] as const;
-export const STEP_OF_PHASE: Record<string, number> = {
-  intake: 0, clarify: 0, kb_check: 1, explore: 1, plan: 2, execute: 3, restructure: 3, review: 4, export: 5, handoff: 5, done: 6,
-};
-
-/** Index of the current step (6 = all done), or null when the session isn't following the phases. */
-export function stepOf(phase: string | undefined): number | null {
-  if (!phase || !(phase in STEP_OF_PHASE)) return null;
-  return STEP_OF_PHASE[phase];
-}
-
 export function elapsed(since: number, now: number): string {
   const seconds = Math.max(0, Math.floor((now - since) / 1000));
   const h = Math.floor(seconds / 3600);

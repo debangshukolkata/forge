@@ -1,26 +1,9 @@
 // The Run map's model, derived from the project's events (D-119): which tasks exist and how they depend on each
-// other, what happened to each (failures, stuck warnings, helper agents), and when each phase, task and agent ran.
+// other, what happened to each (failures, stuck warnings, helper agents), and when each task and agent ran.
 // Pure functions of the event list, so a replayed project draws the same map as a live one.
+// No `phase` tracking here (D-128/D-131/D-133): the engine dropped its fixed phase pipeline, so `where.phase`
+// on events is a stale, best-effort label only — the graph is derived purely from what has actually happened.
 import type { ForgeEvent, Task } from "./types";
-
-export type MarkerKind = "failure" | "stuck" | "waiting";
-
-export interface Marker {
-  kind: MarkerKind;
-  at: number; // ms timestamp
-  seq: number; // the event, for jumping to it in the chat
-  label: string;
-  lane: string; // lane id: "phase", "task:<id>" or "agent:<role>"
-}
-
-export interface Span {
-  lane: string;
-  label: string;
-  start: number;
-  end: number | null; // null = still running
-  seq: number;
-  tone: "phase" | "task" | "agent" | "agent-failed" | "waiting";
-}
 
 export interface Agent {
   id: string;
@@ -80,29 +63,15 @@ export interface TaskStats {
 
 export interface RunModel {
   tasks: Task[];
-  phase: string | null;
   currentTask: string | null;
   stats: Record<string, TaskStats>;
   agents: Agent[];
-  spans: Span[];
-  markers: Marker[];
   failures: Failure[];
-  lanes: { id: string; label: string; group: "phase" | "you" | "task" | "agent" }[];
+  exported: boolean; // output/ has been built at least once (D-133: the deliver node's signal)
   waitingSince: number | null; // seq of the request Forge is still waiting on, if any
   start: number | null;
   end: number | null;
 }
-
-export const PHASE_LABEL: Record<string, string> = {
-  intake: "Intake", clarify: "Clarify", kb_check: "Knowledge", explore: "Explore", plan: "Plan", execute: "Build",
-  review: "Review", export: "Export", restructure: "Restructure", handoff: "Hand-over", done: "Done", direct: "Chat",
-};
-
-const WAITING: Record<string, string> = {
-  approval_requested: "Waiting for your approval",
-  question_asked: "Waiting for your answer",
-  user_action_requested: "Waiting for you to act",
-};
 
 function time(event: ForgeEvent): number {
   const value = Date.parse(event.ts);
@@ -113,62 +82,43 @@ function emptyStats(): TaskStats {
   return { failures: 0, stuck: 0, agents: 0, firstSeq: null };
 }
 
-/** `live` is the current time while Forge is working (open spans grow to it); otherwise the map ends at the
- * last event, so a project reopened days later doesn't stretch its timeline to today. */
+/** `live` is the current time while Forge is working; otherwise the map ends at the last event, so a project
+ * reopened days later doesn't stretch its timeline to today. */
 export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], live: number | null = null): RunModel {
   let tasks: Task[] = fallbackTasks;
-  let phase: string | null = null;
   let currentTask: string | null = null;
+  let exported = false;
   const stats: Record<string, TaskStats> = {};
   const statsOf = (id: string) => (stats[id] ??= emptyStats());
   const agents: Agent[] = [];
   const openAgents = new Map<string, Agent>();
-  const spans: Span[] = [];
-  const markers: Marker[] = [];
   const toolNames = new Map<string, string>();
   const toolStarts = new Map<string, number>();
   const failures: Failure[] = [];
   // Successful calls per task and tool, in order, to tell whether a failure was fixed later.
   const successes: { seq: number; task: string | null; tool: string }[] = [];
-  let phaseSpan = null as Span | null;
-  let taskSpan = null as Span | null;
   let start: number | null = null;
   let end: number | null = null;
 
   // Forge blocks on a request: whatever event comes next means you answered, so the wait ends there.
-  let waitSpan = null as Span | null;
+  let waitingSeq: number | null = null;
   for (const event of events) {
     const at = time(event);
     if (!at) continue;
     start ??= at;
     end = at;
-    if (waitSpan) {
-      waitSpan.end = at;
-      waitSpan = null;
-    }
+    if (waitingSeq !== null) waitingSeq = null;
     const p = event.payload;
     const where = event.where ?? null;
     const task = where?.task ?? null;
 
-    // Phase and task spans follow the stamp every event carries: a change closes the open span.
-    if (where?.phase && where.phase !== phaseSpan?.label) {
-      if (phaseSpan) phaseSpan.end = at;
-      phaseSpan = { lane: "phase", label: where.phase, start: at, end: null, seq: event.seq, tone: "phase" };
-      spans.push(phaseSpan);
-    }
-    if (task !== (taskSpan ? taskSpan.lane.slice(5) : null)) {
-      if (taskSpan) taskSpan.end = at;
-      taskSpan = task ? { lane: `task:${task}`, label: task, start: at, end: null, seq: event.seq, tone: "task" } : null;
-      if (taskSpan) spans.push(taskSpan);
-    }
     if (task && statsOf(task).firstSeq === null) statsOf(task).firstSeq = event.seq;
-    const lane = task ? `task:${task}` : "phase";
 
     switch (event.type) {
       case "task_list_updated":
         tasks = (p.tasks as Task[]) ?? tasks;
-        phase = p.phase ?? phase;
         currentTask = p.current_task ?? null;
+        if (p.exported) exported = true;
         break;
       case "tool_call_started":
         toolNames.set(p.id, p.summary || p.name);
@@ -184,25 +134,16 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
             kind: failureKind(p.name ?? "", output), outcome: "open",
           });
           if (task) statsOf(task).failures += 1;
-          markers.push({ kind: "failure", at, seq: event.seq, lane, label: `Failed: ${toolNames.get(p.id) ?? p.name ?? "tool call"}` });
         }
         break;
       case "notice":
-        if (p.kind === "stuck") {
-          if (task) statsOf(task).stuck += 1;
-          markers.push({ kind: "stuck", at, seq: event.seq, lane, label: String(p.text ?? "Stuck").split("\n")[0] });
-        }
+        if (p.kind === "stuck" && task) statsOf(task).stuck += 1;
         break;
       case "approval_requested":
       case "question_asked":
       case "user_action_requested":
-      {
-        const label = String(p.title || p.question || WAITING[event.type]).split("\n")[0];
-        markers.push({ kind: "waiting", at, seq: event.seq, lane: "you", label });
-        waitSpan = { lane: "you", label: `${WAITING[event.type]}: ${label}`, start: at, end: null, seq: event.seq, tone: "waiting" };
-        spans.push(waitSpan);
+        waitingSeq = event.seq;
         break;
-      }
       case "agent_started": {
         const agent: Agent = {
           id: p.id, role: p.role || "helper", purpose: p.purpose || "", task, start: at, end: null, ok: null,
@@ -223,9 +164,6 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
         agent.failedCalls = p.failed_calls ?? 0;
         break;
       }
-      case "session_ended":
-        currentTask = null;
-        break;
     }
   }
 
@@ -235,98 +173,92 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
     failure.outcome = later ? "fixed" : failure.task && statusOf.get(failure.task) === "done" ? "task-done" : "open";
   }
 
-  // Open spans (end null) are drawn up to the map's end.
   if (live !== null && end !== null) end = Math.max(end, live);
-  for (const agent of agents) {
-    spans.push({
-      lane: `agent:${agent.role}`, label: agent.purpose || agent.role, start: agent.start, end: agent.end, seq: agent.seq,
-      tone: agent.ok === false || agent.failedCalls > 0 ? "agent-failed" : "agent",
-    });
-  }
-
-  const taskIds = new Set(tasks.map((t) => t.id));
-  const laneTaskIds = [...tasks.map((t) => t.id), ...Object.keys(stats).filter((id) => !taskIds.has(id))];
-  const roles = [...new Set(agents.map((a) => a.role))];
-  const lanes: RunModel["lanes"] = [
-    { id: "phase", label: "Phases", group: "phase" },
-    ...(markers.some((m) => m.kind === "waiting") ? [{ id: "you", label: "Waiting for you", group: "you" as const }] : []),
-    ...laneTaskIds.map((id) => ({ id: `task:${id}`, label: id, group: "task" as const })),
-    ...roles.map((role) => ({ id: `agent:${role}`, label: role.charAt(0).toUpperCase() + role.slice(1), group: "agent" as const })),
-  ];
-  const waitingSince = waitSpan ? waitSpan.seq : null;
-  return { tasks, phase, currentTask, stats, agents, spans, markers, failures, lanes, start, end, waitingSince };
+  return { tasks, currentTask, stats, agents, failures, exported, start, end, waitingSince: waitingSeq };
 }
 
 export interface GraphNodeData {
-  kind: "start" | "task" | "review" | "deliver";
+  kind: "start" | "task" | "agent" | "deliver";
   title: string;
   task?: Task;
+  agent?: Agent;
   stats?: TaskStats;
   current?: boolean;
-  state?: "pending" | "active" | "done";
+  state?: "pending" | "active" | "done" | "failed";
 }
 
 export interface GraphEdge {
   from: string;
   to: string;
-  kind: "depends" | "flow" | "fix";
+  kind: "depends_on" | "spawned" | "flow";
 }
 
-/** Nodes and edges of the plan: Plan → tasks (by depends_on) → Review → FIX tasks → Deliver. */
-export function planGraph(model: RunModel): { nodes: { id: string; data: GraphNodeData }[]; edges: GraphEdge[] } {
-  const isFix = (t: Task) => /^FIX/i.test(t.id);
-  const work = model.tasks.filter((t) => !isFix(t));
-  const fixes = model.tasks.filter(isFix);
+export interface Graph {
+  nodes: { id: string; data: GraphNodeData }[];
+  edges: GraphEdge[];
+}
+
+/** Builds the run's DAG incrementally from what has already happened, rather than pre-drawing a fixed
+ * skeleton (D-133, replacing the old phase-driven `planGraph`): a `start` node once the run has begun, a
+ * `task` node per task known so far (tasks can arrive later via `update_plan`), an `agent` node per helper
+ * run spawned so far, and a `deliver` node once the run has actually exported. */
+export function buildGraph(model: RunModel): Graph {
+  if (model.start === null) return { nodes: [], edges: [] };
+
   const ids = new Set(model.tasks.map((t) => t.id));
-  const phaseOrder = ["intake", "clarify", "kb_check", "explore", "plan", "execute", "restructure", "review", "export", "handoff", "done"];
-  const at = phaseOrder.indexOf(model.phase ?? "");
-  const stateOf = (index: number): GraphNodeData["state"] => (at > index ? "done" : at === index ? "active" : "pending");
+  const startState: GraphNodeData["state"] = model.tasks.length > 0 || model.exported ? "done" : "active";
 
   const nodes: { id: string; data: GraphNodeData }[] = [
-    { id: "@plan", data: { kind: "start", title: "Plan", state: at >= 5 ? "done" : at >= 0 ? "active" : "pending" } },
+    { id: "@start", data: { kind: "start", title: "Start", state: startState } },
     ...model.tasks.map((task) => ({
       id: task.id,
-      data: { kind: "task" as const, title: task.title, task, stats: model.stats[task.id], current: task.id === model.currentTask },
+      data: {
+        kind: "task" as const,
+        title: task.title,
+        task,
+        stats: model.stats[task.id],
+        current: task.id === model.currentTask,
+        state: (task.status === "done" ? "done"
+          : task.status === "blocked" ? "failed"
+          : task.status === "in_progress" ? "active"
+          : "pending") as GraphNodeData["state"],
+      },
     })),
-    { id: "@review", data: { kind: "review", title: "Review", state: stateOf(phaseOrder.indexOf("review")) } },
-    { id: "@deliver", data: { kind: "deliver", title: "Deliver", state: model.phase === "done" ? "done" : at >= 8 ? "active" : "pending" } },
+    ...model.agents.map((agent) => ({
+      id: `@agent:${agent.id}`,
+      data: {
+        kind: "agent" as const,
+        title: agent.purpose || agent.role,
+        agent,
+        state: (agent.end === null ? "active" : agent.ok === false || agent.failedCalls > 0 ? "failed" : "done") as GraphNodeData["state"],
+      },
+    })),
   ];
+  if (model.exported) {
+    nodes.push({ id: "@deliver", data: { kind: "deliver", title: "Deliver", state: "done" } });
+  }
+
   const edges: GraphEdge[] = [];
   const hasDependents = new Set<string>();
-  for (const task of work) {
+  for (const task of model.tasks) {
     const deps = (task.depends_on ?? []).filter((d) => ids.has(d));
-    if (deps.length === 0) edges.push({ from: "@plan", to: task.id, kind: "flow" });
+    if (deps.length === 0) edges.push({ from: "@start", to: task.id, kind: "flow" });
     for (const dep of deps) {
-      edges.push({ from: dep, to: task.id, kind: "depends" });
+      edges.push({ from: dep, to: task.id, kind: "depends_on" });
       hasDependents.add(dep);
     }
   }
-  const leaves = work.filter((t) => !hasDependents.has(t.id));
-  if (leaves.length === 0) edges.push({ from: "@plan", to: "@review", kind: "flow" });
-  for (const leaf of leaves) edges.push({ from: leaf.id, to: "@review", kind: "flow" });
-  for (const fix of fixes) {
-    edges.push({ from: "@review", to: fix.id, kind: "fix" });
-    edges.push({ from: fix.id, to: "@deliver", kind: "flow" });
+  for (const agent of model.agents) {
+    edges.push({ from: agent.task && ids.has(agent.task) ? agent.task : "@start", to: `@agent:${agent.id}`, kind: "spawned" });
   }
-  if (fixes.length === 0) edges.push({ from: "@review", to: "@deliver", kind: "flow" });
+  if (model.exported) {
+    // Every task with nothing depending on it feeds Deliver; with no tasks at all (a plain chat that
+    // still ended in an export), Deliver hangs straight off Start.
+    const leaves = model.tasks.filter((t) => !hasDependents.has(t.id));
+    const sources = leaves.length ? leaves.map((t) => t.id) : ["@start"];
+    for (const source of sources) edges.push({ from: source, to: "@deliver", kind: "flow" });
+  }
   return { nodes, edges };
-}
-
-const REQUESTS = new Set(["approval_requested", "question_asked", "user_action_requested"]);
-
-/** Working time per engine phase: the gap after each event counts for that event's phase, except the gaps
- * where Forge waited for you (after a request, until the next event). `live` adds the running gap to now. */
-export function phaseWorkMs(events: ForgeEvent[], live: number | null = null): Record<string, number> {
-  const totals: Record<string, number> = {};
-  for (let i = 0; i < events.length; i++) {
-    const event = events[i];
-    const phase = event.where?.phase;
-    if (!phase || REQUESTS.has(event.type)) continue;
-    const next = i + 1 < events.length ? time(events[i + 1]) : live;
-    const at = time(event);
-    if (next && at && next > at) totals[phase] = (totals[phase] ?? 0) + (next - at);
-  }
-  return totals;
 }
 
 export function duration(ms: number): string {

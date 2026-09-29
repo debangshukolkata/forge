@@ -125,6 +125,10 @@ export type ChatItem =
       state: "running" | "ok" | "fail";
       preview?: string;
       duration?: number;
+      // True once a later call of the same tool succeeds before any other failure of that tool
+      // intervenes: the model made a mistake, got a clear error, and immediately corrected it —
+      // shown de-emphasised rather than as an alarming failure (see ToolCard in Chat.tsx).
+      retried?: boolean;
     }
   | { key: string; kind: "notice"; noticeKind: string; text: string }
   | { key: string; kind: "error"; text: string }

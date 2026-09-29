@@ -172,6 +172,12 @@ def create_app(
 
         return {"path": str(workspace.root), "test_runner": test_runner_note(workspace)}
 
+    @app.get("/api/setup-progress")
+    async def setup_progress() -> dict[str, str | None]:
+        """Polled by the start form while creating a project (spec: Home.tsx), since setup runs as one
+        blocking call before the session's WebSocket exists — there's nowhere else to publish progress."""
+        return {"phase": manager.setup_progress}
+
     @app.post("/api/standalone")
     async def new_standalone(body: NewStandalone) -> dict[str, str]:
         try:

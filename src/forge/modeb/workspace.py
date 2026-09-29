@@ -15,6 +15,7 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
@@ -22,6 +23,8 @@ from forge.modeb.profile import HostProfile
 from forge.workspace.manifest import BaselineManifest
 from forge.workspace.pyenv import PythonEnvironment, venv_python
 from forge.workspace.workspace import Workspace, WorkspaceError, WorkspaceInfo
+
+SetupProgressCallback = Callable[[str], None]
 
 HARNESS_CONFTEST = '''"""Forge Mode B test harness (NOT delivered): loaded with `pytest -p harness_conftest`.
 
@@ -63,17 +66,27 @@ the other. Delivered code in project/ never contains the host's own package `__i
 
 
 def create_standalone_workspace(
-    root: Path, profile: HostProfile, base_python: str | None = None
+    root: Path,
+    profile: HostProfile,
+    base_python: str | None = None,
+    on_progress: SetupProgressCallback | None = None,
 ) -> Workspace:
+    def notify(phase: str) -> None:
+        if on_progress is not None:
+            on_progress(phase)
+
     root = root.resolve()
     if root.exists() and any(root.iterdir()):
         raise WorkspaceError(f"{root} is not empty: choose a new folder for the workspace.")
+    notify("Creating workspace folders…")
     for folder in ("project", "_harness/host_stubs", "output", ".forge"):
         (root / folder).mkdir(parents=True, exist_ok=True)
     (root / "_harness" / "harness_conftest.py").write_text(HARNESS_CONFTEST, encoding="utf-8")
     (root / "_harness" / "run_app.py").write_text(RUN_APP, encoding="utf-8")
     (root / "_harness" / "host_stubs" / "README.md").write_text(STUBS_README, encoding="utf-8")
+    notify("Creating the Python environment…")
     python = _create_venv(root / ".venv", base_python or sys.executable)
+    notify("Installing the test runner (pytest)…")
     setup_note = install_test_runner(python)
     (root / ".forge" / "setup.json").write_text(json.dumps({"test_runner": setup_note}), encoding="utf-8")
     env = PythonEnvironment(

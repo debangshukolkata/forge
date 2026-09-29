@@ -1,24 +1,27 @@
-// The Run map (D-119): the plan as a task graph (React Flow + dagre) above a timeline of phases, tasks and
-// helper agents (plain SVG) with failure, stuck and waiting markers. Everything is derived from the project's
-// events, so it works the same live and after a replay. Clicking a task or a marker jumps to it in the chat.
+// The Run map (D-119/D-133): the plan and its helper agents as a single live-growing DAG (React Flow + dagre),
+// built incrementally from the project's events rather than a fixed phase skeleton — nodes appear only once
+// what they represent has actually happened. Everything is derived from the events, so it works the same live
+// and after a replay. Failure/stuck markers live on their task/agent node as a badge. Clicking a task jumps to
+// it in the chat.
 import dagre from "@dagrejs/dagre";
 import {
   Background,
+  ControlButton,
   Controls,
   Handle,
   Position,
   ReactFlow,
-  useNodesInitialized,
   useReactFlow,
   type Edge,
   type Node,
   type NodeProps,
+  type OnMoveStart,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { AlertTriangle, Bot, ChevronRight, CheckCircle2, CircleDashed, Flag, Hand, ListChecks, Repeat, Search, XCircle } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { AlertTriangle, Bot, ChevronRight, CheckCircle2, CircleDashed, Crosshair, Flag, Hand, ListChecks, Repeat, XCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { cx } from "../lib";
-import { PHASE_LABEL, buildRunModel, planGraph, type GraphNodeData, type Marker, type RunModel, type Span } from "../runmap";
+import { buildGraph, buildRunModel, type GraphNodeData, type RunModel } from "../runmap";
 import type { CostLimits, UsageBucket } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
@@ -29,6 +32,8 @@ const TASK_W = 212;
 const TASK_H = 118;
 const STEP_W = 108;
 const STEP_H = 44;
+const AGENT_W = 176;
+const AGENT_H = 64;
 
 type FlowData = GraphNodeData & {
   usage?: UsageBucket;
@@ -72,15 +77,8 @@ export function RunMap({ forge, onJump }: { forge: Forge; onJump: (seq: number) 
         onFailures={() => setDrawer({ task: null, highlight: null })}
         onOpenRequest={() => onJump(model.waitingSince ?? Number.MAX_SAFE_INTEGER)}
       />
-      <div className="min-h-[220px] flex-[3] border-b border-border">
-        {model.tasks.length ? (
-          <TaskGraph model={model} forge={forge} onJump={onJump} onFailures={setDrawer} />
-        ) : (
-          <div className="flex h-full items-center justify-center text-[13px] text-fg-muted">No plan yet — the timeline below shows what has happened so far.</div>
-        )}
-      </div>
-      <div className="min-h-[160px] flex-[2] overflow-auto">
-        <Timeline model={model} onJump={onJump} onFailures={setDrawer} />
+      <div className="min-h-[220px] flex-1">
+        <TaskGraph model={model} forge={forge} onJump={onJump} onFailures={setDrawer} />
       </div>
       {drawer && (
         <FailureDrawer failures={model.failures} tasks={model.tasks} request={drawer} onClose={closeDrawer} onJump={onJump} />
@@ -102,8 +100,8 @@ function Summary({
 }) {
   const done = model.tasks.filter((t) => t.status === "done").length;
   const blocked = model.tasks.filter((t) => t.status === "blocked").length;
-  const failures = model.markers.filter((m) => m.kind === "failure").length;
-  const stuck = model.markers.filter((m) => m.kind === "stuck").length;
+  const failures = model.failures.length;
+  const stuck = Object.values(model.stats).reduce((sum, s) => sum + s.stuck, 0);
   const running = model.agents.filter((a) => a.end === null).length;
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-[12.5px]">
@@ -122,7 +120,6 @@ function Summary({
       <Badge tone="neutral">
         <ListChecks className="h-3.5 w-3.5" aria-hidden /> {done}/{model.tasks.length} tasks done
       </Badge>
-      {model.phase && <Badge tone="info">Phase: {PHASE_LABEL[model.phase] ?? model.phase}</Badge>}
       {blocked > 0 && <Badge tone="danger">{blocked} blocked</Badge>}
       {failures ? (
         <button
@@ -156,20 +153,27 @@ function Summary({
 
 // ---------------------------------------------------------------- task graph
 
+function nodeSize(kind: GraphNodeData["kind"]): { width: number; height: number } {
+  if (kind === "task") return { width: TASK_W, height: TASK_H };
+  if (kind === "agent") return { width: AGENT_W, height: AGENT_H };
+  return { width: STEP_W, height: STEP_H };
+}
+
+function nodeType(kind: GraphNodeData["kind"]): string {
+  return kind === "task" ? "task" : kind === "agent" ? "agent" : "step";
+}
+
 function layout(
   model: RunModel,
   forge: Forge,
   onJump: (seq: number) => void,
   onFailures: OpenFailures,
 ): { nodes: FlowNode[]; edges: Edge[] } {
-  const { nodes, edges } = planGraph(model);
+  const { nodes, edges } = buildGraph(model);
   const graph = new dagre.graphlib.Graph();
   graph.setGraph({ rankdir: "LR", nodesep: 20, ranksep: 40, marginx: 16, marginy: 16 });
   graph.setDefaultEdgeLabel(() => ({}));
-  for (const node of nodes) {
-    const task = node.data.kind === "task";
-    graph.setNode(node.id, { width: task ? TASK_W : STEP_W, height: task ? TASK_H : STEP_H });
-  }
+  for (const node of nodes) graph.setNode(node.id, nodeSize(node.data.kind));
   for (const edge of edges) graph.setEdge(edge.from, edge.to);
   dagre.layout(graph);
 
@@ -177,10 +181,10 @@ function layout(
   const flowNodes: FlowNode[] = nodes.map((node) => {
     const box = graph.node(node.id);
     const task = node.data.kind === "task";
-    const firstSeq = node.data.stats?.firstSeq;
+    const firstSeq = node.data.kind === "task" ? node.data.stats?.firstSeq : node.data.kind === "agent" ? node.data.agent?.seq : undefined;
     return {
       id: node.id,
-      type: task ? "task" : "step",
+      type: nodeType(node.data.kind),
       position: { x: box.x - box.width / 2, y: box.y - box.height / 2 },
       data: {
         ...node.data,
@@ -217,6 +221,15 @@ function TaskGraph({
 }) {
   const { nodes, edges } = useMemo(() => layout(model, forge, onJump, onFailures), [model, forge, onJump, onFailures]);
   const shape = nodes.map((n) => n.id).join("|");
+  // D-133 milestone 2: auto-fit keeps re-centering the graph as it grows, but only until the user manually
+  // pans or zooms — from then on their framing is theirs to keep, and only the Recenter control (or a new
+  // manual fit) brings auto-fit back. `onMoveStart`'s event is null for a programmatic move (our own
+  // `fitView` calls below) and a real MouseEvent/TouchEvent for a user drag or scroll/pinch, which is the
+  // distinguishing signal `@xyflow/react` gives for "was this the user."
+  const [autoFit, setAutoFit] = useState(true);
+  const handleMoveStart = useCallback<OnMoveStart>((event) => {
+    if (event) setAutoFit(false);
+  }, []);
   return (
     <ReactFlow
       nodes={nodes}
@@ -229,20 +242,30 @@ function TaskGraph({
       nodesDraggable={false}
       nodesConnectable={false}
       elementsSelectable={false}
+      onMoveStart={handleMoveStart}
       proOptions={{ hideAttribution: true }}
     >
-      <AutoFit shape={shape} />
+      <AutoFit shape={shape} enabled={autoFit} />
       <Background gap={20} size={1} />
-      <Controls showInteractive={false} position="bottom-right" />
+      <Controls showInteractive={false} position="bottom-right">
+        <ControlButton title="Recenter the map" aria-label="Recenter the map" onClick={() => setAutoFit(true)} data-testid="run-map-recenter">
+          <Crosshair aria-hidden />
+        </ControlButton>
+      </Controls>
     </ReactFlow>
   );
 }
 
-/** Fits the plan into view once its cards are measured, and again when the plan's shape or the area's size
- * changes (window, side panel) — but not on every status update, so a zoom or pan you made stays. */
-function AutoFit({ shape }: { shape: string }) {
+/** Fits the plan into view whenever the plan's shape or the area's size changes (window, side panel) — but
+ * only while `enabled` (auto-fit hasn't been switched off by a user pan or zoom, D-133 milestone 2). The
+ * Recenter control (in `TaskGraph`) flips `enabled` back on, which both re-arms future auto-fits and —
+ * because it changes a dependency of the effect below — fits immediately.
+ * dagre (in `layout()`) already gives every node an explicit position before it ever mounts, so unlike
+ * React Flow's own layout examples this doesn't need to wait on `useNodesInitialized()`'s DOM measurement
+ * pass — that flag stayed permanently false in practice here (nodes are sized via inline `style`, not via
+ * React Flow's own measured `width`/`height`), which silently prevented every fit. */
+function AutoFit({ shape, enabled }: { shape: string; enabled: boolean }) {
   const { fitView } = useReactFlow();
-  const measured = useNodesInitialized();
   const [size, setSize] = useState("");
   useEffect(() => {
     const pane = document.querySelector(".react-flow");
@@ -252,8 +275,8 @@ function AutoFit({ shape }: { shape: string }) {
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    if (measured) void fitView({ padding: 0.12, maxZoom: 1, duration: 200 });
-  }, [measured, shape, size, fitView]);
+    if (enabled) void fitView({ padding: 0.12, maxZoom: 1, duration: 200 });
+  }, [enabled, shape, size, fitView]);
   return null;
 }
 
@@ -286,7 +309,7 @@ function TaskNode({ id, data }: NodeProps<FlowNode>) {
       title={data.onJump ? "Show this task in the chat" : undefined}
       style={{ width: TASK_W, height: TASK_H }}
       className={cx(
-        "flex flex-col gap-1 rounded-lg border bg-surface px-3 py-2 text-left shadow-sm transition-colors duration-150",
+        "run-node-in flex flex-col gap-1 rounded-lg border bg-surface px-3 py-2 text-left shadow-sm transition-colors duration-150",
         STATUS_BORDER[task.status] ?? "border-border",
         data.current && "ring-2 ring-info/60",
         data.onJump ? "cursor-pointer hover:bg-raised" : "cursor-default",
@@ -349,11 +372,9 @@ function Stat({ icon, title, className, children }: { icon: ReactNode; title: st
   );
 }
 
-const STEP_ICON: Record<GraphNodeData["kind"], ReactNode> = {
+const STEP_ICON: Partial<Record<GraphNodeData["kind"], ReactNode>> = {
   start: <ListChecks className="h-4 w-4" aria-hidden />,
-  review: <Search className="h-4 w-4" aria-hidden />,
   deliver: <Flag className="h-4 w-4" aria-hidden />,
-  task: null,
 };
 
 function StepNode({ data }: NodeProps<FlowNode>) {
@@ -363,7 +384,7 @@ function StepNode({ data }: NodeProps<FlowNode>) {
     <div
       style={{ width: STEP_W, height: STEP_H }}
       data-step={data.kind}
-      className={cx("flex items-center justify-center gap-2 rounded-full border bg-raised text-[12.5px] font-medium", tone)}
+      className={cx("run-node-in flex items-center justify-center gap-2 rounded-full border bg-raised text-[12.5px] font-medium", tone)}
     >
       <Handle type="target" position={Position.Left} className="!opacity-0" />
       {data.state === "done" ? <CheckCircle2 className="h-4 w-4" aria-hidden /> : data.state === "active" ? STEP_ICON[data.kind] : <CircleDashed className="h-4 w-4" aria-hidden />}
@@ -373,191 +394,35 @@ function StepNode({ data }: NodeProps<FlowNode>) {
   );
 }
 
-const NODE_TYPES = { task: TaskNode, step: StepNode };
-
-// ---------------------------------------------------------------- timeline
-
-const LABEL_W = 132;
-const LANE_H = 26;
-const AXIS_H = 26;
-const IDLE_CAP_MS = 45_000; // a pause longer than this (usually waiting for you) is drawn this long, with a break
-
-/** Maps clock time to x, squeezing long idle gaps so hours of waiting don't flatten the work into a line. */
-function timeScale(times: number[], start: number, end: number, width: number) {
-  const sorted = [...new Set([start, ...times, end])].sort((a, b) => a - b);
-  const effective: number[] = [0];
-  const breaks: number[] = [];
-  for (let i = 1; i < sorted.length; i++) {
-    const gap = sorted[i] - sorted[i - 1];
-    if (gap > IDLE_CAP_MS) breaks.push(i);
-    effective.push(effective[i - 1] + Math.min(gap, IDLE_CAP_MS));
-  }
-  const total = effective[effective.length - 1] || 1;
-  const x = (t: number) => {
-    let low = 0;
-    let high = sorted.length - 1;
-    while (low < high) {
-      const mid = (low + high + 1) >> 1;
-      if (sorted[mid] <= t) low = mid;
-      else high = mid - 1;
-    }
-    const e = effective[low] + Math.min(Math.max(t - sorted[low], 0), IDLE_CAP_MS);
-    return (Math.min(e, total) / total) * width;
-  };
-  return { x, breaks: breaks.map((i) => ({ at: x(sorted[i - 1]) + (x(sorted[i]) - x(sorted[i - 1])) / 2, resume: sorted[i] })) };
-}
-
-function clock(ms: number): string {
-  return new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-function stamp(ms: number, withDate: boolean): string {
-  const date = new Date(ms).toLocaleDateString([], { day: "numeric", month: "short" });
-  return withDate ? `${date} ${clock(ms)}` : clock(ms);
-}
-
-const LABEL_GAP = 84; // px between axis labels
-
-function axisLabels(start: number, end: number, breaks: { at: number; resume: number }[], width: number) {
-  const day = (ms: number) => new Date(ms).toDateString();
-  const multiDay = day(start) !== day(end);
-  const labels: { x: number; text: string; anchor: "start" | "end"; at: number }[] = [
-    { x: 0, text: stamp(start, multiDay), anchor: "start", at: start },
-  ];
-  const last = { x: width, text: stamp(end, multiDay && day(end) !== day(start)), anchor: "end" as const, at: end };
-  for (const b of breaks) {
-    const previous = labels[labels.length - 1];
-    if (b.at - previous.x < LABEL_GAP || width - b.at < LABEL_GAP + 20) continue;
-    labels.push({ x: b.at + 3, text: `≈ ${stamp(b.resume, day(b.resume) !== day(previous.at))}`, anchor: "start", at: b.resume });
-  }
-  return [...labels, last];
-}
-
-function Timeline({ model, onJump, onFailures }: { model: RunModel; onJump: (seq: number) => void; onFailures: OpenFailures }) {
-  const box = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(800);
-  useEffect(() => {
-    const element = box.current;
-    if (!element) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(420, entry.contentRect.width)));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  const start = model.start ?? 0;
-  const end = Math.max(model.end ?? start, start + 1000);
-  const plotW = width - LABEL_W - 8;
-  const times = useMemo(
-    () => [...model.spans.flatMap((s) => [s.start, s.end ?? end]), ...model.markers.map((m) => m.at)],
-    [model, end],
-  );
-  const scale = useMemo(() => timeScale(times, start, end, plotW), [times, start, end, plotW]);
-  const laneIndex = new Map(model.lanes.map((lane, index) => [lane.id, index]));
-  const height = AXIS_H + model.lanes.length * LANE_H + 8;
-  const yOf = (lane: string) => AXIS_H + (laneIndex.get(lane) ?? 0) * LANE_H;
-
+function AgentNode({ data }: NodeProps<FlowNode>) {
+  const agent = data.agent!;
+  const tone =
+    data.state === "failed" ? "border-danger text-danger" : data.state === "active" ? "border-info text-info" : "border-border-strong text-fg-muted";
   return (
-    <div ref={box} className="px-4 py-2" data-testid="run-timeline">
-      <svg width={width} height={height} role="img" aria-label="Timeline of phases, tasks and helper agents" className="block">
-        {/* lane labels and stripes */}
-        {model.lanes.map((lane, index) => (
-          <g key={lane.id}>
-            <rect x={0} y={AXIS_H + index * LANE_H} width={width} height={LANE_H} className={index % 2 ? "fill-transparent" : "fill-raised/40"} />
-            <text x={4} y={AXIS_H + index * LANE_H + LANE_H / 2 + 4} className={cx("text-[11.5px]", lane.group === "task" ? "fill-fg font-mono" : lane.group === "you" ? "fill-warn" : "fill-fg-muted")}>
-              {lane.group === "agent" ? `⤷ ${lane.label}` : lane.label}
-            </text>
-          </g>
-        ))}
-        <g transform={`translate(${LABEL_W},0)`}>
-          {/* axis: start, end, and the clock time after each squeezed pause; labels that would collide are
-              dropped (their dashed line stays), and the date is shown whenever the day changes */}
-          {scale.breaks.map((b, index) => (
-            <line key={index} x1={b.at} x2={b.at} y1={AXIS_H - 4} y2={height} className="stroke-border-strong" strokeDasharray="2 3">
-              <title>{`A long pause is shortened here; work resumed at ${stamp(b.resume, true)}`}</title>
-            </line>
-          ))}
-          {axisLabels(start, end, scale.breaks, plotW).map((label, index) => (
-            <text key={index} x={label.x} y={14} textAnchor={label.anchor} className="fill-fg-muted text-[10.5px]">
-              {label.text}
-            </text>
-          ))}
-          {model.spans.map((span, index) => (
-            <SpanBar key={index} span={span} x={scale.x} end={end} y={yOf(span.lane)} onJump={onJump} />
-          ))}
-          {model.markers.map((marker, index) => (
-            <MarkerGlyph
-              key={index}
-              marker={marker}
-              x={scale.x(marker.at)}
-              y={yOf(marker.lane)}
-              onClick={() =>
-                marker.kind === "failure"
-                  ? onFailures({ task: marker.lane.startsWith("task:") ? marker.lane.slice(5) : null, highlight: marker.seq })
-                  : onJump(marker.seq)
-              }
-            />
-          ))}
-        </g>
-      </svg>
-      <Legend />
+    <div
+      role={data.onJump ? "button" : undefined}
+      tabIndex={data.onJump ? 0 : -1}
+      onClick={data.onJump}
+      title={data.onJump ? "Show this helper agent in the chat" : undefined}
+      data-agent={agent.role}
+      data-status={data.state}
+      style={{ width: AGENT_W, height: AGENT_H }}
+      className={cx(
+        "run-node-in flex flex-col justify-center gap-1 rounded-lg border border-dashed bg-raised/60 px-3 py-1.5 text-left shadow-sm",
+        tone,
+        data.onJump && "cursor-pointer hover:bg-raised",
+      )}
+    >
+      <Handle type="target" position={Position.Left} className="!opacity-0" />
+      <div className="flex items-center gap-1.5 text-[11.5px] font-medium">
+        <Bot className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        <span className="truncate capitalize">{agent.role}</span>
+        {data.state === "failed" && <XCircle className="h-3.5 w-3.5 shrink-0 text-danger" aria-hidden />}
+      </div>
+      <div className="line-clamp-1 text-[11px] text-fg-muted">{agent.purpose || "Helper agent"}</div>
+      <Handle type="source" position={Position.Right} className="!opacity-0" />
     </div>
   );
 }
 
-const SPAN_CLASS: Record<Span["tone"], string> = {
-  phase: "fill-info/25 stroke-info/60",
-  task: "fill-accent/25 stroke-accent/60",
-  agent: "fill-fg-muted/20 stroke-fg-muted/50",
-  "agent-failed": "fill-danger/20 stroke-danger/60",
-  waiting: "fill-warn/25 stroke-warn/70",
-};
-
-function SpanBar({ span, x, end, y, onJump }: { span: Span; x: (t: number) => number; end: number; y: number; onJump: (seq: number) => void }) {
-  const left = x(span.start);
-  const right = x(span.end ?? end);
-  const width = Math.max(3, right - left);
-  const label = span.tone === "phase" ? PHASE_LABEL[span.label] ?? span.label : span.label;
-  return (
-    <g className="cursor-pointer" onClick={() => onJump(span.seq)} data-span={span.tone}>
-      <title>{`${label} · ${clock(span.start)}${span.end === null ? " – now" : ` – ${clock(span.end)}`}`}</title>
-      <rect x={left} y={y + 5} width={width} height={LANE_H - 10} rx={3} className={cx(SPAN_CLASS[span.tone], span.end === null && "run-live")} strokeWidth={1} />
-      {width > 60 && span.tone === "phase" && (
-        <text x={left + 5} y={y + LANE_H / 2 + 3.5} className="pointer-events-none fill-fg text-[10.5px]">{label}</text>
-      )}
-    </g>
-  );
-}
-
-function MarkerGlyph({ marker, x, y, onClick }: { marker: Marker; x: number; y: number; onClick: () => void }) {
-  const middle = y + LANE_H / 2;
-  return (
-    <g className="cursor-pointer" onClick={onClick} data-marker={marker.kind}>
-      <title>{`${marker.label} · ${clock(marker.at)} (click ${marker.kind === "failure" ? "for the details" : "to see it in the chat"})`}</title>
-      {marker.kind === "failure" && (
-        <path d={`M${x - 4} ${middle - 4} L${x + 4} ${middle + 4} M${x + 4} ${middle - 4} L${x - 4} ${middle + 4}`} className="stroke-danger" strokeWidth={2.2} strokeLinecap="round" />
-      )}
-      {marker.kind === "stuck" && <path d={`M${x} ${middle - 6} L${x + 6} ${middle + 5} L${x - 6} ${middle + 5} Z`} className="fill-warn" />}
-      {marker.kind === "waiting" && <path d={`M${x} ${middle - 6} L${x + 6} ${middle} L${x} ${middle + 6} L${x - 6} ${middle} Z`} className="fill-warn/80 stroke-warn" />}
-      <rect x={x - 8} y={y} width={16} height={LANE_H} className="fill-transparent" />
-    </g>
-  );
-}
-
-function Legend() {
-  const item = (swatch: ReactNode, text: string) => (
-    <span className="inline-flex items-center gap-1.5">
-      {swatch}
-      {text}
-    </span>
-  );
-  return (
-    <div className="mt-2 flex flex-wrap gap-4 text-[11.5px] text-fg-muted">
-      {item(<span className="h-2.5 w-4 rounded-sm border border-info/60 bg-info/25" />, "Phase")}
-      {item(<span className="h-2.5 w-4 rounded-sm border border-accent/60 bg-accent/25" />, "Task being worked on")}
-      {item(<span className="h-2.5 w-4 rounded-sm border border-fg-muted/50 bg-fg-muted/20" />, "Helper agent")}
-      {item(<XCircle className="h-3.5 w-3.5 text-danger" aria-hidden />, "Failed tool call")}
-      {item(<AlertTriangle className="h-3.5 w-3.5 text-warn" aria-hidden />, "Stuck warning")}
-      {item(<span className="h-2.5 w-4 rounded-sm border border-warn/70 bg-warn/25" />, "Waiting for you")}
-    </div>
-  );
-}
+const NODE_TYPES = { task: TaskNode, step: StepNode, agent: AgentNode };

@@ -30,6 +30,10 @@ class WebSessionManager:
     workspace: Workspace | None = None
     controller: str | None = None
     _runner: asyncio.Task[None] | None = field(default=None, repr=False)
+    # The current phase label while new_workspace/new_standalone is running (spec: Home.tsx polls this
+    # instead of showing one static "Setting up…" label for the whole call). Written from a worker thread
+    # (asyncio.to_thread's callback) and only ever read back as a plain string, so no lock is needed.
+    setup_progress: str | None = None
 
     # --- sessions ---
 
@@ -55,9 +59,18 @@ class WebSessionManager:
                     f"Which folder is the Python app? Candidates: {', '.join(candidates) or 'none found'}."
                 )
             folder = candidates[0]
-        workspace = await asyncio.to_thread(create_workspace, repo, path, folder)
+        self.setup_progress = "Copying the repository…"
+        try:
+            workspace = await asyncio.to_thread(
+                create_workspace, repo, path, folder, on_progress=self._on_copy_progress
+            )
+        finally:
+            self.setup_progress = None
         _set_project(workspace, project)
         return await self.open_workspace(workspace.root)
+
+    def _on_copy_progress(self, count: int, current: str) -> None:
+        self.setup_progress = f"Copying the repository… ({count} file{'s' if count != 1 else ''}: {current})"
 
     async def new_standalone(self, path: Path, profile_name: str, project: str = "") -> Workspace:
         """Mode B: no repository; the host profile describes the host."""
@@ -65,9 +78,18 @@ class WebSessionManager:
         from forge.modeb.workspace import create_standalone_workspace
 
         profile = ProfileStore(self.home).open(profile_name)
-        workspace = await asyncio.to_thread(create_standalone_workspace, path, profile)
+        self.setup_progress = "Setting up the project…"
+        try:
+            workspace = await asyncio.to_thread(
+                create_standalone_workspace, path, profile, None, self._set_setup_progress
+            )
+        finally:
+            self.setup_progress = None
         _set_project(workspace, project)
         return await self.open_workspace(workspace.root)
+
+    def _set_setup_progress(self, phase: str) -> None:
+        self.setup_progress = phase
 
     async def close_session(self) -> None:
         if self.host is not None:

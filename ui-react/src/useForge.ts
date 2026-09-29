@@ -67,15 +67,25 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
         ...state,
         items: [...endStream(items), { key, kind: "tool", id: p.id, name: p.name, summary: p.summary || "", state: "running" }],
       };
-    case "tool_call_finished":
-      return {
-        ...state,
-        items: items.map((item) =>
-          item.kind === "tool" && item.id === p.id
-            ? { ...item, state: p.ok ? "ok" : "fail", preview: p.preview, duration: p.duration_s }
-            : item,
-        ),
-      };
+    case "tool_call_finished": {
+      const updated: ChatItem[] = items.map((item) =>
+        item.kind === "tool" && item.id === p.id
+          ? { ...item, state: (p.ok ? "ok" : "fail") as "ok" | "fail", preview: p.preview, duration: p.duration_s }
+          : item,
+      );
+      // A success right after a same-tool failure usually means the model mis-called it, got a
+      // clear error, and immediately corrected itself — mark the nearest such failure as retried
+      // so it renders de-emphasised instead of alarming (Chat.tsx's ToolCard).
+      if (!p.ok) return { ...state, items: updated };
+      for (let i = updated.length - 1; i >= 0; i--) {
+        const item = updated[i];
+        if (item.kind !== "tool" || item.name !== p.name || item.id === p.id) continue;
+        if (item.state === "ok") break; // an earlier success of this tool already resolved any failure before it
+        if (item.state === "fail" && !item.retried) updated[i] = { ...item, retried: true };
+        break;
+      }
+      return { ...state, items: updated };
+    }
     case "approval_requested":
     case "question_asked":
     case "user_action_requested": {

@@ -5,7 +5,7 @@ import { ArrowUp, CircleStop, FileImage, FileText, FileType, Paperclip, X } from
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { api, cx, storageGet, storageSet, uploadFile, type Attachment } from "../lib";
 import type { Forge } from "../useForge";
-import { ActivityLine } from "./Activity";
+import { ActivityLine, RunTotals } from "./Activity";
 import { Badge, Button, IconButton, Spinner } from "./ui";
 
 const SLASH = [
@@ -188,6 +188,7 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
 
   return (
     <div className="shrink-0 border-t border-border bg-bg px-6 pb-4 pt-3">
+      <RunTotals forge={forge} />
       <ActivityLine forge={forge} />
       <div className="relative mx-auto max-w-3xl">
         {suggestions.length > 0 && (
@@ -262,7 +263,7 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
               disabled={!forge.controls}
               placeholder="Describe the requirement, reply, or type / for commands, @ for files"
               aria-label="Message"
-              className="max-h-60 min-h-[40px] flex-1 resize-none bg-transparent px-1 py-2 text-[14px] leading-relaxed text-fg placeholder:text-fg-muted/70 focus:outline-none"
+              className="max-h-60 min-h-[40px] flex-1 resize-none appearance-none border-0 bg-transparent px-1 py-2 text-[14px] leading-relaxed text-fg placeholder:text-fg-muted/70 focus:outline-none focus:ring-0"
             />
             {busy ? (
               <Button variant="danger" onClick={() => forge.send({ kind: "interrupt" })} icon={<CircleStop className="h-4 w-4" />} aria-label="Stop (Esc)">

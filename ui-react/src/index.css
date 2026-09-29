@@ -125,6 +125,22 @@ body {
   }
 }
 
+/* Some Chromium/Edge configurations paint a hard native field border on a bare <textarea> that
+   `focus:outline-none` alone doesn't suppress — including, distinctly, on a *disabled* field (Edge's
+   Fluent form-control style draws a `box-shadow` there, which `border`/`outline` don't touch at all).
+   Composer.tsx's message box already draws its own border on the wrapper div, so the field itself
+   must stay fully unstyled by the browser in every state. */
+textarea,
+textarea:disabled,
+textarea:focus,
+textarea:focus-visible {
+  border: none;
+  background: transparent;
+  appearance: none;
+  outline: none;
+  box-shadow: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -467,17 +483,37 @@ kbd,
   font-family: var(--font-sans);
   /* React Flow turns pointer events off for nodes that can't be dragged or selected; ours are clickable. */
   pointer-events: all !important;
+  /* D-133 milestone 2: dagre recomputes the whole layout on every structural change (a task or agent node
+     appearing, a dependency edge arriving); this transition turns the resulting jump in the node's `transform`
+     (React Flow sets x/y as an inline `translate(...)`) into a smooth glide so growth reads as movement, not a
+     snap. Only `transform` is transitioned, and the entrance fade/scale below lives on an inner wrapper
+     (`.run-node-in`) instead of this element, so it never fights the inline translate that positions the node. */
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .run-edge-depends path { stroke: var(--border-strong); }
 .run-edge-flow path { stroke: var(--border-strong); stroke-dasharray: 3 4; }
 .run-edge-fix path { stroke: var(--warn); stroke-dasharray: 6 4; }
 .react-flow__edge.animated path { stroke: var(--info); }
+/* A freshly-mounted node/edge (React Flow mounts a fresh DOM node per id) fades and scales in rather than
+   appearing instantly. Applied to each node component's own root element, so it never overrides that
+   element's own `display` (flex for task/agent cards, etc). */
+.run-node-in { animation: run-node-in 220ms ease-out; }
+.react-flow__edge-path { animation: run-edge-in 260ms ease-out; }
+@keyframes run-node-in {
+  from { opacity: 0; transform: scale(0.85); }
+}
+@keyframes run-edge-in {
+  from { opacity: 0; }
+}
 .run-live { animation: run-live 1.6s ease-in-out infinite; }
 @keyframes run-live {
   50% { opacity: 0.45; }
 }
 @media (prefers-reduced-motion: reduce) {
   .run-live, .react-flow__edge.animated path { animation: none; }
+  .react-flow__node { transition: none; }
+  .run-node-in { animation: none; }
+  .react-flow__edge-path { animation: none; }
 }
 .jump-flash { animation: jump-flash 1.8s ease-out; border-radius: 10px; }
 @keyframes jump-flash {

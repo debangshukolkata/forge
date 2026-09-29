@@ -4,7 +4,7 @@
 import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, CircleAlert, CircleCheck, X, XCircle } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { cx } from "../lib";
-import { FAILURE_KIND_LABEL, PHASE_LABEL, type Failure } from "../runmap";
+import { FAILURE_KIND_LABEL, type Failure } from "../runmap";
 import type { Task } from "../types";
 import { Badge, IconButton } from "./ui";
 
@@ -179,7 +179,6 @@ function FailureEntry({ failure, highlighted, onJump }: { failure: Failure; high
           </Badge>
         </span>
         <span className="ml-auto text-[11.5px] text-fg-muted tabular-nums">
-          {failure.phase && failure.phase !== "execute" ? `${PHASE_LABEL[failure.phase] ?? failure.phase} · ` : ""}
           {new Date(failure.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </span>
       </div>
