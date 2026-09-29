@@ -15,6 +15,7 @@ from importlib import resources
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from forge.agent.frontend_smoke import render_smoke_check_section, run_frontend_smoke_check
 from forge.agent.learning_hooks import after_export, pin_lessons, related_cards_note
 from forge.agent.reports import closing_message, final_report
 from forge.agent.state import Cadence, StateStore, Task
@@ -302,6 +303,13 @@ class Orchestrator:
                 f"```\n{summary_after}\n```\n"
             )
             self._restructure_baseline = None
+        node_env = self.workspace.info.node_env
+        if node_env is not None:
+            # D-138's checkpoint-only browser smoke check (deferred by D-139, built here): a workspace with
+            # no React/Node frontend at all must never start a browser or add this section — same discipline
+            # as the React verify ladder's own Python-only regression guard.
+            result = await run_frontend_smoke_check(self.context, node_env)
+            report += render_smoke_check_section(result)
         self.store.write_document("reports/final.md", report)
         await self.host.bus.publish(
             EventType.MESSAGE_DONE, {"text": closing_message(self.state, output), "model": "forge"}
@@ -371,6 +379,13 @@ class Orchestrator:
         )
         self._refresh_pinned()
         self._save()
+        # Tasks now exist but current_task is still unset (or stale): without ending the turn here, the
+        # model can keep calling tools indefinitely and _run_agent's loop never gets a chance to call
+        # _start_task, so current_task stays None all session and every task_update is rejected (seen
+        # live: a whole small project built in one turn, then blocked at the end with nothing to show
+        # for it on the task board). Ending the turn lets the orchestrator start the first pending task
+        # before the model's next reply, the same way a successful task_update already does.
+        self.context.end_turn = True
         return ToolResult(ok=True, content=f"Saved PLAN.md with {len(tasks)} task(s). Work on them now.")
 
     async def update_plan(self, markdown: str, tasks: list[TaskSpec], reason: str) -> ToolResult:
@@ -380,8 +395,18 @@ class Orchestrator:
             status[s.id] if s.id in status and status[s.id].status == "done" else Task(**s.model_dump())
             for s in tasks
         ]
+        # The current task may have been renamed, reshuffled, or dropped by this update: it's no longer
+        # trustworthy as "the task in progress" until _run_agent re-derives it from the new list. Clearing
+        # it here (rather than leaving a stale id) avoids task_update later rejecting a call against a task
+        # id that no longer means what it did, or silently reattaching to the wrong task of the same id.
+        if self.state.current_task not in {t.id for t in self.state.tasks}:
+            self.state.current_task = None
         self._refresh_pinned()
         self._save()
+        # See propose_plan: without ending the turn, _run_agent's loop never regains control to call
+        # _start_task on the (possibly new) current task, and the model can keep working indefinitely
+        # with no task ever marked in_progress.
+        self.context.end_turn = True
         return ToolResult(ok=True, content=f"Plan updated ({reason}).")
 
     async def task_update(
@@ -524,6 +549,8 @@ class Orchestrator:
             "current_task": self.state.current_task,
             "cadence": self.state.cadence,
             "tasks": [t.model_dump() for t in self.state.tasks],
+            # Lets the Run map show a "delivered" node without relying on the stale phase field (D-133).
+            "exported": self.state.exported,
         }
         task = loop.create_task(self.host.bus.publish(EventType.TASK_LIST_UPDATED, payload))
         self._publishing.add(task)
