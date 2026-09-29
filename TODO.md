@@ -55,11 +55,11 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
   - All 6 affected test files rewritten/fixed (`test_orchestrator.py` fully rewritten, `test_db.py`,
     `test_m10_wiring.py`, `test_live_orchestrator.py` updated, `test_web_e2e.py`'s two Run-map/stepper
     tests marked `@pytest.mark.skip` citing D-131) plus new `tests/test_contracts.py` (8 tests). ruff,
-    mypy and `check_secrets.py` clean.
-  - **Known pre-existing issue found while testing, not caused by this work:** running many test files
-    together in one `pytest` invocation hangs partway through, even combinations that pass individually
-    and don't touch anything changed here. Every file passes standalone. Not investigated further; worth a
-    dedicated look (suspect `asyncio_mode = auto` + event-loop/process teardown in this shell).
+    mypy and `check_secrets.py` clean. Full non-live/non-pg suite (~400+ tests, `test_sandbox.py`/
+    `test_hardening.py` excluded to save time, not for correctness) passes cleanly end to end in ~15
+    minutes, exit code 0, only the two deliberate D-131 skips — a first pass mistakenly reported this as
+    a "hanging" test-infrastructure issue because of timeouts (40–250s) too short for the fixtures' real
+    filesystem/git I/O; corrected after a run with a realistic budget.
 - UI: Run map/stepper redesign (D-131) — reads the old `phase` field; needs rebuilding against the new
   activity-less design before its two skipped e2e tests can be re-enabled. Also still needs: the Contracts
   panel (D-129, above), and the pre-existing phase-row-for-multi-day-runs redesign (D-123; options offered:
