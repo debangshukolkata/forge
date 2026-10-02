@@ -396,3 +396,40 @@ def test_mode_b_cwd_project_means_the_project_root(tmp_path: Path, isolated_forg
     workspace = create_standalone_workspace(tmp_path / "ws", ProfileStore(isolated_forge_home).create("demo"))
     assert workspace.path_of("project") == workspace.repo_dir
     assert workspace.path_of("./project") == workspace.repo_dir
+
+
+async def test_the_follow_up_text_reaches_the_model_as_the_latest_user_turn(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    import json
+
+    from tests.helpers import reply, responses_body, text_output
+
+    seen: list[dict[str, object]] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        seen.append(json.loads(request.content))
+        return reply(request, responses_body([text_output("done")]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(
+        mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace, orchestrated=True
+    )
+    orch = orchestrator(host)
+    orch.state.requirement = "Build the attendance app.\n\nChange request: install flask and run the tests"
+    orch.state.started = orch.state.exported = True
+    orch.state.tasks = [Task(id="T1", title="app", status="done")]
+    await orch.handle_message("Add a Department filter and a CSV export to the HR page.")
+    items = [i for i in seen[0]["input"] if isinstance(i, dict) and i.get("role") == "user"]  # type: ignore[union-attr]
+    assert "Department filter" in json.dumps(items[-1])
+    assert any(
+        "install flask" in json.dumps(i) for i in seen[0]["input"]
+    )  # earlier context is still there  # type: ignore[union-attr]
+
+
+def test_the_restructure_brief_carries_the_users_instruction(host: SessionHost) -> None:
+    orch = orchestrator(host)
+    orch.state.requirement, orch.state.started = "Build the app.", True
+    orch._start_change("Move the service code into claims_app/services/policies_service.py", restructure=True)
+    brief = host.history[-1].content
+    assert "policies_service.py" in brief and "Behaviour must not change" in brief

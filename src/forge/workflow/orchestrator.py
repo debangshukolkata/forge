@@ -239,9 +239,10 @@ class Orchestrator:
     def _briefed(self) -> bool:
         # The literal text before the template's first placeholder; the old marker included the placeholder
         # itself and so never matched, which re-sent the whole brief with every chat message (D-162).
-        marker = self.instructions[self._change_kind() or "requirement"].split("{", 1)[0]
-        return bool(marker) and any(
-            m.role == "system" and m.content.startswith(marker) for m in self.host.history
+        markers = [text.split("{", 1)[0] for text in self.instructions.values()]
+        return any(
+            m.role == "system" and any(marker and m.content.startswith(marker) for marker in markers)
+            for m in self.host.history
         )
 
     def _change_kind(self) -> str:
@@ -489,11 +490,19 @@ class Orchestrator:
         self.state.change_request = text
         self.state.restructuring = restructure
         self.state.exported = False
-        self.host.history.append(Message.system(self._format("restructure" if restructure else "change")))
+        if restructure:
+            self.host.history.append(Message.system(self._format("restructure")))
+            return
+        if not self._briefed():  # a fresh process has no context: give it the earlier requirement once
+            self.host.history.append(Message.system(self._format("change")))
+        # The user's message arrives as the latest user turn, as in any chat (D-165): it used to be buried in
+        # a long system brief next to every earlier change request, and the model answered an older one.
+        self.host.history.append(Message.user(text))
 
     def _format(self, kind: str, **values: str) -> str:
         defaults = {
             "requirement": self._requirement_text(),
+            "change": self.state.change_request,
             "explore_notes": self.state.explore_notes or "(none)",
             "task": "",
             "task_board": self.state.task_board(),

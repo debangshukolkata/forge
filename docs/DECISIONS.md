@@ -2433,3 +2433,15 @@ plain answer ends the turn with one call), a missing-cwd test.
 **Found, by design, not changed:** `pip install` is always-ask, so an unattended `forge run --auto-approve` cannot install
 a project's dependencies (Flask etc.) and blocks every task; the model asks the user, nobody answers. The campaign driver
 (`C:\Work\ForgeRuns\drive_forge.py`) approves pip installs into the workspace venv only.
+
+### D-164 / D-165 — Follow-ups arrive as the user's own message; restructure carries its instruction · Built (2026-10-03)
+**D-164:** Mode B `cwd="project"` (which the model keeps writing) now means the project root; `task_update` works on any
+existing task, so a blocked task the model fixed can be marked done (it was refused unless it was the current task).
+**D-165, found in enhancement round 2 of the first Mode B build:** the model did not do the requested enhancement; it
+re-ran the previous "install flask" feedback and told the user the new features already existed. Cause: a follow-up
+was embedded in a long system brief together with every earlier change request, and was never the latest user turn.
+Now a follow-up is appended as a normal user message (the earlier requirement is only re-sent as context in a fresh
+process). **Same code, second bug:** the restructure brief was built from the original requirement, so the user's
+`/restructure <instruction>` text never reached the model (the live restructure test passed trivially because its
+asserted file already existed). The change/restructure briefs now carry `{change}`. Tests: follow-up text is the last
+user turn and earlier context is kept; the restructure brief carries the instruction.

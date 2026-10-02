@@ -66,13 +66,16 @@ When every task is done (or the remaining ones are blocked with a reason), build
 
 ## change
 The user asked for a change to the delivered work:
+{change}
+
+The delivered work answers this earlier requirement (context only; the change above is what to do now):
 {requirement}
 
 Work it like a normal requirement, scaled to its size — plan out loud only if it's a real design fork.
 
 ## restructure
 The user wants the delivered code reshaped to fit their repository:
-{requirement}
+{change}
 
 Behaviour must not change: same endpoints, same SQL, same test results. Use move_file for moves so the
 output records old → new paths, and update every import and registration. Tests are run before and after
