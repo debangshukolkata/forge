@@ -97,6 +97,11 @@ Inline changes are tagged `[A-n]`. Details and rationale are in docs/DECISIONS.m
 | D-129 | In Mode B, the user may pin an interface contract (e.g. an LLM call wrapper's signature) upfront via a Contracts panel/`CONTRACTS.md`, or in chat; Forge builds to it, lets the user change it mid-way, and proposes pinned/repeatedly-corrected contracts as lessons so it recommends them on later similar requirements (§6A.2A). |
 | D-130 | Sign-off cadence (free hand / per-step / default) is a live conversational instruction, not a config key or SETUP question — Forge follows whichever cadence the user last stated in chat, the same way this assistant does, and never lets it waive the always-ask/critical list (§14.2). |
 | D-132 | Verification (§13) becomes judgment-based — no mandatory full-suite-plus-reviewer gate before a task/requirement closes, Forge runs the ladder when it judges warranted, same as this assistant. Resume is automatic on reopening a workspace (crash, network drop, days away, or a context limit hit), with cadence (D-130) persisted in state.json so a free-hand grant survives an interruption. |
+| D-151 | Run log: an `llm_call` event per model call (latency, tokens, tool calls) in `events.jsonl`; `forge log-summary`. The web chat becomes a Claude Code-style timeline (rail, narration between tool rows, inline diffs, nested subagents) — building. |
+| D-152 / D-154 | Forge is split into tiered modules with enforced import boundaries and a MODULE.md each (docs/MODULES.md); `agent` is split into agent / subagents / workflow. §4's module map is superseded by docs/MODULES.md. |
+| D-153 | A chat message while approval cards or questions are open answers them (declines, with the message as the instruction). |
+| D-155 | §13.3 removed: no stuck detector and no escalation ladder; the model improvises recovery. Iteration and budget caps remain. |
+| D-156 | Verification (§9.8, §13.1/13.2), memory and learning (§9.9, §12) and repo knowledge (§9.2 KB tools, §11) replicate Claude Code: shell-based checks, FORGE.md + auto-memory + skills, on-demand search. The verify ladders, the requirements library, lessons, retro, metrics, improvement proposals and the KB are superseded; code removal is staged (see D-156). |
 
 ---
 
@@ -675,9 +680,13 @@ Forge tells the user the level for each DB in one line, and why (e.g. "Local DB:
 `browser_open`, `browser_snapshot` (accessibility tree, compact), `browser_click`, `browser_fill`, `browser_screenshot`, `browser_console`, `browser_network`, `browser_close`, plus `http_request(method, url, json?, headers?)` for API smoke tests (Playwright APIRequestContext or httpx). Launch order: `msedge` → `chrome` → bundled Chromium.
 
 ### 9.8 Verification (§13)
+
+> **SUPERSEDED (D-156, 2026-10-02):** there are no verify/run_tests/openapi_check/langgraph_check tools; the model runs checks through the shell tool like Claude Code. The text below is the previous design.
 `detect_commands`, `run_tests(selector?)`, `run_lint`, `run_typecheck`, `run_app_smoke`, `openapi_check`. Output is parsed into compact summaries (pytest summary + first N failures with file:line; ruff/flake8; mypy).
 
 ### 9.9 Knowledge Base & memory
+
+> **SUPERSEDED (D-156, 2026-10-02):** `kb_*` tools are removed; `memory_read`/`memory_write` stay and write the auto-memory folder (§12.6 as amended by D-156). The text below is the previous design.
 `kb_search(query, kinds?)`, `kb_read(doc)`, `kb_refresh(paths?)`, `memory_read`, `memory_write`.
 
 ### 9.10 Subagents
@@ -746,6 +755,8 @@ At each task start, history is reset to: pinned + task brief + relevant KB modul
 
 ## 11. Knowledge Base (persistent, per repo, shared across workspaces)
 
+> **SUPERSEDED (D-156, 2026-10-02):** Forge builds no Knowledge Base; it explores the repo on demand with Glob/Grep/Read and an explore subagent, guided by FORGE.md. Mode B's Host Profile (§6A.2) is unaffected. The text below is the previous design.
+
 ### 11.1 Location
 `%USERPROFILE%\.forge\kb\<repo-slug>-<hash>\`. It is built from the original repo (read-only) and reused by every workspace for that repo.
 
@@ -787,6 +798,8 @@ The KB is never loaded wholesale. Only the essentials are pinned; everything els
 ---
 
 ## 12. Forge Home, Memory, Learning & Self-Improvement
+
+> **SUPERSEDED (D-156, 2026-10-02):** only Forge Home, FORGE.md instruction files, the auto-memory folder (index + typed files, per scope) and skills remain (§12.1, §12.6). The requirements library, lessons, retro, metrics and self-improvement proposals (§12.2–12.5) are removed. The text below is the previous design.
 
 Forge gets better with every requirement. Knowledge about a codebase, past requirements, and lessons about how to work live in **one common place**, Forge Home, shared by all workspaces. Forge can also propose changes to its own prompts and code, but **the user applies them**.
 
@@ -883,6 +896,8 @@ Forge tells the user in one line ("I've drafted IP-4: a parser for your custom t
 ---
 
 ## 13. Verification & Self-Correction [D-132]
+
+> **SUPERSEDED (D-156, 2026-10-02):** verification is whatever the model chooses to run through the shell tool; the ladders (§13.1) and the test-weakening guard (§13.2) are removed, and §13.3 was removed by D-155. Prompt rules stay: no claim without evidence, never weaken or skip tests. The text below is the previous design.
 
 Verification is **judgment-based**, like this assistant: Forge runs the ladder below when it judges it
 warranted — after a meaningful change, before claiming something works, when something seems risky — not

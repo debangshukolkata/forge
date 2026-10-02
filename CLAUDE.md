@@ -71,18 +71,33 @@ The rules below still describe what goes into briefs and summaries.
 - Postgres tests (`pg` marker, run by default) use the local Postgres (`LOCAL_PG_URL` in `.env`); skipped when
   unset or unreachable. They only create `forge_*` schemas/roles and drop them afterwards.
 - Tests never touch the real `%USERPROFILE%\.forge`; they set `FORGE_HOME` to a tmp dir.
-- Run: `.venv\Scripts\python -m pytest -q` (3.13) and `.venv314\Scripts\python -m pytest -q` (3.14);
+- Run (fast, parallel, ~3.5 min for everything): `.venv\Scripts\python -m pytest -q -n 12 --dist loadfile`
+  (`pytest-xdist`, dev only; `loadfile` keeps each test file on one worker). One module: `pytest tests/test_<module>*.py`.
+  Sequential: `.venv\Scripts\python -m pytest -q` (3.13) and `.venv314\Scripts\python -m pytest -q` (3.14);
   `-m live` for live tests. Also `ruff check .`, `ruff format --check .`, `mypy`, `scripts/check_secrets.py`.
 - The fixture repo's own suite runs under its own venv (`scripts/dev/setup_fixture_venv.ps1`).
 
 ## Safety invariants (never break; each has a test)
 1. Forge never writes to the user's original repo (code-level jail + OS-level low-integrity sandbox, D-050).
 2. In Mode B, Forge never reads outside the workspace and the profile folder.
-3. Secrets never reach the LLM, transcripts, KB, events or the browser.
+3. Secrets never reach the LLM, transcripts, memory files, events or the browser.
 4. DB writes only happen in the scratch schema for the current requirement.
 5. Forge cannot modify its own install folder or `config.yaml`.
 6. Actions Forge can't or mustn't do are handed to the user; if the user can't either, Forge proposes a
    workaround or code change (DECISIONS D-011).
+
+## Revamp direction (D-151..D-156, 2026-10-02) — Forge behaves like Claude Code
+The runtime copies Claude Code: a flat loop; the model improvises failure recovery (no stuck detector or
+escalation ladder, D-155); verification is whatever checks the model runs through the shell; memory is FORGE.md
+files + an auto-memory folder + skills; the repo is learned by on-demand search, not a built index (D-156).
+The Forge-specific layer that stays: workspace isolation and delivery of changed files, Mode B, the safety
+invariants, the database rules. Where an older spec section conflicts, the §0.2 table and docs/DECISIONS.md win.
+The removals in D-156 are staged; check TODO.md for what is already gone before relying on a module.
+
+## Modules (D-152)
+Forge is split into tiered modules; see [docs/MODULES.md](docs/MODULES.md). **Before changing a module, read its
+`src/forge/<module>/MODULE.md` instead of the whole spec.** Imports may only go to earlier tiers
+(`tests/test_module_boundaries.py` enforces it); update the module's `Depends on:` line when you add one.
 
 ## Repository layout (build repo)
 ```

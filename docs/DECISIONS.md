@@ -2154,3 +2154,180 @@ wording the prompt never mandates as literal.
 (`-m "not live"`) pass; `ruff check`/`format --check` clean. Live: two consecutive runs of
 `test_live_learning.py` confirmed the note lands and is used (not rerun a third time after loosening the
 assertion, since both prior runs' captured plan text was checked against the new assertion logic directly).
+
+### D-150 — Gemini as a second model provider (Vertex AI, any role) · Agreed (2026-09-30), building
+User wants Gemini usable alongside Azure OpenAI — any role, not just vision — plus video input (the user
+confirmed Gemini handles video, something Azure OpenAI can't do at all) and a startup/doctor connectivity
+check showing whether Gemini is reachable, matching D-145/D-146's existing live-connectivity pattern.
+**Access path — Vertex AI direct SDK, not LangChain, not the AI Studio API key path.** The user's own
+working snippet used `langchain_google_genai`; CLAUDE.md bans LangChain inside Forge (the fixture repo uses
+it, Forge doesn't), so the adapter calls Google's official `google-genai` SDK directly (`client.aio.models.*`,
+Apache-2.0, pure-Python — installs cleanly into an offline wheelhouse same as `openai`/`httpx`), with
+`vertexai=True`. Confirmed live on the user's office laptop (this dev machine has no GCP credentials, so
+every claim below was verified there, not assumed): auth is Application Default Credentials, auto-detected
+by the SDK (gcloud ADC or `GOOGLE_APPLICATION_CREDENTIALS`) — **Forge never stores or reads Gemini
+credentials itself**, unlike Azure's API-key-in-.env model. Confirmed working: plain text calls, tool/function
+calling round-trip (model calls a function, the result is fed back as a `function_response`, the model uses
+it — the one piece most load-bearing for Forge's agent loop), streaming, image vision, and — on a second
+round of testing — video input. `thinking_level` (the newer enum config) is rejected by this Vertex API
+version ("not supported by this model"); `thinking_budget` (an integer token count) works. A tight
+`max_output_tokens` on a thinking-capable model (e.g. the default test's `max_output_tokens=20`) can be
+silently consumed entirely by `thoughts_token_count`, leaving `response.text` as `None` — not a provisioning
+error, just a budget-too-small symptom; confirmed by retrying with `max_output_tokens=500`, which returned
+"ready" cleanly. On the user's project/region (`us-central1`): `gemini-2.5-pro`, `gemini-2.5-flash`,
+`gemini-2.5-flash-lite` all work; `gemini-2.0-flash`, `gemini-2.0-flash-lite`, `gemini-3-pro-preview` are
+listed in Model Garden but 404 (not enabled for this project/region) — Model Garden's listing is not proof
+of callability, only a live probe-call per candidate model is.
+**Role scope**: generalized, not vision-only — `ModelConfig.provider` becomes `Literal["azure", "gemini"]`
+and any role may be assigned a Gemini model in config.yaml, the same way Azure models are assigned today.
+**Config shape** (`src/forge/config.py`): new `GeminiProviderConfig` (`project_env`, `location_env` — plain
+config values pointing at the GCP project/region, not secrets; reuses `Secrets.get`'s existing
+env-var-with-os-environ-fallback mechanism purely for the "Forge never stores this, only reads the env var
+name" pattern, not because they need redaction). `ModelConfig.deployment_env` becomes optional
+(`str | None`); a new `model_name: str | None` field holds a Gemini model's literal string directly in
+config.yaml (safe per D-014 — it's a public model name, not a tenant-specific deployment identifier, so no
+env-var indirection needed). `doctor.required_secret_names` now asks for Azure's vars only when an Azure
+model is in use, and Gemini's `project_env`/`location_env` only when a Gemini model is in use, so an
+Azure-only or Gemini-only setup isn't asked for the other provider's values.
+**Doctor/startup check**: no new mechanism — `doctor.check_models` already iterates every model actually in
+use (any provider) and does a live "reply with the single word: ready" call, reporting ok/warn/fail; a
+Gemini model assigned to any role gets this for free through the existing `/api/doctor?offline=false` /
+first-run setup screen's connectivity check (D-146), once the router can dispatch to a `GeminiProvider`.
+**Video — still open, not yet decided.** The Files API (`client.files.upload`, used for larger video on
+Google AI Studio) may not behave the same way on Vertex AI (Vertex more commonly expects a `gs://` Cloud
+Storage URI via `file_data`, not an ephemeral upload endpoint) — this needs a live check on the user's
+project before committing to a design, since writing the adapter against an assumed-but-unverified upload
+path risks silently failing in exactly the case it exists for. Asked the user to run a two-path probe (Files
+API upload vs. inline bytes) on the office laptop; awaiting the result. Until resolved, `view_video` is not
+built; everything else (provider adapter, router dispatch, config, doctor check, image vision parity with
+`view_image`) proceeds in parallel since it doesn't depend on the answer.
+**Error mapping**: `google.genai.errors.APIError`/`ClientError`/`ServerError` carry `.code` (HTTP status),
+`.status` (e.g. `INVALID_ARGUMENT`, `RESOURCE_EXHAUSTED`), `.message` — maps onto Forge's existing
+`LLMError` subclasses the same shape as `azure_errors.py` does for the OpenAI SDK. Confirmed live:
+`google.auth.exceptions.DefaultCredentialsError` is what's raised with no ADC configured (this dev machine's
+own case) — mapped to `LLMAuthError` with the office-laptop ADC setup pointed to, not a generic failure.
+`automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)` is set explicitly on every
+call — without it the SDK warns about and may attempt to run tool calls itself, which must never happen:
+Forge's agent loop owns every tool call, the same invariant the Azure adapter already holds.
+
+### D-151 — Revamp: Forge works and looks like Claude Code · Agreed (2026-10-02), discussion stage
+**Context.** User reports Forge's result quality as very poor and its speed as slow. Target: Forge should
+develop, debug and analyse the way Claude Code does (few targeted tool calls, narration between them,
+judgment-based verification) and show it on screen the same way. Evidence will come from Forge runs on the
+build machine (Azure key, several test projects); we judge the loop from those logs, not from guesses.
+**Decisions (user answers):**
+- Verification stays judgment-based: Forge decides when to verify. No forced gate (consistent with D-128..132).
+- UI = option A: the chat becomes a Claude Code-style timeline transcript (vertical rail; green dot = tool
+  call, grey dot = narration; user message in a bordered box; bold tool name + dim one-line description;
+  Grep/Read collapsed, Bash/Edit shown with output; narration text in order between calls).
+- File edits shown as inline diffs in the timeline.
+- Subagents: their own tool calls are visible nested in the subagent row, plus a collapsed hand-back row
+  that expands to the full report.
+- MCP and LSP wanted. Security design (Mode B, write jail, redaction, permissions) is brought to the user
+  BEFORE building either.
+- Gemini work (D-150) is PARKED, uncommitted, not to be touched until the user resumes it.
+- Evidence plan: Forge writes run logs; user runs several projects here; we read the logs to decide what
+  to change in the loop/prompts. Logging must record per-LLM-call latency, tokens and tool durations.
+**Still to discuss:** log format/location, the permission DSL, tool-registry/agent config shape.
+**Built 2026-10-02 (step 1, run log):** new `llm_call` event from `AgentLoop._chat` (role, model, latency,
+time to first token, finish reason, reasoning effort, message and tool counts, token usage, tool calls
+requested) written to the existing per-workspace `.forge/transcripts/events.jsonl` next to the existing
+`tool_call_finished` durations; `forge log-summary --workspace <dir>` (or `--log events.jsonl`) prints the
+one-page report (`engine/log_summary.py`, `tests/test_log_summary.py`). The web UI ignores the new event type.
+Known: mypy reports one error in `llm/azure_openai.py` that comes from the parked, uncommitted D-150 config
+change (clean without it).
+
+### D-152 — Modules with enforced boundaries · Agreed (2026-10-02), built
+User asked to develop Forge as independent modules (main agent, subagents, tools, memory...) so a fault stays
+inside one module, and to see whether per-module docs cut token cost. One package (user's choice), tiers and
+module list as proposed. Found two import cycles (a 10-package one around tools/agent/engine/verify/vision/web,
+and db/kb/workspace). **Fixes:** see docs/MODULES.md "What moved". **Enforcement:**
+`tests/test_module_boundaries.py` (tiers + MODULE.md dependency lists), a `MODULE.md` per module folder.
+**Behaviour change:** `spawn_subagent` is no longer in `default_tools()`; only the main agent registry (session
+host and orchestrator) adds it, so subagents cannot nest (before, read-only subagents were offered it).
+**Token cost:** per-module docs cut the cost of *building* Forge (read one MODULE.md, not the 130 KB spec and
+2,200-line DECISIONS). They do not by themselves cut Forge's *runtime* tokens; that needs role-specific toolsets,
+lazy tool schemas and modular prompt fragments, to be decided from the run logs (D-151).
+
+### D-153 — A chat message answers open approval cards; build id · Agreed (2026-10-02), built
+**Problem (office laptop, 2026-10-02):** after "create an attendance system" Forge kept asking to accept/reject
+lessons and ignored "launch the app". Cause: a message sent while an approval card is open queued behind the turn
+that was waiting on that very card. 15cfd1a already moved the retro off the turn; this fixes the general case.
+**Rule:** a non-slash chat message while approval cards or questions are open declines the approvals (message =
+instruction) and answers the questions as free text, then runs as normal (`SessionHost._supersede_open_requests`,
+`ApprovalBroker.reject_all`, `QuestionBroker.answer_all_with_text`). Declining is the safe direction. Slash
+commands leave cards alone. A `request_superseded` notice tells the user. **Build id:** `forge.buildinfo` — a
+10-char hash of the package's source (line-ending normalised), shown by `forge --version` and `forge doctor`,
+so an installed copy can be compared with this repo (`forge --version` here gives the reference).
+
+### D-154 — `agent` split into agent / subagents / workflow · Agreed (2026-10-02), built
+User confirmed splitting the main agent from subagents. `agent` (tier 9) = loop + stuck detection only;
+`subagents` (10) = subagent, review, spawn_tool; `workflow` (11) = orchestrator, state, reports, learning_hooks,
+frontend_smoke, escalation (+ its `prompts/phases.md`, package-data updated). Escalation ran a debugger subagent
+and was imported by the loop, a cycle, so the loop now takes an injected `StuckHandler` (Protocol) and the
+session host sets `loop.escalator = Escalator(loop)`; subagent loops leave it unset (they never escalate).
+Tiers after this: diagnose 12, engine 13, session/ui 14, web 15, cli 16. See docs/MODULES.md.
+
+### D-155 — Failure handling: the model improvises, no escalation ladder · Agreed (2026-10-02), built
+User: "I want the failure handling of Forge to be like: the model improvises" (as in Claude Code). **Removed:**
+the stuck detector (repeat call / repeat error / oscillation / no progress / fix attempts), the escalation ladder
+(reflection -> debugger -> web lookup -> ask user -> block), the `StuckHandler` injection (D-154), the
+`block_current_task` hook, and their tests. **Kept as guardrails:** the iteration cap
+(`limits.max_iterations_per_task`, then "Say 'continue'"), the session budget cap, tool errors returned to the
+model, `ask_user`, `spawn_subagent` (debugger), `web_search` and `task_update(status=blocked)` — all now the
+model's own choice. `system.md` gained one short paragraph describing recovery as the model's call (read the error,
+don't repeat the same action, options available). `limits.max_fix_attempts` stays in the config schema, unused,
+because config.yaml rejects unknown keys and existing files may set it. Spec §13.3 and the "stuck" Run-map notice
+are obsolete (SPEC_DEVIATIONS). **Risk:** an unattended `--auto-approve` run can now loop on one failure until the
+iteration cap; judge from the run logs (D-151) whether a light safeguard is needed.
+
+### D-156 — Verification, memory/learning and repo knowledge replicate Claude Code · Agreed (2026-10-02), docs done, code staged
+User: verification, memory and learning, and knowledge of the repo should replicate Claude Code. Chosen defaults
+(options considered per area: keep as optional tools / shrink / replace; "replace" chosen because the user's
+complaint is poor quality and slowness and every extra machinery layer adds tokens and wrong turns).
+**1. Verification.** Claude Code has no verify tool: the model runs whatever commands it judges useful (tests,
+linter, type checker, build, start the app and call it, browser) through the shell tool and reads the capped
+output (§10.3). **Replaced:** the `verify`/`run_tests`/`openapi_check`/`langgraph_check` tools, the Python,
+React and Angular ladders, the test-weakening guard and the automatic frontend smoke check at export.
+**Kept:** `mark_server_run` and DB hand-offs (safety invariant 6), the Mode B test harness and stub packages,
+`spawn_subagent(reviewer)`, and two prompt rules ("no claim without evidence", "never weaken or skip tests").
+**2. Memory and learning.** Claude Code = instruction files + auto-memory + skills. **Becomes:** FORGE.md
+instruction files (user / project / local, hierarchical; exists in `parity`), an auto-memory folder per scope with a
+`MEMORY.md` index and typed files (user, feedback, project, reference) that the model writes through the memory
+tools when the user states something lasting or corrects it, and skills. **Removed:** the requirements library
+and cards, the lessons store and its approval cards, the retro, `metrics.jsonl`, self-improvement proposals,
+`/lessons`, `lesson_propose`, `improvement_propose`, `library_search/read`, `related_cards_note`, `pin_lessons`.
+**Kept:** scope isolation (Mode A memory belongs to one repository, Mode B to one host profile, user preferences
+global), redaction on every memory write, never secrets or data rows in memory, and invariant 5 (Forge never
+changes its own installed code or prompts; the proposals feature simply goes). Removing the lesson approvals also
+removes the card type behind the office-laptop report (D-153).
+**3. Knowledge of the repo.** Claude Code has no prebuilt index: it uses Glob/Grep/Read, an explore subagent
+and CLAUDE.md. **Replaced:** the KB builder, deterministic extractors (Flask/SQLAlchemy/LangGraph/AST), BM25,
+LLM-written narrative documents, `kb_search/kb_read/find_symbol/find_references/list_symbols`, the KB check at the
+start of a requirement and `forge kb`. **Kept:** Mode B's Host Profile (a different thing: Mode B cannot see host
+code at all). **Added later:** a `/init` equivalent that drafts FORGE.md after exploring, and LSP (wanted, D-151).
+**Staging (code):** (1) learning and memory first (also ends the lesson cards), (2) verification ladders, (3) KB.
+Each step: remove the module's tools from the registry, delete the dead code, update MODULE.md and tiers, run the
+module and boundary tests, then compare a run log against the previous build. Nothing is deleted before the
+previous state is committed, so git can restore any piece.
+**Risks:** lose the deterministic extractors' framework conventions on large repos (quality could drop there);
+more tokens spent on search each run; judge both from the run logs (D-151) and keep the removal reversible.
+**Open for the user:** whether `test_guard` should survive as a silent check (default: removed), and whether old
+KBs/lessons in Forge home should be left on disk (default: left untouched, ignored).
+
+### D-157 — Repo structure like anthropics/claude-code; plugin support; parallel tests · Agreed (2026-10-02)
+**Finding:** github.com/anthropics/claude-code holds no CLI source (agent loop, tools, permissions are a pre-built
+binary). Its public layout is: `plugins/`, `.claude-plugin/`, `.claude/commands/`, `examples/`, `mods/`,
+`scripts/`, `.github/`, `.devcontainer/`, `.vscode/`, `CHANGELOG.md`, `SECURITY.md`, `LICENSE.md`, `CLAUDE.md`,
+`README.md`. "Exactly the same" is therefore only possible for the public/extension layer, not the module layout.
+**User's answers:** do both (extension layout and housekeeping files); real plugin support (commands, agents, skills,
+hooks); keep the tiered `src/forge/` module structure (it enforces the boundaries).
+**Done now (housekeeping):** `CHANGELOG.md`, `SECURITY.md` (the six safety invariants and how to report),
+`examples/` (FORGE.md, a custom agent, a skill), `.github/` issue and PR templates. No CI workflow yet (it would fail on
+the parked Gemini mypy error and needs Edge/Playwright for the browser tests).
+**Not built yet (needs the design below approved, because hooks run commands = security-relevant, and plugins are a
+new interface):** `plugins/<name>/` with a manifest, commands, agents, skills, hooks, MCP servers; project-level
+`.forge/` folder (commands, agents, skills, settings.json at user/project/local level).
+**Tests:** `pytest-xdist` added to the dev extras; `pytest -n 12 --dist loadfile` runs all 542 tests in ~3.5 min
+(was ~15 min sequential). Fixed on the way: the browser tests were failing since D-146 (empty Forge home showed the
+first-run setup screen; the e2e fixture now sets fake keys) and one waited too briefly under load.
