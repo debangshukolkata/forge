@@ -9,9 +9,9 @@ from forge.parity.agents import load_agents
 from forge.subagents.review import REVIEWER_PROMPT
 from forge.subagents.subagent import DEBUGGER_PROMPT, EXPLORE_PROMPT, _run_subagent
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.shell import RunCommand
 from forge.tools.parity import BUILT_IN_TYPES
 from forge.tools.registry import ToolRegistry, default_tools
-from forge.tools.verify import RunTests, Verify
 
 
 class SpawnSubagent(Tool):
@@ -41,7 +41,7 @@ class SpawnSubagent(Tool):
                 router, context, ToolRegistry(read_only), EXPLORE_PROMPT, args.task, 25, "coder"
             )
         elif args.agent == "debugger":
-            tools = ToolRegistry([*read_only, RunTests(), Verify()])
+            tools = ToolRegistry([*read_only, RunCommand()])
             report = await _run_subagent(router, context, tools, DEBUGGER_PROMPT, args.task, 20, "reviewer")
         elif args.agent == "reviewer":
             report = await _run_subagent(

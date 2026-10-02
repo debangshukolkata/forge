@@ -17,4 +17,4 @@ description: Add a REST endpoint to a Flask + flask-smorest app (blueprint, mars
 6. Auth: reuse the existing decorator (e.g. `@jwt_required`) in the same position as other routes.
 7. Register the blueprint where the app registers the others (e.g. `register_blueprints(api)`).
 8. Tests with the app's fixtures (`client`, auth headers, seeded data): happy path, not found, validation
-   error, auth required. Then `openapi_check` with `expect_paths` to confirm the route and schemas appear.
+   error, auth required. Then a small python_run script that builds the app and lists its OpenAPI paths to confirm the route and schemas appear.

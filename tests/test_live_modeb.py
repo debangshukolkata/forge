@@ -21,9 +21,9 @@ from forge.modeb.workspace import create_standalone_workspace
 from forge.session import build_session
 from forge.toolkit.base import ToolContext
 from forge.toolkit.shell import ShellSession
-from forge.verify.ladder import VerifyLadder
 from forge.workspace.workspace import Workspace
 from tests.conftest import FIXTURE_BACKEND, REPO_ROOT
+from tests.helpers import run_pytest
 
 pytestmark = pytest.mark.live
 FIXTURE_PYTHON = FIXTURE_BACKEND / "venv" / "Scripts" / "python.exe"
@@ -181,8 +181,8 @@ async def test_standalone_feature_passes_in_harness_and_in_the_host(
 
     # 1. In the harness.
     context = ToolContext(workspace=standalone, shell=ShellSession(standalone, sandbox="off"))
-    step, _ = await VerifyLadder(context).run_tests("")
-    assert step.ok, step.summary
+    ok, summary, _ = await run_pytest(context)
+    assert ok, summary
     out = standalone.output_dir
     assert (out / "INTEGRATION_GUIDE.md").exists() and (out / "INTERFACE_CONTRACT.md").exists()
     assert not any(p.name == "harness_conftest.py" for p in out.rglob("*"))

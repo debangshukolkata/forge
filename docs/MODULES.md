@@ -14,7 +14,7 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 | 3 | llm, memory | providers, router, tokens, cost; auto-memory (user + project scope) |
 | 4 | context, kb, toolkit | context window; knowledge base; tool contract + shell runners |
 | 5 | db, parity, vision | database; skills/agents/MCP; vision |
-| 6 | doctor, verify | setup checks; verification ladders |
+| 6 | doctor | setup checks |
 | 7 | modeb | host profiles, contracts |
 | 8 | tools | tool implementations + registry |
 | 9 | agent | the main agent loop (knows nothing about requirements or subagents) |
@@ -27,7 +27,7 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 | 16 | cli | command line |
 
 ## Status of modules affected by the revamp (D-156)
-`kb` (repo index) and the ladders in `verify` are being retired (`learning` is gone: D-158); the replacements are FORGE.md files and the auto-memory folder (`parity`, `memory`) and the shell tool
+`kb` (repo index) is being retired (`learning` is gone: D-158, `verify` is gone: D-159); the replacements are FORGE.md files and the auto-memory folder (`parity`, `memory`) and the shell tool
 (`toolkit`). Until a module's removal is ticked in TODO.md it still exists and is still tested.
 
 ## Rules

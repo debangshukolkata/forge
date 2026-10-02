@@ -16,6 +16,7 @@ from forge.protocol.events import EventBus, EventType
 from forge.safety.permissions import PermissionGate
 from forge.safety.redact import default_redactor
 from forge.toolkit.base import ToolContext
+from forge.toolkit.shell import RunCommand
 from forge.tools.registry import ToolRegistry, default_tools
 
 REPORT_TOKENS = 1500
@@ -74,10 +75,8 @@ If the requirement or a test itself looks wrong, say so plainly."""
 
 async def run_debugger(router: LLMRouter, context: ToolContext, problem: str) -> str:
     """A fresh-context diagnosis (spec §13.3 step 2), on the reviewer role's model: a second model catches
-    different mistakes. Read-only tools plus test runs."""
-    from forge.tools.verify import RunTests, Verify
-
-    tools = ToolRegistry([*(t for t in default_tools() if t.read_only), RunTests(), Verify()])
+    different mistakes. Read-only tools plus the shell (to run tests)."""
+    tools = ToolRegistry([*(t for t in default_tools() if t.read_only), RunCommand()])
     return await _run_subagent(
         router, context, tools, DEBUGGER_PROMPT, problem, DEBUGGER_ITERATIONS, "reviewer"
     )

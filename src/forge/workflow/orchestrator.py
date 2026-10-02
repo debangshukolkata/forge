@@ -25,6 +25,8 @@ from forge.parity.history import History
 from forge.protocol.events import EventType
 from forge.subagents.spawn_tool import SpawnSubagent
 from forge.toolkit.base import Tool, ToolContext, ToolResult
+from forge.toolkit.powershell import ps_quote
+from forge.toolkit.pytest_report import parse_pytest
 from forge.toolkit.shell import execute
 from forge.tools.interaction import (
     AskUser,
@@ -37,8 +39,6 @@ from forge.tools.interaction import (
     UpdatePlan,
 )
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
-from forge.verify.ladder import VerifyLadder
-from forge.workflow.frontend_smoke import render_smoke_check_section, run_frontend_smoke_check
 from forge.workflow.reports import closing_message, final_report
 from forge.workflow.state import Cadence, StateStore, Task
 from forge.workspace.output import build_output
@@ -47,6 +47,9 @@ if TYPE_CHECKING:
     from forge.engine.session_host import SessionHost
 
 MAX_NUDGES = 1
+# No -q: repos often set it in addopts, and -qq hides the summary line the parser reads.
+PYTEST_ARGS = "-rfE --tb=short --no-header -p no:cacheprovider"
+FULL_SUITE_TIMEOUT_S = 900
 RESUMED_NOTE = (
     "\n\nResumed after an interruption: first check what is already done (files modified are pinned)."
 )
@@ -285,13 +288,6 @@ class Orchestrator:
                 f"```\n{summary_after}\n```\n"
             )
             self._restructure_baseline = None
-        node_env = self.workspace.info.node_env
-        if node_env is not None:
-            # D-138's checkpoint-only browser smoke check (deferred by D-139, built here): a workspace with
-            # no React/Node frontend at all must never start a browser or add this section — same discipline
-            # as the React verify ladder's own Python-only regression guard.
-            result = await run_frontend_smoke_check(self.context, node_env)
-            report += render_smoke_check_section(result)
         self.store.write_document("reports/final.md", report)
         await self.host.bus.publish(
             EventType.MESSAGE_DONE, {"text": closing_message(self.state, output), "model": "forge"}
@@ -409,10 +405,11 @@ class Orchestrator:
             return ToolResult(
                 ok=False,
                 content=(
-                    "Not accepted: no passing test run since your last edit. Run the tests (verify or "
-                    "run_tests) and call task_update again when they pass. If there are no tests for this "
-                    "code yet, write them now as part of this task (in the project's test style): a task "
-                    "without a passing test isn't done, and it isn't blocked either."
+                    "Not accepted: no passing test run since your last edit. Run the tests with "
+                    "run_command (e.g. python -m pytest) and call task_update again when they pass. If "
+                    "there are no tests for this code yet, write them now as part of this task (in the "
+                    "project's test style): a task without a passing test isn't done, and it isn't "
+                    "blocked either."
                 ),
             )
         task.status = "done" if status == "done" else "blocked"
@@ -502,7 +499,7 @@ class Orchestrator:
             "explore_notes": self.state.explore_notes or "(none)",
             "task": "",
             "task_board": self.state.task_board(),
-            "test_command": "the verify tool; run_tests for specific tests",
+            "test_command": "the project's own test command (e.g. python -m pytest) run with run_command",
         }
         return self.instructions[kind].format(**{**defaults, **values})
 
@@ -563,8 +560,18 @@ class Orchestrator:
 
     async def _run_tests(self) -> tuple[bool, str]:
         """The full suite from the app folder (whatever directory the model last changed into), parsed."""
-        step, _ = await VerifyLadder(self.context).run_tests("")
-        return step.ok, step.summary[-4000:]
+        shell = self.context.shell
+        python = (shell.python if shell else None) or "python"
+        result = await execute(
+            self.context,
+            f"& {ps_quote(python)} -m pytest {PYTEST_ARGS}",
+            FULL_SUITE_TIMEOUT_S,
+            self.workspace.info.app_subfolder or None,
+        )
+        report = parse_pytest(result.content)
+        if report.ran:
+            return report.passed, report.summary()[-4000:]
+        return result.ok, result.content[-1500:]
 
 
 def _unique_id(wanted: str, taken: set[str]) -> str:

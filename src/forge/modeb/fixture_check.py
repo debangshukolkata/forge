@@ -13,9 +13,9 @@ harness has an autouse fixture.
 from __future__ import annotations
 
 import ast
+from dataclasses import dataclass
 from pathlib import Path
 
-from forge.verify.test_guard import GuardFinding
 from forge.workspace.workspace import Workspace
 
 INFRA_MODULES = {"db", "database", "session", "sessions", "extensions"}
@@ -28,6 +28,18 @@ INFRA_NAMES = {
     "engine",
     "SessionLocal",
 }
+
+
+@dataclass
+class GuardFinding:
+    path: str
+    test: str
+    problem: str
+    blocking: bool = True
+
+    def render(self) -> str:
+        level = "blocking" if self.blocking else "minor"
+        return f"[{level}] {self.path}::{self.test}: {self.problem}"
 
 
 def check_fixture_use(workspace: Workspace) -> list[GuardFinding]:

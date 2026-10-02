@@ -16,6 +16,9 @@ Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
   minutes. The browser tests no longer stop at the first-run setup screen.
 - **`learning` retired, auto-memory added (D-158):** no more library cards, lessons, retro or proposals; the model
   saves typed memories (user and project scope) with `memory_write`, shown in an index pinned every session.
+- **Verification ladders retired (D-159):** the model runs tests, linters and builds itself through the shell; the
+  `verify` and `run_tests` tools, the ladders, the test guard and the export smoke check are gone. Mode B still
+  loads its host stand-ins for any pytest run.
 - **Parked:** Gemini provider (D-150).
 
 ## 0.1.0 — 2026-09-26 … 2026-09-29

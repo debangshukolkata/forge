@@ -14,6 +14,7 @@ from forge.safety.sandbox import is_supported as sandbox_supported
 from forge.safety.shell_classifier import ShellScope
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.powershell import ps_quote, run_powershell
+from forge.workspace.stub_packages import ensure_shared_stub_packages
 from forge.workspace.workspace import Workspace
 
 DEFAULT_TIMEOUT_S = 120
@@ -115,6 +116,10 @@ class ShellSession:
             # Sandboxed processes can't write to the user's %TEMP% or pip cache; give them their own.
             variables["TEMP"] = variables["TMP"] = str(self.scratch_dir)
             variables["PIP_CACHE_DIR"] = str(self.sandbox_dir / "pip-cache")
+        if self.workspace.mode_b:  # the host stand-ins load for any pytest the model runs (D-159)
+            existing = variables.get("PYTEST_ADDOPTS", "")
+            if "harness_conftest" not in existing:
+                variables["PYTEST_ADDOPTS"] = f"{existing} -p harness_conftest".strip()
         variables.update(self.extra_env)
         return variables
 
@@ -193,6 +198,8 @@ class PythonRun(Tool):
 async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str | None) -> ToolResult:
     shell = context.shell
     assert shell is not None
+    if context.workspace.mode_b:  # stub packages must not hide the new code (D-159)
+        ensure_shared_stub_packages(context.workspace)
     start_dir = shell.resolve_cwd(cwd)
     sandboxed = shell.prepare_sandbox()
     try:

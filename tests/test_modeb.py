@@ -22,9 +22,8 @@ from forge.safety.shell_classifier import classify
 from forge.toolkit.base import ToolContext
 from forge.toolkit.shell import ShellSession
 from forge.tools.web import WebSearch
-from forge.verify.ladder import VerifyLadder
 from forge.workspace.workspace import Workspace
-from tests.helpers import mocked_router
+from tests.helpers import mocked_router, run_pytest
 
 EXTEND_PATH = '__path__ = __import__("pkgutil").extend_path(__path__, __name__)\n'
 STUB = "def get_rate(code: str) -> float:\n    return {'EUR': 0.9}.get(code, 1.0)\n"
@@ -75,8 +74,8 @@ async def test_tests_run_against_harness_stubs(workspace: Workspace) -> None:
     workspace.write_text("hostapp/fx/convert.py", FEATURE)
     workspace.write_text("tests/test_convert.py", TEST)
     context = ToolContext(workspace=workspace, shell=ShellSession(workspace, sandbox="off"))
-    step, report = await VerifyLadder(context).run_tests("tests/test_convert.py")
-    assert step.ok, step.summary
+    ok, summary, report = await run_pytest(context, "tests/test_convert.py")
+    assert ok, summary
     assert report.counts.get("passed") == 1
 
 
@@ -229,8 +228,8 @@ async def test_mode_b_commands_run_in_the_sandbox(workspace: Workspace) -> None:
     workspace.write_text("tests/test_convert.py", TEST)
     shell = ShellSession(workspace, sandbox="low_integrity")
     context = ToolContext(workspace=workspace, shell=shell)
-    step, _ = await VerifyLadder(context).run_tests("tests/test_convert.py")
-    assert step.ok, step.summary
+    ok, summary, _ = await run_pytest(context, "tests/test_convert.py")
+    assert ok, summary
     assert shell.sandbox_active is True
 
 

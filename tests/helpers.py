@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx2
 
@@ -140,3 +140,26 @@ def reply(request: httpx2.Request, body: dict[str, Any]) -> httpx2.Response:
     """JSON or server-sent events, whichever the request asked for."""
     streaming = bool(json.loads(request.content or b"{}").get("stream"))
     return sse_response(body) if streaming else json_response(200, body)
+
+
+async def run_pytest(context: ToolContext, selector: str = "") -> tuple[bool, str, TestReport]:
+    """Runs pytest through the shell tool, as the model does (D-159); returns (ok, summary, report)."""
+    from forge.toolkit.powershell import ps_quote
+    from forge.toolkit.pytest_report import parse_pytest
+    from forge.toolkit.shell import execute
+
+    assert context.shell is not None
+    python = context.shell.python or "python"
+    result = await execute(
+        context,
+        f"& {ps_quote(python)} -m pytest -rfE --tb=short --no-header -p no:cacheprovider {selector}".rstrip(),
+        300,
+        context.workspace.info.app_subfolder or None,
+    )
+    report = parse_pytest(result.content)
+    return (report.passed if report.ran else result.ok), result.content[-1500:], report
+
+
+if TYPE_CHECKING:
+    from forge.toolkit.base import ToolContext
+    from forge.toolkit.pytest_report import TestReport

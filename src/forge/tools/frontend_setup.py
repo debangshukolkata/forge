@@ -39,7 +39,7 @@ class SetupFrontend(Tool):
     description = (
         "Scaffold a brand-new frontend in this standalone (Mode B) workspace, e.g. when a requirement needs "
         "a web UI and none exists yet. Runs the real scaffolder (npm create vite@latest by default) through "
-        "the normal shell approval flow, then wires the result up for verify. Use this instead of "
+        "the normal shell approval flow, then records the result for the workspace. Use this instead of "
         "hand-writing package.json/build config yourself. Only usable once per workspace; if you need a "
         "different stack, ask the user before calling it again."
     )
@@ -121,7 +121,7 @@ class SetupFrontend(Tool):
             content=(
                 f"Frontend scaffolded at project/{args.folder} ({args.framework}"
                 f"{', TypeScript' if args.typescript else ''}) using {node_env.package_manager}. "
-                "node_env is now set, so verify/the React ladder applies to files in that folder going "
+                "node_env is now set for files in that folder going "
                 f"forward. Run `{node_env.install_command}` in that folder next if the scaffolder didn't "
                 "already install dependencies."
             ),

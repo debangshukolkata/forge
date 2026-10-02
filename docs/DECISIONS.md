@@ -2351,3 +2351,22 @@ unknown keys); the `lesson_proposed`/`improvement_proposed` event types stay so 
 `/api/learning` endpoint returns empty lists so the current UI panel renders until the timeline UI replaces it; old
 `learning/` data in Forge Home is left on disk, unread. **Tests:** 533 passed + this module's updated tests green
 (parallel run, `-n 12`).
+
+### D-159 — Verification ladders retired; the model checks its own work (D-156 code step 2) · Built (2026-10-03)
+**Removed:** the whole `verify` module (Python, React and Angular ladders, the test-weakening guard, app-level
+openapi/langgraph checks, lint/mypy/compile parsers), `tools/verify.py` (`verify`, `run_tests`, `openapi_check`,
+`langgraph_check`), the automatic frontend smoke check at export (`workflow/frontend_smoke.py`), the "tables exist in
+scratch" pre-check, and their tests. The model now runs tests, linters, type checkers and builds itself through
+`run_command` / `python_run`, reads raw capped output, and starts the app with `start_background` plus
+`http_request` / `browser_*` — as Claude Code does. System prompts, the phases text, the `task_update` refusal text and
+three skills no longer name the removed tools.
+**Kept and moved:** a shell test run still counts as evidence for `task_update` (`execute` already recorded it);
+`mark_server_run` and the DB hand-offs; the pytest summary parser (now `toolkit/pytest_report.py`, used by
+`forge diagnose` and the restructure before/after check); the diagnose OpenAPI probe (`diagnose/openapi_probe.py`);
+Mode B's `GuardFinding` (now in `modeb/fixture_check.py`) and its fixture check.
+**Mode B without the ladder:** the shell session sets `PYTEST_ADDOPTS=-p harness_conftest` for Mode B workspaces and
+`execute()` runs `ensure_shared_stub_packages` first, so any pytest the model runs loads the host stand-ins and the
+stubs can't hide new code (covered by `test_tests_run_against_harness_stubs`, run through the shell).
+**Risks:** no automatic "no tests found" / "pytest not installed" / "collection errors, don't write more tests" hints;
+the model sees the raw output (more tokens, but also what Claude Code sees); no silent test-weakening guard (the prompt
+rule remains). Judge from the run logs. **Tests:** 478 passed, 2 skipped on purpose (parallel run).

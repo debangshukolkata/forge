@@ -10,11 +10,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from forge.diagnose.openapi_probe import DEFAULT_OPENAPI_SETUP, MARKER, OPENAPI_SCRIPT
 from forge.safety.sandbox import SandboxUnavailableError, label_low
 from forge.toolkit.powershell import ps_quote, run_powershell
-from forge.verify.checks import DEFAULT_OPENAPI_SETUP, MARKER, OPENAPI_SCRIPT
-from forge.verify.ladder import PYTEST_ARGS
-from forge.verify.parsers import TestReport, parse_pytest
+from forge.toolkit.pytest_report import TestReport, parse_pytest
 from forge.workspace.copy_repo import copy_app_folder
 from forge.workspace.ignore import IgnoreRules
 from forge.workspace.pyenv import PythonEnvironment, write_import_shim
@@ -23,6 +22,10 @@ from forge.workspace.workspace import Workspace
 RUN_TIMEOUT_S = 900
 SMOKE_TIMEOUT_S = 120
 MAX_FILE_BYTES = 5 * 1024 * 1024
+
+
+# No -q: repos often set it in addopts, and -qq hides the summary line the parser reads.
+PYTEST_ARGS = "-rfE --tb=short --no-header -p no:cacheprovider"
 
 
 @dataclass

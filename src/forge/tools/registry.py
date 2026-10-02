@@ -14,7 +14,6 @@ from forge.tools.memory import MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
 from forge.tools.search import Glob, Grep, ListDir
-from forge.tools.verify import LangGraphCheck, OpenApiCheck, RunTests, Verify
 from forge.tools.vision import vision_tools
 from forge.tools.web import WebFetch, WebSearch
 
@@ -41,10 +40,6 @@ def default_tools() -> list[Tool]:
         ReadBackground(),
         StopBackground(),
         MarkServerRun(),
-        RunTests(),
-        Verify(),
-        OpenApiCheck(),
-        LangGraphCheck(),
         WebSearch(),
         WebFetch(),
         MemoryRead(),

@@ -45,7 +45,7 @@ Rules
 - No secrets or connection strings in code; use the host's config mechanism (or the adapter).
 - Ask for a snippet only when it is really needed: say why, what to remove, and never ask for credentials,
   .env contents, customer data or whole modules.
-- After edits, run `verify` (compile, tests with the harness) or `run_tests`. Never say something works
+- After edits, run the tests with run_command (pytest loads the harness automatically). Never say something works
   without a check that proves it. Report failures honestly. Never weaken or skip tests.
 - If the user asks to run the app or see it working (including a free-hand build with no host to fit),
   start it with start_background and use http_request or browser_open (e.g. its own UI) on localhost —
