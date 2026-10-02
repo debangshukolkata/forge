@@ -15,10 +15,10 @@ from rich.markdown import Markdown
 from rich.rule import Rule
 from rich.text import Text
 
-from forge.engine.events import Event, EventType
-from forge.engine.inputs import Answer, Approve, Interrupt, Reject, SendMessage, SlashCommand, UserInput
 from forge.engine.session_host import SessionHost
 from forge.llm.cost import format_money
+from forge.protocol.events import Event, EventType
+from forge.protocol.inputs import Answer, Approve, Interrupt, Reject, SendMessage, SlashCommand, UserInput
 
 WELCOME = "Forge — type a message, /help for commands, Esc to interrupt, Ctrl+D to quit."
 DIFF_PREVIEW_LINES = 40

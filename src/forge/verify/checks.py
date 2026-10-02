@@ -13,9 +13,9 @@ import json
 import re
 from dataclasses import dataclass, field
 
-from forge.tools.base import ToolContext
-from forge.tools.powershell import ps_quote
-from forge.tools.shell import execute
+from forge.toolkit.base import ToolContext
+from forge.toolkit.powershell import ps_quote
+from forge.toolkit.shell import execute
 
 MARKER = "FORGE_CHECK_RESULT:"
 CHECK_TIMEOUT_S = 180

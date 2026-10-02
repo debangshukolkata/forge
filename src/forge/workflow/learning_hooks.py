@@ -8,16 +8,16 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from forge.config import forge_home
-from forge.engine.events import EventType
 from forge.learning.lessons import LessonStore, parse_proposals, render_for_pin
 from forge.learning.library import Library
 from forge.learning.metrics import Metrics
 from forge.learning.scope import scope_of, visible_scopes
 from forge.llm.base import ChatRequest, Message
+from forge.protocol.events import EventType
 from forge.workspace.output import compute_changes
 
 if TYPE_CHECKING:
-    from forge.agent.orchestrator import Orchestrator
+    from forge.workflow.orchestrator import Orchestrator
 
 RETRO_PROMPT = """You write the retrospective of a finished software requirement for the team that runs
 Forge (an AI coding agent). From the evidence, write in under 350 words:

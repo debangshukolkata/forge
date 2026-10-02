@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 MAX_OUTPUT_CHARS = 1500
 

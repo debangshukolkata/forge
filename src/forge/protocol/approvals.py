@@ -7,8 +7,8 @@ import itertools
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import Answer, Approve, Reject
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import Answer, Approve, Reject
 
 
 @dataclass
@@ -37,6 +37,16 @@ class ApprovalBroker:
             return await future
         finally:
             self._pending.pop(request_id, None)
+
+    def reject_all(self, instruction: str) -> int:
+        """A chat message while cards are open means 'no, do this instead' (D-153): the waiting calls resume
+        declined, carrying the message as the instruction, so the turn can end and the message can run."""
+        count = 0
+        for future in self._pending.values():
+            if not future.done():
+                future.set_result(ApprovalAnswer(approved=False, instruction=instruction))
+                count += 1
+        return count
 
     def resolve(self, answer: Approve | Reject) -> bool:
         future = self._pending.get(answer.request_id)
@@ -76,6 +86,15 @@ class QuestionBroker:
             return await future
         finally:
             self._pending.pop(question_id, None)
+
+    def answer_all_with_text(self, text: str) -> int:
+        """Like ApprovalBroker.reject_all: a typed message answers every open question as free text."""
+        count = 0
+        for future in self._pending.values():
+            if not future.done():
+                future.set_result(QuestionAnswer(text=text))
+                count += 1
+        return count
 
     def resolve(self, answer: Answer) -> bool:
         future = self._pending.get(answer.question_id)

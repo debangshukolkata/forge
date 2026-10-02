@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Any
 
 from forge.config import ForgeConfig, Secrets, forge_home, load_config, load_secrets
-from forge.engine.events import EventBus, EventType
 from forge.engine.session_host import SessionHost
 from forge.llm.router import LLMRouter
+from forge.protocol.events import EventBus, EventType
 from forge.workspace.workspace import Workspace
 
 

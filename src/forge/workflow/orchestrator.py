@@ -15,12 +15,7 @@ from importlib import resources
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from forge.agent.frontend_smoke import render_smoke_check_section, run_frontend_smoke_check
-from forge.agent.learning_hooks import after_export, pin_lessons, related_cards_note
-from forge.agent.reports import closing_message, final_report
-from forge.agent.state import Cadence, StateStore, Task
 from forge.config import forge_home
-from forge.engine.events import EventType
 from forge.kb.builder import build as kb_build
 from forge.kb.builder import status as kb_status
 from forge.kb.narrative import llm_writer
@@ -29,7 +24,10 @@ from forge.llm.base import Message
 from forge.modeb.assumptions import AssumptionRegister
 from forge.modeb.output import build_modeb_output
 from forge.parity.history import History
-from forge.tools.base import Tool, ToolContext, ToolResult
+from forge.protocol.events import EventType
+from forge.subagents.spawn_tool import SpawnSubagent
+from forge.toolkit.base import Tool, ToolContext, ToolResult
+from forge.toolkit.shell import execute
 from forge.tools.interaction import (
     AskUser,
     OptionSpec,
@@ -41,8 +39,11 @@ from forge.tools.interaction import (
     UpdatePlan,
 )
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
-from forge.tools.shell import execute
 from forge.verify.ladder import VerifyLadder
+from forge.workflow.frontend_smoke import render_smoke_check_section, run_frontend_smoke_check
+from forge.workflow.learning_hooks import after_export, pin_lessons, related_cards_note
+from forge.workflow.reports import closing_message, final_report
+from forge.workflow.state import Cadence, StateStore, Task
 from forge.workspace.output import build_output
 
 if TYPE_CHECKING:
@@ -76,7 +77,7 @@ ASK_EVERY_STEP_PHRASES = (
 
 
 def requirement_instructions() -> dict[str, str]:
-    text = resources.files("forge").joinpath("agent/prompts/phases.md").read_text(encoding="utf-8")
+    text = resources.files("forge").joinpath("workflow/prompts/phases.md").read_text(encoding="utf-8")
     override = prompt_override(forge_home(), "phases")  # approved tier-2 tweaks (spec §12.5)
     sections: dict[str, str] = {}
     for block in text.split("\n## ")[1:]:
@@ -243,6 +244,7 @@ class Orchestrator:
         return ToolRegistry(
             [
                 *default_tools(),
+                SpawnSubagent(),
                 *self._db_tools(),
                 *self.host.extra_tools,  # Mode B profile/contract tools, MCP server tools
                 AskUser(),
@@ -278,19 +280,7 @@ class Orchestrator:
         self.host.context_manager.reset_for_task(self.host.history, brief, handoff)
         pin_lessons(self, self._task_text(task))
         self._task_start_step = self.context.step
-        if self.host.agent is not None:
-            self.host.agent.stuck.reset()
-            self.host.agent.escalator.reset()
         self._save()
-
-    def block_current_task(self, reason: str) -> None:
-        """Escalation's last step (spec §13.3): the task is blocked and work moves on."""
-        task = self.state.task(self.state.current_task) if self.state.current_task else None
-        if task is not None:
-            task.status, task.blocked_reason = "blocked", reason
-            self.state.current_task = None
-            self.store.append_log("PROGRESS.md", f"- {task.id} blocked: {reason}")
-            self._save()
 
     async def _export(self) -> None:
         """Builds output/ once every task is settled (done or blocked). Judgment-based, not a mandatory

@@ -18,8 +18,8 @@ from forge.workspace.workspace import Workspace
 
 if TYPE_CHECKING:
     from forge.kb.knowledge import KnowledgeBase
-    from forge.tools.background import BackgroundManager
-    from forge.tools.shell import ShellSession
+    from forge.toolkit.background import BackgroundManager
+    from forge.toolkit.shell import ShellSession
 
 # Per-call output caps in tokens (spec §10.3); configured by context.tool_output_cap / shell_output_cap.
 DEFAULT_TOOL_CAP_TOKENS = 6000

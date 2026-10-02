@@ -12,7 +12,7 @@ from forge.learning.improve import Improvements
 from forge.learning.lessons import LessonStore
 from forge.learning.library import Library
 from forge.learning.scope import scope_of, visible_scopes
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 
 def _scopes(context: ToolContext) -> tuple[str, ...]:

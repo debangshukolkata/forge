@@ -15,13 +15,13 @@ import pytest
 from dotenv import dotenv_values
 
 from forge.config import Secrets, load_config, load_secrets
-from forge.db.checks import load_checks
 from forge.db.scratch import ScratchRegistry
-from forge.engine.events import Event, EventBus, EventType
-from forge.engine.inputs import Approve, UserInput
 from forge.engine.session_host import SessionHost
 from forge.llm.router import LLMRouter
+from forge.protocol.events import Event, EventBus, EventType
+from forge.protocol.inputs import Approve, UserInput
 from forge.workspace.create import create_workspace
+from forge.workspace.server_checks import load_checks
 from tests.conftest import REPO_ROOT
 from tests.test_live_agent import events_of, run_turn
 

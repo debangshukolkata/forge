@@ -10,17 +10,17 @@ from pathlib import Path
 import pytest
 
 from forge.cli import main
-from forge.engine.events import EventBus, EventType
 from forge.engine.session_host import SessionHost
 from forge.modeb.assumptions import AssumptionRegister
 from forge.modeb.output import build_modeb_output, write_document
 from forge.modeb.profile import ProfileStore, host_identifying_terms
 from forge.modeb.workspace import create_standalone_workspace
+from forge.protocol.events import EventBus, EventType
 from forge.safety.paths import JailViolationError
 from forge.safety.redact import Redactor
 from forge.safety.shell_classifier import classify
-from forge.tools.base import ToolContext
-from forge.tools.shell import ShellSession
+from forge.toolkit.base import ToolContext
+from forge.toolkit.shell import ShellSession
 from forge.tools.web import WebSearch
 from forge.verify.ladder import VerifyLadder
 from forge.workspace.workspace import Workspace
@@ -298,7 +298,7 @@ def test_stub_packages_are_shared_with_project(workspace: Workspace) -> None:
     import subprocess
     import sys
 
-    from forge.modeb.workspace import ensure_shared_stub_packages
+    from forge.workspace.stub_packages import ensure_shared_stub_packages
 
     workspace.write_text("demo_host/services/new_service.py", "VALUE = 'new'\n")
     workspace.write_text("_harness/host_stubs/demo_host/__init__.py", "")

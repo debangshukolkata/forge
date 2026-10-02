@@ -8,15 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from forge.agent.orchestrator import Orchestrator, detect_cadence, requirement_instructions
-from forge.agent.state import OrchestratorState, StateStore, Task
-from forge.engine.events import Event, EventBus, EventType
 from forge.engine.headless import HEADLESS_REFUSAL, auto_reply
-from forge.engine.inputs import Answer, Approve, Reject
 from forge.engine.session_host import SessionHost
+from forge.protocol.events import Event, EventBus, EventType
+from forge.protocol.inputs import Answer, Approve, Reject
 from forge.safety.redact import Redactor
+from forge.toolkit.shell import is_test_command, looks_like_write
 from forge.tools.interaction import OptionSpec, TaskSpec
-from forge.tools.shell import is_test_command, looks_like_write
+from forge.workflow.orchestrator import Orchestrator, detect_cadence, requirement_instructions
+from forge.workflow.state import OrchestratorState, StateStore, Task
 from forge.workspace.create import create_workspace
 from tests.helpers import mocked_router
 
@@ -275,7 +275,7 @@ async def test_messages_after_export_start_a_change_request(host: SessionHost) -
 
 def test_a_change_plan_reusing_task_ids_still_runs_its_tasks() -> None:
     """A restructure plan with T1/T2 while T1..T6 are done used to be dropped silently (nothing ran)."""
-    from forge.agent.orchestrator import _renumbered, _unique_id
+    from forge.workflow.orchestrator import _renumbered, _unique_id
 
     new = _renumbered(
         [Task(id="T1", title="move service"), Task(id="T2", title="update imports", depends_on=["T1"])],

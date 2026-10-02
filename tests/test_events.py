@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import Answer, Interrupt, parse_user_input
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import Answer, Interrupt, parse_user_input
 from forge.safety.redact import Redactor
 
 
@@ -68,7 +68,7 @@ def test_inputs_parse_from_json() -> None:
 
 async def test_events_are_stamped_with_phase_and_task() -> None:
     # D-119: the Run map groups events by the phase and task they happened in.
-    from forge.engine.events import EventBus, EventType
+    from forge.protocol.events import EventBus, EventType
 
     bus = EventBus()
     assert (await bus.publish(EventType.NOTICE, {"text": "x"})).where is None
@@ -79,9 +79,9 @@ async def test_events_are_stamped_with_phase_and_task() -> None:
 
 
 async def test_subagent_runs_are_announced_with_their_outcome(tmp_path) -> None:  # type: ignore[no-untyped-def]
-    from forge.agent.subagent import _tracked_run
-    from forge.engine.events import EventBus, EventType
     from forge.llm.base import Message
+    from forge.protocol.events import EventBus, EventType
+    from forge.subagents.subagent import _tracked_run
 
     emitted: list[tuple[str, dict]] = []
 

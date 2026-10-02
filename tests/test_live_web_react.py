@@ -14,10 +14,10 @@ import pytest
 import uvicorn
 
 from forge.config import load_secrets
+from forge.safety.server_security import ServerSecurity
 from forge.session import build_session
 from forge.web.manager import WebSessionManager
 from forge.web.run import free_port
-from forge.web.security import ServerSecurity
 from forge.web.server import create_app
 from tests.conftest import REPO_ROOT
 

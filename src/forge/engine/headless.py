@@ -13,9 +13,9 @@ import asyncio
 import contextlib
 from dataclasses import dataclass
 
-from forge.engine.events import Event, EventType
-from forge.engine.inputs import Answer, Approve, Reject, SendMessage, UserInput
 from forge.engine.session_host import SessionHost
+from forge.protocol.events import Event, EventType
+from forge.protocol.inputs import Answer, Approve, Reject, SendMessage, UserInput
 
 HEADLESS_REFUSAL = (
     "Running headless: this action is on the always-ask list and nobody is here to approve it. "

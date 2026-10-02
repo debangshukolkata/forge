@@ -13,7 +13,7 @@ from typing import Any, ClassVar
 from pydantic import ConfigDict
 
 from forge.llm.base import ToolSpec
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult, inline_schema
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult, inline_schema
 
 PREFIX = "mcp__"
 CALL_TIMEOUT_S = 120

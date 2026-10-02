@@ -21,7 +21,7 @@ from pydantic import Field
 
 from forge.config import forge_home
 from forge.safety.redact import default_redactor
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 TAVILY = "https://api.tavily.com"
 CACHE_SECONDS = 24 * 3600

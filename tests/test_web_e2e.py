@@ -13,12 +13,14 @@ from pathlib import Path
 import pytest
 import uvicorn
 
-from forge.engine.events import EventBus
+from forge.config import load_config
+from forge.doctor import required_secret_names
 from forge.engine.session_host import SessionHost
+from forge.protocol.events import EventBus
 from forge.safety.redact import Redactor
+from forge.safety.server_security import ServerSecurity
 from forge.web.manager import WebSessionManager
 from forge.web.run import free_port
-from forge.web.security import ServerSecurity
 from forge.web.server import create_app
 from forge.workspace.create import create_workspace
 from forge.workspace.workspace import Workspace
@@ -31,6 +33,14 @@ playwright_api = pytest.importorskip("playwright.sync_api")
 
 def unreachable(request: object) -> object:
     raise AssertionError("no LLM call expected")
+
+
+@pytest.fixture(autouse=True)
+def configured_secrets(isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fake values for every required key, so the UI shows its normal pages and not the first-run setup
+    screen (D-146), which an empty Forge home would otherwise trigger."""
+    for name in required_secret_names(load_config(isolated_forge_home)):
+        monkeypatch.setenv(name, "https://fake.invalid")  # check_secrets: fake
 
 
 @pytest.fixture
@@ -134,7 +144,9 @@ def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, 
     page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
     page.fill("input[placeholder^='C:'][placeholder$='payments-masking']", str(tmp_path / "pm"))
     page.click("button:has-text('Create and open')")
-    page.wait_for_selector("textarea[aria-label=Message]")
+    page.wait_for_selector(
+        "textarea[aria-label=Message]", timeout=120_000
+    )  # the repo copy is slow under parallel load
     assert "Payments Masking" in page.inner_text("nav[aria-label=Projects]")
 
     page.click("button:has-text('Home')")
@@ -146,7 +158,9 @@ def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, 
     page.fill("input[placeholder^='C:'][placeholder$='payments-masking']", str(tmp_path / "ce"))
     page.fill("input[placeholder*='claims-repo']", str(original_repo))
     page.click("button:has-text('Create and open')")
-    page.wait_for_selector("textarea[aria-label=Message]")
+    page.wait_for_selector(
+        "textarea[aria-label=Message]", timeout=120_000
+    )  # the repo copy is slow under parallel load
     assert not page.problems, page.problems  # type: ignore[attr-defined]
 
 
@@ -209,7 +223,7 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
     # A replayed conversation: markdown answer, tool cards, a plan approval and a question.
     import asyncio
 
-    from forge.engine.events import EventBus, EventType
+    from forge.protocol.events import EventBus, EventType
 
     async def script() -> None:
         bus = EventBus(workspace.forge_dir / "transcripts" / "events.jsonl", redactor=Redactor())
@@ -445,7 +459,7 @@ def open_in_edge(p: object, live: LiveServer, workspace: Workspace) -> tuple[obj
 )
 def test_react_live_progress_and_activity(live_server: LiveServer, workspace: Workspace) -> None:
     # Live events (not a replay) drive the progress header and the activity line.
-    from forge.engine.events import EventType
+    from forge.protocol.events import EventType
 
     manager, publish = live_server.manager, live_server.publish
 
@@ -458,7 +472,7 @@ def test_react_live_progress_and_activity(live_server: LiveServer, workspace: Wo
     shots = REPO_ROOT / "test-artifacts" / "react-ui"
     with playwright_api.sync_playwright() as p:
         browser, page = open_in_edge(p, live_server, workspace)
-        from forge.agent.state import Task
+        from forge.workflow.state import Task
 
         assert manager.host is not None and manager.host.orchestrator is not None
         state = manager.host.orchestrator.state  # what /api/state reports, as in a real run
@@ -549,8 +563,8 @@ def test_react_live_progress_and_activity(live_server: LiveServer, workspace: Wo
 )
 def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
     # The Run map (D-119) draws the plan, helper agents, failures, stuck warnings and waits from the events.
-    from forge.agent.state import Task
-    from forge.engine.events import EventType
+    from forge.protocol.events import EventType
+    from forge.workflow.state import Task
 
     publish = live_server.publish
     tasks = [

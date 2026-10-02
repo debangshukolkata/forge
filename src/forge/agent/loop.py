@@ -6,31 +6,26 @@ import asyncio
 import contextlib
 import time
 import traceback
-from dataclasses import dataclass
 from datetime import date
 from importlib import resources
-from typing import Any
 
 from pydantic import ValidationError
 
-from forge.agent.escalation import Escalator
-from forge.agent.stuck import StuckDetector, content_hash
 from forge.config import forge_home
 from forge.context.manager import ContextManager
-from forge.engine.approvals import ApprovalBroker
-from forge.engine.events import EventBus, EventType
 from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthError
 from forge.learning.improve import prompt_override
 from forge.llm.base import ChatRequest, LLMResponse, Message, TextDeltaCallback, ToolCall
 from forge.llm.router import LLMRouter
 from forge.llm.tool_args import parse_error_result
+from forge.protocol.approvals import ApprovalBroker
+from forge.protocol.events import EventBus, EventType
 from forge.safety.injection import flag
 from forge.safety.permissions import Decision, PermissionGate
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.powershell import ps_quote
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.powershell import ps_quote
+from forge.toolkit.shell import execute
 from forge.tools.registry import ToolRegistry
-from forge.tools.shell import execute, is_test_command
-from forge.verify.parsers import error_signature, signature
 from forge.workspace.workspace import Workspace
 
 PREVIEW_CHARS = 1500
@@ -103,10 +98,6 @@ class AgentLoop:
         self.role = "coder"  # subagents run on other roles' models (reviewer, debugger)
         self.effort: str | None = None  # /effort: overrides the model's configured reasoning effort
         self.turn_effort: str | None = None  # "think hard:" raises it for one turn
-        self.escalate = True  # subagents report back instead of escalating
-        self.stuck = StuckDetector(max_fix_attempts=router.config.limits.max_fix_attempts)
-        self.escalator = Escalator(self)
-        self._observations: list[_Observation] = []
 
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
@@ -156,8 +147,6 @@ class AgentLoop:
                 )
             if self.context.end_turn:  # a phase tool finished its phase (orchestrator, M6)
                 return
-            if await self._check_stuck(history):
-                return
         await self.bus.publish(
             EventType.NOTICE,
             {
@@ -171,13 +160,21 @@ class AgentLoop:
         self, history: list[Message], on_text_delta: TextDeltaCallback, reasoning_effort: str | None = None
     ) -> LLMResponse:
         tools = self.tools.specs(read_only_only=self.gate.mode == "plan")
+        started = time.perf_counter()
+        first_token_s: list[float] = []  # time to the first streamed token, for the run log
+
+        async def timed_delta(text: str) -> None:
+            if not first_token_s:
+                first_token_s.append(time.perf_counter() - started)
+            await on_text_delta(text)
+
         request = ChatRequest(
             messages=await self.context_manager.prepare(history, tools),
             tools=tools,
             reasoning_effort=reasoning_effort,
         )
         try:
-            response = await self.router.chat(self.role, request, on_text_delta)
+            response = await self.router.chat(self.role, request, timed_delta)
         except LLMContextLengthError:
             # The estimate was too optimistic: trim hard and try once more (spec §10.4 tier 3).
             await self.context_manager.emergency(history)
@@ -186,10 +183,27 @@ class AgentLoop:
                 tools=tools,
                 reasoning_effort=reasoning_effort,
             )
-            response = await self.router.chat(self.role, request, on_text_delta)
+            response = await self.router.chat(self.role, request, timed_delta)
         except LLMContentFilterError:
-            response = await self._rephrase(request, on_text_delta)
+            response = await self._rephrase(request, timed_delta)
         self.context_manager.record_usage(response.usage)
+        await self.bus.publish(
+            EventType.LLM_CALL,
+            {
+                "role": self.role,
+                "model": self.router.model_for_role(self.role),
+                "served_model": response.served_model,
+                "latency_s": round(time.perf_counter() - started, 2),
+                "first_token_s": round(first_token_s[0], 2) if first_token_s else None,
+                "finish_reason": response.finish_reason,
+                "reasoning_effort": reasoning_effort,
+                "messages": len(request.messages),
+                "tools_offered": len(tools),
+                "usage": response.usage.model_dump(),
+                "text_chars": len(response.text),
+                "tool_calls": [call.name for call in response.tool_calls],
+            },
+        )
         parts = self.context_manager.breakdown(history, tools)
         await self.bus.publish(
             EventType.CONTEXT_UPDATED,
@@ -283,7 +297,6 @@ class AgentLoop:
                 "duration_s": round(time.perf_counter() - started, 2),
             },
         )
-        self._observations.append(_Observation(tool.name, call.arguments or {}, args, command, result))
         # Every result is capped here (spec §10.3), whatever the tool did itself.
         content, _ = self.context.cap_output(result.content, tool.output_kind)
         content, marker = flag(content)
@@ -313,25 +326,6 @@ class AgentLoop:
             # A formatter may have rewritten the file: what's on disk now is what the model has "read".
             self.context.reads.record(path, self.context.workspace.path_of(path).read_bytes())
         return ToolResult(ok=result.ok, content=result.content + "\n" + "\n".join(notes), meta=result.meta)
-
-    async def _check_stuck(self, history: list[Message]) -> bool:
-        """Feeds this step's tool results to the stuck detector; escalates on a signal (spec §13.3).
-        Returns True when the turn must stop."""
-        observations, self._observations = self._observations, []
-        if not self.escalate:
-            return False
-        seen_errors: set[str] = set()
-        for observation in observations:
-            facts = observation.facts(self.context)
-            # Parallel calls failing the same way in one step are one failure, not three.
-            if facts["error_signature"] in seen_errors:
-                continue
-            if facts["error_signature"]:
-                seen_errors.add(facts["error_signature"])
-            signal = self.stuck.observe(**facts)
-            if signal is not None:
-                return await self.escalator.handle(signal, history)
-        return False
 
     async def _approved_run(
         self, tool: Tool, args: ToolArgs, summary: str, command: str | None, decision: Decision
@@ -371,35 +365,3 @@ class AgentLoop:
                 "is a Forge bug, not your mistake; the details are logged. Check your inputs or continue "
                 "another way.",
             )
-
-
-@dataclass
-class _Observation:
-    tool: str
-    arguments: dict[str, Any]
-    args: ToolArgs
-    command: str | None
-    result: ToolResult
-
-    def facts(self, context: ToolContext) -> dict[str, Any]:
-        """What the stuck detector needs: the error signature, the file's new content, test success."""
-        ok = self.result.ok
-        is_test = self.tool in ("run_tests", "verify") or bool(self.command and is_test_command(self.command))
-        path = getattr(self.args, "path", None)
-        file_hash = None
-        if ok and isinstance(path, str):
-            try:
-                file_hash = content_hash(context.workspace.path_of(path).read_bytes())
-            except (OSError, ValueError, ForgeError):
-                file_hash = None
-        return {
-            "tool": self.tool,
-            "arguments": self.arguments,
-            "ok": ok,
-            "error_signature": None
-            if ok
-            else (error_signature(self.result.content) or signature(self.result.content[:200])),
-            "file_path": path if isinstance(path, str) else None,
-            "file_content_hash": file_hash,
-            "tests_passed": ok and is_test,
-        }

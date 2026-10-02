@@ -11,8 +11,8 @@ from dataclasses import dataclass, field
 from pydantic import Field
 
 from forge.safety.sandbox import SandboxedProcess, SandboxUnavailableError
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.powershell import build_script, kill_tree, start_process
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.powershell import build_script, kill_tree, start_process
 
 READY_TIMEOUT_S = 60
 KEPT_LINES = 2000

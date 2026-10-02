@@ -23,9 +23,9 @@ from typing import Any
 
 import yaml
 
-from forge.tools.base import ToolContext
-from forge.tools.powershell import ps_quote
-from forge.tools.shell import execute
+from forge.toolkit.base import ToolContext
+from forge.toolkit.powershell import ps_quote
+from forge.toolkit.shell import execute
 from forge.vision.images import draw_boxes, open_image, save
 from forge.vision.metrics import SampleScore, aggregate, check_targets, normalise, score_sample
 

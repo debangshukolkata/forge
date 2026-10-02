@@ -7,9 +7,9 @@ import json
 from pathlib import Path
 
 from forge.cli import main
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import SlashCommand
 from forge.engine.session_host import SessionHost
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import SlashCommand
 from forge.safety.redact import Redactor
 from forge.workspace.workspace import Workspace
 from tests.helpers import mocked_router

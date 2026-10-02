@@ -230,7 +230,7 @@ def test_code_expressions_are_not_redacted_but_env_lines_are() -> None:
 
 
 async def test_redaction_markers_are_never_written_into_files(tmp_path: Path, original_repo: Path) -> None:
-    from forge.tools.base import ToolContext
+    from forge.toolkit.base import ToolContext
     from forge.tools.files import WriteFile
     from forge.workspace.create import create_workspace
 

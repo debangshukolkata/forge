@@ -13,9 +13,9 @@ from pathlib import Path
 import uvicorn
 
 from forge.config import forge_home
+from forge.safety.server_security import ServerSecurity, check_bind_host, check_dev_origin
 from forge.session import build_session
 from forge.web.manager import WebSessionManager
-from forge.web.security import ServerSecurity, check_bind_host, check_dev_origin
 from forge.web.server import create_app
 
 DEFAULT_PORT = 8765

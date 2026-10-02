@@ -12,10 +12,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from forge.db.checks import load_checks, server_run_md
 from forge.safety.paths import os_path
 from forge.workspace.copy_repo import iter_source_files
 from forge.workspace.manifest import sha256_of
+from forge.workspace.server_checks import load_checks, server_run_md
 from forge.workspace.text_format import decode_text, detect_format
 from forge.workspace.workspace import Workspace
 

@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from forge.tools.base import ToolContext, ToolResult
-from forge.tools.shell import ShellSession
+from forge.toolkit.base import ToolContext, ToolResult
+from forge.toolkit.shell import ShellSession
 from forge.verify import react_ladder as react_ladder_module
 from forge.verify.ladder import VerifyLadder
 from forge.verify.react_ladder import ReactVerifyLadder

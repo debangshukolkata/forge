@@ -10,10 +10,10 @@ import pytest
 
 from forge.config import load_config, load_secrets
 from forge.context.compaction import pairs_are_valid, summary_is_valid
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import SendMessage, SlashCommand
 from forge.engine.session_host import SessionHost
 from forge.llm.router import LLMRouter
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import SendMessage, SlashCommand
 from forge.workspace.create import create_workspace
 from tests.conftest import REPO_ROOT
 

@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from forge.db.table_check import TableCheck, check_tables
-from forge.tools.base import ToolContext
-from forge.tools.powershell import ps_quote
-from forge.tools.shell import execute
+from forge.toolkit.base import ToolContext
+from forge.toolkit.powershell import ps_quote
+from forge.toolkit.shell import execute
 from forge.verify.parsers import (
     TestReport,
     error_signature,
@@ -195,7 +195,7 @@ class VerifyLadder:
     async def _pytest(self, name: str, selector: str, timeout_s: int) -> tuple[StepResult, TestReport]:
         harness = " -p harness_conftest" if self.context.workspace.mode_b else ""  # Mode B stand-ins
         if self.context.workspace.mode_b:
-            from forge.modeb.workspace import ensure_shared_stub_packages
+            from forge.workspace.stub_packages import ensure_shared_stub_packages
 
             ensure_shared_stub_packages(self.context.workspace)
         table_note = ""

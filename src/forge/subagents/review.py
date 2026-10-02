@@ -7,11 +7,11 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from forge.agent.subagent import _run_subagent
 from forge.errors import ForgeError
 from forge.llm.router import LLMRouter
 from forge.safety.redact import default_redactor
-from forge.tools.base import ToolContext
+from forge.subagents.subagent import _run_subagent
+from forge.toolkit.base import ToolContext
 from forge.tools.registry import ToolRegistry, default_tools
 from forge.workspace.output import build_patch, compute_changes
 from forge.workspace.workspace import Workspace

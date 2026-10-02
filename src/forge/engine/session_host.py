@@ -17,15 +17,11 @@ from typing import Any
 import psycopg
 
 from forge.agent.loop import AgentLoop, system_prompt
-from forge.agent.orchestrator import Orchestrator
 from forge.config import Secrets, forge_home
 from forge.context.manager import ContextManager
 from forge.db.access import AccessLevel
 from forge.db.scratch import ScratchError
 from forge.db.session import DbSession
-from forge.engine.approvals import ApprovalBroker, QuestionBroker
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import Answer, Approve, Interrupt, Reject, SendMessage, SlashCommand, UserInput
 from forge.engine.slash_commands import SlashCommandHandler
 from forge.errors import BudgetExceededError, ConfigError, LLMError
 from forge.kb.builder import status as kb_status
@@ -45,14 +41,19 @@ from forge.parity.mcp_client import McpHub
 from forge.parity.mentions import expand as expand_mentions
 from forge.parity.skills import discover
 from forge.parity.skills import index_text as skills_index
+from forge.protocol.approvals import ApprovalBroker, QuestionBroker
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import Answer, Approve, Interrupt, Reject, SendMessage, SlashCommand, UserInput
 from forge.safety.permissions import PermissionGate, PermissionMode
 from forge.safety.redact import default_redactor
-from forge.tools.background import BackgroundManager
-from forge.tools.base import Tool, ToolContext
+from forge.subagents.spawn_tool import SpawnSubagent
+from forge.toolkit.background import BackgroundManager
+from forge.toolkit.base import Tool, ToolContext
+from forge.toolkit.shell import ShellSession
 from forge.tools.modeb import modeb_tools
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
-from forge.tools.shell import ShellSession
 from forge.tools.web import azure_hosted_search
+from forge.workflow.orchestrator import Orchestrator
 from forge.workspace.workspace import Workspace
 
 DEFAULT_SYSTEM_PROMPT = (
@@ -278,7 +279,9 @@ class SessionHost:
         return AgentLoop(
             self.router,
             self.bus,
-            ToolRegistry([*default_tools(), *(db_tools() if context.db else []), *self.extra_tools]),
+            ToolRegistry(
+                [SpawnSubagent(), *default_tools(), *(db_tools() if context.db else []), *self.extra_tools]
+            ),
             context,
             gate,
             self.approvals,
@@ -314,11 +317,26 @@ class SessionHost:
             return
         if isinstance(user_input, SendMessage):
             await self.bus.publish(EventType.USER_MESSAGE, {"text": user_input.text})
+            if not user_input.text.lstrip().startswith("/"):  # slash commands don't answer cards
+                await self._supersede_open_requests(user_input.text)
         if self.busy:
             await self.bus.publish(
                 EventType.NOTICE, {"kind": "queued", "text": "Queued until the current turn ends"}
             )
         await self._inputs.put(user_input)
+
+    async def _supersede_open_requests(self, text: str) -> None:
+        """A message typed while approval cards or questions are open answers them (D-153); otherwise it
+        would queue behind a turn that is waiting for those very cards and Forge would look deaf."""
+        declined = self.approvals.reject_all(text) + self.questions.answer_all_with_text(text)
+        if declined:
+            await self.bus.publish(
+                EventType.NOTICE,
+                {
+                    "kind": "request_superseded",
+                    "text": f"Treated your message as the answer to {declined} open request(s); carrying on.",
+                },
+            )
 
     async def interrupt(self) -> None:
         if self.busy and self._current_turn is not None:

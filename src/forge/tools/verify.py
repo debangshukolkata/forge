@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.verify.checks import langgraph_check, openapi_check
 from forge.verify.ladder import VerifyLadder
 

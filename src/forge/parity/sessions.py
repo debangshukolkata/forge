@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from forge.config import forge_home
-from forge.engine.events import Event, EventType
+from forge.protocol.events import Event, EventType
 from forge.workspace.workspace import Workspace
 
 

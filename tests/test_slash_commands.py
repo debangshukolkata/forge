@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import SlashCommand
 from forge.engine.session_host import SessionHost
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import SlashCommand
 from forge.safety.redact import Redactor
 from tests.helpers import mocked_router
 

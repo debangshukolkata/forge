@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 import httpx
 from pydantic import Field
 
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "[::1]", "::1"}
 CHANNELS = ("msedge", "chrome", None)  # None = Playwright's bundled Chromium

@@ -11,12 +11,12 @@ import pytest
 
 from forge.config import ForgeConfig, Secrets, load_config, load_secrets
 from forge.doctor import run_doctor
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import Interrupt, SendMessage
 from forge.engine.session_host import SessionHost
 from forge.llm.azure_openai import AzureOpenAIProvider
 from forge.llm.base import ChatRequest, Message, ToolSpec
 from forge.llm.router import LLMRouter
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import Interrupt, SendMessage
 from forge.safety.redact import Redactor
 from tests.conftest import REPO_ROOT
 

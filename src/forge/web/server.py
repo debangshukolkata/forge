@@ -22,10 +22,10 @@ from pydantic import BaseModel, ValidationError
 from starlette.staticfiles import StaticFiles
 
 from forge.config import ROLES
-from forge.engine.inputs import parse_user_input
 from forge.errors import ForgeError
+from forge.protocol.inputs import parse_user_input
+from forge.safety.server_security import ServerSecurity
 from forge.web.manager import WebSessionManager
-from forge.web.security import ServerSecurity
 from forge.workspace.output import build_output, build_patch, compute_changes
 from forge.workspace.text_format import decode_text, detect_format
 from forge.workspace.workspace import Workspace

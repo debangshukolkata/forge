@@ -9,11 +9,11 @@ import psycopg
 from pydantic import Field
 
 from forge.db.access import AccessLevel
-from forge.db.checks import ServerRunCheck, add_check
 from forge.db.connection import connect
 from forge.db.introspect import describe, introspect
 from forge.safety.sql_guard import SqlGuardError, check_read_only
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.workspace.server_checks import ServerRunCheck, add_check
 
 NO_DB = ToolResult(
     ok=False, content="No database is configured for this workspace (LOCAL_PG_URL / DEV_PG_URL)."

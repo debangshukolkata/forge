@@ -24,6 +24,7 @@ class EventType(StrEnum):
     USER_MESSAGE = "user_message"  # what the user sent, so a UI replay shows both sides
     MESSAGE_DELTA = "message_delta"
     MESSAGE_DONE = "message_done"
+    LLM_CALL = "llm_call"  # one model call: latency, tokens, tool calls asked for (run log; no UI row)
     TOOL_CALL_STARTED = "tool_call_started"
     TOOL_CALL_FINISHED = "tool_call_finished"
     APPROVAL_REQUESTED = "approval_requested"

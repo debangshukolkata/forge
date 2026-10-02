@@ -37,6 +37,7 @@ mcp = ["mcp>=2.0"]  # MCP client (MIT)
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
+    "pytest-xdist>=3.5",  # parallel test runs: pytest -n 8 --dist loadfile (MIT, dev only)
     "ruff>=0.6",
     "mypy>=1.10",
     "types-PyYAML",
@@ -51,7 +52,7 @@ forge = "forge.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-forge = ["py.typed", "data/tiktoken/*", "defaults/*.yaml", "agent/prompts/*.md", "context/prompts/*.md", "kb/prompts/*.md", "skills/*/SKILL.md", "modeb/forge_structure_export.py", "vision/static/*", "web/react/*", "web/react/assets/*"]
+forge = ["py.typed", "data/tiktoken/*", "defaults/*.yaml", "agent/prompts/*.md", "workflow/prompts/*.md", "context/prompts/*.md", "kb/prompts/*.md", "skills/*/SKILL.md", "modeb/forge_structure_export.py", "vision/static/*", "web/react/*", "web/react/assets/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

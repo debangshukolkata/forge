@@ -12,7 +12,7 @@ from forge.modeb.assumptions import AssumptionRegister
 from forge.modeb.contracts import ContractError, ContractRegister
 from forge.modeb.output import DOCUMENT_NAMES, read_document, write_document
 from forge.safety.redact import default_redactor
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.frontend_setup import SetupFrontend
 
 

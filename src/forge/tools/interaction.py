@@ -9,7 +9,7 @@ from typing import Literal, Protocol
 
 from pydantic import Field
 
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 
 class OptionSpec(ToolArgs):

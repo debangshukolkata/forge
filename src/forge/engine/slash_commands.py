@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from forge.config import ROLES, forge_home
-from forge.engine.events import EventType
 from forge.errors import ConfigError
 from forge.kb.builder import build as kb_build
 from forge.kb.builder import status as kb_status
@@ -15,6 +14,7 @@ from forge.kb.knowledge import KnowledgeBase
 from forge.kb.narrative import llm_writer
 from forge.llm.cost import format_money
 from forge.memory.store import CommandStore, MemoryStore
+from forge.protocol.events import EventType
 from forge.workspace.output import build_output
 from forge.workspace.workspace import Workspace, WorkspaceError
 

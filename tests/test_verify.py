@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from forge.tools.base import ToolContext
-from forge.tools.shell import ShellSession
+from forge.toolkit.base import ToolContext
+from forge.toolkit.shell import ShellSession
 from forge.verify.checks import langgraph_check, openapi_check
 from forge.verify.ladder import VerifyLadder
 from forge.verify.parsers import (

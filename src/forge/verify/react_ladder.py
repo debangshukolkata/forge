@@ -6,7 +6,7 @@ typecheck together) and a build rung has no Python equivalent — see D-138 for 
 
 Deliberately NOT here: the browser smoke-check rung. D-138 puts it at task/export checkpoints only, not on
 every verify call (mirroring how Python's own slow full-suite rung is reserved for checkpoints too). It is
-built in `agent/frontend_smoke.py` and called from `Orchestrator._export()` (agent/orchestrator.py), using
+built in `workflow/frontend_smoke.py` and called from `Orchestrator._export()`, using
 the existing headless browser tool (tools/browser.py, BrowserSession) — intentionally left out of this
 module, not a missed rung.
 """
@@ -18,8 +18,8 @@ import re
 from pathlib import Path
 from typing import Any
 
-from forge.tools.base import ToolContext
-from forge.tools.shell import execute
+from forge.toolkit.base import ToolContext
+from forge.toolkit.shell import execute
 from forge.verify.ladder import LadderReport, StepResult
 from forge.workspace.nodeenv import NodeEnvironment
 

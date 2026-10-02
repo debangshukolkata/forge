@@ -12,10 +12,10 @@ import pytest
 
 from forge.modeb.profile import ProfileStore
 from forge.modeb.workspace import create_standalone_workspace
+from forge.toolkit.base import ToolContext, ToolResult
+from forge.toolkit.shell import ShellSession
 from forge.tools import frontend_setup as frontend_setup_module
-from forge.tools.base import ToolContext, ToolResult
 from forge.tools.frontend_setup import SetupFrontend
-from forge.tools.shell import ShellSession
 from forge.workspace.create import create_workspace
 from forge.workspace.workspace import Workspace
 from tests.conftest import FIXTURE_REPO

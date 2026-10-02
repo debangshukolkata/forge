@@ -9,8 +9,8 @@ from pathlib import Path
 
 import httpx2
 
-from forge.engine.events import Event, EventBus, EventType
 from forge.engine.session_host import SessionHost
+from forge.protocol.events import Event, EventBus, EventType
 from forge.safety.redact import Redactor
 from forge.ui.console import ConsoleState, status_bar, track_status
 from forge.workspace.create import create_workspace

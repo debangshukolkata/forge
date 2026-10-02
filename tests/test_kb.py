@@ -14,7 +14,7 @@ from forge.kb.flask_smorest import resolve_import
 from forge.kb.knowledge import KnowledgeBase
 from forge.kb.python_index import parse_module
 from forge.kb.store import PINNED_MARKER, kb_dir_for
-from forge.tools.base import ToolContext
+from forge.toolkit.base import ToolContext
 from forge.tools.kb import FindReferences, FindSymbol, KbRead, KbSearch, ListSymbols
 from forge.workspace.create import create_workspace
 from tests.conftest import FIXTURE_REPO
@@ -246,8 +246,8 @@ async def test_workspace_session_pins_kb_essentials(
 ) -> None:
     import asyncio
 
-    from forge.engine.events import EventBus, EventType
     from forge.engine.session_host import SessionHost
+    from forge.protocol.events import EventBus, EventType
     from forge.safety.redact import Redactor
     from tests.helpers import mocked_router
 

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from forge.llm.base import ToolSpec
-from forge.tools.background import ReadBackground, StartBackground, StopBackground
-from forge.tools.base import Tool
+from forge.toolkit.background import ReadBackground, StartBackground, StopBackground
+from forge.toolkit.base import Tool
+from forge.toolkit.shell import PythonRun, RunCommand
 from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
@@ -12,9 +13,8 @@ from forge.tools.kb import FindReferences, FindSymbol, KbRead, KbSearch, ListSym
 from forge.tools.learning import ImprovementPropose, LessonPropose, LibraryRead, LibrarySearch
 from forge.tools.memory import MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
-from forge.tools.parity import LoadSkill, SpawnSubagent
+from forge.tools.parity import LoadSkill
 from forge.tools.search import Glob, Grep, ListDir
-from forge.tools.shell import PythonRun, RunCommand
 from forge.tools.verify import LangGraphCheck, OpenApiCheck, RunTests, Verify
 from forge.tools.vision import vision_tools
 from forge.tools.web import WebFetch, WebSearch
@@ -55,7 +55,6 @@ def default_tools() -> list[Tool]:
         LessonPropose(),
         ImprovementPropose(),
         LoadSkill(),
-        SpawnSubagent(),
         NotebookRead(),
         NotebookEditCell(),
         *browser_tools(),

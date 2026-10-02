@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 
 from forge.config import load_config, load_secrets
-from forge.engine.events import EventBus, EventType
 from forge.llm.router import LLMRouter
-from forge.tools.base import ToolContext
+from forge.protocol.events import EventBus, EventType
+from forge.toolkit.base import ToolContext
 from forge.tools.vision import ViewImage
 from forge.vision.synthetic import DocumentSpec, generate
 from forge.workspace.create import create_workspace

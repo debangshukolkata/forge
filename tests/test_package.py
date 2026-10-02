@@ -21,4 +21,4 @@ def test_cli_version_flag_via_module() -> None:
     result = subprocess.run(
         [sys.executable, "-m", "forge.cli", "--version"], capture_output=True, text=True, check=True
     )
-    assert result.stdout.strip() == "forge 0.1.0"
+    assert result.stdout.strip().startswith("forge 0.1.0 (build ")  # the build id follows (D-153)

@@ -22,7 +22,7 @@ from forge.context.manager import ContextManager
 from forge.context.pinned import PinnedBlocks
 from forge.llm.base import Message, ToolCall, ToolSpec
 from forge.llm.tokens import count_text_tokens, head_and_tail
-from forge.tools.base import ToolContext
+from forge.toolkit.base import ToolContext
 from forge.tools.files import ReadFile
 from forge.workspace.create import create_workspace
 from tests.helpers import default_config, mocked_router

@@ -9,17 +9,17 @@ from pathlib import Path
 
 import pytest
 
-from forge.agent import frontend_smoke as frontend_smoke_module
-from forge.agent import orchestrator as orchestrator_module
-from forge.agent.frontend_smoke import (
+from forge.engine.session_host import SessionHost
+from forge.protocol.events import EventBus
+from forge.safety.redact import Redactor
+from forge.toolkit.base import ToolContext
+from forge.workflow import frontend_smoke as frontend_smoke_module
+from forge.workflow import orchestrator as orchestrator_module
+from forge.workflow.frontend_smoke import (
     SmokeCheckResult,
     render_smoke_check_section,
     run_frontend_smoke_check,
 )
-from forge.engine.events import EventBus
-from forge.engine.session_host import SessionHost
-from forge.safety.redact import Redactor
-from forge.tools.base import ToolContext
 from forge.workspace.create import create_workspace
 from forge.workspace.nodeenv import NodeEnvironment
 from tests.helpers import mocked_router

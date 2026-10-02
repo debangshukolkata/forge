@@ -8,18 +8,18 @@ from pathlib import Path
 import psutil
 import pytest
 
-from forge.tools.background import (
+from forge.toolkit.background import (
     BackgroundManager,
     ReadBackground,
     StartBackground,
     StopBackground,
     port_open,
 )
-from forge.tools.base import ToolContext, ToolResult
+from forge.toolkit.base import ToolContext, ToolResult
+from forge.toolkit.shell import PythonRun, RunCommand, ShellSession
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
 from forge.tools.registry import ToolRegistry
 from forge.tools.search import Glob, Grep, ListDir
-from forge.tools.shell import PythonRun, RunCommand, ShellSession
 from forge.workspace.create import create_workspace
 from forge.workspace.workspace import Workspace
 from tests.conftest import FIXTURE_BACKEND, FIXTURE_REPO

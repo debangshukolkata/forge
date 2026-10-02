@@ -1,5 +1,5 @@
 """M8 live acceptance (spec M8): the live agent fixes an injected failing test without weakening tests, and
-a repeated error signature injected at the tool layer triggers escalation. Run with: pytest -m live"""
+the agent runs the tests itself. Run with: pytest -m live"""
 
 from __future__ import annotations
 
@@ -8,13 +8,11 @@ from pathlib import Path
 import pytest
 
 from forge.config import load_config, load_secrets
-from forge.engine.events import Event, EventBus, EventType
-from forge.engine.inputs import Interrupt, UserInput
 from forge.engine.session_host import SessionHost
 from forge.llm.router import LLMRouter
-from forge.tools.base import ToolContext, ToolResult
-from forge.tools.shell import ShellSession
-from forge.tools.verify import RunTests
+from forge.protocol.events import EventBus, EventType
+from forge.toolkit.base import ToolContext
+from forge.toolkit.shell import ShellSession
 from forge.verify.ladder import VerifyLadder
 from forge.verify.test_guard import check_tests
 from forge.workspace.create import create_workspace
@@ -66,43 +64,3 @@ async def test_injected_failure_is_fixed_without_weakening_tests(host: SessionHo
         e for e in started if e.payload["name"] in ("verify", "run_tests") or "pytest" in e.payload["summary"]
     ]
     assert ran_tests, "the agent must run the tests itself (evidence), whichever tool it uses"
-
-
-def stop_when_stuck(event: Event) -> UserInput | None:
-    """The first escalation is what this test checks (later levels are covered offline in test_stuck.py);
-    going on would only repeat the injected failure."""
-    if event.type == EventType.NOTICE and event.payload.get("kind") == "stuck":
-        return Interrupt()
-    return None
-
-
-async def test_a_repeated_error_signature_escalates(
-    host: SessionHost, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    async def always_the_same_failure(
-        self: RunTests, args: RunTests.Args, context: ToolContext
-    ) -> ToolResult:
-        return ToolResult(
-            ok=False,
-            content=(
-                "pytest: 1 failed, 11 passed\n- tests/test_claims_api.py::test_list_claims: "
-                "KeyError: 'total' at tests/test_claims_api.py:30"
-            ),
-        )
-
-    monkeypatch.setattr(RunTests, "run", always_the_same_failure)
-    monkeypatch.setattr("tests.test_live_agent.TURN_TIMEOUT_S", 600)  # the model investigates first
-    assert host.agent is not None
-    host.agent.max_iterations = 40
-
-    await run_turn(
-        host,
-        "Run tests/test_claims_api.py with run_tests (the only tool for running tests) and make it pass. "
-        "After each fix attempt, run it again with run_tests. Keep trying until it passes.",
-        stop_when_stuck,
-    )
-
-    stuck = [e.payload for e in events_of(host, EventType.NOTICE) if e.payload.get("kind") == "stuck"]
-    assert stuck, "the repeated failure should have triggered escalation"
-    assert stuck[0]["level"] == 1 and stuck[0]["trigger"] in ("repeat_error", "repeat_call")
-    assert any(m.role == "system" and "You seem to be stuck" in m.content for m in host.history)

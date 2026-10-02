@@ -12,11 +12,11 @@ import pytest
 
 from forge.cli import main
 from forge.config import load_config, load_secrets
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import SendMessage
 from forge.engine.session_host import SessionHost
 from forge.kb.store import kb_dir_for
 from forge.llm.router import LLMRouter
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import SendMessage
 from forge.workspace.create import create_workspace
 from tests.conftest import FIXTURE_REPO, REPO_ROOT
 

@@ -12,11 +12,11 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from forge.engine.events import EventBus
 from forge.engine.session_host import SessionHost
+from forge.protocol.events import EventBus
 from forge.safety.redact import Redactor
+from forge.safety.server_security import BindError, ServerSecurity, check_bind_host
 from forge.web.manager import WebSessionManager
-from forge.web.security import BindError, ServerSecurity, check_bind_host
 from forge.web.server import create_app
 from forge.workspace.create import create_workspace
 from forge.workspace.workspace import Workspace

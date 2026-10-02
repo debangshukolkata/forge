@@ -6,7 +6,7 @@ The stack is the model's own per-project judgment (D-141: no one fixed default),
 structured, common-case shape (framework + typescript, translated into the matching `npm create vite@latest`
 template) and a free-form `create_command` escape hatch for anything the structured shape doesn't cover
 (Angular's own CLI, a framework with no Vite template, etc.). Whichever form is used, the actual scaffold runs
-through the existing shell/approval mechanism (`tools/shell.py`'s `execute`) exactly like any other install —
+through the existing shell/approval mechanism (`toolkit/shell.py`'s `execute`) like any other install —
 per D-141, deliberately not a hand-written offline template."""
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.shell import execute
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.shell import execute
 from forge.workspace.nodeenv import detect_node_environment
 
 SCAFFOLD_TIMEOUT_S = 600

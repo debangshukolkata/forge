@@ -14,14 +14,14 @@ from fastapi.testclient import TestClient
 from PIL import Image, ImageDraw, ImageFont
 
 from forge.errors import ForgeError
-from forge.tools.base import ToolContext
-from forge.tools.shell import ShellSession
+from forge.safety.server_security import ServerSecurity
+from forge.toolkit.base import ToolContext
+from forge.toolkit.shell import ShellSession
 from forge.tools.vision import DrawBoxes, ImageInfo, ImageOps, PdfRender, RunEval, SynthSamples, image_path
 from forge.vision import images, pdf
 from forge.vision.labeler import create_label_app
 from forge.vision.metrics import aggregate, check_targets, normalise, score_sample
 from forge.vision.synthetic import DocumentSpec, generate
-from forge.web.security import ServerSecurity
 from forge.workspace.create import create_workspace
 from forge.workspace.workspace import Workspace
 

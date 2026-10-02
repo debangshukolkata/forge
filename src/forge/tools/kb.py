@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 NO_KB = (
     "There is no knowledge base for this repository yet. Use grep/glob/read_file, or ask the user to run "

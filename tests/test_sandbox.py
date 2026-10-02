@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 
 from forge.safety.sandbox import SandboxUnavailableError
-from forge.tools.background import BackgroundManager
-from forge.tools.base import ToolContext, ToolResult
-from forge.tools.shell import PythonRun, RunCommand, ShellSession
+from forge.toolkit.background import BackgroundManager
+from forge.toolkit.base import ToolContext, ToolResult
+from forge.toolkit.shell import PythonRun, RunCommand, ShellSession
 from forge.workspace.create import create_workspace
 from tests.conftest import FIXTURE_BACKEND, FIXTURE_REPO
 
@@ -102,7 +102,7 @@ async def test_falls_back_with_a_notice_when_the_sandbox_fails(
     async def broken(*args: object, **kwargs: object) -> object:
         raise SandboxUnavailableError("blocked by policy (simulated)")
 
-    monkeypatch.setattr("forge.tools.powershell.spawn_low_integrity", broken)
+    monkeypatch.setattr("forge.toolkit.powershell.spawn_low_integrity", broken)
     notices: list[dict[str, object]] = []
 
     async def publish(kind: str, payload: dict[str, object]) -> None:

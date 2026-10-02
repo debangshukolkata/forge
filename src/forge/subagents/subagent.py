@@ -8,14 +8,14 @@ import time
 
 from forge.agent.loop import AgentLoop
 from forge.context.manager import ContextManager
-from forge.engine.approvals import ApprovalBroker
-from forge.engine.events import EventBus, EventType
 from forge.llm.base import Message
 from forge.llm.router import LLMRouter
 from forge.llm.tokens import head_and_tail
+from forge.protocol.approvals import ApprovalBroker
+from forge.protocol.events import EventBus, EventType
 from forge.safety.permissions import PermissionGate
 from forge.safety.redact import default_redactor
-from forge.tools.base import ToolContext
+from forge.toolkit.base import ToolContext
 from forge.tools.registry import ToolRegistry, default_tools
 
 REPORT_TOKENS = 1500
@@ -45,7 +45,6 @@ async def run_explore(router: LLMRouter, context: ToolContext, requirement: str)
     gate = PermissionGate("plan", context.workspace.forge_dir / "permissions.json")
     manager = ContextManager(router, router.config)
     loop = AgentLoop(router, bus, tools, sub_context, gate, ApprovalBroker(bus), EXPLORE_ITERATIONS, manager)
-    loop.escalate = False
     history = [Message.system(EXPLORE_PROMPT), Message.user(f"Requirement:\n{requirement}")]
 
     await _tracked_run(
@@ -159,7 +158,7 @@ async def _run_subagent(
     gate = PermissionGate("default", context.workspace.forge_dir / "permissions.json")
     manager = ContextManager(router, router.config)
     loop = AgentLoop(router, bus, tools, sub_context, gate, ApprovalBroker(bus), iterations, manager)
-    loop.role, loop.escalate = role, False
+    loop.role = role
     history = [Message.system(prompt), Message.user(task)]
 
     await _tracked_run(context, loop, bus, history, role, _purpose(prompt, task))

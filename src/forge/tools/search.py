@@ -13,7 +13,7 @@ from typing import Literal
 from pydantic import Field
 
 from forge.safety.paths import is_within
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.workspace.copy_repo import iter_source_files
 from forge.workspace.workspace import Workspace
 

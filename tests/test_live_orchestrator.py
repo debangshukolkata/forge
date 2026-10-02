@@ -16,12 +16,12 @@ from pathlib import Path
 import psutil
 import pytest
 
-from forge.agent.state import StateStore
 from forge.cli import _cleanup
-from forge.engine.events import EventType
 from forge.engine.headless import EXIT_OK, auto_reply, run_headless
-from forge.engine.inputs import SlashCommand
+from forge.protocol.events import EventType
+from forge.protocol.inputs import SlashCommand
 from forge.session import build_session
+from forge.workflow.state import StateStore
 from forge.workspace.create import create_workspace
 from forge.workspace.workspace import Workspace
 from tests.conftest import FIXTURE_BACKEND, FIXTURE_REPO, REPO_ROOT

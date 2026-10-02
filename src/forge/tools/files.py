@@ -9,7 +9,7 @@ from pathlib import Path
 from pydantic import Field
 
 from forge.errors import ForgeError
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.diagnostics import diagnose_file
 from forge.workspace.text_format import detect_format
 

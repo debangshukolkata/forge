@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from forge.config import forge_home
 from forge.memory.store import MemoryStore
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 
 class MemoryRead(Tool):

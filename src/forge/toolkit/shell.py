@@ -12,8 +12,8 @@ from forge.safety.paths import is_within, real_path
 from forge.safety.sandbox import SandboxUnavailableError, has_low_label, label_low
 from forge.safety.sandbox import is_supported as sandbox_supported
 from forge.safety.shell_classifier import ShellScope
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.powershell import ps_quote, run_powershell
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.powershell import ps_quote, run_powershell
 from forge.workspace.workspace import Workspace
 
 DEFAULT_TIMEOUT_S = 120

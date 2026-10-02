@@ -13,7 +13,7 @@ from typing import Any
 from forge.diagnose.fresh_run import FreshRun, fresh_copy_run
 from forge.diagnose.integrity import IntegrityReport, check_integrity
 from forge.llm.router import LLMRouter
-from forge.tools.base import ToolContext
+from forge.toolkit.base import ToolContext
 from forge.workspace.workspace import Workspace
 
 ANALYSIS_ITERATIONS = 20
@@ -77,7 +77,7 @@ async def _analyse(
     fresh: FreshRun | None,
     pasted: str | None,
 ) -> str:
-    from forge.agent.subagent import _run_subagent
+    from forge.subagents.subagent import _run_subagent
     from forge.tools.registry import ToolRegistry, default_tools
 
     evidence = (

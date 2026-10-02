@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from forge.memory.store import CommandStore, MemoryStore
-from forge.tools.base import ToolContext
+from forge.toolkit.base import ToolContext
 from forge.tools.browser import BrowserClose, BrowserConsole, BrowserOpen, HttpRequest, local_url
 from forge.tools.web import (
     WebCache,

@@ -17,7 +17,7 @@ from pydantic import Field
 from forge.errors import ForgeError
 from forge.llm.base import ChatRequest, Message
 from forge.safety.paths import resolve_inside
-from forge.tools.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.vision import images, pdf
 from forge.vision.evals import JUDGE_RUBRIC, run_eval
 from forge.vision.synthetic import DocumentSpec, generate

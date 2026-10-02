@@ -19,8 +19,8 @@ from forge.modeb import forge_structure_export as exporter
 from forge.modeb.profile import ProfileStore
 from forge.modeb.workspace import create_standalone_workspace
 from forge.session import build_session
-from forge.tools.base import ToolContext
-from forge.tools.shell import ShellSession
+from forge.toolkit.base import ToolContext
+from forge.toolkit.shell import ShellSession
 from forge.verify.ladder import VerifyLadder
 from forge.workspace.workspace import Workspace
 from tests.conftest import FIXTURE_BACKEND, REPO_ROOT

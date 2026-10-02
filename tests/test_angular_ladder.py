@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from forge.tools.base import ToolContext, ToolResult
-from forge.tools.shell import ShellSession
+from forge.toolkit.base import ToolContext, ToolResult
+from forge.toolkit.shell import ShellSession
 from forge.verify import angular_ladder as angular_ladder_module
 from forge.verify import react_ladder as react_ladder_module
 from forge.verify.angular_ladder import AngularVerifyLadder, is_angular_project

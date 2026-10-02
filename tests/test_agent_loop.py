@@ -10,9 +10,9 @@ from pathlib import Path
 import httpx2
 
 from forge.agent.loop import CUT_OFF_NOTE, FAILURE_HEAD_CHARS, FAILURE_TAIL_CHARS, _preview
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import SendMessage
 from forge.engine.session_host import SessionHost
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import SendMessage
 from forge.safety.redact import Redactor
 from forge.workspace.create import create_workspace
 from tests.helpers import mocked_router, reply, responses_body, text_output

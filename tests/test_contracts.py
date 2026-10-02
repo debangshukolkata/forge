@@ -13,7 +13,7 @@ from forge.learning.scope import scope_of
 from forge.modeb.contracts import ContractError, ContractRegister
 from forge.modeb.profile import ProfileStore
 from forge.modeb.workspace import create_standalone_workspace
-from forge.tools.base import ToolContext
+from forge.toolkit.base import ToolContext
 from forge.tools.modeb import ContractPin, ContractRead
 from forge.workspace.workspace import Workspace
 

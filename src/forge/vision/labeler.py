@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 
-from forge.web.security import ServerSecurity
+from forge.safety.server_security import ServerSecurity
 
 STATIC = Path(str(resources.files("forge.vision") / "static"))
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp", ".webp"}

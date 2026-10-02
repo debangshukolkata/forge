@@ -11,8 +11,6 @@ from pathlib import Path
 import pytest
 
 from forge.config import McpServerConfig
-from forge.engine.events import EventBus, EventType
-from forge.engine.inputs import Answer
 from forge.engine.session_host import SessionHost
 from forge.parity.agents import load_agents
 from forge.parity.history import History
@@ -20,9 +18,11 @@ from forge.parity.mcp_client import McpHub
 from forge.parity.mentions import LONG_PASTE_CHARS, expand
 from forge.parity.sessions import export_chat
 from forge.parity.skills import discover
+from forge.protocol.events import EventBus, EventType
+from forge.protocol.inputs import Answer
 from forge.safety.permissions import PermissionGate
 from forge.safety.redact import Redactor
-from forge.tools.base import ToolContext
+from forge.toolkit.base import ToolContext
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
 from forge.workspace.create import create_workspace
@@ -178,7 +178,7 @@ def test_local_history_commits_per_task_outside_the_repo_copy(workspace: Workspa
 
 
 def test_export_chat_writes_markdown(host: SessionHost, workspace: Workspace) -> None:
-    from forge.engine.events import Event
+    from forge.protocol.events import Event
 
     events = [
         Event(seq=1, type=EventType.USER_MESSAGE, ts="", payload={"text": "Add an endpoint"}),

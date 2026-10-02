@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import pytest
 
-from forge.engine.events import Event, EventType
-from forge.engine.inputs import Reject, UserInput
+from forge.protocol.events import Event, EventType
+from forge.protocol.inputs import Reject, UserInput
 from tests.test_live_agent import make_host, run_turn  # noqa: F401  (make_host is a fixture)
 
 pytestmark = pytest.mark.live

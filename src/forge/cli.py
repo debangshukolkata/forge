@@ -8,13 +8,13 @@ from pathlib import Path
 
 from rich.console import Console
 
-from forge import __version__
+from forge.buildinfo import describe
 from forge.errors import ConfigError
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="forge", description="Forge coding agent")
-    parser.add_argument("--version", action="version", version=f"forge {__version__}")
+    parser.add_argument("--version", action="version", version=describe())
     parser.add_argument("--workspace", type=Path, help="attach the interactive session to a workspace")
     parser.add_argument(
         "--direct",
@@ -59,6 +59,11 @@ def build_parser() -> argparse.ArgumentParser:
     diagnose.add_argument("--workspace", type=Path, required=True, dest="diagnose_workspace")
     diagnose.add_argument("--error-file", type=Path, help="an error/log from your own run to start from")
     diagnose.add_argument("--no-run", action="store_true", help="only the integrity check (no test run)")
+    log_summary = subcommands.add_parser(
+        "log-summary", help="one-page summary of a run: where the time and tokens went (D-151)"
+    )
+    log_summary.add_argument("--workspace", type=Path, help="a workspace folder (uses its transcripts)")
+    log_summary.add_argument("--log", type=Path, help="an events.jsonl file instead of a workspace")
     profile = subcommands.add_parser("profile", help="Mode B host profiles")
     profile.add_argument("action", choices=["list", "new", "show", "import", "export-script"])
     profile.add_argument("name", nargs="?", help="the profile name (new/show/import)")
@@ -121,9 +126,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "diagnose":
         error = args.error_file.read_text(encoding="utf-8", errors="replace") if args.error_file else None
         return asyncio.run(_diagnose(args.diagnose_workspace, error, not args.no_run))
+    if args.command == "log-summary":
+        return _log_summary(args.workspace, args.log)
     if args.command == "ui":
+        from forge.safety.server_security import BindError
         from forge.web.run import run_ui
-        from forge.web.security import BindError
 
         try:
             return run_ui(args.ui_workspace, args.port, args.host, args.no_browser, args.dev)
@@ -149,6 +156,7 @@ async def _doctor(offline: bool) -> int:
 
     results = await run_doctor(offline=offline)
     console = Console()
+    console.print(describe())
     render_results(results, console.print)
     return 1 if any(result.status == "fail" for result in results) else 0
 
@@ -350,6 +358,19 @@ def _cleanup(workspace_path: Path, yes: bool) -> int:
     return status
 
 
+def _log_summary(workspace_path: Path | None, log_path: Path | None) -> int:
+    from forge.engine.log_summary import summarize_file
+
+    path = log_path or (
+        workspace_path / ".forge" / "transcripts" / "events.jsonl" if workspace_path else None
+    )
+    if path is None or not path.exists():
+        print("forge log-summary needs --workspace (with a transcript) or --log events.jsonl")
+        return 2
+    print(summarize_file(path))
+    return 0
+
+
 async def _diagnose(workspace_path: Path, pasted_error: str | None, fresh_run: bool) -> int:
     """Spec §6.6: exit 0 when nothing is wrong, 2 when problems were found, 1 on errors."""
     from forge.diagnose.run import run_diagnose
@@ -462,9 +483,9 @@ def _profile(args: argparse.Namespace) -> int:
 def _label(eval_dir: Path, no_browser: bool) -> int:
     import uvicorn
 
+    from forge.safety.server_security import ServerSecurity
     from forge.vision.labeler import create_label_app
     from forge.web.run import free_port, open_browser
-    from forge.web.security import ServerSecurity
 
     if not (eval_dir / "samples").is_dir():
         Console().print(f"{eval_dir} has no samples/ folder.", markup=False)
