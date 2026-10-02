@@ -10,10 +10,10 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 |---|---|---|
 | 0 | errors, net | exceptions, TLS |
 | 1 | safety | write jail, permissions, sandbox, redaction (safety invariants) |
-| 2 | config, protocol, workspace, memory | settings; events/inputs/approvals; the workspace write gate; user memory |
-| 3 | llm | providers, router, tokens, cost |
+| 2 | config, protocol, workspace | settings; events/inputs/approvals; the workspace write gate |
+| 3 | llm, memory | providers, router, tokens, cost; auto-memory (user + project scope) |
 | 4 | context, kb, toolkit | context window; knowledge base; tool contract + shell runners |
-| 5 | db, learning, parity, vision | database; lessons/library; skills/agents/MCP; vision |
+| 5 | db, parity, vision | database; skills/agents/MCP; vision |
 | 6 | doctor, verify | setup checks; verification ladders |
 | 7 | modeb | host profiles, contracts |
 | 8 | tools | tool implementations + registry |
@@ -27,8 +27,7 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 | 16 | cli | command line |
 
 ## Status of modules affected by the revamp (D-156)
-`kb` (repo index), `learning` (library, lessons, retro, metrics, proposals) and the ladders in `verify` are being
-retired; the replacements are FORGE.md files and the auto-memory folder (`parity`, `memory`) and the shell tool
+`kb` (repo index) and the ladders in `verify` are being retired (`learning` is gone: D-158); the replacements are FORGE.md files and the auto-memory folder (`parity`, `memory`) and the shell tool
 (`toolkit`). Until a module's removal is ticked in TODO.md it still exists and is still tested.
 
 ## Rules

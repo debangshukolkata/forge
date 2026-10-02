@@ -14,6 +14,8 @@ Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
   Claude Code (shell checks, FORGE.md + auto-memory + skills, on-demand search).
 - **Tests:** `pytest-xdist` added for dev; `pytest -n 12 --dist loadfile` runs the whole suite in about 3.5
   minutes. The browser tests no longer stop at the first-run setup screen.
+- **`learning` retired, auto-memory added (D-158):** no more library cards, lessons, retro or proposals; the model
+  saves typed memories (user and project scope) with `memory_write`, shown in an index pinned every session.
 - **Parked:** Gemini provider (D-150).
 
 ## 0.1.0 — 2026-09-26 … 2026-09-29

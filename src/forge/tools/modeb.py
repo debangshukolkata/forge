@@ -20,21 +20,20 @@ def _profile(context: ToolContext) -> Any:
     return context.profile
 
 
-def _propose_contract_lesson(context: ToolContext, contract: Any) -> None:
-    """D-129: a pinned/revised contract becomes a lesson proposal, scoped to this host profile, so Forge
-    recommends it on a later, similar requirement instead of re-deriving or re-asking (spec §12)."""
+def _remember_contract(context: ToolContext, contract: Any) -> None:
+    """D-129 as amended by D-156: a pinned or revised contract is saved as a project-scope memory for this
+    host profile, so Forge builds to it again on a later requirement instead of re-deriving or re-asking.
+    The user stated it directly, so there is no approval step."""
     from forge.config import forge_home
-    from forge.learning.lessons import LessonStore
-    from forge.learning.scope import scope_of
+    from forge.memory.scope import scope_of
+    from forge.memory.store import MemoryStore
 
-    scope = scope_of(context.workspace, forge_home())
-    LessonStore(forge_home()).propose(
-        f"For the '{contract.seam}' seam on this host, build to this exact signature: {contract.signature}"
+    MemoryStore(forge_home(), scope_of(context.workspace)).save(
+        f"contract-{contract.seam}",
+        f"Interface contract for the '{contract.seam}' seam on this host",
+        "reference",
+        f"Build to this exact signature: {contract.signature}"
         + (f" ({contract.note})" if contract.note else ""),
-        scope,
-        source="contract",
-        evidence=contract.id,
-        confidence="high",  # the user stated it directly, not inferred
     )
 
 
@@ -232,7 +231,7 @@ class ContractPin(Tool):
             contract = ContractRegister(profile).pin(args.seam, args.signature, args.note)
         except ContractError as error:
             return ToolResult(ok=False, content=str(error))
-        _propose_contract_lesson(context, contract)
+        _remember_contract(context, contract)
         return ToolResult(ok=True, content=f"Pinned {contract.id} ({contract.seam}).")
 
 

@@ -19,7 +19,6 @@ SLOT_ORDER = [
     "database",
     "kb_essentials",
     "files_modified",
-    "lessons",
     "memory_index",
     "skills",
 ]
@@ -35,8 +34,7 @@ SLOT_TITLES = {
     "instructions": "Instructions from FORGE.md files (always follow them)",
     "skills": "Skills",
     "files_modified": "Files modified so far",
-    "lessons": "Lessons for this task",
-    "memory_index": "User memory",
+    "memory_index": "Memory",
 }
 HEADER = "Pinned context (kept up to date by Forge; it replaces anything older on the same topics):"
 

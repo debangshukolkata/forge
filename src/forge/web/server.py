@@ -197,21 +197,9 @@ def create_app(
 
     @app.get("/api/learning")
     async def learning() -> dict[str, Any]:
-        """Lessons, library cards and improvement proposals visible to the open workspace (its scope)."""
-        from forge.learning.improve import Improvements
-        from forge.learning.lessons import LessonStore
-        from forge.learning.library import Library
-        from forge.learning.scope import scope_of, visible_scopes
-
-        scopes = visible_scopes(scope_of(current(), manager.home))
-        lessons = [
-            lesson.model_dump() for lesson in LessonStore(manager.home).all() if lesson.scope in scopes
-        ]
-        return {
-            "lessons": [lesson for lesson in lessons if lesson["status"] in ("proposed", "approved")],
-            "cards": Library(manager.home).cards(scopes),
-            "improvements": [{"id": p.id, **p.meta} for p in Improvements(manager.home).all()],
-        }
+        """The lessons/library/improvements panel was retired with the learning module (D-156); the endpoint
+        stays, empty, until the timeline UI replaces that panel, so the current UI keeps rendering."""
+        return {"lessons": [], "cards": [], "improvements": []}
 
     @app.get("/api/evals")
     async def evals() -> list[dict[str, Any]]:

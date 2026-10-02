@@ -229,7 +229,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] D-153 a chat message answers open approval cards; build id in `forge --version` / `forge doctor`
 - [x] D-155 no stuck detector or escalation ladder; the model improvises failure recovery
 - [x] D-156 docs: spec §0.2 + banners, SPEC_DEVIATIONS, CLAUDE.md, MODULES.md, memory
-- [ ] D-156 code step 1: retire `learning` (library, lessons, retro, metrics, proposals, /lessons, tools); memory = FORGE.md + auto-memory folder per scope
+- [x] D-156 code step 1 (D-158, 2026-10-03): `learning` retired; memory = FORGE.md + auto-memory (typed files + MEMORY.md, user and project scope). Left: remove the empty Lessons panel from the React UI with the timeline UI
 - [ ] D-156 code step 2: retire the verify ladders, `verify`/`run_tests`/`openapi_check`/`langgraph_check` tools, test guard, export smoke check (keep `mark_server_run`, Mode B harness)
 - [ ] D-156 code step 3: retire `kb` and the `kb_*`/symbol tools, KB check, `forge kb`; add `/init`-style FORGE.md drafting
 - [ ] Timeline UI (option A): rail, narration between tool rows, Read/Grep collapsed, Bash/Edit with output, inline diffs, nested subagents; fix the Run map (D-131)

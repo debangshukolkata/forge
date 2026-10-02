@@ -10,8 +10,7 @@ from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
 from forge.tools.kb import FindReferences, FindSymbol, KbRead, KbSearch, ListSymbols
-from forge.tools.learning import ImprovementPropose, LessonPropose, LibraryRead, LibrarySearch
-from forge.tools.memory import MemoryRead, MemoryWrite
+from forge.tools.memory import MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
 from forge.tools.search import Glob, Grep, ListDir
@@ -50,10 +49,7 @@ def default_tools() -> list[Tool]:
         WebFetch(),
         MemoryRead(),
         MemoryWrite(),
-        LibrarySearch(),
-        LibraryRead(),
-        LessonPropose(),
-        ImprovementPropose(),
+        MemoryForget(),
         LoadSkill(),
         NotebookRead(),
         NotebookEditCell(),

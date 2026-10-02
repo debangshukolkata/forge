@@ -30,7 +30,8 @@ from forge.kb.store import kb_dir_for
 from forge.llm.base import ChatRequest, Message
 from forge.llm.router import LLMRouter
 from forge.llm.usage_ledger import UsageLedger
-from forge.memory.store import MemoryStore
+from forge.memory.scope import scope_of
+from forge.memory.store import combined_index
 from forge.modeb.profile import HostProfile, ProfileError, ProfileStore, host_identifying_terms
 from forge.modeb.workspace import profile_ref
 from forge.parity.history import History
@@ -197,7 +198,8 @@ class SessionHost:
         return response.text
 
     def refresh_memory_pin(self) -> None:
-        self.context_manager.pinned.set("memory_index", MemoryStore(forge_home()).index())
+        scope = scope_of(self.workspace) if self.workspace is not None else None
+        self.context_manager.pinned.set("memory_index", combined_index(forge_home(), scope))
 
     async def _prepare_database_quietly(self) -> None:
         """Session start in direct mode: not a turn (no status/cost events), and never fatal."""
@@ -273,7 +275,7 @@ class SessionHost:
         if workspace.mode_b:
             context.profile = self.host_profile()
             context.sensitive_terms = host_identifying_terms(context.profile)
-        self.context_manager.pinned.set("memory_index", MemoryStore(forge_home()).index())
+        self.refresh_memory_pin()
         self.style: str | None = None
         gate = PermissionGate(mode, workspace.forge_dir / "permissions.json")
         return AgentLoop(
@@ -465,24 +467,11 @@ class SessionHost:
         return expanded.text
 
     def _mention_lookup(self) -> dict[str, object]:
-        from forge.learning.lessons import LessonStore
-        from forge.learning.library import Library
-        from forge.learning.scope import scope_of, visible_scopes
-
-        assert self.workspace is not None
-        scopes = visible_scopes(scope_of(self.workspace, forge_home()))
-
         def dbr(ident: str) -> str | None:
             request = self.db.requests.get(ident) if self.db is not None else None
             return f"{request.title}\n{request.sql}\nstatus: {request.status}" if request else None
 
-        def lesson(ident: str) -> str | None:
-            found = next(
-                (item for item in LessonStore(forge_home()).all() if item.id.upper() == ident.upper()), None
-            )
-            return found.text if found is not None and found.scope in scopes else None
-
-        return {"DBR": dbr, "REQ": lambda ident: Library(forge_home()).read(ident, scopes), "L": lesson}
+        return {"DBR": dbr}
 
     async def _save_instruction(self, line: str) -> None:
         files = {f.level: f for f in self.instruction_files()}

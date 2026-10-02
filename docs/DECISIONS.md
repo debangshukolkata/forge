@@ -2331,3 +2331,23 @@ new interface):** `plugins/<name>/` with a manifest, commands, agents, skills, h
 **Tests:** `pytest-xdist` added to the dev extras; `pytest -n 12 --dist loadfile` runs all 542 tests in ~3.5 min
 (was ~15 min sequential). Fixed on the way: the browser tests were failing since D-146 (empty Forge home showed the
 first-run setup screen; the e2e fixture now sets fake keys) and one waited too briefly under load.
+
+### D-158 — `learning` retired; auto-memory built (D-156 code step 1) · Built (2026-10-03)
+**Removed:** the whole `learning` module (requirements library, lessons store and approvals, retro, metrics,
+self-improvement proposals, scope), `tools/learning.py` (`library_search/read`, `lesson_propose`,
+`improvement_propose`), `workflow/learning_hooks.py` (library card + metrics + retro after export, related-cards
+note, lessons pinned per task), the `/library /lessons /retro /stats /improve` commands, the `@REQ` and `@L`
+mentions, the "lessons" pinned slot, approved prompt overrides (`prompt_override`), and their tests. The retro and its
+lesson approval card, which caused the office-laptop report, no longer exist.
+**Built:** auto-memory in `forge.memory`: one file per memory (frontmatter name/description/type user, feedback,
+project, reference) + a `MEMORY.md` index, in two scopes: user (`<home>/memory/`) and project
+(`<home>/memory/scopes/<scope>/`; scope = repo key or host profile, `memory/scope.py`, same key format as before).
+Tools `memory_read(name?, scope?)`, `memory_write(name, description, type, text, scope)`, `memory_forget`; the index
+of both scopes is pinned every session; `/remember [project] <text>` and `/memory [delete <name>]`. Memories are
+redacted and size-capped. Older single-file user memories still load. Pinning a Mode B contract now saves a
+project-scope `reference` memory (no approval step) instead of proposing a lesson.
+**Kept on purpose:** the `learning:` config key and `limits.max_fix_attempts` stay in the schema (config.yaml rejects
+unknown keys); the `lesson_proposed`/`improvement_proposed` event types stay so old event logs still load; the web
+`/api/learning` endpoint returns empty lists so the current UI panel renders until the timeline UI replaces it; old
+`learning/` data in Forge Home is left on disk, unread. **Tests:** 533 passed + this module's updated tests green
+(parallel run, `-n 12`).

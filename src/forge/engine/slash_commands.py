@@ -13,6 +13,7 @@ from forge.kb.builder import status as kb_status
 from forge.kb.knowledge import KnowledgeBase
 from forge.kb.narrative import llm_writer
 from forge.llm.cost import format_money
+from forge.memory.scope import scope_of
 from forge.memory.store import CommandStore, MemoryStore
 from forge.protocol.events import EventType
 from forge.workspace.output import build_output
@@ -46,17 +47,12 @@ HELP_TEXT = """Available commands:
   /db skip <DBR-n>          drop it; Forge works around it
   /db cleanup               drop every object Forge created in the scratch schema
   /diagnose [error text]    after copying output/ into your repo: find what is wrong
-  /remember <text>          remember a preference for all future work
+  /remember [project] <text>          remember a preference for all future work
   /profile [show|list|terms <t1,t2,...>]   Mode B: the host profile (sensitive terms masked everywhere)
   /assumptions [confirm|wrong <id> [note]] Mode B: what Forge assumed about the host
   /contract | /revision     Mode B: the interface contract; the current revision and what changed
   /contracts [pin <seam> <signature> | forget <seam|id>]   Mode B: user-pinned interface contracts (D-129)
   /forget-snippet <id>      Mode B: remove a pasted snippet (exemplar) from the profile
-  /library [search <text> | show <REQ-n>]   earlier requirements on this codebase
-  /lessons [approve|reject|delete|promote <id> | edit <id> <text>]
-                            what Forge learned (only approved lessons are ever used)
-  /retro [REQ-n]            the last (or a given) retrospective
-  /stats                    trends across requirements (cost, first-pass success, failure causes)
   /init                     draft the repository-level FORGE.md (instructions Forge always follows)
   # <text>                  (a message starting with #) save an instruction to a FORGE.md
   /effort [low|medium|high] reasoning effort for this session ('think hard: ...' raises it for one message)
@@ -67,9 +63,7 @@ HELP_TEXT = """Available commands:
   /rename <name>            name this session/workspace
   /export-chat              save the conversation as Markdown (.forge/exports/)
   /mcp                      connected MCP servers and their tools (optional; config mcp.*)
-  /improve [list | show IP-n | suggest <idea> | validate IP-n | apply IP-n | reject IP-n]
-                            Forge's proposals to improve itself (you apply them)
-  /memory [delete <id>]     list (or delete) what Forge remembers
+  /memory [delete <name>]   list (or delete) what Forge remembers (user + this project)
   /<name> [args]            your custom commands: <forge home>/commands/<name>.md ($ARGUMENTS = args)
   /exit                     end the session
 Other commands from the spec arrive with later milestones."""
@@ -101,7 +95,6 @@ class SlashCommandHandler:
             "/diagnose": self._diagnose,
             "/remember": self._remember,
             "/profile": self._profile,
-            "/library": self._library,
             "/init": self._init,
             "/effort": self._effort,
             "/style": self._style,
@@ -113,10 +106,6 @@ class SlashCommandHandler:
             "/rename": self._rename,
             "/export-chat": self._export_chat,
             "/mcp": self._mcp,
-            "/lessons": self._lessons,
-            "/retro": self._retro,
-            "/stats": self._stats,
-            "/improve": self._improve,
             "/assumptions": self._assumptions,
             "/contract": self._contract,
             "/contracts": self._contracts,
@@ -352,23 +341,33 @@ class SlashCommandHandler:
 
     async def _remember(self, args: list[str]) -> None:
         if not args:
-            await self._say("Usage: /remember <a preference for all future work>")
+            await self._say(
+                "Usage: /remember [project] <something to remember>  (project = this repository/host only)"
+            )
             return
-        memory = MemoryStore(forge_home()).add(" ".join(args))
+        project = args[0] == "project" and len(args) > 1
+        text = " ".join(args[1:] if project else args)
+        scope = scope_of(self._workspace()) if project else None
+        memory = MemoryStore(forge_home(), scope).add(text)
         self.host.refresh_memory_pin()
-        await self._say(f"Remembered ({memory.id}): {memory.title}")
+        await self._say(
+            f"Remembered ({memory.name}, {'project' if project else 'user'}): {memory.description}"
+        )
 
     async def _memory(self, args: list[str]) -> None:
-        store = MemoryStore(forge_home())
-        if len(args) == 2 and args[0] == "delete":
-            deleted = store.delete(args[1])
+        scope = scope_of(self._workspace())
+        stores = {"user": MemoryStore(forge_home()), "project": MemoryStore(forge_home(), scope)}
+        if len(args) >= 2 and args[0] == "delete":
+            deleted = any(store.delete(args[1]) for store in stores.values())
             self.host.refresh_memory_pin()
             await self._say(f"Deleted {args[1]}." if deleted else f"No memory {args[1]}.")
             return
-        memories = store.all()
-        await self._say(
-            "\n".join(f"  {m.id}  {m.text}" for m in memories) or "Nothing remembered yet: /remember <text>"
-        )
+        lines = [
+            f"  {name:8} {m.name}  ({m.kind}) {m.description}"
+            for name, store in stores.items()
+            for m in store.all()
+        ]
+        await self._say("\n".join(lines) or "Nothing remembered yet: /remember [project] <text>")
 
     def _modeb(self) -> Workspace:
         workspace = self._workspace()
@@ -478,127 +477,6 @@ class SlashCommandHandler:
         await self._say(
             f"{args[0].upper()} removed from the profile." if removed else f"No snippet {args[0]}."
         )
-
-    def _scopes(self) -> tuple[str, ...]:
-        from forge.learning.scope import scope_of, visible_scopes
-
-        return visible_scopes(scope_of(self._workspace(), forge_home()))
-
-    async def _library(self, args: list[str]) -> None:
-        from forge.learning.library import Library
-
-        library = Library(forge_home())
-        if len(args) >= 2 and args[0] == "show":
-            await self._say(
-                library.read(args[1], self._scopes()) or f"No requirement {args[1]} for this codebase."
-            )
-            return
-        if args and args[0] == "search":
-            hits = library.search(" ".join(args[1:]), self._scopes())
-            await self._say("\n".join(f"  {h.id}  {h.title}" for h in hits) or "No matches.")
-            return
-        cards = library.cards(self._scopes())
-        await self._say(
-            "\n".join(f"  {c['id']}  [{c['status']}] {c['title']}" for c in cards) or "No requirements yet."
-        )
-
-    async def _lessons(self, args: list[str]) -> None:
-        from forge.learning.lessons import LessonStore
-
-        store = LessonStore(forge_home())
-        try:
-            if len(args) >= 2 and args[0] in ("approve", "reject", "delete"):
-                status = {"approve": "approved", "reject": "rejected", "delete": "archived"}[args[0]]
-                lesson = store.set_status(args[1], status)  # type: ignore[arg-type]
-                await self._say(f"{lesson.id} {status}.")
-                return
-            if len(args) >= 3 and args[0] == "edit":
-                lesson = store.set_status(args[1], "approved", " ".join(args[2:]))
-                await self._say(f"{lesson.id} edited and approved.")
-                return
-            if len(args) >= 2 and args[0] == "promote":
-                lesson = store.promote(args[1])
-                await self._say(f"{lesson.id} is now global (used for every codebase).")
-                return
-        except KeyError:
-            await self._say(f"No lesson {args[1]}.")
-            return
-        visible = [
-            item
-            for item in store.all()
-            if item.scope in self._scopes() and item.status in ("approved", "proposed")
-        ]
-        lines = [f"  {item.id}  [{item.status}] ({item.scope}) {item.text}" for item in visible]
-        await self._say(
-            "\n".join(lines) or "No lessons yet: they are proposed in the retro after each requirement."
-        )
-
-    async def _retro(self, args: list[str]) -> None:
-        from forge.learning.library import Library
-
-        folder = forge_home() / "learning" / "retros"
-        cards = Library(forge_home()).cards(self._scopes())
-        wanted = args[0].upper() if args else (cards[-1]["id"] if cards else "")
-        path = folder / f"{wanted}.md"
-        allowed = {c["id"] for c in cards}
-        await self._say(
-            path.read_text(encoding="utf-8") if wanted in allowed and path.exists() else "No retro yet."
-        )
-
-    async def _stats(self, args: list[str]) -> None:
-        from forge.learning.metrics import Metrics
-
-        await self._say(Metrics(forge_home()).stats())
-
-    async def _improve(self, args: list[str]) -> None:
-        from forge.learning.improve import Improvements
-
-        improvements = Improvements(forge_home())
-        action = args[0].lower() if args else "list"
-        if action == "list":
-            items = improvements.all()
-            await self._say(
-                "\n".join(
-                    f"  {p.id}  tier {p.meta['tier']}  [{p.meta['status']}] {p.meta['title']}" for p in items
-                )
-                or "No improvement proposals."
-            )
-            return
-        if action == "suggest":
-            idea = " ".join(args[1:]) or "anything that recurring problems in the metrics and retros suggest"
-            await self.host.run_message(
-                "Draft a self-improvement proposal for Forge (spec §12.5) about: "
-                f"{idea}. Use the evidence in /stats and the retros; write it with improvement_propose."
-            )
-            return
-        proposal = improvements.get(args[1]) if len(args) > 1 else None
-        if proposal is None:
-            await self._say(
-                "Usage: /improve [list | show IP-n | suggest <idea> | validate IP-n | apply IP-n | "
-                "reject IP-n]"
-            )
-            return
-        if action == "show":
-            text = (proposal.folder / "PROPOSAL.md").read_text(encoding="utf-8")
-            validation = proposal.folder / "VALIDATION.md"
-            await self._say(
-                text + ("\n" + validation.read_text(encoding="utf-8") if validation.exists() else "")
-            )
-        elif action == "validate":
-            await self._say(
-                f"Validating {proposal.id} in a sandbox copy of Forge's source (runs its test suite)…"
-            )
-            await self._say(await asyncio.to_thread(improvements.validate, proposal.id))
-        elif action == "apply":
-            try:
-                target = improvements.apply_tier2(proposal.id)
-            except ValueError as error:
-                await self._say(str(error))
-                return
-            await self._say(f"{proposal.id} applied to {target}; it takes effect from the next session.")
-        elif action == "reject":
-            improvements.set_status(proposal, "rejected")
-            await self._say(f"{proposal.id} rejected.")
 
     async def _init(self, args: list[str]) -> None:
         from forge.parity.instructions import draft_from_kb

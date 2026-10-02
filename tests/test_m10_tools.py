@@ -137,11 +137,23 @@ def test_browser_and_http_tools_only_reach_the_local_machine() -> None:
 def test_memory_store_redacts_and_indexes(tmp_path: Path) -> None:
     store = MemoryStore(tmp_path)
     memory = store.add("Always ask before adding a new dependency.\nThe user said so on day one.")
-    assert store.get(memory.id) is not None
+    assert store.get(memory.name) is not None and memory.kind == "user"
     index = store.index()
     assert index is not None and "Always ask before adding a new dependency." in index
-    assert store.delete(memory.id) and store.all() == []
+    assert (tmp_path / "memory" / "MEMORY.md").read_text(encoding="utf-8").count("\n") == 1
+    assert store.delete(memory.name) and store.all() == []
     assert not store.delete("../../config")
+
+
+def test_project_memories_stay_in_their_scope_and_are_redacted(tmp_path: Path) -> None:
+    mine, other = MemoryStore(tmp_path, "repo:a-1"), MemoryStore(tmp_path, "repo:b-2")
+    saved = mine.save(
+        "db-quirk", "orders are soft-deleted", "project", "api_key=abc123def456ghi789jkl"
+    )  # check_secrets: fake
+    assert "abc123def456ghi789jkl" not in saved.text
+    assert other.get("db-quirk") is None and MemoryStore(tmp_path).get("db-quirk") is None
+    assert mine.save("db-quirk", "updated", "project", "replaced").text == "replaced"
+    assert len(mine.all()) == 1
 
 
 def test_custom_commands_expand_arguments(tmp_path: Path) -> None:

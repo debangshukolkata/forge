@@ -86,13 +86,13 @@ async def test_think_hard_raises_effort_for_one_turn(host: SessionHost) -> None:
 def test_mentions_files_ranges_objects_images_and_long_pastes(workspace: Workspace, tmp_path: Path) -> None:
     image = tmp_path / "scan.png"
     image.write_bytes(b"\x89PNG\r\n\x1a\nfake")
-    lookup = {"REQ": lambda ident: f"card {ident}" if ident == "REQ-0007" else None}
+    lookup = {"DBR": lambda ident: f"request {ident}" if ident == "DBR-7" else None}
     result = expand(
-        f"Look at @backend/claims_app/errors.py:1-3 and @REQ-7, plus @{image} and @backend/.env",
+        f"Look at @backend/claims_app/errors.py:1-3 and @DBR-7, plus @{image} and @backend/.env",
         workspace,
         lookup,
     )
-    assert "[@backend/claims_app/errors.py lines 1-3]" in result.text and "card REQ-0007" in result.text
+    assert "[@backend/claims_app/errors.py lines 1-3]" in result.text and "request DBR-7" in result.text
     assert result.images and result.images[0].parent == workspace.forge_dir / "inputs"
     assert "SECRET" not in result.text and ".env]" not in result.text  # secret files are never inlined
     long = expand("x" * (LONG_PASTE_CHARS + 10), workspace)

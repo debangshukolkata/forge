@@ -16,10 +16,10 @@ SOURCE = Path(__file__).resolve().parent.parent / "src" / "forge"
 TIERS: list[set[str]] = [
     {"__init__", "buildinfo", "errors", "net"},
     {"safety"},
-    {"config", "protocol", "workspace", "memory"},
-    {"llm"},
+    {"config", "protocol", "workspace"},
+    {"llm", "memory"},
     {"context", "kb", "toolkit"},
-    {"db", "learning", "parity", "vision"},
+    {"db", "parity", "vision"},
     {"doctor", "verify"},
     {"modeb"},
     {"tools"},

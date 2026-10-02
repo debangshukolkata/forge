@@ -15,11 +15,9 @@ from importlib import resources
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from forge.config import forge_home
 from forge.kb.builder import build as kb_build
 from forge.kb.builder import status as kb_status
 from forge.kb.narrative import llm_writer
-from forge.learning.improve import prompt_override
 from forge.llm.base import Message
 from forge.modeb.assumptions import AssumptionRegister
 from forge.modeb.output import build_modeb_output
@@ -41,7 +39,6 @@ from forge.tools.interaction import (
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
 from forge.verify.ladder import VerifyLadder
 from forge.workflow.frontend_smoke import render_smoke_check_section, run_frontend_smoke_check
-from forge.workflow.learning_hooks import after_export, pin_lessons, related_cards_note
 from forge.workflow.reports import closing_message, final_report
 from forge.workflow.state import Cadence, StateStore, Task
 from forge.workspace.output import build_output
@@ -78,13 +75,10 @@ ASK_EVERY_STEP_PHRASES = (
 
 def requirement_instructions() -> dict[str, str]:
     text = resources.files("forge").joinpath("workflow/prompts/phases.md").read_text(encoding="utf-8")
-    override = prompt_override(forge_home(), "phases")  # approved tier-2 tweaks (spec §12.5)
     sections: dict[str, str] = {}
     for block in text.split("\n## ")[1:]:
         name, _, body = block.partition("\n")
-        sections[name.strip()] = body.strip() + (
-            f"\n\n{override.replace('{', '{{').replace('}', '}}')}" if override else ""
-        )
+        sections[name.strip()] = body.strip()
     return sections
 
 
@@ -184,11 +178,6 @@ class Orchestrator:
             await self.host.prepare_database()
         if first_brief:
             text = self._format(kind or "requirement")
-            # Earlier related requirements in this repo/profile are worth surfacing on any fresh brief, not
-            # only a change request on the same workspace — a new requirement is the common case where a
-            # past card (reusable pattern, prior design decision) actually helps, and library search already
-            # excludes this workspace's own card so it can't cite itself.
-            text += related_cards_note(self)
             self.host.history.append(Message.system(text))
         if not await self._run_agent(self._tools()):
             return  # waiting for the user's reply
@@ -278,7 +267,6 @@ class Orchestrator:
         if resumed:
             brief += RESUMED_NOTE
         self.host.context_manager.reset_for_task(self.host.history, brief, handoff)
-        pin_lessons(self, self._task_text(task))
         self._task_start_step = self.context.step
         self._save()
 
@@ -310,7 +298,6 @@ class Orchestrator:
         )
         self.state.change_request, self.state.restructuring = "", False
         self.state.exported = True
-        await after_export(self)  # library card, metrics, RETRO (spec §12)
         self._save()
 
     # --- Interaction protocol (called by the phase tools) ---

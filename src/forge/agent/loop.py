@@ -11,10 +11,8 @@ from importlib import resources
 
 from pydantic import ValidationError
 
-from forge.config import forge_home
 from forge.context.manager import ContextManager
 from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthError
-from forge.learning.improve import prompt_override
 from forge.llm.base import ChatRequest, LLMResponse, Message, TextDeltaCallback, ToolCall
 from forge.llm.router import LLMRouter
 from forge.llm.tool_args import parse_error_result
@@ -58,9 +56,6 @@ def _preview(content: str, ok: bool) -> str:
 def system_prompt(workspace: Workspace) -> str:
     name = "agent/prompts/system_modeb.md" if workspace.mode_b else "agent/prompts/system.md"
     template = resources.files("forge").joinpath(name).read_text(encoding="utf-8")
-    override = prompt_override(forge_home(), "system_modeb" if workspace.mode_b else "system")
-    if override:  # approved tier-2 tweaks (spec §12.5), never edits to the built-in file
-        template += "\n\n" + override.replace("{", "{{").replace("}", "}}")
     env = workspace.info.python_env
     return template.format(
         workspace=workspace.root,

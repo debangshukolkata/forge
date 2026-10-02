@@ -1,5 +1,5 @@
 """User-pinned interface contracts (spec §6A.2A, D-129): pin, revise, forget, essentials for pinned
-context, and the lesson-proposal hook when the ContractPin tool is used."""
+context, and the project-memory write when the ContractPin tool is used."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from forge.learning.lessons import LessonStore
-from forge.learning.scope import scope_of
+from forge.memory.scope import scope_of
+from forge.memory.store import MemoryStore
 from forge.modeb.contracts import ContractError, ContractRegister
 from forge.modeb.profile import ProfileStore
 from forge.modeb.workspace import create_standalone_workspace
@@ -95,7 +95,7 @@ def test_sensitive_terms_are_masked_in_pinned_signatures(isolated_forge_home: Pa
 # --- tool layer ---
 
 
-async def test_contract_pin_tool_saves_and_proposes_a_lesson(
+async def test_contract_pin_tool_saves_and_remembers_the_contract(
     workspace: Workspace, isolated_forge_home: Path
 ) -> None:
     from forge.modeb.profile import ProfileStore as _Store
@@ -116,9 +116,8 @@ async def test_contract_pin_tool_saves_and_proposes_a_lesson(
     listed = await ContractRead().run(ContractRead.Args(), context)
     assert "llm_call_wrapper" in listed.content and "call_llm" in listed.content
 
-    scope = scope_of(workspace, isolated_forge_home)
-    lessons = [lesson for lesson in LessonStore(isolated_forge_home).all() if lesson.scope == scope]
-    assert any("llm_call_wrapper" in lesson.text and lesson.source == "contract" for lesson in lessons)
+    remembered = MemoryStore(isolated_forge_home, scope_of(workspace)).get("contract-llm-call-wrapper")
+    assert remembered is not None and "call_llm" in remembered.text and remembered.kind == "reference"
 
 
 async def test_contract_pin_tool_without_a_profile_fails_cleanly(

@@ -2,7 +2,7 @@
 
 The main agent core: the loop (model call -> tool calls -> results -> repeat), no scripted failure handling (D-155). Knows nothing about requirements, reports or subagents.
 
-- **Depends on:** config, context, errors, learning, llm, protocol, safety, toolkit, tools, verify, workspace
+- **Depends on:** context, errors, llm, protocol, safety, toolkit, tools, workspace
 - **Invariants:** Every tool call gets a result, in order, even on interrupt. The loop owns every tool call
   (providers never execute tools). No phase machine (D-128..132). Tool results are capped and redacted here.
 - **Tests:** test_agent_loop.py, test_events.py

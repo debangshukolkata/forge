@@ -49,8 +49,8 @@ async def test_remember_and_memory_commands_keep_the_pin_current(
     pinned = host.context_manager.pinned.get("memory_index")
     assert pinned is not None and "Always use type hints in new code" in pinned
     await host._commands.handle("/memory")
-    memory_id = next(t for t in notices(host) if t.strip().startswith("M")).split()[0]
-    await host._commands.handle(f"/memory delete {memory_id}")
+    name = next(t for t in notices(host) if "type hints" in t and t.strip().startswith("user")).split()[1]
+    await host._commands.handle(f"/memory delete {name}")
     assert host.context_manager.pinned.get("memory_index") is None
 
 

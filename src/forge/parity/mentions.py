@@ -1,8 +1,8 @@
 """@-mentions and long pastes (spec §13B).
 
 In a user message: `@path` includes a workspace file, `@path:10-80` a line range; `@image.png` (an image in
-the workspace or a pasted path) is saved to .forge/inputs/ and attached; `@DBR-3`, `@REQ-0007`, `@L12` (or
-`@lesson-12`) bring in Forge objects. A message longer than LONG_PASTE_CHARS is stored as a file in
+the workspace or a pasted path) is saved to .forge/inputs/ and attached; `@DBR-3` brings in a Forge object.
+A message longer than LONG_PASTE_CHARS is stored as a file in
 .forge/inputs/ and referenced instead of being sent inline in full.
 """
 
@@ -32,7 +32,7 @@ class Expanded:
 
 
 def expand(message: str, workspace: Workspace, lookup: dict[str, object] | None = None) -> Expanded:
-    """lookup maps object kinds to callables: {"DBR": fn(id)->str|None, "REQ": ..., "L": ...}."""
+    """lookup maps object kinds to callables: {"DBR": fn(id)->str|None}."""
     result = Expanded(text=message)
     stored = _store_long_paste(message, workspace)
     if stored is not None:
@@ -54,14 +54,11 @@ def expand(message: str, workspace: Workspace, lookup: dict[str, object] | None 
 
 
 def _resolve(token: str, workspace: Workspace, lookup: dict[str, object], result: Expanded) -> str | None:
-    object_match = re.fullmatch(r"(DBR|REQ|L|lesson)-?(\d+)", token, re.IGNORECASE)
+    object_match = re.fullmatch(r"(DBR)-?(\d+)", token, re.IGNORECASE)
     if object_match:
         kind = object_match.group(1).upper()
-        kind = "L" if kind == "LESSON" else kind
         getter = lookup.get(kind)
-        ident = f"{kind}-{object_match.group(2)}" if kind != "L" else f"L{object_match.group(2)}"
-        if kind == "REQ":
-            ident = f"REQ-{int(object_match.group(2)):04d}"
+        ident = f"{kind}-{object_match.group(2)}"
         text = getter(ident) if callable(getter) else None
         if text:
             result.notes.append(f"@{token}")

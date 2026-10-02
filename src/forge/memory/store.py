@@ -1,7 +1,15 @@
-"""User memory (spec §12.6): preferences that apply across all repositories ("always ask before adding a
-dependency", "use type hints"), one Markdown file per memory in <forge_home>/memory/. Their titles are
-pinned in every session (the memory index); the model reads a memory in full with memory_read. Memories
-are redacted before saving: they never hold secrets.
+"""Auto-memory (spec §12.6 as amended by D-156), modelled on Claude Code's memory: one Markdown file per
+memory with a small frontmatter (name, description, type) and a `MEMORY.md` index, in two scopes.
+
+- user scope, `<forge_home>/memory/`: preferences that apply everywhere ("always ask before adding a
+  dependency");
+- project scope, `<forge_home>/memory/scopes/<scope>/`: what Forge learned about one repository or host
+  profile (see forge.memory.scope). Nothing crosses between projects.
+
+The model writes memories itself (memory_write) when the user states something lasting or corrects it. The
+index
+(name, type, description) is pinned in every session; the model reads a memory in full with memory_read.
+Memories are redacted before saving: they never hold secrets or data rows.
 
 Custom slash commands (<forge_home>/commands/<name>.md): the file's text becomes the message, with
 $ARGUMENTS replaced by whatever follows the command.
@@ -16,61 +24,113 @@ from pathlib import Path
 
 from forge.safety.redact import default_redactor
 
-MAX_MEMORY_CHARS = 2000
+KINDS = ("user", "feedback", "project", "reference")
+MAX_BODY_CHARS = 4000
+MAX_DESCRIPTION_CHARS = 150
+INDEX_FILE = "MEMORY.md"
 _NAME = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")
+_FRONT = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.S)
+
+
+def slugify(text: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:40].strip("-")
+    return slug if _NAME.match(slug) else f"note-{datetime.now():%Y%m%d%H%M%S}"
 
 
 @dataclass
 class Memory:
-    id: str
-    title: str
+    name: str
+    description: str
+    kind: str
     text: str
+    scope: str = "user"  # "user" or the project scope key
 
     def render(self) -> str:
-        return f"{self.id}: {self.title}"
+        return f"{self.name} ({self.kind}): {self.description}"
 
 
 class MemoryStore:
-    def __init__(self, home: Path) -> None:
-        self.folder = home / "memory"
+    def __init__(self, home: Path, scope: str | None = None) -> None:
+        base = home / "memory"
+        self.scope = scope or "user"
+        self.folder = base if scope is None else base / "scopes" / re.sub(r"[^A-Za-z0-9._-]", "-", scope)
+
+    def _parse(self, path: Path) -> Memory:
+        text = path.read_text(encoding="utf-8")
+        match = _FRONT.match(text)
+        if match:  # current format
+            meta = dict(re.findall(r"^(\w+):\s*(.*)$", match.group(1), re.M))
+            kind = meta.get("type", "user")
+            return Memory(
+                meta.get("name", path.stem),
+                meta.get("description", ""),
+                kind if kind in KINDS else "user",
+                match.group(2).strip(),
+                self.scope,
+            )
+        title, _, body = text.strip().partition("\n")  # older format: "# title" then the text
+        return Memory(path.stem, title.lstrip("# ").strip(), "user", body.strip() or title, self.scope)
 
     def all(self) -> list[Memory]:
-        if not self.folder.exists():
+        if not self.folder.is_dir():
             return []
-        memories = []
-        for path in sorted(self.folder.glob("*.md")):
-            text = path.read_text(encoding="utf-8").strip()
-            title, _, body = text.partition("\n")
-            memories.append(Memory(path.stem, title.lstrip("# ").strip(), body.strip() or title))
-        return memories
+        return [self._parse(p) for p in sorted(self.folder.glob("*.md")) if p.name != INDEX_FILE]
 
-    def get(self, memory_id: str) -> Memory | None:
-        return next((m for m in self.all() if m.id == memory_id), None)
+    def get(self, name: str) -> Memory | None:
+        return next((m for m in self.all() if m.name == name), None)
+
+    def save(self, name: str, description: str, kind: str, body: str) -> Memory:
+        """Creates or replaces the memory called `name`."""
+        text = default_redactor.redact(body.strip())[:MAX_BODY_CHARS]
+        summary = " ".join(default_redactor.redact(description).split())[:MAX_DESCRIPTION_CHARS]
+        if not text:
+            raise ValueError("Nothing to remember.")
+        if kind not in KINDS:
+            raise ValueError(f"type must be one of {', '.join(KINDS)}.")
+        slug = slugify(name)
+        self.folder.mkdir(parents=True, exist_ok=True)
+        path = self.folder / f"{slug}.md"
+        path.write_text(
+            f"---\nname: {slug}\ndescription: {summary}\ntype: {kind}\n---\n\n{text}\n", encoding="utf-8"
+        )
+        self._write_index()
+        return Memory(slug, summary, kind, text, self.scope)
 
     def add(self, text: str) -> Memory:
-        clean = default_redactor.redact(text.strip())[:MAX_MEMORY_CHARS]
-        if not clean:
-            raise ValueError("Nothing to remember.")
-        title = clean.splitlines()[0][:80]
-        memory_id = f"M{datetime.now():%Y%m%d%H%M%S%f}"[:18]
-        self.folder.mkdir(parents=True, exist_ok=True)
-        (self.folder / f"{memory_id}.md").write_text(f"# {title}\n\n{clean}\n", encoding="utf-8")
-        return Memory(memory_id, title, clean)
+        """A quick user preference (the /remember command): the first line becomes the description."""
+        clean = text.strip()
+        first = clean.splitlines()[0] if clean else ""
+        return self.save(slugify(first) if first else "", first, "user", clean)
 
-    def delete(self, memory_id: str) -> bool:
-        path = self.folder / f"{memory_id}.md"
-        if not re.fullmatch(r"M\d+", memory_id) or not path.exists():
+    def delete(self, name: str) -> bool:
+        path = self.folder / f"{name}.md"
+        if not _NAME.match(name) or name == "memory" or not path.exists():
             return False
         path.unlink()
+        self._write_index()
         return True
 
+    def _write_index(self) -> None:
+        lines = [f"- [{m.name}]({m.name}.md) ({m.kind}) — {m.description}" for m in self.all()]
+        (self.folder / INDEX_FILE).write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+
     def index(self) -> str | None:
-        """The pinned memory index: titles only (spec §10.2)."""
         memories = self.all()
-        if not memories:
-            return None
-        lines = [f"- {m.render()}" for m in memories]
-        return "The user asked Forge to remember (read one in full with memory_read):\n" + "\n".join(lines)
+        return "\n".join(f"- {m.render()}" for m in memories) if memories else None
+
+
+def combined_index(home: Path, scope: str | None) -> str | None:
+    """The pinned memory index (spec §10.2): user memories plus this project's (names and descriptions)."""
+    parts = []
+    user = MemoryStore(home).index()
+    if user:
+        parts.append("About the user (all projects):\n" + user)
+    project = MemoryStore(home, scope).index() if scope else None
+    if project:
+        parts.append("About this project:\n" + project)
+    if not parts:
+        return None
+    return "Saved memories (read one in full with memory_read):\n" + "\n".join(parts)
 
 
 class CommandStore:
