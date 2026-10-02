@@ -2390,3 +2390,28 @@ only) stay for config and event-log compatibility.
 **Risk:** no precomputed API/model/graph catalog, so large repos cost more search per requirement; judge from the run
 logs. **Tests:** 464 + 95 targeted after fixes, all green (parallel run); `tests/test_kb.py`, `test_live_kb.py` and the
 three table-check tests removed, one credential-table test added.
+
+### D-161 — Accuracy and speed over cost at runtime; token savings only while building · Agreed (2026-10-03)
+User: while Forge works with the Azure tokens it must never optimise for cost (accuracy and speed always win); token and
+cost optimisation belongs only to how Forge is developed with Claude Code. **Dropped** (not parked): role-specific
+toolsets, lazy tool schemas and prompt fragments as cost measures. **Changed:** `limits.session_budget_usd` default
+20.0 -> 0 (no cap; `CostTracker.check_budget` ignores a zero budget, `/cost` says "no cap"; a user may still set a
+cap); `role_reasoning_effort.summariser: low` removed (summaries replace earlier conversation, so they run at the
+model's default effort). **Kept on purpose:** cost display, the context window and tool-output caps (needed for the
+window, not for cost), `max_iterations_per_task` (runaway guard), the reviewer/judge on a second model (a different
+view, not a saving), low effort right after a cut-off reply (to fit the output limit). **Not done:** the web UI budget
+panel still prints "Budget $0" (UI work deferred).
+
+### D-162 — One conversation across tasks; the brief is sent once (found in the first live run log) · Built (2026-10-03)
+**Evidence** (`forge log-summary` on a real run, 61 model calls, 89 tool calls, 380 s, 86% of it model time): after every
+`task_update ... done` the model re-read the same files in batches of 8–10 (`routes.py` and `policies_repository.py` six
+times each, about half of all reads were repeats). Cause: `ContextManager.reset_for_task` replaced the whole history at
+each task start, including right after `propose_plan`. **Change:** `Orchestrator._start_task` keeps the conversation and
+appends a short "Next task: ..." note; it resets only in a fresh process (resume after a kill), where the history is
+empty and must be briefed again. Tasks are now a progress list, not context boundaries. Compaction (unchanged) handles a
+full window. **Second bug found in the same run:** `Orchestrator._briefed()` compared against the raw template text including
+its `{requirement}` placeholder, so it never matched and every chat message re-sent the whole requirement brief; it
+now matches the literal text before the first placeholder. **Tests:** three new unit tests (brief recognised, next task
+keeps the conversation, a fresh process is briefed again); the two live orchestrator tests were stale since D-132
+(they expected `review.md` and `REQUIREMENTS.md`, and a two-task decomposition); updated to the flat loop.
+`reset_for_task` stays in `ContextManager` for the resume path.

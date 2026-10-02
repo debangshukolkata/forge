@@ -182,7 +182,7 @@ async def test_reasoning_settings_follow_model_and_role() -> None:
     await router.chat("reviewer", HELLO)  # gpt-4.1: no reasoning parameters at all
 
     assert bodies[0]["reasoning"] == {"effort": "medium"}
-    assert bodies[1]["reasoning"] == {"effort": "low"}
+    assert bodies[1]["reasoning"] == {"effort": "medium"}  # no low-effort override by default (D-161)
     assert "reasoning" not in bodies[2] and "include" not in bodies[2]
     assert bodies[0]["store"] is False
 

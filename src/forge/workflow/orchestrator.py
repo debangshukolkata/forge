@@ -231,8 +231,12 @@ class Orchestrator:
         return db_tools() if self.host.db is not None else []
 
     def _briefed(self) -> bool:
-        marker = self.instructions[self._change_kind() or "requirement"][:40]
-        return any(m.role == "system" and m.content.startswith(marker) for m in self.host.history)
+        # The literal text before the template's first placeholder; the old marker included the placeholder
+        # itself and so never matched, which re-sent the whole brief with every chat message (D-162).
+        marker = self.instructions[self._change_kind() or "requirement"].split("{", 1)[0]
+        return bool(marker) and any(
+            m.role == "system" and m.content.startswith(marker) for m in self.host.history
+        )
 
     def _change_kind(self) -> str:
         if self.state.restructuring:
@@ -245,10 +249,16 @@ class Orchestrator:
         task.status = "in_progress"
         task.attempts += 1
         self.state.current_task = task.id
-        brief = self._format(self._change_kind() or "requirement", task=self._task_text(task))
-        if resumed:
-            brief += RESUMED_NOTE
-        self.host.context_manager.reset_for_task(self.host.history, brief, handoff)
+        if self._briefed():
+            # D-162: the conversation continues, like Claude Code. Dropping it between tasks made the model
+            # read the same files again at every task boundary (seen in the first live run log).
+            note = f"Next task: {self._task_text(task)}" + (RESUMED_NOTE if resumed else "")
+            self.host.history.append(Message.system(note))
+        else:  # a fresh process (resume after a kill): the history is empty, so brief it again
+            brief = self._format(self._change_kind() or "requirement", task=self._task_text(task))
+            if resumed:
+                brief += RESUMED_NOTE
+            self.host.context_manager.reset_for_task(self.host.history, brief, handoff)
         self._task_start_step = self.context.step
         self._save()
 
@@ -523,7 +533,7 @@ class Orchestrator:
         )
 
     def _background(self, task: asyncio.Task[Any]) -> None:
-        """Runs a task (e.g. the retro) alongside the input loop instead of inside a turn, so it can never
+        """Runs a task alongside the input loop instead of inside a turn, so it can never
         block the user's next message. Errors are reported as a notice rather than propagating unseen."""
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.discard)

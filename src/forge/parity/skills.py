@@ -1,5 +1,6 @@
 """Skills (spec §13B): Markdown instruction packs. Built-in ones ship in forge/skills/<name>/SKILL.md;
-users add their own in <forge_home>/skills/<name>/ and per repo/profile in <kb or profile>/skills/<name>/
+users add their own in <forge_home>/skills/<name>/ and per repo/profile in
+<project memory folder or profile>/skills/<name>/
 (later ones override earlier ones of the same name). Only each skill's one-line description is pinned;
 the model loads a full skill with load_skill(name) when a task matches."""
 

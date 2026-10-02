@@ -44,7 +44,7 @@ class CostTracker:
         return cost
 
     def check_budget(self) -> None:
-        if self.total_usd >= self.budget_usd:
+        if self.budget_usd > 0 and self.total_usd >= self.budget_usd:  # 0 = no cap (D-161)
             raise BudgetExceededError(
                 f"Session budget of ${self.budget_usd:.2f} reached (spent ${self.total_usd:.2f}). "
                 "Approve a higher budget to continue."

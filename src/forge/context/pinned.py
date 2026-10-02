@@ -1,8 +1,8 @@
 """Pinned context (spec §10.2): re-sent with every model call, never compacted.
 
-Slots are filled by the milestones that own them: the requirement and tasks (M6), KB essentials (M5),
-memory index (M10), lessons (M10C), files modified (M4, from the workspace change log) and the latest
-compaction summary (M4). The rendered block is capped; lowest-priority slots are shortened first.
+Slots: the requirement and tasks, the Mode B host profile essentials, instructions (FORGE.md), skills,
+the memory index, databases, files modified (from the workspace change log) and the latest compaction
+summary. The rendered block is capped; lowest-priority slots are shortened first.
 """
 
 from __future__ import annotations

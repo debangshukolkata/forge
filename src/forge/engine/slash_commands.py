@@ -561,8 +561,9 @@ class SlashCommandHandler:
         cost = self.host.router.cost
         config = self.host.router.config.cost
         lines = [
-            f"Spent {format_money(cost.total_usd, config)} of {format_money(cost.budget_usd, config)} "
-            f"in {cost.calls} call(s)"
+            f"Spent {format_money(cost.total_usd, config)}"
+            + (f" of {format_money(cost.budget_usd, config)}" if cost.budget_usd > 0 else " (no cap)")
+            + f" in {cost.calls} call(s)"
         ]
         for model_key, usage in cost.usage_by_model.items():
             lines.append(

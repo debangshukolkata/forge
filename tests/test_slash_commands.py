@@ -44,6 +44,6 @@ async def test_unknown_model_is_reported_not_crashing() -> None:
 async def test_cost_help_clear_and_exit() -> None:
     host, outputs = await run_commands("/cost", "/help", "/clear", "/exit")
 
-    assert outputs[0].startswith("Spent $0.0000 of $20.0000")
+    assert outputs[0].startswith("Spent $0.0000 (no cap)")
     assert "/model <role> <model>" in outputs[1]
     assert host.closed

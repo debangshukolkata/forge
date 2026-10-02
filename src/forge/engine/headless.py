@@ -78,10 +78,8 @@ async def run_headless(host: SessionHost, requirement: str | None, auto_approve:
             if host.orchestrator.state.exported or errors or nudge == MAX_PROCEED_NUDGES:
                 break
             await host.submit(SendMessage(text=PROCEED))  # the model asked something in plain text
-        # state.exported flips as soon as the requirement is done; the retro (library card, lessons) now
-        # runs after that point without blocking the user's turn (D-128), so a caller that wants to observe
-        # its results — this one does, via the library/lessons assertions callers write against — waits for
-        # it explicitly instead of racing the background task to close().
+        # Background work started by the orchestrator never blocks the user's turn; wait for it explicitly
+        # here so a caller sees the settled state instead of racing it at close().
         await host.orchestrator.wait_idle()
     finally:
         subscription.close()

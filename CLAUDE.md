@@ -86,6 +86,14 @@ The rules below still describe what goes into briefs and summaries.
 6. Actions Forge can't or mustn't do are handed to the user; if the user can't either, Forge proposes a
    workaround or code change (DECISIONS D-011).
 
+## Cost principle (D-161) — two different things, never mixed up
+1. **Forge at runtime (Azure tokens):** accuracy and speed always come before cost. Never add or keep anything in
+   Forge that trades quality or speed for fewer tokens (no budget cap by default, no low effort for convenience,
+   no smaller model to save money, no cutting context or tools to save tokens, no skipped checks). The only limits
+   are the context window and runaway guards.
+2. **Building Forge with Claude Code (these sessions):** here we do save tokens: read one MODULE.md instead of
+   the whole spec, run only the tests that matter, keep summaries short.
+
 ## Revamp direction (D-151..D-156, 2026-10-02) — Forge behaves like Claude Code
 The runtime copies Claude Code: a flat loop; the model improvises failure recovery (no stuck detector or
 escalation ladder, D-155); verification is whatever checks the model runs through the shell; memory is FORGE.md

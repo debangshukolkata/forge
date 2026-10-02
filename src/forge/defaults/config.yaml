@@ -39,8 +39,7 @@ llm:
     judge: gpt41
     fallback: gpt41
 
-  role_reasoning_effort:          # overrides the model's default effort for a role
-    summariser: low
+  role_reasoning_effort: {}       # overrides the model's default effort for a role (none: accuracy first, D-161)
 
   retry:
     max_attempts: 6
@@ -48,7 +47,7 @@ llm:
     max_delay_s: 60.0
 
 limits:
-  session_budget_usd: 20.0
+  session_budget_usd: 0           # 0 = no cap: accuracy and speed come before token cost (D-161)
   max_iterations_per_task: 40
   max_fix_attempts: 5
 

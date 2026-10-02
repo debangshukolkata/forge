@@ -83,16 +83,10 @@ async def test_requirement_runs_from_clarify_to_export_then_restructures(
     assert host.orchestrator is not None and host.orchestrator.state.exported
     assert all(t["status"] == "done" for t in result.tasks)
     forge = workspace.forge_dir
-    for name in (
-        "REQUIREMENTS.md",
-        "PLAN.md",
-        "tasks.json",
-        "PROGRESS.md",
-        "reports/review.md",
-        "reports/final.md",
-    ):
+    # PLAN.md and REQUIREMENTS.md are optional records since D-128 (the model writes them when it judges
+    # them useful), and there is no separate review report since D-132.
+    for name in ("tasks.json", "PROGRESS.md", "reports/final.md"):
         assert (forge / name).exists(), name
-    assert "PASSED" in (forge / "reports" / "review.md").read_text(encoding="utf-8")
     manifest = json.loads((workspace.output_dir / "MANIFEST.json").read_text(encoding="utf-8"))
     changed = {f["path"] for f in manifest["files"]}
     assert "backend/claims_app/api/policies/routes.py" in changed
@@ -132,8 +126,8 @@ async def test_requirement_runs_from_clarify_to_export_then_restructures(
     responder.cancel()
     engine.cancel()
 
-    review = (forge / "reports" / "review.md").read_text(encoding="utf-8")
-    assert "Restructure check" in review and "(same)" in review
+    final = (forge / "reports" / "final.md").read_text(encoding="utf-8")
+    assert "Restructure check" in final and "(same)" in final
     assert workspace.path_of("backend/claims_app/services/policies_service.py").exists()
     assert workspace_tests_pass(workspace)
     manifest = json.loads((workspace.output_dir / "MANIFEST.json").read_text(encoding="utf-8"))
@@ -159,14 +153,19 @@ def test_killed_run_resumes_the_same_task(live_env: Path, tmp_path: Path) -> Non
         if not store.path.exists():
             continue
         state = store.load()
-        done = [t for t in state.tasks if t.status == "done"]
-        if done and state.current_task:
+        # Kill once the agent is part-way through a task. How many tasks the model makes is its own call
+        # (D-128), so don't require a finished one first.
+        events_path = workspace.forge_dir / "transcripts" / "events.jsonl"
+        worked = (
+            events_path.exists() and events_path.read_text(encoding="utf-8").count("tool_call_finished") >= 8
+        )
+        if state.current_task and worked:
             killed_during = state.current_task
             for child in psutil.Process(process.pid).children(recursive=True):
                 child.kill()
             process.kill()
             break
-    assert killed_during is not None, "the run finished or never reached a second task"
+    assert killed_during is not None, "the run finished before it could be killed mid-task"
     process.wait(timeout=30)
     before = store.load()
     finished_before = {t.id for t in before.tasks if t.status == "done"}

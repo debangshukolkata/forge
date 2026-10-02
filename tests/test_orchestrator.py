@@ -10,6 +10,7 @@ import pytest
 
 from forge.engine.headless import HEADLESS_REFUSAL, auto_reply
 from forge.engine.session_host import SessionHost
+from forge.llm.base import Message
 from forge.protocol.events import Event, EventBus, EventType
 from forge.protocol.inputs import Answer, Approve, Reject
 from forge.safety.redact import Redactor
@@ -285,3 +286,38 @@ def test_a_change_plan_reusing_task_ids_still_runs_its_tasks() -> None:
     assert new[1].depends_on == ["CT1"]
     assert _unique_id("FIX1", {"FIX1", "FIX2"}) == "FIX3"
     assert _unique_id("FIX1", set()) == "FIX1"
+
+
+# --- one conversation across tasks (D-162) ---
+
+
+def test_the_brief_is_recognised_so_it_is_sent_once(host: SessionHost) -> None:
+    orch = orchestrator(host)
+    orch.state.requirement, orch.state.started = "Add an endpoint", True
+    assert not orch._briefed()
+    host.history.append(Message.system(orch._format("requirement")))
+    assert orch._briefed()
+
+
+def test_starting_the_next_task_keeps_the_conversation(host: SessionHost) -> None:
+    orch = orchestrator(host)
+    orch.state.requirement, orch.state.started = "Add an endpoint", True
+    host.history.append(Message.system(orch._format("requirement")))
+    host.history.append(Message.user("earlier exploration the model must not have to redo"))
+    orch.state.tasks = [Task(id="T1", title="repository", status="done"), Task(id="T2", title="service")]
+    before = list(host.history)
+    orch._start_task(orch.state.tasks[1])
+    assert host.history[: len(before)] == before  # nothing dropped
+    assert (
+        host.history[-1].role == "system"
+        and "Next task" in host.history[-1].content
+        and "T2" in host.history[-1].content
+    )
+
+
+def test_a_fresh_process_is_briefed_again_when_it_resumes(host: SessionHost) -> None:
+    orch = orchestrator(host)
+    orch.state.requirement, orch.state.started = "Add an endpoint", True
+    orch.state.tasks = [Task(id="T1", title="repository")]
+    orch._start_task(orch.state.tasks[0], resumed=True)
+    assert any("Add an endpoint" in m.content for m in host.history if m.role == "user")

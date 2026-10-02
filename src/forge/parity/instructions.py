@@ -1,6 +1,6 @@
 """FORGE.md instruction files (spec §13B), the equivalent of CLAUDE.md, loaded hierarchically and always
-pinned (capped): <forge_home>/FORGE.md (user-wide) -> <kb folder or host profile>/FORGE.md (repo/host) ->
-<workspace>/FORGE.md (this requirement). `/init` drafts the repo-level file from the knowledge base;
+pinned (capped): <forge_home>/FORGE.md (user-wide) -> <project folder or host profile>/FORGE.md (repo/host) ->
+<workspace>/FORGE.md (this requirement). `/init` has the model explore the repo and write the repo-level file;
 a chat line starting with '#' appends to a chosen file after confirmation."""
 
 from __future__ import annotations
@@ -54,28 +54,6 @@ def append_line(file: InstructionFile, line: str) -> None:
         existing + "\n" if existing else "# Instructions for Forge\n\n"
     ) + f"- {default_redactor.redact(line.strip())}\n"
     file.path.write_text(body, encoding="utf-8")
-
-
-def draft_from_kb(essentials: str | None, name: str) -> str:
-    """/init: a starting point from what the KB already knows; the user edits it afterwards."""
-    lines = [
-        f"# Instructions for Forge — {name}",
-        "",
-        "Edit this file freely: Forge reads it at the start of every session for this repository.",
-        "",
-        "## Conventions to always follow",
-        "- (add yours, e.g. 'always add type hints', 'errors use the ClaimsAppError hierarchy')",
-        "",
-        "## Things Forge must never do here",
-        "- (e.g. 'never touch the alembic folder')",
-    ]
-    if essentials:
-        lines += [
-            "",
-            "## What the knowledge base found (for reference; trim as you like)",
-            essentials.strip()[:3000],
-        ]
-    return "\n".join(lines) + "\n"
 
 
 STYLES = {

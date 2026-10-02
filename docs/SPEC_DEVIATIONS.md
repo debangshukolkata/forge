@@ -63,4 +63,6 @@ are folded into the spec itself as amendments (§0.2, tags `[A-n]`) and listed h
 - **§9.2 KB tools, §9.9, §11 Knowledge Base (D-156):** no KB; on-demand search instead. Mode B Host Profile stays.
 - **§12.2–12.5 library, lessons, retro, metrics, improvement proposals (D-156):** removed; FORGE.md files,
   auto-memory and skills replace them (§12.6 stays in amended form).
+- **§5.3 session budget cap, summariser effort (D-161):** default budget is 0 = no cap; the summariser role no longer
+  runs at low reasoning effort. Cost is shown, never enforced, unless the user sets a cap.
 - **§4 module map (D-152/D-154):** superseded by docs/MODULES.md (tiers, MODULE.md per module).
