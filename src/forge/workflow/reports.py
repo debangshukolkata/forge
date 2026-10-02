@@ -29,8 +29,9 @@ def closing_message(state: OrchestratorState, output: OutputManifest) -> str:
     counts = {s: sum(1 for f in output.files if f.status == s) for s in ("added", "modified", "deleted")}
     blocked_note = f", {len(blocked)} blocked" if blocked else ""
     deleted_note = f", and {counts['deleted']} deletion(s)" if counts["deleted"] else ""
+    done_note = f"{len(done)} task(s) completed{blocked_note}" if state.tasks else "work finished"
     return (
-        f"Done: {len(done)} task(s) completed{blocked_note}. "
+        f"Done: {done_note}. "
         f"output/ has {counts['added']} new and {counts['modified']} modified file(s){deleted_note}. "
         "Ask me to run it, or for the copy instructions when you want them."
     )

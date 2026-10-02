@@ -433,3 +433,24 @@ def test_the_restructure_brief_carries_the_users_instruction(host: SessionHost) 
     orch._start_change("Move the service code into claims_app/services/policies_service.py", restructure=True)
     brief = host.history[-1].content
     assert "policies_service.py" in brief and "Behaviour must not change" in brief
+
+
+async def test_work_without_a_task_list_is_still_delivered(
+    talking_host: tuple[SessionHost, list[int]],
+) -> None:
+    host, _ = talking_host
+    orch = orchestrator(host)
+    host.agent.context.last_edit_step = 5  # type: ignore[union-attr]  # the model edited files, planned no tasks
+    await orch.handle_message("Build a small tool.")
+    assert orch.state.exported and not orch.state.tasks
+    done = [str(e.payload.get("text")) for e in host.bus.events_since(0) if e.type == EventType.MESSAGE_DONE]
+    assert any(t.startswith("Done: work finished.") for t in done), done
+
+
+async def test_a_plain_question_without_edits_does_not_deliver_or_finish(
+    talking_host: tuple[SessionHost, list[int]],
+) -> None:
+    host, _ = talking_host
+    orch = orchestrator(host)
+    await orch.handle_message("Which database should it use?")
+    assert not orch.state.exported

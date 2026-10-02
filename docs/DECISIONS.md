@@ -2445,3 +2445,11 @@ process). **Same code, second bug:** the restructure brief was built from the or
 `/restructure <instruction>` text never reached the model (the live restructure test passed trivially because its
 asserted file already existed). The change/restructure briefs now carry `{change}`. Tests: follow-up text is the last
 user turn and earlier context is kept; the restructure brief carries the instruction.
+
+### D-166 — Work without a task list is still delivered (found in the invoice-tool build) · Built (2026-10-03)
+The model built the whole invoice tool without ever creating a task list; the orchestrator only treated work as
+settled when tasks existed, so `output/` was never built and an unattended run ended "Understanding the requirement"
+(exit 2) with 975 events of finished work. A task list is the model's choice (D-128), so the work is now settled when no
+task is open and either tasks exist or files changed since the last delivery; then `output/` is built. The closing
+message says "work finished" when there are no tasks. Tests: delivery without tasks; a plain question without edits
+neither delivers nor finishes.

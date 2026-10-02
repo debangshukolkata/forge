@@ -174,7 +174,10 @@ class Orchestrator:
             text = self._format(kind or "requirement")
             self.host.history.append(Message.system(text))
         await self._run_agent(self._tools())
-        settled = bool(self.state.tasks) and self.state.next_task() is None and not self._has_open_tasks()
+        # Settled: no task is open, and either tasks exist or the model changed files on its own. A task list
+        # is the model's choice (D-128), so building everything without one must still deliver (D-166).
+        built = self.context.last_edit_step > self._export_step
+        settled = not self._has_open_tasks() and (bool(self.state.tasks) or built)
         if not settled:
             return  # work is still open, or waiting for the user's reply
         if self.context.last_edit_step > self._export_step:
