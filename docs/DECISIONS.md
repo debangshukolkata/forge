@@ -2415,3 +2415,21 @@ now matches the literal text before the first placeholder. **Tests:** three new 
 keeps the conversation, a fresh process is briefed again); the two live orchestrator tests were stale since D-132
 (they expected `review.md` and `REQUIREMENTS.md`, and a two-task decomposition); updated to the flat loop.
 `reset_for_task` stays in `ContextManager` for the resume path.
+
+### D-163 — A follow-up message always reaches the model; no nudges; bad cwd is an error · Built (2026-10-03, found in the first Mode B build)
+**Bug (core, high impact):** after a requirement was delivered, any follow-up message ("launch the app", "add X") made the
+orchestrator re-export and print "Done: N task(s) completed" without calling the model: `_run_agent` only looped while a
+task was open or none existed, and a follow-up arrives with every task settled. Seen as zero tool calls and a repeated
+"Done" in the run log; almost certainly the office-laptop report too (D-153's retro fix was the wrong cause). The old
+live restructure test passed trivially for the same reason (the file it checked already existed). **Fix:** `_run_agent`
+always runs the model once per message; the orchestrator then exports only when files changed since the last delivery
+(`last_edit_step > _export_step`), otherwise just marks the workspace resume-safe again. **Removed the nudge**
+("Finish the current step: verify and call task_update ... Don't stop without one of these."): a plain-text answer now ends
+the turn, as in Claude Code (headless runs keep their own PROCEED nudge). **Also:** a `cwd` that doesn't exist
+(`project` in Mode B, where `project/` is already the root) made the sandbox launch fail and switched the sandbox off for
+the session; `execute` now returns "No such folder" instead. Tool-call arguments (shortened, redacted) are now in the
+`tool_call_started` run-log event. **Tests:** two new unit tests (follow-up reaches the model without re-announcing; a
+plain answer ends the turn with one call), a missing-cwd test.
+**Found, by design, not changed:** `pip install` is always-ask, so an unattended `forge run --auto-approve` cannot install
+a project's dependencies (Flask etc.) and blocks every task; the model asks the user, nobody answers. The campaign driver
+(`C:\Work\ForgeRuns\drive_forge.py`) approves pip installs into the workspace venv only.

@@ -42,16 +42,11 @@ from forge.workspace.output import build_output
 if TYPE_CHECKING:
     from forge.engine.session_host import SessionHost
 
-MAX_NUDGES = 1
 # No -q: repos often set it in addopts, and -qq hides the summary line the parser reads.
 PYTEST_ARGS = "-rfE --tb=short --no-header -p no:cacheprovider"
 FULL_SUITE_TIMEOUT_S = 900
 RESUMED_NOTE = (
     "\n\nResumed after an interruption: first check what is already done (files modified are pinned)."
-)
-NUDGE = (
-    "Finish the current step: verify and call task_update, or ask the user if you are blocked. "
-    "Don't stop without one of these."
 )
 FREE_HAND_PHRASES = (
     "don't ask me",
@@ -106,6 +101,7 @@ class Orchestrator:
         self._publishing: set[asyncio.Task[Any]] = set()
         self._background_tasks: set[asyncio.Task[Any]] = set()
         self._task_start_step = 0
+        self._export_step = 0  # tool step of the last delivery; later edits mean output/ is stale
         self._restructure_baseline: tuple[bool, str] | None = None
         self._apply_cadence()
         self._refresh_pinned()
@@ -177,30 +173,40 @@ class Orchestrator:
         if first_brief:
             text = self._format(kind or "requirement")
             self.host.history.append(Message.system(text))
-        if not await self._run_agent(self._tools()):
-            return  # waiting for the user's reply
-        if self.state.tasks and self.state.next_task() is None and not self._has_open_tasks():
-            await self._export()
+        await self._run_agent(self._tools())
+        settled = bool(self.state.tasks) and self.state.next_task() is None and not self._has_open_tasks()
+        if not settled:
+            return  # work is still open, or waiting for the user's reply
+        if self.context.last_edit_step > self._export_step:
+            await self._export()  # files changed since the last delivery: rebuild output/ and report
+        else:
+            # A follow-up that changed nothing (a question, "run it", "show me"): the delivery stands; just
+            # make the workspace resume-safe again without re-announcing "Done" (D-163).
+            self.state.change_request, self.state.restructuring, self.state.exported = "", False, True
+            self._save()
 
     def _has_open_tasks(self) -> bool:
         return any(t.status in ("pending", "in_progress") for t in self.state.tasks)
 
     async def _run_agent(self, tools: ToolRegistry) -> bool:
+        """Runs the model on the current message. Returns True when the work can move on (a task finished or
+        the model planned tasks) and False when the model ended its turn in plain text, i.e. it is waiting for
+        the user. There is no nudge: like Claude Code, a plain answer ends the turn (D-163)."""
         agent = self.host.agent
         assert agent is not None
         agent.tools = tools
         self.context.end_turn = False
+        first = True
         try:
-            while (task := self.state.next_task()) is not None or not self.state.tasks:
+            # `first`: a follow-up message arrives when every task is already settled, and the model must
+            # still run for it (the old loop only ran while a task was open and never answered).
+            while (task := self.state.next_task()) is not None or not self.state.tasks or first:
+                first = False
                 if task is not None and (self.state.current_task != task.id or task.status != "in_progress"):
                     self._start_task(task)
-                for nudge in range(MAX_NUDGES + 1):
-                    await agent.run(self.host.history, self.host.stream_delta)
-                    if self.context.end_turn:
-                        break
-                    if nudge == MAX_NUDGES:
-                        return False  # waiting for the user's reply
-                    self.host.history.append(Message.system(NUDGE))
+                await agent.run(self.host.history, self.host.stream_delta)
+                if not self.context.end_turn:
+                    return False  # a plain answer: the user's turn
                 self.context.end_turn = False
                 if not self.state.tasks:  # the model hasn't broken the work into tasks yet
                     return True
@@ -283,6 +289,7 @@ class Orchestrator:
         )
         self.state.change_request, self.state.restructuring = "", False
         self.state.exported = True
+        self._export_step = self.context.step
         self._save()
 
     # --- Interaction protocol (called by the phase tools) ---

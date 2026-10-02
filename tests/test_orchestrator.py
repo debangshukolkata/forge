@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
+import httpx2
 import pytest
 
 from forge.engine.headless import HEADLESS_REFUSAL, auto_reply
@@ -321,3 +322,53 @@ def test_a_fresh_process_is_briefed_again_when_it_resumes(host: SessionHost) -> 
     orch.state.tasks = [Task(id="T1", title="repository")]
     orch._start_task(orch.state.tasks[0], resumed=True)
     assert any("Add an endpoint" in m.content for m in host.history if m.role == "user")
+
+
+# --- follow-up messages reach the model (D-163) ---
+
+
+@pytest.fixture
+def talking_host(original_repo: Path, tmp_path: Path) -> tuple[SessionHost, list[int]]:
+    """A host whose model just answers in plain text; the list counts the model calls."""
+    from tests.helpers import reply, responses_body, text_output
+
+    calls: list[int] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        calls.append(1)
+        return reply(request, responses_body([text_output("The app is running on port 5055.")]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(
+        mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace, orchestrated=True
+    )
+    return host, calls
+
+
+async def test_a_follow_up_after_delivery_reaches_the_model_and_does_not_re_announce(
+    talking_host: tuple[SessionHost, list[int]],
+) -> None:
+    host, calls = talking_host
+    orch = orchestrator(host)
+    orch.state.requirement, orch.state.started, orch.state.exported = "Add an endpoint", True, True
+    orch.state.tasks = [
+        Task(id="T1", title="repository", status="done"),
+        Task(id="T2", title="x", status="blocked"),
+    ]
+    await orch.handle_message("please run the app and show me")
+    assert len(calls) == 1, (
+        "the model must answer the follow-up (it used to be skipped: tasks were all settled)"
+    )
+    assert orch.state.exported and not orch.state.change_request  # resume-safe again, nothing rebuilt
+    done = [e for e in host.bus.events_since(0) if e.type == EventType.MESSAGE_DONE]
+    assert any("port 5055" in str(e.payload.get("text")) for e in done)
+    assert not any("task(s) completed" in str(e.payload.get("text")) for e in done)  # no repeated "Done: ..."
+
+
+async def test_a_plain_text_answer_ends_the_turn_without_a_nudge(
+    talking_host: tuple[SessionHost, list[int]],
+) -> None:
+    host, calls = talking_host
+    orch = orchestrator(host)
+    await orch.handle_message("Which database should the report use?")
+    assert len(calls) == 1 and not orch.state.exported

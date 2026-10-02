@@ -201,6 +201,14 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
     if context.workspace.mode_b:  # stub packages must not hide the new code (D-159)
         ensure_shared_stub_packages(context.workspace)
     start_dir = shell.resolve_cwd(cwd)
+    if not start_dir.is_dir():
+        # A folder that doesn't exist made the sandbox launch fail, which looked like "sandbox unavailable"
+        # and switched the sandbox off for the rest of the session (found in the first Mode B build).
+        return ToolResult(
+            ok=False,
+            content=f"No such folder: {cwd!r} (cwd is relative to the repository root; in Mode B that is "
+            f"project/ itself, so don't prefix it). Leave cwd out to stay in {shell.display(shell.cwd)}.",
+        )
     sandboxed = shell.prepare_sandbox()
     try:
         outcome = await run_powershell(

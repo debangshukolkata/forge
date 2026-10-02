@@ -8,6 +8,7 @@ import time
 import traceback
 from datetime import date
 from importlib import resources
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -51,6 +52,14 @@ def _preview(content: str, ok: bool) -> str:
     if ok or len(content) <= FAILURE_HEAD_CHARS + FAILURE_TAIL_CHARS:
         return content[:PREVIEW_CHARS] if ok else content
     return content[:FAILURE_HEAD_CHARS] + "\n…\n" + content[-FAILURE_TAIL_CHARS:]
+
+
+def _short_arguments(arguments: dict[str, Any] | None) -> dict[str, Any]:
+    """The tool call's arguments for the run log (D-151), long values shortened; the bus redacts secrets."""
+    return {
+        key: value if not isinstance(value, str) or len(value) <= 300 else value[:300] + "…"
+        for key, value in (arguments or {}).items()
+    }
 
 
 def system_prompt(workspace: Workspace) -> str:
@@ -268,7 +277,13 @@ class AgentLoop:
             tool.name, tool.read_only, command, scope, own_files_only=tool.own_files_only(args, self.context)
         )
         await self.bus.publish(
-            EventType.TOOL_CALL_STARTED, {"id": call.id, "name": call.name, "summary": summary}
+            EventType.TOOL_CALL_STARTED,
+            {
+                "id": call.id,
+                "name": call.name,
+                "summary": summary,
+                "arguments": _short_arguments(call.arguments),
+            },
         )
         started = time.perf_counter()
         if decision.verdict == "deny":
