@@ -392,10 +392,11 @@ class Orchestrator:
         context: ToolContext,
     ) -> ToolResult:
         task = self.state.task(task_id)
-        if task is None or task.id != self.state.current_task:
-            return ToolResult(
-                ok=False, content=f"The current task is {self.state.current_task}, not {task_id}."
-            )
+        if task is None:
+            known = ", ".join(t.id for t in self.state.tasks) or "none yet"
+            return ToolResult(ok=False, content=f"No task {task_id}. Tasks: {known}.")
+        # Any existing task can be updated, also a blocked or finished one the model returns to after
+        # fixing the cause (it used to be refused unless that task was the current one, D-164).
         edited = context.last_edit_step > self._task_start_step
         if status == "done" and edited and context.last_verified_step <= context.last_edit_step:
             return ToolResult(
@@ -412,7 +413,8 @@ class Orchestrator:
         task.handoff_note, task.verification, task.blocked_reason = handoff_note, verification, blocked_reason
         if task.status == "done":  # local history (spec §13B): one commit per completed task
             await asyncio.to_thread(History(self.workspace).commit, f"{task.id}: {task.title}")
-        self.state.current_task = None
+        if self.state.current_task == task.id:
+            self.state.current_task = None
         self.store.append_log(
             "PROGRESS.md", f"{task.id} {task.title}: {task.status}. {verification}\n{handoff_note}"
         )

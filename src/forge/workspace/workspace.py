@@ -108,6 +108,8 @@ class Workspace:
         if self.mode_b and (normalised == "_harness" or normalised.startswith("_harness/")):
             inside = normalised.removeprefix("_harness").lstrip("/")
             return resolve_inside(self.harness_dir, inside) if inside else self.harness_dir
+        if self.mode_b and normalised.strip("./") == "project" and not (self.repo_dir / "project").is_dir():
+            return self.repo_dir  # "project" itself means the root: the model keeps writing cwd="project"
         if (
             self.mode_b
             and normalised.lstrip("./").startswith("project/")

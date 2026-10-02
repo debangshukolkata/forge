@@ -372,3 +372,27 @@ async def test_a_plain_text_answer_ends_the_turn_without_a_nudge(
     orch = orchestrator(host)
     await orch.handle_message("Which database should the report use?")
     assert len(calls) == 1 and not orch.state.exported
+
+
+async def test_a_blocked_task_can_be_marked_done_once_the_cause_is_fixed(host: SessionHost) -> None:
+    from forge.toolkit.base import ToolContext
+
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="repository", status="blocked", blocked_reason="flask missing")]
+    context = host.agent.context  # type: ignore[union-attr]
+    assert isinstance(context, ToolContext)
+    result = await orch.task_update(
+        "T1", "done", "Installed flask; tests pass.", "pytest: 9 passed", "", context
+    )
+    assert result.ok and orch.state.task("T1").status == "done"  # type: ignore[union-attr]
+    missing = await orch.task_update("T9", "done", "", "", "", context)
+    assert not missing.ok and "No task T9" in missing.content
+
+
+def test_mode_b_cwd_project_means_the_project_root(tmp_path: Path, isolated_forge_home: Path) -> None:
+    from forge.modeb.profile import ProfileStore
+    from forge.modeb.workspace import create_standalone_workspace
+
+    workspace = create_standalone_workspace(tmp_path / "ws", ProfileStore(isolated_forge_home).create("demo"))
+    assert workspace.path_of("project") == workspace.repo_dir
+    assert workspace.path_of("./project") == workspace.repo_dir
