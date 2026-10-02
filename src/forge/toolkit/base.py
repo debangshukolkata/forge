@@ -17,7 +17,6 @@ from forge.llm.tokens import head_and_tail
 from forge.workspace.workspace import Workspace
 
 if TYPE_CHECKING:
-    from forge.kb.knowledge import KnowledgeBase
     from forge.toolkit.background import BackgroundManager
     from forge.toolkit.shell import ShellSession
 
@@ -65,7 +64,6 @@ class ToolContext:
     workspace: Workspace
     shell: ShellSession | None = None
     background: BackgroundManager | None = None
-    kb: KnowledgeBase | None = None
     db: Any = None  # forge.db.session.DbSession, when a database is configured
     secrets: Any = None  # forge.config.Secrets: optional service keys (e.g. TAVILY_API_KEY); never shown
     summarise: Callable[[str, str], Awaitable[str]] | None = None  # (text, instruction) -> summary

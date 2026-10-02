@@ -12,7 +12,7 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 | 1 | safety | write jail, permissions, sandbox, redaction (safety invariants) |
 | 2 | config, protocol, workspace | settings; events/inputs/approvals; the workspace write gate |
 | 3 | llm, memory | providers, router, tokens, cost; auto-memory (user + project scope) |
-| 4 | context, kb, toolkit | context window; knowledge base; tool contract + shell runners |
+| 4 | context, toolkit | context window; tool contract + shell runners |
 | 5 | db, parity, vision | database; skills/agents/MCP; vision |
 | 6 | doctor | setup checks |
 | 7 | modeb | host profiles, contracts |
@@ -27,7 +27,7 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 | 16 | cli | command line |
 
 ## Status of modules affected by the revamp (D-156)
-`kb` (repo index) is being retired (`learning` is gone: D-158, `verify` is gone: D-159); the replacements are FORGE.md files and the auto-memory folder (`parity`, `memory`) and the shell tool
+`learning`, `verify` and `kb` are gone (D-158, D-159, D-160); the replacements are FORGE.md files and the auto-memory folder (`parity`, `memory`) and the shell tool
 (`toolkit`). Until a module's removal is ticked in TODO.md it still exists and is still tested.
 
 ## Rules

@@ -149,12 +149,11 @@ async def test_session_and_commands_in_mode_b(workspace: Workspace) -> None:
         raise AssertionError("no LLM call expected")
 
     host = SessionHost(mocked_router(unreachable), EventBus(redactor=Redactor()), workspace=workspace)
-    assert host.agent is not None and host.kb_dir() is None
+    assert host.agent is not None
     assert {"profile_search", "assumption_add", "modeb_document"} <= set(host.agent.tools.names())
     assert "Host profile 'host'" in (host.context_manager.pinned.get("kb_essentials") or "")
     assert "STANDALONE mode" in host.system_prompt and "Contoso" in host.agent.context.sensitive_terms
     for command in (
-        "/kb status",
         "/diagnose",
         "/assumptions",
         "/profile",
@@ -163,7 +162,7 @@ async def test_session_and_commands_in_mode_b(workspace: Workspace) -> None:
     ):
         await host._commands.handle(command)
     texts = [str(e.payload.get("text")) for e in host.bus.events_since(0) if e.type == EventType.NOTICE]
-    assert any("not used in Mode B" in t for t in texts) and any("paste the error" in t for t in texts)
+    assert any("paste the error" in t for t in texts)
     assert any("Assumptions" in t for t in texts) and any("nothing exported yet" in t for t in texts)
 
 

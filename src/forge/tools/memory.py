@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Literal
 
 from forge.config import forge_home
-from forge.memory.scope import scope_of
+from forge.memory.scope import repo_level_dir, scope_of
 from forge.memory.store import KINDS, MemoryStore
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
@@ -90,3 +90,29 @@ class MemoryForget(Tool):
     async def run(self, args: MemoryForget.Args, context: ToolContext) -> ToolResult:
         removed = _store(context, args.scope).delete(args.name)
         return ToolResult(ok=removed, content="Forgotten." if removed else f"No memory {args.name}.")
+
+
+class InstructionsWrite(Tool):
+    name = "instructions_write"
+    read_only = True  # writes only the repository-level FORGE.md in Forge Home, never the workspace
+    description = (
+        "Write the repository-level FORGE.md: short instructions Forge reads at the start of every session "
+        "on this codebase (conventions to follow, commands to run, things never to do). Used by /init after "
+        "exploring the repo. Replaces the file only when the user asked for /init; never include secrets."
+    )
+
+    class Args(ToolArgs):
+        text: str
+
+    async def run(self, args: InstructionsWrite.Args, context: ToolContext) -> ToolResult:
+        from forge.safety.redact import default_redactor
+
+        profile_root = context.profile.root if context.profile is not None else None
+        folder = repo_level_dir(forge_home(), context.workspace, profile_root)
+        path = folder / "FORGE.md"
+        if path.exists():
+            return ToolResult(ok=False, content=f"{path} already exists; the user edits it directly.")
+        folder.mkdir(parents=True, exist_ok=True)
+        path.write_text(default_redactor.redact(args.text.strip())[:6000] + "\n", encoding="utf-8")
+        await context.emit("notice", {"kind": "memory", "text": f"Wrote {path}"})
+        return ToolResult(ok=True, content=f"Wrote {path}.")

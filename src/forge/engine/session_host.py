@@ -20,17 +20,15 @@ from forge.agent.loop import AgentLoop, system_prompt
 from forge.config import Secrets, forge_home
 from forge.context.manager import ContextManager
 from forge.db.access import AccessLevel
+from forge.db.credential_tables import credential_tables
 from forge.db.scratch import ScratchError
 from forge.db.session import DbSession
 from forge.engine.slash_commands import SlashCommandHandler
 from forge.errors import BudgetExceededError, ConfigError, LLMError
-from forge.kb.builder import status as kb_status
-from forge.kb.knowledge import KnowledgeBase
-from forge.kb.store import kb_dir_for
 from forge.llm.base import ChatRequest, Message
 from forge.llm.router import LLMRouter
 from forge.llm.usage_ledger import UsageLedger
-from forge.memory.scope import scope_of
+from forge.memory.scope import repo_level_dir, scope_of
 from forge.memory.store import combined_index
 from forge.modeb.profile import HostProfile, ProfileError, ProfileStore, host_identifying_terms
 from forge.modeb.workspace import profile_ref
@@ -106,27 +104,17 @@ class SessionHost:
         if workspace is not None:
             self.refresh_instructions()
 
-    def kb_dir(self) -> Path | None:
-        if self.workspace is None or self.workspace.mode_b:  # Mode B: the host profile replaces the KB
-            return None
-        return kb_dir_for(forge_home(), self.workspace.info.repo_path, self.workspace.info.app_subfolder)
-
-    def open_kb(self) -> KnowledgeBase | None:
-        """The repo's KB (shared by all workspaces for it); its essentials go into the pinned context.
-        Mode B also pins active interface contracts (§6A.2A, D-129) alongside the profile essentials."""
-        kb_dir = self.kb_dir()
-        kb = KnowledgeBase.open(kb_dir) if kb_dir else None
+    def refresh_profile_pin(self) -> None:
+        """Mode B: the host profile's essentials, plus active interface contracts (§6A.2A, D-129), are pinned.
+        Mode A pins nothing: Forge reads the repository itself (D-160)."""
         profile = self.host_profile()
-        essentials: str | None
+        essentials: str | None = None
         if profile is not None:
             from forge.modeb.contracts import ContractRegister
 
             contracts = ContractRegister(profile).essentials()
             essentials = profile.essentials() + (f"\n\n{contracts}" if contracts else "")
-        else:
-            essentials = kb.essentials() if kb else None
         self.context_manager.pinned.set("kb_essentials", essentials)
-        return kb
 
     def host_profile(self) -> HostProfile | None:
         """Mode B: the profile this workspace uses (spec §6A.2)."""
@@ -138,12 +126,6 @@ class SessionHost:
         except ProfileError:
             return None
 
-    def reload_kb(self) -> None:
-        if self.agent is not None:
-            self.agent.context.kb = self.open_kb()
-            if self.db is not None and self.agent.context.kb is not None:
-                self.db.add_deny_tables(self.agent.context.kb.credential_tables())
-
     @property
     def db(self) -> DbSession | None:
         return self.agent.context.db if self.agent is not None else None
@@ -154,10 +136,12 @@ class SessionHost:
             self.secrets.get(c.url_env) for c in settings.connections.values()
         ):
             return None
-        kb = self.open_kb()
-        return DbSession(
-            settings, self.secrets, workspace, forge_home(), kb.credential_tables() if kb else []
+        tables = (
+            []
+            if workspace.mode_b
+            else credential_tables(workspace.info.repo_path, workspace.info.app_subfolder)
         )
+        return DbSession(settings, self.secrets, workspace, forge_home(), tables)
 
     async def prepare_database(self, force: bool = False) -> None:
         """Spec §9.5.2 at the start of work: access level per database, then the scratch schema (created
@@ -216,23 +200,6 @@ class SessionHost:
         if self.db is not None:
             self.context_manager.pinned.set("database", self.db.status_line())
 
-    async def announce_kb_status(self) -> None:
-        """Spec §11.4 staleness check at session start (M6 refreshes automatically in its KB CHECK phase)."""
-        assert self.workspace is not None
-        kb_dir = self.kb_dir()
-        assert kb_dir is not None
-        repo, app = Path(self.workspace.info.repo_path), self.workspace.info.app_subfolder
-        changes = await asyncio.to_thread(kb_status, repo, app, kb_dir)
-        if changes is None:
-            text = (
-                "No knowledge base for this repository yet. Run /kb build (uses the LLM once; reused later)."
-            )
-        elif changes.all:
-            text = f"The knowledge base is out of date ({len(changes.all)} file(s) changed). Run /kb refresh."
-        else:
-            return
-        await self.bus.publish(EventType.NOTICE, {"kind": "kb_status", "text": text})
-
     async def _publish(self, event_type: str, payload: dict[str, Any]) -> None:
         await self.bus.publish(EventType(event_type), payload)
 
@@ -262,9 +229,9 @@ class SessionHost:
             publish=self._publish,
             tool_cap_tokens=settings.tool_output_cap,
             shell_cap_tokens=settings.shell_output_cap,
-            kb=self.open_kb(),
         )
         context.db = self._build_db(workspace)
+        self.refresh_profile_pin()
         web = self.router.config.web
         context.secrets = self.secrets
         context.web_search_provider = web.search_provider
@@ -362,7 +329,6 @@ class SessionHost:
             self._history_baseline = asyncio.create_task(asyncio.to_thread(History(self.workspace).ensure))
         await self.start_mcp()
         if self.workspace is not None and self.orchestrator is None and not self.workspace.mode_b:
-            self._kb_check = asyncio.create_task(self.announce_kb_status())
             await self._prepare_database_quietly()
         if self.orchestrator is not None and self.orchestrator.needs_resume:
             await self._run_turn(self.orchestrator.resume)
@@ -429,8 +395,10 @@ class SessionHost:
     # --- instructions, skills, message preparation (spec §13B) ---
 
     def repo_level_dir(self) -> Path | None:
+        if self.workspace is None:
+            return None
         profile = self.host_profile()
-        return profile.root if profile is not None else self.kb_dir()
+        return repo_level_dir(forge_home(), self.workspace, profile.root if profile is not None else None)
 
     def instruction_files(self) -> list[InstructionFile]:
         return instruction_files(

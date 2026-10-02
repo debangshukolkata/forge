@@ -231,8 +231,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] D-156 docs: spec §0.2 + banners, SPEC_DEVIATIONS, CLAUDE.md, MODULES.md, memory
 - [x] D-156 code step 1 (D-158, 2026-10-03): `learning` retired; memory = FORGE.md + auto-memory (typed files + MEMORY.md, user and project scope). Left: remove the empty Lessons panel from the React UI with the timeline UI
 - [x] D-156 code step 2 (D-159, 2026-10-03): verify ladders, tools, test guard, export smoke check retired; Mode B harness kept (PYTEST_ADDOPTS)
-- [ ] D-156 code step 3: retire `kb` and the `kb_*`/symbol tools, KB check, `forge kb`; add `/init`-style FORGE.md drafting
-- [ ] Timeline UI (option A): rail, narration between tool rows, Read/Grep collapsed, Bash/Edit with output, inline diffs, nested subagents; fix the Run map (D-131)
+- [x] D-156 code step 3 (D-160, 2026-10-03): `kb` retired; credential-table detection kept in `db`; `/init` now has the model explore and write FORGE.md
+- [ ] **DEFERRED (user, 2026-10-03: UI and charts are secondary; core first)** Timeline UI (option A): rail, narration between tool rows, Read/Grep collapsed, Bash/Edit with output, inline diffs, nested subagents; fix the Run map (D-131)
 - [ ] MCP review and security design (Mode B) before extending; LSP design
 - [ ] Role-specific toolsets, lazy tool schemas, prompt fragments: decide from run logs
 - [ ] Full test run after the revamp code steps; commit in logical parts

@@ -52,7 +52,7 @@ forge = "forge.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-forge = ["py.typed", "data/tiktoken/*", "defaults/*.yaml", "agent/prompts/*.md", "workflow/prompts/*.md", "context/prompts/*.md", "kb/prompts/*.md", "skills/*/SKILL.md", "modeb/forge_structure_export.py", "vision/static/*", "web/react/*", "web/react/assets/*"]
+forge = ["py.typed", "data/tiktoken/*", "defaults/*.yaml", "agent/prompts/*.md", "workflow/prompts/*.md", "context/prompts/*.md", "skills/*/SKILL.md", "modeb/forge_structure_export.py", "vision/static/*", "web/react/*", "web/react/assets/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

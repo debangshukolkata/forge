@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from forge.memory.scope import project_dir
 from forge.safety.redact import default_redactor
 
 KINDS = ("user", "feedback", "project", "reference")
@@ -53,7 +54,7 @@ class MemoryStore:
     def __init__(self, home: Path, scope: str | None = None) -> None:
         base = home / "memory"
         self.scope = scope or "user"
-        self.folder = base if scope is None else base / "scopes" / re.sub(r"[^A-Za-z0-9._-]", "-", scope)
+        self.folder = base if scope is None else project_dir(home, scope)
 
     def _parse(self, path: Path) -> Memory:
         text = path.read_text(encoding="utf-8")

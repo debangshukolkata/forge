@@ -22,7 +22,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from forge.kb.bm25 import BM25, tokenize
+from forge.modeb.bm25 import BM25, tokenize
 from forge.safety.redact import default_redactor
 
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,48}$")

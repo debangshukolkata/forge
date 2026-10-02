@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 
 from forge.safety.paths import real_path
@@ -27,3 +28,22 @@ def scope_of(workspace: Workspace) -> str:
         ref = json.loads(ref_path.read_text(encoding="utf-8")) if ref_path.exists() else {}
         return f"profile:{ref.get('profile', 'unknown')}"
     return f"repo:{repo_key(workspace.info.repo_path, workspace.info.app_subfolder)}"
+
+
+def project_dir(home: Path, scope: str) -> Path:
+    """<forge_home>/memory/scopes/<scope>/: this project's memories, FORGE.md and skills (D-160)."""
+    return home / "memory" / "scopes" / re.sub(r"[^A-Za-z0-9._-]", "-", scope)
+
+
+def repo_level_dir(home: Path, workspace: Workspace, profile_root: Path | None) -> Path:
+    """Where the repository-level FORGE.md and skills live: the host profile folder in Mode B, otherwise the
+    project folder. A FORGE.md written into the old knowledge-base folder is copied over once."""
+    if profile_root is not None:
+        return profile_root
+    folder = project_dir(home, scope_of(workspace))
+    target = folder / "FORGE.md"
+    legacy = home / "kb" / repo_key(workspace.info.repo_path, workspace.info.app_subfolder) / "FORGE.md"
+    if not target.exists() and legacy.exists():
+        folder.mkdir(parents=True, exist_ok=True)
+        target.write_text(legacy.read_text(encoding="utf-8"), encoding="utf-8")
+    return folder

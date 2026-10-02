@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Any
 
 from forge.config import forge_home
+from forge.memory.scope import repo_level_dir
 from forge.parity.skills import discover
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
@@ -21,10 +22,8 @@ BUILT_IN_TYPES = {
 
 def skill_roots(context: ToolContext) -> list[Any]:
     roots: list[Any] = [forge_home() / "skills"]
-    if context.kb is not None:
-        roots.append(context.kb.kb_dir / "skills")
-    if context.profile is not None:
-        roots.append(context.profile.root / "skills")
+    profile_root = context.profile.root if context.profile is not None else None
+    roots.append(repo_level_dir(forge_home(), context.workspace, profile_root) / "skills")
     return roots
 
 

@@ -9,8 +9,7 @@ from forge.toolkit.shell import PythonRun, RunCommand
 from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
-from forge.tools.kb import FindReferences, FindSymbol, KbRead, KbSearch, ListSymbols
-from forge.tools.memory import MemoryForget, MemoryRead, MemoryWrite
+from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
 from forge.tools.search import Glob, Grep, ListDir
@@ -29,11 +28,6 @@ def default_tools() -> list[Tool]:
         Glob(),
         ListDir(),
         Grep(),
-        KbSearch(),
-        KbRead(),
-        FindSymbol(),
-        FindReferences(),
-        ListSymbols(),
         RunCommand(),
         PythonRun(),
         StartBackground(),
@@ -45,6 +39,7 @@ def default_tools() -> list[Tool]:
         MemoryRead(),
         MemoryWrite(),
         MemoryForget(),
+        InstructionsWrite(),
         LoadSkill(),
         NotebookRead(),
         NotebookEditCell(),

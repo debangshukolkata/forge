@@ -3,15 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from forge.config import ROLES, forge_home
 from forge.errors import ConfigError
-from forge.kb.builder import build as kb_build
-from forge.kb.builder import status as kb_status
-from forge.kb.knowledge import KnowledgeBase
-from forge.kb.narrative import llm_writer
 from forge.llm.cost import format_money
 from forge.memory.scope import scope_of
 from forge.memory.store import CommandStore, MemoryStore
@@ -39,7 +34,6 @@ HELP_TEXT = """Available commands:
   /mode [plan|default|auto] show or change the permission mode
   /requirements | /plan | /tasks   the approved requirements, the plan, the task board
   /restructure <how>        reshape delivered code to fit your repo (behaviour kept)
-  /kb status|build|refresh|rebuild|search <text>   the repository knowledge base
   /db [status]              what Forge may do on each database, and the scratch schema
   /db requests              DB requests Forge wrote for you or your DBA
   /db done <DBR-n> [result] you ran it: Forge verifies and unblocks the tasks waiting on it
@@ -90,7 +84,6 @@ class SlashCommandHandler:
             "/requirements": self._requirements,
             "/plan": self._plan,
             "/tasks": self._tasks,
-            "/kb": self._kb,
             "/db": self._db,
             "/diagnose": self._diagnose,
             "/remember": self._remember,
@@ -188,65 +181,6 @@ class SlashCommandHandler:
             f"Permission mode: {agent.gate.mode}. plan = read-only; default = edits applied, "
             "unlisted commands ask; auto = no questions except the always-ask list."
         )
-
-    async def _kb(self, args: list[str]) -> None:
-        workspace = self._workspace()
-        if workspace.mode_b:
-            await self._say(
-                "/kb is not used in Mode B: the host profile replaces the knowledge base (/profile)."
-            )
-            return
-        kb_dir = self.host.kb_dir()
-        assert kb_dir is not None
-        action = args[0] if args else "status"
-        repo, app = Path(workspace.info.repo_path), workspace.info.app_subfolder
-        if action == "status":
-            changes = await asyncio.to_thread(kb_status, repo, app, kb_dir)
-            text = (
-                "No knowledge base yet: /kb build"
-                if changes is None
-                else f"Knowledge base at {kb_dir}: up to date."
-                if not changes.all
-                else f"Knowledge base at {kb_dir}: {len(changes.all)} file(s) changed — /kb refresh"
-            )
-            await self._say(text)
-        elif action in ("build", "refresh", "rebuild"):
-
-            async def progress(message: str) -> None:
-                await self._say(message)
-
-            def on_progress(message: str) -> None:
-                asyncio.get_running_loop().create_task(progress(message))
-
-            report = await kb_build(
-                repo,
-                app,
-                kb_dir,
-                llm_writer(self.host.router),
-                full=action == "rebuild",
-                on_progress=on_progress,
-            )
-            self.host.reload_kb()
-            await self._say(
-                f"Knowledge base {'built' if report.full else 'refreshed'}: "
-                f"{len(report.changes.all)} changed "
-                f"file(s); {len(report.llm_documents)} document(s) written by the LLM"
-                + (
-                    f"; kept your pinned edits in {', '.join(report.docs_kept_pinned)}"
-                    if report.docs_kept_pinned
-                    else ""
-                )
-            )
-        elif action == "search" and len(args) > 1:
-            kb = KnowledgeBase.open(kb_dir)
-            if kb is None:
-                await self._say("No knowledge base yet: /kb build")
-                return
-            hits = kb.search(" ".join(args[1:]))
-            listing = [f"[{h.kind}] {h.name} — {h.location}" for h in hits]
-            await self._say("\n".join(listing) or "No matches.")
-        else:
-            await self._say("Usage: /kb status | build | refresh | rebuild | search <text>")
 
     async def _db(self, args: list[str]) -> None:
         db = self.host.db
@@ -473,31 +407,26 @@ class SlashCommandHandler:
             await self._say("Usage: /forget-snippet <exemplar id, e.g. E001>")
             return
         removed = profile.forget_exemplar(args[0].upper())
-        self.host.open_kb()  # refresh the pinned profile essentials
+        self.host.refresh_profile_pin()
         await self._say(
             f"{args[0].upper()} removed from the profile." if removed else f"No snippet {args[0]}."
         )
 
     async def _init(self, args: list[str]) -> None:
-        from forge.parity.instructions import draft_from_kb
-
-        workspace = self._workspace()
+        """Like Claude Code's /init: Forge reads the repository and writes the repository-level FORGE.md."""
         level = self.host.repo_level_dir()
         if level is None:
-            await self._say(
-                "No repository/host folder to hold a FORGE.md yet (build the KB first: /kb build)."
-            )
+            await self._say("No project yet to hold a FORGE.md.")
             return
         path = level / "FORGE.md"
         if path.exists():
             await self._say(f"{path} already exists; edit it directly (or add lines with '# <instruction>').")
             return
-        essentials = self.host.context_manager.pinned.get("kb_essentials")
-        level.mkdir(parents=True, exist_ok=True)
-        path.write_text(draft_from_kb(essentials, workspace.info.name), encoding="utf-8")
-        self.host.refresh_instructions()
-        await self._say(
-            f"Drafted {path}. Edit it: Forge reads it at the start of every session on this codebase."
+        await self.host.run_message(
+            "Explore this repository (list it, read the README and the main modules, look at the tests and "
+            "config) and write a short FORGE.md for it with instructions_write: how to run and test it, "
+            "the conventions to follow, and things never to do here. Keep it under 40 lines and base every "
+            "line on what you actually read."
         )
 
     async def _effort(self, args: list[str]) -> None:

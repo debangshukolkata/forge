@@ -12,12 +12,8 @@ from __future__ import annotations
 
 import asyncio
 from importlib import resources
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from forge.kb.builder import build as kb_build
-from forge.kb.builder import status as kb_status
-from forge.kb.narrative import llm_writer
 from forge.llm.base import Message
 from forge.modeb.assumptions import AssumptionRegister
 from forge.modeb.output import build_modeb_output
@@ -177,7 +173,6 @@ class Orchestrator:
         first_brief = not self._briefed()
         kind = self._change_kind()
         if first_brief and not kind and not self.workspace.mode_b:
-            await self._kb_check()  # Mode A: keep the KB fresh before the model relies on it, once
             await self.host.prepare_database()
         if first_brief:
             text = self._format(kind or "requirement")
@@ -186,22 +181,6 @@ class Orchestrator:
             return  # waiting for the user's reply
         if self.state.tasks and self.state.next_task() is None and not self._has_open_tasks():
             await self._export()
-
-    async def _kb_check(self) -> None:
-        kb_dir = self.host.kb_dir()
-        assert kb_dir is not None
-        repo, app = Path(self.workspace.info.repo_path), self.workspace.info.app_subfolder
-        changes = kb_status(repo, app, kb_dir)
-        if changes is not None and not changes.all:
-            return
-        await self._notice(
-            "kb",
-            "Building the knowledge base…"
-            if changes is None
-            else f"Refreshing the knowledge base ({len(changes.all)} changed file(s))…",
-        )
-        await kb_build(repo, app, kb_dir, llm_writer(self.host.router))
-        self.host.reload_kb()
 
     def _has_open_tasks(self) -> bool:
         return any(t.status in ("pending", "in_progress") for t in self.state.tasks)

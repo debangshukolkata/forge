@@ -19,6 +19,9 @@ Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
 - **Verification ladders retired (D-159):** the model runs tests, linters and builds itself through the shell; the
   `verify` and `run_tests` tools, the ladders, the test guard and the export smoke check are gone. Mode B still
   loads its host stand-ins for any pytest run.
+- **Knowledge base retired (D-160):** Forge reads the repository on demand with glob/grep/read and the explore
+  subagent. The list of credential tables the database guard refuses to read is still computed (now in `db`).
+  `/init` has the model explore the repo and write FORGE.md.
 - **Parked:** Gemini provider (D-150).
 
 ## 0.1.0 — 2026-09-26 … 2026-09-29

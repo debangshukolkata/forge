@@ -39,7 +39,6 @@ async def run_explore(router: LLMRouter, context: ToolContext, requirement: str)
     sub_context = ToolContext(
         workspace=context.workspace,
         shell=context.shell,
-        kb=context.kb,
         tool_cap_tokens=context.tool_cap_tokens,
         shell_cap_tokens=context.shell_cap_tokens,
     )
@@ -149,7 +148,6 @@ async def _run_subagent(
     sub_context = ToolContext(
         workspace=context.workspace,
         shell=context.shell,
-        kb=context.kb,
         db=context.db,
         tool_cap_tokens=context.tool_cap_tokens,
         shell_cap_tokens=context.shell_cap_tokens,

@@ -90,12 +90,6 @@ def build_parser() -> argparse.ArgumentParser:
     ui.add_argument(
         "--dev", action="store_true", help="accept the Vite dev server (127.0.0.1:5173) for UI development"
     )
-    kb = subcommands.add_parser("kb", help="build or refresh a repository's knowledge base")
-    kb.add_argument("action", choices=["build", "refresh", "rebuild", "status"])
-    kb.add_argument("--repo", type=Path, required=True, dest="kb_repo")
-    kb.add_argument(
-        "--app-folder", dest="kb_app_folder", help="defaults to the remembered/detected app folder"
-    )
     return parser
 
 
@@ -146,8 +140,6 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "cleanup":
         return _cleanup(args.cleanup_workspace, args.yes)
-    if args.command == "kb":
-        return asyncio.run(_kb(args.action, args.kb_repo, args.kb_app_folder))
     return _interactive(args.workspace, direct=args.direct)
 
 
@@ -201,61 +193,6 @@ async def _run(workspace_path: Path, requirement: str | None, auto_approve: bool
         for message in result.errors:
             console.print(f"Error: {message}", markup=False)
     return result.exit_code
-
-
-async def _kb(action: str, repo: Path, app_folder: str | None) -> int:
-    from forge.config import forge_home, load_config, load_secrets
-    from forge.kb.builder import build, status
-    from forge.kb.narrative import llm_writer
-    from forge.kb.store import kb_dir_for
-    from forge.llm.router import LLMRouter
-    from forge.workspace.pyenv import find_app_folder_candidates
-    from forge.workspace.repo_memory import remembered_app_folder
-
-    console = Console()
-    home = forge_home()
-    app_folder = app_folder or remembered_app_folder(home, repo)
-    if app_folder is None:
-        candidates = find_app_folder_candidates(repo) if repo.is_dir() else []
-        if len(candidates) != 1:
-            console.print(
-                f"Which folder is the Python app? Candidates: {', '.join(candidates) or 'none'}. "
-                "Use --app-folder.",
-                markup=False,
-            )
-            return 2
-        app_folder = candidates[0]
-    kb_dir = kb_dir_for(home, repo, app_folder)
-    if action == "status":
-        changes = status(repo, app_folder, kb_dir)
-        message = (
-            "No knowledge base yet."
-            if changes is None
-            else "Up to date."
-            if not changes.all
-            else f"{len(changes.all)} file(s) changed since the last build."
-        )
-        console.print(f"{kb_dir}: {message}", markup=False)
-        return 0
-    try:
-        router = LLMRouter(load_config(home), load_secrets(home))
-    except ConfigError as error:
-        console.print(f"Configuration problem: {error}", markup=False)
-        return 2
-    report = await build(
-        repo,
-        app_folder,
-        kb_dir,
-        llm_writer(router),
-        full=action == "rebuild",
-        on_progress=lambda message: console.print(message, markup=False),
-    )
-    console.print(
-        f"{kb_dir}: {len(report.docs_written)} document(s) written ({len(report.llm_documents)} by the LLM, "
-        f"cost ${router.cost.total_usd:.4f}).",
-        markup=False,
-    )
-    return 0
 
 
 def _new(repo: Path, workspace_path: Path, app_folder: str | None, project: str = "") -> int:

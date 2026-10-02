@@ -2370,3 +2370,23 @@ stubs can't hide new code (covered by `test_tests_run_against_harness_stubs`, ru
 **Risks:** no automatic "no tests found" / "pytest not installed" / "collection errors, don't write more tests" hints;
 the model sees the raw output (more tokens, but also what Claude Code sees); no silent test-weakening guard (the prompt
 rule remains). Judge from the run logs. **Tests:** 478 passed, 2 skipped on purpose (parallel run).
+
+### D-160 — Knowledge base retired; the repo is read on demand (D-156 code step 3) · Built (2026-10-03)
+**Removed:** the whole `kb` module (builder, extractors for Flask/SQLAlchemy/LangGraph/AST, narrative LLM documents,
+index, search), `tools/kb.py` (`kb_search`, `kb_read`, `find_symbol`, `find_references`, `list_symbols`), the KB check
+and refresh at the start of a requirement, the `/kb` command and `forge kb`, the `kb` field on `ToolContext`, and the
+"tables exist in scratch" check (`db/table_check.py`, dead since D-159). Mode A no longer pins "codebase essentials":
+Forge reads the repository with `glob` / `grep` / `read_file` and the explore subagent, like Claude Code.
+**Kept, and why (safety):** the credentials-bootstrap detection. Forge must never read the tables an app loads its
+database credentials from (spec §9.5.1, safety rules 3 and 4), and that list came from the KB manifest. It now lives in
+`db/credential_tables.py` (+ `db/python_index.py`, trimmed `db/data_facts.py`), runs at session start on the original
+repo (read-only, secret files never parsed) and feeds `DbSession` deny-tables exactly as before. Moved: BM25 to
+`modeb/bm25.py` (Mode B profile search). **Where FORGE.md and skills live now:** the project folder
+`<home>/memory/scopes/<scope>/` (Mode B: the host profile folder); a FORGE.md in an old KB folder is copied over once.
+**New:** `/init` is Claude Code's: it tells the model to explore the repository and write the repo-level FORGE.md
+with the new `instructions_write` tool (refuses to overwrite an existing file). Old KB folders in Forge home are left
+on disk, unread. The `kb_builder` model role and the pinned slot name `kb_essentials` (now Mode B profile essentials
+only) stay for config and event-log compatibility.
+**Risk:** no precomputed API/model/graph catalog, so large repos cost more search per requirement; judge from the run
+logs. **Tests:** 464 + 95 targeted after fixes, all green (parallel run); `tests/test_kb.py`, `test_live_kb.py` and the
+three table-check tests removed, one credential-table test added.
