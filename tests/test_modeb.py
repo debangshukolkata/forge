@@ -415,9 +415,7 @@ async def test_a_missing_cwd_is_an_error_not_a_sandbox_failure(workspace: Worksp
 
     shell = ShellSession(workspace, sandbox="off")
     context = ToolContext(workspace=workspace, shell=shell)
-    result = await execute(
-        context, "python --version", 30, "project"
-    )  # the project/ prefix is already implied
+    result = await execute(context, "python --version", 30, "no_such_folder")
     assert not result.ok and "No such folder" in result.content
     assert shell.pending_notice is None
     assert (await execute(context, "python --version", 30, None)).ok
