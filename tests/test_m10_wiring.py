@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import httpx2
+import pytest
 
 from forge.engine.session_host import SessionHost
 from forge.protocol.events import Event, EventBus, EventType
@@ -136,3 +137,37 @@ def test_a_saved_project_state_is_flagged_first_in_the_pinned_memory(isolated_fo
     flag = "Work on this project was left unfinished or paused: read the memory 'project-state'"
     assert flag in pinned and pinned.index(flag) < pinned.index("About this project:")
     assert "project-state (project): where the work stands" in pinned
+
+
+async def test_todo_write_updates_the_pinned_list_and_the_event_and_survives_a_reopen(
+    original_repo: Path, tmp_path: Path, isolated_forge_home: Path
+) -> None:
+    import pydantic
+
+    from forge.tools.todo import TodoWrite
+
+    host = host_for(original_repo, tmp_path)
+    assert host.agent is not None
+    items = [
+        {"content": "read the routes", "status": "completed"},
+        {"content": "add the endpoint", "status": "in_progress"},
+        {"content": "run the tests", "status": "pending"},
+    ]
+    result = await TodoWrite().run(TodoWrite.Args(todos=items), host.agent.context)  # type: ignore[arg-type]
+    assert result.ok and "[~] add the endpoint" in result.content
+    pinned = host.context_manager.pinned.get("todos") or ""
+    assert "[x] read the routes" in pinned and "[ ] run the tests" in pinned
+    events = [e for e in host.bus.events_since(0) if e.type == EventType.TODO_UPDATED]
+    assert len(events) == 1 and len(events[0].payload["items"]) == 3
+    with pytest.raises(pydantic.ValidationError):  # two in progress at once
+        TodoWrite.Args(
+            todos=[{"content": "a", "status": "in_progress"}, {"content": "b", "status": "in_progress"}]
+        )  # type: ignore[list-item]
+    # A new session over the same event log gets the list back.
+    reopened = SessionHost(
+        host.router,
+        host.bus,
+        workspace=host.workspace,
+        orchestrated=False,  # same log, fresh host
+    )
+    assert "[~] add the endpoint" in (reopened.context_manager.pinned.get("todos") or "")

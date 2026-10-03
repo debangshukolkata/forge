@@ -13,6 +13,7 @@ from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, Memo
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
 from forge.tools.search import Glob, Grep, ListDir
+from forge.tools.todo import TodoWrite
 from forge.tools.vision import vision_tools
 from forge.tools.web import WebFetch, WebSearch
 
@@ -39,6 +40,7 @@ def default_tools() -> list[Tool]:
         MemoryRead(),
         MemoryWrite(),
         MemoryForget(),
+        TodoWrite(),
         InstructionsWrite(),
         LoadSkill(),
         NotebookRead(),

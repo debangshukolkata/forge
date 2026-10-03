@@ -15,6 +15,7 @@ SLOT_ORDER = [
     "requirement",
     "instructions",
     "phase_and_tasks",
+    "todos",
     "compaction_summary",
     "database",
     "kb_essentials",
@@ -25,6 +26,7 @@ SLOT_ORDER = [
 SLOT_TITLES = {
     "requirement": "Requirement and acceptance criteria",
     "phase_and_tasks": "Phase and tasks",
+    "todos": "Your todo list (keep it current with todo_write)",
     "compaction_summary": (
         "Summary of earlier conversation (continue the task from its current state and next step "
         "directly, with tool calls; do not stop to announce it)"
