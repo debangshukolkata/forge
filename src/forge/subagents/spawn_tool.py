@@ -98,8 +98,22 @@ class SpawnSubagent(Tool):
                 names = ", ".join([*BUILT_IN_TYPES, *load_agents(forge_home())])
                 return ToolResult(ok=False, content=f"No agent {args.agent!r}. Agents: {names}")
             everything = {t.name: t for t in default_tools()}
-            chosen = [everything[n] for n in custom.tools if n in everything] or read_only
+            unknown = [n for n in custom.tools if n not in everything]
+            if unknown:
+                return ToolResult(
+                    ok=False,
+                    content=f"Agent {args.agent!r} lists unknown tools: {', '.join(unknown)}. "
+                    f"Known tools: {', '.join(sorted(everything))}.",
+                )
+            chosen = [everything[n] for n in custom.tools] or read_only
             report = await _run_subagent(
-                router, context, ToolRegistry(chosen), custom.prompt, args.task, 25, custom.role
+                router,
+                context,
+                ToolRegistry(chosen),
+                custom.prompt,
+                args.task,
+                custom.max_steps or 25,
+                custom.role,
+                write_only_under=custom.write_only_under,
             )
         return ToolResult(ok=True, content=f"[{args.agent} report]\n{report}")

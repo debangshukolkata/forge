@@ -2542,3 +2542,27 @@ sentence before a batch of tool calls ("Reading the routes to see how errors are
 `thinking_delta` yet (UI work is deferred), and tools do not start while the model is still streaming its remaining calls.
 Tests: summaries reach the callback with `summary: auto` in the request, a refusing deployment is retried without it, the host
 publishes the event.
+
+### D-175..D-180 — Items from the Codex-comparison list (docs/SPEC_CODEX_GAPS.md, G1 G2 G6 G7 G4) + subagent progress · Built (2026-10-03)
+Built in a separate git worktree while the speed benchmark ran, so the benchmark was not disturbed.
+- **D-175 / G1 parallel subagents.** Measured first: the loop already ran consecutive read-only calls in parallel and
+  `spawn_subagent` is marked read-only, so two subagents overlapped, including two verifiers (which write `tests/e2e/` and
+  start the app) and two debuggers (which run commands). Now only `explore` and `reviewer` overlap (`PARALLEL_SUBAGENT_TYPES`);
+  the rest run one after another; at most 4 at once (`MAX_PARALLEL_SUBAGENTS`). Timing test: two reads/explorers about 0.3 s,
+  two verifiers 0.6 s, six explorers 0.6 s (4 then 2). Subagents still cannot nest.
+- **D-176 / G2 compaction hooks.** `hooks.pre_compact` / `hooks.post_compact` command lists; run through the session's shell like
+  `post_edit`; pre-compact output (capped at 1500 chars each, redacted) is handed to the summariser as facts to keep; a failing or
+  crashing hook is reported (`hook_failed` notice) and skipped, never blocks compaction. `ContextManager.run_hook` is set by the host.
+- **D-177 / G6 `todo_write`.** The model's own lightweight list (whole list each time; pending/in_progress/completed; at most one
+  in_progress), no approval, read-only. Pinned (slot `todos`) so it survives compaction, emitted as `todo_updated`, rebuilt from
+  the last event when a project is reopened; the terminal shows it. Prompts: use it on work with three or more steps. The web UI does
+  not show it yet (UI deferred).
+- **D-178 / G7 `monitor`.** Wait on a background process in one call: returns when a regex appears, the process exits (with the exit
+  code) or the timeout (default 60 s, max 300 s) passes, with the new output; replaces `read_background` poll loops. Same sandbox, no
+  new rights.
+- **D-179 subagent progress** (found by the speed benchmark: a verifier runs 10-15 minutes and the screen showed nothing). A running
+  subagent's tool starts/finishes and reasoning summaries are relayed to the session as `subagent_step` events (agent id and role
+  included); the terminal shows them nested. The web UI shows them once the timeline UI is built.
+- **D-180 / G4 per-agent settings.** Custom agent files may set `max_steps` (1-200) and `write_only_under` (a folder; `..` refused);
+  an agent that lists unknown tools is rejected with the list of known ones instead of silently ignoring them.
+Not built: G3 (compaction robustness; only if real runs need it), G5 (no change under D-155).
