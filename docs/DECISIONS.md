@@ -2679,3 +2679,16 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   strip is where the eye is during a run, the panel keeps it after the strip is collapsed). State is rebuilt from the last
   `todo_updated` event, so a reopened project shows the same list. The `todo_write` tool row stays in the chat as a normal call.
   Test: `test_react_todo_list` (`todo-strip-light.png`).
+
+### D-192 — Timeline rows in the web chat: narration, folded read/search runs, inline diffs, failures open (built 2026-10-03; agreed in D-151)
+- **Narration:** the model's reasoning summaries (`thinking_delta`) show in order between calls as dim italic text; consecutive ones
+  merge into one block. **Read/search runs:** two or more `read_file` / `grep` / `glob` / `list_dir` calls in a row fold into one line
+  ("Read 2 files, Searched 3 times") with a spinner while running and a red mark if one failed; opening it lists the calls.
+  **Edits as diffs:** the `file_changed` event already carries a unified diff; the web now attaches it to the edit's call row, which
+  opens by itself with added lines green, removed red, and `+N −M` on the row (the IN block is replaced by the diff, the OUT block
+  stays). **Failures open:** a failed call (not one the model retried successfully) expands by itself once, and can be closed.
+  Code moved out of Chat.tsx into `components/ToolRows.tsx`. Test: `test_react_timeline_rows` (`timeline-rows-light.png`).
+- **Not built, on purpose:** the vertical rail with green/grey dots from D-151: the user's later choice of the "Conversation" look
+  (D-189) replaced it. **Still open:** the Run map still reads the old phase field (D-131; two skipped browser tests), and the open
+  question of sending the full tool result to the UI instead of the capped preview (the preview is up to the engine's cap;
+  redaction would apply either way).

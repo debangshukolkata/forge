@@ -88,6 +88,26 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
       }
       return { ...state, items: updated };
     }
+    case "thinking_delta": {
+      const text = String(p.text ?? "").trim();
+      if (!text) return state;
+      if (last && last.kind === "thinking") return { ...state, items: [...items.slice(0, -1), { ...last, text: `${last.text}\n\n${text}` }] };
+      return { ...state, items: [...endStream(items), { key, kind: "thinking", text }] };
+    }
+    case "file_changed": {
+      // Emitted by the edit while its tool call is still running: the diff belongs to that call.
+      if (!p.diff) return state;
+      let at = -1;
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        if (item.kind === "tool" && !item.agent && (item.state === "running" || at < 0)) {
+          at = i;
+          if (item.state === "running") break;
+        }
+      }
+      if (at < 0) return state;
+      return { ...state, items: items.map((item, i) => (i === at && item.kind === "tool" ? { ...item, diff: String(p.diff) } : item)) };
+    }
     case "todo_updated":
       return { ...state, todos: Array.isArray(p.items) ? p.items : [] };
     case "agent_started":

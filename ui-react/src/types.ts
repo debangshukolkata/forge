@@ -130,6 +130,7 @@ export type ChatItem =
       name: string;
       summary: string;
       args?: Record<string, unknown>; // the call's arguments (shown as the IN block)
+      diff?: string; // an edit's unified diff (from the file_changed event), shown inline
       agent?: AgentView; // set on a spawn_subagent row (or a row made for a subagent): its own steps, nested
       state: "running" | "ok" | "fail";
       preview?: string;
@@ -139,6 +140,7 @@ export type ChatItem =
       // shown de-emphasised rather than as an alarming failure (see ToolCard in Chat.tsx).
       retried?: boolean;
     }
+  | { key: string; kind: "thinking"; text: string } // the model's reasoning summary between calls (dim)
   | { key: string; kind: "notice"; noticeKind: string; text: string }
   | { key: string; kind: "error"; text: string }
   | { key: string; kind: "approval"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any

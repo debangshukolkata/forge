@@ -1,15 +1,15 @@
 import {
-  AlertOctagon, CheckCircle2, ChevronRight, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload, XCircle,
+  AlertOctagon, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload,
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
 import type { ChatItem, EnvironmentOverview, UserInput } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
-import { AgentSteps, agentCounts, latestStepText, roleLabel } from "./AgentSteps";
 import { Composer, useAttachments } from "./Composer";
 import { TodoStrip } from "./TodoList";
-import { Badge, Button, CopyButton, Spinner, Textarea } from "./ui";
+import { LookingGroup, ThinkingLine, ToolCard, groupLookingRuns } from "./ToolRows";
+import { Badge, Button, CopyButton, Textarea } from "./ui";
 
 
 export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment?: () => void }) {
@@ -67,11 +67,17 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
               </Button>
             </div>
           )}
-          {items.map((item) => (
-            <div key={item.key} data-seq={/^e\d+$/.test(item.key) ? item.key.slice(1) : undefined}>
-              <Item item={item} forge={forge} />
-            </div>
-          ))}
+          {groupLookingRuns(items).map((row) =>
+            row.kind === "looking" ? (
+              <div key={row.items[0].key} data-seq={/^e\d+$/.test(row.items[0].key) ? row.items[0].key.slice(1) : undefined}>
+                <LookingGroup items={row.items} />
+              </div>
+            ) : (
+              <div key={row.item.key} data-seq={/^e\d+$/.test(row.item.key) ? row.item.key.slice(1) : undefined}>
+                <Item item={row.item} forge={forge} />
+              </div>
+            ),
+          )}
         </div>
       </div>
       <TodoStrip todos={forge.timeline.todos} />
@@ -176,6 +182,8 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
       );
     case "tool":
       return <ToolCard item={item} />;
+    case "thinking":
+      return <ThinkingLine text={item.text} />;
     case "notice":
       return <Notice kind={item.noticeKind} text={item.text} />;
     case "error":
@@ -192,100 +200,6 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
     case "action":
       return <ActionCard id={item.id} p={item.payload} forge={forge} />;
   }
-}
-
-const OUT_COLLAPSED_LINES = 15;
-
-/** The IN block: the command or path when there is one, else the arguments one per line. */
-function inputText(item: Extract<ChatItem, { kind: "tool" }>): string {
-  const args = item.args;
-  if (!args || Object.keys(args).length === 0) return item.summary;
-  if (typeof args.command === "string") return args.command;
-  return Object.entries(args)
-    .map(([key, value]) => `${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`)
-    .join("\n");
-}
-
-function IoBlock({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wider text-fg-muted">{label}</div>
-      {children}
-    </div>
-  );
-}
-
-// A tool call is one quiet line; opening it shows what went in and what came out, long output folded.
-function ToolCard({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
-  const [open, setOpen] = useState(false);
-  const [showAll, setShowAll] = useState(false);
-  const retried = item.state === "fail" && item.retried;
-  const lines = item.preview ? item.preview.split("\n") : [];
-  const folded = !showAll && lines.length > OUT_COLLAPSED_LINES;
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className={cx(
-          "flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-fg-muted transition-colors duration-150 hover:bg-surface",
-          retried && "opacity-70",
-        )}
-      >
-        <ChevronRight className={cx("h-3.5 w-3.5 shrink-0 transition-transform duration-150", open && "rotate-90")} aria-hidden />
-        {item.agent ? (
-          <>
-            <Badge tone="info">{roleLabel(item.agent.role)}</Badge>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-fg">{item.agent.purpose || item.summary}</span>
-              <span className="block truncate text-[12px]">
-                {item.state === "running" ? `${agentCounts(item.agent)} · ${latestStepText(item.agent)}` : agentCounts(item.agent)}
-              </span>
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="shrink-0 font-mono text-[12.5px] font-semibold text-fg">{item.name}</span>
-            <span className="min-w-0 flex-1 truncate">{item.summary}</span>
-          </>
-        )}
-        {retried && <Badge tone="neutral">retried</Badge>}
-        {item.state === "running" ? (
-          <Spinner className="h-3.5 w-3.5 text-accent" />
-        ) : item.state === "ok" ? (
-          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-label="Succeeded" />
-        ) : retried ? (
-          <AlertOctagon className="h-3.5 w-3.5 shrink-0" aria-label="Failed, then retried successfully" />
-        ) : (
-          <XCircle className="h-3.5 w-3.5 shrink-0 text-danger" aria-label="Failed" />
-        )}
-        {item.duration !== undefined && <span className="shrink-0 font-mono text-[11.5px] tabular-nums">{item.duration}s</span>}
-      </button>
-      {open && (
-        <div className="mb-1 ml-3.5 mt-1 space-y-3 border-l-2 border-border pl-4">
-          {item.agent && <AgentSteps agent={item.agent} />}
-          <IoBlock label="In">
-            <Code text={inputText(item)} className="max-h-60 text-[12px]" />
-          </IoBlock>
-          {item.preview && (
-            <IoBlock label="Out">
-              <Code text={folded ? lines.slice(0, OUT_COLLAPSED_LINES).join("\n") : item.preview} className="max-h-96 text-[12px]" />
-              {lines.length > OUT_COLLAPSED_LINES && (
-                <button
-                  type="button"
-                  onClick={() => setShowAll((v) => !v)}
-                  className="mt-1 cursor-pointer text-[12px] font-semibold text-accent hover:underline"
-                >
-                  {folded ? `Show ${lines.length - OUT_COLLAPSED_LINES} more lines` : "Show less"}
-                </button>
-              )}
-            </IoBlock>
-          )}
-        </div>
-      )}
-    </div>
-  );
 }
 
 function Notice({ kind, text }: { kind: string; text: string }) {

@@ -325,7 +325,7 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
         page.wait_for_selector("text=Approve the plan?")
         page.wait_for_selector("text=Should masking keep the first 6 digits (BIN)?")
         page.wait_for_selector("td:has-text('masking.py')")  # markdown table rendered (sanitised)
-        page.click("button:has-text('run_tests')")
+        # A failed call opens by itself: no click needed to see what went wrong.
         page.wait_for_selector("text=python -m pytest tests/ -q")  # the IN block
         assert not page.locator("pre:has-text('1 failed')").count()  # long output is folded
         page.click("button:has-text('more lines')")
@@ -926,5 +926,99 @@ def test_react_todo_list(server: ServerSecurity, workspace: Workspace) -> None:
         page.click("[role=tab]:has-text('Tasks')")
         page.wait_for_selector("text=Forge's todo list")
         page.wait_for_selector("text=1/3 done")
+        browser.close()
+    assert not problems, problems
+
+
+def test_react_timeline_rows(server: ServerSecurity, workspace: Workspace) -> None:
+    """D-151/D-189: narration between calls, read/search runs folded into one line, edits as inline diffs, failures open."""
+    import asyncio
+
+    from forge.protocol.events import EventBus, EventType
+
+    async def call(
+        bus: EventBus, call_id: str, name: str, summary: str, ok: bool = True, preview: str = "done"
+    ) -> None:
+        await bus.publish(
+            EventType.TOOL_CALL_STARTED, {"id": call_id, "name": name, "summary": summary, "arguments": {}}
+        )
+        await bus.publish(
+            EventType.TOOL_CALL_FINISHED,
+            {
+                "id": call_id,
+                "name": name,
+                "ok": ok,
+                "summary": summary,
+                "preview": preview,
+                "duration_s": 0.2,
+            },
+        )
+
+    async def script() -> None:
+        bus = EventBus(workspace.forge_dir / "transcripts" / "events.jsonl", redactor=Redactor())
+        await bus.publish(EventType.USER_MESSAGE, {"text": "Rename the helper and fix the import"})
+        await bus.publish(
+            EventType.THINKING_DELTA, {"text": "First I will look at where the helper is used."}
+        )
+        await call(bus, "r1", "grep", "def helper")
+        await call(bus, "r2", "read_file", "utils.py")
+        await call(bus, "r3", "grep", "helper(")
+        await call(bus, "r4", "read_file", "main.py")
+        await call(bus, "r5", "glob", "**/*.py")
+        await bus.publish(EventType.THINKING_DELTA, {"text": "Two files use it; I will edit both."})
+        await bus.publish(
+            EventType.TOOL_CALL_STARTED,
+            {"id": "e1", "name": "edit_file", "summary": "edit utils.py", "arguments": {"path": "utils.py"}},
+        )
+        diff = "--- a/utils.py\n+++ b/utils.py\n@@ -1,3 +1,4 @@\n def keep():\n-    return helper()\n+    return helper_v2()\n+    # renamed\n"
+        await bus.publish(EventType.FILE_CHANGED, {"path": "utils.py", "op": "update", "diff": diff})
+        await bus.publish(
+            EventType.TOOL_CALL_FINISHED,
+            {
+                "id": "e1",
+                "name": "edit_file",
+                "ok": True,
+                "summary": "edit utils.py",
+                "preview": "Updated utils.py.",
+                "duration_s": 0.1,
+            },
+        )
+        await call(bus, "t1", "run_command", "python -m pytest -q", ok=False, preview="1 failed: test_keep")
+
+    asyncio.run(script())
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        problems: list[str] = []
+        page.on("console", lambda m: problems.append(m.text) if m.type == "error" else None)
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Start something new.")
+        page.evaluate(
+            "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
+            str(workspace.root),
+        )
+        page.reload()
+        page.wait_for_selector("text=First I will look at where the helper is used.")  # narration, in order
+        page.wait_for_selector("text=Two files use it; I will edit both.")
+        group = page.locator("button:has-text('Read 2 files, Searched 3 times')")
+        group.wait_for()
+        assert page.locator("button:has-text('def helper')").count() == 0  # folded until opened
+        # The edit shows its diff without a click, with the +/- counts on the row.
+        diff_box = page.locator("[role=region][aria-label=Changes]")
+        diff_box.wait_for()
+        assert "return helper_v2()" in diff_box.inner_text() and "# renamed" in diff_box.inner_text()
+        assert "return helper()" in diff_box.inner_text()
+        assert "+2" in page.locator("button:has-text('edit_file')").inner_text()
+        # The failed test run opened itself.
+        page.wait_for_selector("pre:has-text('1 failed: test_keep')")
+        page.screenshot(path=str(shots / "timeline-rows-light.png"))
+        group.click()
+        page.wait_for_selector("button:has-text('def helper')")
         browser.close()
     assert not problems, problems
