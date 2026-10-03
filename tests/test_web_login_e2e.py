@@ -309,3 +309,91 @@ def test_account_screen_in_edge(server: ServerSecurity) -> None:
         page.wait_for_selector("text=Start something new.")
         browser.close()
     assert not problems, problems
+
+
+def test_optional_tools_are_asked_before_they_are_tested(
+    server: ServerSecurity, isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-201: the drawer asks whether Tesseract is installed and Gemini is enabled; only a yes starts a
+    test, the answer is remembered, and the server holds to it even if a page asks for the test anyway."""
+    from forge.doctor import CheckResult
+    from forge.environment import checks
+
+    calls: list[str] = []
+
+    async def answers(config: object, secrets: object) -> list[CheckResult]:
+        return [CheckResult("Model gpt51", "ok", "serves gpt-5.1 via responses API in 0.4s")]
+
+    def fake_tesseract() -> checks.Outcome:
+        calls.append("tesseract")
+        return checks.Outcome("tesseract", "ok", "tesseract v5.4.0 read a test image correctly (fake)")
+
+    def fake_gemini(config: object) -> checks.Outcome:
+        calls.append("gemini")
+        return checks.Outcome("gemini", "ok", "Credentials found (fake).")
+
+    monkeypatch.setattr(checks, "check_models", answers)
+    monkeypatch.setattr(checks, "check_tesseract", fake_tesseract)
+    monkeypatch.setattr(checks, "check_gemini", fake_gemini)
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1440, "height": 1100}).new_page()
+        problems: list[str] = []
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Welcome to Forge.")
+        page.fill("input[autocomplete=username]", "asha")
+        page.fill("label:has-text('Password') input", PASSWORD)
+        page.fill("label:has-text('Repeat the password') input", PASSWORD)
+        page.click("button:has-text('Create account')")
+        page.wait_for_selector("text=Start something new.")
+        page.click("button:has-text('Environment')")
+        drawer = page.locator("[role=dialog][aria-label=Environment]")
+        drawer.wait_for()
+        page.wait_for_selector("text=serves gpt-5.1")
+
+        tesseract = drawer.locator("[role=group][aria-label='Is Tesseract installed on this computer?']")
+        gemini = drawer.locator("[role=group][aria-label='Is Gemini enabled for you?']")
+        tesseract.wait_for()
+        assert drawer.locator("text=Answer the question to test it.").count() == 2
+        assert calls == []  # nothing is tested until the user says yes
+
+        tesseract.locator("button:has-text('Yes')").click()
+        page.wait_for_selector("text=read a test image correctly")
+        assert calls == ["tesseract"]
+        gemini.locator("button:has-text('No')").click()
+        page.wait_for_selector("text=Not in use.")
+        assert calls == ["tesseract"]
+        page.screenshot(path=str(shots / "environment-ask-light.png"))
+
+        # The answers are remembered: after a reload the drawer shows them and tests only what was a yes.
+        page.reload()
+        page.click("button:has-text('Environment')")
+        tesseract.wait_for()
+        assert tesseract.locator("button:has-text('Yes')").get_attribute("aria-pressed") == "true"
+        assert gemini.locator("button:has-text('No')").get_attribute("aria-pressed") == "true"
+        # The saved result shows at once; the yes is tested again in the background: wait for that call.
+        for _ in range(100):
+            if len(calls) >= 2:
+                break
+            page.wait_for_timeout(100)
+        page.wait_for_selector("text=read a test image correctly")
+        assert calls == ["tesseract", "tesseract"] and "Not in use." in drawer.inner_text()
+
+        # The server holds to the answer whatever a page asks for.
+        status = page.evaluate(
+            "fetch('/api/environment/check/gemini', {method: 'POST'})"
+            ".then(r => r.json()).then(j => j.result.status)"
+        )
+        assert status == "off" and "gemini" not in calls
+
+        tesseract.locator("button:has-text('No')").click()
+        page.wait_for_selector("text=Not in use. >> nth=1")
+        assert drawer.locator("text=read a test image correctly").count() == 0
+        browser.close()
+    assert not problems, problems

@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -28,9 +29,9 @@ from forge.doctor import (
 from forge.errors import ForgeError
 from forge.safety.redact import default_redactor
 
-Status = Literal["ok", "warn", "fail"]
+Status = Literal["ok", "warn", "fail", "off"]  # off: the user said they do not use it
 CHECK_TIMEOUT_S = 90.0
-RANK = {"ok": 0, "warn": 1, "fail": 2}
+RANK = {"ok": 0, "off": 0, "warn": 1, "fail": 2}
 
 
 @dataclass
@@ -39,15 +40,29 @@ class CheckInfo:
     label: str
     optional: bool
     purpose: str
+    ask: str = ""  # a yes/no question: the check only runs when the user answers yes (D-201)
 
 
 CHECKS = (
     CheckInfo("system", "This computer", False, "Python, packages, certificates and the Forge folder"),
     CheckInfo("azure", "Azure OpenAI", False, "The models Forge works with"),
     CheckInfo("postgres", "PostgreSQL", True, "A database for scratch schemas and data checks"),
-    CheckInfo("gemini", "Gemini", True, "Video input (reserved; not used by this version of Forge)"),
-    CheckInfo("tesseract", "Tesseract OCR", True, "Reading text in scanned images (reserved; not used yet)"),
+    CheckInfo(
+        "gemini",
+        "Gemini",
+        True,
+        "Video input (reserved; not used by this version of Forge)",
+        ask="Is Gemini enabled for you?",
+    ),
+    CheckInfo(
+        "tesseract",
+        "Tesseract OCR",
+        True,
+        "Reading text in scanned images (reserved; not used yet)",
+        ask="Is Tesseract installed on this computer?",
+    ),
 )
+ASKED_IDS = tuple(check.id for check in CHECKS if check.ask)
 KNOWN_IDS = tuple(check.id for check in CHECKS)
 
 
@@ -65,6 +80,12 @@ class Outcome:
         data["detail"] = default_redactor.redact(self.detail)
         data["hint"] = default_redactor.redact(self.hint)
         return data
+
+
+def not_in_use(check_id: str, said_no: bool) -> Outcome:
+    """What a row shows until the user says yes: nothing is tested (D-201)."""
+    detail = "Not in use." if said_no else "Answer the question to test it."
+    return Outcome(check_id, "off", detail)
 
 
 def _worst(results: list[CheckResult]) -> Status:
@@ -131,7 +152,7 @@ def _adc_file() -> Path:
 def check_gemini(config: ForgeConfig) -> Outcome:
     provider = getattr(config.llm.providers, "gemini", None)
     if provider is None:
-        return Outcome("gemini", "warn", "Not part of this version of Forge.", "Nothing to do for now.")
+        return Outcome("gemini", "warn", "Not part of this version of Forge yet.", "Nothing to do for now.")
     secrets = load_secrets(forge_home())
     missing = [name for name in (provider.project_env, provider.location_env) if not secrets.get(name)]
     if missing:
@@ -148,14 +169,43 @@ def check_gemini(config: ForgeConfig) -> Outcome:
     return Outcome("gemini", "ok", "Credentials found (not called live).")
 
 
+def _ocr_reads_a_test_image(binary: str) -> tuple[bool, str]:
+    """Draws the word "Forge" and asks Tesseract to read it: proves the install, its language data and the
+    command line work together, not only that the program starts."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    with tempfile.TemporaryDirectory() as folder:
+        image = Image.new("L", (560, 170), 255)
+        try:
+            font = ImageFont.load_default(size=84)
+        except (TypeError, OSError):  # an older Pillow without a sizeable default font
+            font = ImageFont.load_default()
+        ImageDraw.Draw(image).text((28, 30), "Forge", fill=0, font=font)
+        path = Path(folder) / "probe.png"
+        image.save(path)
+        try:
+            done = subprocess.run(
+                [binary, str(path), "stdout"], capture_output=True, text=True, timeout=30, check=False
+            )
+        except (OSError, subprocess.SubprocessError) as error:
+            return False, str(error)[:200]
+    letters = "".join(ch for ch in done.stdout.lower() if ch.isalnum())
+    return "forge" in letters, (done.stderr or "").strip()[:200]
+
+
 def check_tesseract() -> Outcome:
+    """Only run when the user said Tesseract is installed (D-201), so not finding it is a failure."""
     found = shutil.which("tesseract")
     windows_default = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
     if not found and windows_default.exists():
         found = str(windows_default)
-    hint = "Optional: install Tesseract and add it to PATH."
     if not found:
-        return Outcome("tesseract", "warn", "Not found.", hint)
+        return Outcome(
+            "tesseract",
+            "fail",
+            "You said it is installed, but Forge cannot find it.",
+            "Add its folder to PATH, or answer No above.",
+        )
     try:
         completed = subprocess.run(
             [found, "--version"], capture_output=True, text=True, timeout=10, check=False
@@ -164,8 +214,17 @@ def check_tesseract() -> Outcome:
     except (OSError, subprocess.SubprocessError):
         lines = []
     if not lines:
-        return Outcome("tesseract", "warn", f"Found at {found} but it did not run.", "Reinstall Tesseract.")
-    return Outcome("tesseract", "ok", f"{lines[0]} ({found})")
+        return Outcome("tesseract", "fail", f"Found at {found} but it did not run.", "Reinstall Tesseract.")
+    reads, problem = _ocr_reads_a_test_image(found)
+    if not reads:
+        detail = f"{lines[0]} runs, but could not read a test image" + (f": {problem}" if problem else ".")
+        return Outcome(
+            "tesseract",
+            "warn",
+            detail,
+            "Check that the English language data (eng.traineddata) is installed.",
+        )
+    return Outcome("tesseract", "ok", f"{lines[0]} read a test image correctly ({found})")
 
 
 async def run_check(check_id: str) -> Outcome:

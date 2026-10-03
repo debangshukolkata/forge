@@ -171,11 +171,12 @@ export interface CheckInfo {
   label: string;
   optional: boolean;
   purpose: string;
+  ask?: string; // a yes/no question: the check only runs after a yes (D-201)
 }
 
 export interface CheckResultView {
   id: string;
-  status: "ok" | "warn" | "fail";
+  status: "ok" | "warn" | "fail" | "off"; // off: not in use
   detail: string;
   hint: string;
   models: Record<string, boolean>;
@@ -191,7 +192,12 @@ export interface ModelPlan {
 
 export interface EnvironmentOverview {
   checks: CheckInfo[];
-  saved: { results: Record<string, CheckResultView>; plan: Record<string, string>; confirmed_at: string | null };
+  saved: {
+    results: Record<string, CheckResultView>;
+    plan: Record<string, string>;
+    confirmed_at: string | null;
+    answers: Record<string, boolean>; // optional tools: check id -> the user's yes/no
+  };
   plan: ModelPlan;
 }
 

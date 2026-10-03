@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from forge.config import ForgeConfig, load_config
 from forge.environment import store
-from forge.environment.checks import CHECKS, KNOWN_IDS, run_check
+from forge.environment.checks import ASKED_IDS, CHECKS, KNOWN_IDS, not_in_use, run_check
 from forge.environment.plan import propose_plan, validate_plan
 from forge.errors import ForgeError
 from forge.web.manager import WebSessionManager
@@ -19,6 +19,11 @@ from forge.web.manager import WebSessionManager
 
 class ConfirmedPlan(BaseModel):
     roles: dict[str, str]
+
+
+class Answer(BaseModel):
+    check: str
+    enabled: bool
 
 
 def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
@@ -44,9 +49,24 @@ def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
     async def check(check_id: str) -> dict[str, Any]:
         if check_id not in KNOWN_IDS:
             raise HTTPException(404, "No such check")
-        result = (await run_check(check_id)).to_dict()
+        # Tools the user may not have (Tesseract, Gemini) are only tested after a "yes" (D-201): the server
+        # holds to that too, whatever the page asks for.
+        answer = store.load(manager.home)["answers"].get(check_id)
+        if check_id in ASKED_IDS and answer is not True:
+            result = not_in_use(check_id, said_no=answer is False).to_dict()
+        else:
+            result = (await run_check(check_id)).to_dict()
         store.save_result(manager.home, check_id, result)
         return {"result": result, "plan": overview()["plan"]}
+
+    @app.post("/api/environment/answer")
+    async def answer(body: Answer) -> dict[str, Any]:
+        if body.check not in ASKED_IDS:
+            raise HTTPException(400, "That check is not optional")
+        store.save_answer(manager.home, body.check, body.enabled)
+        if not body.enabled:  # nothing to test: show it as not in use right away
+            store.save_result(manager.home, body.check, not_in_use(body.check, said_no=True).to_dict())
+        return overview()
 
     @app.post("/api/environment/confirm")
     async def confirm(body: ConfirmedPlan) -> dict[str, Any]:

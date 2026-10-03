@@ -4,6 +4,7 @@ connectivity check itself is the same code `forge doctor` runs and is covered by
 from __future__ import annotations
 
 import json
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -27,12 +28,15 @@ def by_role(plan: dict[str, object]) -> dict[str, dict[str, str]]:
 
 
 def test_store_round_trip_and_damaged_file(tmp_path: Path) -> None:
-    assert store.load(tmp_path) == {"results": {}, "plan": {}, "confirmed_at": None}
+    assert store.load(tmp_path) == {"results": {}, "plan": {}, "confirmed_at": None, "answers": {}}
     store.save_result(tmp_path, "azure", {"status": "ok"})
     store.save_plan(tmp_path, {"coder": "gpt51"})
     data = store.load(tmp_path)
     assert data["results"]["azure"]["status"] == "ok" and data["results"]["azure"]["checked_at"]
     assert data["plan"] == {"coder": "gpt51"} and data["confirmed_at"]
+    store.save_answer(tmp_path, "tesseract", True)
+    store.save_answer(tmp_path, "gemini", False)
+    assert store.load(tmp_path)["answers"] == {"tesseract": True, "gemini": False}
     (tmp_path / store.FILE).write_text("{not json", encoding="utf-8")
     assert store.load(tmp_path)["plan"] == {}
 
@@ -101,7 +105,8 @@ def test_unknown_check_and_missing_tesseract(
     monkeypatch.setattr(checks.shutil, "which", lambda name: None)
     monkeypatch.setattr(checks.Path, "exists", lambda self: False)
     outcome = asyncio.run(checks.run_check("tesseract"))
-    assert outcome.status == "warn" and "Not found" in outcome.detail and outcome.hint
+    # The check only runs after a "yes", so not finding it is a failure, not a shrug.
+    assert outcome.status == "fail" and "cannot find it" in outcome.detail and outcome.hint
 
 
 def test_check_details_are_redacted() -> None:
@@ -129,11 +134,30 @@ def test_environment_endpoints(
     assert [c["id"] for c in overview["checks"]] == ["system", "azure", "postgres", "gemini", "tesseract"]
     assert overview["saved"]["confirmed_at"] is None and len(overview["plan"]["roles"]) == len(ROLES)
 
+    tested: list[str] = []
+    monkeypatch.setattr(checks, "check_tesseract", lambda: tested.append("tesseract"))  # must not run
+    # Nothing is tested until the user answers yes: no answer, then no.
+    unanswered = client.post("/api/environment/check/tesseract", headers=origin).json()["result"]
+    assert unanswered["status"] == "off" and "Answer the question" in unanswered["detail"]
+    said_no = client.post(
+        "/api/environment/answer", json={"check": "tesseract", "enabled": False}, headers=origin
+    )
+    assert said_no.json()["saved"]["answers"] == {"tesseract": False}
+    assert said_no.json()["saved"]["results"]["tesseract"]["detail"] == "Not in use."
+    assert client.post("/api/environment/check/tesseract", headers=origin).json()["result"]["status"] == "off"
+    assert tested == []
+    bad_answer = client.post(
+        "/api/environment/answer", json={"check": "azure", "enabled": True}, headers=origin
+    )
+    assert bad_answer.status_code == 400  # only optional tools can be switched off
+
+    client.post("/api/environment/answer", json={"check": "tesseract", "enabled": True}, headers=origin)
+    monkeypatch.undo()  # the real check, with the program made to look missing
     monkeypatch.setattr(checks.shutil, "which", lambda name: None)
     monkeypatch.setattr(checks.Path, "exists", lambda self: False)
     ran = client.post("/api/environment/check/tesseract", headers=origin).json()
-    assert ran["result"]["status"] == "warn"
-    assert store.load(isolated_forge_home)["results"]["tesseract"]["status"] == "warn"
+    assert ran["result"]["status"] == "fail"
+    assert store.load(isolated_forge_home)["results"]["tesseract"]["status"] == "fail"
     assert client.post("/api/environment/check/nonsense", headers=origin).status_code == 404
 
     roles = {role: "gpt51" for role in ROLES}
@@ -160,3 +184,34 @@ def test_azure_check_names_the_missing_values_without_calling_the_network(
 
     assert outcome.status == "fail" and "AZURE_OPENAI_API_KEY" in outcome.missing
     assert "Enter them below" in outcome.hint and outcome.to_dict()["missing"] == outcome.missing
+
+
+def test_the_overview_says_which_checks_ask_a_question(client: TestClient) -> None:
+    asked = {c["id"]: c["ask"] for c in client.get("/api/environment").json()["checks"] if c["ask"]}
+    assert set(asked) == {"gemini", "tesseract"} and "installed" in asked["tesseract"]
+
+
+WINDOWS_TESSERACT = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+TESSERACT = shutil.which("tesseract") or (str(WINDOWS_TESSERACT) if WINDOWS_TESSERACT.exists() else None)
+
+
+@pytest.mark.skipif(TESSERACT is None, reason="Tesseract is not installed on this machine")
+def test_the_real_tesseract_reads_the_test_image() -> None:
+    reads, _ = checks._ocr_reads_a_test_image(str(TESSERACT))
+    assert reads
+    outcome = checks.check_tesseract()
+    assert outcome.status == "ok" and "read a test image correctly" in outcome.detail
+
+
+def test_a_tesseract_that_cannot_read_is_a_warning(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Done:
+        returncode = 0
+        stdout = "tesseract v9.9.9\n"
+        stderr = ""
+
+    monkeypatch.setattr(checks.shutil, "which", lambda name: "tesseract-fake")
+    monkeypatch.setattr(checks.subprocess, "run", lambda *a, **k: Done())
+    monkeypatch.setattr(checks, "_ocr_reads_a_test_image", lambda binary: (False, "Error opening data file"))
+    outcome = checks.check_tesseract()
+    assert outcome.status == "warn" and "could not read a test image" in outcome.detail
+    assert "Error opening data file" in outcome.detail and "eng.traineddata" in outcome.hint

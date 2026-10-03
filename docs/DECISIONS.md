@@ -2803,3 +2803,21 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   (`environment-keys-light.png`).
 - **Test infrastructure fix found on the way:** the browser-test fixtures now ask the OS for a free port instead of a fixed preferred
   one: two test files running in parallel could pick the same port and one of the servers failed to start (a refused connection).
+
+### D-201 — Tesseract and Gemini are asked about first, then tested for real (user decision 2026-10-03)
+- The Environment drawer asks **"Is Tesseract installed on this computer?"** and **"Is Gemini enabled for you?"** (Yes / No buttons on each
+  row). Nothing is tested until the answer is yes; a row with no answer says "Answer the question to test it", a no says "Not in use".
+  The answers are saved per machine in `environment.json` and shown again next time; the page only re-tests what was a yes. The
+  **server enforces it too**: `POST /api/environment/check/<id>` for these two returns "not in use" without running anything unless
+  the saved answer is yes (`POST /api/environment/answer`, optional tools only). New status `off` (not in use) next to ok/warn/fail.
+- **Tesseract is tested properly:** Forge finds the program, runs `--version`, then draws the word "Forge" with Pillow (already a
+  dependency) and has Tesseract read it back from a temp file: that proves the install, its language data and the command line work
+  together. Because the user said it is installed, not finding it is a *failure* ("add its folder to PATH, or answer No"); a
+  Tesseract that runs but cannot read the image is a *warning* (check eng.traineddata). The real test ran against the Tesseract 5.4
+  installed on the build machine. **Gemini:** after a yes, the checks are the same as before (project and location in .env,
+  Google credentials file present); a live call needs the parked provider code (D-150) and a machine with credentials, so it waits
+  for that. Tesseract and Gemini are still reserved: this version of Forge does not use either.
+- Options considered: test automatically and let the user hide a failing row (rejected: the user asked to be asked first), a global
+  "enable optional tools" switch (rejected: the two are independent). Tests: `tests/test_environment.py` (including the real OCR
+  test, skipped where Tesseract is not installed), `test_optional_tools_are_asked_before_they_are_tested`
+  (`environment-ask-light.png`).
