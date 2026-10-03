@@ -206,4 +206,5 @@ async def test_a_running_subagent_reports_its_steps_to_the_session(
     kinds = [s["kind"] for s in steps]
     assert "tool_started" in kinds and "tool_finished" in kinds
     assert all(s["agent"].startswith("agent-") for s in steps)
-    assert any(e.type == EventType.AGENT_FINISHED for e in host.bus.events_since(0))
+    finished = [e.payload for e in host.bus.events_since(0) if e.type == EventType.AGENT_FINISHED]
+    assert len(finished) == 1 and finished[0]["cost_usd"] > 0  # the mocked replies carry token counts

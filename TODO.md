@@ -233,7 +233,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] D-156 code step 2 (D-159, 2026-10-03): verify ladders, tools, test guard, export smoke check retired; Mode B harness kept (PYTEST_ADDOPTS)
 - [x] D-156 code step 3 (D-160, 2026-10-03): `kb` retired; credential-table detection kept in `db`; `/init` now has the model explore and write FORGE.md
 - [x] Timeline UI (D-189, D-190, D-192): narration, folded Read/Grep runs, Bash/Edit with output, inline diffs, nested subagents, failures open. The rail was dropped (superseded by the Conversation look).
-- [ ] Fix the Run map (D-131): it reads the old phase field; two browser tests are skipped until it is rebuilt on the flat-loop events
+- [x] Run map (D-193): the D-133 redesign was already built; its two skipped tests are rewritten (`test_web_runmap_e2e.py`) and per-agent cost added
 - [ ] MCP review and security design (Mode B) before extending; LSP design
 - [x] **DROPPED (D-161)**: role-specific toolsets, lazy tool schemas, prompt fragments. Forge does not optimise token cost at runtime; accuracy and speed first
 - [ ] Full test run after the revamp code steps; commit in logical parts

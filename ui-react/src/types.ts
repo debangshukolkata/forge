@@ -205,7 +205,7 @@ export interface AgentView {
   role: string;
   purpose: string;
   steps: AgentStep[];
-  done?: { ok: boolean; tool_calls: number; failed_calls: number; duration_s: number };
+  done?: { ok: boolean; tool_calls: number; failed_calls: number; duration_s: number; cost_usd?: number };
 }
 
 export interface TodoItem {

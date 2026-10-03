@@ -15,6 +15,7 @@ export interface Agent {
   ok: boolean | null;
   toolCalls: number;
   failedCalls: number;
+  costUsd: number;
   seq: number;
 }
 
@@ -147,7 +148,7 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
       case "agent_started": {
         const agent: Agent = {
           id: p.id, role: p.role || "helper", purpose: p.purpose || "", task, start: at, end: null, ok: null,
-          toolCalls: 0, failedCalls: 0, seq: event.seq,
+          toolCalls: 0, failedCalls: 0, costUsd: 0, seq: event.seq,
         };
         agents.push(agent);
         openAgents.set(agent.id, agent);
@@ -162,6 +163,7 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
         agent.ok = p.ok !== false;
         agent.toolCalls = p.tool_calls ?? 0;
         agent.failedCalls = p.failed_calls ?? 0;
+        agent.costUsd = p.cost_usd ?? 0;
         break;
       }
     }

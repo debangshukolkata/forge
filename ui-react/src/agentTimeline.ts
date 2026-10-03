@@ -47,7 +47,7 @@ export function agentStep(items: ChatItem[], p: ForgeEvent["payload"]): ChatItem
 
 export function agentFinished(items: ChatItem[], p: ForgeEvent["payload"]): ChatItem[] {
   return withAgent(items, p.id, (agent, item) => {
-    const done = { ok: Boolean(p.ok), tool_calls: p.tool_calls ?? 0, failed_calls: p.failed_calls ?? 0, duration_s: p.duration_s ?? 0 };
+    const done = { ok: Boolean(p.ok), tool_calls: p.tool_calls ?? 0, failed_calls: p.failed_calls ?? 0, duration_s: p.duration_s ?? 0, cost_usd: p.cost_usd };
     // A row made only for this agent has no tool call of its own to finish it.
     const own = item.id === agent.id;
     return { ...item, agent: { ...agent, done }, ...(own ? { state: done.ok ? ("ok" as const) : ("fail" as const), duration: done.duration_s } : {}) };

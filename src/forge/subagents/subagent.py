@@ -10,7 +10,7 @@ import time
 from forge.agent.loop import AgentLoop
 from forge.config import permission_rules
 from forge.context.manager import ContextManager
-from forge.llm.base import Message
+from forge.llm.base import Message, Usage
 from forge.llm.router import LLMRouter
 from forge.llm.tokens import head_and_tail
 from forge.protocol.approvals import ApprovalBroker
@@ -199,6 +199,7 @@ async def _tracked_run(
         await asyncio.sleep(0)  # let the relay deliver what is already queued
         relayer.cancel()
         finished = [e for e in bus.events_since(0) if e.type == EventType.TOOL_CALL_FINISHED]
+        cost = _cost_of_calls(loop.router, bus)
         await context.emit(
             "agent_finished",
             {
@@ -208,8 +209,23 @@ async def _tracked_run(
                 "tool_calls": len(finished),
                 "failed_calls": sum(1 for e in finished if not e.payload.get("ok")),
                 "duration_s": round(time.perf_counter() - started, 1),
+                "cost_usd": cost,
             },
         )
+
+
+def _cost_of_calls(router: LLMRouter, bus: EventBus) -> float:
+    """What this subagent's own model calls cost (the Run map shows it per agent, D-133). The session's totals
+    already include it; this only attributes it. A model that is no longer configured counts as zero."""
+    total = 0.0
+    for event in bus.events_since(0):
+        if event.type != EventType.LLM_CALL:
+            continue
+        try:
+            total += router.cost.cost_of(event.payload["model"], Usage.model_validate(event.payload["usage"]))
+        except (KeyError, ValueError):
+            continue
+    return round(total, 6)
 
 
 def _purpose(prompt: str, task: str) -> str:

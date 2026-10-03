@@ -20,7 +20,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { AlertTriangle, Bot, ChevronRight, CheckCircle2, CircleDashed, Crosshair, Flag, Hand, ListChecks, Repeat, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { cx } from "../lib";
+import { cx, money } from "../lib";
 import { buildGraph, buildRunModel, type GraphNodeData, type RunModel } from "../runmap";
 import type { CostLimits, UsageBucket } from "../types";
 import type { Forge } from "../useForge";
@@ -309,7 +309,7 @@ function TaskNode({ id, data }: NodeProps<FlowNode>) {
       title={data.onJump ? "Show this task in the chat" : undefined}
       style={{ width: TASK_W, height: TASK_H }}
       className={cx(
-        "run-node-in flex flex-col gap-1 rounded-lg border bg-surface px-3 py-2 text-left shadow-sm transition-colors duration-150",
+        "run-node-in flex flex-col gap-1 rounded-lg border bg-surface px-3 py-2 text-left transition-colors duration-150",
         STATUS_BORDER[task.status] ?? "border-border",
         data.current && "ring-2 ring-info/60",
         data.onJump ? "cursor-pointer hover:bg-raised" : "cursor-default",
@@ -408,7 +408,7 @@ function AgentNode({ data }: NodeProps<FlowNode>) {
       data-status={data.state}
       style={{ width: AGENT_W, height: AGENT_H }}
       className={cx(
-        "run-node-in flex flex-col justify-center gap-1 rounded-lg border border-dashed bg-raised/60 px-3 py-1.5 text-left shadow-sm",
+        "run-node-in flex flex-col justify-center gap-1 rounded-lg border border-dashed bg-raised/60 px-3 py-1.5 text-left",
         tone,
         data.onJump && "cursor-pointer hover:bg-raised",
       )}
@@ -420,6 +420,7 @@ function AgentNode({ data }: NodeProps<FlowNode>) {
         {data.state === "failed" && <XCircle className="h-3.5 w-3.5 shrink-0 text-danger" aria-hidden />}
       </div>
       <div className="line-clamp-1 text-[11px] text-fg-muted">{agent.purpose || "Helper agent"}</div>
+      {agent.costUsd > 0 && <div className="font-mono text-[10.5px] tabular-nums text-fg-muted" title="What this agent's model calls cost">{money(agent.costUsd)}</div>}
       <Handle type="source" position={Position.Right} className="!opacity-0" />
     </div>
   );

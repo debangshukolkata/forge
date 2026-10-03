@@ -1,5 +1,6 @@
 // What a subagent did, nested inside its row (D-181): its own tool calls and short reasoning notes, in order.
 import { AlertOctagon, CheckCircle2, XCircle } from "lucide-react";
+import { money } from "../lib";
 import type { AgentStep, AgentView } from "../types";
 import { Spinner } from "./ui";
 
@@ -24,7 +25,8 @@ export function latestStepText(agent: AgentView): string {
 export function agentCounts(agent: AgentView): string {
   const calls = agent.done ? agent.done.tool_calls : agent.steps.filter((s) => s.kind === "tool").length;
   const failed = agent.done ? agent.done.failed_calls : agent.steps.filter((s) => s.state === "fail").length;
-  return `${calls} call${calls === 1 ? "" : "s"}${failed ? `, ${failed} failed` : ""}`;
+  const cost = agent.done?.cost_usd ? ` · ${money(agent.done.cost_usd)}` : "";
+  return `${calls} call${calls === 1 ? "" : "s"}${failed ? `, ${failed} failed` : ""}${cost}`;
 }
 
 function StepRow({ step }: { step: AgentStep }) {

@@ -2692,3 +2692,17 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   (D-189) replaced it. **Still open:** the Run map still reads the old phase field (D-131; two skipped browser tests), and the open
   question of sending the full tool result to the UI instead of the capped preview (the preview is up to the engine's cap;
   redaction would apply either way).
+
+### D-193 — Run map closed out (2026-10-03; the D-133 redesign was already built, this finishes its open items)
+- **Tests:** the two browser tests skipped since D-131 are replaced by `tests/test_web_runmap_e2e.py` against the D-133 design: the
+  map grows from live events (start, task, helper-agent and deliver nodes appear only when their event fires; markers for failed
+  calls, stuck warnings and helper agents sit on the task nodes; the summary strip; Forge waiting on you; the failures drawer with
+  its "fixed later" outcome; a task opens its place in the chat) and the activity line with the per-task badge and the run-total strip.
+  Screenshots: `run-map-light.png`, `run-map-dark.png`, `run-map-failures-light.png`, `activity-light.png`.
+- **Per-agent cost (the D-133 fast-follow):** `agent_finished` now carries `cost_usd`, the cost of that subagent's own model calls
+  (summed from its `llm_call` events with the session's price table; a model no longer configured counts as zero; the session total
+  already included it). Shown on helper-agent nodes in the Run map and in the nested subagent row of the chat.
+  Test: `tests/test_agent_loop.py`.
+- **Look:** the task and agent nodes lost their small shadow (the design has none). Behaviour of the Run map itself is unchanged.
+- **A trap found while testing:** the page re-reads `/api/state` on every `task_list_updated`, so a test that fakes "working" with a
+  `status_changed` event must publish it after the task list, or the server's real "not busy" overrides it.
