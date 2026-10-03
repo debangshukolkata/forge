@@ -29,6 +29,7 @@ KINDS = ("user", "feedback", "project", "reference")
 MAX_BODY_CHARS = 4000
 MAX_DESCRIPTION_CHARS = 150
 INDEX_FILE = "MEMORY.md"
+INSTRUCTIONS_FILE = "FORGE.md"  # shares the project folder with the notes but is not one of them (D-199)
 STATE_MEMORY = "project-state"  # where a session leaves the state of the work for the next one (D-171)
 _NAME = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")
 _FRONT = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.S)
@@ -76,7 +77,11 @@ class MemoryStore:
     def all(self) -> list[Memory]:
         if not self.folder.is_dir():
             return []
-        return [self._parse(p) for p in sorted(self.folder.glob("*.md")) if p.name != INDEX_FILE]
+        return [
+            self._parse(p)
+            for p in sorted(self.folder.glob("*.md"))
+            if p.name not in (INDEX_FILE, INSTRUCTIONS_FILE)
+        ]
 
     def get(self, name: str) -> Memory | None:
         return next((m for m in self.all() if m.name == name), None)

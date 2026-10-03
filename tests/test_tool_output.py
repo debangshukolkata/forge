@@ -120,3 +120,38 @@ def test_only_ids_the_engine_made_are_accepted(bad: str) -> None:
 
     assert OUTPUT_ID.fullmatch(bad) is None
     assert OUTPUT_ID.fullmatch("0123456789abcdef" * 2) is not None
+
+
+def test_the_oldest_outputs_go_first_when_the_folder_is_over_its_cap(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    import os
+
+    from forge.agent.tool_output import prune
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    folder = workspace.forge_dir / FOLDER
+    folder.mkdir(parents=True, exist_ok=True)
+    made = []
+    for age, name in enumerate(("oldest", "older", "newer", "newest")):
+        path = folder / f"{name}.txt"
+        path.write_text("x" * 100, encoding="utf-8")
+        os.utime(path, (1_000_000 + age, 1_000_000 + age))
+        made.append(path)
+
+    assert prune(folder, made[-1], max_total_bytes=1000) == 0  # under the cap: nothing goes
+    removed = prune(folder, made[-1], max_total_bytes=250)  # 400 bytes over a 250 cap: down to 80% = 200
+    assert removed == 2 and not made[0].exists() and not made[1].exists()
+    assert made[2].exists() and made[3].exists()
+
+    # The output just written is never the one deleted, however small the cap.
+    keep = made[2]
+    assert prune(folder, keep, max_total_bytes=1) == 1 and keep.exists() and not made[3].exists()
+
+
+def test_saving_prunes_to_the_cap(original_repo: Path, tmp_path: Path) -> None:
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    ids = [save_full_output(workspace, "y" * 1000, Redactor().redact, max_total_bytes=2500) for _ in range(5)]
+    assert all(ids)
+    files = saved_files(workspace.root)
+    assert len(files) < 5 and f"{ids[-1]}.txt" in {f.name for f in files}  # the newest survives

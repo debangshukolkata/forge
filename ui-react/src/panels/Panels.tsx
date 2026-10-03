@@ -142,7 +142,7 @@ function TasksTab({ forge }: { forge: Forge }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between text-[13px]">
-        <span className="text-fg-muted">Phase <span className="font-medium text-fg">{state.phase}</span></span>
+        <span className="font-medium">Plan tasks</span>
         {tasks.length > 0 && <span className="font-mono text-[12px] text-fg-muted tabular-nums">{done}/{tasks.length} done</span>}
       </div>
       {tasks.length > 0 && (

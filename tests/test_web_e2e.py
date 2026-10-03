@@ -197,7 +197,7 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         page.wait_for_selector("pre:has-text('/rewind')")
         for tab in ("Files", "Diffs", "Usage", "Settings", "Tasks"):
             page.click(f"[role=tab]:has-text('{tab}')")
-        page.wait_for_selector("text=Phase")
+        page.wait_for_selector("text=No tasks yet")
         page.screenshot(path=str(shots / "chat-light.png"))
         page.click("button[aria-label='Dark theme']")
         page.wait_for_timeout(400)  # let the 150 ms colour transitions finish

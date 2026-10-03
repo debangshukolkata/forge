@@ -51,8 +51,7 @@ def project_memory(home: Path, root: Path, entry: dict[str, Any], mode: str) -> 
         return empty
     key, profile_name = scope
     store = MemoryStore(home, key)
-    # FORGE.md shares the folder, so the store lists it too: it is the instructions, not a remembered note.
-    memories = [m for m in store.all() if m.name != STATE_MEMORY and m.name.lower() != "forge"]
+    memories = [m for m in store.all() if m.name != STATE_MEMORY]
     folder = project_dir(home, key)
     if profile_name is not None:  # Mode B keeps FORGE.md in the host profile folder
         with contextlib.suppress(ProfileError):

@@ -2774,3 +2774,15 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   `/lessons`, `/library`, `/restructure`, `/retro`, `/stats`) and lacked `/contracts` and `/handoff`. Fixed, and
   `tests/test_slash_suggestions.py` now fails when the suggestion list and the engine's command table differ (only `/exit` is left
   out on purpose). Memory (FORGE.md, notes, handoff) is the replacement for lessons and is shown in the project list (D-196).
+
+### D-199 — Cleanups (2026-10-03)
+- **Saved tool outputs (D-195) are capped:** at most 200 MB per workspace; after each save, if the folder is over the cap the oldest
+  files are deleted down to 80% of it (the file just written is never deleted). A deleted output shows "no longer available" in the
+  chat. Options considered: delete by age (rejected: reopening an old project would lose all of its outputs at once) and clean up at
+  session start only (rejected: a long single session could grow without bound). Tests in `tests/test_tool_output.py`.
+- **FORGE.md is no longer a memory note:** it shares the project's memory folder, so `MemoryStore.all()` listed it as "FORGE (user)",
+  and the pinned index and `MEMORY.md` repeated the repository rules the model already gets as instructions (and `memory_read`
+  could open it as a note). The store now skips it (`INSTRUCTIONS_FILE`); the file is untouched. The workaround in the project list
+  count (D-196) is gone. Test: `tests/test_memory_store.py`.
+- **Phase leftovers hidden:** the top bar's status badge ("direct") and the Tasks tab's "Phase direct" line showed the engine's coarse
+  status string, which means nothing to a user since the phase pipeline went (D-131). Removed; the engine still sends the field.

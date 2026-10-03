@@ -41,7 +41,6 @@ export function TopBar({
             {workspace.name}
           </span>
           <Badge tone={workspace.mode === "B" ? "info" : "neutral"}>{workspace.mode === "B" ? "Standalone" : "Repository"}</Badge>
-          {state.phase && <Badge>{state.phase}</Badge>}
           {waiting ? (
             <Badge tone="warn">Waiting for you</Badge>
           ) : state.busy ? (
