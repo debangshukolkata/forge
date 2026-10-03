@@ -2764,3 +2764,13 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   (rejected for now: it adds nothing to protecting the machine), a modal over the current page (rejected: the other landing screens are
   pages). Code: `AccountStore.change_password`, `web/auth_routes.py`, `components/Account.tsx`. Tests: `tests/test_web_accounts.py`,
   `test_account_screen_in_edge` (`account-light.png`).
+
+### D-198 — The Learning tab is gone, and the message box suggests only real commands (2026-10-03; closes the D-158 leftover)
+- The side panel's **Learning** tab (lessons, requirements library, improvement proposals) showed three empty lists since the learning
+  module was retired (D-156/D-158). The tab, its component, the `/api/learning` endpoint (kept empty only so that panel kept rendering)
+  and the web's handling of `lesson_proposed` / `improvement_proposed` events are removed; the event names stay in the protocol so
+  old logs still load. A tab remembered as "learning" in the browser falls back to Tasks.
+- **Found on the way:** the message box's "/" suggestions still offered seven commands the engine no longer has (`/improve`, `/kb`,
+  `/lessons`, `/library`, `/restructure`, `/retro`, `/stats`) and lacked `/contracts` and `/handoff`. Fixed, and
+  `tests/test_slash_suggestions.py` now fails when the suggestion list and the engine's command table differ (only `/exit` is left
+  out on purpose). Memory (FORGE.md, notes, handoff) is the replacement for lessons and is shown in the project list (D-196).

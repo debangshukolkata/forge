@@ -156,7 +156,7 @@ export interface Forge {
   waiting: string | null;
   context: ContextInfo | null;
   cost: CostInfo | null;
-  changeTick: number; // increments on file/task/learning changes so panels can refresh
+  changeTick: number; // increments on file/task changes so panels can refresh
   costColors: CostColors | null; // green / yellow / red limits from Forge's config (cost.colors)
   events: ForgeEvent[]; // every event of the project (replayed + live), for the Run map
   activity: LiveActivity;
@@ -264,8 +264,6 @@ export function useForge(): Forge {
           break;
         case "file_changed":
         case "eval_report_ready":
-        case "lesson_proposed":
-        case "improvement_proposed":
           if (live) bump();
           break;
         default:

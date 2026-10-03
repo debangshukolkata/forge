@@ -217,12 +217,6 @@ def create_app(
 
         return {"path": str(workspace.root), "test_runner": test_runner_note(workspace)}
 
-    @app.get("/api/learning")
-    async def learning() -> dict[str, Any]:
-        """The lessons/library/improvements panel was retired with the learning module (D-156); the endpoint
-        stays, empty, until the timeline UI replaces that panel, so the current UI keeps rendering."""
-        return {"lessons": [], "cards": [], "improvements": []}
-
     @app.get("/api/evals")
     async def evals() -> list[dict[str, Any]]:
         history = current().forge_dir / "reports" / "eval-history.jsonl"

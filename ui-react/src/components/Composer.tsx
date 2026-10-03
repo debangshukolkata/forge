@@ -10,9 +10,9 @@ import { Badge, Button, IconButton, Spinner } from "./ui";
 
 const SLASH = [
   "/help", "/model", "/cost", "/clear", "/context", "/compact", "/checkpoints", "/undo", "/rewind", "/export", "/mode",
-  "/requirements", "/plan", "/tasks", "/restructure", "/kb status", "/kb build", "/kb refresh", "/db", "/db requests",
+  "/requirements", "/plan", "/tasks", "/db", "/db requests",
   "/db done", "/db cant", "/db cleanup", "/diagnose", "/remember", "/memory", "/profile", "/assumptions", "/contract",
-  "/revision", "/forget-snippet", "/library", "/lessons", "/retro", "/stats", "/improve", "/effort", "/style",
+  "/revision", "/forget-snippet", "/contracts", "/handoff", "/effort", "/style",
   "/skills", "/agents", "/bg", "/log", "/diff", "/rename", "/export-chat", "/mcp", "/init",
 ];
 const MODES = ["default", "auto", "plan"] as const;

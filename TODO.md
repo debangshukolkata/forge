@@ -229,7 +229,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] D-153 a chat message answers open approval cards; build id in `forge --version` / `forge doctor`
 - [x] D-155 no stuck detector or escalation ladder; the model improvises failure recovery
 - [x] D-156 docs: spec §0.2 + banners, SPEC_DEVIATIONS, CLAUDE.md, MODULES.md, memory
-- [x] D-156 code step 1 (D-158, 2026-10-03): `learning` retired; memory = FORGE.md + auto-memory (typed files + MEMORY.md, user and project scope). Left: remove the empty Lessons panel from the React UI with the timeline UI
+- [x] D-156 code step 1 (D-158, 2026-10-03): `learning` retired; memory = FORGE.md + auto-memory (typed files + MEMORY.md, user and project scope). The empty Lessons panel was removed from the React UI on 2026-10-03 (D-198)
 - [x] D-156 code step 2 (D-159, 2026-10-03): verify ladders, tools, test guard, export smoke check retired; Mode B harness kept (PYTEST_ADDOPTS)
 - [x] D-156 code step 3 (D-160, 2026-10-03): `kb` retired; credential-table detection kept in `db`; `/init` now has the model explore and write FORGE.md
 - [x] Timeline UI (D-189, D-190, D-192): narration, folded Read/Grep runs, Bash/Edit with output, inline diffs, nested subagents, failures open. The rail was dropped (superseded by the Conversation look).

@@ -119,8 +119,9 @@ def test_web_ui_mechanics_in_edge(page, server: ServerSecurity, workspace: Works
     page.click("[role=tab]:has-text('Diffs')")
     page.wait_for_selector(".d2h-wrapper")
     assert "edited for the e2e test" in page.inner_text("[role=tabpanel]")
-    page.click("[role=tab]:has-text('Learning')")
-    page.wait_for_selector("[role=tabpanel] h3:has-text('Lessons')")
+    assert (
+        page.locator("[role=tab]:has-text('Learning')").count() == 0
+    )  # retired with the learning module (D-198)
     page.click("[role=tab]:has-text('Settings')")
     page.wait_for_selector("[role=tabpanel] select")
 
@@ -194,7 +195,7 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         page.fill("textarea[aria-label=Message]", "/help")
         page.keyboard.press("Enter")
         page.wait_for_selector("pre:has-text('/rewind')")
-        for tab in ("Files", "Diffs", "Learning", "Usage", "Settings", "Tasks"):
+        for tab in ("Files", "Diffs", "Usage", "Settings", "Tasks"):
             page.click(f"[role=tab]:has-text('{tab}')")
         page.wait_for_selector("text=Phase")
         page.screenshot(path=str(shots / "chat-light.png"))

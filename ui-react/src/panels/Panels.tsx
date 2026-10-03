@@ -2,7 +2,7 @@ import "diff2html/bundles/css/diff2html.min.css";
 import DOMPurify from "dompurify";
 import { html as diffHtml } from "diff2html";
 import {
-  Brain, ChevronDown, ChevronRight, Columns2, Database, Download, FileCode2, FileSignature, FileText, Folder, FolderOpen, Gauge,
+  ChevronDown, ChevronRight, Columns2, Database, Download, FileCode2, FileSignature, FileText, Folder, FolderOpen, Gauge,
   GitCompareArrows, ListChecks, RotateCcw, Rows2, Settings2, Target,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
@@ -14,7 +14,7 @@ import type { Forge } from "../useForge";
 import { TodoItems, todoSummary } from "../components/TodoList";
 import { ContractsTab } from "./ContractsTab";
 
-type Tab = "tasks" | "files" | "diffs" | "db" | "contracts" | "evals" | "learning" | "context" | "settings";
+type Tab = "tasks" | "files" | "diffs" | "db" | "contracts" | "evals" | "context" | "settings";
 
 const TABS: Array<{ id: Tab; label: string; icon: ReactNode }> = [
   { id: "tasks", label: "Tasks", icon: <ListChecks className="h-4 w-4" /> },
@@ -23,7 +23,6 @@ const TABS: Array<{ id: Tab; label: string; icon: ReactNode }> = [
   { id: "db", label: "DB", icon: <Database className="h-4 w-4" /> },
   { id: "contracts", label: "Contracts", icon: <FileSignature className="h-4 w-4" /> },
   { id: "evals", label: "Evals", icon: <Target className="h-4 w-4" /> },
-  { id: "learning", label: "Learning", icon: <Brain className="h-4 w-4" /> },
   { id: "context", label: "Usage", icon: <Gauge className="h-4 w-4" /> },
   { id: "settings", label: "Settings", icon: <Settings2 className="h-4 w-4" /> },
 ];
@@ -90,7 +89,6 @@ export function Panels({ forge, collapsed, onExpand }: { forge: Forge; collapsed
         {tab === "db" && <DbTab forge={forge} />}
         {tab === "contracts" && <ContractsTab forge={forge} />}
         {tab === "evals" && <EvalsTab forge={forge} />}
-        {tab === "learning" && <LearningTab forge={forge} />}
         {tab === "context" && <ContextTab forge={forge} />}
         {tab === "settings" && <SettingsTab forge={forge} />}
       </div>
@@ -424,72 +422,6 @@ function EvalsTab({ forge }: { forge: Forge }) {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-// --- Learning ---
-
-interface Learning {
-  lessons: Array<{ id: string; status: string; scope: string; text: string }>;
-  cards: Array<{ id: string; title: string; status: string; created: string }>;
-  improvements: Array<{ id: string; tier: number; status: string; title: string }>;
-}
-
-function LearningTab({ forge }: { forge: Forge }) {
-  const { data, error } = useData<Learning>("/api/learning", forge.changeTick);
-  if (!data) return <Loading error={error} />;
-  return (
-    <div>
-      <SectionTitle>Lessons</SectionTitle>
-      <p className="mb-2 text-[12.5px] text-fg-muted">Only approved lessons are used; they are pinned at the start of related tasks.</p>
-      {!data.lessons.length && <p className="text-[13px] text-fg-muted">None yet: proposed in the retro after each requirement.</p>}
-      <div className="space-y-2">
-        {data.lessons.map((lesson) => (
-          <Card key={lesson.id} className="space-y-2 p-3">
-            <div className="flex items-center gap-2 text-[12px]">
-              <Badge tone={lesson.status === "approved" ? "ok" : "warn"}>{lesson.status}</Badge>
-              <span className="font-mono text-fg-muted">{lesson.id}</span>
-              <span className="text-fg-muted">· {lesson.scope}</span>
-            </div>
-            <p className="text-[13px]">{lesson.text}</p>
-            <div className="flex gap-2">
-              {lesson.status !== "approved" && <Button size="sm" variant="primary" onClick={() => forge.command(`/lessons approve ${lesson.id}`)}>Approve</Button>}
-              <Button size="sm" variant="ghost" onClick={() => forge.command(`/lessons reject ${lesson.id}`)}>Reject</Button>
-              {lesson.scope !== "global" && lesson.status === "approved" && <Button size="sm" onClick={() => forge.command(`/lessons promote ${lesson.id}`)}>Make global</Button>}
-            </div>
-          </Card>
-        ))}
-      </div>
-      <SectionTitle>Requirements library</SectionTitle>
-      {!data.cards.length && <p className="text-[13px] text-fg-muted">No earlier requirements yet.</p>}
-      <ul className="space-y-1.5">
-        {data.cards.map((card) => (
-          <li key={card.id} className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
-            <span className="font-mono text-[11.5px] text-fg-muted">{card.id}</span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px]">{card.title}</span>
-              <span className="block text-[11.5px] text-fg-muted">{card.status} · {card.created}</span>
-            </span>
-            <Button size="sm" variant="ghost" onClick={() => forge.command(`/library show ${card.id}`)}>Show</Button>
-          </li>
-        ))}
-      </ul>
-      <SectionTitle>Improvement proposals</SectionTitle>
-      <p className="mb-2 text-[12.5px] text-fg-muted">Forge never changes itself: you apply tier-2 tweaks; tier-3 patches are yours to apply.</p>
-      <div className="space-y-2">
-        {data.improvements.map((p) => (
-          <Card key={p.id} className="space-y-2 p-3">
-            <div className="text-[13px]"><span className="font-mono text-fg-muted">{p.id}</span> · tier {p.tier} · {p.status} · {p.title}</div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => forge.command(`/improve show ${p.id}`)}>Show</Button>
-              {p.tier === 3 && <Button size="sm" onClick={() => forge.command(`/improve validate ${p.id}`)}>Validate</Button>}
-              {p.tier === 2 && p.status !== "applied" && <Button size="sm" variant="primary" onClick={() => confirm(`Apply ${p.id}?`) && forge.command(`/improve apply ${p.id}`)}>Apply</Button>}
-              <Button size="sm" variant="ghost" onClick={() => forge.command(`/improve reject ${p.id}`)}>Reject</Button>
-            </div>
-          </Card>
-        ))}
-      </div>
     </div>
   );
 }
