@@ -181,7 +181,9 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         page.goto(server.url())
         page.click("button:has-text('New project')")
         page.wait_for_selector("text=Create and open")
-        page.wait_for_selector("text=Environment check")
+        page.wait_for_selector(
+            "[role=dialog][aria-label=Environment]"
+        )  # the drawer opens beside the form (D-186)
         # Light is the default theme (D-125).
         assert page.evaluate("document.documentElement.classList.contains('dark')") is False
         page.screenshot(path=str(shots / "home-light.png"))
