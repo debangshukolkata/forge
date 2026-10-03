@@ -24,6 +24,7 @@ from forge.db.credential_tables import credential_tables
 from forge.db.scratch import ScratchError
 from forge.db.session import DbSession
 from forge.engine.slash_commands import SlashCommandHandler
+from forge.environment.store import tesseract_ready
 from forge.errors import BudgetExceededError, ConfigError, LLMError
 from forge.llm.base import ChatRequest, Message
 from forge.llm.router import LLMRouter
@@ -54,6 +55,7 @@ from forge.tools.registry import ToolRegistry, db_tools, default_tools
 from forge.tools.todo import PIN_SLOT as TODO_PIN_SLOT
 from forge.tools.todo import TodoItem
 from forge.tools.todo import render as render_todos
+from forge.tools.vision import ocr_tools
 from forge.tools.web import azure_hosted_search
 from forge.workflow.orchestrator import Orchestrator
 from forge.workspace.workspace import Workspace
@@ -221,8 +223,11 @@ class SessionHost:
         )
 
     def _build_agent(self, workspace: Workspace, mode: PermissionMode) -> AgentLoop:
-        # Tools beyond the defaults that every phase gets: Mode B's, and MCP servers' once connected.
-        self.extra_tools: list[Tool] = [*(modeb_tools() if workspace.mode_b else [])]
+        # Tools beyond the defaults that every phase gets: Mode B's, OCR's, and MCP servers' once connected.
+        self.extra_tools: list[Tool] = [
+            *(modeb_tools() if workspace.mode_b else []),
+            *(ocr_tools() if tesseract_ready(forge_home()) else []),  # D-203
+        ]
         self.mcp_hub: McpHub | None = None
         settings = self.router.config.context
         context = ToolContext(

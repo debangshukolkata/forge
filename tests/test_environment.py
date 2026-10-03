@@ -15,6 +15,7 @@ from forge.config import ROLES, ForgeConfig
 from forge.environment import checks, store
 from forge.environment.plan import apply_saved_plan, propose_plan, validate_plan
 from forge.safety.server_security import ServerSecurity
+from forge.vision import ocr
 from forge.web.manager import WebSessionManager
 from forge.web.server import create_app
 from tests.helpers import default_config, mocked_router
@@ -102,8 +103,8 @@ def test_unknown_check_and_missing_tesseract(
 
     with pytest.raises(KeyError):
         asyncio.run(checks.run_check("nonsense"))
-    monkeypatch.setattr(checks.shutil, "which", lambda name: None)
-    monkeypatch.setattr(checks.Path, "exists", lambda self: False)
+    monkeypatch.setattr(ocr.shutil, "which", lambda name: None)
+    monkeypatch.setattr(ocr.Path, "exists", lambda self: False)
     outcome = asyncio.run(checks.run_check("tesseract"))
     # The check only runs after a "yes", so not finding it is a failure, not a shrug.
     assert outcome.status == "fail" and "cannot find it" in outcome.detail and outcome.hint
@@ -153,8 +154,8 @@ def test_environment_endpoints(
 
     client.post("/api/environment/answer", json={"check": "tesseract", "enabled": True}, headers=origin)
     monkeypatch.undo()  # the real check, with the program made to look missing
-    monkeypatch.setattr(checks.shutil, "which", lambda name: None)
-    monkeypatch.setattr(checks.Path, "exists", lambda self: False)
+    monkeypatch.setattr(ocr.shutil, "which", lambda name: None)
+    monkeypatch.setattr(ocr.Path, "exists", lambda self: False)
     ran = client.post("/api/environment/check/tesseract", headers=origin).json()
     assert ran["result"]["status"] == "fail"
     assert store.load(isolated_forge_home)["results"]["tesseract"]["status"] == "fail"
@@ -209,7 +210,7 @@ def test_a_tesseract_that_cannot_read_is_a_warning(monkeypatch: pytest.MonkeyPat
         stdout = "tesseract v9.9.9\n"
         stderr = ""
 
-    monkeypatch.setattr(checks.shutil, "which", lambda name: "tesseract-fake")
+    monkeypatch.setattr(ocr.shutil, "which", lambda name: "tesseract-fake")
     monkeypatch.setattr(checks.subprocess, "run", lambda *a, **k: Done())
     monkeypatch.setattr(checks, "_ocr_reads_a_test_image", lambda binary: (False, "Error opening data file"))
     outcome = checks.check_tesseract()

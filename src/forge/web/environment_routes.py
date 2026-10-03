@@ -14,6 +14,7 @@ from forge.environment import store
 from forge.environment.checks import ASKED_IDS, CHECKS, KNOWN_IDS, not_in_use, run_check
 from forge.environment.plan import propose_plan, validate_plan
 from forge.errors import ForgeError
+from forge.tools.vision import ocr_tools
 from forge.web.manager import WebSessionManager
 
 
@@ -27,6 +28,20 @@ class Answer(BaseModel):
 
 
 def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
+    def sync_ocr_tool() -> None:
+        """A yes (and a passing test) on the drawer gives the open session the `ocr_image` tool now; a no
+        takes it away. A session started later gets it from the saved answer (D-203)."""
+        host = manager.host
+        if host is None or host.agent is None:
+            return
+        tools = host.agent.tools
+        if store.tesseract_ready(manager.home):
+            if tools.get("ocr_image") is None:
+                for tool in ocr_tools():
+                    tools.add(tool)
+        else:
+            tools.remove("ocr_image")
+
     def config() -> ForgeConfig:
         try:
             return load_config(manager.home)
@@ -57,6 +72,8 @@ def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
         else:
             result = (await run_check(check_id)).to_dict()
         store.save_result(manager.home, check_id, result)
+        if check_id == "tesseract":
+            sync_ocr_tool()
         return {"result": result, "plan": overview()["plan"]}
 
     @app.post("/api/environment/answer")
@@ -66,6 +83,8 @@ def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
         store.save_answer(manager.home, body.check, body.enabled)
         if not body.enabled:  # nothing to test: show it as not in use right away
             store.save_result(manager.home, body.check, not_in_use(body.check, said_no=True).to_dict())
+        if body.check == "tesseract":
+            sync_ocr_tool()
         return overview()
 
     @app.post("/api/environment/confirm")

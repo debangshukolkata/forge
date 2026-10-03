@@ -8,9 +8,11 @@ Paths: repo-relative, or .forge/inputs|scratch_images|reports|screenshots/... fo
 
 from __future__ import annotations
 
+import asyncio
 import json
+import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -18,7 +20,7 @@ from forge.errors import ForgeError
 from forge.llm.base import ChatRequest, Message
 from forge.safety.paths import resolve_inside
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.vision import images, pdf
+from forge.vision import images, ocr, pdf
 from forge.vision.evals import JUDGE_RUBRIC, run_eval
 from forge.vision.synthetic import DocumentSpec, generate
 
@@ -261,6 +263,100 @@ class SynthSamples(Tool):
             ok=True,
             content=f"{len(written)} synthetic sample(s) with exact labels in evals/{args.name}/ (marked synthetic).",
         )
+
+
+MAX_OCR_PAGES = 10
+OCR_PDF_DPI = 300
+OCR_CAUTION = "(OCR can confuse look-alike characters such as l/1 and O/0: check anything that matters with view_image.)"
+
+
+class OcrImage(Tool):
+    name = "ocr_image"
+    read_only = True  # works on temporary copies outside the workspace; nothing is written there
+    description = (
+        "Read the exact text in an image or PDF page with Tesseract, on this computer (view_image is the one to "
+        "understand what a picture shows). Use it for characters that must be exact: a function signature, "
+        "code, numbers or a table in a screenshot. Paths: repo-relative or .forge/inputs|scratch_images|reports/... "
+        "For a PDF give the pages (1-based, up to 10); a region [x1,y1,x2,y2] reads only that part of an image."
+    )
+
+    class Args(ToolArgs):
+        path: str
+        pages: list[int] | None = Field(
+            default=None, description="PDF pages, 1-based (default: the first 10)"
+        )
+        region: list[float] | None = Field(default=None, description="[x1, y1, x2, y2] in pixels (images)")
+        layout: Literal["page", "block", "line", "word"] = Field(
+            default="page", description="page: whole page; block: one block of text; line / word: just that"
+        )
+        language: str = Field(default="eng", description="Tesseract language code, e.g. eng or eng+deu")
+
+    def summary(self, args: OcrImage.Args) -> str:
+        return f"ocr {args.path}" + (f" {args.region}" if args.region else "")
+
+    async def run(self, args: OcrImage.Args, context: ToolContext) -> ToolResult:
+        binary = ocr.find_tesseract()
+        if binary is None:
+            return ToolResult(
+                ok=False,
+                content="Tesseract was not found on this computer. Ask the user to check it in the Environment panel.",
+            )
+        try:
+            source = image_path(context, args.path)
+            if not source.is_file():
+                return ToolResult(ok=False, content=f"{args.path} does not exist.")
+            if source.suffix.lower() == ".pdf":
+                text = await asyncio.to_thread(self._read_pdf, binary, source, args)
+            else:
+                text = await asyncio.to_thread(self._read_image, binary, source, args)
+        except (ForgeError, ocr.OcrError, ValueError, OSError) as error:
+            return ToolResult(ok=False, content=str(error))
+        if not text.strip():
+            return ToolResult(
+                ok=True,
+                content="No text was read. The image may have none, or it is too small or blurry: try a "
+                "larger region, or look at it with view_image.",
+            )
+        return ToolResult(ok=True, content=f"{text}\n\n{OCR_CAUTION}")
+
+    @staticmethod
+    def _read_image(binary: str, source: Path, args: OcrImage.Args) -> str:
+        image = images.open_image(source)
+        if args.region:
+            if len(args.region) != 4:
+                raise ValueError("region needs four numbers: [x1, y1, x2, y2]")
+            x1, y1, x2, y2 = (int(value) for value in args.region)
+            box = (max(0, x1), max(0, y1), min(image.width, x2), min(image.height, y2))
+            if box[2] <= box[0] or box[3] <= box[1]:
+                raise ValueError(
+                    f"region {args.region} is empty for an image of {image.width}x{image.height}"
+                )
+            image = image.crop(box)
+        return ocr.read_image(binary, image, args.language, args.layout)
+
+    @staticmethod
+    def _read_pdf(binary: str, source: Path, args: OcrImage.Args) -> str:
+        total = pdf.page_count(source)
+        wanted = args.pages or list(range(1, min(total, MAX_OCR_PAGES) + 1))
+        if len(wanted) > MAX_OCR_PAGES:
+            raise ValueError(f"at most {MAX_OCR_PAGES} pages at a time")
+        parts = []
+        with tempfile.TemporaryDirectory() as folder:
+            for number, rendered in zip(
+                wanted, pdf.render(source, Path(folder), wanted, OCR_PDF_DPI), strict=True
+            ):
+                text = ocr.read_image(binary, images.open_image(rendered), args.language, args.layout)
+                parts.append(f"--- page {number} of {total} ---\n{text}")
+        if args.pages is None and total > MAX_OCR_PAGES:
+            parts.append(
+                f"(only the first {MAX_OCR_PAGES} of {total} pages were read; pass pages for the others)"
+            )
+        return "\n\n".join(parts)
+
+
+def ocr_tools() -> list[Tool]:
+    """Only offered once the user said Tesseract is installed and the Environment test passed (D-201, D-203)."""
+    return [OcrImage()]
 
 
 def vision_tools() -> list[Tool]:

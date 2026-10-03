@@ -261,7 +261,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] Login (local account), hub (new / open), project list, Apple-style theme on the whole app, Inter font, `ok` green token
 - [x] Setup screen after "new project" and from the top bar: live checks (system, Azure, Postgres, Gemini, Tesseract), model plan to confirm,
   remembered per machine (D-186)
-- [ ] Use Tesseract and Gemini for real (the Environment drawer asks first, then tests them: D-201; Forge itself still uses neither)
+- [x] Tesseract: the `ocr_image` tool the model can call (D-203)
+- [ ] Gemini for real (video input): needs the parked provider (D-150) and the office laptop to verify; the drawer asks first (D-201)
 - [x] Azure key/endpoint entry on the Environment drawer (D-200)
 - [x] Project list: memory summary (handoff goal/next, note count, FORGE.md) on each project (D-196)
 - [x] FORGE.md was listed as a memory note in the store and the pinned index: fixed (D-199)

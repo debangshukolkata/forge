@@ -6,10 +6,8 @@ from __future__ import annotations
 
 import asyncio
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -28,6 +26,7 @@ from forge.doctor import (
 )
 from forge.errors import ForgeError
 from forge.safety.redact import default_redactor
+from forge.vision.ocr import find_tesseract
 
 Status = Literal["ok", "warn", "fail", "off"]  # off: the user said they do not use it
 CHECK_TIMEOUT_S = 90.0
@@ -170,35 +169,28 @@ def check_gemini(config: ForgeConfig) -> Outcome:
 
 
 def _ocr_reads_a_test_image(binary: str) -> tuple[bool, str]:
-    """Draws the word "Forge" and asks Tesseract to read it: proves the install, its language data and the
-    command line work together, not only that the program starts."""
+    """Draws the word "Forge" and has the same OCR code the `ocr_image` tool uses read it back: proves the
+    install, its language data and the command line work together, not only that the program starts."""
     from PIL import Image, ImageDraw, ImageFont
 
-    with tempfile.TemporaryDirectory() as folder:
-        image = Image.new("L", (560, 170), 255)
-        try:
-            font = ImageFont.load_default(size=84)
-        except (TypeError, OSError):  # an older Pillow without a sizeable default font
-            font = ImageFont.load_default()
-        ImageDraw.Draw(image).text((28, 30), "Forge", fill=0, font=font)
-        path = Path(folder) / "probe.png"
-        image.save(path)
-        try:
-            done = subprocess.run(
-                [binary, str(path), "stdout"], capture_output=True, text=True, timeout=30, check=False
-            )
-        except (OSError, subprocess.SubprocessError) as error:
-            return False, str(error)[:200]
-    letters = "".join(ch for ch in done.stdout.lower() if ch.isalnum())
-    return "forge" in letters, (done.stderr or "").strip()[:200]
+    from forge.vision.ocr import OcrError, read_image
+
+    image = Image.new("L", (560, 170), 255)
+    try:
+        font = ImageFont.load_default(size=84)
+    except (TypeError, OSError):  # an older Pillow without a sizeable default font
+        font = ImageFont.load_default()
+    ImageDraw.Draw(image).text((28, 30), "Forge", fill=0, font=font)
+    try:
+        text = read_image(binary, image, timeout=30)
+    except OcrError as error:
+        return False, str(error)[:200]
+    return "forge" in "".join(ch for ch in text.lower() if ch.isalnum()), ""
 
 
 def check_tesseract() -> Outcome:
     """Only run when the user said Tesseract is installed (D-201), so not finding it is a failure."""
-    found = shutil.which("tesseract")
-    windows_default = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
-    if not found and windows_default.exists():
-        found = str(windows_default)
+    found = find_tesseract()
     if not found:
         return Outcome(
             "tesseract",

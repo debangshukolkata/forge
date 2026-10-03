@@ -2837,3 +2837,21 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   `$env:NAME` and `python -c` still read them) and leave as is. Not changed: `diagnose` (runs the repo's app for a failing build, not a
   model-driven command) and the venv creation step. Code: `toolkit/private_env.py`; tests: `tests/test_private_env.py` (including a
   real process started with the scrubbed environment).
+
+### D-203 — The `ocr_image` tool: Forge uses Tesseract (user decision 2026-10-03: "an ocr tool the model calls")
+- New tool **`ocr_image`**: reads the exact text in an image or PDF with Tesseract, on this computer. Arguments: a path (repo-relative or
+  `.forge/inputs|scratch_images|reports|screenshots/...`, the same rules as `view_image`; secret files are refused), `pages` for a PDF
+  (1-based, up to 10 at a time, the first 10 by default), `region` `[x1,y1,x2,y2]` for part of an image, `layout` (page / block / line /
+  word) and `language` (letters and `+` only). Small images are enlarged 3x first (Tesseract reads small type badly). It is for characters
+  that must be exact (function signatures, code, numbers, tables in a screenshot); `view_image` stays the way to understand a picture,
+  and every result ends with a reminder that OCR can confuse look-alike characters. It is **read-only** (it works on temporary copies
+  outside the workspace, so it also works in plan mode) and nothing leaves the machine.
+- **When it is offered (D-201):** only after the user answered Yes on the Environment drawer *and* the last Tesseract test passed
+  (`store.tesseract_ready`). A new session reads that at start; on the drawer a Yes whose test passes gives the **open session** the tool
+  at once, and a No takes it away at once (`ToolRegistry.remove`). Subagents do not get it. The drawer's test and the tool share one
+  OCR code path (`vision/ocr.py`), so a green tick means the tool works.
+- Options considered: OCR every attachment automatically (rejected: every attachment pays the time and tokens, and noisy OCR can
+  mislead), OCR only for pasted signatures in Standalone projects (rejected: narrowest, least benefit), a tool the model decides to call
+  (**chosen**: costs nothing unused, the model asks when exact text matters). Tests: `tests/test_ocr.py` (real Tesseract: a screenshot, a
+  region, a two-page PDF, a blank image; skipped without Tesseract) plus the gating tests. Gemini is unchanged: still only detected, and
+  it cannot be verified on the build machine (see memory note on build-machine tools).

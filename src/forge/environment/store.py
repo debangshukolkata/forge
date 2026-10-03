@@ -55,6 +55,15 @@ def save_answer(home: Path, check_id: str, enabled: bool) -> None:
     _write(home, data)
 
 
+def tesseract_ready(home: Path) -> bool:
+    """The user said Tesseract is installed and its last test passed: only then is `ocr_image` offered."""
+    data = load(home)
+    result = data["results"].get("tesseract")
+    return (
+        data["answers"].get("tesseract") is True and isinstance(result, dict) and result.get("status") == "ok"
+    )
+
+
 def save_plan(home: Path, plan: dict[str, str]) -> None:
     data = load(home)
     data["plan"] = dict(plan)
