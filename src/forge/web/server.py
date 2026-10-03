@@ -31,6 +31,7 @@ from forge.web.contracts_routes import add_contracts_routes
 from forge.web.environment_routes import add_environment_routes
 from forge.web.manager import WebSessionManager
 from forge.web.project_list import describe_projects
+from forge.web.tool_output_routes import add_tool_output_routes
 from forge.workspace.output import build_output, build_patch, compute_changes
 from forge.workspace.text_format import decode_text, detect_format
 from forge.workspace.workspace import Workspace
@@ -84,6 +85,7 @@ def create_app(
     session_cookie = session_cookie_name(security)
     add_environment_routes(app, manager)
     add_contracts_routes(app, manager)
+    add_tool_output_routes(app, manager)
     if accounts:
         add_auth_routes(app, accounts, security)
     else:

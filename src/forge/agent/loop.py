@@ -13,6 +13,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from forge.agent.tool_output import save_full_output
 from forge.context.manager import ContextManager
 from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthError
 from forge.llm.base import ChatRequest, LLMResponse, Message, TextDeltaCallback, ToolCall
@@ -122,6 +123,8 @@ class AgentLoop:
         self._last_step_read_only = False  # the previous step only read things and nothing failed
         self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
         self.role = "coder"  # subagents run on other roles' models (reviewer, debugger)
+        # The web UI can show a tool's whole result (D-195); a subagent's calls show only as steps.
+        self.keep_full_output = True
         self.effort: str | None = None  # /effort: overrides the model's configured reasoning effort
         self.turn_effort: str | None = None  # "think hard:" raises it for one turn
 
@@ -352,6 +355,12 @@ class AgentLoop:
             )
             if result.ok and tool.name in HOOKED_TOOLS and self.router.config.hooks.post_edit:
                 result = await self._post_edit_hooks(args, result)
+        preview = _preview(result.content, result.ok)
+        full: dict[str, Any] = {}
+        if preview != result.content and self.keep_full_output and self.context.workspace is not None:
+            output_id = save_full_output(self.context.workspace, result.content, self.bus.redact_text)
+            if output_id is not None:
+                full = {"output_id": output_id, "output_chars": len(result.content)}
         await self.bus.publish(
             EventType.TOOL_CALL_FINISHED,
             {
@@ -359,8 +368,9 @@ class AgentLoop:
                 "name": call.name,
                 "ok": result.ok,
                 "summary": summary,
-                "preview": _preview(result.content, result.ok),
+                "preview": preview,
                 "duration_s": round(time.perf_counter() - started, 2),
+                **full,
             },
         )
         self._note_ui_evidence(tool.name, call.arguments or {}, result)

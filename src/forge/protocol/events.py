@@ -75,6 +75,10 @@ class EventBus:
             if log_path.exists():
                 self._events = load_event_log(log_path)
 
+    def redact_text(self, text: str) -> str:
+        """Text that leaves the engine outside an event (a saved tool output) gets the same redaction."""
+        return self._redactor.redact(text)
+
     @property
     def last_seq(self) -> int:
         return self._events[-1].seq if self._events else 0

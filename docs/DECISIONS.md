@@ -2723,3 +2723,20 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   open and the form needs three fields), editing the signature in place on the card (rejected: easy to change by accident; Revise
   is explicit). Forgetting removes the contract from the register (as `/contracts forget` does); a memory note saved when it was
   pinned is not removed. Tests: `tests/test_web_contracts.py`, `tests/test_web_contracts_e2e.py` (`contracts-light.png`).
+
+### D-195 — The full result of a tool call in the web UI (built 2026-10-03; the open question from the tool-call layout, D-189)
+- **Problem:** the `tool_call_finished` event carries only a preview (1,500 characters; a failure keeps its head and tail), so a long
+  test run or file read could not be seen in full. Options: (a) raise the preview cap, (b) save the whole text and fetch it on
+  request (chosen), (c) put the whole result in the event. Rejected (a): any cap still cuts something. Rejected (c): the event log
+  is replayed in full on every reopen and sent to the browser, so a few large outputs would make reopening a project slow.
+- **Built:** when a result is longer than its preview, the engine saves the whole text to
+  `<workspace>/.forge/tool-output/<32-hex id>.txt` (through the write jail, redacted with the event bus's own redactor, cut at
+  2,000,000 characters with a note) and the event gains `output_id` and `output_chars`. `GET /api/tool-output/<id>` serves it
+  (the id must be exactly 32 hex characters, so no path can be passed; behind the login and the session token like every other call).
+  In the chat the OUT block shows "Show full output (N characters)"; it replaces the preview with the whole text (scrolling box,
+  copy button, "Show less"); a deleted file says "The full output is no longer available". Subagent calls save nothing (their
+  calls show only as steps). Short results save nothing. Code: `agent/tool_output.py`, `web/tool_output_routes.py`,
+  `EventBus.redact_text`. Tests: `tests/test_tool_output.py`, `tests/test_web_tool_output.py`, `test_react_full_tool_output`.
+- **Security:** the same redaction as the events (invariant 3: secrets never reach the browser); the files sit in the workspace's own
+  `.forge` folder, which is not part of the delivered output. **Limits:** the files stay until the workspace is deleted (no
+  clean-up yet); a result cut by the tool itself (the shell's own cap, the context cap applied later) is saved as the tool returned it.

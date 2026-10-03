@@ -72,7 +72,7 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
     case "tool_call_finished": {
       const updated: ChatItem[] = items.map((item) =>
         item.kind === "tool" && item.id === p.id
-          ? { ...item, state: (p.ok ? "ok" : "fail") as "ok" | "fail", preview: p.preview, duration: p.duration_s }
+          ? { ...item, state: (p.ok ? "ok" : "fail") as "ok" | "fail", preview: p.preview, duration: p.duration_s, outputId: p.output_id, outputChars: p.output_chars }
           : item,
       );
       // A success right after a same-tool failure usually means the model mis-called it, got a

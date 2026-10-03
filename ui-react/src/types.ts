@@ -134,6 +134,8 @@ export type ChatItem =
       agent?: AgentView; // set on a spawn_subagent row (or a row made for a subagent): its own steps, nested
       state: "running" | "ok" | "fail";
       preview?: string;
+      outputId?: string; // the whole result was saved: fetch it from /api/tool-output/<id> (D-195)
+      outputChars?: number;
       duration?: number;
       // True once a later call of the same tool succeeds before any other failure of that tool
       // intervenes: the model made a mistake, got a clear error, and immediately corrected it —

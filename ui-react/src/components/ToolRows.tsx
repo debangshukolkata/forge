@@ -3,10 +3,10 @@
 // went in and what came out. Failed calls and edits open by themselves.
 import { AlertOctagon, CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { Code, cx } from "../lib";
+import { Code, api, cx } from "../lib";
 import type { ChatItem } from "../types";
 import { AgentSteps, agentCounts, latestStepText, roleLabel } from "./AgentSteps";
-import { Badge, Spinner } from "./ui";
+import { Badge, CopyButton, Spinner } from "./ui";
 
 export type ToolItem = Extract<ChatItem, { kind: "tool" }>;
 const OUT_COLLAPSED_LINES = 15;
@@ -126,6 +126,19 @@ export function ToolCard({ item }: { item: ToolItem }) {
   }, [Boolean(item.diff)]); // eslint-disable-line react-hooks/exhaustive-deps
   const lines = item.preview ? item.preview.split("\n") : [];
   const folded = !showAll && lines.length > OUT_COLLAPSED_LINES;
+  // The whole result, fetched on request (D-195): the event only carries a preview.
+  const [full, setFull] = useState<string | null>(null);
+  const [fullState, setFullState] = useState<"idle" | "loading" | "gone">("idle");
+  const loadFull = async () => {
+    if (!item.outputId) return;
+    setFullState("loading");
+    try {
+      setFull((await api<{ text: string }>(`/api/tool-output/${item.outputId}`)).text);
+      setFullState("idle");
+    } catch {
+      setFullState("gone");
+    }
+  };
   const counts = item.diff ? diffCounts(item.diff) : null;
   return (
     <div>
@@ -174,7 +187,19 @@ export function ToolCard({ item }: { item: ToolItem }) {
               <Code text={inputText(item)} className="max-h-60 text-[12px]" />
             </IoBlock>
           )}
-          {item.preview && (
+          {item.preview && full !== null && (
+            <IoBlock label="Out">
+              <Code text={full} className="max-h-112 text-[12px]" />
+              <div className="mt-1 flex items-center gap-3 text-[12px] text-fg-muted">
+                <span>Full output, {full.length.toLocaleString()} characters</span>
+                <CopyButton text={full} label="Copy output" />
+                <button type="button" onClick={() => setFull(null)} className="cursor-pointer font-semibold text-accent hover:underline">
+                  Show less
+                </button>
+              </div>
+            </IoBlock>
+          )}
+          {item.preview && full === null && (
             <IoBlock label="Out">
               <Code text={folded ? lines.slice(0, OUT_COLLAPSED_LINES).join("\n") : item.preview} className="max-h-96 text-[12px]" />
               {lines.length > OUT_COLLAPSED_LINES && (
@@ -185,6 +210,22 @@ export function ToolCard({ item }: { item: ToolItem }) {
                 >
                   {folded ? `Show ${lines.length - OUT_COLLAPSED_LINES} more lines` : "Show less"}
                 </button>
+              )}
+              {item.outputId && (
+                <div className="mt-1 text-[12px]">
+                  {fullState === "gone" ? (
+                    <span className="text-fg-muted">The full output is no longer available.</span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={fullState === "loading"}
+                      onClick={() => void loadFull()}
+                      className="cursor-pointer font-semibold text-accent hover:underline disabled:opacity-60"
+                    >
+                      {fullState === "loading" ? "Loading…" : `Show full output (${(item.outputChars ?? 0).toLocaleString()} characters)`}
+                    </button>
+                  )}
+                </div>
               )}
             </IoBlock>
           )}

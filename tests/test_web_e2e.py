@@ -736,3 +736,80 @@ def test_react_timeline_rows(server: ServerSecurity, workspace: Workspace) -> No
         page.wait_for_selector("button:has-text('def helper')")
         browser.close()
     assert not problems, problems
+
+
+def test_react_full_tool_output(server: ServerSecurity, workspace: Workspace) -> None:
+    """D-195: a long result shows a preview, and "Show full output" fetches the whole saved text."""
+    import asyncio
+
+    from forge.agent.tool_output import FOLDER
+    from forge.protocol.events import EventBus, EventType
+
+    saved_id, missing_id = "a" * 32, "b" * 32
+    full = "\n".join(f"test_case_{n} PASSED" for n in range(1, 301)) + "\n300 passed in 4.1s"
+    folder = workspace.forge_dir / FOLDER
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{saved_id}.txt").write_text(full, encoding="utf-8")
+
+    async def script() -> None:
+        bus = EventBus(workspace.forge_dir / "transcripts" / "events.jsonl", redactor=Redactor())
+        await bus.publish(EventType.USER_MESSAGE, {"text": "Run the tests"})
+        for call_id, output_id in (("t1", saved_id), ("t2", missing_id)):
+            await bus.publish(
+                EventType.TOOL_CALL_STARTED,
+                {
+                    "id": call_id,
+                    "name": "run_command",
+                    "summary": f"pytest {call_id}",
+                    "arguments": {"command": "pytest"},
+                },
+            )
+            await bus.publish(
+                EventType.TOOL_CALL_FINISHED,
+                {
+                    "id": call_id,
+                    "name": "run_command",
+                    "ok": True,
+                    "summary": f"pytest {call_id}",
+                    "preview": "test_case_1 PASSED\ntest_case_2 PASSED",
+                    "duration_s": 4.1,
+                    "output_id": output_id,
+                    "output_chars": len(full),
+                },
+            )
+
+    asyncio.run(script())
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        problems: list[str] = []
+        # the second call's output was deleted on purpose: the 404 is expected and the UI says so
+        page.on(
+            "console",
+            lambda m: problems.append(m.text) if m.type == "error" and "404" not in m.text else None,
+        )
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Start something new.")
+        page.evaluate(
+            "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
+            str(workspace.root),
+        )
+        page.reload()
+        page.click("button:has-text('pytest t1')")
+        page.wait_for_selector("pre:has-text('test_case_2 PASSED')")
+        assert page.locator("pre:has-text('test_case_300 PASSED')").count() == 0  # only the preview so far
+        page.click(f"button:has-text('Show full output ({len(full):,} characters)')")
+        page.wait_for_selector("pre:has-text('300 passed in 4.1s')")
+        page.wait_for_selector(f"text=Full output, {len(full):,} characters")
+        page.click("button:has-text('Show less')")
+        assert page.locator("pre:has-text('300 passed in 4.1s')").count() == 0
+
+        page.click("button:has-text('pytest t2')")
+        page.locator("button:has-text('Show full output')").last.click()  # the second call's
+        page.wait_for_selector("text=The full output is no longer available.")
+        browser.close()
+    assert not problems, problems

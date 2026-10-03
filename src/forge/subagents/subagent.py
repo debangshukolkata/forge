@@ -48,6 +48,7 @@ async def run_explore(router: LLMRouter, context: ToolContext, requirement: str)
     gate = PermissionGate("plan", context.workspace.forge_dir / "permissions.json")
     manager = ContextManager(router, router.config)
     loop = AgentLoop(router, bus, tools, sub_context, gate, ApprovalBroker(bus), EXPLORE_ITERATIONS, manager)
+    loop.keep_full_output = False
     history = [Message.system(EXPLORE_PROMPT), Message.user(f"Requirement:\n{requirement}")]
 
     await _tracked_run(
@@ -285,6 +286,7 @@ async def _run_subagent(
     manager = ContextManager(router, router.config)
     loop = AgentLoop(router, bus, tools, sub_context, gate, approvals, iterations, manager)
     loop.role = role
+    loop.keep_full_output = False
     history = [Message.system(prompt), Message.user(task)]
 
     await _tracked_run(context, loop, bus, history, role, _purpose(prompt, task))
