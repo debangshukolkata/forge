@@ -71,7 +71,7 @@ The rules below still describe what goes into briefs and summaries.
 - Postgres tests (`pg` marker, run by default) use the local Postgres (`LOCAL_PG_URL` in `.env`); skipped when
   unset or unreachable. They only create `forge_*` schemas/roles and drop them afterwards.
 - Tests never touch the real `%USERPROFILE%\.forge`; they set `FORGE_HOME` to a tmp dir.
-- Run (fast, parallel, ~3.5 min for everything): `.venv\Scripts\python -m pytest -q -n 12 --dist loadfile`
+- Run (fast, parallel, ~1.5 min for everything): `.venv\Scripts\python -m pytest -q -n 12 --dist loadfile`
   (`pytest-xdist`, dev only; `loadfile` keeps each test file on one worker). One module: `pytest tests/test_<module>*.py`.
   Sequential: `.venv\Scripts\python -m pytest -q` (3.13) and `.venv314\Scripts\python -m pytest -q` (3.14);
   `-m live` for live tests. Also `ruff check .`, `ruff format --check .`, `mypy`, `scripts/check_secrets.py`.

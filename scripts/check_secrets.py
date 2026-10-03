@@ -12,6 +12,7 @@ Exit code 0 = clean, 1 = findings.
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from collections.abc import Iterator
@@ -78,15 +79,17 @@ def load_secret_values(env_file: Path) -> dict[str, str]:
     return secrets
 
 
+def is_skipped_dir(name: str) -> bool:
+    return name in SKIP_DIRS or name.startswith(".venv") or name == "site-packages"
+
+
 def iter_text_files(root: Path) -> Iterator[Path]:
-    for path in root.rglob("*"):
-        if any(
-            part in SKIP_DIRS or part.startswith(".venv") or part == "site-packages" for part in path.parts
-        ):
-            continue
-        if not path.is_file() or path.name.startswith(SKIP_FILE_PREFIXES):
-            continue
-        yield path
+    # Prune skipped folders while walking: rglob would descend into .venv and node_modules first.
+    for folder, subfolders, names in os.walk(root):
+        subfolders[:] = [name for name in subfolders if not is_skipped_dir(name)]
+        for name in names:
+            if not name.startswith(SKIP_FILE_PREFIXES):
+                yield Path(folder) / name
 
 
 def scan_file(path: Path, secrets: dict[str, str]) -> Iterator[str]:

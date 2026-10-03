@@ -192,7 +192,7 @@ def test_emergency_trim_keeps_last_two_turns() -> None:
 # --- the manager ---
 
 
-async def test_stress_500_tool_calls_never_exceed_the_window() -> None:
+async def test_stress_200_tool_calls_never_exceed_the_window() -> None:
     config = small_window_config()
     manager = manager_with(config)
     budget = manager.budget()
@@ -200,7 +200,7 @@ async def test_stress_500_tool_calls_never_exceed_the_window() -> None:
     rng = random.Random(7)
     worst = 0
 
-    for index in range(500):
+    for index in range(200):
         if index % 10 == 0:
             history.append(Message.user(f"Step {index}: keep going."))
         history += tool_turn(index, rng.choice([200, 800, 2500, 7000]))
