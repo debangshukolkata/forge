@@ -3,6 +3,7 @@ the codebase. Only the condensed report (<= ~1.5k tokens) comes back to the main
 
 from __future__ import annotations
 
+import asyncio
 import itertools
 import time
 
@@ -162,6 +163,31 @@ async def _tracked_run(
     agent_id = f"agent-{next(_AGENT_IDS)}"
     started = time.perf_counter()
     await context.emit("agent_started", {"id": agent_id, "role": role, "purpose": purpose})
+
+    async def step(kind: str, **fields: object) -> None:
+        await context.emit("subagent_step", {"agent": agent_id, "role": role, "kind": kind, **fields})
+
+    async def thinking(text: str) -> None:
+        if text.strip():
+            await step("thinking", text=text.strip()[:300])
+
+    async def relay() -> None:
+        """What the subagent is doing, as it happens (a verifier runs ten minutes or more)."""
+        async for event in bus.subscribe(since_seq=0):
+            payload = event.payload
+            if event.type == EventType.TOOL_CALL_STARTED:
+                await step("tool_started", name=payload.get("name"), summary=payload.get("summary"))
+            elif event.type == EventType.TOOL_CALL_FINISHED:
+                await step(
+                    "tool_finished",
+                    name=payload.get("name"),
+                    ok=payload.get("ok"),
+                    summary=payload.get("summary"),
+                    duration_s=payload.get("duration_s"),
+                )
+
+    loop.on_thinking = thinking
+    relayer = asyncio.create_task(relay())
     ok = True
     try:
         await loop.run(history, ignore)
@@ -169,6 +195,8 @@ async def _tracked_run(
         ok = False
         raise
     finally:
+        await asyncio.sleep(0)  # let the relay deliver what is already queued
+        relayer.cancel()
         finished = [e for e in bus.events_since(0) if e.type == EventType.TOOL_CALL_FINISHED]
         await context.emit(
             "agent_finished",

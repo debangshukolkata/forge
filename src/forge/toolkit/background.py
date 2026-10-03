@@ -142,7 +142,7 @@ class Monitor(Tool):
     read_only = True
     description = (
         "Wait for a background process: returns as soon as `until` (a regex) appears in its output, or the "
-        "process exits (with its exit code), or the timeout passes (the process keeps running), together with "
+        "process exits (with its exit code), or the timeout passes (the process keeps running), with "
         "the new output. Use it instead of calling read_background in a loop, e.g. after start_background to "
         "wait for a build or 'Running on'."
     )

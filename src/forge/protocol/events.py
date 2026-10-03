@@ -48,6 +48,7 @@ class EventType(StrEnum):
         "agent_started"  # a subagent (reviewer, debugger, helper, analysis) began (Run map, D-119)
     )
     AGENT_FINISHED = "agent_finished"
+    SUBAGENT_STEP = "subagent_step"  # a step of a running subagent (tool started/finished, thinking) (D-179)
     NOTICE = "notice"  # informational: retries, fallbacks, queued input, slash-command output
     ERROR = "error"
 

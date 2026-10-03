@@ -181,3 +181,29 @@ async def test_read_only_agents_run_side_by_side_but_verifiers_are_serialised(
     assert two_reads < 0.5 and two_explores < 0.5  # about the time of one
     assert two_verifiers >= 0.55  # one after the other: they write files and start the app
     assert 0.55 <= six_explores < 0.95  # capped at 4 at once: 4 together, then 2
+
+
+async def test_a_running_subagent_reports_its_steps_to_the_session(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    from forge.subagents.subagent import run_debugger
+    from tests.helpers import function_call_output
+
+    calls = {"n": 0}
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return reply(request, responses_body([function_call_output("list_dir", '{"path": "."}')]))
+        return reply(request, responses_body([text_output("Root cause: x. Fix: y.")]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace)
+    assert host.agent is not None
+    report = await run_debugger(host.router, host.agent.context, "the build fails")
+    assert "Root cause" in report
+    steps = [e.payload for e in host.bus.events_since(0) if e.type == EventType.SUBAGENT_STEP]
+    kinds = [s["kind"] for s in steps]
+    assert "tool_started" in kinds and "tool_finished" in kinds
+    assert all(s["agent"].startswith("agent-") for s in steps)
+    assert any(e.type == EventType.AGENT_FINISHED for e in host.bus.events_since(0))
