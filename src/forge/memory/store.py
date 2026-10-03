@@ -29,6 +29,7 @@ KINDS = ("user", "feedback", "project", "reference")
 MAX_BODY_CHARS = 4000
 MAX_DESCRIPTION_CHARS = 150
 INDEX_FILE = "MEMORY.md"
+STATE_MEMORY = "project-state"  # where a session leaves the state of the work for the next one (D-171)
 _NAME = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")
 _FRONT = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.S)
 
@@ -126,9 +127,16 @@ def combined_index(home: Path, scope: str | None) -> str | None:
     user = MemoryStore(home).index()
     if user:
         parts.append("About the user (all projects):\n" + user)
-    project = MemoryStore(home, scope).index() if scope else None
+    project_store = MemoryStore(home, scope) if scope else None
+    project = project_store.index() if project_store else None
     if project:
         parts.append("About this project:\n" + project)
+    if project_store is not None and project_store.get(STATE_MEMORY) is not None:
+        parts.insert(
+            0,
+            f"Work on this project was left unfinished or paused: read the memory '{STATE_MEMORY}' first "
+            f"(memory_read name={STATE_MEMORY} scope=project) and carry on from there.",
+        )
     if not parts:
         return None
     return "Saved memories (read one in full with memory_read):\n" + "\n".join(parts)

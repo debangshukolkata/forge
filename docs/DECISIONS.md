@@ -2496,3 +2496,15 @@ verifier's step budget is 90 instead of 45, and its prompt now says: check what 
 does; never assert unspecified wording (check that a clear visible message appeared); reproduce a failure by hand and read
 the server log before calling it a bug. The earlier D-168 checklist (static, tests, runtime log, behaviour, browser
 diagnostics, visual, data) stays.
+
+### D-171 — Saving the state of a project to memory so work can be taken up later (`/handoff`) · Built (2026-10-03)
+User: the "write everything to memory so it can be picked up later" step I did for this project must be a Forge feature.
+**Built on the existing auto-memory (D-158):** `/handoff [note]` asks the model to write ONE project-scope memory named
+`project-state` (replacing the previous one) with fixed sections: Goal, Decisions (with reasons and what was rejected), Done
+(and how each part was checked), In progress, Next (including open questions), How to run and test, Pitfalls; it reads the
+existing state, the task list and the code first and may not invent anything. The same rule is in both system prompts, so a
+plain request ("save everything so we can continue later") or having to stop with unfinished work does the same. **Resume:**
+when a `project-state` memory exists, the pinned memory block starts with "Work on this project was left unfinished or paused:
+read the memory 'project-state' first ... and carry on from there", and the prompts tell the model to do so. Scope is the
+project (a repository in Mode A, a host profile in Mode B), so nothing crosses between projects. Tests: `/handoff` sends the
+structured request (with the user's note); a saved state is flagged first in the pinned memory.

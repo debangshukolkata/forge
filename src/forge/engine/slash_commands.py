@@ -57,10 +57,26 @@ HELP_TEXT = """Available commands:
   /rename <name>            name this session/workspace
   /export-chat              save the conversation as Markdown (.forge/exports/)
   /mcp                      connected MCP servers and their tools (optional; config mcp.*)
+  /handoff [note]           save where the work stands (decisions, done, next steps, how to run) to memory,
+                            so it can be picked up later, even in a new session
   /memory [delete <name>]   list (or delete) what Forge remembers (user + this project)
   /<name> [args]            your custom commands: <forge home>/commands/<name>.md ($ARGUMENTS = args)
   /exit                     end the session
 Other commands from the spec arrive with later milestones."""
+
+
+HANDOFF_PROMPT = """Save where we are so this work can be picked up later, even in a new session with no
+conversation history. Write ONE project memory named "project-state" with memory_write (type project, scope
+project; it replaces the previous one) with these sections, concrete and concise, no secrets:
+## Goal: what is being built and for whom
+## Decisions: each with the reason, and what was rejected
+## Done: what exists now (files, pages, features) and how each was checked (what you ran or saw)
+## In progress: anything half-finished, in its exact state
+## Next: the next steps in order, including open questions for the user
+## How to run and test: exact commands, ports, environment, data
+## Pitfalls: what went wrong and how to avoid it
+First read the existing project-state (if any), the task list and the code as needed, so the memory is
+accurate; do not invent anything. Then reply with a short summary of what you saved."""
 
 
 class SlashCommandHandler:
@@ -87,6 +103,7 @@ class SlashCommandHandler:
             "/db": self._db,
             "/diagnose": self._diagnose,
             "/remember": self._remember,
+            "/handoff": self._handoff,
             "/profile": self._profile,
             "/init": self._init,
             "/effort": self._effort,
@@ -272,6 +289,12 @@ class SlashCommandHandler:
         if not problems and (tests is None or tests.passed) and not result.analysis:
             lines.append("No problems found.")
         await self._say("\n".join(lines))
+
+    async def _handoff(self, args: list[str]) -> None:
+        """Like writing the state of a project to memory before stopping: one `project-state` memory the next
+        session reads first (D-171)."""
+        note = " ".join(args).strip()
+        await self.host.run_message(HANDOFF_PROMPT + (f"\n\nExtra from the user: {note}" if note else ""))
 
     async def _remember(self, args: list[str]) -> None:
         if not args:

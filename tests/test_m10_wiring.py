@@ -109,3 +109,30 @@ def test_status_bar_follows_the_session(original_repo: Path, tmp_path: Path) -> 
         and "ctx 42%" in bar
         and "mode default" in bar
     )
+
+
+async def test_handoff_asks_the_model_to_write_the_project_state_memory(
+    original_repo: Path, tmp_path: Path, isolated_forge_home: Path
+) -> None:
+    bodies: list[dict[str, object]] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        bodies.append(json.loads(request.content))
+        return reply(request, responses_body([text_output("Saved.")]))
+
+    host = host_for(original_repo, tmp_path, handler)
+    await host._commands.handle("/handoff the cart is half done")
+    sent = json.dumps(bodies[0])
+    assert "project-state" in sent and "## Next" in sent and "the cart is half done" in sent
+
+
+def test_a_saved_project_state_is_flagged_first_in_the_pinned_memory(isolated_forge_home: Path) -> None:
+    from forge.memory.store import MemoryStore, combined_index
+
+    store = MemoryStore(isolated_forge_home, "repo:demo-1")
+    assert combined_index(isolated_forge_home, "repo:demo-1") is None
+    store.save("project-state", "where the work stands", "project", "## Next\n- finish the cart")
+    pinned = combined_index(isolated_forge_home, "repo:demo-1") or ""
+    flag = "Work on this project was left unfinished or paused: read the memory 'project-state'"
+    assert flag in pinned and pinned.index(flag) < pinned.index("About this project:")
+    assert "project-state (project): where the work stands" in pinned
