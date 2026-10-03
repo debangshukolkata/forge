@@ -2569,3 +2569,7 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - **D-181 subagent display (user decision 2026-10-03).** In the web UI a subagent's own tool calls are shown nested inside its row,
   collapsed by default and expandable (not just the hand-back). Options were nested vs hand-back only; nested chosen because
   verifier runs last 10-15 minutes. Built with the timeline UI (deferred); the engine already relays the steps (D-179).
+- **D-182 speed settings unchanged (user decision 2026-10-03).** The A/B/C benchmark (attendance build + 2 enhancements): gpt-5.1
+  baseline 2953 s (accuracy not measured: port 5061 is blocked by Edge, ERR_UNSAFE_PORT; avoid 5060/5061 in checks), gpt-5.1 with
+  lower effort after read-only steps 2447 s (9/11, 15/17, 19/21), gpt-4.1 coder 742 s (all checks passed, verifier never called).
+  One run per setting on one app, verifier use differs, so no setting change; the model and effort stay as configured (D-161).
