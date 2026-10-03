@@ -80,6 +80,12 @@ def main() -> None:
     results = []
     for title, prompt_path, phase in STEPS:
         prompt = prompt_path.read_text(encoding="utf-8").replace("5055", args.port)
+        prompt += (
+            "
+
+You may install the packages the app and its checks need (flask, pytest, playwright, ...) with "
+            "`python -m pip install ...` in this project's environment: that is approved."
+        )
         prompt_file = RUNS / f"bench_{args.name}_{phase}.txt"
         prompt_file.write_text(prompt, encoding="utf-8")
         out_json = RUNS / f"bench_{args.name}_{phase}.json"
