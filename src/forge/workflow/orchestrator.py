@@ -413,6 +413,21 @@ class Orchestrator:
                     "blocked either."
                 ),
             )
+        ui_edited = context.last_ui_edit_step > self._task_start_step
+        if status == "done" and ui_edited and context.last_browser_step <= context.last_ui_edit_step:
+            return ToolResult(
+                ok=False,
+                content=(
+                    "Not accepted: you changed what the page shows (templates, styles or scripts) but "
+                    "have not used the running app in a browser since. Unit tests do not show whether the "
+                    "button, label or message is really on the page. Start the app (start_background), "
+                    "open it with browser_open, click through the feature and its error case with "
+                    "browser_click / browser_fill, compare what you see with the requirement word by word "
+                    "(browser_screenshot then view_image for layout), fix what is off, then call "
+                    "task_update again and say what you saw. The web-ui-verification skill has the "
+                    "steps, and a Playwright script you run counts too."
+                ),
+            )
         task.status = "done" if status == "done" else "blocked"
         task.handoff_note, task.verification, task.blocked_reason = handoff_note, verification, blocked_reason
         if task.status == "done":  # local history (spec §13B): one commit per completed task

@@ -2453,3 +2453,19 @@ settled when tasks existed, so `output/` was never built and an unattended run e
 task is open and either tasks exist or files changed since the last delivery; then `output/` is built. The closing
 message says "work finished" when there are no tasks. Tests: delivery without tasks; a plain question without edits
 neither delivers nor finishes.
+
+### D-167 — Forge verifies web UI work in a real browser (user: "Forge should write and run these scripts itself") · Built (2026-10-03)
+**Evidence from the first Mode B builds:** Forge reported UI features done that were not there (bakery cart without any
+"Add to cart" button, attendance CSV export that did not exist) because it only ran unit tests; in the attendance runs it
+never started the app or opened a browser, and a prompt paragraph asking for it changed nothing (round 4: pip and pytest
+only). **Change:** like the existing test-evidence rule, `task_update(done)` is refused when templates, stylesheets or
+scripts (not tests) were edited during the task and the app has not been used in a browser since: a `browser_*` tool
+call or a passing shell command that runs Playwright counts. The refusal tells the model how (start_background,
+browser_open/click/fill, screenshot + view_image, compare with the requirement word by word). New skill
+`web-ui-verification` (procedure, and a Playwright script that uses the installed Edge: `channel="msedge"`, no browser
+download) plus a rule in both system prompts. Bookkeeping: `ToolContext.last_ui_edit_step` / `last_browser_step`, set in
+`AgentLoop._note_ui_evidence` and `execute`. Not covered: work with no task list (only the prompt rule applies). **Tests:**
+UI-edited task refused then accepted after a browser step; a blocked UI task is not gated.
+**Campaign results so far** (independent Playwright checks in `C:\Work\ForgeRuns`): attendance app 37/37 after 4
+enhancement rounds and one feedback round; bakery site 57/57 after 3 enhancement rounds and one feedback round;
+invoice tool 26/26 after one feedback round with the real invoices pasted in and one enhancement round.

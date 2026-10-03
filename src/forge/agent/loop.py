@@ -79,6 +79,20 @@ HOOKED_TOOLS = {"write_file", "edit_file", "multi_edit"}
 HOOK_TIMEOUT_S = 120
 
 
+UI_SUFFIXES = (".html", ".htm", ".css", ".js", ".jsx", ".ts", ".tsx", ".vue", ".svelte", ".jinja", ".j2")
+
+
+def is_test_path(path: str) -> bool:
+    name = path.rsplit("/", 1)[-1]
+    return (
+        "/tests/" in f"/{path}"
+        or "/test/" in f"/{path}"
+        or name.startswith("test_")
+        or ".test." in name
+        or ".spec." in name
+    )
+
+
 class AgentLoop:
     def __init__(
         self,
@@ -307,6 +321,7 @@ class AgentLoop:
                 "duration_s": round(time.perf_counter() - started, 2),
             },
         )
+        self._note_ui_evidence(tool.name, call.arguments or {}, result)
         # Every result is capped here (spec §10.3), whatever the tool did itself.
         content, _ = self.context.cap_output(result.content, tool.output_kind)
         content, marker = flag(content)
@@ -319,6 +334,19 @@ class AgentLoop:
                 },
             )
         return Message.tool_result(call.id, content if result.ok else f"Error: {content}")
+
+    def _note_ui_evidence(self, tool_name: str, arguments: dict[str, Any], result: ToolResult) -> None:
+        """Remembers when UI files were edited and when the app was last used in a browser, so task_update can
+        ask for the second after the first (D-167)."""
+        if not result.ok:
+            return
+        if tool_name.startswith("browser_") and tool_name != "browser_close":
+            self.context.last_browser_step = self.context.step
+            return
+        if tool_name in ("write_file", "edit_file", "multi_edit", "move_file"):
+            path = str(arguments.get("path") or arguments.get("destination") or "").replace("\\", "/").lower()
+            if path.endswith(UI_SUFFIXES) and not is_test_path(path):
+                self.context.last_ui_edit_step = self.context.step
 
     async def _post_edit_hooks(self, args: ToolArgs, result: ToolResult) -> ToolResult:
         """config hooks.post_edit (e.g. "ruff format {file}") after each successful edit; the output is

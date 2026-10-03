@@ -454,3 +454,31 @@ async def test_a_plain_question_without_edits_does_not_deliver_or_finish(
     orch = orchestrator(host)
     await orch.handle_message("Which database should it use?")
     assert not orch.state.exported
+
+
+async def test_a_task_that_changed_the_ui_needs_a_browser_check_before_done(host: SessionHost) -> None:
+    from forge.toolkit.base import ToolContext
+
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="cart page")]
+    orch.state.current_task = "T1"
+    context = host.agent.context  # type: ignore[union-attr]
+    assert isinstance(context, ToolContext)
+    context.step = 7
+    context.last_ui_edit_step = 7  # templates/cart.html was edited; the unit tests pass
+    refused = await orch.task_update("T1", "done", "", "pytest: 9 passed", "", context)
+    assert not refused.ok and "browser" in refused.content and "web-ui-verification" in refused.content
+    context.step, context.last_browser_step = 9, 9  # the app was then opened and clicked through
+    accepted = await orch.task_update(
+        "T1", "done", "Cart works.", "browser: added two items, saw Cart (2)", "", context
+    )
+    assert accepted.ok
+
+
+async def test_a_blocked_ui_task_does_not_need_a_browser_check(host: SessionHost) -> None:
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="cart page")]
+    orch.state.current_task = "T1"
+    context = host.agent.context  # type: ignore[union-attr]
+    context.step = context.last_ui_edit_step = 4  # type: ignore[union-attr]
+    assert (await orch.task_update("T1", "blocked", "", "", "flask missing", context)).ok  # type: ignore[arg-type]

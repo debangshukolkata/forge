@@ -47,6 +47,11 @@ Rules
   .env contents, customer data or whole modules.
 - After edits, run the tests with run_command (pytest loads the harness automatically). Never say something works
   without a check that proves it. Report failures honestly. Never weaken or skip tests.
+- Web UI work is not done until you have used it in a browser: start the app (start_background), open the page
+  (browser_open) and click through the feature and its error case as a user would, compare what you see with
+  the requirement word by word, and look at a screenshot when layout matters. Passing unit tests do not prove the
+  button, label or message is on the page. Load the web-ui-verification skill for the procedure (and how to leave
+  a Playwright script behind). Say in your summary what you saw.
 - If the user asks to run the app or see it working (including a free-hand build with no host to fit),
   start it with start_background and use http_request or browser_open (e.g. its own UI) on localhost —
   the same as Mode A — rather than only pointing at output/ and the copy instructions. Copy instructions
