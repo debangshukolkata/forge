@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import os
 import time
 import traceback
 from datetime import date
@@ -114,6 +115,7 @@ class AgentLoop:
         self.max_iterations = max_iterations
         self.context_manager = context_manager
         self.on_thinking: TextDeltaCallback | None = None  # set by the session host (D-174)
+        self._last_step_read_only = False  # the previous step only read things and nothing failed
         self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
         self.role = "coder"  # subagents run on other roles' models (reviewer, debugger)
         self.effort: str | None = None  # /effort: overrides the model's configured reasoning effort
@@ -126,7 +128,9 @@ class AgentLoop:
         for _ in range(self.max_iterations):
             # After a cut-off reply, think less so the answer fits in the output limit (D-060).
             response = await self._chat(
-                history, on_text_delta, "low" if continuations else (self.turn_effort or self.effort)
+                history,
+                on_text_delta,
+                "low" if continuations else (self.turn_effort or self.effort or self._adaptive_effort()),
             )
             model_key = self.router.model_for_role(self.role)
             history.append(response.to_message(model_key))
@@ -166,6 +170,13 @@ class AgentLoop:
                     results.get(call.id) or Message.tool_result(call.id, INTERRUPTED)
                     for call in response.tool_calls
                 )
+            self._last_step_read_only = all(
+                (tool := self.tools.get(call.name)) is not None
+                and tool.read_only
+                and not str(results[call.id].content).startswith("Error")
+                for call in response.tool_calls
+                if call.id in results
+            )
             if self.context.end_turn:  # a phase tool finished its phase (orchestrator, M6)
                 return
         self.hit_iteration_limit = True
@@ -177,6 +188,12 @@ class AgentLoop:
                 "Say 'continue' to go on.",
             },
         )
+
+    def _adaptive_effort(self) -> str | None:
+        """EXPERIMENT (env FORGE_ADAPTIVE_EFFORT=low|medium): the reasoning effort for a step that only
+        follows read-only tool results (reading, listing, searching); None keeps the configured effort."""
+        value = os.environ.get("FORGE_ADAPTIVE_EFFORT", "")
+        return value if value and self._last_step_read_only else None
 
     async def _chat(
         self, history: list[Message], on_text_delta: TextDeltaCallback, reasoning_effort: str | None = None

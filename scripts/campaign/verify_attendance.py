@@ -15,7 +15,8 @@ from playwright.sync_api import sync_playwright
 APP_DIR, PYTHON, PHASE = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
 SHOTS = Path(r"C:\Work\ForgeRuns\shots")
 SHOTS.mkdir(exist_ok=True)
-BASE = "http://127.0.0.1:5055"
+PORT = int(__import__("os").environ.get("APP_PORT", "5055"))
+BASE = f"http://127.0.0.1:{PORT}"
 results: list[tuple[str, bool, str]] = []
 
 
@@ -27,7 +28,7 @@ def check(name: str, ok: bool, detail: str = "") -> None:
 def port_open() -> bool:
     with socket.socket() as s:
         s.settimeout(0.5)
-        return s.connect_ex(("127.0.0.1", 5055)) == 0
+        return s.connect_ex(("127.0.0.1", PORT)) == 0
 
 
 def body(page) -> str:  # type: ignore[no-untyped-def]
@@ -44,7 +45,7 @@ try:
         if server.poll() is not None:
             break
         time.sleep(0.5)
-    check("app starts on port 5055", port_open(), (Path(r'C:\Work\ForgeRuns') / (Path(sys.argv[1]).parent.name + '_server.log')).read_text()[-400:] if server.poll() is not None else "")
+    check(f"app starts on port {PORT}", port_open(), (Path(r'C:\Work\ForgeRuns') / (Path(sys.argv[1]).parent.name + '_server.log')).read_text()[-400:] if server.poll() is not None else "")
     if not port_open():
         raise SystemExit(1)
     with sync_playwright() as p:
