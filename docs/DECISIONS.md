@@ -2519,3 +2519,15 @@ records `hit_iteration_limit`; the orchestrator returns without delivering or se
 `exported` stays false (an unattended run is nudged to continue, an interactive user says "continue"); the default cap is 150
 (a runaway guard only, D-161), not 40. Tests: a model that never stops calling a tool is cut at the cap, nothing is delivered;
 the default cap is at least 100.
+
+### D-173 — Throwaway checks and clean-up (user: Claude Code "writes a throwaway spec ... cleans up after itself and deletes the file") · Built (2026-10-03)
+Forge could already write and run a script against the running app (the main agent via `write_file` + `python_run`, the verifier
+under `tests/e2e/`) and delete files it created (`delete_file`; only the user's own files always ask). Missing: the verifier could
+not delete anything and was told to leave its script behind, and nothing told it to clean up the data its checks created (the
+bakery run left three scratch databases in `tests/e2e/`). **Now:** the verifier has `delete_file` restricted to `tests/e2e/`
+(`write_only_under` also guards deletes); its prompt and the web-ui-verification skill say: keep the script by default (a repeatable
+check delivered with the project), or call it throwaway/temporary when the main agent says so (`tests/e2e/tmp_*.py`, deleted with
+the screenshots and scratch databases when done); either way the checks leave the app and its data as found (a scratch database
+file or delete the records, users, orders and files they created; never touch data they did not create). The main agent's prompt
+says it may ask for a throwaway check. For Node/React apps the skill names an `@playwright/test` spec. Tests: the verifier may
+delete only below `tests/e2e/`.

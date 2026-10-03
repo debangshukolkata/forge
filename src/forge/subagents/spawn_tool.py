@@ -62,6 +62,7 @@ class SpawnSubagent(Tool):
                 in (
                     "write_file",
                     "edit_file",
+                    "delete_file",
                     "run_command",
                     "python_run",
                     "start_background",

@@ -459,3 +459,19 @@ def test_the_verifier_is_a_built_in_subagent_type() -> None:
     from forge.tools.parity import BUILT_IN_TYPES
 
     assert "verifier" in BUILT_IN_TYPES and "verifier" in SpawnSubagent.description
+
+
+async def test_the_verifier_may_delete_only_its_own_files(tmp_path: Path, original_repo: Path) -> None:
+    from forge.toolkit.base import ToolContext
+    from forge.tools.files import DeleteFile, WriteFile
+    from forge.workspace.create import create_workspace
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace, write_only_under="backend/tests/e2e/")
+    await WriteFile().run(
+        WriteFile.Args(path="backend/tests/e2e/tmp_check.py", content="x = 1" + chr(10)), context
+    )
+    refused = await DeleteFile().run(DeleteFile.Args(path="backend/claims_app/errors.py"), context)
+    assert not refused.ok and "only delete files below" in refused.content
+    assert (await DeleteFile().run(DeleteFile.Args(path="backend/tests/e2e/tmp_check.py"), context)).ok
+    assert not workspace.path_of("backend/tests/e2e/tmp_check.py").exists()

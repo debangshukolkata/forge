@@ -184,6 +184,9 @@ class DeleteFile(Tool):
         return args.path.replace("\\", "/") not in context.workspace.manifest.files
 
     async def run(self, args: DeleteFile.Args, context: ToolContext) -> ToolResult:
+        under = context.write_only_under
+        if under is not None and not args.path.replace("\\", "/").lstrip("./").startswith(under):
+            return ToolResult(ok=False, content=f"You may only delete files below {under} (your own checks).")
         context.workspace.delete(args.path, reason=args.reason)
         context.last_edit_step = context.step
         await context.emit("file_changed", {"path": args.path, "op": "delete", "diff": ""})

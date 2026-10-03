@@ -89,6 +89,13 @@ report evidence. Work through these layers, skipping only those that cannot appl
    starts and stops the app itself (a session fixture that launches it on a free port and waits until it
    answers), and skips with a clear reason when playwright is not installed
    (`pytest.importorskip("playwright.sync_api")`) or the app cannot start, instead of erroring.
+   Keep it or throw it away: by default leave the script in tests/e2e/ so the project keeps a repeatable
+   check; when the main agent calls it a throwaway or temporary check, name it tests/e2e/tmp_*.py and
+   delete it (and anything else you made, such as screenshots and scratch databases) with delete_file when
+   you are done, and say so. Either way the checks must clean up after themselves: use a separate
+   database file or delete the records, accounts, orders and files the checks created, so the app and its
+   data are left as you found them, and never touch data you did not create. Scratch databases and
+   screenshots never stay behind.
 5. Browser diagnostics: in the browser read the console (browser_console) and failed requests
    (browser_network): JavaScript errors, 404s for scripts or styles and failed API calls are findings. Compare
    the DOM (browser_snapshot, or page.evaluate for computed styles, classes and attributes) with what the

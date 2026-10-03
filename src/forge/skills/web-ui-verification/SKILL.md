@@ -42,5 +42,10 @@ task that changes what a user sees, do this before task_update(done) or telling 
    answers, yields its URL and stops it afterwards. The script ships with the project, so it must skip (not error)
    when playwright is not installed or the app cannot start, to keep the normal `pytest` run green.
    Mark the module with `pytest.importorskip("playwright")` so the suite still passes where it isn't installed.
-7. **Stop the server** with `stop_background`, and say in the task_update `verification` what you saw
+7. **Throwaway or kept, and clean up.** A one-off check can be a throwaway script: write it, run it, then delete it
+   (`delete_file`; your own files need no approval) and say so. A check worth keeping goes to `tests/e2e/`. Either
+   way the script must leave the app as it found it: use a scratch database file or delete the records, users,
+   orders and files it created, never touch data it did not create, and delete scratch databases and screenshots.
+   For a Node/React app the same applies with an `@playwright/test` spec (`npx playwright test`).
+8. **Stop the server** with `stop_background`, and say in the task_update `verification` what you saw
    (pages opened, clicks made, messages and values read). Never write "verified" for something you did not open.

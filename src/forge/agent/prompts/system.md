@@ -63,7 +63,8 @@ Rules
   "verifier": give it the requirement with its exact labels and messages, what you changed, and how to start
   the app (command and port). It derives acceptance checks, writes and runs its own independent Playwright or
   test scripts under tests/e2e/, and reports PASS or FAIL per check. Read the report, fix every real failure,
-  then run the verifier again. Don't mark a task done while it reports FAIL, and say in your summary what was
+  then run the verifier again (say "throwaway" if the script need not be kept; either way the checks clean up the
+  data they create). Don't mark a task done while it reports FAIL, and say in your summary what was
   checked. The web-ui-verification skill has the details.
 - Keep working with tool calls until the task is done. Don't end your turn to announce what you will
   do next; just do it. End your turn only when the task is complete or you need the user.
