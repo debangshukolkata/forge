@@ -2508,3 +2508,14 @@ when a `project-state` memory exists, the pinned memory block starts with "Work 
 read the memory 'project-state' first ... and carry on from there", and the prompts tell the model to do so. Scope is the
 project (a repository in Mode A, a host profile in Mode B), so nothing crosses between projects. Tests: `/handoff` sends the
 structured request (with the user's note); a saved state is flagged first in the pinned memory.
+
+### D-172 — Hitting the step cap is not finishing; the cap is a generous runaway guard · Built (2026-10-03)
+**Found in the larger-feature test** (bakery accounts, loyalty points; the user's open question "does Forge call the verifier on a
+larger feature?" — yes: it did, unprompted, 64 tool calls). The verifier correctly reported FAIL (the account page crashed with
+a 500 once the customer had an order: Jinja resolves `order.items` to the dict method). But the main agent had used all 40
+steps of `max_iterations_per_task` right before, the loop stopped with only a notice, and the orchestrator then **delivered
+`output/` and reported "Done"** while the verifier's failure was unresolved and the work was cut off. **Fix:** `AgentLoop`
+records `hit_iteration_limit`; the orchestrator returns without delivering or settling when the last run ended at the cap, so
+`exported` stays false (an unattended run is nudged to continue, an interactive user says "continue"); the default cap is 150
+(a runaway guard only, D-161), not 40. Tests: a model that never stops calling a tool is cut at the cap, nothing is delivered;
+the default cap is at least 100.

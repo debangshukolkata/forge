@@ -183,6 +183,8 @@ class Orchestrator:
             text = self._format(kind or "requirement")
             self.host.history.append(Message.system(text))
         await self._run_agent(self._tools())
+        if self._stopped_at_the_step_cap():
+            return  # not finished: nothing is delivered; the user (or a headless nudge) continues
         if self._ui_changed_without_a_browser_check():
             # The model finished a turn after changing what the page shows without using the app in a browser
             # (it "verified" a layout fix with unit tests, D-169): send it back once, before delivery.
@@ -202,6 +204,10 @@ class Orchestrator:
             # make the workspace resume-safe again without re-announcing "Done" (D-163).
             self.state.change_request, self.state.restructuring, self.state.exported = "", False, True
             self._save()
+
+    def _stopped_at_the_step_cap(self) -> bool:
+        agent = self.host.agent
+        return agent is not None and agent.hit_iteration_limit
 
     def _ui_changed_without_a_browser_check(self) -> bool:
         ctx = self.context

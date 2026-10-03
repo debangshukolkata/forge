@@ -48,7 +48,7 @@ llm:
 
 limits:
   session_budget_usd: 0           # 0 = no cap: accuracy and speed come before token cost (D-161)
-  max_iterations_per_task: 40
+  max_iterations_per_task: 150   # a runaway guard only (D-161): a large feature needs far more than 40 steps
   max_fix_attempts: 5
 
 cost:

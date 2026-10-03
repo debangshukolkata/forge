@@ -508,3 +508,30 @@ async def test_a_ui_change_that_was_checked_in_a_browser_is_not_questioned(
     context.last_browser_step = 8
     await orch.handle_message("Make the calendar fit on a phone.")
     assert len(calls) == 1
+
+
+async def test_stopping_at_the_step_cap_is_not_finishing(original_repo: Path, tmp_path: Path) -> None:
+    from tests.helpers import function_call_output, reply, responses_body
+
+    def handler(request: httpx2.Request) -> httpx2.Response:  # the model never stops calling a tool
+        return reply(request, responses_body([function_call_output("list_dir", '{"path": "."}')]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(
+        mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace, orchestrated=True
+    )
+    assert host.agent is not None
+    host.agent.max_iterations = 2
+    host.agent.context.last_edit_step = 5  # files changed: this would normally be delivered
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="x", status="done")]
+    await orch.handle_message("Build a lot.")
+    assert host.agent.hit_iteration_limit and not orch.state.exported
+    done = [str(e.payload.get("text")) for e in host.bus.events_since(0) if e.type == EventType.MESSAGE_DONE]
+    assert not any("Done:" in t for t in done), done  # no delivery while work is cut off
+
+
+def test_the_step_cap_is_a_generous_runaway_guard() -> None:
+    from tests.helpers import default_config
+
+    assert default_config().limits.max_iterations_per_task >= 100

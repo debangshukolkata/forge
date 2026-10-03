@@ -113,6 +113,7 @@ class AgentLoop:
         self.approvals = approvals
         self.max_iterations = max_iterations
         self.context_manager = context_manager
+        self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
         self.role = "coder"  # subagents run on other roles' models (reviewer, debugger)
         self.effort: str | None = None  # /effort: overrides the model's configured reasoning effort
         self.turn_effort: str | None = None  # "think hard:" raises it for one turn
@@ -120,6 +121,7 @@ class AgentLoop:
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
         continuations = 0
+        self.hit_iteration_limit = False
         for _ in range(self.max_iterations):
             # After a cut-off reply, think less so the answer fits in the output limit (D-060).
             response = await self._chat(
@@ -165,6 +167,7 @@ class AgentLoop:
                 )
             if self.context.end_turn:  # a phase tool finished its phase (orchestrator, M6)
                 return
+        self.hit_iteration_limit = True
         await self.bus.publish(
             EventType.NOTICE,
             {
