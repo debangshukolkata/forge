@@ -1,4 +1,4 @@
-import { Anvil, Gauge, Home, LogOut, Moon, Power, ShieldCheck, Sun } from "lucide-react";
+import { Anvil, Gauge, Home, LogOut, Moon, Power, ShieldCheck, Sun, UserRound } from "lucide-react";
 import type { Forge } from "../useForge";
 import { AnimatedCost } from "./AnimatedCost";
 import { Badge, Button, IconButton, Spinner } from "./ui";
@@ -12,6 +12,7 @@ export function TopBar({
   user,
   onSignOut,
   onEnvironment,
+  onAccount,
 }: {
   forge: Forge;
   theme: "dark" | "light";
@@ -21,6 +22,7 @@ export function TopBar({
   user: string | null;
   onSignOut: () => void;
   onEnvironment: () => void;
+  onAccount: () => void;
 }) {
   const { state, context, cost, waiting, connected, controls, replaying } = forge;
   const workspace = state.workspace;
@@ -72,6 +74,11 @@ export function TopBar({
       <Button variant="ghost" size="sm" icon={<Home className="h-3.5 w-3.5" />} onClick={onHome}>
         Home
       </Button>
+      {user && (
+        <Button variant="ghost" size="sm" icon={<UserRound className="h-3.5 w-3.5" />} onClick={onAccount} title="Your account and password">
+          <span className="max-w-24 truncate">{user}</span>
+        </Button>
+      )}
       {user && (
         <Button variant="ghost" size="sm" icon={<LogOut className="h-3.5 w-3.5" />} onClick={onSignOut} title={`Signed in as ${user}`}>
           Sign out

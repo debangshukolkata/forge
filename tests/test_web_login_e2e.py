@@ -247,3 +247,65 @@ def test_environment_screen_in_edge(
         page.screenshot(path=str(shots / "new-project-drawer-dark.png"))
         browser.close()
     assert not problems, problems
+
+
+def test_account_screen_in_edge(server: ServerSecurity) -> None:
+    """D-184: change the password from the account screen; the old one stops working, the new one signs in."""
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    new_password = "a brand new passphrase"  # check_secrets: fake
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
+        problems: list[str] = []
+        # the wrong-password step below is refused with a 400 on purpose; the browser logs that
+        page.on(
+            "console", lambda m: problems.append(m.text) if m.type == "error" and "40" not in m.text else None
+        )
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Welcome to Forge.")
+        page.fill("input[autocomplete=username]", "asha")
+        page.fill("label:has-text('Password') input", PASSWORD)
+        page.fill("label:has-text('Repeat the password') input", PASSWORD)
+        page.click("button:has-text('Create account')")
+        page.wait_for_selector("text=Start something new.")
+
+        page.click("button[title='Your account and password']")
+        page.wait_for_selector("text=Your account.")
+        page.wait_for_selector("text=Signed in as")
+        change = page.locator("button:has-text('Change password')")
+        assert change.is_disabled()
+        page.fill("label:has-text('Current password') input", "not my password")
+        page.fill("label:has-text('New password') input", new_password)
+        page.fill("label:has-text('Repeat the new password') input", "something else entirely")
+        change.click()
+        page.wait_for_selector("text=The two new passwords don't match.")
+        page.fill("label:has-text('Repeat the new password') input", new_password)
+        change.click()
+        page.wait_for_selector("text=The current password is wrong.")
+
+        page.fill("label:has-text('Current password') input", PASSWORD)
+        page.fill("label:has-text('New password') input", new_password)
+        page.fill("label:has-text('Repeat the new password') input", new_password)
+        change.click()
+        page.wait_for_selector("[role=status]:has-text('Password changed.')")
+        page.screenshot(path=str(shots / "account-light.png"))
+
+        # Still signed in here; after signing out only the new password works.
+        page.click("button:has-text('Back')")
+        page.wait_for_selector("text=Start something new.")
+        page.click("button:has-text('Sign out')")
+        page.wait_for_selector("text=Sign in to Forge.")
+        page.fill("input[autocomplete=username]", "asha")
+        page.fill("input[type=password]", PASSWORD)
+        page.click("button:has-text('Sign in')")
+        page.wait_for_selector("text=The user ID or password is wrong.")
+        page.fill("input[type=password]", new_password)
+        page.click("button:has-text('Sign in')")
+        page.wait_for_selector("text=Start something new.")
+        browser.close()
+    assert not problems, problems

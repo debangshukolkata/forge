@@ -20,6 +20,11 @@ class Credentials(BaseModel):
     password: str
 
 
+class PasswordChange(BaseModel):
+    current: str
+    new: str
+
+
 def session_cookie_name(security: ServerSecurity) -> str:
     return f"{SESSION_COOKIE}_{security.port}"  # per port, like the server token cookie
 
@@ -68,6 +73,18 @@ def add_auth_routes(app: FastAPI, accounts: AccountStore, security: ServerSecuri
             raise HTTPException(401, str(error)) from error
         set_cookie(response, token)
         return {"user": accounts.user}
+
+    @app.post("/api/auth/password")
+    async def change_password(body: PasswordChange, request: Request, response: Response) -> dict[str, bool]:
+        # /api/auth/* is reachable without a session (login needs it), so this call checks the session itself.
+        if not accounts.signed_in(request.cookies.get(cookie)):
+            raise HTTPException(401, "Sign in first")
+        try:
+            token = accounts.change_password(request.cookies.get(cookie), body.current, body.new)
+        except AccountError as error:
+            raise HTTPException(400, str(error)) from error
+        set_cookie(response, token)
+        return {"ok": True}
 
     @app.post("/api/auth/logout")
     async def logout(request: Request, response: Response) -> dict[str, bool]:

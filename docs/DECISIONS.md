@@ -2753,3 +2753,14 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   `test_react_project_list_shows_what_forge_remembers` (`projects-memory-light.png`).
 - **Found on the way:** FORGE.md sits in the same folder as the project's memory notes, so `MemoryStore.all()` lists it as a note
   named "FORGE" (and it probably appears in the pinned memory index). The count here skips it; the store itself is unchanged.
+
+### D-197 — Change password screen (built 2026-10-03; extends D-184)
+- Your name in the top bar opens **Your account**: who is signed in and a Change password form (current, new, repeat). The server
+  asks for the current password again (a borrowed open window must not be able to lock the owner out), enforces the same 8-character
+  minimum and refuses the same password; wrong guesses of the current password count toward the same 5-tries / 30-second pause as
+  sign-in. On success every other session is signed out and this browser gets a fresh one (`POST /api/auth/password`; the route
+  checks the session itself because `/api/auth/*` is reachable without one). The user ID cannot be changed here (deleting
+  `account.json` still resets everything, and the login screen still says so). Options considered: also changing the user ID
+  (rejected for now: it adds nothing to protecting the machine), a modal over the current page (rejected: the other landing screens are
+  pages). Code: `AccountStore.change_password`, `web/auth_routes.py`, `components/Account.tsx`. Tests: `tests/test_web_accounts.py`,
+  `test_account_screen_in_edge` (`account-light.png`).

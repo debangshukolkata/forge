@@ -79,25 +79,60 @@ class AccountStore:
         self._file.write_text(json.dumps(record), encoding="utf-8")
         return self._open_session()
 
+    def _check_lock(self) -> None:
+        if self._now() < self._locked_until:
+            wait = int(self._locked_until - self._now()) + 1
+            raise AccountError(f"Too many wrong attempts. Try again in {wait} seconds.")
+
+    def _count_failure(self) -> None:
+        self._failures += 1
+        if self._failures >= MAX_ATTEMPTS:
+            self._failures = 0
+            self._locked_until = self._now() + LOCKOUT_SECONDS
+
+    @staticmethod
+    def _password_matches(account: dict[str, str], password: str) -> bool:
+        expected = base64.b64decode(account["hash"])
+        return hmac.compare_digest(_hash(password, base64.b64decode(account["salt"])), expected)
+
     def login(self, user: str, password: str) -> str:
         account = self._read()
         if account is None:
             raise AccountError("No account yet.")
-        if self._now() < self._locked_until:
-            wait = int(self._locked_until - self._now()) + 1
-            raise AccountError(f"Too many wrong attempts. Try again in {wait} seconds.")
-        expected = base64.b64decode(account["hash"])
-        actual = _hash(password, base64.b64decode(account["salt"]))
+        self._check_lock()
         # Compare both parts without short-circuiting, so the message and timing don't say which was wrong.
         user_ok = hmac.compare_digest(user.strip().encode(), account["user"].encode())
-        password_ok = hmac.compare_digest(actual, expected)
+        password_ok = self._password_matches(account, password)
         if not (user_ok and password_ok):
-            self._failures += 1
-            if self._failures >= MAX_ATTEMPTS:
-                self._failures = 0
-                self._locked_until = self._now() + LOCKOUT_SECONDS
+            self._count_failure()
             raise AccountError("The user ID or password is wrong.")
         self._failures = 0
+        return self._open_session()
+
+    def change_password(self, token: str | None, current: str, new: str) -> str:
+        """Signed-in only, and the current password is asked again (a borrowed open window must not
+        be able to lock the owner out). Wrong guesses count toward the same pause as sign-in. Every other
+        session is signed out; returns the token of a fresh one for this browser."""
+        account = self._read()
+        if account is None or not self.signed_in(token):
+            raise AccountError("Sign in first.")
+        self._check_lock()
+        if not self._password_matches(account, current):
+            self._count_failure()
+            raise AccountError("The current password is wrong.")
+        self._failures = 0
+        if len(new) < MIN_PASSWORD_LENGTH:
+            raise AccountError(f"The new password needs at least {MIN_PASSWORD_LENGTH} characters.")
+        if new == current:
+            raise AccountError("Choose a password different from the current one.")
+        salt = os.urandom(16)
+        record = {
+            "user": account["user"],
+            "salt": base64.b64encode(salt).decode(),
+            "hash": base64.b64encode(_hash(new, salt)).decode(),
+        }
+        self._file.write_text(json.dumps(record), encoding="utf-8")
+        self._sessions.clear()
         return self._open_session()
 
     def _open_session(self) -> str:

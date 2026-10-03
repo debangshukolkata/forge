@@ -2,6 +2,7 @@ import { MessagesSquare, Network, PanelRightClose, PanelRightOpen } from "lucide
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Chat } from "./components/Chat";
 import { RunMap } from "./components/RunMap";
+import { Account } from "./components/Account";
 import { EnvironmentDrawer } from "./components/Environment";
 import { Hub } from "./components/Hub";
 import { Login } from "./components/Login";
@@ -17,7 +18,7 @@ import type { AuthStatus, SetupStatus } from "./types";
 import { useForge } from "./useForge";
 
 type Theme = "dark" | "light";
-type View = "hub" | "new" | "open" | "chat";
+type View = "hub" | "new" | "open" | "account" | "chat";
 
 // Login first (D-184); the engine session and everything else only start once signed in.
 export function App() {
@@ -137,7 +138,7 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
 
   return (
     <div className="flex h-full flex-col">
-      <TopBar forge={forge} theme={theme} onToggleTheme={onToggleTheme} onHome={() => setView("hub")} onQuit={quit} user={user} onSignOut={onSignOut} onEnvironment={() => setEnvOpen((open) => !open)} />
+      <TopBar forge={forge} theme={theme} onToggleTheme={onToggleTheme} onHome={() => setView("hub")} onQuit={quit} user={user} onSignOut={onSignOut} onEnvironment={() => setEnvOpen((open) => !open)} onAccount={() => setView("account")} />
       <div className="flex min-h-0 flex-1">
         {!landing && <Sidebar forge={forge} onNew={() => showView("new")} onOpen={open} />}
         <main className="flex min-w-0 flex-1 flex-col">
@@ -145,6 +146,8 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
             <div className="min-h-0 flex-1 overflow-y-auto bg-bg">
               {view === "new" ? (
                 <NewProject onBack={() => setView("hub")} onOpenEnvironment={() => setEnvOpen(true)} onCreated={async () => { setEnvOpen(false); await forge.enter(); setView("chat"); }} />
+              ) : view === "account" ? (
+                <Account user={user} onBack={() => setView(forge.state.workspace ? "chat" : "hub")} />
               ) : view === "open" ? (
                 <ProjectList onBack={() => setView("hub")} onOpen={open} />
               ) : (

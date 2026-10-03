@@ -154,3 +154,72 @@ def test_project_list_shows_last_activity_and_request(tmp_path: Path) -> None:
         )
         == []
     )
+
+
+def test_changing_the_password(tmp_path: Path) -> None:
+    store = AccountStore(tmp_path)
+    mine = store.create("asha", PASSWORD)
+    elsewhere = store.login("asha", PASSWORD)  # another browser, still signed in
+
+    fresh = store.change_password(mine, PASSWORD, "a brand new passphrase")
+
+    assert store.signed_in(fresh)
+    assert not store.signed_in(mine) and not store.signed_in(elsewhere)  # every other session is signed out
+    with pytest.raises(AccountError):
+        store.login("asha", PASSWORD)  # the old password no longer works
+    assert store.signed_in(store.login("asha", "a brand new passphrase"))
+    assert store.user == "asha"  # the user ID is untouched
+
+
+def test_a_password_change_checks_who_asks_and_what_they_ask_for(tmp_path: Path) -> None:
+    store = AccountStore(tmp_path)
+    token = store.create("asha", PASSWORD)
+    with pytest.raises(AccountError, match="Sign in first"):
+        store.change_password(None, PASSWORD, "another long passphrase")
+    with pytest.raises(AccountError, match="Sign in first"):
+        store.change_password("not-a-session", PASSWORD, "another long passphrase")
+    with pytest.raises(AccountError, match="current password is wrong"):
+        store.change_password(token, "not it", "another long passphrase")
+    with pytest.raises(AccountError, match="at least"):
+        store.change_password(token, PASSWORD, "short")
+    with pytest.raises(AccountError, match="different"):
+        store.change_password(token, PASSWORD, PASSWORD)
+    assert store.signed_in(token) and store.signed_in(store.login("asha", PASSWORD))  # nothing changed
+
+
+def test_wrong_current_passwords_count_toward_the_pause(tmp_path: Path) -> None:
+    now = [0.0]
+    store = AccountStore(tmp_path, clock=lambda: now[0])
+    token = store.create("asha", PASSWORD)
+    for _ in range(MAX_ATTEMPTS):
+        with pytest.raises(AccountError, match="current password is wrong"):
+            store.change_password(token, "guess", "another long passphrase")
+    with pytest.raises(AccountError, match="Too many"):
+        store.change_password(token, PASSWORD, "another long passphrase")  # even the right one waits
+    with pytest.raises(AccountError, match="Too many"):
+        store.login("asha", PASSWORD)  # and the pause is shared with sign-in
+    now[0] += LOCKOUT_SECONDS + 1
+    store.change_password(token, PASSWORD, "another long passphrase")
+
+
+def test_the_password_endpoint(secured: tuple[TestClient, ServerSecurity]) -> None:
+    client, security = secured
+    origin = {"origin": "http://127.0.0.1:8798"}
+    client.get(f"/?t={security.token}", follow_redirects=False)
+    body = {"current": PASSWORD, "new": "a brand new passphrase"}
+    assert client.post("/api/auth/password", json=body, headers=origin).status_code == 401  # not signed in
+
+    client.post("/api/auth/register", json={"user": "asha", "password": PASSWORD}, headers=origin)
+    wrong = client.post("/api/auth/password", json={**body, "current": "nope"}, headers=origin)
+    assert wrong.status_code == 400 and "current password is wrong" in wrong.json()["detail"]
+    short = client.post("/api/auth/password", json={**body, "new": "short"}, headers=origin)
+    assert short.status_code == 400 and "at least" in short.json()["detail"]
+
+    changed = client.post("/api/auth/password", json=body, headers=origin)
+    assert changed.status_code == 200 and session_cookie_name(security) in changed.headers["set-cookie"]
+    assert client.get("/api/state").status_code == 200  # this browser got a fresh session
+    client.post("/api/auth/logout", headers=origin)
+    old = client.post("/api/auth/login", json={"user": "asha", "password": PASSWORD}, headers=origin)
+    assert old.status_code == 401
+    new = client.post("/api/auth/login", json={"user": "asha", "password": body["new"]}, headers=origin)
+    assert new.status_code == 200
