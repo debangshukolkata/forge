@@ -241,3 +241,15 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] First Mode B end-to-end campaign (2026-10-03): attendance, bakery, invoice projects; D-162..D-170; report in docs/E2E_CAMPAIGN_2026-10-03.md
 - [ ] Next campaign ideas: a project with a database and a REST API (verifier on an API), a CLI tool, a Mode A repo; watch whether the verifier is called on larger features
 - [ ] Unattended runs: decide how a headless run may install dependencies (today always-ask)
+
+## Codex comparison gaps (2026-10-03) — spec in docs/SPEC_CODEX_GAPS.md
+- [x] G1 Parallel subagents: first test whether concurrent `spawn_subagent` calls already run in parallel; parallel only for read-only agents; cap; subagent id in events
+- [x] G2 `pre_compact` / `post_compact` hooks in `HooksConfig`
+- [x] G4 Per-agent settings in custom agent files (max_steps, role, write folder)
+- [x] G6 `todo_write` tool: lightweight model-kept todo list (no approval), event + UI, survives compaction
+- [x] G7 `monitor` tool: wait on a background process for a pattern, exit or timeout (replaces poll loops)
+- [ ] G3 Compaction robustness (summariser-failure fallback, image budget) — only if real runs need it
+- [ ] G5 Task breakdown — decide only if the campaign shows lost steps (no build under D-155)
+
+## Later, only if real runs need it
+- [ ] Parallel pytest in built apps: Forge runs `python -m pytest` sequentially (no xdist, no `-n`). Add a prompt line to use pytest-xdist only for large suites (needs a pip install approval; beware shared ports and SQLite files) once a real project shows slow test runs.
