@@ -1,0 +1,1 @@
+The employee calendar page (/employees/<id>) scrolls sideways on a phone: at 375px width the page is wider than the screen. The requirement said it must be readable on a phone without horizontal page scrolling. Please fix that.

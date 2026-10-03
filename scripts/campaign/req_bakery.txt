@@ -1,0 +1,9 @@
+Build a website for a small bakery called "Golden Crust" (Python + Flask + SQLite, plain HTML/CSS/JavaScript, no external CDN: it must work offline). Start it with `python app.py` on port 5056.
+
+Pages (each with a header navigation bar containing links Home, Menu, Reservations, Contact):
+- "/" Home: a hero section with the bakery name as the page's main heading, the tagline "Fresh bread, baked at dawn", and an opening hours block ("Mon-Sat 7:00-19:00, Sun 8:00-14:00").
+- "/menu" Menu: at least 8 items in 3 categories (Bread, Pastries, Cakes), each with name, price (shown as ₹ amounts) and a short description. Above the list, filter buttons labelled "All", "Bread", "Pastries", "Cakes"; clicking one shows only that category's items without reloading the page.
+- "/reservations" Reservations: a form with labelled fields Name, Phone, Date, Time, Guests (a number from 1 to 12) and Notes (optional), and a button "Book table". Validate on the server: name and phone required, guests 1-12, date not in the past; show clear error messages next to the problem. On success show a confirmation with a reference number like "GC-0001" and store the booking in SQLite.
+- "/contact" Contact: address, phone, email and opening hours.
+
+Site-wide: responsive layout that works on a 375px wide phone (the navigation collapses behind a button labelled "Menu toggle" on small screens), a button labelled "Toggle dark mode" that switches the theme and remembers the choice (localStorage) across pages and reloads, semantic HTML (header, nav, main, footer), alt text on every image (use simple inline SVG or CSS shapes instead of image files). Include pytest tests for the reservation validation and routes.

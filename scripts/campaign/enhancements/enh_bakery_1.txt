@@ -1,0 +1,6 @@
+Enhancement 1 for the bakery site (keep everything that works): online ordering with a shopping cart.
+
+- On "/menu" every menu item gets a button "Add to cart". The cart lives in the browser (localStorage), so it survives page changes and reloads. The header navigation shows a link "Cart (n)" where n is the total number of items in the cart, updating immediately when something is added.
+- New page "/cart": lists each cart line (item name, unit price, a quantity number field labelled "Quantity", line total) and a "Total: ₹<amount>" that updates when a quantity changes (setting a quantity to 0 removes the line). Below it: a field labelled "Your name" and a button "Place order". The order is sent to the server and stored in SQLite; on success show a confirmation with a reference like "ORD-0001" and empty the cart. Placing an order with an empty cart, or without a name, must be refused with a clear message and must not create an order.
+- New page "/admin/orders" listing all orders: reference, customer name, items with quantities, total in ₹ and the time placed (link it from the footer).
+- Add pytest tests for the order endpoint and validation, and make sure all tests pass.

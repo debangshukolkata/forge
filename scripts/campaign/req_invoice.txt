@@ -1,0 +1,10 @@
+Build an invoice extraction tool as a small web app (Python + Flask + SQLite; no external services or CDN, it must work offline). Start it with `python app.py` on port 5057.
+
+Users upload invoice files (plain text .txt, and text-based .pdf) and the app extracts the key fields with rule-based parsing (regular expressions and heuristics; no LLM calls). Invoices come in different layouts, for example "Invoice No:" / "Bill #:" / "Number:" for the number, dates written as 15/03/2024, March 3, 2024 or 2024-02-27, amounts such as 3658.00, "Rs. 20,000" or "$1,200.50 USD", and totals labelled "Total Amount", "Grand Total" or "TOTAL DUE".
+
+Pages:
+- "/" Upload page: a file input labelled "Invoice files" that accepts several files at once, and a button "Extract". Show the results for each uploaded file below the form: file name, Vendor, Invoice number, Invoice date (normalised to YYYY-MM-DD), Currency (INR for Rs./₹, USD for $, otherwise the code if present), Total (a plain number) and a table of line items (Description, Quantity, Amount) where line items can be found. If a field cannot be found, show "Not found" for it and a visible warning "Needs review" on that file; a file that does not look like an invoice at all (for example a short note) must show "Not an invoice" instead of guessed values.
+- Each result has a link "Download JSON" returning that invoice's extracted data as JSON.
+- "/history": a table of every invoice processed so far (file name, vendor, number, date, currency, total, status OK or Needs review), newest first, and a link "Export CSV" that downloads all of them as CSV with the header: File,Vendor,Invoice number,Invoice date,Currency,Total,Status.
+
+Store results in SQLite next to the app. Write pytest tests for the parsing of the three layouts above and the not-an-invoice case, and make sure all tests pass.

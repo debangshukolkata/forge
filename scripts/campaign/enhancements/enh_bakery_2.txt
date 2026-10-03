@@ -1,0 +1,5 @@
+Enhancement 2 for the bakery site (keep everything that works, including the cart and orders):
+
+1. Table capacity: the bakery seats at most 20 guests in total per date and time slot. A booking that would take the total for that date and time above 20 must be refused with the message "Sorry, that time is fully booked" (and show how many seats are left), and must not be saved.
+2. New page "/admin/reservations": a table of all reservations (reference, name, phone, date, time, guests, notes, status) with a button "Cancel" on each active row. After cancelling, the status shows "Cancelled", the seats are freed for that slot, and the button disappears. Link it from the footer next to the orders page.
+3. Add pytest tests for the capacity rule and cancellation, and make sure all tests pass.

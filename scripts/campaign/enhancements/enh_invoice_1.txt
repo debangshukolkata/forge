@@ -1,0 +1,5 @@
+Enhancement 1 for the invoice tool (keep everything that works):
+
+1. Duplicate detection: if an uploaded invoice has the same vendor and the same invoice number as one already processed, show a clear warning "Duplicate invoice" on that result (mentioning which earlier record it matches) and do NOT add a second row to the history.
+2. Corrections: every row on "/history" gets a link "Edit" that opens a page with a form for that invoice: fields labelled Vendor, Invoice number, Invoice date, Currency and Total (pre-filled), and a button "Save corrections". Validate the date (YYYY-MM-DD) and the total (a number) and show errors without saving. After saving, the history row shows the corrected values and its Status becomes "Corrected"; the CSV export and the JSON download use the corrected values.
+3. Add pytest tests for duplicate detection and corrections, and make sure all tests pass.

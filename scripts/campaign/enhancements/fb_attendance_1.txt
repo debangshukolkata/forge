@@ -1,0 +1,1 @@
+Flask isn't installed in the project's Python environment, which is why all your tasks were blocked. You are allowed to install packages: use `python -m pip install flask` (and anything else the app needs) in this project's environment, then run the tests and make sure they pass. Fix anything the tests reveal.

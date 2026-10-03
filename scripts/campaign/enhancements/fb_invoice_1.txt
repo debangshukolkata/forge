@@ -1,0 +1,1 @@
+Please finish this up: install the dependencies the app needs into this project's environment (for example `python -m pip install flask pypdf` or whatever you used), run the whole test suite until it passes, start the app with `python app.py` and check in the browser that uploading a .txt invoice shows the extracted fields, then deliver the result.

@@ -1,0 +1,8 @@
+Build an employee attendance system as a small web app in Python (Flask + SQLite, no login needed for this demo).
+
+Pages:
+- "/" Check-in page: a dropdown to choose an employee, and two buttons labelled exactly "Check in" and "Check out". After clicking, show a clear message on the page (for example "Ravi checked in at 09:02"). Checking in twice without checking out, or checking out without checking in, must show an error message instead of saving.
+- "/employees" Employees page: a form to add an employee (fields labelled "Name" and "Department", a button "Add employee") and a table listing all employees.
+- "/hr" HR page: a date picker (default today) and a table of that day's attendance records with columns Employee, Department, Check in, Check out and Hours worked (blank until checked out).
+
+Seed three employees (Ravi / Engineering, Meena / HR, Arjun / Sales) on first start. Store data in a SQLite file next to the app. Include pytest tests for the main behaviour. Start the app with `python app.py` on port 5055.

@@ -1,0 +1,3 @@
+Enhancement 6 for the attendance app (keep everything that works): a dark mode.
+
+Add a button labelled "Toggle dark mode" to the navigation bar on every page. Clicking it switches the whole app between a light and a dark theme (dark background, light text, readable tables, form fields, buttons, the calendar cells and the report chart in both themes) and remembers the choice across pages and reloads (localStorage). The light theme stays the default. Make sure text stays readable in the dark theme on every page, including the shaded "present" days of the employee calendar.

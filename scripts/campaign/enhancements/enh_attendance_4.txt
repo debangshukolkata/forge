@@ -1,0 +1,5 @@
+Enhancement 4 for the attendance app (keep everything that works): late-arrival marking with settings.
+
+- New page "/settings" (add it to the navigation bar): a time field labelled "Work start time" (default 09:30), a number field labelled "Grace minutes" (default 10), and a button "Save settings". Show a confirmation after saving ("Settings saved") and keep the saved values in the database. Reject a negative grace value with an error message.
+- On the HR page "/hr", mark every check-in later than the work start time plus the grace minutes with the word "Late" next to the check-in time, and show a line "Late today: N" above the table with the number of late check-ins for the selected date.
+- Add pytest tests for the lateness rule, and make sure all tests pass.

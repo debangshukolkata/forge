@@ -1,0 +1,11 @@
+Tax Invoice
+From: Blue Ocean Logistics
+Bill #: BO/778
+Dated: March 3, 2024
+Customer: Zenith Retail LLP
+
+Services rendered:
+Freight Delhi to Pune      Rs. 18,500
+Handling charges           Rs. 1,500
+
+Grand Total: Rs. 20,000

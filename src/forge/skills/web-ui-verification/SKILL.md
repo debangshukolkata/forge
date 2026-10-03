@@ -38,7 +38,9 @@ task that changes what a user sees, do this before task_update(done) or telling 
            assert "checked in" in page.inner_text("body").lower()
            browser.close()
    ```
-   `live_server` is a fixture that starts the app on a free port in a thread or subprocess and yields its URL.
+   `live_server` is a session fixture that starts the app on a free port in a subprocess, waits until it
+   answers, yields its URL and stops it afterwards. The script ships with the project, so it must skip (not error)
+   when playwright is not installed or the app cannot start, to keep the normal `pytest` run green.
    Mark the module with `pytest.importorskip("playwright")` so the suite still passes where it isn't installed.
 7. **Stop the server** with `stop_background`, and say in the task_update `verification` what you saw
    (pages opened, clicks made, messages and values read). Never write "verified" for something you did not open.

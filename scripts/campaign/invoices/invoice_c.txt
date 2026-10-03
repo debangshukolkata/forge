@@ -1,0 +1,10 @@
+Northwind Traders Inc.
+INVOICE
+Number: 2024/0099
+Issued: 2024-02-27
+Due: 2024-03-28
+
+Widget (x3) @ 100.00 ..... 300.00
+Gadget (x2) @ 450.25 ..... 900.50
+
+TOTAL DUE: $1,200.50 USD

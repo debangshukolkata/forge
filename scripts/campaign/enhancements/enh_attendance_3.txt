@@ -1,0 +1,5 @@
+Enhancement 3 for the attendance app (keep everything that works):
+
+1. A navigation bar (a <nav> element) at the top of every page with links to: Check in (/), Employees, HR, Leave, Leave approvals (/hr/leaves) and Report. Give the app a clean, consistent look (shared stylesheet/base template, readable spacing, buttons and tables styled consistently).
+2. New page "/report": a month picker (an input of type month, default the current month) and a button "Show". It shows a table with columns Employee, Days present, Total hours (days = distinct dates with a check in that month; total hours = sum of hours worked on checked-out records), and below it a bar chart of total hours per employee drawn as an inline SVG (one <rect> bar per employee with the employee's name as a label). No external libraries or CDN links: everything must work offline.
+3. Add pytest tests for the report calculation and make sure all tests pass.

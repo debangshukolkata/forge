@@ -1,0 +1,6 @@
+Enhancement 2 for the attendance app (keep everything that works, including the leave feature):
+
+On the HR page "/hr":
+- Add a dropdown labelled "Department" next to the date picker, with the options "All" (default) and one option per department that exists. After clicking the existing "Show" button the table lists only the records of the chosen department (or everyone for "All"), for the chosen date.
+- Add a link labelled "Export CSV" that downloads the currently shown records (the selected date and department) as a CSV file named attendance_<date>.csv, e.g. attendance_2026-10-03.csv. The header row must be exactly: Employee,Department,Check in,Check out,Hours worked.
+- Add pytest tests for the filter and the CSV export, and make sure all tests pass.

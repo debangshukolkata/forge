@@ -1,0 +1,5 @@
+Enhancement: add a leave-request feature to the attendance app. Keep everything that already works.
+
+- New page "/leave": a dropdown to choose the employee, date fields labelled "Start date" and "End date", a field labelled "Reason", and a button "Request leave". After submitting, show a confirmation message. If the end date is before the start date, show an error message and do not save.
+- New page "/hr/leaves" (link to it from the HR page and from any navigation you have): a table with columns Employee, From, To, Reason, Status. New requests start as "Pending" and each pending row has buttons "Approve" and "Reject". After clicking one, the row's Status shows "Approved" or "Rejected" and the buttons for that row disappear.
+- Add pytest tests for the new behaviour and make sure all tests (old and new) pass.

@@ -1,0 +1,4 @@
+Feedback on the /report page: two problems.
+1. When every total is 0 hours (for example the same day's check-in and check-out), the chart draws no bars at all. The requirement was one <rect> bar per employee, so draw a bar (and its name label) for every employee even when the value is 0; give the bars a small minimum height so they stay visible.
+2. The table only lists employees who have records in the month. HR needs to see everyone, so list every employee in the table, with 0 days present and 0 hours for the ones who were never there.
+Fix both, keep the tests passing, and add tests for these two cases.

@@ -1,0 +1,52 @@
+I tried the tool with three real invoices and the extraction is wrong in several places. Here are the exact files (each between ---- lines) and what I expected. Please add these three as test fixtures in your tests, make the parser produce the expected values, and run the suite.
+
+---- invoice_a.txt
+ACME SUPPLIES PVT LTD
+12 Industrial Road, Pune 411001
+GSTIN: 27ABCDE1234F1Z5
+
+TAX INVOICE
+Invoice No: INV-2024-0042
+Invoice Date: 15/03/2024
+Bill To: Zenith Retail LLP
+
+Description          Qty    Rate      Amount
+Copy paper A4         10    250.00    2500.00
+Stapler               5     120.00     600.00
+
+Subtotal:                             3100.00
+GST 18%:                               558.00
+Total Amount:                         3658.00
+----
+Expected: Vendor ACME SUPPLIES PVT LTD; Invoice number INV-2024-0042; Invoice date 2024-03-15; Total 3658.00 (the 'Total Amount' line, not the subtotal or GST); two line items: Copy paper A4 qty 10 amount 2500.00, Stapler qty 5 amount 600.00 (GST and subtotal are not line items); currency is not stated so 'Not found' is fine. You returned Total 310.0 and a GST line as an item.
+
+---- invoice_b.txt
+Tax Invoice
+From: Blue Ocean Logistics
+Bill #: BO/778
+Dated: March 3, 2024
+Customer: Zenith Retail LLP
+
+Services rendered:
+Freight Delhi to Pune      Rs. 18,500
+Handling charges           Rs. 1,500
+
+Grand Total: Rs. 20,000
+----
+Expected: Vendor Blue Ocean Logistics; Invoice number BO/778 (you returned just 'BO': invoice numbers may contain / and -); date 2024-03-03; Currency INR; Total 20000; two line items (Freight Delhi to Pune 18500, Handling charges 1500).
+
+---- invoice_c.txt
+Northwind Traders Inc.
+INVOICE
+Number: 2024/0099
+Issued: 2024-02-27
+Due: 2024-03-28
+
+Widget (x3) @ 100.00 ..... 300.00
+Gadget (x2) @ 450.25 ..... 900.50
+
+TOTAL DUE: $1,200.50 USD
+----
+Expected: Vendor Northwind Traders Inc.; Invoice number 2024/0099; date 2024-02-27; Currency USD; Total 1200.50; line items Widget qty 3 amount 300.00 and Gadget qty 2 amount 900.50.
+
+Also check a text-based PDF made from invoice_a.txt gives the same values as the .txt, and that a short note ('Remember to call the supplier about the delayed shipment. Meeting at 4pm.') is reported as Not an invoice.

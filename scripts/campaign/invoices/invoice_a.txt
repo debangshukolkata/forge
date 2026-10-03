@@ -1,0 +1,16 @@
+ACME SUPPLIES PVT LTD
+12 Industrial Road, Pune 411001
+GSTIN: 27ABCDE1234F1Z5
+
+TAX INVOICE
+Invoice No: INV-2024-0042
+Invoice Date: 15/03/2024
+Bill To: Zenith Retail LLP
+
+Description          Qty    Rate      Amount
+Copy paper A4         10    250.00    2500.00
+Stapler               5     120.00     600.00
+
+Subtotal:                             3100.00
+GST 18%:                               558.00
+Total Amount:                         3658.00

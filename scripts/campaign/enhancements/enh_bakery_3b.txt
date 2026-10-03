@@ -1,0 +1,9 @@
+Your previous attempt at this enhancement was interrupted by a network failure part-way through, so some of it exists and some does not. Look at what is already in place, finish it, and check it in the running app (use the browser tools) before telling me it works. The request again:
+
+Enhancement 3 for the bakery site (keep everything that works): an English / Hindi language switch.
+
+- Add a button in the header, labelled "हिन्दी" while the site is in English and labelled "English" while it is in Hindi. Clicking it switches the whole visible site text between English and Hindi without reloading the page, and remembers the choice (localStorage) across pages and reloads. English stays the default.
+- At minimum these texts must switch: the navigation links (Home→होम, Menu→मेन्यू, Reservations→आरक्षण, Contact→संपर्क), the home page tagline ("Fresh bread, baked at dawn" → "सुबह की ताज़ी रोटी"), the menu filter buttons (All→सभी, Bread→ब्रेड, Pastries→पेस्ट्री, Cakes→केक), and the reservation form button ("Book table" → "टेबल बुक करें"). Everything else you can translate sensibly too. Menu item names and prices stay as they are.
+- The page's <html lang> attribute must follow the language ("en" / "hi").
+- The filter buttons must keep working in both languages (clicking "केक" shows only the cakes).
+- Add tests where it makes sense and make sure all tests pass.

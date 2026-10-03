@@ -85,6 +85,10 @@ report evidence. Work through these layers, skipping only those that cannot appl
    missing install it with `python -m pip install playwright`, the user is asked to approve); for an API or
    CLI a pytest or python script with requests or subprocess. Print one PASS/FAIL line per check with
    the observed value and exit non-zero on any failure.
+   The script is delivered with the project and must not break its normal `pytest` run: it
+   starts and stops the app itself (a session fixture that launches it on a free port and waits until it
+   answers), and skips with a clear reason when playwright is not installed
+   (`pytest.importorskip("playwright.sync_api")`) or the app cannot start, instead of erroring.
 5. Browser diagnostics: in the browser read the console (browser_console) and failed requests
    (browser_network): JavaScript errors, 404s for scripts or styles and failed API calls are findings. Compare
    the DOM (browser_snapshot, or page.evaluate for computed styles, classes and attributes) with what the

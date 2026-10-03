@@ -1,0 +1,7 @@
+Enhancement 5 for the attendance app (keep everything that works): an employee detail page with a monthly calendar.
+
+- On the Employees page, add a link "View" at the end of each employee row. It opens "/employees/<id>" showing the employee's name and department as the page heading, a month picker (input of type month, default the current month) with a button "Show", and a calendar grid for the chosen month: one cell per day of the month, seven columns Mon-Sun with the weekday names in a header row, the day number in each cell.
+- A cell for a day on which the employee checked in is shaded (give those cells the CSS class "present") and shows the check-in and check-out times and the hours worked; weekend cells get the class "weekend"; today's cell gets the class "today".
+- Above the calendar show a summary: "Days present: N" and "Total hours: H" for that month.
+- Clicking a present day opens/reveals nothing extra: keep it simple, but the cells must be readable on a phone (375px wide) without horizontal page scrolling.
+- Add pytest tests for the calendar data and make sure all tests pass.
