@@ -482,3 +482,29 @@ async def test_a_blocked_ui_task_does_not_need_a_browser_check(host: SessionHost
     context = host.agent.context  # type: ignore[union-attr]
     context.step = context.last_ui_edit_step = 4  # type: ignore[union-attr]
     assert (await orch.task_update("T1", "blocked", "", "", "flask missing", context)).ok  # type: ignore[arg-type]
+
+
+async def test_a_ui_change_without_a_browser_check_sends_the_model_back_once(
+    talking_host: tuple[SessionHost, list[int]],
+) -> None:
+    host, calls = talking_host
+    orch = orchestrator(host)
+    host.agent.context.last_edit_step = host.agent.context.last_ui_edit_step = 5  # type: ignore[union-attr]
+    await orch.handle_message("Make the calendar fit on a phone.")
+    assert len(calls) == 2  # the answer, then one more run after the note about the missing browser check
+    assert any(
+        "not used the running app in a browser" in m.content for m in host.history if m.role == "system"
+    )
+    assert orch.state.exported  # and then it is delivered; it is only asked once
+
+
+async def test_a_ui_change_that_was_checked_in_a_browser_is_not_questioned(
+    talking_host: tuple[SessionHost, list[int]],
+) -> None:
+    host, calls = talking_host
+    orch = orchestrator(host)
+    context = host.agent.context  # type: ignore[union-attr]
+    context.last_edit_step = context.last_ui_edit_step = 5
+    context.last_browser_step = 8
+    await orch.handle_message("Make the calendar fit on a phone.")
+    assert len(calls) == 1

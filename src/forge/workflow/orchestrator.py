@@ -48,6 +48,14 @@ FULL_SUITE_TIMEOUT_S = 900
 RESUMED_NOTE = (
     "\n\nResumed after an interruption: first check what is already done (files modified are pinned)."
 )
+UI_EVIDENCE_NOTE = (
+    "You changed what the page shows (templates, styles or scripts) but have not used the running app in a "
+    "browser since. Before you finish: check it the way a user would (start_background, browser_open, click "
+    "through the feature and its error case, compare what you see with the requirement word by word; for "
+    "anything beyond a trivial flow call spawn_subagent with agent 'verifier', giving it the requirement, "
+    "what you changed and how to start the app). Fix what you find, then give your final summary and say "
+    "what you saw."
+)
 FREE_HAND_PHRASES = (
     "don't ask me",
     "dont ask me",
@@ -102,6 +110,7 @@ class Orchestrator:
         self._background_tasks: set[asyncio.Task[Any]] = set()
         self._task_start_step = 0
         self._export_step = 0  # tool step of the last delivery; later edits mean output/ is stale
+        self._ui_nudge_step = -1  # when the model was last sent back to check the UI in a browser
         self._restructure_baseline: tuple[bool, str] | None = None
         self._apply_cadence()
         self._refresh_pinned()
@@ -174,6 +183,12 @@ class Orchestrator:
             text = self._format(kind or "requirement")
             self.host.history.append(Message.system(text))
         await self._run_agent(self._tools())
+        if self._ui_changed_without_a_browser_check():
+            # The model finished a turn after changing what the page shows without using the app in a browser
+            # (it "verified" a layout fix with unit tests, D-169): send it back once, before delivery.
+            self._ui_nudge_step = self.context.step
+            self.host.history.append(Message.system(UI_EVIDENCE_NOTE))
+            await self._run_agent(self._tools())
         # Settled: no task is open, and either tasks exist or the model changed files on its own. A task list
         # is the model's choice (D-128), so building everything without one must still deliver (D-166).
         built = self.context.last_edit_step > self._export_step
@@ -187,6 +202,13 @@ class Orchestrator:
             # make the workspace resume-safe again without re-announcing "Done" (D-163).
             self.state.change_request, self.state.restructuring, self.state.exported = "", False, True
             self._save()
+
+    def _ui_changed_without_a_browser_check(self) -> bool:
+        ctx = self.context
+        return (
+            ctx.last_ui_edit_step > max(self._export_step, ctx.last_browser_step)
+            and ctx.last_ui_edit_step > self._ui_nudge_step
+        )
 
     def _has_open_tasks(self) -> bool:
         return any(t.status in ("pending", "in_progress") for t in self.state.tasks)
