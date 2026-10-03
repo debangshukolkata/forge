@@ -82,8 +82,8 @@ report evidence. Work through these layers, skipping only those that cannot appl
    UI a Playwright script (python, sync API) under tests/e2e/ launched with
    `p.chromium.launch(channel="msedge", headless=True)` (no browser download is needed; if playwright is
    missing install it with `python -m pip install playwright`, the user is asked to approve); for an API or
-   CLI a pytest or python script with requests or subprocess. Print one PASS/FAIL line per check with the observed value and exit non-zero on
-   any failure.
+   CLI a pytest or python script with requests or subprocess. Print one PASS/FAIL line per check with
+   the observed value and exit non-zero on any failure.
 5. Browser diagnostics: in the browser read the console (browser_console) and failed requests
    (browser_network): JavaScript errors, 404s for scripts or styles and failed API calls are findings. Compare
    the DOM (browser_snapshot, or page.evaluate for computed styles, classes and attributes) with what the
