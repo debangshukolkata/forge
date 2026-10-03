@@ -94,6 +94,10 @@ def is_test_path(path: str) -> bool:
     )
 
 
+PARALLEL_SUBAGENT_TYPES = frozenset({"explore", "reviewer"})  # read-only agents; may run side by side
+MAX_PARALLEL_SUBAGENTS = 4
+
+
 class AgentLoop:
     def __init__(
         self,
@@ -273,12 +277,22 @@ class AgentLoop:
         )
         return await self.router.chat("coder", retry, on_text_delta)
 
+    def _runs_in_parallel(self, call: ToolCall) -> bool:
+        """Read-only tools may run side by side. spawn_subagent is marked read-only, but only the read-only
+        agent types may overlap: the verifier writes under tests/e2e/ and starts the app, the debugger runs
+        commands (D-175), so two of those would collide."""
+        tool = self.tools.get(call.name)
+        if tool is None or not tool.read_only or call.parse_error is not None:
+            return False
+        if call.name == "spawn_subagent":
+            return str((call.arguments or {}).get("agent", "")) in PARALLEL_SUBAGENT_TYPES
+        return True
+
     async def _run_calls(self, calls: list[ToolCall], results: dict[str, Message]) -> None:
-        """Consecutive read-only calls run in parallel; anything that changes state runs alone, in order."""
+        """Consecutive parallel-safe calls run together; anything else runs alone, in order."""
         batch: list[ToolCall] = []
         for call in calls:
-            tool = self.tools.get(call.name)
-            if tool is not None and tool.read_only and call.parse_error is None:
+            if self._runs_in_parallel(call):
                 batch.append(call)
                 continue
             await self._run_batch(batch, results)
@@ -288,9 +302,15 @@ class AgentLoop:
 
     async def _run_batch(self, batch: list[ToolCall], results: dict[str, Message]) -> None:
         if batch:
-            for call, message in zip(
-                batch, await asyncio.gather(*(self._run_one(c) for c in batch)), strict=True
-            ):
+            subagent_slots = asyncio.Semaphore(MAX_PARALLEL_SUBAGENTS)
+
+            async def run(call: ToolCall) -> Message:
+                if call.name != "spawn_subagent":
+                    return await self._run_one(call)
+                async with subagent_slots:  # at most MAX_PARALLEL_SUBAGENTS at once; the rest wait their turn
+                    return await self._run_one(call)
+
+            for call, message in zip(batch, await asyncio.gather(*(run(c) for c in batch)), strict=True):
                 results[call.id] = message
 
     async def _run_one(self, call: ToolCall) -> Message:
