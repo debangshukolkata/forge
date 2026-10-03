@@ -2670,3 +2670,12 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   labels: noted as a known limit). An agent started by something other than that tool (the review step) gets a row of its own.
   Code: `ui-react/src/agentTimeline.ts`, `components/AgentSteps.tsx`; test `test_react_subagent_steps_are_nested`
   (`subagent-nested-light.png`).
+
+### D-191 — Todo list in the web UI (built 2026-10-03; engine side is D-177)
+- Forge's own list (`todo_write`, whole list per `todo_updated` event) shows (1) as a strip above the message box, open by default:
+  "Todo 1/3", then each item with a done check, a spinner for the one in progress and an empty circle for the rest; collapsed it
+  shows the progress and the item being worked on; (2) in the side panel's Tasks tab with a progress bar, while the older
+  plan/task list (from the phased orchestrator) is empty. Options considered for placement: strip only, panel only, both (chosen: the
+  strip is where the eye is during a run, the panel keeps it after the strip is collapsed). State is rebuilt from the last
+  `todo_updated` event, so a reopened project shows the same list. The `todo_write` tool row stays in the chat as a normal call.
+  Test: `test_react_todo_list` (`todo-strip-light.png`).

@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { agentFinished, agentStarted, agentStep } from "./agentTimeline";
 import { api } from "./lib";
-import type { AppState, ChatItem, ContextInfo, CostColors, CostInfo, ForgeEvent, ServerMessage, UserInput } from "./types";
+import type { AppState, ChatItem, ContextInfo, CostColors, CostInfo, ForgeEvent, ServerMessage, TodoItem, UserInput } from "./types";
 
 interface Timeline {
   items: ChatItem[];
   answered: Record<string, string>; // card id -> how it was settled ("Approved", "superseded", …)
+  todos: TodoItem[]; // Forge's own todo list, the whole list as of the last `todo_updated` (D-177)
 }
 
 type Action =
@@ -17,7 +18,7 @@ type Action =
   | { type: "answered"; id: string; label: string }
   | { type: "settle"; pending: string[] };
 
-const initial: Timeline = { items: [], answered: {} };
+const initial: Timeline = { items: [], answered: {}, todos: [] };
 
 function reducer(state: Timeline, action: Action): Timeline {
   switch (action.type) {
@@ -87,6 +88,8 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
       }
       return { ...state, items: updated };
     }
+    case "todo_updated":
+      return { ...state, todos: Array.isArray(p.items) ? p.items : [] };
     case "agent_started":
       return { ...state, items: agentStarted(endStream(items), key, p) };
     case "subagent_step":

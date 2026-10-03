@@ -872,3 +872,59 @@ def test_react_subagent_steps_are_nested(server: ServerSecurity, workspace: Work
         page.screenshot(path=str(shots / "subagent-nested-light.png"))
         browser.close()
     assert not problems, problems
+
+
+def test_react_todo_list(server: ServerSecurity, workspace: Workspace) -> None:
+    """D-177: the model's todo list shows above the message box and in the Tasks tab, and follows the latest update."""
+    import asyncio
+
+    from forge.protocol.events import EventBus, EventType
+
+    async def script() -> None:
+        bus = EventBus(workspace.forge_dir / "transcripts" / "events.jsonl", redactor=Redactor())
+        await bus.publish(EventType.USER_MESSAGE, {"text": "Add a CSV export"})
+        first = [
+            {"content": "Read the report builder", "status": "in_progress"},
+            {"content": "Add export_csv()", "status": "pending"},
+            {"content": "Write tests", "status": "pending"},
+        ]
+        await bus.publish(EventType.TODO_UPDATED, {"items": first})
+        later = [
+            {"content": "Read the report builder", "status": "completed"},
+            {"content": "Add export_csv()", "status": "in_progress"},
+            {"content": "Write tests", "status": "pending"},
+        ]
+        await bus.publish(EventType.TODO_UPDATED, {"items": later})
+
+    asyncio.run(script())
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        problems: list[str] = []
+        page.on("console", lambda m: problems.append(m.text) if m.type == "error" else None)
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Start something new.")
+        page.evaluate(
+            "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
+            str(workspace.root),
+        )
+        page.reload()
+        strip = page.locator("button[aria-expanded]:has-text('Todo')")
+        strip.wait_for()
+        assert "1/3" in strip.inner_text()  # the latest list, not the first
+        items = page.locator("ol[aria-label='Todo list']").first
+        assert "Add export_csv()" in items.inner_text() and "Write tests" in items.inner_text()
+        page.screenshot(path=str(shots / "todo-strip-light.png"))
+        strip.click()  # collapse: progress and the item in progress
+        page.wait_for_selector("button[aria-expanded=false]:has-text('Add export_csv()')")
+        page.click("[role=tab]:has-text('Tasks')")
+        page.wait_for_selector("text=Forge's todo list")
+        page.wait_for_selector("text=1/3 done")
+        browser.close()
+    assert not problems, problems

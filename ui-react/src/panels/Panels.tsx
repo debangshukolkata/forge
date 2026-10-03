@@ -11,6 +11,7 @@ import { Code, Markdown, api, cx, languageOf, money, storageGet, storageSet } fr
 import { UsageBadge, compactTokens, usd as usdText } from "../usage";
 import type { CostLimits, UsageBucket } from "../types";
 import type { Forge } from "../useForge";
+import { TodoItems, todoSummary } from "../components/TodoList";
 
 type Tab = "tasks" | "files" | "diffs" | "db" | "evals" | "learning" | "context" | "settings";
 
@@ -118,6 +119,22 @@ function TasksTab({ forge }: { forge: Forge }) {
   if (!state.workspace) return <Empty title="No project open" />;
   const tasks = state.tasks || [];
   const done = tasks.filter((t) => t.status === "done").length;
+  const todos = forge.timeline.todos;
+  if (todos.length > 0 && tasks.length === 0) {
+    const { done: todoDone, total } = todoSummary(todos);
+    return (
+      <div>
+        <div className="mb-3 flex items-center justify-between text-[13px]">
+          <span className="font-medium">Forge's todo list</span>
+          <span className="font-mono text-[12px] tabular-nums text-fg-muted">{todoDone}/{total} done</span>
+        </div>
+        <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div className="h-full rounded-full bg-ok transition-all duration-300" style={{ width: `${(todoDone / total) * 100}%` }} />
+        </div>
+        <TodoItems todos={todos} />
+      </div>
+    );
+  }
   return (
     <div>
       <div className="mb-3 flex items-center justify-between text-[13px]">

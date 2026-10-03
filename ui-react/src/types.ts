@@ -205,3 +205,8 @@ export interface AgentView {
   steps: AgentStep[];
   done?: { ok: boolean; tool_calls: number; failed_calls: number; duration_s: number };
 }
+
+export interface TodoItem {
+  content: string;
+  status: "pending" | "in_progress" | "completed";
+}

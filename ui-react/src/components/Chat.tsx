@@ -8,6 +8,7 @@ import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
 import { AgentSteps, agentCounts, latestStepText, roleLabel } from "./AgentSteps";
 import { Composer, useAttachments } from "./Composer";
+import { TodoStrip } from "./TodoList";
 import { Badge, Button, CopyButton, Spinner, Textarea } from "./ui";
 
 
@@ -73,6 +74,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
           ))}
         </div>
       </div>
+      <TodoStrip todos={forge.timeline.todos} />
       <Composer forge={forge} attachments={attachments} />
     </div>
   );
