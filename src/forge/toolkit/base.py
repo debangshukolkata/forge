@@ -79,6 +79,7 @@ class ToolContext:
     step: int = 0  # increases with every tool call; used for 'no claim without evidence'
     last_edit_step: int = 0
     last_verified_step: int = 0
+    write_only_under: str | None = None  # a subagent that may write only below this folder (the verifier)
     last_ui_edit_step: int = 0  # a template/stylesheet/script that changes what the user sees (D-167)
     last_browser_step: int = 0  # the app was last used in a browser (browser_* tool or a Playwright run)
     reads: ReadTracker = field(default_factory=ReadTracker)

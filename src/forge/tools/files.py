@@ -282,6 +282,14 @@ def _load_for_edit(context: ToolContext, relative: str) -> str | ToolResult:
 
 async def _save(context: ToolContext, relative: str, text: str, reason: str, op: str) -> ToolResult:
     workspace = context.workspace
+    if context.write_only_under is not None and not relative.replace("\\", "/").lstrip("./").startswith(
+        context.write_only_under
+    ):
+        return ToolResult(
+            ok=False,
+            content=f"You may only write below {context.write_only_under} (you are verifying, not "
+            "changing the app). If the app is wrong, report it; the main agent fixes it.",
+        )
     path = workspace.path_of(relative)
     before = workspace.read_text(relative)[0] if path.is_file() else ""
     if text.count("[REDACTED:") > before.count("[REDACTED:"):

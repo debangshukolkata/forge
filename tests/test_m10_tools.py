@@ -435,3 +435,27 @@ async def test_azure_built_in_web_search(
     assert result.ok, result.content
     assert "https://" in result.content.split("Sources:")[1]
     assert router.cost.total_usd > 0
+
+
+async def test_the_verifier_may_only_write_below_tests_e2e(tmp_path: Path, original_repo: Path) -> None:
+    from forge.toolkit.base import ToolContext
+    from forge.tools.files import WriteFile
+    from forge.workspace.create import create_workspace
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace, write_only_under="backend/tests/e2e/")
+    refused = await WriteFile().run(
+        WriteFile.Args(path="backend/claims_app/app.py", content="x = 1\n"), context
+    )
+    assert not refused.ok and "only write below" in refused.content
+    accepted = await WriteFile().run(
+        WriteFile.Args(path="backend/tests/e2e/test_ui.py", content="def test_x():\n    pass\n"), context
+    )
+    assert accepted.ok
+
+
+def test_the_verifier_is_a_built_in_subagent_type() -> None:
+    from forge.subagents.spawn_tool import SpawnSubagent
+    from forge.tools.parity import BUILT_IN_TYPES
+
+    assert "verifier" in BUILT_IN_TYPES and "verifier" in SpawnSubagent.description

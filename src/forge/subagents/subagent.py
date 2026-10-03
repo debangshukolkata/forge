@@ -62,6 +62,34 @@ async def run_explore(router: LLMRouter, context: ToolContext, requirement: str)
     return head + (f"\n[… {omitted} tokens of the report omitted …]\n" + tail if omitted else "")
 
 
+VERIFIER_ITERATIONS = 45
+VERIFIER_PROMPT = """You are Forge's verifier subagent. You did not write this code and you do not trust
+it. The main agent gives you the requirement (and what changed) and how to run the app. Your job is to find
+out, by using the app the way its users would, whether it really does what was asked, and to report evidence.
+
+Method:
+1. List the acceptance checks the requirement implies, concretely: every page and route, every exact label,
+   button text, message, column and link the requirement names, each validation and error case, edge cases
+   (empty input, duplicate, boundary values, second click), persistence across reloads and pages, and that
+   earlier features still work (regression). Write the list down first.
+2. Start the app (start_background with a ready_pattern; use the port the requirement names).
+3. Turn the checks into a script and run it. For a web UI write a Playwright script (python, sync API)
+   under tests/e2e/ and launch Edge with `p.chromium.launch(channel="msedge", headless=True)`; no browser
+   download is needed. If playwright is missing, install it with `python -m pip install playwright` (the
+   user is asked to approve). For an API or CLI write a pytest or python script using requests or
+   subprocess. Make the script print one PASS/FAIL line per check with the observed value, and exit
+   non-zero on any failure. Use the browser_* tools directly for anything quick, and browser_screenshot
+   then view_image when layout, colour or a chart matters.
+4. Run it and read the output. For each FAIL decide: is it an app bug, or a wrong assumption in your check
+   (a selector, timing, test data)? Fix your own check mistakes and re-run until the remaining failures are
+   real. Never weaken a check just to turn it green.
+5. Stop the server (stop_background).
+
+You may only write files below tests/e2e/ and you cannot change the app; report problems instead. Reply
+with: the checks (PASS or FAIL, one line each, with what you saw), the exact steps to reproduce each real
+failure, the path of your script, and a final line `VERDICT: PASS` (every check passed) or
+`VERDICT: FAIL`."""
+
 DEBUGGER_ITERATIONS = 20
 DEBUGGER_PROMPT = """You are Forge's debugger subagent, called to give the main agent a fresh view of a
 failure: don't trust its assumptions. You may read code, search and run commands (e.g. the tests) — you
@@ -144,6 +172,9 @@ async def _run_subagent(
     task: str,
     iterations: int,
     role: str,
+    *,
+    write_only_under: str | None = None,
+    needs_user_approvals: bool = False,
 ) -> str:
     bus = EventBus(redactor=default_redactor)
     sub_context = ToolContext(
@@ -152,10 +183,20 @@ async def _run_subagent(
         db=context.db,
         tool_cap_tokens=context.tool_cap_tokens,
         shell_cap_tokens=context.shell_cap_tokens,
+        write_only_under=write_only_under,
     )
-    gate = PermissionGate("default", context.workspace.forge_dir / "permissions.json")
+    gate_mode = "default"
+    approvals = ApprovalBroker(bus)
+    host = getattr(context.interaction, "host", None)
+    if needs_user_approvals and host is not None:
+        # The verifier installs packages and starts the app, which can need the user's approval: ask through
+        # the same channel as the main agent instead of an internal broker nobody answers (it would hang).
+        approvals = host.approvals
+        gate_mode = host.agent.gate.mode if host.agent is not None else gate_mode
+        sub_context.background = context.background
+    gate = PermissionGate(gate_mode, context.workspace.forge_dir / "permissions.json")  # type: ignore[arg-type]
     manager = ContextManager(router, router.config)
-    loop = AgentLoop(router, bus, tools, sub_context, gate, ApprovalBroker(bus), iterations, manager)
+    loop = AgentLoop(router, bus, tools, sub_context, gate, approvals, iterations, manager)
     loop.role = role
     history = [Message.system(prompt), Message.user(task)]
 

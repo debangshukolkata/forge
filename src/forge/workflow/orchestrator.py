@@ -425,7 +425,8 @@ class Orchestrator:
                     "browser_click / browser_fill, compare what you see with the requirement word by word "
                     "(browser_screenshot then view_image for layout), fix what is off, then call "
                     "task_update again and say what you saw. The web-ui-verification skill has the "
-                    "steps, and a Playwright script you run counts too."
+                    "steps. For anything beyond a trivial flow, spawn_subagent with agent 'verifier' gives "
+                    "you an independent check; a passing Playwright script you run counts too."
                 ),
             )
         task.status = "done" if status == "done" else "blocked"

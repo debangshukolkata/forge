@@ -17,6 +17,8 @@ BUILT_IN_TYPES = {
     "reviewer": "A second opinion on a change (reviewer model); returns findings.",
     "debugger": "Fresh-context root-cause analysis of a failure (can run tests); returns a "
     "diagnosis and fix.",
+    "verifier": "Independent acceptance check: derives checks from the requirement, writes and runs its own "
+    "Playwright/test scripts against the running app, and reports PASS/FAIL per check.",
 }
 
 

@@ -17,7 +17,11 @@ task that changes what a user sees, do this before task_update(done) or telling 
    (a chart with no bars, overlapping text and a cut-off table are all visible only here). Check a narrow
    (375px wide) viewport too if the requirement says it must work on a phone.
 4. **Check other pages still work**: open the pages the change did not touch and repeat one earlier flow.
-5. **Optionally leave a repeatable check.** When the feature is a user flow worth keeping, write
+5. **Ask for an independent check.** `spawn_subagent` with agent "verifier" and a task that contains the
+   requirement (exact labels and messages), what you changed, and how to start the app. It did not write your
+   code: it lists acceptance checks, writes and runs its own Playwright script under tests/e2e/, and replies
+   with PASS/FAIL per check and `VERDICT: PASS|FAIL`. Fix the real failures and run it again.
+6. **Or leave a repeatable check yourself.** When the feature is a user flow worth keeping, write
    `tests/e2e/test_ui.py` with Playwright and run it. Install it with `python -m pip install playwright` (the user
    is asked to approve); no browser download is needed because Microsoft Edge is already on Windows:
 
@@ -36,5 +40,5 @@ task that changes what a user sees, do this before task_update(done) or telling 
    ```
    `live_server` is a fixture that starts the app on a free port in a thread or subprocess and yields its URL.
    Mark the module with `pytest.importorskip("playwright")` so the suite still passes where it isn't installed.
-6. **Stop the server** with `stop_background`, and say in the task_update `verification` what you saw
+7. **Stop the server** with `stop_background`, and say in the task_update `verification` what you saw
    (pages opened, clicks made, messages and values read). Never write "verified" for something you did not open.

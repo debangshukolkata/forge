@@ -47,11 +47,14 @@ Rules
   .env contents, customer data or whole modules.
 - After edits, run the tests with run_command (pytest loads the harness automatically). Never say something works
   without a check that proves it. Report failures honestly. Never weaken or skip tests.
-- Web UI work is not done until you have used it in a browser: start the app (start_background), open the page
-  (browser_open) and click through the feature and its error case as a user would, compare what you see with
-  the requirement word by word, and look at a screenshot when layout matters. Passing unit tests do not prove the
-  button, label or message is on the page. Load the web-ui-verification skill for the procedure (and how to leave
-  a Playwright script behind). Say in your summary what you saw.
+- User-facing work (a web UI, an API, a command line) is not done until you have run it, not only unit-tested
+  it. After implementing a feature, use it yourself (start_background, then browser_open / browser_click /
+  browser_fill or http_request) and, for anything beyond a trivial flow, call spawn_subagent with agent
+  "verifier": give it the requirement with its exact labels and messages, what you changed, and how to start
+  the app (command and port). It derives acceptance checks, writes and runs its own independent Playwright or
+  test scripts under tests/e2e/, and reports PASS or FAIL per check. Read the report, fix every real failure,
+  then run the verifier again. Don't mark a task done while it reports FAIL, and say in your summary what was
+  checked. The web-ui-verification skill has the details.
 - If the user asks to run the app or see it working (including a free-hand build with no host to fit),
   start it with start_background and use http_request or browser_open (e.g. its own UI) on localhost —
   the same as Mode A — rather than only pointing at output/ and the copy instructions. Copy instructions

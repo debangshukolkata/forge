@@ -2469,3 +2469,18 @@ UI-edited task refused then accepted after a browser step; a blocked UI task is 
 **Campaign results so far** (independent Playwright checks in `C:\Work\ForgeRuns`): attendance app 37/37 after 4
 enhancement rounds and one feedback round; bakery site 57/57 after 3 enhancement rounds and one feedback round;
 invoice tool 26/26 after one feedback round with the real invoices pasted in and one enhancement round.
+
+### D-168 — Independent verifier subagent: Forge writes, runs and acts on its own acceptance checks · Built (2026-10-03)
+User: Forge must write independent checks from the requirement's context, run them, analyse the results and rework, as
+my own Playwright scripts did. **Built-in subagent type `verifier`** (`spawn_subagent(agent="verifier", task=...)`): a fresh
+context that did not write the code derives concrete acceptance checks from the requirement (exact labels and messages,
+validations, edge cases, persistence, regression), starts the app, writes a Playwright script (Edge, `channel="msedge"`,
+no browser download) or a pytest/requests script under `tests/e2e/`, runs it, decides per failure whether it is an app
+bug or its own wrong assumption, fixes its own check mistakes, and replies with PASS/FAIL per check, reproduction steps,
+the script path and `VERDICT: PASS|FAIL`. It runs on the `coder` model, may write only below `tests/e2e/` (the file tool
+refuses other paths) and cannot change the app. Its approvals (pip install of playwright, starting the app) go through the
+main session's approval channel and gate mode instead of an internal broker nobody answers; it shares the session's
+background-process manager. A `VERDICT: PASS` counts as browser evidence for `task_update(done)` (D-167). Prompt rule in both
+system prompts (use the app yourself, then call the verifier for anything beyond a trivial flow, fix real failures, run it
+again) and in the web-ui-verification skill. The scripts it leaves in `tests/e2e/` are delivered with the work, so the user
+gets repeatable checks. **Tests:** write restriction, built-in type registered; its behaviour is checked live in the campaign.
