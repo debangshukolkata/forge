@@ -48,9 +48,12 @@ from forge.safety.redact import default_redactor
 from forge.subagents.spawn_tool import SpawnSubagent
 from forge.toolkit.background import BackgroundManager
 from forge.toolkit.base import Tool, ToolContext
-from forge.toolkit.shell import ShellSession
+from forge.toolkit.shell import ShellSession, execute
 from forge.tools.modeb import modeb_tools
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
+from forge.tools.todo import PIN_SLOT as TODO_PIN_SLOT
+from forge.tools.todo import TodoItem
+from forge.tools.todo import render as render_todos
 from forge.tools.web import azure_hosted_search
 from forge.workflow.orchestrator import Orchestrator
 from forge.workspace.workspace import Workspace
@@ -258,6 +261,9 @@ class SessionHost:
             self.context_manager,
         )
         loop.on_thinking = self.stream_thinking
+        context.pin = self.context_manager.pinned.set
+        self._restore_todos(context)
+        self.context_manager.run_hook = lambda command: self._run_hook(loop, command)
         return loop
 
     @property
@@ -389,6 +395,20 @@ class SessionHost:
             await orchestrator.restructure(instruction)
 
         await self._run_turn(turn)
+
+    async def _run_hook(self, loop: AgentLoop, command: str) -> tuple[bool, str]:
+        """A configured hook command, run like any command: in the workspace, sandboxed (D-176)."""
+        outcome = await execute(loop.context, command, 120, ".")
+        return outcome.ok, outcome.content
+
+    def _restore_todos(self, context: ToolContext) -> None:
+        """A reopened project gets its todo list back from the last `todo_updated` event (D-177)."""
+        for event in reversed(self.bus.events_since(0)):
+            if event.type == EventType.TODO_UPDATED:
+                items = [TodoItem.model_validate(i) for i in event.payload.get("items", [])]
+                context.todos = [item.model_dump() for item in items]
+                self.context_manager.pinned.set(TODO_PIN_SLOT, render_todos(items) if items else None)
+                return
 
     async def stream_thinking(self, text: str) -> None:
         """A short summary of what the model is working out, shown while it waits on a slow reasoning call."""

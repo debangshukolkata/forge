@@ -475,3 +475,68 @@ async def test_the_verifier_may_delete_only_its_own_files(tmp_path: Path, origin
     assert not refused.ok and "only delete files below" in refused.content
     assert (await DeleteFile().run(DeleteFile.Args(path="backend/tests/e2e/tmp_check.py"), context)).ok
     assert not workspace.path_of("backend/tests/e2e/tmp_check.py").exists()
+
+
+def _background_entry(name: str = "app"):  # type: ignore[no-untyped-def]
+    from types import SimpleNamespace
+
+    from forge.toolkit.background import BackgroundManager, BackgroundProcess
+
+    manager = BackgroundManager()
+    process = SimpleNamespace(returncode=None, pid=0)
+    entry = BackgroundProcess(name=name, command="python app.py", process=process, port=None)  # type: ignore[arg-type]
+    manager.processes[name] = entry
+    return manager, entry, process
+
+
+async def test_monitor_returns_when_the_pattern_appears(tmp_path: Path, original_repo: Path) -> None:
+    import asyncio
+
+    from forge.toolkit.background import Monitor
+    from forge.toolkit.base import ToolContext
+    from forge.workspace.create import create_workspace
+
+    manager, entry, _ = _background_entry()
+    context = ToolContext(
+        workspace=create_workspace(original_repo, tmp_path / "ws", "backend"), background=manager
+    )
+
+    async def print_later() -> None:
+        await asyncio.sleep(0.4)
+        entry.lines.append("* Running on http://127.0.0.1:5056")
+        entry.total_lines += 1
+
+    task = asyncio.create_task(print_later())
+    started = asyncio.get_running_loop().time()
+    result = await Monitor().run(Monitor.Args(name="app", until="Running on", timeout_s=30), context)
+    assert result.ok and "pattern matched" in result.content and "5056" in result.content
+    assert asyncio.get_running_loop().time() - started < 5  # one call, not a poll loop
+    await task
+
+
+async def test_monitor_reports_an_exit_and_a_timeout(tmp_path: Path, original_repo: Path) -> None:
+    import asyncio
+
+    from forge.toolkit.background import Monitor
+    from forge.toolkit.base import ToolContext
+    from forge.workspace.create import create_workspace
+
+    manager, entry, process = _background_entry()
+    context = ToolContext(
+        workspace=create_workspace(original_repo, tmp_path / "ws", "backend"), background=manager
+    )
+    timed_out = await Monitor().run(Monitor.Args(name="app", until="never", timeout_s=1), context)
+    assert "timed out after 1s; still running" in timed_out.content  # the process keeps running
+
+    async def crash() -> None:
+        await asyncio.sleep(0.3)
+        entry.lines.append("Traceback: boom")
+        entry.total_lines += 1
+        process.returncode = 3
+
+    task = asyncio.create_task(crash())
+    exited = await Monitor().run(Monitor.Args(name="app", timeout_s=30), context)
+    assert "exited (3)" in exited.content and "boom" in exited.content
+    await task
+    missing = await Monitor().run(Monitor.Args(name="nope"), context)
+    assert not missing.ok

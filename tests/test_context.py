@@ -319,3 +319,58 @@ async def test_no_compaction_storm() -> None:
     steps = 300
     assert 0 < manager.compactions <= steps // manager.config.context.keep_recent_turns + 1
     assert len(calls) == manager.compactions  # one summary call per compaction (all valid)
+
+
+# --- compaction hooks (D-176) ---
+
+
+def _history_for_compaction() -> list[Message]:
+    return [Message.system("s")] + [m for t in range(10) for m in (Message.user(f"u{t}"), *tool_turn(t, 20))]
+
+
+async def test_compaction_hooks_run_in_order_and_feed_the_summariser() -> None:
+    order: list[str] = []
+    prompts: list[str] = []
+
+    async def summarise(prompt: str) -> str:
+        order.append("summary")
+        prompts.append(prompt)
+        return VALID_SUMMARY
+
+    config = small_window_config()
+    config.hooks.pre_compact = ["echo keep: the port is 5056"]
+    config.hooks.post_compact = ["echo done"]
+    manager = manager_with(config, summarise)
+
+    async def hook(command: str) -> tuple[bool, str]:
+        order.append(command)
+        return True, "keep: the port is 5056 api_key=abcd1234efgh5678ijkl"  # check_secrets: fake
+
+    manager.run_hook = hook
+    assert await manager.compact(_history_for_compaction()) is True
+    assert order == ["echo keep: the port is 5056", "summary", "echo done"]
+    assert "the port is 5056" in prompts[0] and "abcd1234efgh5678ijkl" not in prompts[0]
+
+
+async def test_a_failing_hook_never_blocks_compaction() -> None:
+    config = small_window_config()
+    config.hooks.pre_compact = ["boom", "echo fine"]
+    config.hooks.post_compact = ["boom"]
+    manager = manager_with(config)
+    events: list[str] = []
+
+    async def emit(kind: str, payload: dict) -> None:  # type: ignore[type-arg]
+        events.append(payload.get("kind", ""))
+
+    manager._on_event = emit
+
+    async def hook(command: str) -> tuple[bool, str]:
+        if command == "boom":
+            raise RuntimeError("hook crashed")
+        return True, "fine"
+
+    manager.run_hook = hook
+    history = _history_for_compaction()
+    assert await manager.compact(history) is True
+    assert events.count("hook_failed") == 2 and "compacted" in events
+    assert pairs_are_valid(history)

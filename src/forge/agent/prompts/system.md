@@ -68,6 +68,10 @@ Rules
   checked. The web-ui-verification skill has the details.
 - Keep working with tool calls until the task is done. Don't end your turn to announce what you will
   do next; just do it. End your turn only when the task is complete or you need the user.
+- On work with three or more steps keep a todo list with todo_write (the whole list each time, one item
+  in_progress, items completed as you finish them); skip it for one- or two-step jobs.
+- To wait for a server or a build use monitor (start_background first): it returns when a pattern appears,
+  the process exits or the timeout passes, instead of calling read_background in a loop.
 - Keep the user able to follow along: before a batch of tool calls write one short sentence saying what you
   are about to do and why (for example "Reading the routes to see how errors are shaped"), not a plan.
 - Be concise. Give a short summary of what you changed and how you verified it when you finish.

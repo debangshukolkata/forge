@@ -21,6 +21,21 @@ class AgentDefinition:
     role: str = "coder"
     effort: str | None = None
     description: str = ""
+    max_steps: int | None = None  # model calls before it must report (D-180); None = the default
+    write_only_under: str | None = None  # folder (relative to the repository root) it may write below
+
+
+def _positive_int(text: str | None) -> int | None:
+    try:
+        value = int((text or "").strip())
+    except ValueError:
+        return None
+    return value if 1 <= value <= 200 else None
+
+
+def _folder(text: str | None) -> str | None:
+    folder = (text or "").strip().replace("\\", "/").strip("./")
+    return f"{folder}/" if folder and ".." not in folder.split("/") else None
 
 
 def load_agents(home: Path) -> dict[str, AgentDefinition]:
@@ -43,5 +58,7 @@ def load_agents(home: Path) -> dict[str, AgentDefinition]:
             role=meta.get("model", meta.get("role", "coder")).strip(),
             effort=meta.get("effort", "").strip() or None,
             description=meta.get("description", "").strip(),
+            max_steps=_positive_int(meta.get("max_steps")),
+            write_only_under=_folder(meta.get("write_only_under")),
         )
     return agents

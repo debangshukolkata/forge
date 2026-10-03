@@ -98,3 +98,112 @@ def test_a_subagent_that_ends_in_tool_calls_is_asked_for_a_report() -> None:
         Message.tool_result("c1", "contents"),
     ]
     assert not _ended_with_text(cut_off) and _last_text(cut_off) == ""
+
+
+# --- parallel tool calls and subagents (D-175) ---
+
+
+def _timed_tools(log: list[tuple[str, float, float]]):  # type: ignore[no-untyped-def]
+    import time
+
+    from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+
+    class Pause(Tool):
+        name = "slow_read"
+        read_only = True
+        description = "sleeps"
+
+        class Args(ToolArgs):
+            tag: str = ""
+
+        async def run(self, args: Pause.Args, context: ToolContext) -> ToolResult:
+            started = time.perf_counter()
+            await asyncio.sleep(0.3)
+            log.append((args.tag, started, time.perf_counter()))
+            return ToolResult(ok=True, content="done")
+
+    class Spawn(Pause):
+        name = "spawn_subagent"
+
+        class Args(ToolArgs):
+            agent: str
+            task: str = ""
+
+        async def run(self, args: Spawn.Args, context: ToolContext) -> ToolResult:  # type: ignore[override]
+            started = time.perf_counter()
+            await asyncio.sleep(0.3)
+            log.append((args.agent, started, time.perf_counter()))
+            return ToolResult(ok=True, content="report")
+
+    return Pause(), Spawn()
+
+
+async def _elapsed_for(host, calls) -> float:  # type: ignore[no-untyped-def]
+    import time
+
+    from forge.llm.base import ToolCall
+
+    results: dict = {}
+    wrapped = [
+        ToolCall(id=f"c{i}", name=n, raw_arguments=json.dumps(a), arguments=a)
+        for i, (n, a) in enumerate(calls)
+    ]
+    started = time.perf_counter()
+    await host.agent._run_calls(wrapped, results)
+    assert len(results) == len(calls)
+    return time.perf_counter() - started
+
+
+async def test_read_only_agents_run_side_by_side_but_verifiers_are_serialised(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    from forge.tools.registry import ToolRegistry
+    from tests.helpers import mocked_router
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(
+        mocked_router(lambda request: httpx2.Response(500)),
+        EventBus(redactor=Redactor()),
+        workspace=workspace,
+    )
+    assert host.agent is not None
+    log: list[tuple[str, float, float]] = []
+    host.agent.tools = ToolRegistry(list(_timed_tools(log)))
+
+    await _elapsed_for(
+        host, [("slow_read", {"tag": "warm-up"})]
+    )  # the first call pays one-time start-up costs
+    two_reads = await _elapsed_for(host, [("slow_read", {"tag": "a"}), ("slow_read", {"tag": "b"})])
+    two_explores = await _elapsed_for(host, [("spawn_subagent", {"agent": "explore"})] * 2)
+    two_verifiers = await _elapsed_for(host, [("spawn_subagent", {"agent": "verifier"})] * 2)
+    six_explores = await _elapsed_for(host, [("spawn_subagent", {"agent": "explore"})] * 6)
+
+    assert two_reads < 0.5 and two_explores < 0.5  # about the time of one
+    assert two_verifiers >= 0.55  # one after the other: they write files and start the app
+    assert 0.55 <= six_explores < 0.95  # capped at 4 at once: 4 together, then 2
+
+
+async def test_a_running_subagent_reports_its_steps_to_the_session(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    from forge.subagents.subagent import run_debugger
+    from tests.helpers import function_call_output
+
+    calls = {"n": 0}
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return reply(request, responses_body([function_call_output("list_dir", '{"path": "."}')]))
+        return reply(request, responses_body([text_output("Root cause: x. Fix: y.")]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace)
+    assert host.agent is not None
+    report = await run_debugger(host.router, host.agent.context, "the build fails")
+    assert "Root cause" in report
+    steps = [e.payload for e in host.bus.events_since(0) if e.type == EventType.SUBAGENT_STEP]
+    kinds = [s["kind"] for s in steps]
+    assert "tool_started" in kinds and "tool_finished" in kinds
+    assert all(s["agent"].startswith("agent-") for s in steps)
+    assert any(e.type == EventType.AGENT_FINISHED for e in host.bus.events_since(0))

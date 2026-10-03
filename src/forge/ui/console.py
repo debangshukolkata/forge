@@ -76,6 +76,18 @@ def render_event(event: Event, console: Console, state: ConsoleState) -> None:
         # Streamed text is written raw (no markup parsing) so model output can't inject styles.
         sys.stdout.write(payload["text"])
         sys.stdout.flush()
+    elif kind == EventType.SUBAGENT_STEP:
+        who = f"{payload.get('role', 'agent')} {payload.get('agent', '')}"
+        if payload.get("kind") == "tool_started":
+            console.print(Text(f"    ↳ [{who}] {payload.get('summary')}", style="dim cyan"))
+        elif payload.get("kind") == "thinking":
+            console.print(Text(f"    ↳ [{who}] … {payload.get('text')}", style="dim italic"))
+    elif kind == EventType.TODO_UPDATED:
+        marks = {"pending": "[ ]", "in_progress": "[~]", "completed": "[x]"}
+        for item in payload.get("items", []):
+            console.print(
+                Text(f"  {marks.get(item.get('status'), '[ ]')} {item.get('content')}", style="dim")
+            )
     elif kind == EventType.THINKING_DELTA:
         console.print(Text(f"  … {payload['text'].strip()[:300]}", style="dim italic"))
     elif kind == EventType.MESSAGE_DONE:

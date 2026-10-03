@@ -225,3 +225,45 @@ async def test_mcp_tools_are_listed_called_and_gated(tmp_path: Path) -> None:
         assert "demo: connected (1 tools)" in hub.describe()
     finally:
         await hub.close()
+
+
+def test_custom_agent_files_can_set_max_steps_and_a_write_folder(isolated_forge_home: Path) -> None:
+    from forge.parity.agents import load_agents
+
+    folder = isolated_forge_home / "agents"
+    folder.mkdir()
+    (folder / "scribe.md").write_text(
+        "---\ndescription: writes notes\ntools: read_file, write_file\nmax_steps: 5\n"
+        "write_only_under: docs/notes\n---\nYou write notes.\n",
+        encoding="utf-8",
+    )
+    (folder / "plain.md").write_text("---\ndescription: plain\nmax_steps: 9999\n---\nx\n", encoding="utf-8")
+    agents = load_agents(isolated_forge_home)
+    assert agents["scribe"].max_steps == 5 and agents["scribe"].write_only_under == "docs/notes/"
+    assert (
+        agents["plain"].max_steps is None and agents["plain"].write_only_under is None
+    )  # 9999 is out of range
+
+
+async def test_a_custom_agent_with_unknown_tools_is_rejected_clearly(
+    original_repo: Path, tmp_path: Path, isolated_forge_home: Path
+) -> None:
+    import httpx2
+
+    from forge.engine.session_host import SessionHost
+    from forge.protocol.events import EventBus
+    from forge.safety.redact import Redactor
+    from forge.subagents.spawn_tool import SpawnSubagent
+    from forge.workspace.create import create_workspace
+    from tests.helpers import mocked_router
+
+    folder = isolated_forge_home / "agents"
+    folder.mkdir()
+    (folder / "odd.md").write_text("---\ntools: read_file, teleport\n---\nx\n", encoding="utf-8")
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(
+        mocked_router(lambda r: httpx2.Response(500)), EventBus(redactor=Redactor()), workspace=workspace
+    )
+    assert host.agent is not None
+    result = await SpawnSubagent().run(SpawnSubagent.Args(agent="odd", task="go"), host.agent.context)
+    assert not result.ok and "unknown tools: teleport" in result.content

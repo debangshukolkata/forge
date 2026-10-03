@@ -31,11 +31,15 @@ from forge.context.pinned import PinnedBlocks
 from forge.llm.base import ChatRequest, Message, ToolSpec, Usage
 from forge.llm.router import LLMRouter
 from forge.llm.tokens import count_request_tokens, count_text_tokens
+from forge.safety.redact import default_redactor
 
 Summariser = Callable[[str], Awaitable[str]]
 EventCallback = Callable[[str, dict[str, Any]], Awaitable[None]]
 SUMMARY_MAX_OUTPUT = 4000
 CHUNK_SHARE_OF_SUMMARISER_WINDOW = 0.5
+
+
+HOOK_OUTPUT_CHARS = 1500  # per hook, what is given to the summariser
 
 
 class ContextManager:
@@ -56,6 +60,8 @@ class ContextManager:
         self._summarise = summarise or self._summarise_with_llm
         self._on_event = on_event
         self._files_modified = files_modified
+        # Runs one hook command and returns (ok, output); set by the session host (D-176).
+        self.run_hook: Callable[[str], Awaitable[tuple[bool, str]]] | None = None
         self._budgets: dict[str, ContextBudget] = {}
         self._last_raw_estimate = 0
         self._steps_at_last_compaction = 0
@@ -142,6 +148,13 @@ class ContextManager:
         await self._emit(
             "notice", {"kind": "compacting", "text": "Summarising earlier conversation to save context…"}
         )
+        kept = await self._run_hooks(self.config.hooks.pre_compact, "pre_compact")
+        if kept:
+            focus = (
+                (focus + "\n\n" if focus else "")
+                + "Facts the project's pre-compact hooks say to keep:\n"
+                + kept
+            )
         summary = await self._summary_for(older, focus)
         if summary is None:
             await self._emit(
@@ -157,11 +170,30 @@ class ContextManager:
         self.compactions += 1
         self._steps_at_last_compaction = len(step_starts(history))
         self._save_summary(summary)
+        await self._run_hooks(self.config.hooks.post_compact, "post_compact")
         await self._emit(
             "notice",
             {"kind": "compacted", "text": f"Compacted earlier conversation ({len(older)} messages)."},
         )
         return True
+
+    async def _run_hooks(self, commands: list[str], kind: str) -> str:
+        """Runs the configured hook commands in order; returns their combined output, capped and redacted.
+        A hook that fails or cannot run is reported and skipped: it never blocks compaction (D-176)."""
+        if not commands or self.run_hook is None:
+            return ""
+        outputs = []
+        for command in commands:
+            try:
+                ok, output = await self.run_hook(command)
+            except Exception as error:  # a hook must never break compaction
+                ok, output = False, f"{type(error).__name__}: {error}"
+            if not ok:
+                await self._emit("notice", {"kind": "hook_failed", "text": f"{kind} hook failed: {command}"})
+                continue
+            if output.strip():
+                outputs.append(default_redactor.redact(output.strip())[:HOOK_OUTPUT_CHARS])
+        return "\n".join(outputs)
 
     async def _summary_for(self, older: list[Message], focus: str | None) -> str | None:
         summariser_model = self.config.llm.models[self.router.model_for_role("summariser")]

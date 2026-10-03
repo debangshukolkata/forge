@@ -36,6 +36,7 @@ class EventType(StrEnum):
     DB_REQUEST_CREATED = "db_request_created"
     DB_REQUEST_UPDATED = "db_request_updated"
     TASK_LIST_UPDATED = "task_list_updated"
+    TODO_UPDATED = "todo_updated"  # the model's own todo list, whole list each time (D-177)
     FILE_CHANGED = "file_changed"
     CONTEXT_UPDATED = "context_updated"
     COST_UPDATED = "cost_updated"
@@ -47,6 +48,7 @@ class EventType(StrEnum):
         "agent_started"  # a subagent (reviewer, debugger, helper, analysis) began (Run map, D-119)
     )
     AGENT_FINISHED = "agent_finished"
+    SUBAGENT_STEP = "subagent_step"  # a step of a running subagent (tool started/finished, thinking) (D-179)
     NOTICE = "notice"  # informational: retries, fallbacks, queued input, slash-command output
     ERROR = "error"
 

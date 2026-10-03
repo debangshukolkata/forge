@@ -101,7 +101,10 @@ async def test_subagent_runs_are_announced_with_their_outcome(tmp_path) -> None:
 
     bus = EventBus()
     await _tracked_run(Context(), Loop(False), bus, [], "reviewer", "Review the change")  # type: ignore[arg-type]
-    (start_kind, start), (end_kind, end) = emitted
+    (start_kind, start), (end_kind, end) = [e for e in emitted if e[0].startswith("agent_")]
+    assert [e[1]["kind"] for e in emitted if e[0] == "subagent_step"].count(
+        "tool_finished"
+    ) == 2  # relayed (D-179)
     assert (start_kind, end_kind) == ("agent_started", "agent_finished") and start["id"] == end["id"]
     assert (
         end["ok"]
@@ -113,4 +116,6 @@ async def test_subagent_runs_are_announced_with_their_outcome(tmp_path) -> None:
     bus = EventBus()
     with pytest.raises(RuntimeError):
         await _tracked_run(Context(), Loop(True), bus, [], "reviewer", "x")  # type: ignore[arg-type]
-    assert emitted[-1][1]["ok"] is False  # a crash still closes the agent's bar on the map
+    assert [e for e in emitted if e[0] == "agent_finished"][-1][1][
+        "ok"
+    ] is False  # a crash still closes the bar
