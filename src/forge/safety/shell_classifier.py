@@ -218,6 +218,12 @@ def classify(command: str, scope: ShellScope) -> Classification:
         r"(powershell|pwsh)", command, re.IGNORECASE
     ):
         result.raise_to("blocked", "encoded PowerShell commands are not allowed")
+    if _HIDDEN_SECRET_PATH.search(command) or _PROFILE_VARIABLE.search(command):
+        # A path built from a variable, or a ".env" named inside a quoted string (python -c "open('.env')"),
+        # is invisible to the per-argument checks below, and these files hold Forge's own keys.
+        result.raise_to(
+            "ask", "refers to a secret file or to the user's profile/Forge folder indirectly", always_ask=True
+        )
     segments = split_segments(command)
     if not segments:
         result.raise_to("ask", "empty command")
@@ -347,6 +353,19 @@ def _looks_like_path(arg: str) -> bool:
 _SECRET_FILE = re.compile(
     r"(^|[\\/])(\.env(\.(?!example$|sample$|template$)[\w.-]+)?|[^\\/]+\.(pem|pfx|p12|key)|id_(rsa|ed25519|ecdsa)"
     r"|secrets[\\/].*)$",
+    re.IGNORECASE,
+)
+
+
+# ".env" (not .env.example) after a path separator or quote anywhere in the command text.
+_HIDDEN_SECRET_PATH = re.compile(
+    r"[\\/'\"]\.env(?!\.(?:example|sample|template)\b)(?:\.[\w.-]+)?(?=$|[\\/'\"\s)\]};,])", re.IGNORECASE
+)
+# Where Forge keeps its folder and keys, reached through a variable instead of a literal path.
+_PROFILE_VARIABLE = re.compile(
+    r"\$env:(?:forge_env_file|forge_home|userprofile|home|homepath|appdata|localappdata)\b"
+    r"|\$\{?home\b|%(?:forge_env_file|forge_home|userprofile|homepath|appdata|localappdata)%"
+    r"|\bFORGE_ENV_FILE\b|\bFORGE_HOME\b",
     re.IGNORECASE,
 )
 

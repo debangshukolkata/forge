@@ -2623,3 +2623,19 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   Code: new module `environment/` (checks, plan, store; tier 7), `web/environment_routes.py`, `ui-react/.../Environment.tsx`.
   Tests: `tests/test_environment.py`, `tests/test_web_login_e2e.py::test_environment_screen_in_edge` (the model call is stubbed
   there; screenshots `environment-light.png` / `environment-dark.png`). Also fixed: `__main__.py` had no tier in the boundary test.
+
+### D-187 — Can the agent read Forge's own .env? Verified 2026-10-03; two shell gaps closed (user asked to verify)
+- **Checked with real probes** (not only by reading code): `read_file` refuses anything outside the workspace (jail: absolute path and
+  `..` both raise). Shell reads of the Forge `.env` by literal path are always-asked in Mode A and blocked in Mode B (outside the
+  workspace). A leaked `.env` is masked by redaction: key/secret/token/password values and URL passwords registered from the file
+  show as `[REDACTED:NAME]`. Forge never copies `.env` values into `os.environ`, so child commands do not inherit them.
+- **Gaps found and fixed:** (1) `Get-Content $env:FORGE_ENV_FILE` (and `$HOME`, `$env:USERPROFILE`, `%APPDATA%`, ...) was classified
+  *safe*: a path built from a variable is invisible to the per-argument check. (2) `python -c "open(r'...\.env')"` only asked,
+  and could be remembered as "always allow python". Now both are *always-ask* (never remembered, never silent): any command text
+  that names `.env` (not .env.example/.sample/.template) after a separator or quote, or uses those variables or `FORGE_ENV_FILE` /
+  `FORGE_HOME`. Tests: `tests/test_shell_secret_paths.py`.
+- **Still open (decision for the user):** the shell's child processes inherit the user's own environment variables, so a key the user
+  exported themselves (not from Forge's .env) would show in `Get-ChildItem Env:` unmasked. Removing Forge's variable names
+  (the .env names and the provider env names) from the child environment would close it, but would also hide e.g. LOCAL_PG_URL
+  from a built app that reads it from the environment. Redaction does not catch re-encoded values (base64, reversed) if the model
+  runs code to transform a secret; that needs an approved command first.
