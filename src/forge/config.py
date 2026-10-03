@@ -184,6 +184,10 @@ class HooksConfig(_Strict):
     # Commands run after every successful file edit, e.g. "ruff format {file}" ({file} = the edited path,
     # relative to the repository root). They run like any command: in the workspace, sandboxed.
     post_edit: list[str] = []
+    # Commands run around a compaction (D-176): pre_compact output (capped, redacted) is given to the
+    # summariser as facts to keep; post_compact runs afterwards. A failing hook never blocks compaction.
+    pre_compact: list[str] = []
+    post_compact: list[str] = []
 
 
 class LearningConfig(_Strict):

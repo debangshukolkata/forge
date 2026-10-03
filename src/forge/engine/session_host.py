@@ -48,7 +48,7 @@ from forge.safety.redact import default_redactor
 from forge.subagents.spawn_tool import SpawnSubagent
 from forge.toolkit.background import BackgroundManager
 from forge.toolkit.base import Tool, ToolContext
-from forge.toolkit.shell import ShellSession
+from forge.toolkit.shell import ShellSession, execute
 from forge.tools.modeb import modeb_tools
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
 from forge.tools.web import azure_hosted_search
@@ -258,6 +258,7 @@ class SessionHost:
             self.context_manager,
         )
         loop.on_thinking = self.stream_thinking
+        self.context_manager.run_hook = lambda command: self._run_hook(loop, command)
         return loop
 
     @property
@@ -389,6 +390,11 @@ class SessionHost:
             await orchestrator.restructure(instruction)
 
         await self._run_turn(turn)
+
+    async def _run_hook(self, loop: AgentLoop, command: str) -> tuple[bool, str]:
+        """A configured hook command, run like any command: in the workspace, sandboxed (D-176)."""
+        outcome = await execute(loop.context, command, 120, ".")
+        return outcome.ok, outcome.content
 
     async def stream_thinking(self, text: str) -> None:
         """A short summary of what the model is working out, shown while it waits on a slow reasoning call."""
