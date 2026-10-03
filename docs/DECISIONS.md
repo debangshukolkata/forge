@@ -2634,7 +2634,7 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   and could be remembered as "always allow python". Now both are *always-ask* (never remembered, never silent): any command text
   that names `.env` (not .env.example/.sample/.template) after a separator or quote, or uses those variables or `FORGE_ENV_FILE` /
   `FORGE_HOME`. Tests: `tests/test_shell_secret_paths.py`.
-- **Still open (decision for the user):** the shell's child processes inherit the user's own environment variables, so a key the user
+- **Closed by D-202 (2026-10-03):** the shell's child processes inherit the user's own environment variables, so a key the user
   exported themselves (not from Forge's .env) would show in `Get-ChildItem Env:` unmasked. Removing Forge's variable names
   (the .env names and the provider env names) from the child environment would close it, but would also hide e.g. LOCAL_PG_URL
   from a built app that reads it from the environment. Redaction does not catch re-encoded values (base64, reversed) if the model
@@ -2821,3 +2821,19 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   "enable optional tools" switch (rejected: the two are independent). Tests: `tests/test_environment.py` (including the real OCR
   test, skipped where Tesseract is not installed), `test_optional_tools_are_asked_before_they_are_tested`
   (`environment-ask-light.png`).
+
+### D-202 — Forge's own variables are hidden from the commands the model runs (user decision 2026-10-03; closes the open point of D-187)
+- A command the model runs used to inherit the whole user environment, so a key the user had exported themselves, `FORGE_ENV_FILE`
+  (which names the .env file) or the Azure settings showed in a plain `Get-ChildItem Env:` (no approval needed) and redaction only
+  knows values loaded from Forge's .env. The shell's environment (`ShellSession.environment()`, used by `run_command` and
+  background processes) now drops **Forge's own names**: every name in Forge's .env, `FORGE_ENV_FILE`, `FORGE_HOME`, and the provider
+  settings from config.yaml (the Azure endpoint, key and version names, each model's deployment name, and the Gemini project and
+  location when that provider is present). Names are matched case-insensitively (Windows); the list follows the .env file's modified
+  time, so a key added on the Environment drawer is hidden from the next command on. What Forge sets **on purpose** is added after the
+  removal and kept: the scratch database of this requirement (`db.command_environment()`).
+- **Cost the user accepted:** an app Forge builds or tests that reads a name from the environment which is also in Forge's .env (for
+  example `LOCAL_PG_URL`, or the Azure settings for an app that calls Azure OpenAI itself) no longer sees it in a command Forge runs;
+  the scratch database URL for the requirement is still provided. Options considered: only ask before listing variables (not chosen:
+  `$env:NAME` and `python -c` still read them) and leave as is. Not changed: `diagnose` (runs the repo's app for a failing build, not a
+  model-driven command) and the venv creation step. Code: `toolkit/private_env.py`; tests: `tests/test_private_env.py` (including a
+  real process started with the scrubbed environment).
