@@ -6,6 +6,7 @@ import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export const SIGNED_OUT_EVENT = "forge:signed-out";
+export const DRAFT_EVENT = "forge:draft"; // the welcome screen's starter chips fill the composer
 
 export async function api<T = unknown>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
   const response = await fetch(path, {

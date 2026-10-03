@@ -2,16 +2,16 @@ import {
   AlertOctagon, Bot, CheckCircle2, ChevronRight, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload, User,
   Wrench, XCircle,
 } from "lucide-react";
-import { useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Code, Markdown, cx } from "../lib";
-import type { ChatItem, UserInput } from "../types";
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
+import type { ChatItem, EnvironmentOverview, UserInput } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
 import { Composer, useAttachments } from "./Composer";
 import { Badge, Button, CopyButton, Spinner, Textarea } from "./ui";
 
 
-export function Chat({ forge }: { forge: Forge }) {
+export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment?: () => void }) {
   const scroller = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const { items } = forge.timeline;
@@ -57,7 +57,7 @@ export function Chat({ forge }: { forge: Forge }) {
         aria-live="polite"
       >
         <div className="mx-auto flex max-w-3xl flex-col gap-3 px-6 py-6">
-          {items.length === 0 && !forge.replaying && <Welcome standalone={forge.state.workspace?.mode === "B"} />}
+          {items.length === 0 && !forge.replaying && <Welcome forge={forge} onOpenEnvironment={onOpenEnvironment} />}
           {!forge.controls && (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-warn/40 bg-warn-soft px-4 py-2.5 text-[13px] text-warn">
               Another window controls this project; this one watches.
@@ -78,18 +78,67 @@ export function Chat({ forge }: { forge: Forge }) {
   );
 }
 
-function Welcome({ standalone }: { standalone: boolean }) {
+const STARTERS: Record<"A" | "B", string[]> = {
+  B: [
+    "Build a function from a signature I paste",
+    "Write a small API with tests",
+    "Add tests for a module I describe",
+  ],
+  A: [
+    "Explain how this repository is structured",
+    "Find and fix a bug I describe",
+    "Add a feature and tests for it",
+  ],
+};
+
+// What a new project's chat opens with (D-186): what Forge is about to work with, and ways to begin.
+function Welcome({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment?: () => void }) {
+  const workspace = forge.state.workspace;
+  const mode = workspace?.mode === "B" ? "B" : "A";
+  const [env, setEnv] = useState<EnvironmentOverview | null>(null);
+  useEffect(() => {
+    api<EnvironmentOverview>("/api/environment").then(setEnv).catch(() => setEnv(null));
+  }, []);
+  const coder = env?.plan.roles.find((r) => r.role === "coder")?.model;
+  const coderLabel = env?.plan.options.find((o) => o.key === coder)?.label;
+  const confirmed = Boolean(env?.saved.confirmed_at);
+  const draft = (text: string) => window.dispatchEvent(new CustomEvent(DRAFT_EVENT, { detail: text }));
   return (
-    <div className="rounded-xl border border-dashed border-border-strong p-6 text-center">
-      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
-        <Bot className="h-5 w-5" aria-hidden />
-      </div>
-      <div className="font-medium">Describe what you need</div>
-      <p className="mx-auto mt-1 max-w-md text-[13px] text-fg-muted">
-        {standalone
-          ? "Say what to build. Paste any function signatures or snippets it must use — Forge uses them exactly and asks what it needs to know."
+    <div className="px-2 pb-4 pt-10 text-center">
+      <h1 className="text-balance text-[34px] font-semibold leading-[1.1] tracking-[-0.3px]">
+        {mode === "B" ? "What are we building?" : "What should we change?"}
+      </h1>
+      <p className="mx-auto mt-3 max-w-lg text-[17px] leading-[1.47] tracking-[-0.37px] text-fg-muted">
+        {mode === "B"
+          ? "Say what to build. Paste any function signatures or snippets it must use: Forge uses them exactly and asks what it needs to know."
           : "Describe the change. Forge reads the copy of your repository, proposes requirements and a plan for your approval, then builds and tests it."}
       </p>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+        {workspace && <Badge>{workspace.name}</Badge>}
+        <Badge tone={mode === "B" ? "info" : "neutral"}>{mode === "B" ? "Standalone" : "Repository copy"}</Badge>
+        {coderLabel && <Badge>Coder: {coderLabel}</Badge>}
+        {onOpenEnvironment && (
+          <button
+            type="button"
+            onClick={onOpenEnvironment}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border px-2.5 py-0.5 text-[11.5px] font-semibold text-accent transition-colors duration-150 hover:bg-accent-soft"
+          >
+            {confirmed ? "Environment" : "Review environment"}
+          </button>
+        )}
+      </div>
+      <div className="mt-6 flex flex-wrap justify-center gap-2" aria-label="Ways to begin">
+        {STARTERS[mode].map((text) => (
+          <button
+            key={text}
+            type="button"
+            onClick={() => draft(text)}
+            className="cursor-pointer rounded-full border border-border bg-surface px-4 py-2 text-[13px] transition-colors duration-150 hover:border-accent hover:text-accent active:scale-95"
+          >
+            {text}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

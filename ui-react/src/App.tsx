@@ -159,7 +159,7 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
                 panelsCollapsed={surface === "chat" ? panelsCollapsed : null}
                 onTogglePanels={() => collapsePanels(!panelsCollapsed)}
               />
-              {surface === "map" ? <RunMap forge={forge} onJump={jump} /> : <Chat forge={forge} />}
+              {surface === "map" ? <RunMap forge={forge} onJump={jump} /> : <Chat forge={forge} onOpenEnvironment={() => setEnvOpen(true)} />}
             </>
           )}
         </main>

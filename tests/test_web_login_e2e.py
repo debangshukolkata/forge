@@ -120,6 +120,11 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
         page.fill("input[placeholder*='payments-masking'][placeholder^='C:']", str(tmp_path / "pm"))
         page.click("button:has-text('Create and open')")
         page.wait_for_selector("textarea[aria-label=Message]")
+        page.wait_for_selector("text=What are we building?")  # the chat opens with the welcome (D-186)
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(shots / "chat-welcome-light.png"))
+        page.click("button:has-text('Write a small API with tests')")
+        assert page.input_value("textarea[aria-label=Message]") == "Write a small API with tests"
         page.fill("textarea[aria-label=Message]", "/help")
         page.keyboard.press("Enter")
         page.wait_for_selector("pre:has-text('/rewind')")

@@ -3,7 +3,7 @@
 // images can be attached with the paperclip, pasted (Ctrl+V a screenshot) or dropped on the chat.
 import { ArrowUp, CircleStop, FileImage, FileText, FileType, Paperclip, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { api, cx, storageGet, storageSet, uploadFile, type Attachment } from "../lib";
+import { api, cx, DRAFT_EVENT, storageGet, storageSet, uploadFile, type Attachment } from "../lib";
 import type { Forge } from "../useForge";
 import { ActivityLine, RunTotals } from "./Activity";
 import { Badge, Button, IconButton, Spinner } from "./ui";
@@ -63,6 +63,16 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
   const workspace = forge.state.workspace?.path ?? "";
   const historyKey = `forge-history-${workspace}`;
   const mode = forge.state.mode ?? "default";
+
+  // A starter chip on the welcome screen puts its text in the box (the user still reviews and sends it).
+  useEffect(() => {
+    const fill = (event: Event) => {
+      setText(String((event as CustomEvent).detail ?? ""));
+      area.current?.focus();
+    };
+    window.addEventListener(DRAFT_EVENT, fill);
+    return () => window.removeEventListener(DRAFT_EVENT, fill);
+  }, []);
 
   // The "@word" being typed right before the caret, if any.
   const mention = useMemo(() => {

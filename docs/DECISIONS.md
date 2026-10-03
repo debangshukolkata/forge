@@ -2639,3 +2639,11 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   (the .env names and the provider env names) from the child environment would close it, but would also hide e.g. LOCAL_PG_URL
   from a built app that reads it from the environment. Redaction does not catch re-encoded values (base64, reversed) if the model
   runs code to transform a secret; that needs an approved command first.
+
+### D-188 — The chat's opening screen (2026-10-03, "proceed to the next screen" = the chat step of the flow)
+- A new or empty project's chat opens with a welcome in the new design: a large question ("What are we building?" for Standalone, "What
+  should we change?" for a repository copy), one line of guidance, chips for the project name, the mode, the coder model chosen on the
+  Environment drawer and a link back to it ("Review environment" until the models were confirmed), and three starter prompts per mode.
+  A starter fills the message box (the user reads, edits and sends it; nothing is sent automatically). The rest of the chat (messages,
+  tool cards, side panels) only picked up the new theme; the Claude Code style tool-call cards and the subagent view stay in TODO.
+  Test: `tests/test_web_login_e2e.py` (screenshot `chat-welcome-light.png`).
