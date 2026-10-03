@@ -99,6 +99,17 @@
   color-scheme: dark;
 }
 
+/* The environment drawer slides in from the right. */
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+.drawer-in {
+  animation: drawer-in 180ms ease-out;
+}
+
 html,
 body,
 #root {

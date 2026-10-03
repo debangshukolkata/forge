@@ -119,7 +119,6 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
         page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
         page.fill("input[placeholder*='payments-masking'][placeholder^='C:']", str(tmp_path / "pm"))
         page.click("button:has-text('Create and open')")
-        page.click("button:has-text('Skip for now')")  # the setup screen (D-186)
         page.wait_for_selector("textarea[aria-label=Message]")
         page.fill("textarea[aria-label=Message]", "/help")
         page.keyboard.press("Enter")
@@ -192,7 +191,7 @@ def test_environment_screen_in_edge(
             browser = p.chromium.launch(channel="msedge", headless=True)
         except Exception as error:
             pytest.skip(f"headless Edge not available: {error}")
-        page = browser.new_context(viewport={"width": 1280, "height": 1500}).new_page()
+        page = browser.new_context(viewport={"width": 1500, "height": 950}).new_page()
         problems: list[str] = []
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
@@ -204,7 +203,8 @@ def test_environment_screen_in_edge(
         page.wait_for_selector("text=Start something new.")
 
         page.click("button:has-text('Environment')")
-        page.wait_for_selector("text=Check your environment.")
+        drawer = page.locator("[role=dialog][aria-label=Environment]")
+        drawer.wait_for()
         page.wait_for_selector("text=Azure OpenAI")
         page.wait_for_selector("text=no answer from the deployment")  # the azure row finished
         page.wait_for_selector("text=Tesseract OCR")
@@ -214,20 +214,31 @@ def test_environment_screen_in_edge(
         assert reviewer.input_value() == "gpt51"  # gpt41 did not answer, so the reviewer moved to gpt51
         page.wait_for_selector("text=is not answering; using gpt51 instead")
         page.wait_for_timeout(500)
-        page.screenshot(path=str(shots / "environment-light.png"), full_page=True)
+        page.screenshot(path=str(shots / "environment-drawer-light.png"))
 
-        page.click("button:has-text('Save')")
-        page.wait_for_selector("text=Start something new.")
+        page.click("button:has-text('Save models')")
+        drawer.wait_for(state="hidden")
         saved = store.load(isolated_forge_home)
         assert saved["plan"]["reviewer"] == "gpt51" and saved["confirmed_at"]
         assert saved["results"]["azure"]["models"] == {"gpt41": False, "gpt51": True}
 
-        # Next time the saved plan is what the screen shows.
+        # Next time the saved plan is what the drawer shows.
         page.click("button:has-text('Environment')")
         page.wait_for_selector("select[aria-label='Model for reviewer']")
         assert page.locator("select[aria-label='Model for reviewer']").input_value() == "gpt51"
+        page.click("button[aria-label='Close']")
+        drawer.wait_for(state="hidden")
+
+        # The New project screen opens the drawer by itself, beside the form.
+        page.click("button:has-text('Home')")
+        page.click("button:has-text('New project')")
+        drawer.wait_for()
+        page.wait_for_selector("text=Project folder")
+        page.wait_for_selector("text=no answer from the deployment")
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(shots / "new-project-drawer-light.png"))
         page.click("button[aria-label='Dark theme']")
         page.wait_for_timeout(500)
-        page.screenshot(path=str(shots / "environment-dark.png"), full_page=True)
+        page.screenshot(path=str(shots / "new-project-drawer-dark.png"))
         browser.close()
     assert not problems, problems

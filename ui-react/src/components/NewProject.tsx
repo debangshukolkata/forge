@@ -1,13 +1,12 @@
-import { AlertTriangle, ArrowLeft, CheckCircle2, FolderGit2, Layers, ShieldCheck, XCircle } from "lucide-react";
+import { ArrowLeft, FolderGit2, Layers, ShieldCheck, XCircle } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, cx } from "../lib";
-import type { DoctorResult } from "../types";
 import { Headline, Tagline } from "./landing";
 import { Button, Card, Field, Input, Spinner } from "./ui";
 
 type Mode = "A" | "B";
 
-export function NewProject({ onCreated, onBack }: { onCreated: () => void; onBack: () => void }) {
+export function NewProject({ onCreated, onBack, onOpenEnvironment }: { onCreated: () => void; onBack: () => void; onOpenEnvironment: () => void }) {
   const [mode, setMode] = useState<Mode>("B");
   const [project, setProject] = useState("");
   const [folder, setFolder] = useState("");
@@ -19,11 +18,9 @@ export function NewProject({ onCreated, onBack }: { onCreated: () => void; onBac
   const [setupPhase, setSetupPhase] = useState("");
   const [error, setError] = useState("");
   const [known, setKnown] = useState<string[]>([]);
-  const [doctor, setDoctor] = useState<DoctorResult[] | null>(null);
 
   useEffect(() => {
     api<string[]>("/api/profiles").then(setKnown).catch(() => setKnown([]));
-    api<DoctorResult[]>("/api/doctor").then(setDoctor).catch(() => setDoctor([]));
   }, []);
 
   const submit = async (event: FormEvent) => {
@@ -56,9 +53,14 @@ export function NewProject({ onCreated, onBack }: { onCreated: () => void; onBac
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
-      <Button variant="ghost" size="sm" icon={<ArrowLeft className="h-3.5 w-3.5" />} onClick={onBack} className="-ml-3 mb-4">
-        Back
-      </Button>
+      <div className="mb-4 flex items-center justify-between">
+        <Button variant="ghost" size="sm" icon={<ArrowLeft className="h-3.5 w-3.5" />} onClick={onBack} className="-ml-3">
+          Back
+        </Button>
+        <Button variant="ghost" size="sm" icon={<ShieldCheck className="h-3.5 w-3.5" />} onClick={onOpenEnvironment}>
+          Environment
+        </Button>
+      </div>
       <Headline className="!text-[34px]">New project.</Headline>
       <Tagline className="mt-2">Give it a name and a folder. Everything after that happens in the chat.</Tagline>
 
@@ -127,35 +129,6 @@ export function NewProject({ onCreated, onBack }: { onCreated: () => void; onBac
         </form>
       </Card>
 
-      <Card className="mt-6 p-5">
-        <div className="mb-3 flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-fg-muted" aria-hidden />
-          <h2 className="text-[14px] font-semibold">Environment check</h2>
-        </div>
-        {doctor === null ? (
-          <div className="flex items-center gap-2 text-[13px] text-fg-muted">
-            <Spinner /> Checking…
-          </div>
-        ) : (
-          <ul className="space-y-1.5">
-            {doctor.map((result) => (
-              <li key={result.name} className="flex gap-2 text-[13px]">
-                {result.status === "ok" ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-ok" aria-label="OK" />
-                ) : result.status === "warn" ? (
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warn" aria-label="Warning" />
-                ) : (
-                  <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-label="Failed" />
-                )}
-                <span>
-                  <span className="font-medium">{result.name}</span>
-                  <span className="text-fg-muted"> — {result.detail}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
     </div>
   );
 }
