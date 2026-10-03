@@ -92,6 +92,9 @@ class LLMResponse(BaseModel):
         )
 
 
+TextDeltaCallback = Callable[[str], Awaitable[None]]
+
+
 class ChatRequest(BaseModel):
     messages: list[Message]
     tools: list[ToolSpec] = Field(default_factory=list)
@@ -100,9 +103,8 @@ class ChatRequest(BaseModel):
     parallel_tool_calls: bool = True
     # Tools the provider runs itself (Responses API), e.g. "web_search". Only used by Forge's search tool.
     hosted_tools: list[str] = Field(default_factory=list)
-
-
-TextDeltaCallback = Callable[[str], Awaitable[None]]
+    # Called with each finished piece of the model's reasoning summary while it thinks (D-174); local only.
+    on_thinking: TextDeltaCallback | None = Field(default=None, exclude=True)
 
 
 class LLMProvider(Protocol):

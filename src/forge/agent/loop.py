@@ -113,6 +113,7 @@ class AgentLoop:
         self.approvals = approvals
         self.max_iterations = max_iterations
         self.context_manager = context_manager
+        self.on_thinking: TextDeltaCallback | None = None  # set by the session host (D-174)
         self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
         self.role = "coder"  # subagents run on other roles' models (reviewer, debugger)
         self.effort: str | None = None  # /effort: overrides the model's configured reasoning effort
@@ -193,6 +194,7 @@ class AgentLoop:
             messages=await self.context_manager.prepare(history, tools),
             tools=tools,
             reasoning_effort=reasoning_effort,
+            on_thinking=self.on_thinking,
         )
         try:
             response = await self.router.chat(self.role, request, timed_delta)

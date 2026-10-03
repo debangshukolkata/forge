@@ -2531,3 +2531,14 @@ the screenshots and scratch databases when done); either way the checks leave th
 file or delete the records, users, orders and files they created; never touch data they did not create). The main agent's prompt
 says it may ask for a throwaway check. For Node/React apps the skill names an `@playwright/test` spec. Tests: the verifier may
 delete only below `tests/e2e/`.
+
+### D-174 — Visible progress while the model thinks (user: "little visible progress between steps") · Built (2026-10-03)
+Measured (28 runs): 74% of the time is waiting on the model, 15 s per call on average and 100-200 s for calls that write whole
+files, so the screen was silent for long stretches. **Two changes:** (1) the Responses request now asks for reasoning summaries
+(`reasoning.summary: "auto"`, verified live on this deployment) and each finished summary part streams as a `thinking_delta`
+event (`ChatRequest.on_thinking`, a local callback that is never sent; `SessionHost.stream_thinking`); the terminal client
+prints it dim and italic; a deployment that rejects `summary` is retried without it. (2) both system prompts ask for one short
+sentence before a batch of tool calls ("Reading the routes to see how errors are shaped"). Not done: the web UI does not show
+`thinking_delta` yet (UI work is deferred), and tools do not start while the model is still streaming its remaining calls.
+Tests: summaries reach the callback with `summary: auto` in the request, a refusing deployment is retried without it, the host
+publishes the event.

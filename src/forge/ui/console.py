@@ -76,6 +76,8 @@ def render_event(event: Event, console: Console, state: ConsoleState) -> None:
         # Streamed text is written raw (no markup parsing) so model output can't inject styles.
         sys.stdout.write(payload["text"])
         sys.stdout.flush()
+    elif kind == EventType.THINKING_DELTA:
+        console.print(Text(f"  … {payload['text'].strip()[:300]}", style="dim italic"))
     elif kind == EventType.MESSAGE_DONE:
         sys.stdout.write("\n")
         sys.stdout.flush()

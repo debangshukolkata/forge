@@ -101,22 +101,36 @@ class AzureOpenAIProvider:
         if request.reasoning_effort:
             params["reasoning"] = {"effort": request.reasoning_effort}
             params["include"] = ["reasoning.encrypted_content"]
+        wants_summary = bool(request.on_thinking and request.reasoning_effort and on_text_delta)
+        if wants_summary:  # progress while it thinks: short summaries of the reasoning (D-174)
+            params["reasoning"] = {**params["reasoning"], "summary": "auto"}
         try:
             if on_text_delta is None:
                 response = await self._client.responses.create(**params)
                 return from_responses_output(response.model_dump(exclude_none=True))
-            return await self._stream_responses(params, on_text_delta)
+            try:
+                return await self._stream_responses(params, on_text_delta, request.on_thinking)
+            except openai.BadRequestError as error:
+                if not wants_summary or "summary" not in str(error).lower():
+                    raise
+                params["reasoning"].pop("summary", None)  # this deployment does not offer summaries
+                return await self._stream_responses(params, on_text_delta, None)
         except openai.OpenAIError as error:
             raise map_openai_error(error) from error
 
     async def _stream_responses(
-        self, params: dict[str, Any], on_text_delta: TextDeltaCallback
+        self,
+        params: dict[str, Any],
+        on_text_delta: TextDeltaCallback,
+        on_thinking: TextDeltaCallback | None = None,
     ) -> LLMResponse:
         stream = await self._client.responses.create(**params, stream=True)
         final: dict[str, Any] | None = None
         async for event in stream:
             if event.type == "response.output_text.delta":
                 await on_text_delta(event.delta)
+            elif event.type == "response.reasoning_summary_text.done" and on_thinking is not None:
+                await on_thinking(str(getattr(event, "text", "") or ""))
             elif event.type in ("response.completed", "response.incomplete"):
                 final = event.response.model_dump(exclude_none=True)
             elif event.type in ("response.failed", "error"):

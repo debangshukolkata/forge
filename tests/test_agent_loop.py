@@ -41,8 +41,8 @@ async def test_reply_cut_off_at_the_output_limit_is_continued(original_repo: Pat
     runner.cancel()
 
     assert len(bodies) == 2
-    assert bodies[0]["reasoning"] == {"effort": "medium"}
-    assert bodies[1]["reasoning"] == {"effort": "low"}  # think less so the answer fits
+    assert bodies[0]["reasoning"]["effort"] == "medium"  # type: ignore[index]
+    assert bodies[1]["reasoning"]["effort"] == "low"  # type: ignore[index]  # think less so the answer fits
     assert any(m.role == "system" and m.content == CUT_OFF_NOTE for m in host.history)
     kinds = [e.payload.get("kind") for e in host.bus.events_since(0) if e.type == EventType.NOTICE]
     assert "continuing" in kinds

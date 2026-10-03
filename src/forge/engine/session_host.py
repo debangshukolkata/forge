@@ -245,7 +245,7 @@ class SessionHost:
         self.refresh_memory_pin()
         self.style: str | None = None
         gate = PermissionGate(mode, workspace.forge_dir / "permissions.json")
-        return AgentLoop(
+        loop = AgentLoop(
             self.router,
             self.bus,
             ToolRegistry(
@@ -257,6 +257,8 @@ class SessionHost:
             self.router.config.limits.max_iterations_per_task,
             self.context_manager,
         )
+        loop.on_thinking = self.stream_thinking
+        return loop
 
     @property
     def busy(self) -> bool:
@@ -387,6 +389,11 @@ class SessionHost:
             await orchestrator.restructure(instruction)
 
         await self._run_turn(turn)
+
+    async def stream_thinking(self, text: str) -> None:
+        """A short summary of what the model is working out, shown while it waits on a slow reasoning call."""
+        if text.strip():
+            await self.bus.publish(EventType.THINKING_DELTA, {"text": text})
 
     async def stream_delta(self, delta: str) -> None:
         self._streamed.append(delta)

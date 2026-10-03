@@ -23,6 +23,9 @@ from forge.safety.redact import Redactor, default_redactor
 class EventType(StrEnum):
     USER_MESSAGE = "user_message"  # what the user sent, so a UI replay shows both sides
     MESSAGE_DELTA = "message_delta"
+    THINKING_DELTA = (
+        "thinking_delta"  # a finished piece of the model's reasoning summary (progress while it thinks)
+    )
     MESSAGE_DONE = "message_done"
     LLM_CALL = "llm_call"  # one model call: latency, tokens, tool calls asked for (run log; no UI row)
     TOOL_CALL_STARTED = "tool_call_started"

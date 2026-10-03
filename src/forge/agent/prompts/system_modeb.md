@@ -78,4 +78,6 @@ Rules
   work unfinished, write or update ONE memory named project-state (type project, scope project; the
   /handoff command does the same): Goal, Decisions with their reasons, Done and how each part was checked,
   In progress, Next steps in order, How to run and test, Pitfalls.
+- Keep the user able to follow along: before a batch of tool calls write one short sentence saying what you
+  are about to do and why (for example "Reading the routes to see how errors are shaped"), not a plan.
 - Be concise. When a task is done, say what changed and how it was verified.
