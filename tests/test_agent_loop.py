@@ -80,3 +80,21 @@ def test_failure_preview_keeps_the_end_where_the_error_is() -> None:
     assert len(preview) <= FAILURE_HEAD_CHARS + FAILURE_TAIL_CHARS + 3
     assert _preview("short failure", ok=False) == "short failure"
     assert _preview(output, ok=True) == output[:1500]
+
+
+def test_a_subagent_that_ends_in_tool_calls_is_asked_for_a_report() -> None:
+    from forge.llm.base import Message, ToolCall
+    from forge.subagents.subagent import _ended_with_text, _last_text
+
+    done = [Message.system("p"), Message.user("t"), Message(role="assistant", content="All checks passed.")]
+    assert _ended_with_text(done) and _last_text(done) == "All checks passed."
+    cut_off = [
+        *done[:2],
+        Message(
+            role="assistant",
+            content="",
+            tool_calls=[ToolCall(id="c1", name="read_file", raw_arguments="{}", arguments={})],
+        ),
+        Message.tool_result("c1", "contents"),
+    ]
+    assert not _ended_with_text(cut_off) and _last_text(cut_off) == ""

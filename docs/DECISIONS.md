@@ -2484,3 +2484,15 @@ background-process manager. A `VERDICT: PASS` counts as browser evidence for `ta
 system prompts (use the app yourself, then call the verifier for anything beyond a trivial flow, fix real failures, run it
 again) and in the web-ui-verification skill. The scripts it leaves in `tests/e2e/` are delivered with the work, so the user
 gets repeatable checks. **Tests:** write restriction, built-in type registered; its behaviour is checked live in the campaign.
+
+### D-170 — Verifier robustness (first live run on the bakery site) · Built (2026-10-03)
+First real verifier run (bakery site, 61 tool calls, 12 minutes): it wrote a 436-line Playwright suite under
+`tests/e2e/`, ran 23 checks and found a **real bug my own scripts had missed** (placing an order with no customer name
+shows no message at all; the requirement said it must be refused with a clear message). Two defects in the verifier
+itself: it ran out of steps while still calling tools and returned an **empty report** to the main agent, and it asserted
+exact wording the requirement never gave ("Please enter your name.") copied from the app's source. **Fixes:** every subagent
+that ends mid-work is now asked once, with nothing to call, to write its report from what it found (`_run_subagent`), the
+verifier's step budget is 90 instead of 45, and its prompt now says: check what the requirement says, not what the code
+does; never assert unspecified wording (check that a clear visible message appeared); reproduce a failure by hand and read
+the server log before calling it a bug. The earlier D-168 checklist (static, tests, runtime log, behaviour, browser
+diagnostics, visual, data) stays.

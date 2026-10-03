@@ -17,6 +17,7 @@ from forge.safety.permissions import PermissionGate
 from forge.safety.redact import default_redactor
 from forge.toolkit.base import ToolContext
 from forge.toolkit.shell import RunCommand
+from forge.tools.files import ReadFile
 from forge.tools.registry import ToolRegistry, default_tools
 
 REPORT_TOKENS = 1500
@@ -62,7 +63,7 @@ async def run_explore(router: LLMRouter, context: ToolContext, requirement: str)
     return head + (f"\n[… {omitted} tokens of the report omitted …]\n" + tail if omitted else "")
 
 
-VERIFIER_ITERATIONS = 45
+VERIFIER_ITERATIONS = 90
 VERIFIER_PROMPT = """You are Forge's verifier subagent. You did not write this code and you do not trust
 it. The main agent gives you the requirement (and what changed) and how to run the app. Your job is to find
 out, by running and using the app the way its users would, whether it really does what was asked, and to
@@ -94,10 +95,14 @@ report evidence. Work through these layers, skipping only those that cannot appl
 7. Data: when the app stores anything, check the stored result directly (query the SQLite file or read the
    output file with a python_run script), not just the page that claims it saved.
 
-For each FAIL decide: is it an app bug, or a wrong assumption in your check (a selector, timing, test data)?
-Fix your own check mistakes and re-run until the remaining failures are real. Never weaken a check just to
-turn it green. Stop the server (stop_background) when done. You may only write files below tests/e2e/ and you
-cannot change the app; report problems instead. Reply with a short table per layer (PASS or FAIL, one line
+Check what the requirement says, not what the code happens to do: do not assert exact wording the requirement
+does not give (check that a clear visible message appeared, whatever its text), and do not copy selectors or
+messages from the app's source as the expected result. For each FAIL decide: is it an app bug, or a wrong
+assumption in your check (a selector, timing, test data, invented wording)? Reproduce it by hand first
+(browser_snapshot or a screenshot, the server log) before you call it a bug. Fix your own check mistakes
+and re-run until the remaining failures are real. Never weaken a check just to turn it green. Stop the
+server (stop_background) when done. You may only write files below tests/e2e/ and you cannot change the
+app; report problems instead. Reply with a short table per layer (PASS or FAIL, one line
 each, with what you saw and any screenshot path), the exact steps to reproduce each real failure, the path of
 your script, and a final line `VERDICT: PASS` (everything that applies passed) or `VERDICT: FAIL`."""
 
@@ -119,6 +124,16 @@ async def run_debugger(router: LLMRouter, context: ToolContext, problem: str) ->
     return await _run_subagent(
         router, context, tools, DEBUGGER_PROMPT, problem, DEBUGGER_ITERATIONS, "reviewer"
     )
+
+
+def _last_text(history: list[Message]) -> str:
+    return next((m.content for m in reversed(history) if m.role == "assistant" and m.content.strip()), "")
+
+
+def _ended_with_text(history: list[Message]) -> bool:
+    """The subagent finished by answering in text, not by running out of steps while still calling tools."""
+    last = next((m for m in reversed(history) if m.role == "assistant"), None)
+    return last is not None and not last.tool_calls and bool(last.content.strip())
 
 
 _AGENT_IDS = itertools.count(1)
@@ -212,6 +227,21 @@ async def _run_subagent(
     history = [Message.system(prompt), Message.user(task)]
 
     await _tracked_run(context, loop, bus, history, role, _purpose(prompt, task))
-    report = next((m.content for m in reversed(history) if m.role == "assistant" and m.content.strip()), "")
+    report = _last_text(history)
+    if not _ended_with_text(history):
+        # Out of steps in the middle of the work (a verifier once used 61 tool calls and returned an empty
+        # report, D-170): ask for the report now, with nothing to call, from what it has found so far.
+        history.append(
+            Message.user(
+                "You are out of steps. Write your final report now from what you have found so far (what "
+                "you checked, what failed with the evidence, what you did not get to). Do not call tools."
+            )
+        )
+        loop.tools = ToolRegistry([ReadFile()])
+        loop.max_iterations = 2
+        await _tracked_run(context, loop, bus, history, role, "final report")
+        report = _last_text(history)
+    if not report.strip():
+        report = "(the subagent ended without writing a report; see its files and the run log)"
     head, tail, omitted = head_and_tail(report, REPORT_TOKENS)
     return head + (f"\n[… {omitted} tokens of the report omitted …]\n" + tail if omitted else "")
