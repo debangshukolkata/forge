@@ -17,7 +17,7 @@ from typing import Any
 import psycopg
 
 from forge.agent.loop import AgentLoop, system_prompt
-from forge.config import Secrets, forge_home
+from forge.config import Secrets, forge_home, permission_rules
 from forge.context.manager import ContextManager
 from forge.db.access import AccessLevel
 from forge.db.credential_tables import credential_tables
@@ -247,7 +247,7 @@ class SessionHost:
             context.sensitive_terms = host_identifying_terms(context.profile)
         self.refresh_memory_pin()
         self.style: str | None = None
-        gate = PermissionGate(mode, workspace.forge_dir / "permissions.json")
+        gate = PermissionGate(mode, workspace.forge_dir / "permissions.json", permission_rules())
         loop = AgentLoop(
             self.router,
             self.bus,

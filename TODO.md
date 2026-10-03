@@ -253,3 +253,5 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 
 ## Later, only if real runs need it
 - [ ] Parallel pytest in built apps: Forge runs `python -m pytest` sequentially (no xdist, no `-n`). Add a prompt line to use pytest-xdist only for large suites (needs a pip install approval; beware shared ports and SQLite files) once a real project shows slow test runs.
+- [ ] Campaign case: Forge builds a small MCP-using tool and tests it with a dummy stdio MCP server it writes itself (needs the `mcp` package via an approved pip install; the server is not wired into Forge's own `config.yaml`). Not yet run live.
+- [ ] UI: Claude Code layout for tool calls in the web chat (user chose option A, 2026-10-03): each call a card in order with the tool name, an IN block (command/path/arguments) and an OUT block, long output collapsed behind "show more" (about 15 lines), edits shown as diffs, failures open, reasoning summaries dim, subagent calls nested and collapsed (D-181). Open question: send the full result to the UI instead of the capped preview. Redaction applies. Check with headless Edge screenshots.

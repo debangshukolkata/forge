@@ -13,6 +13,7 @@ from dotenv import dotenv_values
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from forge.errors import ConfigError
+from forge.safety.permissions import PermissionRules
 from forge.safety.redact import Redactor, default_redactor
 
 ROLES = ("coder", "kb_builder", "reviewer", "summariser", "vision", "judge", "fallback")
@@ -253,6 +254,12 @@ def load_config(home: Path | None = None) -> ForgeConfig:
         except yaml.YAMLError as error:
             raise ConfigError(f"{user_file} is not valid YAML: {error}") from error
         if not isinstance(user_data, dict):
+def permission_rules() -> PermissionRules:
+    """allow/deny rules from <home>/settings.json (D-183). Only the user's own file counts: a project folder
+    the model can write to must never be able to grant itself permissions."""
+    return PermissionRules.load(forge_home() / "settings.json")
+
+
             raise ConfigError(f"{user_file} must contain a YAML mapping")
         data = deep_merge(data, user_data)
     try:

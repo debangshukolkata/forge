@@ -12,8 +12,8 @@ Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
 - **No stuck detector, no escalation ladder (D-155):** the model improvises failure recovery.
 - **Direction (D-156, docs done, code staged):** verification, memory/learning and repo knowledge replicate
   Claude Code (shell checks, FORGE.md + auto-memory + skills, on-demand search).
-- **Tests:** `pytest-xdist` added for dev; `pytest -n 12 --dist loadfile` runs the whole suite in about 3.5
-  minutes. The browser tests no longer stop at the first-run setup screen.
+- **Tests:** `pytest-xdist` added for dev; `pytest -n 12 --dist loadfile` runs the whole suite (about 45 s
+  after D-182's test speed-up). The browser tests no longer stop at the first-run setup screen.
 - **`learning` retired, auto-memory added (D-158):** no more library cards, lessons, retro or proposals; the model
   saves typed memories (user and project scope) with `memory_write`, shown in an index pinned every session.
 - **Verification ladders retired (D-159):** the model runs tests, linters and builds itself through the shell; the
@@ -26,6 +26,18 @@ Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
   enhanced; follow-ups now always reach the model, one conversation across tasks, work without a task list is
   delivered, UI work must be checked in a browser, new `verifier` subagent that writes and runs independent Playwright
   checks; no runtime budget cap.
+- **Reasoning summaries and progress (D-174, D-179):** the model's reasoning summaries stream as dim lines and it
+  narrates before tool calls; a running subagent's steps are relayed as `subagent_step` events (terminal today).
+- **Codex-comparison gaps (D-175..D-180):** read-only `explore`/`reviewer` subagents run in parallel (cap 4);
+  `pre_compact`/`post_compact` hooks; `todo_write` (the model's own todo list, survives compaction); `monitor`
+  (wait on a background process for a pattern, exit or timeout); custom agents may set `max_steps` and
+  `write_only_under`.
+- **Settings permission rules (D-183):** `<home>/settings.json` `permissions.allow` / `deny` (`tool(pattern)`).
+  Deny always wins; allow never lifts a block, the always-ask list or plan mode, and never covers chained commands.
+- **Speed (D-182):** benchmark of three settings; no change to model or effort. **Tests:** the full suite now runs
+  in about 45 s (test workspaces use a venv without pip; shorter stress test; pruned secrets scan).
+- **Decisions awaiting the UI work:** subagent calls nested and collapsed (D-181); Claude Code layout for tool
+  calls in the web chat (TODO).
 - **Parked:** Gemini provider (D-150).
 
 ## 0.1.0 — 2026-09-26 … 2026-09-29

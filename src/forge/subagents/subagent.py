@@ -8,6 +8,7 @@ import itertools
 import time
 
 from forge.agent.loop import AgentLoop
+from forge.config import permission_rules
 from forge.context.manager import ContextManager
 from forge.llm.base import Message
 from forge.llm.router import LLMRouter
@@ -259,7 +260,11 @@ async def _run_subagent(
         approvals = host.approvals
         gate_mode = host.agent.gate.mode if host.agent is not None else gate_mode
         sub_context.background = context.background
-    gate = PermissionGate(gate_mode, context.workspace.forge_dir / "permissions.json")  # type: ignore[arg-type]
+    gate = PermissionGate(
+        gate_mode,  # type: ignore[arg-type]
+        context.workspace.forge_dir / "permissions.json",
+        permission_rules(),
+    )
     manager = ContextManager(router, router.config)
     loop = AgentLoop(router, bus, tools, sub_context, gate, approvals, iterations, manager)
     loop.role = role

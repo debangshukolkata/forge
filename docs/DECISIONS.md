@@ -2573,3 +2573,14 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   baseline 2953 s (accuracy not measured: port 5061 is blocked by Edge, ERR_UNSAFE_PORT; avoid 5060/5061 in checks), gpt-5.1 with
   lower effort after read-only steps 2447 s (9/11, 15/17, 19/21), gpt-4.1 coder 742 s (all checks passed, verifier never called).
   One run per setting on one app, verifier use differs, so no setting change; the model and effort stay as configured (D-161).
+- **D-183 settings permission rules (user decision 2026-10-03, first step of docs/DESIGN_PLUGINS_MCP_LSP.md).** `<home>/settings.json`
+  (`%USERPROFILE%\.forge\settings.json`) may hold `{"permissions": {"allow": [...], "deny": [...]}}`; a rule is `tool` or
+  `tool(pattern)` (fnmatch; the pattern is matched against the shell command, wildcards allowed, tool names may use `*`, e.g.
+  `run_command(python -m pytest*)`, `mcp__demo__add`, `mcp__demo__wipe*`). **Deny always wins**, in every mode, and also matches a
+  segment of a chained command (`cd x && git push` hits `run_command(git push*)`). **Allow only turns "ask" into "allow"**: it can
+  never lift a classifier block, the always-ask list (pip install, deleting the user's files, network, outside the workspace) or plan
+  mode, and it never covers a command containing `; & | < > \`` or a newline or `$(` (so `pytest && curl ...` is not `pytest`).
+  Options considered: user file only (chosen) vs also a project file in the workspace. A project file is deferred: the model can write
+  inside the workspace, so a project-level settings file there would let it grant itself permissions. A broken file raises
+  `ConfigError` instead of being ignored (a dropped deny rule would be worse than refusing to start). Applies to the main agent and to
+  subagents. Option "always allow" prefixes in `.forge/permissions.json` are unchanged. Tests: `tests/test_permissions.py`.
