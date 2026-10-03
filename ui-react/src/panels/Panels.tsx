@@ -2,7 +2,7 @@ import "diff2html/bundles/css/diff2html.min.css";
 import DOMPurify from "dompurify";
 import { html as diffHtml } from "diff2html";
 import {
-  Brain, ChevronDown, ChevronRight, Columns2, Database, Download, FileCode2, FileText, Folder, FolderOpen, Gauge,
+  Brain, ChevronDown, ChevronRight, Columns2, Database, Download, FileCode2, FileSignature, FileText, Folder, FolderOpen, Gauge,
   GitCompareArrows, ListChecks, RotateCcw, Rows2, Settings2, Target,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
@@ -12,14 +12,16 @@ import { UsageBadge, compactTokens, usd as usdText } from "../usage";
 import type { CostLimits, UsageBucket } from "../types";
 import type { Forge } from "../useForge";
 import { TodoItems, todoSummary } from "../components/TodoList";
+import { ContractsTab } from "./ContractsTab";
 
-type Tab = "tasks" | "files" | "diffs" | "db" | "evals" | "learning" | "context" | "settings";
+type Tab = "tasks" | "files" | "diffs" | "db" | "contracts" | "evals" | "learning" | "context" | "settings";
 
 const TABS: Array<{ id: Tab; label: string; icon: ReactNode }> = [
   { id: "tasks", label: "Tasks", icon: <ListChecks className="h-4 w-4" /> },
   { id: "files", label: "Files", icon: <FileCode2 className="h-4 w-4" /> },
   { id: "diffs", label: "Diffs", icon: <GitCompareArrows className="h-4 w-4" /> },
   { id: "db", label: "DB", icon: <Database className="h-4 w-4" /> },
+  { id: "contracts", label: "Contracts", icon: <FileSignature className="h-4 w-4" /> },
   { id: "evals", label: "Evals", icon: <Target className="h-4 w-4" /> },
   { id: "learning", label: "Learning", icon: <Brain className="h-4 w-4" /> },
   { id: "context", label: "Usage", icon: <Gauge className="h-4 w-4" /> },
@@ -27,7 +29,10 @@ const TABS: Array<{ id: Tab; label: string; icon: ReactNode }> = [
 ];
 
 export function Panels({ forge, collapsed, onExpand }: { forge: Forge; collapsed: boolean; onExpand: () => void }) {
-  const [tab, setTab] = useState<Tab>((storageGet("forge-react-tab") as Tab) || "tasks");
+  const [saved, setTab] = useState<Tab>((storageGet("forge-react-tab") as Tab) || "tasks");
+  // Contracts belong to Standalone (Mode B) projects only (D-129); elsewhere the tab isn't offered.
+  const tabs = TABS.filter((t) => t.id !== "contracts" || forge.state.workspace?.mode === "B");
+  const tab: Tab = tabs.some((t) => t.id === saved) ? saved : "tasks";
   const select = (next: Tab) => {
     setTab(next);
     storageSet("forge-react-tab", next);
@@ -36,7 +41,7 @@ export function Panels({ forge, collapsed, onExpand }: { forge: Forge; collapsed
     // A thin rail of the tab icons: one click reopens the panel on that tab.
     return (
       <aside aria-label="Details (collapsed)" className="flex w-12 shrink-0 flex-col items-center gap-1 border-l border-border bg-surface py-2">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -59,9 +64,9 @@ export function Panels({ forge, collapsed, onExpand }: { forge: Forge; collapsed
   }
   return (
     <aside aria-label="Details" className="flex w-[440px] shrink-0 flex-col border-l border-border bg-surface">
-      {/* Eight tabs in one row that always fits: icon above a short label, no hidden overflow. */}
-      <div role="tablist" className="grid shrink-0 grid-cols-8 border-b border-border px-1">
-        {TABS.map((t) => (
+      {/* The tabs share one row that always fits: icon above a short label, no hidden overflow. */}
+      <div role="tablist" className="grid shrink-0 border-b border-border px-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
+        {tabs.map((t) => (
           <button
             key={t.id}
             role="tab"
@@ -83,6 +88,7 @@ export function Panels({ forge, collapsed, onExpand }: { forge: Forge; collapsed
         {tab === "files" && <FilesTab forge={forge} />}
         {tab === "diffs" && <DiffsTab forge={forge} />}
         {tab === "db" && <DbTab forge={forge} />}
+        {tab === "contracts" && <ContractsTab forge={forge} />}
         {tab === "evals" && <EvalsTab forge={forge} />}
         {tab === "learning" && <LearningTab forge={forge} />}
         {tab === "context" && <ContextTab forge={forge} />}

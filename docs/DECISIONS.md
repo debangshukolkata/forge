@@ -2711,3 +2711,15 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   measurement was sometimes missed (about one run in three while the whole suite ran in parallel). The nodes now carry their known
   width and height (the same numbers dagre lays them out with), so they show at once. Also a fix for `subagent.py`: a loop
   stand-in without a router (as in `test_events.py`) gets cost 0 instead of failing.
+
+### D-194 — Contracts panel in the web UI (built 2026-10-03; the second half of D-129)
+- A **Contracts** tab in the side panel, offered only on Standalone (Mode B) projects (Mode A reads the repository itself, there are no
+  seams to pin). A form (seam, signature, optional note) pins a contract; each pinned contract is a card with its signature, note,
+  where it came from ("Pinned by you" / "From your corrections"), when it was pinned and revised, and Revise / Forget buttons
+  (Revise locks the seam and saves a revision; Forget asks first). The list also refreshes when the chat pins one with `contract_pin`
+  or `/contracts pin`. Endpoints: `GET/POST /api/contracts`, `DELETE /api/contracts/{seam|id}` (`web/contracts_routes.py`). Pinning
+  runs the same `contract_pin` tool the chat uses, so a contract entered on the panel is also saved as project memory, then the pinned
+  context is refreshed so the next model call sees it. Options considered: a modal editor (rejected: the panel is narrow but always
+  open and the form needs three fields), editing the signature in place on the card (rejected: easy to change by accident; Revise
+  is explicit). Forgetting removes the contract from the register (as `/contracts forget` does); a memory note saved when it was
+  pinned is not removed. Tests: `tests/test_web_contracts.py`, `tests/test_web_contracts_e2e.py` (`contracts-light.png`).

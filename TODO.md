@@ -49,7 +49,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
   - Mode B Contracts store (§6A.2A, D-129): `src/forge/modeb/contracts.py` (`ContractRegister`, per host
     profile), `contract_pin`/`contract_read` tools, `/contracts` command, pinned into context alongside
     profile essentials, and pinning proposes a lesson (scoped to the profile) so Forge recommends a known
-    contract on a later requirement. The **web UI Contracts panel** (the other half of the D-129 UI
+    contract on a later requirement. The **web UI Contracts panel** (built 2026-10-03, D-194; the other half of the D-129 UI
     decision) is NOT built — chat/`/contracts` is the only interface today; deferred with the rest of the
     React UI work (below).
   - All 6 affected test files rewritten/fixed (`test_orchestrator.py` fully rewritten, `test_db.py`,

@@ -212,3 +212,13 @@ export interface TodoItem {
   content: string;
   status: "pending" | "in_progress" | "completed";
 }
+
+export interface Contract {
+  id: string;
+  seam: string;
+  signature: string;
+  note: string;
+  source: "user" | "corrected";
+  pinned: string;
+  revised: string;
+}
