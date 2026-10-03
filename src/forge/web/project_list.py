@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from forge.web.project_memory import project_memory
+
 TAIL_BYTES = 256 * 1024
 SUMMARY_CHARS = 160
 
@@ -36,7 +38,7 @@ def _last_request(log: Path) -> str:
     return ""
 
 
-def describe_projects(recent: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def describe_projects(recent: list[dict[str, Any]], home: Path) -> list[dict[str, Any]]:
     """`recent` is WebSessionManager.recent(): path, name, repo, app_folder. Newest activity first."""
     projects = []
     for entry in recent:
@@ -49,12 +51,14 @@ def describe_projects(recent: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 touched = (root / ".forge" / "workspace.json").stat().st_mtime
             except OSError:
                 continue
+        mode = "B" if str(entry.get("repo", "")).startswith("standalone") else "A"
         projects.append(
             {
                 **entry,
-                "mode": "B" if str(entry.get("repo", "")).startswith("standalone") else "A",
+                "mode": mode,
                 "last_activity": datetime.fromtimestamp(touched, UTC).isoformat(),
                 "last_request": _last_request(log),
+                "memory": project_memory(home, root, entry, mode),
             }
         )
     return sorted(projects, key=lambda project: project["last_activity"], reverse=True)

@@ -813,3 +813,59 @@ def test_react_full_tool_output(server: ServerSecurity, workspace: Workspace) ->
         page.wait_for_selector("text=The full output is no longer available.")
         browser.close()
     assert not problems, problems
+
+
+def test_react_project_list_shows_what_forge_remembers(
+    server: ServerSecurity, isolated_forge_home: Path, tmp_path: Path
+) -> None:
+    """D-196: each project in the list says where the work stands, from its handoff, and what Forge holds for it."""
+    from forge.memory.store import STATE_MEMORY, MemoryStore
+    from forge.modeb.profile import ProfileStore
+
+    handoff = (
+        "## Goal\nMask card numbers in the audit log.\n\n## Next\n1. Add the CSV export of masked rows\n"
+    )
+    profile = ProfileStore(isolated_forge_home).create("web-host")
+    store = MemoryStore(isolated_forge_home, "profile:web-host")
+    store.save(STATE_MEMORY, "Where the work stands", "project", handoff)
+    store.save("prefers-pytest", "Uses pytest", "project", "Run python -m pytest -q.")
+    (profile.root / "FORGE.md").write_text("# Host rules\n", encoding="utf-8")
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
+        problems: list[str] = []
+        page.on("console", lambda m: problems.append(m.text) if m.type == "error" else None)
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Start something new.")
+        page.evaluate(
+            "p => fetch('/api/standalone', {method: 'POST', headers: {'Content-Type': 'application/json'},"
+            " body: JSON.stringify({workspace: p, profile: 'web-host'})})",
+            str(tmp_path / "wsb"),
+        )
+        page.reload()
+        page.click("button:has-text('Home')")
+        page.click("button:has-text('Open a project')")
+        state = page.locator("[data-testid=project-state]")
+        state.wait_for()
+        assert "Mask card numbers in the audit log." in state.inner_text()
+        assert "Add the CSV export of masked rows" in state.inner_text()
+        card = page.locator("li:has([data-testid=project-state])")
+        assert (
+            "1 note" in card.inner_text()
+            and "FORGE.md" in card.inner_text()
+            and "handoff" in card.inner_text()
+        )
+        page.fill("input[aria-label='Search projects']", "csv export")  # the search reads the handoff too
+        assert page.locator("[data-testid=project-state]").count() == 1
+        page.fill("input[aria-label='Search projects']", "nothing like this")
+        page.wait_for_selector("text=No match")
+        page.fill("input[aria-label='Search projects']", "")
+        page.screenshot(path=str(shots / "projects-memory-light.png"))
+        browser.close()
+    assert not problems, problems

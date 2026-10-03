@@ -263,5 +263,6 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
   remembered per machine (D-186)
 - [ ] Use Tesseract and Gemini for real (the screen only detects them today); show the Azure key/endpoint entry on this screen too
   (today missing values are asked for by the older first-run Setup screen)
-- [ ] Project list: show the project's memory summary (FORGE.md / handoff) and mode-specific details, not only the last request
+- [x] Project list: memory summary (handoff goal/next, note count, FORGE.md) on each project (D-196)
+- [ ] Check whether FORGE.md really shows up as a note in `MemoryStore.all()` and the pinned memory index (found while building D-196)
 - [ ] Change password / account screen (today: delete account.json)

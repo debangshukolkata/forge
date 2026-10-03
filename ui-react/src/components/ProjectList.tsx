@@ -19,7 +19,7 @@ export function ProjectList({ onBack, onOpen }: { onBack: () => void; onOpen: (p
         setProjects([]);
       });
   }, []);
-  const shown = (projects ?? []).filter((p) => `${p.name} ${p.repo} ${p.last_request}`.toLowerCase().includes(filter.toLowerCase()));
+  const shown = (projects ?? []).filter((p) => `${p.name} ${p.repo} ${p.last_request} ${p.memory.state?.goal ?? ""} ${p.memory.state?.next ?? ""}`.toLowerCase().includes(filter.toLowerCase()));
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
@@ -68,7 +68,32 @@ export function ProjectList({ onBack, onOpen }: { onBack: () => void; onOpen: (p
                   <span className="mt-0.5 block truncate text-[13.5px] text-fg-muted">
                     {project.last_request ? `Last: ${project.last_request}` : "No requests yet"}
                   </span>
-                  <span className="mt-0.5 block truncate text-[12px] text-fg-muted">
+                  {project.memory.state && (
+                    <span className="mt-2 block space-y-0.5 border-l-2 border-border pl-3 text-[13px]" data-testid="project-state">
+                      {project.memory.state.goal && (
+                        <span className="block truncate">
+                          <span className="text-fg-muted">Goal: </span>
+                          {project.memory.state.goal}
+                        </span>
+                      )}
+                      {project.memory.state.next && (
+                        <span className="block truncate">
+                          <span className="text-fg-muted">Next: </span>
+                          {project.memory.state.next}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  <span className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {project.memory.memories > 0 && (
+                      <Badge>
+                        {project.memory.memories} note{project.memory.memories === 1 ? "" : "s"}
+                      </Badge>
+                    )}
+                    {project.memory.instructions && <Badge>FORGE.md</Badge>}
+                    {project.memory.state?.saved && <Badge>handoff {timeAgo(project.memory.state.saved)}</Badge>}
+                  </span>
+                  <span className="mt-1.5 block truncate text-[12px] text-fg-muted">
                     {timeAgo(project.last_activity)} · {project.path}
                   </span>
                 </span>

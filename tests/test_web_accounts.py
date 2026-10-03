@@ -142,12 +142,15 @@ def test_project_list_shows_last_activity_and_request(tmp_path: Path) -> None:
     (root / ".forge" / "transcripts" / "events.jsonl").write_text(
         "\n".join(json.dumps(line) for line in lines), encoding="utf-8"
     )
+    home = tmp_path / "home"
     [project] = describe_projects(
-        [{"path": str(root), "name": "proj", "repo": "standalone (Mode B)", "app_folder": None}]
+        [{"path": str(root), "name": "proj", "repo": "standalone (Mode B)", "app_folder": None}], home
     )
     assert project["mode"] == "B" and project["last_request"] == "add a CSV export"
     assert project["last_activity"].endswith("+00:00")
     assert (
-        describe_projects([{"path": str(tmp_path / "gone"), "name": "x", "repo": "r", "app_folder": None}])
+        describe_projects(
+            [{"path": str(tmp_path / "gone"), "name": "x", "repo": "r", "app_folder": None}], home
+        )
         == []
     )

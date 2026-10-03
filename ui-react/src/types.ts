@@ -163,6 +163,7 @@ export interface ProjectEntry {
   app_folder: string | null;
   last_activity: string; // ISO time
   last_request: string; // what the user last asked for ("" if nothing yet)
+  memory: { memories: number; instructions: boolean; state: { goal: string; next: string; saved: string } | null };
 }
 
 export interface CheckInfo {

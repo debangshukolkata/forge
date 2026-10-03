@@ -249,7 +249,7 @@ def create_app(
 
     @app.get("/api/projects")
     async def project_list() -> list[dict[str, Any]]:
-        return describe_projects(manager.recent())
+        return describe_projects(manager.recent(), manager.home)
 
     @app.get("/api/profiles")
     async def profiles() -> list[str]:

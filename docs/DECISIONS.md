@@ -2740,3 +2740,16 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - **Security:** the same redaction as the events (invariant 3: secrets never reach the browser); the files sit in the workspace's own
   `.forge` folder, which is not part of the delivered output. **Limits:** the files stay until the workspace is deleted (no
   clean-up yet); a result cut by the tool itself (the shell's own cap, the context cap applied later) is saved as the tool returned it.
+
+### D-196 — What Forge remembers, shown on each project in the project list (built 2026-10-03; part of D-184)
+- Each project card now shows, under the last request: **where the work stands** (the first line of the Goal and of the Next section of
+  the `project-state` memory a `/handoff` leaves; if the handoff has no such sections, its first line), chips for the number of
+  remembered notes, FORGE.md present, and when the handoff was saved. The search box also looks in the handoff. Read from the Forge
+  folder without opening the project (`web/project_memory.py`): Mode A projects by their repository's memory scope, Standalone
+  projects by their host profile (FORGE.md lives in the profile folder there). Nothing is shown when nothing is remembered, and a
+  project whose profile reference is missing shows no memory instead of an error. Options considered: a "Resume" preview panel
+  (rejected for now: the card already carries the two lines that answer "where was I"), and listing every note name on the card
+  (rejected: too long; the count is enough, the notes are in the project). Tests: `tests/test_project_memory.py`,
+  `test_react_project_list_shows_what_forge_remembers` (`projects-memory-light.png`).
+- **Found on the way:** FORGE.md sits in the same folder as the project's memory notes, so `MemoryStore.all()` lists it as a note
+  named "FORGE" (and it probably appears in the pinned memory index). The count here skips it; the store itself is unchanged.
