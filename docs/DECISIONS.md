@@ -2706,3 +2706,8 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - **Look:** the task and agent nodes lost their small shadow (the design has none). Behaviour of the Run map itself is unchanged.
 - **A trap found while testing:** the page re-reads `/api/state` on every `task_list_updated`, so a test that fakes "working" with a
   `status_changed` event must publish it after the task list, or the server's real "not busy" overrides it.
+- **A real bug the loaded test runs exposed (D-193):** a node added to the map later (Deliver, a helper agent) could stay invisible for
+  good: the Run map gave React Flow no node sizes, so it hid each new node until it had measured it, and under load that
+  measurement was sometimes missed (about one run in three while the whole suite ran in parallel). The nodes now carry their known
+  width and height (the same numbers dagre lays them out with), so they show at once. Also a fix for `subagent.py`: a loop
+  stand-in without a router (as in `test_events.py`) gets cost 0 instead of failing.

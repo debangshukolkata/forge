@@ -199,7 +199,8 @@ async def _tracked_run(
         await asyncio.sleep(0)  # let the relay deliver what is already queued
         relayer.cancel()
         finished = [e for e in bus.events_since(0) if e.type == EventType.TOOL_CALL_FINISHED]
-        cost = _cost_of_calls(loop.router, bus)
+        router = getattr(loop, "router", None)  # a loop without a router (a test stand-in) has no cost
+        cost = _cost_of_calls(router, bus) if router is not None else 0.0
         await context.emit(
             "agent_finished",
             {

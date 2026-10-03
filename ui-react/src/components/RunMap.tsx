@@ -186,6 +186,10 @@ function layout(
       id: node.id,
       type: nodeType(node.data.kind),
       position: { x: box.x - box.width / 2, y: box.y - box.height / 2 },
+      // The size is known (dagre was given it), so say so: React Flow keeps a node hidden until it has measured
+      // it, and under load that measurement of a freshly added node (Deliver, a helper agent) could be missed.
+      width: box.width,
+      height: box.height,
       data: {
         ...node.data,
         usage: task ? byTask[node.id] : undefined,
