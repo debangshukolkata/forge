@@ -1,6 +1,7 @@
 // The connection to Forge: loads /api/state, keeps one WebSocket to the engine (replaying every event since the
 // last one seen, so a reload or reconnect never loses anything) and turns events into the chat timeline.
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { agentFinished, agentStarted, agentStep } from "./agentTimeline";
 import { api } from "./lib";
 import type { AppState, ChatItem, ContextInfo, CostColors, CostInfo, ForgeEvent, ServerMessage, UserInput } from "./types";
 
@@ -86,6 +87,12 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
       }
       return { ...state, items: updated };
     }
+    case "agent_started":
+      return { ...state, items: agentStarted(endStream(items), key, p) };
+    case "subagent_step":
+      return { ...state, items: agentStep(items, p) };
+    case "agent_finished":
+      return { ...state, items: agentFinished(items, p) };
     case "approval_requested":
     case "question_asked":
     case "user_action_requested": {

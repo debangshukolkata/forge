@@ -130,6 +130,7 @@ export type ChatItem =
       name: string;
       summary: string;
       args?: Record<string, unknown>; // the call's arguments (shown as the IN block)
+      agent?: AgentView; // set on a spawn_subagent row (or a row made for a subagent): its own steps, nested
       state: "running" | "ok" | "fail";
       preview?: string;
       duration?: number;
@@ -186,4 +187,21 @@ export interface EnvironmentOverview {
   checks: CheckInfo[];
   saved: { results: Record<string, CheckResultView>; plan: Record<string, string>; confirmed_at: string | null };
   plan: ModelPlan;
+}
+
+export interface AgentStep {
+  kind: "tool" | "thinking";
+  name?: string;
+  summary?: string;
+  text?: string;
+  state?: "running" | "ok" | "fail";
+  duration?: number;
+}
+
+export interface AgentView {
+  id: string;
+  role: string;
+  purpose: string;
+  steps: AgentStep[];
+  done?: { ok: boolean; tool_calls: number; failed_calls: number; duration_s: number };
 }

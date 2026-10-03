@@ -2659,3 +2659,14 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   `arguments` the engine already sends, falling back to the summary for old logs) and an OUT block folded to 15 lines with
   "Show N more lines". Approval / question / action cards keep their look. Test: `test_react_chat_cards_render`
   (`cards-light.png`). Not done: the subagent nesting (D-181) and the todo list display (D-177) still wait for their UI.
+
+### D-190 — Nested subagent view in the web chat (built 2026-10-03; design decided in D-181)
+- A `spawn_subagent` row carries the agent's own steps. Collapsed: a role badge (Explorer / Reviewer / Debugger / Verifier), the purpose,
+  the call count ("2 calls, 1 failed") and, while it runs, its newest step ("grep: def authenticate") with a spinner. Opened: the
+  steps in order (reasoning notes in italics, each tool call with status and time; up to 400 kept) and then the usual IN (the task) and
+  OUT (the hand-back, folded to 15 lines) blocks. The events were already there (`agent_started`, `subagent_step`,
+  `agent_finished`, D-179); only the web timeline was missing. Pairing: an `agent_started` joins the oldest running `spawn_subagent`
+  row that has no agent yet, so parallel explorers are matched in the order they started (a different order would swap their
+  labels: noted as a known limit). An agent started by something other than that tool (the review step) gets a row of its own.
+  Code: `ui-react/src/agentTimeline.ts`, `components/AgentSteps.tsx`; test `test_react_subagent_steps_are_nested`
+  (`subagent-nested-light.png`).

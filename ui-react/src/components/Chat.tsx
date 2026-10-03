@@ -6,6 +6,7 @@ import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
 import type { ChatItem, EnvironmentOverview, UserInput } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
+import { AgentSteps, agentCounts, latestStepText, roleLabel } from "./AgentSteps";
 import { Composer, useAttachments } from "./Composer";
 import { Badge, Button, CopyButton, Spinner, Textarea } from "./ui";
 
@@ -231,8 +232,22 @@ function ToolCard({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
         )}
       >
         <ChevronRight className={cx("h-3.5 w-3.5 shrink-0 transition-transform duration-150", open && "rotate-90")} aria-hidden />
-        <span className="shrink-0 font-mono text-[12.5px] font-semibold text-fg">{item.name}</span>
-        <span className="min-w-0 flex-1 truncate">{item.summary}</span>
+        {item.agent ? (
+          <>
+            <Badge tone="info">{roleLabel(item.agent.role)}</Badge>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-fg">{item.agent.purpose || item.summary}</span>
+              <span className="block truncate text-[12px]">
+                {item.state === "running" ? `${agentCounts(item.agent)} · ${latestStepText(item.agent)}` : agentCounts(item.agent)}
+              </span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="shrink-0 font-mono text-[12.5px] font-semibold text-fg">{item.name}</span>
+            <span className="min-w-0 flex-1 truncate">{item.summary}</span>
+          </>
+        )}
         {retried && <Badge tone="neutral">retried</Badge>}
         {item.state === "running" ? (
           <Spinner className="h-3.5 w-3.5 text-accent" />
@@ -247,6 +262,7 @@ function ToolCard({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
       </button>
       {open && (
         <div className="mb-1 ml-3.5 mt-1 space-y-3 border-l-2 border-border pl-4">
+          {item.agent && <AgentSteps agent={item.agent} />}
           <IoBlock label="In">
             <Code text={inputText(item)} className="max-h-60 text-[12px]" />
           </IoBlock>

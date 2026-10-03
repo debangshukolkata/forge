@@ -750,3 +750,125 @@ def test_react_run_map(live_server: LiveServer, workspace: Workspace) -> None:
         assert "run tests" in page.inner_text(".jump-flash").lower()
         assert not page.problems, page.problems  # type: ignore[attr-defined]
         browser.close()
+
+
+def test_react_subagent_steps_are_nested(server: ServerSecurity, workspace: Workspace) -> None:
+    """D-181: a subagent's own tool calls sit inside its row, collapsed until opened; a running one shows its newest step."""
+    import asyncio
+
+    from forge.protocol.events import EventBus, EventType
+
+    async def script() -> None:
+        bus = EventBus(workspace.forge_dir / "transcripts" / "events.jsonl", redactor=Redactor())
+        await bus.publish(EventType.USER_MESSAGE, {"text": "Review my change and map the auth code"})
+        for call_id, who in (("s1", "reviewer"), ("s2", "explore")):
+            await bus.publish(
+                EventType.TOOL_CALL_STARTED,
+                {
+                    "id": call_id,
+                    "name": "spawn_subagent",
+                    "summary": f"spawn {who}",
+                    "arguments": {"agent": who, "task": f"{who} task text"},
+                },
+            )
+        await bus.publish(
+            EventType.AGENT_STARTED,
+            {"id": "agent-1", "role": "reviewer", "purpose": "Review the change: masking.py"},
+        )
+        await bus.publish(
+            EventType.AGENT_STARTED,
+            {"id": "agent-2", "role": "explore", "purpose": "Helper task: where is auth?"},
+        )
+        steps = [
+            ("agent-1", {"kind": "thinking", "text": "Checking the signature first"}),
+            ("agent-1", {"kind": "tool_started", "name": "run_command", "summary": "python -m pytest -q"}),
+            (
+                "agent-1",
+                {
+                    "kind": "tool_finished",
+                    "name": "run_command",
+                    "ok": False,
+                    "summary": "python -m pytest -q",
+                    "duration_s": 3.2,
+                },
+            ),
+            ("agent-1", {"kind": "tool_started", "name": "read_file", "summary": "payments/masking.py"}),
+            (
+                "agent-1",
+                {
+                    "kind": "tool_finished",
+                    "name": "read_file",
+                    "ok": True,
+                    "summary": "payments/masking.py",
+                    "duration_s": 0.1,
+                },
+            ),
+            ("agent-2", {"kind": "tool_started", "name": "grep", "summary": "def authenticate"}),
+        ]
+        for agent, fields in steps:
+            await bus.publish(EventType.SUBAGENT_STEP, {"agent": agent, "role": "x", **fields})
+        await bus.publish(
+            EventType.AGENT_FINISHED,
+            {
+                "id": "agent-1",
+                "role": "reviewer",
+                "ok": True,
+                "tool_calls": 2,
+                "failed_calls": 1,
+                "duration_s": 4.5,
+            },
+        )
+        await bus.publish(
+            EventType.TOOL_CALL_FINISHED,
+            {
+                "id": "s1",
+                "name": "spawn_subagent",
+                "ok": True,
+                "summary": "spawn reviewer",
+                "preview": "VERDICT: PASS (one failing test was unrelated)",
+                "duration_s": 4.6,
+            },
+        )
+
+    asyncio.run(script())
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        problems: list[str] = []
+        page.on("console", lambda m: problems.append(m.text) if m.type == "error" else None)
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Start something new.")
+        page.evaluate(
+            "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
+            str(workspace.root),
+        )
+        page.reload()
+        reviewer = page.locator("button:has-text('Review the change: masking.py')")
+        explorer = page.locator("button:has-text('where is auth?')")
+        reviewer.wait_for()
+        explorer.wait_for()
+        # Collapsed: a finished agent shows its counts; a running one shows what it is doing right now.
+        assert "2 calls, 1 failed" in reviewer.inner_text()
+        assert "grep: def authenticate" in explorer.inner_text()
+        assert page.locator("ol[aria-label='Reviewer steps']").count() == 0
+        # The agent was paired with its own spawn row: no extra row was made for it.
+        assert page.locator("button:has-text('spawn_subagent')").count() == 0
+
+        reviewer.click()
+        steps = page.locator("ol[aria-label='Reviewer steps']")
+        steps.wait_for()
+        text = steps.inner_text()
+        assert (
+            "Checking the signature first" in text and "run_command" in text and "payments/masking.py" in text
+        )
+        page.wait_for_selector("pre:has-text('VERDICT: PASS')")  # the hand-back is the OUT block
+        page.wait_for_selector("text=reviewer task text")  # the task is the IN block
+        page.screenshot(path=str(shots / "subagent-nested-light.png"))
+        browser.close()
+    assert not problems, problems
