@@ -2566,3 +2566,6 @@ Built in a separate git worktree while the speed benchmark ran, so the benchmark
 - **D-180 / G4 per-agent settings.** Custom agent files may set `max_steps` (1-200) and `write_only_under` (a folder; `..` refused);
   an agent that lists unknown tools is rejected with the list of known ones instead of silently ignoring them.
 Not built: G3 (compaction robustness; only if real runs need it), G5 (no change under D-155).
+- **D-181 subagent display (user decision 2026-10-03).** In the web UI a subagent's own tool calls are shown nested inside its row,
+  collapsed by default and expandable (not just the hand-back). Options were nested vs hand-back only; nested chosen because
+  verifier runs last 10-15 minutes. Built with the timeline UI (deferred); the engine already relays the steps (D-179).
