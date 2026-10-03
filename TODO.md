@@ -258,7 +258,9 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 
 ## UI redesign (D-184..D-186, 2026-10-03)
 - [x] Login (local account), hub (new / open), project list, Apple-style theme on the whole app, Inter font, `ok` green token
-- [ ] Setup screen after "new project": per-machine config (Azure, Gemini, Tesseract, Postgres) with live checks, then the model plan to
-  confirm; remembered and shown by default next time (agreed global per machine, D-186; parked by the user)
+- [x] Setup screen after "new project" and from the top bar: live checks (system, Azure, Postgres, Gemini, Tesseract), model plan to confirm,
+  remembered per machine (D-186)
+- [ ] Use Tesseract and Gemini for real (the screen only detects them today); show the Azure key/endpoint entry on this screen too
+  (today missing values are asked for by the older first-run Setup screen)
 - [ ] Project list: show the project's memory summary (FORGE.md / handoff) and mode-specific details, not only the last request
 - [ ] Change password / account screen (today: delete account.json)

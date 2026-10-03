@@ -27,6 +27,7 @@ from forge.protocol.inputs import parse_user_input
 from forge.safety.server_security import ServerSecurity
 from forge.web.accounts import AccountStore
 from forge.web.auth_routes import add_auth_routes, add_no_login_route, needs_login, session_cookie_name
+from forge.web.environment_routes import add_environment_routes
 from forge.web.manager import WebSessionManager
 from forge.web.project_list import describe_projects
 from forge.workspace.output import build_output, build_patch, compute_changes
@@ -80,6 +81,7 @@ def create_app(
     # accounts=None: no login. Only tests build the app that way; `forge ui` always passes one.
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     session_cookie = session_cookie_name(security)
+    add_environment_routes(app, manager)
     if accounts:
         add_auth_routes(app, accounts, security)
     else:

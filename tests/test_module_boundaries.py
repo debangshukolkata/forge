@@ -21,7 +21,7 @@ TIERS: list[set[str]] = [
     {"context", "toolkit"},
     {"db", "parity", "vision"},
     {"doctor"},
-    {"modeb"},
+    {"modeb", "environment"},
     {"tools"},
     {"agent"},
     {"subagents"},
@@ -31,6 +31,7 @@ TIERS: list[set[str]] = [
     {"session", "ui"},
     {"web"},
     {"cli"},
+    {"__main__"},
 ]
 TIER_OF = {name: number for number, names in enumerate(TIERS) for name in names}
 DATA_ONLY = {"data", "defaults", "skills", "__pycache__"}  # package data, no code

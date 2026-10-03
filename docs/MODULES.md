@@ -15,7 +15,7 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 | 4 | context, toolkit | context window; tool contract + shell runners |
 | 5 | db, parity, vision | database; skills/agents/MCP; vision |
 | 6 | doctor | setup checks |
-| 7 | modeb | host profiles, contracts |
+| 7 | modeb, environment | host profiles, contracts; per-machine checks and the model plan |
 | 8 | tools | tool implementations + registry |
 | 9 | agent | the main agent loop (knows nothing about requirements or subagents) |
 | 10 | subagents | explore / reviewer / debugger / custom agents, the `spawn_subagent` tool |

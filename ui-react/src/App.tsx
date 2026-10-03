@@ -1,7 +1,8 @@
 import { MessagesSquare, Network, PanelRightClose, PanelRightOpen } from "lucide-react";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Chat } from "./components/Chat";
 import { RunMap } from "./components/RunMap";
+import { Environment } from "./components/Environment";
 import { Hub } from "./components/Hub";
 import { Login } from "./components/Login";
 import { NewProject } from "./components/NewProject";
@@ -16,7 +17,7 @@ import type { AuthStatus, SetupStatus } from "./types";
 import { useForge } from "./useForge";
 
 type Theme = "dark" | "light";
-type View = "hub" | "new" | "open" | "chat";
+type View = "hub" | "new" | "open" | "environment" | "chat";
 
 // Login first (D-184); the engine session and everything else only start once signed in.
 export function App() {
@@ -90,7 +91,19 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
     }, 60);
   }, []);
 
+  // "project": the setup screen after a new project (then the chat); "settings": opened from the top bar.
+  const [envFlow, setEnvFlow] = useState<"project" | "settings" | null>(null);
+  const envFlowRef = useRef(envFlow);
+  envFlowRef.current = envFlow;
+  const envReturn = useRef<View>("hub"); // where "Back" from the settings flow goes
+  const finishEnvironment = () => {
+    const next: View = envFlow === "project" ? "chat" : envReturn.current;
+    setEnvFlow(null);
+    setView(next);
+  };
+
   useEffect(() => {
+    if (envFlowRef.current) return; // the setup screen is showing: don't jump away from it
     setView(forge.state.workspace ? "chat" : "hub");
   }, [forge.state.workspace?.path]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -129,14 +142,21 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
 
   return (
     <div className="flex h-full flex-col">
-      <TopBar forge={forge} theme={theme} onToggleTheme={onToggleTheme} onHome={() => setView("hub")} onQuit={quit} user={user} onSignOut={onSignOut} />
+      <TopBar forge={forge} theme={theme} onToggleTheme={onToggleTheme} onHome={() => setView("hub")} onQuit={quit} user={user} onSignOut={onSignOut} onEnvironment={() => { envReturn.current = view; setEnvFlow("settings"); setView("environment"); }} />
       <div className="flex min-h-0 flex-1">
         {!landing && <Sidebar forge={forge} onNew={() => setView("new")} onOpen={open} />}
         <main className="flex min-w-0 flex-1 flex-col">
           {landing ? (
             <div className="min-h-0 flex-1 overflow-y-auto bg-bg">
               {view === "new" ? (
-                <NewProject onBack={() => setView("hub")} onCreated={async () => { await forge.enter(); setView("chat"); }} />
+                <NewProject onBack={() => setView("hub")} onCreated={async () => { envFlowRef.current = "project"; setEnvFlow("project"); setView("environment"); await forge.enter(); }} />
+              ) : view === "environment" ? (
+                <Environment
+                  onBack={finishEnvironment}
+                  onContinue={finishEnvironment}
+                  backLabel={envFlow === "project" ? "Skip for now" : "Back"}
+                  continueLabel={envFlow === "project" ? "Confirm and start" : "Save"}
+                />
               ) : view === "open" ? (
                 <ProjectList onBack={() => setView("hub")} onOpen={open} />
               ) : (

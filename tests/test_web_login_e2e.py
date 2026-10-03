@@ -119,6 +119,7 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
         page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
         page.fill("input[placeholder*='payments-masking'][placeholder^='C:']", str(tmp_path / "pm"))
         page.click("button:has-text('Create and open')")
+        page.click("button:has-text('Skip for now')")  # the setup screen (D-186)
         page.wait_for_selector("textarea[aria-label=Message]")
         page.fill("textarea[aria-label=Message]", "/help")
         page.keyboard.press("Enter")
@@ -166,3 +167,67 @@ def test_unsigned_api_is_refused_in_the_browser(
         status = page.evaluate("fetch('/api/state').then(r => r.status)")
         assert status == 401
         browser.close()
+
+
+def test_environment_screen_in_edge(
+    server: ServerSecurity, isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The setup screen (D-186): live rows, the model plan, confirm, and the saved result shown next time.
+    The model connectivity call itself is stubbed (`forge doctor` and the live tests cover it); this tests
+    what the screen does with one working and one unreachable model."""
+    from forge.doctor import CheckResult
+    from forge.environment import checks, store
+
+    async def answers(config: object, secrets: object) -> list[CheckResult]:
+        return [
+            CheckResult("Model gpt41", "fail", "no answer from the deployment"),
+            CheckResult("Model gpt51", "ok", "serves gpt-5.1 via responses API in 0.4s"),
+        ]
+
+    monkeypatch.setattr(checks, "check_models", answers)
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1280, "height": 1500}).new_page()
+        problems: list[str] = []
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Welcome to Forge.")
+        page.fill("input[autocomplete=username]", "asha")
+        page.fill("label:has-text('Password') input", PASSWORD)
+        page.fill("label:has-text('Repeat the password') input", PASSWORD)
+        page.click("button:has-text('Create account')")
+        page.wait_for_selector("text=Start something new.")
+
+        page.click("button:has-text('Environment')")
+        page.wait_for_selector("text=Check your environment.")
+        page.wait_for_selector("text=Azure OpenAI")
+        page.wait_for_selector("text=no answer from the deployment")  # the azure row finished
+        page.wait_for_selector("text=Tesseract OCR")
+        page.wait_for_selector("text=gpt-5.1 >> nth=0")
+        reviewer = page.locator("select[aria-label='Model for reviewer']")
+        reviewer.wait_for()
+        assert reviewer.input_value() == "gpt51"  # gpt41 did not answer, so the reviewer moved to gpt51
+        page.wait_for_selector("text=is not answering; using gpt51 instead")
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(shots / "environment-light.png"), full_page=True)
+
+        page.click("button:has-text('Save')")
+        page.wait_for_selector("text=Start something new.")
+        saved = store.load(isolated_forge_home)
+        assert saved["plan"]["reviewer"] == "gpt51" and saved["confirmed_at"]
+        assert saved["results"]["azure"]["models"] == {"gpt41": False, "gpt51": True}
+
+        # Next time the saved plan is what the screen shows.
+        page.click("button:has-text('Environment')")
+        page.wait_for_selector("select[aria-label='Model for reviewer']")
+        assert page.locator("select[aria-label='Model for reviewer']").input_value() == "gpt51"
+        page.click("button[aria-label='Dark theme']")
+        page.wait_for_timeout(500)
+        page.screenshot(path=str(shots / "environment-dark.png"), full_page=True)
+        browser.close()
+    assert not problems, problems

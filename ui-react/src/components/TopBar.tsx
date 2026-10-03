@@ -1,4 +1,4 @@
-import { Anvil, Gauge, Home, LogOut, Moon, Power, Sun } from "lucide-react";
+import { Anvil, Gauge, Home, LogOut, Moon, Power, ShieldCheck, Sun } from "lucide-react";
 import type { Forge } from "../useForge";
 import { AnimatedCost } from "./AnimatedCost";
 import { Badge, Button, IconButton, Spinner } from "./ui";
@@ -11,6 +11,7 @@ export function TopBar({
   onQuit,
   user,
   onSignOut,
+  onEnvironment,
 }: {
   forge: Forge;
   theme: "dark" | "light";
@@ -19,6 +20,7 @@ export function TopBar({
   onQuit: () => void;
   user: string | null;
   onSignOut: () => void;
+  onEnvironment: () => void;
 }) {
   const { state, context, cost, waiting, connected, controls, replaying } = forge;
   const workspace = state.workspace;
@@ -64,6 +66,9 @@ export function TopBar({
       <IconButton label={theme === "dark" ? "Light theme" : "Dark theme"} onClick={onToggleTheme}>
         {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </IconButton>
+      <Button variant="ghost" size="sm" icon={<ShieldCheck className="h-3.5 w-3.5" />} onClick={onEnvironment} title="Connections and models">
+        Environment
+      </Button>
       <Button variant="ghost" size="sm" icon={<Home className="h-3.5 w-3.5" />} onClick={onHome}>
         Home
       </Button>

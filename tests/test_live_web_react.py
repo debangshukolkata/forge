@@ -106,6 +106,7 @@ def test_a_requirement_through_the_react_ui(server: ServerSecurity, tmp_path: Pa
         page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
         page.fill("input[placeholder^='C:']", str(project))
         page.click("button:has-text('Create and open')")
+        page.click("button:has-text('Skip for now')")  # the setup screen (D-186)
         box = page.locator("textarea[aria-label=Message]")
         box.wait_for(timeout=10 * 60 * 1000)  # the project's Python environment + pytest are set up first
         page.set_input_files("input[type=file]", str(signature))

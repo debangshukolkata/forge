@@ -144,6 +144,7 @@ def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, 
     page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
     page.fill("input[placeholder^='C:'][placeholder$='payments-masking']", str(tmp_path / "pm"))
     page.click("button:has-text('Create and open')")
+    page.click("button:has-text('Skip for now')")  # the setup screen (D-186)
     page.wait_for_selector(
         "textarea[aria-label=Message]", timeout=120_000
     )  # the repo copy is slow under parallel load
@@ -159,6 +160,7 @@ def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, 
     page.fill("input[placeholder^='C:'][placeholder$='payments-masking']", str(tmp_path / "ce"))
     page.fill("input[placeholder*='claims-repo']", str(original_repo))
     page.click("button:has-text('Create and open')")
+    page.click("button:has-text('Skip for now')")  # the setup screen (D-186)
     page.wait_for_selector(
         "textarea[aria-label=Message]", timeout=120_000
     )  # the repo copy is slow under parallel load
@@ -188,6 +190,7 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
         page.fill("input[placeholder*='payments-masking'][placeholder^='C:']", str(tmp_path / "pm"))
         page.click("button:has-text('Create and open')")
+        page.click("button:has-text('Skip for now')")  # the setup screen (D-186)
         page.wait_for_selector("textarea[aria-label=Message]")
         page.fill("textarea[aria-label=Message]", "/help")
         page.keyboard.press("Enter")

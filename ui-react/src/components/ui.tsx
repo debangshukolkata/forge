@@ -1,7 +1,7 @@
 // Small, consistent building blocks: every clickable thing has a visible focus ring, a pointer cursor,
 // a 150–200 ms colour transition and a disabled state; icons are SVG (lucide), never emoji.
 import { Check, Copy, Loader2 } from "lucide-react";
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cx, useCopy } from "../lib";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
@@ -100,6 +100,10 @@ const inputClass =
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cx(inputClass, "h-9", props.className)} />;
+}
+
+export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select {...props} className={cx(inputClass, "h-9 cursor-pointer pr-8", props.className)} />;
 }
 
 export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {

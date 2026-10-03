@@ -2606,6 +2606,19 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   stays for code. Success is a separate green token (`ok`) so blue only means "clickable"; done/added/targets-met/green dots moved to
   it. Large type and 17 px body only on the landing screens; chat, run map and panels keep their dense sizes. Dark theme is derived
   by us from the tile colours (the design.md has none). Photography tiles and the product shadow are not used (no product images).
-- **D-186 setup and model plan: parked.** The environment-checks screen (Azure, Gemini, Tesseract, Postgres, live), the model plan
-  for confirmation and the remembered per-machine configuration were agreed as global per machine and not built yet (user: "don't
-  build it now"). The old Environment check card stays on the New project form until then.
+- **D-186 setup and model plan (agreed global per machine; built 2026-10-03 after the user said "proceed").** After "Create and open"
+  the user sees "Check your environment": five rows (This computer, Azure OpenAI, PostgreSQL, Gemini, Tesseract OCR) that each run
+  live and flip from "checking" to ok / warning / failed with a one-line fix and a Retry button, then a model table (one row per
+  role) proposed from what answered. The user can change a row and confirms ("Confirm and start", or "Skip for now"). It can also be
+  opened any time from "Environment" in the top bar. Saved in `<home>/environment.json` (check results with times, the confirmed
+  role -> model keys; never a secret value, texts are redacted); next time the saved results show at once while the checks re-run,
+  and the saved plan is the default. Applied to the live session on confirm and to every new session in `build_session`
+  (`apply_saved_plan`; an unknown model key is skipped). Rules: the plan only moves a role off a model that did not answer (to one
+  that did, and for `vision` only a model that can read images); Azure with no answering model blocks "Confirm"; one answering model
+  is a warning. Options considered for the plan's home: write it into config.yaml (rejected: Forge must not modify config.yaml,
+  invariant 5) vs its own file merged at session start (chosen). Honest limits: Tesseract and Gemini are only *detected* (binary on
+  PATH, Google credentials + project in .env); this version of Forge does not use either yet, and the screen says so. Gemini's row
+  reads "not part of this version" unless the parked provider (D-150) is in the config. Postgres: one reachable database is ok.
+  Code: new module `environment/` (checks, plan, store; tier 7), `web/environment_routes.py`, `ui-react/.../Environment.tsx`.
+  Tests: `tests/test_environment.py`, `tests/test_web_login_e2e.py::test_environment_screen_in_edge` (the model call is stubbed
+  there; screenshots `environment-light.png` / `environment-dark.png`). Also fixed: `__main__.py` had no tier in the boundary test.

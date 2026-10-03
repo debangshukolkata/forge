@@ -8,6 +8,7 @@ from typing import Any
 
 from forge.config import ForgeConfig, Secrets, forge_home, load_config, load_secrets
 from forge.engine.session_host import SessionHost
+from forge.environment.plan import apply_saved_plan
 from forge.llm.router import LLMRouter
 from forge.protocol.events import EventBus, EventType
 from forge.workspace.workspace import Workspace
@@ -41,6 +42,7 @@ def build_session(
             await bus.publish(EventType.NOTICE, {"kind": kind, **data})
 
     router = LLMRouter(config, secrets, on_notice=on_notice)
+    apply_saved_plan(router, home)  # the model plan the user confirmed on the setup screen (D-186)
     return SessionHost(
         router,
         bus,

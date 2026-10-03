@@ -158,3 +158,31 @@ export interface ProjectEntry {
   last_activity: string; // ISO time
   last_request: string; // what the user last asked for ("" if nothing yet)
 }
+
+export interface CheckInfo {
+  id: string;
+  label: string;
+  optional: boolean;
+  purpose: string;
+}
+
+export interface CheckResultView {
+  id: string;
+  status: "ok" | "warn" | "fail";
+  detail: string;
+  hint: string;
+  models: Record<string, boolean>;
+  checked_at?: string;
+}
+
+export interface ModelPlan {
+  roles: { role: string; model: string | null; reason: string; default: string | null }[];
+  options: { key: string; label: string; vision: boolean; usable: boolean }[];
+  notes: string[];
+}
+
+export interface EnvironmentOverview {
+  checks: CheckInfo[];
+  saved: { results: Record<string, CheckResultView>; plan: Record<string, string>; confirmed_at: string | null };
+  plan: ModelPlan;
+}
