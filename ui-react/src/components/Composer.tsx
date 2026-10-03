@@ -197,10 +197,10 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
   const ready = !attachments.uploading && forge.controls;
 
   return (
-    <div className="shrink-0 border-t border-border bg-bg px-6 pb-4 pt-3">
+    <div className="shrink-0 bg-bg px-6 pb-4 pt-2">
       <RunTotals forge={forge} />
       <ActivityLine forge={forge} />
-      <div className="relative mx-auto max-w-3xl">
+      <div className="relative mx-auto max-w-[760px]">
         {suggestions.length > 0 && (
           <ul role="listbox" aria-label={mention !== null ? "Files" : "Commands"} className="absolute bottom-full mb-2 max-w-full min-w-72 overflow-hidden rounded-lg border border-border bg-surface py-1 shadow-lg">
             {suggestions.map((s, index) => (
@@ -220,7 +220,7 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
             ))}
           </ul>
         )}
-        <div className="rounded-xl border border-border bg-surface p-2 transition-colors duration-150 focus-within:border-accent/70">
+        <div className="rounded-[26px] border border-border bg-surface px-3 py-2 transition-colors duration-150 focus-within:border-accent/70">
           {(attachments.items.length > 0 || attachments.uploading > 0) && (
             <div className="flex flex-wrap gap-1.5 px-1 pb-2">
               {attachments.items.map((a) => (
@@ -271,7 +271,7 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
                 }
               }}
               disabled={!forge.controls}
-              placeholder="Describe the requirement, reply, or type / for commands, @ for files"
+              placeholder="Message Forge. / for commands, @ for files"
               aria-label="Message"
               className="max-h-60 min-h-[40px] flex-1 resize-none appearance-none border-0 bg-transparent px-1 py-2 text-[14px] leading-relaxed text-fg placeholder:text-fg-muted/70 focus:outline-none focus:ring-0"
             />
@@ -280,9 +280,15 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
                 Stop
               </Button>
             ) : (
-              <Button variant="primary" onClick={submit} disabled={!ready || (!text.trim() && !attachments.items.length)} icon={<ArrowUp className="h-4 w-4" />} aria-label="Send (Enter)">
-                Send
-              </Button>
+              <Button
+                variant="primary"
+                className="h-9 w-9 shrink-0 !px-0"
+                onClick={submit}
+                disabled={!ready || (!text.trim() && !attachments.items.length)}
+                icon={<ArrowUp className="h-4 w-4" />}
+                aria-label="Send (Enter)"
+                title="Send (Enter)"
+              />
             )}
           </div>
         </div>

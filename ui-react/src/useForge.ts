@@ -65,7 +65,7 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
     case "tool_call_started":
       return {
         ...state,
-        items: [...endStream(items), { key, kind: "tool", id: p.id, name: p.name, summary: p.summary || "", state: "running" }],
+        items: [...endStream(items), { key, kind: "tool", id: p.id, name: p.name, summary: p.summary || "", args: p.arguments, state: "running" }],
       };
     case "tool_call_finished": {
       const updated: ChatItem[] = items.map((item) =>

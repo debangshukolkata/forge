@@ -249,7 +249,13 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
             },
         )
         await bus.publish(
-            EventType.TOOL_CALL_STARTED, {"id": "c2", "name": "run_tests", "summary": "run tests tests/"}
+            EventType.TOOL_CALL_STARTED,
+            {
+                "id": "c2",
+                "name": "run_tests",
+                "summary": "run tests tests/",
+                "arguments": {"command": "python -m pytest tests/ -q"},
+            },
         )
         await bus.publish(
             EventType.TOOL_CALL_FINISHED,
@@ -258,7 +264,8 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
                 "name": "run_tests",
                 "ok": False,
                 "summary": "run tests tests/",
-                "preview": "pytest: 1 failed, 8 passed",
+                "preview": "\n".join(f"tests/test_masking.py::test_case_{n} PASSED" for n in range(1, 29))
+                + "\npytest: 1 failed, 8 passed",
                 "duration_s": 2.4,
             },
         )
@@ -319,6 +326,9 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
         page.wait_for_selector("text=Should masking keep the first 6 digits (BIN)?")
         page.wait_for_selector("td:has-text('masking.py')")  # markdown table rendered (sanitised)
         page.click("button:has-text('run_tests')")
+        page.wait_for_selector("text=python -m pytest tests/ -q")  # the IN block
+        assert not page.locator("pre:has-text('1 failed')").count()  # long output is folded
+        page.click("button:has-text('more lines')")
         page.wait_for_selector("pre:has-text('1 failed')")
         overflow = page.evaluate(
             "() => { const box = document.querySelector('[aria-live=polite]');"

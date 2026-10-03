@@ -129,6 +129,7 @@ export type ChatItem =
       id: string;
       name: string;
       summary: string;
+      args?: Record<string, unknown>; // the call's arguments (shown as the IN block)
       state: "running" | "ok" | "fail";
       preview?: string;
       duration?: number;

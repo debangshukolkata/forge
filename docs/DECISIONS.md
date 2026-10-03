@@ -2647,3 +2647,15 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   A starter fills the message box (the user reads, edits and sends it; nothing is sent automatically). The rest of the chat (messages,
   tool cards, side panels) only picked up the new theme; the Claude Code style tool-call cards and the subagent view stay in TODO.
   Test: `tests/test_web_login_e2e.py` (screenshot `chat-welcome-light.png`).
+
+### D-189 — Chat look: "Conversation" (user decision 2026-10-03, option A of A/B/C) + Claude Code tool-call layout
+- Options shown: A conversation (your message a soft blue pill on the right, Forge's reply as plain text, tool calls quiet lines),
+  B transcript (role labels, boxed cards, terminal-like), C turn tiles (alternating light/dark band per exchange). A chosen; C
+  rejected for wasting vertical space in runs with dozens of tool calls.
+- Built: a centred 760 px column; user message pill (`accent-soft`, 20 px radius, right); Forge reply as prose with no avatar or box;
+  a floating pill composer with a round send button (Stop keeps its text label); notices and command output use the full column.
+  This also delivers the earlier TODO "Claude Code layout for tool calls" (user choice A, 2026-10-03): a call is one quiet line
+  (tool name, summary, status, time); opening it shows an IN block (the command, else the arguments one per line; from the
+  `arguments` the engine already sends, falling back to the summary for old logs) and an OUT block folded to 15 lines with
+  "Show N more lines". Approval / question / action cards keep their look. Test: `test_react_chat_cards_render`
+  (`cards-light.png`). Not done: the subagent nesting (D-181) and the todo list display (D-177) still wait for their UI.

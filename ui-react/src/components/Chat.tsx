@@ -1,6 +1,5 @@
 import {
-  AlertOctagon, Bot, CheckCircle2, ChevronRight, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload, User,
-  Wrench, XCircle,
+  AlertOctagon, CheckCircle2, ChevronRight, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload, XCircle,
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
@@ -56,7 +55,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
         className="min-h-0 flex-1 overflow-y-auto"
         aria-live="polite"
       >
-        <div className="mx-auto flex max-w-3xl flex-col gap-3 px-6 py-6">
+        <div className="mx-auto flex max-w-[760px] flex-col gap-4 px-6 py-6">
           {items.length === 0 && !forge.replaying && <Welcome forge={forge} onOpenEnvironment={onOpenEnvironment} />}
           {!forge.controls && (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-warn/40 bg-warn-soft px-4 py-2.5 text-[13px] text-warn">
@@ -146,14 +145,18 @@ function Welcome({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment
 function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
   switch (item.kind) {
     case "user":
+      // Your message: a soft blue pill on the right, no avatar.
       return (
-        <Row icon={<User className="h-4 w-4" />} tone="user">
-          <div className="whitespace-pre-wrap break-words">{item.text}</div>
-        </Row>
+        <div className="flex justify-end">
+          <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-[20px] bg-accent-soft px-4 py-2.5 text-[14.5px] leading-[1.5]">
+            {item.text}
+          </div>
+        </div>
       );
     case "assistant":
+      // Forge's reply: plain text on the page, no box and no avatar.
       return (
-        <Row icon={<Bot className="h-4 w-4" />} tone="assistant">
+        <div className="min-w-0 text-[14.5px] leading-[1.6]">
           {item.streaming ? (
             <div className="caret whitespace-pre-wrap break-words">{item.text}</div>
           ) : (
@@ -166,7 +169,7 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
               limits={forge.costColors?.reply}
             />
           )}
-        </Row>
+        </div>
       );
     case "tool":
       return <ToolCard item={item} />;
@@ -188,63 +191,90 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
   }
 }
 
-function Row({ icon, tone, children }: { icon: ReactNode; tone: "user" | "assistant"; children: ReactNode }) {
+const OUT_COLLAPSED_LINES = 15;
+
+/** The IN block: the command or path when there is one, else the arguments one per line. */
+function inputText(item: Extract<ChatItem, { kind: "tool" }>): string {
+  const args = item.args;
+  if (!args || Object.keys(args).length === 0) return item.summary;
+  if (typeof args.command === "string") return args.command;
+  return Object.entries(args)
+    .map(([key, value]) => `${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`)
+    .join("\n");
+}
+
+function IoBlock({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex gap-3">
-      <div
-        className={cx(
-          "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-          tone === "user" ? "bg-raised text-fg-muted" : "bg-accent-soft text-accent",
-        )}
-        aria-hidden
-      >
-        {icon}
-      </div>
-      <div className={cx("min-w-0 flex-1 pt-0.5", tone === "user" && "rounded-lg bg-raised px-3 py-2")}>{children}</div>
+    <div>
+      <div className="mb-1 font-mono text-[10.5px] font-semibold uppercase tracking-wider text-fg-muted">{label}</div>
+      {children}
     </div>
   );
 }
 
+// A tool call is one quiet line; opening it shows what went in and what came out, long output folded.
 function ToolCard({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
   const [open, setOpen] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const retried = item.state === "fail" && item.retried;
+  const lines = item.preview ? item.preview.split("\n") : [];
+  const folded = !showAll && lines.length > OUT_COLLAPSED_LINES;
   return (
-    <div className={cx("ml-10 rounded-lg border bg-surface", retried ? "border-border/60" : "border-border")}>
+    <div>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cx(
-          "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors duration-150 hover:bg-raised rounded-lg",
+          "flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-fg-muted transition-colors duration-150 hover:bg-surface",
           retried && "opacity-70",
         )}
       >
-        <ChevronRight className={cx("h-3.5 w-3.5 shrink-0 text-fg-muted transition-transform duration-150", open && "rotate-90")} aria-hidden />
-        <Wrench className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden />
-        <span className="shrink-0 font-mono text-[12.5px] font-medium">{item.name}</span>
-        <span className="min-w-0 flex-1 truncate text-fg-muted">{item.summary}</span>
+        <ChevronRight className={cx("h-3.5 w-3.5 shrink-0 transition-transform duration-150", open && "rotate-90")} aria-hidden />
+        <span className="shrink-0 font-mono text-[12.5px] font-semibold text-fg">{item.name}</span>
+        <span className="min-w-0 flex-1 truncate">{item.summary}</span>
         {retried && <Badge tone="neutral">retried</Badge>}
         {item.state === "running" ? (
           <Spinner className="h-3.5 w-3.5 text-accent" />
         ) : item.state === "ok" ? (
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-label="Succeeded" />
         ) : retried ? (
-          <AlertOctagon className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-label="Failed, then retried successfully" />
+          <AlertOctagon className="h-3.5 w-3.5 shrink-0" aria-label="Failed, then retried successfully" />
         ) : (
           <XCircle className="h-3.5 w-3.5 shrink-0 text-danger" aria-label="Failed" />
         )}
-        {item.duration !== undefined && <span className="shrink-0 font-mono text-[11.5px] tabular-nums text-fg-muted">{item.duration}s</span>}
+        {item.duration !== undefined && <span className="shrink-0 font-mono text-[11.5px] tabular-nums">{item.duration}s</span>}
       </button>
-      {open && item.preview && <Code text={item.preview} className="m-2 mt-0 max-h-80 text-[12px]" />}
+      {open && (
+        <div className="mb-1 ml-3.5 mt-1 space-y-3 border-l-2 border-border pl-4">
+          <IoBlock label="In">
+            <Code text={inputText(item)} className="max-h-60 text-[12px]" />
+          </IoBlock>
+          {item.preview && (
+            <IoBlock label="Out">
+              <Code text={folded ? lines.slice(0, OUT_COLLAPSED_LINES).join("\n") : item.preview} className="max-h-96 text-[12px]" />
+              {lines.length > OUT_COLLAPSED_LINES && (
+                <button
+                  type="button"
+                  onClick={() => setShowAll((v) => !v)}
+                  className="mt-1 cursor-pointer text-[12px] font-semibold text-accent hover:underline"
+                >
+                  {folded ? `Show ${lines.length - OUT_COLLAPSED_LINES} more lines` : "Show less"}
+                </button>
+              )}
+            </IoBlock>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 function Notice({ kind, text }: { kind: string; text: string }) {
-  if (kind === "command_output") return <Code text={text} className="ml-10" />;
+  if (kind === "command_output") return <Code text={text} />;
   const tone = kind === "stuck" || kind === "injection" ? "warn" : "info";
   return (
-    <div className={cx("ml-10 flex gap-2 rounded-md px-3 py-1.5 text-[12.5px]", tone === "warn" ? "bg-warn-soft text-warn" : "text-fg-muted")}>
+    <div className={cx("flex gap-2 rounded-md px-3 py-1.5 text-[12.5px]", tone === "warn" ? "bg-warn-soft text-warn" : "text-fg-muted")}>
       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
       <span className="whitespace-pre-wrap break-words">{text}</span>
     </div>
