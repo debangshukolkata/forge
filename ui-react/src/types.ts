@@ -142,3 +142,19 @@ export type ChatItem =
   | { key: string; kind: "approval"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
   | { key: string; kind: "question"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
   | { key: string; kind: "action"; id: string; payload: Record<string, any> }; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+export interface AuthStatus {
+  configured: boolean;
+  signed_in: boolean;
+  user: string | null;
+}
+
+export interface ProjectEntry {
+  path: string;
+  name: string;
+  repo: string;
+  mode: "A" | "B";
+  app_folder: string | null;
+  last_activity: string; // ISO time
+  last_request: string; // what the user last asked for ("" if nothing yet)
+}

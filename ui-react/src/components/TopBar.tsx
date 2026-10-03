@@ -1,4 +1,4 @@
-import { Anvil, Gauge, Home, Moon, Power, Sun } from "lucide-react";
+import { Anvil, Gauge, Home, LogOut, Moon, Power, Sun } from "lucide-react";
 import type { Forge } from "../useForge";
 import { AnimatedCost } from "./AnimatedCost";
 import { Badge, Button, IconButton, Spinner } from "./ui";
@@ -9,19 +9,23 @@ export function TopBar({
   onToggleTheme,
   onHome,
   onQuit,
+  user,
+  onSignOut,
 }: {
   forge: Forge;
   theme: "dark" | "light";
   onToggleTheme: () => void;
   onHome: () => void;
   onQuit: () => void;
+  user: string | null;
+  onSignOut: () => void;
 }) {
   const { state, context, cost, waiting, connected, controls, replaying } = forge;
   const workspace = state.workspace;
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-surface px-4">
+    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur-xl">
       <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-accent-fg">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-action text-accent-fg">
           <Anvil className="h-4 w-4" aria-hidden />
         </div>
         <span className="font-mono text-[14px] font-semibold tracking-tight">Forge</span>
@@ -63,6 +67,11 @@ export function TopBar({
       <Button variant="ghost" size="sm" icon={<Home className="h-3.5 w-3.5" />} onClick={onHome}>
         Home
       </Button>
+      {user && (
+        <Button variant="ghost" size="sm" icon={<LogOut className="h-3.5 w-3.5" />} onClick={onSignOut} title={`Signed in as ${user}`}>
+          Sign out
+        </Button>
+      )}
       <Button variant="danger" size="sm" icon={<Power className="h-3.5 w-3.5" />} onClick={onQuit}>
         Quit
       </Button>

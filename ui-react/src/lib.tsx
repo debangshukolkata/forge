@@ -5,6 +5,8 @@ import hljs from "highlight.js/lib/common";
 import { marked } from "marked";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+export const SIGNED_OUT_EVENT = "forge:signed-out";
+
 export async function api<T = unknown>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
   const response = await fetch(path, {
     method: options.method ?? "GET",
@@ -13,6 +15,8 @@ export async function api<T = unknown>(path: string, options: { method?: string;
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
   const data = await response.json().catch(() => ({}));
+  // An expired or missing session (the server restarted): send the user back to the login screen.
+  if (response.status === 401 && !path.startsWith("/api/auth")) window.dispatchEvent(new Event(SIGNED_OUT_EVENT));
   if (!response.ok) throw new Error(data.detail || data.error || `HTTP ${response.status}`);
   return data as T;
 }
@@ -105,4 +109,24 @@ export async function uploadFile(file: File): Promise<Attachment> {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.detail || data.error || `Upload failed (HTTP ${response.status})`);
   return data as Attachment;
+}
+
+/** "just now", "5 minutes ago", "3 days ago", else the date. */
+export function timeAgo(iso: string, now: number = Date.now()): string {
+  const seconds = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
+  if (Number.isNaN(seconds)) return "";
+  if (seconds < 60) return "just now";
+  const units: [number, string][] = [
+    [86400, "day"],
+    [3600, "hour"],
+    [60, "minute"],
+  ];
+  for (const [size, name] of units) {
+    if (seconds >= size) {
+      const count = Math.floor(seconds / size);
+      if (name === "day" && count >= 30) break;
+      return `${count} ${name}${count === 1 ? "" : "s"} ago`;
+    }
+  }
+  return new Date(iso).toLocaleDateString();
 }

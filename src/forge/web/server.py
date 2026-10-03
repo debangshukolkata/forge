@@ -25,7 +25,10 @@ from forge.config import ROLES
 from forge.errors import ForgeError
 from forge.protocol.inputs import parse_user_input
 from forge.safety.server_security import ServerSecurity
+from forge.web.accounts import AccountStore
+from forge.web.auth_routes import add_auth_routes, add_no_login_route, needs_login, session_cookie_name
 from forge.web.manager import WebSessionManager
+from forge.web.project_list import describe_projects
 from forge.workspace.output import build_output, build_patch, compute_changes
 from forge.workspace.text_format import decode_text, detect_format
 from forge.workspace.workspace import Workspace
@@ -72,14 +75,27 @@ def create_app(
     manager: WebSessionManager,
     security: ServerSecurity,
     on_quit: Stopper | None = None,
+    accounts: AccountStore | None = None,
 ) -> FastAPI:
+    # accounts=None: no login. Only tests build the app that way; `forge ui` always passes one.
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    session_cookie = session_cookie_name(security)
+    if accounts:
+        add_auth_routes(app, accounts, security)
+    else:
+        add_no_login_route(app)
 
     @app.middleware("http")
     async def guard(request: Request, call_next: Any) -> Response:
         problem = security.check(request.headers, request.cookies, request.query_params.get("t"))
         if problem is not None:
             return JSONResponse({"error": f"Forbidden: {problem}"}, status_code=403)
+        if (
+            accounts
+            and needs_login(request.url.path)
+            and not accounts.signed_in(request.cookies.get(session_cookie))
+        ):
+            return JSONResponse({"error": "Sign in first"}, status_code=401)
         response: Response = await call_next(request)
         response.headers["Content-Security-Policy"] = security.content_security_policy()
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -224,6 +240,10 @@ def create_app(
         if path.parent != folder or path.suffix != ".png" or not path.is_file():
             raise HTTPException(404, "No such overlay")
         return FileResponse(path, media_type="image/png")
+
+    @app.get("/api/projects")
+    async def project_list() -> list[dict[str, Any]]:
+        return describe_projects(manager.recent())
 
     @app.get("/api/profiles")
     async def profiles() -> list[str]:
@@ -440,6 +460,9 @@ def create_app(
         problem = security.check(socket.headers, socket.cookies, None)
         if problem is not None:
             await socket.close(code=4403, reason=problem)
+            return
+        if accounts and not accounts.signed_in(socket.cookies.get(session_cookie)):
+            await socket.close(code=4401, reason="Sign in first")
             return
         await socket.accept()
         client = secrets.token_hex(8)

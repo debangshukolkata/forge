@@ -101,7 +101,8 @@ def test_a_requirement_through_the_react_ui(server: ServerSecurity, tmp_path: Pa
         problems: list[str] = []
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("text=Start a project")
+        page.click("button:has-text('New project')")
+        page.wait_for_selector("text=Create and open")
         page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
         page.fill("input[placeholder^='C:']", str(project))
         page.click("button:has-text('Create and open')")

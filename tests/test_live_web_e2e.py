@@ -112,7 +112,7 @@ def test_requirement_through_the_web_ui(server: ServerSecurity, workspace: Works
         problems: list[str] = []
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("text=Start a project")
+        page.wait_for_selector("text=Start something new.")
         page.evaluate(
             "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
             str(workspace.root),

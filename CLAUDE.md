@@ -40,7 +40,7 @@ The rules below still describe what goes into briefs and summaries.
 - `src/` layout: package at `src/forge/`. Module map follows spec §4.
 - The **engine is UI-agnostic**: it emits typed events and receives inputs through one interface
   (spec §15A.2). Terminal UI and web UI are thin clients. No `print()` in engine code.
-- Web UI = React in `ui-react/` (D-117); `npm run build` writes `src/forge/web/react/`; commit source and build
+- Web UI = React in `ui-react/` (D-117); look and feel per docs/DESIGN.md (D-185: one blue accent, `ok` green for success only); `npm run build` writes `src/forge/web/react/`; commit source and build
   together. UI views derive their state from events (the Run map replays the event list), so a reopened
   project looks the same as a live one. Browser tests (`tests/test_web_e2e.py`, headless Edge) take screenshots
   to `test-artifacts/react-ui/` — look at them before reporting UI work done.

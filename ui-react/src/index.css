@@ -1,9 +1,10 @@
-/* Forge design system (ui-ux-pro-max: "Minimalism & Swiss Style", developer-tool palette "code dark + run
-   green", IBM Plex Sans + JetBrains Mono). Light by default (D-125); the dark theme swaps the same semantic tokens.
+/* Forge design system (D-185, docs/DESIGN.md): the Apple-style language from the user's design.md, adapted to a
+   developer tool. One blue accent for everything interactive, white/parchment surfaces (near-black tiles in the
+   dark theme), hairline borders, no shadows, pill buttons, tight Inter headings. Success is its own green
+   (`ok`) so blue only ever means "you can click this". Light by default (D-125); dark swaps the same tokens.
    Fonts are bundled (no Google Fonts): the laptop may be offline and the CSP only allows 'self'. */
-@import "@fontsource/ibm-plex-sans/latin-400.css";
-@import "@fontsource/ibm-plex-sans/latin-500.css";
-@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-600.css";
 @import "@fontsource/jetbrains-mono/latin-400.css";
 @import "@fontsource/jetbrains-mono/latin-500.css";
 @import "tailwindcss";
@@ -11,8 +12,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  /* The ladder is 400 / 600: Inter 500 isn't bundled and the design avoids mid weights. */
+  --font-weight-medium: 600;
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -23,8 +26,11 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
+  --color-action: var(--action);
   --color-accent-fg: var(--accent-fg);
   --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-warn: var(--warn);
@@ -32,51 +38,64 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-ring: var(--ring);
+  --color-tile: var(--tile);
+  --color-tile-fg: var(--tile-fg);
 }
 
 :root {
-  /* light */
-  --bg: #f8fafc;
+  /* light: white cards on parchment */
+  --bg: #f5f5f7;
   --surface: #ffffff;
-  --raised: #f1f5f9;
-  --muted: #e2e8f0;
-  --fg: #0f172a;
-  --fg-muted: #475569;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --accent: #16a34a;
+  --raised: #f5f5f7;
+  --muted: #e8e8ed;
+  --fg: #1d1d1f;
+  --fg-muted: #6e6e73;
+  --border: #e0e0e0;
+  --border-strong: #d2d2d7;
+  --accent: #0066cc;
+  --action: #0066cc; /* solid fills (primary buttons): white text stays readable in both themes */
   --accent-fg: #ffffff;
-  --accent-soft: #dcfce7;
-  --danger: #dc2626;
-  --danger-soft: #fee2e2;
-  --warn: #b45309;
-  --warn-soft: #fef3c7;
-  --info: #0369a1;
-  --info-soft: #e0f2fe;
-  --ring: #0f172a;
+  --accent-soft: rgb(0 102 204 / 0.08);
+  --ok: #1a7f37;
+  --ok-soft: rgb(26 127 55 / 0.1);
+  --danger: #d70015;
+  --danger-soft: rgb(215 0 21 / 0.08);
+  --warn: #a14a00;
+  --warn-soft: rgb(161 74 0 / 0.1);
+  --info: #0066cc;
+  --info-soft: rgb(0 102 204 / 0.08);
+  --ring: #0071e3;
+  /* the dark "tile" used on the landing screens in both themes */
+  --tile: #272729;
+  --tile-fg: #ffffff;
   /* Native controls and scrollbars follow Forge's theme, not the OS theme. */
   color-scheme: light;
 }
 
 .dark {
-  --bg: #0f172a;
-  --surface: #1b2336;
-  --raised: #222b40;
-  --muted: #272f42;
-  --fg: #f8fafc;
-  --fg-muted: #94a3b8;
-  --border: #334155;
-  --border-strong: #475569;
-  --accent: #22c55e;
-  --accent-fg: #0f172a;
-  --accent-soft: rgb(34 197 94 / 0.14);
-  --danger: #ef4444;
-  --danger-soft: rgb(239 68 68 / 0.14);
-  --warn: #f59e0b;
-  --warn-soft: rgb(245 158 11 / 0.14);
-  --info: #38bdf8;
-  --info-soft: rgb(56 189 248 / 0.14);
-  --ring: #f8fafc;
+  --bg: #161617;
+  --surface: #272729;
+  --raised: #2a2a2c;
+  --muted: #3a3a3c;
+  --fg: #f5f5f7;
+  --fg-muted: #a1a1a6;
+  --border: #3a3a3c;
+  --border-strong: #48484a;
+  --accent: #2997ff;
+  --action: #0071e3;
+  --accent-fg: #ffffff;
+  --accent-soft: rgb(41 151 255 / 0.14);
+  --ok: #30d158;
+  --ok-soft: rgb(48 209 88 / 0.14);
+  --danger: #ff453a;
+  --danger-soft: rgb(255 69 58 / 0.14);
+  --warn: #ff9f0a;
+  --warn-soft: rgb(255 159 10 / 0.14);
+  --info: #2997ff;
+  --info-soft: rgb(41 151 255 / 0.14);
+  --ring: #2997ff;
+  --tile: #1d1d1f;
+  --tile-fg: #f5f5f7;
   color-scheme: dark;
 }
 

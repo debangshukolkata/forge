@@ -75,7 +75,7 @@ export function Setup({ missing, onDone }: { missing: string[]; onDone: () => vo
               {results.map((result) => (
                 <li key={result.name} className="flex gap-2 text-[13px]">
                   {result.status === "ok" ? (
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-label="OK" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-ok" aria-label="OK" />
                   ) : result.status === "warn" ? (
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warn" aria-label="Warning" />
                   ) : (

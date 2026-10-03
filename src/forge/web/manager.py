@@ -18,7 +18,7 @@ from forge.workspace.pyenv import find_app_folder_candidates
 from forge.workspace.repo_memory import remembered_app_folder
 from forge.workspace.workspace import Workspace
 
-MAX_RECENT = 12
+MAX_RECENT = 50
 SessionFactory = Callable[[Workspace], SessionHost]
 
 

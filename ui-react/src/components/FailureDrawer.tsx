@@ -136,10 +136,10 @@ export function FailureDrawer({
   );
 }
 
-const OUTCOME: Record<Failure["outcome"], { label: string; tone: "accent" | "neutral" | "danger"; icon: ReactNode; hint: string }> = {
+const OUTCOME: Record<Failure["outcome"], { label: string; tone: "ok" | "neutral" | "danger"; icon: ReactNode; hint: string }> = {
   fixed: {
     label: "Fixed later",
-    tone: "accent",
+    tone: "ok",
     icon: <CircleCheck className="h-3 w-3" aria-hidden />,
     hint: "A later call of the same tool in the same task succeeded",
   },

@@ -109,8 +109,8 @@ function Loading({ error }: { error?: string }) {
 
 // --- Tasks ---
 
-const STATUS_TONE: Record<string, "accent" | "info" | "danger" | "neutral" | "warn"> = {
-  done: "accent", in_progress: "info", blocked: "danger", pending: "neutral", skipped: "warn",
+const STATUS_TONE: Record<string, "ok" | "info" | "danger" | "neutral" | "warn"> = {
+  done: "ok", in_progress: "info", blocked: "danger", pending: "neutral", skipped: "warn",
 };
 
 function TasksTab({ forge }: { forge: Forge }) {
@@ -126,7 +126,7 @@ function TasksTab({ forge }: { forge: Forge }) {
       </div>
       {tasks.length > 0 && (
         <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
-          <div className="h-full rounded-full bg-accent transition-all duration-300" style={{ width: `${(done / tasks.length) * 100}%` }} />
+          <div className="h-full rounded-full bg-ok transition-all duration-300" style={{ width: `${(done / tasks.length) * 100}%` }} />
         </div>
       )}
       {tasks.length === 0 ? (
@@ -248,7 +248,7 @@ function Tree({ root, dir, onOpen }: { root: string; dir: string; onOpen: (root:
 
 function TreeRow({ root, entry, onOpen }: { root: string; entry: TreeEntry; onOpen: (root: string, path: string) => void }) {
   const [open, setOpen] = useState(false);
-  const tone = entry.status === "added" ? "text-accent" : entry.status === "modified" ? "text-warn" : entry.status === "deleted" ? "text-danger line-through" : "";
+  const tone = entry.status === "added" ? "text-ok" : entry.status === "modified" ? "text-warn" : entry.status === "deleted" ? "text-danger line-through" : "";
   return (
     <li>
       <button
@@ -342,7 +342,7 @@ function DbRequestCard({ request, forge }: { request: NonNullable<Forge["state"]
       <div className="flex items-center gap-2">
         <span className="font-mono text-[11.5px] text-fg-muted">{request.id}</span>
         <span className="min-w-0 flex-1 truncate font-medium">{request.title}</span>
-        <Badge tone={pending ? "warn" : "accent"}>{request.status}</Badge>
+        <Badge tone={pending ? "warn" : "ok"}>{request.status}</Badge>
       </div>
       <p className="text-[13px]">{request.purpose}</p>
       <p className="text-[12px] text-fg-muted">{request.target} · run by {request.who}</p>
@@ -380,7 +380,7 @@ function EvalsTab({ forge }: { forge: Forge }) {
           <div className="flex items-center gap-2">
             <span className="font-medium">Run {run.n} · {run.name}</span>
             <span className="flex-1" />
-            <Badge tone={run.misses.length ? "danger" : "accent"}>{run.misses.length ? "Targets missed" : "Targets met"}</Badge>
+            <Badge tone={run.misses.length ? "danger" : "ok"}>{run.misses.length ? "Targets missed" : "Targets met"}</Badge>
           </div>
           <div className="mt-1 font-mono text-[12px] text-fg-muted">
             {Object.entries(run.metrics).map(([k, v]) => `${k} ${v}`).join(" · ")}
@@ -425,7 +425,7 @@ function LearningTab({ forge }: { forge: Forge }) {
         {data.lessons.map((lesson) => (
           <Card key={lesson.id} className="space-y-2 p-3">
             <div className="flex items-center gap-2 text-[12px]">
-              <Badge tone={lesson.status === "approved" ? "accent" : "warn"}>{lesson.status}</Badge>
+              <Badge tone={lesson.status === "approved" ? "ok" : "warn"}>{lesson.status}</Badge>
               <span className="font-mono text-fg-muted">{lesson.id}</span>
               <span className="text-fg-muted">· {lesson.scope}</span>
             </div>
@@ -482,7 +482,7 @@ function ContextTab({ forge }: { forge: Forge }) {
         <>
           <div className="mb-1 flex justify-between text-[13px]"><span className="text-fg-muted">Used</span><span className="font-mono tabular-nums">{c.percent}%</span></div>
           <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
-            <div className={cx("h-full rounded-full transition-all duration-300", c.percent > 85 ? "bg-danger" : c.percent > 65 ? "bg-warn" : "bg-accent")} style={{ width: `${Math.min(100, c.percent)}%` }} />
+            <div className={cx("h-full rounded-full transition-all duration-300", c.percent > 85 ? "bg-danger" : c.percent > 65 ? "bg-warn" : "bg-ok")} style={{ width: `${Math.min(100, c.percent)}%` }} />
           </div>
           <KeyValues rows={[["Fixed (prompt + tools)", c.fixed], ["Pinned", c.pinned], ["History", c.history], ["Free", c.free], ["Usable", c.usable], ["Compactions", c.compactions]]} />
         </>

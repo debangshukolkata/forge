@@ -11,7 +11,7 @@ export function Sidebar({ forge, onNew, onOpen }: { forge: Forge; onNew: () => v
         <button
           type="button"
           onClick={onNew}
-          className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-md border border-dashed border-border-strong px-3 text-[13px] font-medium text-fg transition-colors duration-150 hover:border-accent hover:text-accent"
+          className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-full border border-dashed border-border-strong px-3 text-[13px] font-medium text-fg transition-colors duration-150 hover:border-accent hover:text-accent"
         >
           <FolderPlus className="h-4 w-4" aria-hidden /> New project
         </button>

@@ -15,7 +15,7 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: "sm" | "md"; icon?: ReactNode }) {
   const styles: Record<Variant, string> = {
-    primary: "bg-accent text-accent-fg hover:brightness-110 border border-transparent",
+    primary: "bg-action text-accent-fg hover:brightness-110 active:scale-95 border border-transparent",
     secondary: "bg-raised text-fg border border-border hover:border-border-strong hover:bg-muted",
     ghost: "bg-transparent text-fg-muted border border-transparent hover:bg-raised hover:text-fg",
     danger: "bg-transparent text-danger border border-danger/40 hover:bg-danger-soft",
@@ -25,9 +25,9 @@ export function Button({
       type="button"
       {...props}
       className={cx(
-        "inline-flex items-center justify-center gap-1.5 rounded-md font-medium cursor-pointer select-none",
+        "inline-flex items-center justify-center gap-1.5 rounded-full font-medium cursor-pointer select-none",
         "transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed",
-        size === "sm" ? "h-7 px-2.5 text-[12.5px]" : "h-9 px-3.5 text-[13.5px]",
+        size === "sm" ? "h-7 px-3 text-[12.5px]" : "h-9 px-4 text-[13.5px]",
         styles[variant],
         className,
       )}
@@ -56,12 +56,13 @@ export function IconButton({ label, children, className, ...props }: ButtonHTMLA
   );
 }
 
-type Tone = "neutral" | "accent" | "danger" | "warn" | "info";
+type Tone = "neutral" | "accent" | "ok" | "danger" | "warn" | "info";
 
 export function Badge({ tone = "neutral", children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
   const tones: Record<Tone, string> = {
     neutral: "bg-raised text-fg-muted border-border",
     accent: "bg-accent-soft text-accent border-transparent",
+    ok: "bg-ok-soft text-ok border-transparent",
     danger: "bg-danger-soft text-danger border-transparent",
     warn: "bg-warn-soft text-warn border-transparent",
     info: "bg-info-soft text-info border-transparent",
@@ -74,7 +75,7 @@ export function Badge({ tone = "neutral", children, className }: { tone?: Tone; 
 }
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx("rounded-xl border border-border bg-surface", className)}>{children}</div>;
+  return <div className={cx("rounded-[18px] border border-border bg-surface", className)}>{children}</div>;
 }
 
 export function Field({ label, hint, error, children }: { label: string; hint?: ReactNode; error?: string; children: ReactNode }) {
@@ -93,7 +94,7 @@ export function Field({ label, hint, error, children }: { label: string; hint?: 
 }
 
 const inputClass =
-  "w-full rounded-md border border-border bg-bg px-3 text-[13.5px] text-fg placeholder:text-fg-muted/70 " +
+  "w-full rounded-lg border border-border bg-surface px-3 text-[13.5px] text-fg placeholder:text-fg-muted/70 " +
   "transition-colors duration-150 hover:border-border-strong focus:border-accent focus:outline-none " +
   "focus-visible:outline-2 focus-visible:outline-accent/60";
 

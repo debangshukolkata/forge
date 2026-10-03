@@ -1,12 +1,13 @@
-import { AlertTriangle, CheckCircle2, FolderGit2, Layers, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, FolderGit2, Layers, ShieldCheck, XCircle } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, cx } from "../lib";
 import type { DoctorResult } from "../types";
+import { Headline, Tagline } from "./landing";
 import { Button, Card, Field, Input, Spinner } from "./ui";
 
 type Mode = "A" | "B";
 
-export function Home({ onCreated }: { onCreated: () => void }) {
+export function NewProject({ onCreated, onBack }: { onCreated: () => void; onBack: () => void }) {
   const [mode, setMode] = useState<Mode>("B");
   const [project, setProject] = useState("");
   const [folder, setFolder] = useState("");
@@ -55,8 +56,11 @@ export function Home({ onCreated }: { onCreated: () => void }) {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
-      <h1 className="text-[22px] font-semibold tracking-tight">Start a project</h1>
-      <p className="mt-1 text-fg-muted">Give it a name and a folder. Everything after that happens in the chat.</p>
+      <Button variant="ghost" size="sm" icon={<ArrowLeft className="h-3.5 w-3.5" />} onClick={onBack} className="-ml-3 mb-4">
+        Back
+      </Button>
+      <Headline className="!text-[34px]">New project.</Headline>
+      <Tagline className="mt-2">Give it a name and a folder. Everything after that happens in the chat.</Tagline>
 
       <Card className="mt-6 p-6">
         <form onSubmit={submit} className="space-y-5" noValidate>
@@ -137,7 +141,7 @@ export function Home({ onCreated }: { onCreated: () => void }) {
             {doctor.map((result) => (
               <li key={result.name} className="flex gap-2 text-[13px]">
                 {result.status === "ok" ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-label="OK" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-ok" aria-label="OK" />
                 ) : result.status === "warn" ? (
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warn" aria-label="Warning" />
                 ) : (

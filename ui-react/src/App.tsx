@@ -2,19 +2,64 @@ import { MessagesSquare, Network, PanelRightClose, PanelRightOpen } from "lucide
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Chat } from "./components/Chat";
 import { RunMap } from "./components/RunMap";
-import { Home } from "./components/Home";
+import { Hub } from "./components/Hub";
+import { Login } from "./components/Login";
+import { NewProject } from "./components/NewProject";
+import { ProjectList } from "./components/ProjectList";
 import { Setup } from "./components/Setup";
 import { IconButton, Spinner } from "./components/ui";
 import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
-import { api, cx, storageGet, storageSet } from "./lib";
+import { api, cx, SIGNED_OUT_EVENT, storageGet, storageSet } from "./lib";
 import { Panels } from "./panels/Panels";
-import type { SetupStatus } from "./types";
+import type { AuthStatus, SetupStatus } from "./types";
 import { useForge } from "./useForge";
 
+type Theme = "dark" | "light";
+type View = "hub" | "new" | "open" | "chat";
+
+// Login first (D-184); the engine session and everything else only start once signed in.
 export function App() {
+  // Light is the default (D-125). A new key, written only when the user toggles: the old "forge-theme" was
+  // saved on every load, so it can't tell a real choice of dark from the old default.
+  const [theme, setTheme] = useState<Theme>(storageGet("forge-theme-choice") === "dark" ? "dark" : "light");
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    storageSet("forge-theme-choice", next);
+  };
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
+  const [auth, setAuth] = useState<AuthStatus | null>(null);
+  useEffect(() => {
+    api<AuthStatus>("/api/auth").then(setAuth).catch(() => setAuth({ configured: true, signed_in: false, user: null }));
+    const back = () => setAuth((prev) => ({ configured: prev?.configured ?? true, signed_in: false, user: null }));
+    window.addEventListener(SIGNED_OUT_EVENT, back);
+    return () => window.removeEventListener(SIGNED_OUT_EVENT, back);
+  }, []);
+  const signOut = async () => {
+    await api("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+    setAuth({ configured: true, signed_in: false, user: null });
+  };
+
+  if (auth === null) {
+    return (
+      <div className="flex h-full items-center justify-center text-fg-muted">
+        <Spinner />
+      </div>
+    );
+  }
+  if (!auth.signed_in) {
+    return <Login configured={auth.configured} onSignedIn={(user) => setAuth({ configured: true, signed_in: true, user })} />;
+  }
+  return <Shell user={auth.user} theme={theme} onToggleTheme={toggleTheme} onSignOut={signOut} />;
+}
+
+function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null; theme: Theme; onToggleTheme: () => void; onSignOut: () => void }) {
   const forge = useForge();
-  const [view, setView] = useState<"home" | "chat">("home");
+  const [view, setView] = useState<View>("hub");
   // D-145/D-146: null while the one-time check is in flight (nothing renders yet, so there's no flash of
   // the setup screen when everything's already configured — the common case on every run after the first).
   const [missingSecrets, setMissingSecrets] = useState<string[] | null>(null);
@@ -23,14 +68,6 @@ export function App() {
       .then((status) => setMissingSecrets(status.missing))
       .catch(() => setMissingSecrets([])); // can't tell: don't block the app on a broken check
   }, []);
-  // Light is the default (D-125). A new key, written only when the user toggles: the old "forge-theme" was
-  // saved on every load, so it can't tell a real choice of dark from the old default.
-  const [theme, setTheme] = useState<"dark" | "light">(storageGet("forge-theme-choice") === "dark" ? "dark" : "light");
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    storageSet("forge-theme-choice", next);
-  };
   const [stopped, setStopped] = useState(false);
   const [surface, setSurface] = useState<Surface>("chat");
   const [panelsCollapsed, setPanelsCollapsed] = useState(storageGet("forge-panels-collapsed") === "1");
@@ -54,11 +91,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
-
-  useEffect(() => {
-    setView(forge.state.workspace ? "chat" : "home");
+    setView(forge.state.workspace ? "chat" : "hub");
   }, [forge.state.workspace?.path]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const open = async (path: string) => {
@@ -75,6 +108,8 @@ export function App() {
     await api("/api/quit", { method: "POST" }).catch(() => undefined);
     setStopped(true);
   };
+
+  const landing = view !== "chat" || !forge.state.workspace;
 
   if (stopped) {
     return <div className="flex h-full items-center justify-center text-fg-muted">Forge has stopped. You can close this tab.</div>;
@@ -94,13 +129,19 @@ export function App() {
 
   return (
     <div className="flex h-full flex-col">
-      <TopBar forge={forge} theme={theme} onToggleTheme={toggleTheme} onHome={() => setView("home")} onQuit={quit} />
+      <TopBar forge={forge} theme={theme} onToggleTheme={onToggleTheme} onHome={() => setView("hub")} onQuit={quit} user={user} onSignOut={onSignOut} />
       <div className="flex min-h-0 flex-1">
-        <Sidebar forge={forge} onNew={() => setView("home")} onOpen={open} />
+        {!landing && <Sidebar forge={forge} onNew={() => setView("new")} onOpen={open} />}
         <main className="flex min-w-0 flex-1 flex-col">
-          {view === "home" || !forge.state.workspace ? (
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <Home onCreated={async () => { await forge.enter(); setView("chat"); }} />
+          {landing ? (
+            <div className="min-h-0 flex-1 overflow-y-auto bg-bg">
+              {view === "new" ? (
+                <NewProject onBack={() => setView("hub")} onCreated={async () => { await forge.enter(); setView("chat"); }} />
+              ) : view === "open" ? (
+                <ProjectList onBack={() => setView("hub")} onOpen={open} />
+              ) : (
+                <Hub user={user} projectCount={forge.state.recent?.length ?? 0} onNew={() => setView("new")} onOpen={() => setView("open")} />
+              )}
             </div>
           ) : (
             <>

@@ -101,8 +101,7 @@ def page(server: ServerSecurity) -> Iterator[object]:
 def test_web_ui_mechanics_in_edge(page, server: ServerSecurity, workspace: Workspace) -> None:  # type: ignore[no-untyped-def]
     page.goto(server.url())
     assert page.url.rstrip("/").endswith(str(server.port)), "the token must leave the URL"
-    page.wait_for_selector("text=Start a project")
-    page.wait_for_selector("text=Environment check")
+    page.wait_for_selector("text=Start something new.")
 
     # Open the workspace through the API the home screen uses, then load it like a user would.
     page.evaluate(
@@ -139,7 +138,8 @@ def test_web_ui_mechanics_in_edge(page, server: ServerSecurity, workspace: Works
 def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, original_repo: Path) -> None:  # type: ignore[no-untyped-def]
     # The start form: project name + folder (both modes); the repository field appears only in Mode A.
     page.goto(server.url())
-    page.wait_for_selector("text=Start a project")
+    page.click("button:has-text('New project')")
+    page.wait_for_selector("text=Create and open")
     assert page.locator("input[placeholder*='claims-repo']").count() == 0
     page.fill("input[placeholder='e.g. payments-masking']", "Payments Masking")
     page.fill("input[placeholder^='C:'][placeholder$='payments-masking']", str(tmp_path / "pm"))
@@ -150,7 +150,8 @@ def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, 
     assert "Payments Masking" in page.inner_text("nav[aria-label=Projects]")
 
     page.click("button:has-text('Home')")
-    page.wait_for_selector("text=Start a project")
+    page.click("button:has-text('New project')")
+    page.wait_for_selector("text=Create and open")
     page.click("[role=radio]:has-text('From an existing repository')")
     assert page.locator("input[placeholder*='claims-repo']").count() == 1
     assert page.locator("input[placeholder^='Acme']").count() == 0  # sensitive terms: standalone only
@@ -178,7 +179,8 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         page.on("console", lambda m: problems.append(m.text) if m.type == "error" else None)
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("text=Start a project")
+        page.click("button:has-text('New project')")
+        page.wait_for_selector("text=Create and open")
         page.wait_for_selector("text=Environment check")
         # Light is the default theme (D-125).
         assert page.evaluate("document.documentElement.classList.contains('dark')") is False
@@ -305,7 +307,7 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
         page.on("console", lambda m: problems.append(m.text) if m.type == "error" else None)
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("text=Start a project")
+        page.wait_for_selector("text=Start something new.")
         page.evaluate(
             "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
             str(workspace.root),
@@ -339,7 +341,7 @@ def test_react_composer_features(server: ServerSecurity, workspace: Workspace, t
         problems: list[str] = []
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("text=Start a project")
+        page.wait_for_selector("text=Start something new.")
         page.evaluate(
             "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
             str(workspace.root),
@@ -441,7 +443,7 @@ def open_in_edge(p: object, live: LiveServer, workspace: Workspace) -> tuple[obj
     page.on("pageerror", lambda e: problems.append(str(e)))
     page.problems = problems
     page.goto(live.security.url())
-    page.wait_for_selector("text=Start a project")
+    page.wait_for_selector("text=Start something new.")
     page.evaluate(
         "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
         str(workspace.root),

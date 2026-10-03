@@ -178,7 +178,7 @@ function ToolCard({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
         {item.state === "running" ? (
           <Spinner className="h-3.5 w-3.5 text-accent" />
         ) : item.state === "ok" ? (
-          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-accent" aria-label="Succeeded" />
+          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-ok" aria-label="Succeeded" />
         ) : retried ? (
           <AlertOctagon className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-label="Failed, then retried successfully" />
         ) : (
@@ -310,7 +310,7 @@ function QuestionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
                   {option.description && <span className="mt-0.5 block text-[12.5px] text-fg-muted">{option.description}</span>}
                   {(option.pros || option.cons || option.risks) && (
                     <span className="mt-1 block space-y-0.5 text-[12px]">
-                      {option.pros && <span className="block text-accent">Pros: {option.pros}</span>}
+                      {option.pros && <span className="block text-ok">Pros: {option.pros}</span>}
                       {option.cons && <span className="block text-warn">Cons: {option.cons}</span>}
                       {option.risks && <span className="block text-danger">Risks: {option.risks}</span>}
                     </span>

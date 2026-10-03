@@ -21,7 +21,7 @@ export function usd(value: number, digits = 4): string {
   return `$${value.toFixed(digits)}`;
 }
 
-const DOT: Record<Level, string> = { green: "bg-accent", yellow: "bg-warn", red: "bg-danger" };
+const DOT: Record<Level, string> = { green: "bg-ok", yellow: "bg-warn", red: "bg-danger" };
 const TEXT: Record<Level, string> = { green: "text-fg-muted", yellow: "text-warn", red: "text-danger" };
 
 /** "● 184k tok · $0.2110" with the level's colour; tooltip with the split. */

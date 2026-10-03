@@ -2584,3 +2584,28 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   inside the workspace, so a project-level settings file there would let it grant itself permissions. A broken file raises
   `ConfigError` instead of being ignored (a dropped deny rule would be worse than refusing to start). Applies to the main agent and to
   subagents. Option "always allow" prefixes in `.forge/permissions.json` are unchanged. Tests: `tests/test_permissions.py`.
+
+### D-184..D-186 — UI redesign: login, landing flow, Apple-style design (user decisions 2026-10-03) · Built (login, hub, list, theme)
+- **D-184 login and landing flow.** The web UI opens on a login page; after signing in the user chooses New project (the existing
+  Standalone / From an existing repository form) or Open an existing project (a list, newest first, with the last request and time;
+  opening replays the project's events and memory). Login options considered: A local account with a salted scrypt hash (chosen),
+  B trust the Windows user (no password), C company SSO (needs admin and app registration, parked). One account per machine in
+  `<home>/account.json`; first run creates it; "forgot password" = delete the file (projects are untouched). Wrong passwords: the same
+  message for a wrong ID or password, a 30 s pause after 5 in a row. Session = random token in an HttpOnly SameSite=Strict cookie
+  (one per port), kept in memory, so a server restart signs everyone out. Everything except the page shell and `/api/auth/*` returns
+  401 without it, and the WebSocket closes with 4401. This sits on top of the per-run server token and the 127.0.0.1 bind (unchanged).
+  It keeps other people on a shared laptop or browser out; it is not protection from a local administrator. `create_app(accounts=None)`
+  means no login and exists only so the older tests need none; `forge ui` always passes an account store. Code:
+  `web/accounts.py`, `web/auth_routes.py`, `web/project_list.py`; `/api/projects` (GET) lists projects; the recent list now keeps 50.
+  Tests: `tests/test_web_accounts.py`, `tests/test_web_login_e2e.py` (screenshots in test-artifacts/react-ui/).
+- **D-185 design language.** The user's design.md (Apple style) is adopted as the theme for the whole app, adapted for a developer
+  tool (docs/DESIGN.md): one blue accent (#0066cc, #2997ff in dark) for everything clickable; white cards on parchment (#f5f5f7), near-
+  black tiles (#272729 / #1d1d1f) as the alternating bands on the landing screens; hairline borders, no shadows, pill buttons with a
+  0.95 press scale, 18 px cards, a frosted top bar. Fonts: Inter bundled via `@fontsource/inter` (OFL licence, build-time npm
+  package, offline on the laptop) replaces IBM Plex Sans; the font-weight ladder is 400/600 (`font-medium` maps to 600); JetBrains Mono
+  stays for code. Success is a separate green token (`ok`) so blue only means "clickable"; done/added/targets-met/green dots moved to
+  it. Large type and 17 px body only on the landing screens; chat, run map and panels keep their dense sizes. Dark theme is derived
+  by us from the tile colours (the design.md has none). Photography tiles and the product shadow are not used (no product images).
+- **D-186 setup and model plan: parked.** The environment-checks screen (Azure, Gemini, Tesseract, Postgres, live), the model plan
+  for confirmation and the remembered per-machine configuration were agreed as global per machine and not built yet (user: "don't
+  build it now"). The old Environment check card stays on the New project form until then.

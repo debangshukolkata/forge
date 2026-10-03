@@ -255,3 +255,10 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [ ] Parallel pytest in built apps: Forge runs `python -m pytest` sequentially (no xdist, no `-n`). Add a prompt line to use pytest-xdist only for large suites (needs a pip install approval; beware shared ports and SQLite files) once a real project shows slow test runs.
 - [ ] Campaign case: Forge builds a small MCP-using tool and tests it with a dummy stdio MCP server it writes itself (needs the `mcp` package via an approved pip install; the server is not wired into Forge's own `config.yaml`). Not yet run live.
 - [ ] UI: Claude Code layout for tool calls in the web chat (user chose option A, 2026-10-03): each call a card in order with the tool name, an IN block (command/path/arguments) and an OUT block, long output collapsed behind "show more" (about 15 lines), edits shown as diffs, failures open, reasoning summaries dim, subagent calls nested and collapsed (D-181). Open question: send the full result to the UI instead of the capped preview. Redaction applies. Check with headless Edge screenshots.
+
+## UI redesign (D-184..D-186, 2026-10-03)
+- [x] Login (local account), hub (new / open), project list, Apple-style theme on the whole app, Inter font, `ok` green token
+- [ ] Setup screen after "new project": per-machine config (Azure, Gemini, Tesseract, Postgres) with live checks, then the model plan to
+  confirm; remembered and shown by default next time (agreed global per machine, D-186; parked by the user)
+- [ ] Project list: show the project's memory summary (FORGE.md / handoff) and mode-specific details, not only the last request
+- [ ] Change password / account screen (today: delete account.json)

@@ -15,6 +15,7 @@ import uvicorn
 from forge.config import forge_home
 from forge.safety.server_security import ServerSecurity, check_bind_host, check_dev_origin
 from forge.session import build_session
+from forge.web.accounts import AccountStore
 from forge.web.manager import WebSessionManager
 from forge.web.server import create_app
 
@@ -63,7 +64,7 @@ async def serve(
     async def stop() -> None:
         server.should_exit = True
 
-    config.app = create_app(manager, security, on_quit=stop)
+    config.app = create_app(manager, security, on_quit=stop, accounts=AccountStore(forge_home()))
     if workspace is not None:
         await manager.open_workspace(workspace)
     print(f"Forge web UI: {security.url()}")

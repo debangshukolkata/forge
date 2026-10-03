@@ -280,12 +280,12 @@ function AutoFit({ shape, enabled }: { shape: string; enabled: boolean }) {
   return null;
 }
 
-const STATUS_TONE: Record<string, "neutral" | "accent" | "danger" | "warn" | "info"> = {
-  pending: "neutral", in_progress: "info", done: "accent", blocked: "danger", skipped: "warn",
+const STATUS_TONE: Record<string, "neutral" | "ok" | "danger" | "warn" | "info"> = {
+  pending: "neutral", in_progress: "info", done: "ok", blocked: "danger", skipped: "warn",
 };
 
 const STATUS_BORDER: Record<string, string> = {
-  pending: "border-border", in_progress: "border-info", done: "border-accent/60", blocked: "border-danger", skipped: "border-warn/60",
+  pending: "border-border", in_progress: "border-info", done: "border-ok/60", blocked: "border-danger", skipped: "border-warn/60",
 };
 
 function TaskNode({ id, data }: NodeProps<FlowNode>) {
@@ -379,7 +379,7 @@ const STEP_ICON: Partial<Record<GraphNodeData["kind"], ReactNode>> = {
 
 function StepNode({ data }: NodeProps<FlowNode>) {
   const tone =
-    data.state === "done" ? "border-accent/60 text-accent" : data.state === "active" ? "border-info text-info" : "border-border text-fg-muted";
+    data.state === "done" ? "border-ok/60 text-ok" : data.state === "active" ? "border-info text-info" : "border-border text-fg-muted";
   return (
     <div
       style={{ width: STEP_W, height: STEP_H }}
