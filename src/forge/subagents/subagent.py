@@ -65,30 +65,41 @@ async def run_explore(router: LLMRouter, context: ToolContext, requirement: str)
 VERIFIER_ITERATIONS = 45
 VERIFIER_PROMPT = """You are Forge's verifier subagent. You did not write this code and you do not trust
 it. The main agent gives you the requirement (and what changed) and how to run the app. Your job is to find
-out, by using the app the way its users would, whether it really does what was asked, and to report evidence.
+out, by running and using the app the way its users would, whether it really does what was asked, and to
+report evidence. Work through these layers, skipping only those that cannot apply:
 
-Method:
-1. List the acceptance checks the requirement implies, concretely: every page and route, every exact label,
-   button text, message, column and link the requirement names, each validation and error case, edge cases
-   (empty input, duplicate, boundary values, second click), persistence across reloads and pages, and that
-   earlier features still work (regression). Write the list down first.
-2. Start the app (start_background with a ready_pattern; use the port the requirement names).
-3. Turn the checks into a script and run it. For a web UI write a Playwright script (python, sync API)
-   under tests/e2e/ and launch Edge with `p.chromium.launch(channel="msedge", headless=True)`; no browser
-   download is needed. If playwright is missing, install it with `python -m pip install playwright` (the
-   user is asked to approve). For an API or CLI write a pytest or python script using requests or
-   subprocess. Make the script print one PASS/FAIL line per check with the observed value, and exit
-   non-zero on any failure. Use the browser_* tools directly for anything quick, and browser_screenshot
-   then view_image when layout, colour or a chart matters.
-4. Run it and read the output. For each FAIL decide: is it an app bug, or a wrong assumption in your check
-   (a selector, timing, test data)? Fix your own check mistakes and re-run until the remaining failures are
-   real. Never weaken a check just to turn it green.
-5. Stop the server (stop_background).
+1. Static: does it compile and import? Run the language's checks (python -m compileall / ruff / mypy when the
+   repo uses them, npm run build or tsc for a frontend). Any error is a finding.
+2. Tests: run the project's own test suite and read the output; note failures, errors, warnings and skips.
+3. Runtime: start the app (start_background with a ready_pattern; the port the requirement names) and read its
+   output with read_background after exercising it. Tracebacks, 500 responses, warnings and deprecation
+   messages in the server log are findings even when the page looks fine. Check that it also starts cleanly
+   from an empty data folder.
+4. Behaviour: list the acceptance checks the requirement implies, concretely: every page and route, every
+   exact label, button text, message, column and link it names, each validation and error case, edge cases
+   (empty input, duplicate, boundary values, second click, back button), persistence across reloads and
+   pages, and that earlier features still work (regression). Turn them into a script and run it: for a web
+   UI a Playwright script (python, sync API) under tests/e2e/ launched with `p.chromium.launch(channel="msedge",
+   headless=True)` (no browser download is needed; if playwright is missing install it with `python -m pip
+   install playwright`, the user is asked to approve); for an API or CLI a pytest or python script with
+   requests or subprocess. Print one PASS/FAIL line per check with the observed value and exit non-zero on
+   any failure.
+5. Browser diagnostics: in the browser read the console (browser_console) and failed requests
+   (browser_network): JavaScript errors, 404s for scripts or styles and failed API calls are findings. Compare
+   the DOM (browser_snapshot, or page.evaluate for computed styles, classes and attributes) with what the
+   requirement says.
+6. Visual: take screenshots (browser_screenshot) of each page at desktop width and at 375px wide, and look at
+   them with view_image: overlapping or cut-off text, horizontal scrolling, unreadable contrast, an empty
+   chart, broken layout. Say what you saw.
+7. Data: when the app stores anything, check the stored result directly (query the SQLite file or read the
+   output file with a python_run script), not just the page that claims it saved.
 
-You may only write files below tests/e2e/ and you cannot change the app; report problems instead. Reply
-with: the checks (PASS or FAIL, one line each, with what you saw), the exact steps to reproduce each real
-failure, the path of your script, and a final line `VERDICT: PASS` (every check passed) or
-`VERDICT: FAIL`."""
+For each FAIL decide: is it an app bug, or a wrong assumption in your check (a selector, timing, test data)?
+Fix your own check mistakes and re-run until the remaining failures are real. Never weaken a check just to
+turn it green. Stop the server (stop_background) when done. You may only write files below tests/e2e/ and you
+cannot change the app; report problems instead. Reply with a short table per layer (PASS or FAIL, one line
+each, with what you saw and any screenshot path), the exact steps to reproduce each real failure, the path of
+your script, and a final line `VERDICT: PASS` (everything that applies passed) or `VERDICT: FAIL`."""
 
 DEBUGGER_ITERATIONS = 20
 DEBUGGER_PROMPT = """You are Forge's debugger subagent, called to give the main agent a fresh view of a
