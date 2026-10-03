@@ -27,6 +27,7 @@ class BackgroundProcess:
     port: int | None
     lines: deque[str] = field(default_factory=lambda: deque(maxlen=KEPT_LINES))
     reader: asyncio.Task[None] | None = None
+    total_lines: int = 0  # every line the process has printed, also those that scrolled out of `lines`
 
     @property
     def running(self) -> bool:
@@ -135,6 +136,59 @@ class ReadBackground(Tool):
         return ToolResult(ok=True, content=f"[{state}]\n{text}")
 
 
+class Monitor(Tool):
+    name = "monitor"
+    output_kind = "shell"
+    read_only = True
+    description = (
+        "Wait for a background process: returns as soon as `until` (a regex) appears in its output, or the "
+        "process exits (with its exit code), or the timeout passes (the process keeps running), together with "
+        "the new output. Use it instead of calling read_background in a loop, e.g. after start_background to "
+        "wait for a build or 'Running on'."
+    )
+
+    class Args(ToolArgs):
+        name: str
+        until: str | None = Field(default=None, description="Regex to wait for in the output.")
+        timeout_s: int = Field(default=60, ge=1, le=300)
+
+    def summary(self, args: Monitor.Args) -> str:
+        return f"monitor {args.name}" + (f" until /{args.until}/" if args.until else "")
+
+    async def run(self, args: Monitor.Args, context: ToolContext) -> ToolResult:
+        manager = context.background
+        assert manager is not None
+        entry = manager.processes.get(args.name)
+        if entry is None:
+            return ToolResult(ok=False, content=f"No background process named '{args.name}'.")
+        try:
+            regex = re.compile(args.until) if args.until else None
+        except re.error as error:
+            return ToolResult(ok=False, content=f"Invalid regex: {error}")
+        seen = entry.total_lines  # output printed from now on counts as new
+        deadline = asyncio.get_running_loop().time() + args.timeout_s
+        outcome = "timeout"
+        while True:
+            if regex is not None and any(regex.search(line) for line in entry.lines):
+                outcome = "matched"
+                break
+            if not entry.running:
+                outcome = "exited"
+                break
+            if asyncio.get_running_loop().time() >= deadline:
+                break
+            await asyncio.sleep(0.2)
+        fresh = max(entry.total_lines - seen, 0)
+        shown = list(entry.lines)[-fresh:] if fresh else []
+        text, _ = context.cap_output("\n".join(shown), "shell")
+        state = {
+            "matched": "pattern matched; still running" if entry.running else "pattern matched; exited",
+            "exited": f"exited ({entry.process.returncode})",
+            "timeout": f"timed out after {args.timeout_s}s; still running",
+        }[outcome]
+        return ToolResult(ok=True, content=f"[{state}]\n{text}" if text else f"[{state}]")
+
+
 class StopBackground(Tool):
     name = "stop_background"
     description = "Stop a background process and all its child processes."
@@ -155,6 +209,7 @@ async def _collect(entry: BackgroundProcess) -> None:
     assert entry.process.stdout is not None
     while line := await entry.process.stdout.readline():
         entry.lines.append(line.decode("utf-8", errors="replace").rstrip("\r\n"))
+        entry.total_lines += 1
 
 
 async def _wait_until_ready(entry: BackgroundProcess, pattern: str | None, timeout_s: int) -> bool:

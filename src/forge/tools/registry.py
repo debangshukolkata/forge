@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from forge.llm.base import ToolSpec
-from forge.toolkit.background import ReadBackground, StartBackground, StopBackground
+from forge.toolkit.background import Monitor, ReadBackground, StartBackground, StopBackground
 from forge.toolkit.base import Tool
 from forge.toolkit.shell import PythonRun, RunCommand
 from forge.tools.browser import browser_tools
@@ -41,6 +41,7 @@ def default_tools() -> list[Tool]:
         MemoryWrite(),
         MemoryForget(),
         TodoWrite(),
+        Monitor(),
         InstructionsWrite(),
         LoadSkill(),
         NotebookRead(),
