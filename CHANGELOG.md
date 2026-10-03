@@ -22,6 +22,10 @@ Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
 - **Knowledge base retired (D-160):** Forge reads the repository on demand with glob/grep/read and the explore
   subagent. The list of credential tables the database guard refuses to read is still computed (now in `db`).
   `/init` has the model explore the repo and write FORGE.md.
+- **First Mode B end-to-end campaign (D-162..D-170, docs/E2E_CAMPAIGN_2026-10-03.md):** three projects built and
+  enhanced; follow-ups now always reach the model, one conversation across tasks, work without a task list is
+  delivered, UI work must be checked in a browser, new `verifier` subagent that writes and runs independent Playwright
+  checks; no runtime budget cap.
 - **Parked:** Gemini provider (D-150).
 
 ## 0.1.0 — 2026-09-26 … 2026-09-29

@@ -237,3 +237,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] **DROPPED (D-161)**: role-specific toolsets, lazy tool schemas, prompt fragments. Forge does not optimise token cost at runtime; accuracy and speed first
 - [ ] Full test run after the revamp code steps; commit in logical parts
 - [ ] **Parked:** D-150 Gemini provider (uncommitted in config.py, doctor.py)
+
+- [x] First Mode B end-to-end campaign (2026-10-03): attendance, bakery, invoice projects; D-162..D-170; report in docs/E2E_CAMPAIGN_2026-10-03.md
+- [ ] Next campaign ideas: a project with a database and a REST API (verifier on an API), a CLI tool, a Mode A repo; watch whether the verifier is called on larger features
+- [ ] Unattended runs: decide how a headless run may install dependencies (today always-ask)
