@@ -53,7 +53,7 @@ def workspace(original_repo: Path, tmp_path: Path) -> Workspace:
 
 @pytest.fixture
 def server(isolated_forge_home: Path) -> Iterator[ServerSecurity]:
-    port = free_port(8790)
+    port = free_port(0)
     security = ServerSecurity(port=port)
     manager = WebSessionManager(
         isolated_forge_home,
@@ -412,7 +412,7 @@ def live_server(isolated_forge_home: Path) -> Iterator[LiveServer]:
     import asyncio
 
     loops: list[asyncio.AbstractEventLoop] = []
-    port = free_port(8798)
+    port = free_port(0)
     security = ServerSecurity(port=port)
     manager = WebSessionManager(
         isolated_forge_home,

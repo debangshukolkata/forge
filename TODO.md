@@ -261,8 +261,8 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] Login (local account), hub (new / open), project list, Apple-style theme on the whole app, Inter font, `ok` green token
 - [x] Setup screen after "new project" and from the top bar: live checks (system, Azure, Postgres, Gemini, Tesseract), model plan to confirm,
   remembered per machine (D-186)
-- [ ] Use Tesseract and Gemini for real (the screen only detects them today); show the Azure key/endpoint entry on this screen too
-  (today missing values are asked for by the older first-run Setup screen)
+- [ ] Use Tesseract and Gemini for real (the Environment drawer only detects them today)
+- [x] Azure key/endpoint entry on the Environment drawer (D-200)
 - [x] Project list: memory summary (handoff goal/next, note count, FORGE.md) on each project (D-196)
 - [x] FORGE.md was listed as a memory note in the store and the pinned index: fixed (D-199)
 - [x] Change password / account screen (D-197)

@@ -179,6 +179,7 @@ export interface CheckResultView {
   detail: string;
   hint: string;
   models: Record<string, boolean>;
+  missing?: string[]; // azure: names of required values that are not set (never values)
   checked_at?: string;
 }
 

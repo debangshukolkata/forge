@@ -42,7 +42,7 @@ def configured_secrets(isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatc
 
 @pytest.fixture
 def server(isolated_forge_home: Path) -> Iterator[ServerSecurity]:
-    port = free_port(8780)
+    port = free_port(0)
     security = ServerSecurity(port=port)
     manager = WebSessionManager(
         isolated_forge_home,

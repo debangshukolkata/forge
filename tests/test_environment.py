@@ -142,3 +142,21 @@ def test_environment_endpoints(
     good = client.post("/api/environment/confirm", json={"roles": roles}, headers=origin)
     assert good.status_code == 200 and good.json()["saved"]["plan"] == roles
     assert good.json()["saved"]["confirmed_at"]
+
+
+def test_azure_check_names_the_missing_values_without_calling_the_network(
+    isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import asyncio
+
+    from forge.config import load_config
+    from forge.doctor import required_secret_names
+
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    for name in required_secret_names(load_config(isolated_forge_home)):
+        monkeypatch.delenv(name, raising=False)
+
+    outcome = asyncio.run(checks.run_check("azure"))
+
+    assert outcome.status == "fail" and "AZURE_OPENAI_API_KEY" in outcome.missing
+    assert "Enter them below" in outcome.hint and outcome.to_dict()["missing"] == outcome.missing

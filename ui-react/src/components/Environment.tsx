@@ -3,9 +3,10 @@
 // confirms (or changes a row) and the choice is remembered per machine; next time the saved results show at once
 // while the checks re-run. It opens by itself on the New project screen and from "Environment" in the top bar.
 import { AlertTriangle, CheckCircle2, RotateCw, X, XCircle } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, timeAgo } from "../lib";
 import type { CheckInfo, CheckResultView, EnvironmentOverview, ModelPlan } from "../types";
+import { AzureKeys } from "./AzureKeys";
 import { Badge, Button, IconButton, Select, Spinner } from "./ui";
 
 type Row = { result: CheckResultView | null; running: boolean };
@@ -98,7 +99,17 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
             </div>
           )}
           {checks.map((check) => (
-            <CheckRow key={check.id} check={check} row={rows[check.id]} onRetry={() => void runCheck(check.id)} />
+            <CheckRow
+              key={check.id}
+              check={check}
+              row={rows[check.id]}
+              onRetry={() => void runCheck(check.id)}
+              extra={
+                check.id === "azure" && rows[check.id] && !rows[check.id].running && rows[check.id].result ? (
+                  <AzureKeys missing={rows[check.id].result?.missing ?? []} onSaved={() => void runCheck("azure")} />
+                ) : null
+              }
+            />
           ))}
         </div>
 
@@ -166,7 +177,7 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
   );
 }
 
-function CheckRow({ check, row, onRetry }: { check: CheckInfo; row: Row | undefined; onRetry: () => void }) {
+function CheckRow({ check, row, onRetry, extra }: { check: CheckInfo; row: Row | undefined; onRetry: () => void; extra?: ReactNode }) {
   const result = row?.result ?? null;
   const running = row?.running ?? true;
   return (
@@ -197,6 +208,7 @@ function CheckRow({ check, row, onRetry }: { check: CheckInfo; row: Row | undefi
         {result && !running && result.hint && <div className="mt-0.5 text-[12px] text-fg-muted">{result.hint}</div>}
         {result?.checked_at && !running && <div className="mt-0.5 text-[11px] text-fg-muted">Checked {timeAgo(result.checked_at)}</div>}
         {!result && running && <div className="mt-1 text-[12.5px] text-fg-muted">Checking…</div>}
+        {extra}
       </div>
       <IconButton label={`Check ${check.label} again`} disabled={running} onClick={onRetry}>
         <RotateCw className="h-3.5 w-3.5" />

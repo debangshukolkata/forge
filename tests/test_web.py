@@ -362,3 +362,36 @@ def test_file_search_for_mentions(client: TestClient, security: ServerSecurity, 
     found = client.get("/api/files", params={"q": "claims_service"}).json()
     assert found and all("claims_service" in path for path in found)
     assert not [p for p in client.get("/api/files", params={"q": ".env"}).json() if p.endswith(".env")]
+
+
+def test_setup_secrets_refuses_a_value_with_a_line_break(
+    client: TestClient, security: ServerSecurity, isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A second line in a value would add a second variable to the .env file."""
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    login(client, security)
+    evil = "abc\nAZURE_OPENAI_ENDPOINT=https://evil.invalid"  # check_secrets: fake
+
+    refused = client.post(
+        "/api/setup/secrets", headers=ORIGIN, json={"values": {"AZURE_OPENAI_API_KEY": evil}}
+    )
+
+    assert refused.status_code == 400 and "line break" in refused.json()["detail"]
+    assert "evil.invalid" not in env_file_path_text(isolated_forge_home)
+    # Whitespace around a pasted value is trimmed, not kept.
+    padded = client.post(
+        "/api/setup/secrets",
+        headers=ORIGIN,
+        json={"values": {"AZURE_OPENAI_API_KEY": "  padded-key-123456  "}},
+    )
+    assert padded.status_code == 200
+    assert "AZURE_OPENAI_API_KEY=padded-key-123456\n" in env_file_path_text(isolated_forge_home)
+
+
+def test_setup_status_lists_the_names_that_can_be_replaced(
+    client: TestClient, security: ServerSecurity, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("FORGE_ENV_FILE", raising=False)
+    login(client, security)
+    status = client.get("/api/setup", headers=ORIGIN).json()
+    assert "AZURE_OPENAI_API_KEY" in status["required"] and set(status["missing"]) <= set(status["required"])

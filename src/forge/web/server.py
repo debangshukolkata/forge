@@ -415,15 +415,20 @@ def create_app(
         whether to show the setup screen at all before doing anything else (D-145 — no flash of UI when
         everything's already configured)."""
         from forge.config import forge_home, load_config, load_secrets
-        from forge.doctor import missing_secret_names
+        from forge.doctor import missing_secret_names, required_secret_names
 
         home = forge_home()
         try:
             config = load_config(home)
         except ForgeError as error:
-            return {"missing": [], "config_error": str(error)[:500]}
+            return {"missing": [], "required": [], "config_error": str(error)[:500]}
         secrets = load_secrets(home)
-        return {"missing": missing_secret_names(config, secrets), "config_error": None}
+        # `required` (names only) is what the Environment drawer offers when the user wants to replace a key.
+        return {
+            "missing": missing_secret_names(config, secrets),
+            "required": sorted(required_secret_names(config)),
+            "config_error": None,
+        }
 
     @app.post("/api/setup/secrets")
     async def setup_secrets(body: SetupSecrets) -> dict[str, bool]:
@@ -442,7 +447,10 @@ def create_app(
         unknown = sorted(set(body.values) - allowed)
         if unknown:
             raise HTTPException(400, f"Unrecognized field(s): {', '.join(unknown)}")
-        submitted = {name: value for name, value in body.values.items() if value.strip()}
+        submitted = {name: value.strip() for name, value in body.values.items() if value.strip()}
+        # One line per variable: a pasted line break could otherwise add a second variable to the .env file.
+        if any("\n" in value or "\r" in value for value in submitted.values()):
+            raise HTTPException(400, "A value can't contain a line break.")
         write_secret_values(submitted, home)
         return {"ok": True}
 

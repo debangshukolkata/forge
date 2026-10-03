@@ -23,6 +23,7 @@ from forge.doctor import (
     check_packages,
     check_python,
     check_secrets,
+    missing_secret_names,
 )
 from forge.errors import ForgeError
 from forge.safety.redact import default_redactor
@@ -57,6 +58,7 @@ class Outcome:
     detail: str
     hint: str = ""
     models: dict[str, bool] = field(default_factory=dict)  # azure: model key -> answered
+    missing: list[str] = field(default_factory=list)  # azure: env var NAMES not set (never values)
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -93,7 +95,8 @@ async def check_azure(config: ForgeConfig) -> Outcome:
             "azure",
             "fail",
             present.detail,
-            "Add the missing values to the .env file in the Forge folder (see .env.example), then retry.",
+            "Enter them below, or add them to the .env file in the Forge folder (see .env.example).",
+            missing=missing_secret_names(config, secrets),
         )
     models = await check_models(config, secrets)
     answered = {r.name.removeprefix("Model "): r.status != "fail" for r in models}

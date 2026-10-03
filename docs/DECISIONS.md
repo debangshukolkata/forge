@@ -2786,3 +2786,20 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   count (D-196) is gone. Test: `tests/test_memory_store.py`.
 - **Phase leftovers hidden:** the top bar's status badge ("direct") and the Tasks tab's "Phase direct" line showed the engine's coarse
   status string, which means nothing to a user since the phase pipeline went (D-131). Removed; the engine still sends the field.
+
+### D-200 — Azure keys on the Environment drawer (2026-10-03)
+- The **Azure OpenAI** row of the drawer now lets you fix what it reports: when required values are missing it lists them (names
+  only) in a form (the key field is masked), and "Save and test" writes them and re-runs the check at once; when everything is set a
+  quiet **Update keys** button opens the same form with every required name, empty, where a blank field keeps the saved value. Until
+  now a missing value could only be entered on the first-run screen (or by editing the file); if that screen was skipped there was
+  no way back to it. **No new way to write secrets:** it uses the existing `POST /api/setup/secrets` (only the names Forge itself
+  requires are accepted, nothing is sent back, the new values are registered for redaction at once). The check result and
+  `GET /api/setup` carry names only (`missing`, `required`).
+- **Hardened while there:** a value with a line break is refused (a pasted second line would have added a second variable to the .env
+  file) and whitespace around a value is trimmed. Options considered for the form's home: a separate Settings page (rejected: the
+  drawer is where the failure is seen) and prefilled masked values (rejected: the browser must never receive a saved value, invariant
+  3). The values live in the .env file in the Forge folder as before (see the risk discussion of 2026-10-03: plaintext on disk, same
+  as editing the file by hand). Tests: `tests/test_web.py`, `tests/test_environment.py`, `tests/test_web_keys_e2e.py`
+  (`environment-keys-light.png`).
+- **Test infrastructure fix found on the way:** the browser-test fixtures now ask the OS for a free port instead of a fixed preferred
+  one: two test files running in parallel could pick the same port and one of the servers failed to start (a refused connection).
