@@ -266,6 +266,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] Shell: indirect `.env` reads always ask (D-187); Forge's own variables hidden from commands (D-202)
 - [x] Tesseract: the `ocr_image` tool the model can call (D-203)
 - [x] Gemini provider built and pushed (D-150, D-205): adapter, router dispatch, drawer real call + (i) steps; project/location optional
+- [x] `forge skill add/list/remove` (D-207): third-party skills like Claude Code; `load_skill` reads a skill's own files
 - [ ] Gemini: run `scripts/dev/gemini_smoke.py` / the drawer test on the office laptop (never called live here); `view_video` waits for the video probe
 - [x] gpt-4o on a second Azure resource as the optional fallback model (D-206), pushed 2026-10-04
 - [ ] Optional: Azure AI Vision / Document Intelligence for handwriting OCR (user has no key yet; would need a yes in the drawer)

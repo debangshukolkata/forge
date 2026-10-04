@@ -2908,3 +2908,21 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - The user's own `.env` lowercase entries (`openai_api_*`, `deployment_name`) were renamed to these names and
   `openai_api_type` was removed (implied by `provider: azure`); a notebook that read the lowercase names must be updated.
 - Live check (2026-10-04): gpt41, gpt51 and gpt4o all answer; gpt-4o uses the Chat Completions API (auto-fallback from Responses).
+
+### D-207 — Installing third-party skills the way Claude Code treats them (user decision 2026-10-04)
+- Context: Claude Code can be told to use a skill repository (ui-ux-pro-max-skill, taste-skill); Forge had skills but no way to
+  take one from GitHub, and `load_skill` returned only SKILL.md (a skill that ships data or scripts lost them).
+- Claude Code's model, copied: installing a skill is the user's decision to trust it; nothing scans it; every command its
+  instructions lead to still goes through the normal approval. Differences, both stricter: Forge ignores a skill's
+  `allowed-tools` pre-approval (it only shows it), and only the user's own command can install (the model has no tool for it).
+- Built: `forge skill add <github.com link | folder> [--list] [--yes] [--force]`, `forge skill list`, `forge skill remove <name>`
+  (`parity/skill_install.py`). Fetch = the repo's zip from codeload.github.com (no git needed; 50 MB / 5000 file caps; every
+  archive path checked, symbolic links never created; public github.com repositories only). Each skill found (any depth) is shown
+  (description, file count, programs inside, allowed-tools) and asked about; same-named copies in one repo are skipped; an existing
+  name is never replaced without `--force`. Installed into `<home>/skills/<name>/` (cleaned name).
+- `load_skill` now appends the skill's folder and file list and takes `file=` to read one text file inside that folder (path
+  contained, 200 KB cap, no links). A program in the folder runs only through the shell, which asks.
+- Checked live (listing only, nothing installed): nextlevelbuilder/ui-ux-pro-max-skill (7 skills, several with Python scripts) and
+  leonxlnx/taste-skill (many single-file skills) both parse. Many of those skills assume Claude/Codex tools (image generation,
+  a skill's own search script), so some instructions will not apply in Forge.
+- Not built: install from the web UI, private repositories, updating an installed skill, a skill marketplace.

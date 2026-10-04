@@ -20,6 +20,10 @@ class Skill:
     description: str
     path: Path
 
+    @property
+    def folder(self) -> Path:
+        return self.path.parent
+
     def body(self) -> str:
         text = self.path.read_text(encoding="utf-8")
         return FRONT.sub("", text, count=1).strip()

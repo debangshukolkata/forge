@@ -267,3 +267,24 @@ async def test_a_custom_agent_with_unknown_tools_is_rejected_clearly(
     assert host.agent is not None
     result = await SpawnSubagent().run(SpawnSubagent.Args(agent="odd", task="go"), host.agent.context)
     assert not result.ok and "unknown tools: teleport" in result.content
+
+
+async def test_load_skill_lists_and_reads_files_inside_its_folder(
+    workspace: Workspace, isolated_forge_home: Path
+) -> None:
+    folder = isolated_forge_home / "skills" / "with-data"
+    (folder / "data").mkdir(parents=True)
+    (folder / "SKILL.md").write_text(
+        "---\nname: with-data\ndescription: Has data.\n---\nSee data.", encoding="utf-8"
+    )
+    (folder / "data" / "styles.csv").write_text("name\nglass\n", encoding="utf-8")
+    (isolated_forge_home / "secret.txt").write_text("not for the model", encoding="utf-8")
+    context = ToolContext(workspace=workspace)
+
+    body = await LoadSkill().run(LoadSkill.Args(name="with-data"), context)
+    assert body.ok and "data/styles.csv" in body.content and "asks for approval" in body.content
+    data = await LoadSkill().run(LoadSkill.Args(name="with-data", file="data/styles.csv"), context)
+    assert data.ok and "glass" in data.content
+    for outside in ("../../secret.txt", r"..\..\secret.txt", "C:/Windows/win.ini"):
+        refused = await LoadSkill().run(LoadSkill.Args(name="with-data", file=outside), context)
+        assert not refused.ok and "not a file inside the skill folder" in refused.content

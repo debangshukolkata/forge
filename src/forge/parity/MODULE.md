@@ -1,6 +1,6 @@
 # parity
 
-Claude Code parity features: skills, custom agents, FORGE.md instructions, MCP client, @-mentions, local history, sessions.
+Claude Code parity features: skills (incl. `skill_install.py`: `forge skill add` from a GitHub link or folder, D-207), custom agents, FORGE.md instructions, MCP client, @-mentions, local history, sessions.
 
 - **Depends on:** config, errors, llm, protocol, safety, toolkit, workspace
 - **Invariants:** MCP server tools join the agent through the registry; their output is untrusted (injection markers apply).

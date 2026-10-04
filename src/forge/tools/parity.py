@@ -8,7 +8,7 @@ from typing import Any
 
 from forge.config import forge_home
 from forge.memory.scope import repo_level_dir
-from forge.parity.skills import discover
+from forge.parity.skills import Skill, discover
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 BUILT_IN_TYPES = {
@@ -29,6 +29,39 @@ def skill_roots(context: ToolContext) -> list[Any]:
     return roots
 
 
+MAX_SKILL_FILE_BYTES = 200_000
+
+
+def skill_files_note(skill: Skill) -> str:
+    """Tells the model what else the skill folder holds and how to reach it."""
+    others = sorted(
+        p.relative_to(skill.folder).as_posix()
+        for p in skill.folder.rglob("*")
+        if p.is_file() and p.name != "SKILL.md" and not p.is_symlink()
+    )
+    if not others:
+        return ""
+    listed = "\n".join(f"- {name}" for name in others[:60]) + ("\n- ..." if len(others) > 60 else "")
+    return (
+        f"\n\n---\nThis skill's folder is {skill.folder}. Read one of its files with "
+        "load_skill(name, file=...); "
+        f"a program in it runs only through the shell, which asks for approval.\nFiles:\n{listed}"
+    )
+
+
+def read_skill_file(skill: Skill, relative: str) -> ToolResult:
+    root = skill.folder.resolve()
+    target = (root / relative).resolve()
+    if root not in target.parents or not target.is_file() or (root / relative).is_symlink():
+        return ToolResult(ok=False, content=f"{relative!r} is not a file inside the skill folder.")
+    if target.stat().st_size > MAX_SKILL_FILE_BYTES:
+        return ToolResult(ok=False, content=f"{relative!r} is larger than {MAX_SKILL_FILE_BYTES // 1000} KB.")
+    try:
+        return ToolResult(ok=True, content=target.read_text(encoding="utf-8"))
+    except UnicodeDecodeError:
+        return ToolResult(ok=False, content=f"{relative!r} is not a text file.")
+
+
 class LoadSkill(Tool):
     name = "load_skill"
     read_only = True
@@ -36,6 +69,9 @@ class LoadSkill(Tool):
 
     class Args(ToolArgs):
         name: str
+        file: str | None = (
+            None  # a file inside the skill's own folder (listed in the skill's text), not SKILL.md
+        )
 
     async def run(self, args: LoadSkill.Args, context: ToolContext) -> ToolResult:
         skills = discover(*skill_roots(context))
@@ -44,4 +80,6 @@ class LoadSkill(Tool):
             return ToolResult(
                 ok=False, content=f"No skill {args.name!r}. Skills: {', '.join(sorted(skills))}"
             )
-        return ToolResult(ok=True, content=skill.body())
+        if args.file:
+            return read_skill_file(skill, args.file)
+        return ToolResult(ok=True, content=skill.body() + skill_files_note(skill))

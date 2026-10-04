@@ -9,7 +9,7 @@ from pathlib import Path
 from rich.console import Console
 
 from forge.buildinfo import describe
-from forge.errors import ConfigError
+from forge.errors import ConfigError, ForgeError
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -79,6 +79,18 @@ def build_parser() -> argparse.ArgumentParser:
     label.add_argument("--no-browser", action="store_true")
     sessions = subcommands.add_parser("sessions", help="list recent workspaces/sessions")
     sessions.add_argument("action", choices=["list"])
+    skill = subcommands.add_parser("skill", help="add, list or remove skills (instruction packs)")
+    skill_commands = skill.add_subparsers(dest="skill_command", required=True)
+    skill_add = skill_commands.add_parser("add", help="install skills from a github.com link or a folder")
+    skill_add.add_argument(
+        "source", help="https://github.com/<owner>/<repo>[/tree/<branch>/<folder>] or a folder"
+    )
+    skill_add.add_argument("--list", action="store_true", help="only show what the source contains")
+    skill_add.add_argument("--yes", action="store_true", help="install without asking (you trust the source)")
+    skill_add.add_argument("--force", action="store_true", help="replace a skill of the same name")
+    skill_commands.add_parser("list", help="list the skills Forge can load")
+    skill_remove = skill_commands.add_parser("remove", help="remove an installed skill")
+    skill_remove.add_argument("name")
     ui = subcommands.add_parser("ui", help="start the local web UI (opens Edge)")
     ui.add_argument("--workspace", type=Path, dest="ui_workspace", help="open this workspace right away")
     ui.add_argument("--port", type=int, help="default 8765 (the next free one if taken)")
@@ -122,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_diagnose(args.diagnose_workspace, error, not args.no_run))
     if args.command == "log-summary":
         return _log_summary(args.workspace, args.log)
+    if args.command == "skill":
+        return _skill(args)
     if args.command == "ui":
         from forge.safety.server_security import BindError
         from forge.web.run import run_ui
@@ -141,6 +155,40 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "cleanup":
         return _cleanup(args.cleanup_workspace, args.yes)
     return _interactive(args.workspace, direct=args.direct)
+
+
+def _skill(args: argparse.Namespace) -> int:
+    from forge.config import forge_home
+    from forge.parity import skill_install
+    from forge.parity.skills import discover
+
+    console = Console()
+    skills_root = forge_home() / "skills"
+    if args.skill_command == "list":
+        for skill in sorted(discover(skills_root).values(), key=lambda s: s.name):
+            console.print(f"{skill.name}: {skill.description}", markup=False)
+        return 0
+    if args.skill_command == "remove":
+        removed = skill_install.remove(args.name, skills_root)
+        console.print("Removed." if removed else f"No installed skill named {args.name!r}.", markup=False)
+        return 0 if removed else 1
+
+    def confirm(candidate: skill_install.Candidate) -> bool:
+        # A description can hold characters the Windows console cannot show; never let that stop the listing.
+        encoding = console.encoding or "utf-8"
+        shown = skill_install.summary(candidate).encode(encoding, errors="replace").decode(encoding)
+        console.print(shown, markup=False)
+        if args.list:
+            return False
+        return args.yes or input("Install this skill? [y/N] ").strip().lower() in ("y", "yes")
+
+    try:
+        lines = skill_install.add_from_source(args.source, skills_root, confirm, args.force)
+    except ForgeError as error:
+        console.print(str(error), markup=False)
+        return 1
+    console.print("\n".join(lines), markup=False)
+    return 0
 
 
 async def _doctor(offline: bool) -> int:
