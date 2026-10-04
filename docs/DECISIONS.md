@@ -3089,3 +3089,21 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Cost: one or two extra model calls when the model stops early. If the model still stops, the user simply says "continue".
 - Not changed: design-system search chose "Meditation & Mindfulness" for a reading-list app (the skill's own keyword matching); the model
   can pass better keywords.
+
+### D-218 — Four fixes from the live Capability Lab run (user screenshots 2026-10-04)
+1. **Buttons greyed out on a new request.** Cause: each session numbered its requests from 1 again, so a new request ("question-1", a step
+   for the user) shared its id with an old, answered one, and the page marked it answered. Fix, both sides: ids now carry a per-session part
+   (`question-ab12c-1`, `approval-ab12c-1`), so they never repeat across sessions; and the page keys answers by the card, not by the id, and
+   treats only the newest card of an id as possibly open (so old logs that already have repeated ids behave).
+2. **Forge does the work itself where it can.** The model asked the user to install Flask into the project's virtual environment
+   (`request_user_action`). `request_user_action`'s description and both system prompts now say: installing a package into the workspace's own
+   venv is done by the model with `run_command` (the user gets the usual approval card, pip install always asks); a step is handed to the user
+   only for what Forge cannot do, or after its attempt was refused or failed.
+3. **Two different cost numbers.** The top bar showed the session's cost, the strip above the message box the project's total (all sessions).
+   Both now show the project total ("Project total"); the top bar's tooltip says so.
+4. **"Thinking..." all the time.** Between tool calls the activity line now says what the model is busy with, taken from the todo item in
+   progress (the work word that comes first in its text: Researching, Designing, Testing, Planning, Coding, Reading, Writing) with the item
+   as the detail, else from the last tool used (Coding after an edit, Researching after a web call, ...), else "Thinking". A working helper
+   still shows "<Role> is working" (D-214).
+- Tests: `test_a_new_request_that_reuses_an_old_id_can_still_be_answered` (real browser), `test_request_ids_do_not_repeat_from_one_session_to_the_next`,
+  and added checks in `test_activity_line_and_run_totals`.

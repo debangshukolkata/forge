@@ -50,7 +50,7 @@ export function AnimatedCost({ total }: { total: number }) {
         "hidden items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[12.5px] transition-colors duration-300 md:flex",
         flash ? "bg-accent-soft text-accent" : "text-fg-muted",
       )}
-      title="Estimated cost so far (tokens x configured prices)"
+      title="Estimated cost of this project so far, all sessions (tokens x configured prices)"
     >
       <Coins className="h-3.5 w-3.5" aria-hidden />
       <span className="font-mono tabular-nums">{money(shown)}</span>

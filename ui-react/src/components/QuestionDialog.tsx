@@ -15,7 +15,7 @@ export const QuestionPopup = createContext<{ popupId: string | null; reopen: (id
   reopen: () => undefined,
 });
 
-export function QuestionForm({ id, p, forge }: { id: string; p: P; forge: Forge }) {
+export function QuestionForm({ itemKey, p, forge }: { itemKey: string; p: P; forge: Forge }) {
   const options: P[] = p.options || [];
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState("");
@@ -25,7 +25,7 @@ export function QuestionForm({ id, p, forge }: { id: string; p: P; forge: Forge 
     if (!ready) return;
     const label = selected !== null ? `You chose: ${selected}${typed ? " (with a note)" : ""}` : `You answered: ${typed}`;
     forge.answer(
-      id,
+      itemKey,
       { kind: "answer", question_id: p.id, ...(selected !== null ? { choice: selected } : {}), text: typed || null },
       label,
     );
@@ -115,7 +115,7 @@ export function QuestionForm({ id, p, forge }: { id: string; p: P; forge: Forge 
   );
 }
 
-export function QuestionDialog({ id, p, forge, onDismiss }: { id: string; p: P; forge: Forge; onDismiss: () => void }) {
+export function QuestionDialog({ itemKey, p, forge, onDismiss }: { itemKey: string; p: P; forge: Forge; onDismiss: () => void }) {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     box.current?.focus();
@@ -149,7 +149,7 @@ export function QuestionDialog({ id, p, forge, onDismiss }: { id: string; p: P; 
           </IconButton>
         </div>
         {p.context && <Markdown text={p.context} className="mb-3 text-fg-muted" />}
-        <QuestionForm id={id} p={p} forge={forge} />
+        <QuestionForm itemKey={itemKey} p={p} forge={forge} />
       </div>
     </div>
   );

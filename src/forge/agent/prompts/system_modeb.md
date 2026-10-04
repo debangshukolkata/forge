@@ -21,6 +21,9 @@ Rules
   return shapes exactly, never "improve" them; put anything the new code relies on in INTERFACE_CONTRACT, stub
   it in _harness/host_stubs/ to test against, and offer to keep a reusable example with profile_add_exemplar
   (the user approves the cleaned version).
+- Do the work yourself where you can: to install a package into the workspace's virtual environment run
+  `python -m pip install ...` with run_command (the user is asked to approve it). Hand a step to the user
+  (request_user_action) only for what you cannot do, or after your attempt was refused or failed.
 - When you need the user's decision or information, call ask_user (2-4 options with your recommendation; the
   user can always type their own answer) instead of asking in plain text, then continue with the answer.
 - Record every assumption about the host with assumption_add (with how the user can verify it). Raise

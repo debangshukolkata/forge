@@ -63,7 +63,7 @@ export function TopBar({
           <span className="tabular-nums">{context.percent}%</span>
         </span>
       )}
-      {cost && <AnimatedCost total={cost.total_usd} />}
+      {cost && <AnimatedCost total={cost.project?.total.cost_usd ?? cost.total_usd} />}
       <IconButton label={theme === "dark" ? "Light theme" : "Dark theme"} onClick={onToggleTheme}>
         {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </IconButton>

@@ -216,6 +216,13 @@ def test_activity_line_and_run_totals(
             EventType.TOOL_CALL_FINISHED,
             {"id": "t1", "name": "run_tests", "ok": True, "summary": "run tests", "duration_s": 3.1},
         )
+        # Between tool calls the line says what the model is busy with (from its todo list).
+        publish(
+            EventType.TODO_UPDATED,
+            {"items": [{"content": "Implement the Flask app and tests", "status": "in_progress"}]},
+        )
+        page.wait_for_selector("[role=status]:has-text('Coding')")
+        assert "Implement the Flask app and tests" in status.first.inner_text()
         publish(
             EventType.QUESTION_ASKED,
             {"id": "Q9", "question": "Keep the BIN?", "options": [{"label": "No"}], "recommended": "No"},
@@ -239,7 +246,7 @@ def test_activity_line_and_run_totals(
         }
         publish(EventType.NOTICE, {"kind": "usage", "summary": summary, "cost_usd": 0.01})
         # The strip for the whole run, and the badge for the current task, over the message box.
-        page.wait_for_selector("text=Run total")
+        page.wait_for_selector("text=Project total")  # the one cost number: the project's, all sessions
         page.wait_for_selector("[title='Cost and time on the current task']")
         publish(
             EventType.MESSAGE_DONE,
@@ -268,3 +275,45 @@ def test_activity_line_and_run_totals(
         problems = page.problems  # type: ignore[attr-defined]
         browser.close()
     assert not problems, problems
+
+
+def test_a_new_request_that_reuses_an_old_id_can_still_be_answered(
+    live_server: LiveServer,  # noqa: F811
+    workspace: Workspace,  # noqa: F811
+) -> None:
+    """Older logs reuse ids (a restart counted from 1 again): the newest request with an id is the open one
+    and its buttons work; the older card with that id is settled and never opens a pop-up (D-218)."""
+    import asyncio
+
+    publish = live_server.publish
+    with playwright_api.sync_playwright() as p:
+        browser, page = open_in_edge(p, live_server, workspace)
+        host = live_server.manager.host
+        assert host is not None
+        publish(
+            EventType.QUESTION_ASKED,
+            {"id": "question-1", "question": "Old question?", "options": [{"label": "A"}]},
+        )
+        publish(
+            EventType.USER_ACTION_REQUESTED,
+            {
+                "id": "question-1",
+                "title": "Install Flask into the lab virtualenv",
+                "steps": ["pip install flask"],
+            },
+        )
+
+        async def make_pending() -> None:
+            host.questions._pending["question-1"] = asyncio.get_running_loop().create_future()
+
+        asyncio.run_coroutine_threadsafe(make_pending(), live_server.loop).result(5)  # type: ignore[arg-type]
+        page.reload()
+        action = page.locator("[data-card=action][data-pending]")
+        done = action.locator("button:has-text('Done')")
+        done.wait_for()
+        assert done.is_enabled()
+        assert page.locator("[data-card=question][data-pending]").count() == 0  # the old one is settled
+        assert page.locator("[role=dialog]").count() == 0  # and no pop-up opened for it
+        done.click()
+        page.wait_for_selector("[data-card=action] [data-testid=answered-badge]")
+        browser.close()

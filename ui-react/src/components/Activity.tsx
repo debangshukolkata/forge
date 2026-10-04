@@ -5,7 +5,7 @@
 // `RunTotals` strip above it for the whole run's cost + elapsed time.
 import { FileSearch, Globe, Hand, PenLine, Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
-import { elapsed, thinkingLabel, toolActivity, type LoaderStyle } from "../activity";
+import { elapsed, thinkingNow, toolActivity, type LoaderStyle } from "../activity";
 import { cx } from "../lib";
 import { duration } from "../runmap";
 import type { UsageBucket } from "../types";
@@ -80,7 +80,7 @@ export function RunTotals({ forge }: { forge: Forge }) {
   if (!bucket) return null;
   return (
     <div className="mx-auto mb-1 flex max-w-3xl items-center justify-end gap-2 px-1 text-[11px] text-fg-muted">
-      <span>Run total</span>
+      <span>Project total</span>
       <UsageBadge bucket={bucket} limits={forge.costColors?.task} compact />
       <span className="font-mono tabular-nums" title="Time since this run started">
         {duration(now - runStartedAt)}
@@ -113,7 +113,15 @@ export function ActivityLine({ forge }: { forge: Forge }) {
     detail = "see the card above";
     loader = "pulse";
   } else {
-    label = thinkingLabel(state.phase, task?.title);
+    const items = forge.timeline.items;
+    const lastTool = [...items].reverse().find((item) => item.kind === "tool");
+    const doing = forge.timeline.todos.find((item) => item.status === "in_progress");
+    ({ label, detail } = thinkingNow(
+      state.phase,
+      task?.title,
+      doing?.content,
+      lastTool?.kind === "tool" ? lastTool.name : undefined,
+    ));
     loader = "dots";
   }
   const taskUsage: UsageBucket | undefined = state.current_task

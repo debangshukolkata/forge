@@ -7,7 +7,7 @@ import asyncio
 from pathlib import Path
 from typing import Any
 
-from forge.protocol.events import EventType
+from forge.protocol.events import EventBus, EventType
 from forge.protocol.inputs import Answer, SendMessage
 from forge.toolkit.base import ToolContext
 from forge.tools.interaction import AskUser, OptionSpec
@@ -58,3 +58,23 @@ def test_the_tool_is_offered_in_chat_sessions(host: Any) -> None:  # noqa: F811
 async def test_without_a_question_channel_it_says_so(workspace: Any, tmp_path: Path) -> None:  # noqa: F811
     result = await AskUser().run(ARGS, ToolContext(workspace=workspace))
     assert not result.ok and "only available" in result.content
+
+
+async def test_request_ids_do_not_repeat_from_one_session_to_the_next() -> None:
+    """The counter restarts with every session; ids must not, or a new request looks answered (D-218)."""
+    from forge.protocol.approvals import ApprovalBroker, QuestionBroker
+    from forge.safety.redact import Redactor
+
+    ids: list[str] = []
+    for _ in range(2):  # two sessions
+        bus = EventBus(redactor=Redactor())
+        tasks = [
+            asyncio.create_task(QuestionBroker(bus).ask(EventType.QUESTION_ASKED, {"question": "q"})),
+            asyncio.create_task(ApprovalBroker(bus).request({"tool": "x"})),
+        ]
+        await asyncio.sleep(0.05)
+        ids += [event.payload["id"] for event in bus.events_since(0)]
+        for task in tasks:
+            task.cancel()
+    assert len(ids) == 4 and len(set(ids)) == 4
+    assert all(i.startswith(("question-", "approval-")) for i in ids)

@@ -190,9 +190,12 @@ class RequestUserAction(Tool):
     name = "request_user_action"
     read_only = True
     description = (
-        "Ask the user to do something you can't (install a tool, grant a DB privilege, set an env var, run a "
-        "command you lack access for). Give exact PowerShell steps and, if possible, a command that "
-        "verifies it. "
+        "Ask the user to do something you can't (grant a DB privilege, set an env var, install a program "
+        "outside the workspace, run a command you lack access for). Do not use it for anything you can run "
+        "yourself: installing a package into the workspace's own virtual environment is yours to do with "
+        "run_command (the user is asked to approve it); hand it to the user only if that was refused or "
+        "failed. "
+        "Give exact PowerShell steps and, if possible, a command that verifies it. "
         "The user answers done / skip / can't; on can't, propose a workaround or code change."
     )
 

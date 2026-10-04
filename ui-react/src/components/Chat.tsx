@@ -21,10 +21,10 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
   const [dragging, setDragging] = useState(false);
   // The oldest question still waiting for an answer opens as a pop-up; "Answer later" leaves it in the chat.
   const pending = items.find(
-    (item): item is Extract<ChatItem, { kind: "question" }> => item.kind === "question" && forge.timeline.answered[item.id] === undefined,
+    (item): item is Extract<ChatItem, { kind: "question" }> => item.kind === "question" && forge.timeline.answered[item.key] === undefined,
   );
   const [dismissed, setDismissed] = useState<string[]>([]);
-  const popupId = pending && forge.controls && !dismissed.includes(pending.id) ? pending.id : null;
+  const popupId = pending && forge.controls && !dismissed.includes(pending.key) ? pending.key : null;
 
   useLayoutEffect(() => {
     const box = scroller.current;
@@ -91,7 +91,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
       <TodoStrip todos={forge.timeline.todos} />
       <Composer forge={forge} attachments={attachments} />
       {pending && popupId && (
-        <QuestionDialog id={pending.id} p={pending.payload} forge={forge} onDismiss={() => setDismissed((list) => [...list, pending.id])} />
+        <QuestionDialog itemKey={pending.key} p={pending.payload} forge={forge} onDismiss={() => setDismissed((list) => [...list, pending.key])} />
       )}
     </div>
     </QuestionPopup.Provider>
@@ -206,11 +206,11 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
         </div>
       );
     case "approval":
-      return <ApprovalCard id={item.id} p={item.payload} forge={forge} />;
+      return <ApprovalCard itemKey={item.key} p={item.payload} forge={forge} />;
     case "question":
-      return <QuestionCard id={item.id} p={item.payload} forge={forge} />;
+      return <QuestionCard itemKey={item.key} p={item.payload} forge={forge} />;
     case "action":
-      return <ActionCard id={item.id} p={item.payload} forge={forge} />;
+      return <ActionCard itemKey={item.key} p={item.payload} forge={forge} />;
   }
 }
 
@@ -255,10 +255,10 @@ function AskCard({ kind, icon, title, answered, children }: { kind: "approval" |
 
 type P = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-function ApprovalCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
+function ApprovalCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: Forge }) {
   const [text, setText] = useState("");
-  const answered = forge.timeline.answered[id];
-  const reply = (input: UserInput, label: string) => forge.answer(id, input, label);
+  const answered = forge.timeline.answered[itemKey];
+  const reply = (input: UserInput, label: string) => forge.answer(itemKey, input, label);
   if (p.kind) {
     return (
       <AskCard kind="approval" icon={<ShieldQuestion className="h-4 w-4" />} title={`Approve the ${p.kind}?`} answered={answered}>
@@ -310,11 +310,11 @@ function ApprovalCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
   );
 }
 
-function QuestionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
-  const answered = forge.timeline.answered[id];
+function QuestionCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: Forge }) {
+  const answered = forge.timeline.answered[itemKey];
   const { popupId, reopen } = useContext(QuestionPopup);
   const icon = <HelpCircle className="h-4 w-4" />;
-  if (answered === undefined && popupId === id) {
+  if (answered === undefined && popupId === itemKey) {
     // The question is open as a pop-up: this card only marks the place in the conversation.
     return (
       <AskCard kind="question" icon={icon} title={p.question} answered={undefined}>
@@ -327,8 +327,8 @@ function QuestionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
       {p.context && <Markdown text={p.context} className="text-fg-muted" />}
       {answered === undefined && (
         <>
-          <QuestionForm id={id} p={p} forge={forge} />
-          <button type="button" onClick={() => reopen(id)} className="cursor-pointer text-[12px] font-semibold text-accent hover:underline">
+          <QuestionForm itemKey={itemKey} p={p} forge={forge} />
+          <button type="button" onClick={() => reopen(itemKey)} className="cursor-pointer text-[12px] font-semibold text-accent hover:underline">
             Show as a pop-up
           </button>
         </>
@@ -337,11 +337,11 @@ function QuestionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
   );
 }
 
-function ActionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
+function ActionCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: Forge }) {
   const [note, setNote] = useState("");
-  const answered = forge.timeline.answered[id];
+  const answered = forge.timeline.answered[itemKey];
   const choose = (choice: string, label: string) =>
-    forge.answer(id, { kind: "answer", question_id: p.id, choice, text: note.trim() || null }, label);
+    forge.answer(itemKey, { kind: "answer", question_id: p.id, choice, text: note.trim() || null }, label);
   return (
     <AskCard kind="action" icon={<Hand className="h-4 w-4" />} title={p.title || "A step for you"} answered={answered}>
       <ol className="space-y-2">

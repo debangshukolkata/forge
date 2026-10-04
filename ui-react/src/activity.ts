@@ -83,6 +83,56 @@ export function thinkingLabel(phase: string | undefined, taskTitle?: string): st
   return PHASE_THINKING[phase ?? "direct"] ?? "Thinking";
 }
 
+const WORK_BY_TODO: [RegExp, string][] = [
+  [/research|search|fetch|look up|investigate|find out/i, "Researching"],
+  [/design|layout|visual|style|ui\/ux/i, "Designing"],
+  [/test|verif|check|run (the )?app|validate/i, "Testing"],
+  [/plan|outline|break down/i, "Planning"],
+  [/implement|build|code|create|add |fix|refactor|develop/i, "Coding"],
+  [/read|brief|understand|explore|review|analy[sz]e/i, "Reading"],
+  [/write|draft|summar|document|report|log\b/i, "Writing"],
+];
+
+/** The kind of work a todo item names: the work word that comes first in the text wins ("Run the design search"
+ * is designing, "Implement the app and tests" is coding), after dropping a "Phase 3 –" prefix. */
+export function workKind(todo: string): string | undefined {
+  const text = todo.replace(/^\s*(phase|step|task)\s*\d+\s*[–:.-]\s*/i, "");
+  let best: { at: number; label: string } | undefined;
+  for (const [pattern, label] of WORK_BY_TODO) {
+    const at = text.search(pattern);
+    if (at >= 0 && (best === undefined || at < best.at)) best = { at, label };
+  }
+  return best?.label;
+}
+
+const WORK_BY_TOOL: [RegExp, string][] = [
+  [/^(write_file|edit_file|multi_edit|notebook_edit_cell)$/, "Coding"],
+  [/^(web_search|web_fetch)$/, "Researching"],
+  [/^(run_tests|verify|run_eval|run_command|python_run|start_background)$/, "Checking the result"],
+  [/^(read_file|list_dir|glob|grep)$/, "Reading the code"],
+  [/^(todo_write|propose_plan|propose_requirements|task_update)$/, "Planning"],
+  [/^spawn_subagent$/, "Reviewing the helper's report"],
+];
+
+/** What the model is busy with between two tool calls: the item it is working on from its todo list tells the
+ * kind of work (researching, designing, coding, testing...); without a list, the last tool it used does.
+ * The todo text goes along as the detail, so the line says what, not only "Thinking". */
+export function thinkingNow(
+  phase: string | undefined,
+  taskTitle: string | undefined,
+  todo: string | undefined,
+  lastTool: string | undefined,
+): { label: string; detail?: string } {
+  if (todo) {
+    return { label: workKind(todo) ?? "Working", detail: todo };
+  }
+  if (lastTool) {
+    const hit = WORK_BY_TOOL.find(([pattern]) => pattern.test(lastTool));
+    if (hit) return { label: hit[1], detail: taskTitle };
+  }
+  return { label: thinkingLabel(phase, taskTitle) };
+}
+
 export function elapsed(since: number, now: number): string {
   const seconds = Math.max(0, Math.floor((now - since) / 1000));
   const h = Math.floor(seconds / 3600);

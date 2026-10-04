@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import itertools
+import uuid
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -23,13 +24,16 @@ class ApprovalBroker:
         self._bus = bus
         self._pending: dict[str, asyncio.Future[ApprovalAnswer]] = {}
         self._ids = itertools.count(1)
+        # Counting restarts with every session; the event log does not. A fresh part in each id keeps a new
+        # request from sharing its id with an old, answered one (the page would show it as answered already).
+        self._session = uuid.uuid4().hex[:5]
 
     @property
     def pending_ids(self) -> list[str]:
         return list(self._pending)
 
     async def request(self, payload: dict[str, Any]) -> ApprovalAnswer:
-        request_id = f"approval-{next(self._ids)}"
+        request_id = f"approval-{self._session}-{next(self._ids)}"
         future: asyncio.Future[ApprovalAnswer] = asyncio.get_running_loop().create_future()
         self._pending[request_id] = future
         await self._bus.publish(EventType.APPROVAL_REQUESTED, {"id": request_id, **payload})
@@ -72,13 +76,14 @@ class QuestionBroker:
         self._bus = bus
         self._pending: dict[str, asyncio.Future[QuestionAnswer]] = {}
         self._ids = itertools.count(1)
+        self._session = uuid.uuid4().hex[:5]  # see ApprovalBroker
 
     @property
     def pending_ids(self) -> list[str]:
         return list(self._pending)
 
     async def ask(self, event_type: EventType, payload: dict[str, Any]) -> QuestionAnswer:
-        question_id = f"question-{next(self._ids)}"
+        question_id = f"question-{self._session}-{next(self._ids)}"
         future: asyncio.Future[QuestionAnswer] = asyncio.get_running_loop().create_future()
         self._pending[question_id] = future
         await self._bus.publish(event_type, {"id": question_id, **payload})

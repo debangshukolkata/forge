@@ -7,7 +7,7 @@ import type { AppState, ChatItem, ContextInfo, CostColors, CostInfo, ForgeEvent,
 
 interface Timeline {
   items: ChatItem[];
-  answered: Record<string, string>; // card id -> how it was settled ("Approved", "superseded", …)
+  answered: Record<string, string>; // card key (unique per card) -> how it was settled ("Approved", "superseded", …)
   todos: TodoItem[]; // Forge's own todo list, the whole list as of the last `todo_updated` (D-177)
 }
 
@@ -31,11 +31,17 @@ function reducer(state: Timeline, action: Action): Timeline {
     case "settle": {
       const pending = new Set(action.pending);
       const answered = { ...state.answered };
-      for (const item of state.items) {
-        if ((item.kind === "approval" || item.kind === "question" || item.kind === "action") && !pending.has(item.id)) {
-          answered[item.id] ??= "answered earlier";
+      const isCard = (item: ChatItem) => item.kind === "approval" || item.kind === "question" || item.kind === "action";
+      // Older logs reuse ids (a restart counted from 1 again): only the newest card with an id can still be open.
+      const newest = new Map<string, number>();
+      state.items.forEach((item, index) => {
+        if (isCard(item) && "id" in item) newest.set(item.id, index);
+      });
+      state.items.forEach((item, index) => {
+        if (isCard(item) && "id" in item && !(pending.has(item.id) && newest.get(item.id) === index)) {
+          answered[item.key] ??= "answered earlier";
         }
-      }
+      });
       return { ...state, answered };
     }
     case "event":
