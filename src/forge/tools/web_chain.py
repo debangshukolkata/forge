@@ -103,7 +103,7 @@ async def fetch_page(url: str, options: FetchOptions) -> PageResult:
         if (done := consider("direct", content, final or key)) is not None:
             return _store(done, options)
         is_pdf = content is not None and content.method == "pdf"
-        if options.render and not is_pdf and error_kind != "blocked":
+        if options.render and not is_pdf and error_kind not in ("blocked", "gone"):
             try:
                 html, rendered_url = await options.render_function(key, options.policy)
                 if (done := consider("browser", from_html(html, rendered_url), rendered_url)) is not None:
@@ -204,7 +204,11 @@ async def _direct(
             continue
         if response.status_code >= 400:
             attempts.append(f"direct: HTTP {response.status_code}")
-            return None, str(response.url), "http"
+            gone = response.status_code in (
+                404,
+                410,
+            )  # no page here: a browser would only render the error page
+            return None, str(response.url), "gone" if gone else "http"
         if len(response.content) > MAX_BYTES:
             attempts.append("direct: the page is larger than 20 MB")
             return None, str(response.url), "http"

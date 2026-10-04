@@ -19,6 +19,11 @@ from forge.workspace.create import create_workspace
 from forge.workspace.read_grants import ReadGrants
 from tests.helpers import function_call_output, mocked_router, reply, responses_body, text_output
 
+
+def todo_args(*items: tuple[str, str]) -> str:
+    return json.dumps({"todos": [{"content": text, "status": status} for text, status in items]})
+
+
 ASK_ARGS = json.dumps(
     {
         "question": "Which database?",
@@ -116,3 +121,60 @@ def test_a_resumed_request_opens_the_files_it_named(
     other.write_text("x", encoding="utf-8")
     assert grant_from_message(f"the file {other} is nice", workspace) == []  # no reading word
     assert workspace.resolve_readable(str(other)) is None
+
+
+async def test_a_turn_that_ends_with_open_todo_items_carries_on(original_repo: Path, tmp_path: Path) -> None:
+    host, requests = await _run(
+        original_repo,
+        tmp_path,
+        [
+            [
+                function_call_output(
+                    "todo_write", todo_args(("Phase 1", "in_progress"), ("Phase 2", "pending"))
+                )
+            ],
+            [text_output("Phase 1 is done.")],  # a status message that would have ended the turn
+            [
+                function_call_output(
+                    "todo_write", todo_args(("Phase 1", "completed"), ("Phase 2", "completed"))
+                )
+            ],
+            [text_output("Everything is done.")],
+        ],
+    )
+    assert requests == 4
+    notes = [
+        m.content
+        for m in host.history
+        if m.role == "system" and "todo list still has open items" in m.content
+    ]
+    assert len(notes) == 1 and "Phase 1; Phase 2" in notes[0]
+    assert host.history[-1].content == "Everything is done."
+
+
+async def test_the_open_todo_nudge_is_limited_and_never_pushes_past_a_question(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    stubborn = [
+        [function_call_output("todo_write", todo_args(("Phase 1", "pending")))],
+        [text_output("Pausing here.")],
+    ]
+    _, requests = await _run(original_repo, tmp_path, stubborn)
+    assert requests == 4  # the plan, then two nudges, then the turn ends: it does not loop forever
+    host, requests = await _run(
+        original_repo,
+        tmp_path / "q",
+        [
+            [function_call_output("todo_write", todo_args(("Phase 1", "pending")))],
+            [text_output("Shall I use SQLite or Postgres for Phase 1?")],
+            [function_call_output("ask_user", ASK_ARGS)],
+            [text_output("Using SQLite.")],
+        ],
+    )
+    first_note = next(
+        m.content
+        for m in host.history
+        if m.role == "system"
+        and (m.content == ASK_WITH_OPTIONS_NOTE or "todo list still has open items" in m.content)
+    )
+    assert first_note == ASK_WITH_OPTIONS_NOTE  # a question to the user is asked as options, not pushed past

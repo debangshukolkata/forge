@@ -278,6 +278,27 @@ async def test_total_failure_still_says_what_was_tried() -> None:
     )
 
 
+async def test_a_missing_page_is_reported_as_missing_and_no_browser_is_tried() -> None:
+    rendered: list[str] = []
+
+    async def browser(url: str, policy: WebPolicy) -> tuple[str, str]:
+        rendered.append(url)
+        return GOOD_PAGE, url
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return (
+            httpx.Response(404, json={})
+            if request.url.host == "archive.org"
+            else httpx.Response(404, text="gone")
+        )
+
+    opts, _ = options(handler, render_function=browser)
+    result = await fetch_page("https://example.invalid/this-page-does-not-exist", opts)
+    assert result.status == "failed" and rendered == []  # an error page is not the page
+    assert any("HTTP 404" in line for line in result.attempts)
+    assert any("archive" in line for line in result.attempts)  # an archived copy may still exist
+
+
 async def test_a_redirect_into_the_intranet_is_not_followed() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(302, headers={"location": "http://10.0.0.7/admin"})
@@ -401,7 +422,7 @@ class _Pages(BaseHTTPRequestHandler):
             ".then(()=>document.getElementById('r').textContent='REACHED')"
             ".catch(()=>document.getElementById('r').textContent='BLOCKED')</script></body></html>",
         }.get(self.path, "<html><body>other</body></html>")
-        self.send_response(200)
+        self.send_response(404 if self.path == "/missing" else 200)
         self.send_header("Content-Type", "text/html")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
@@ -433,6 +454,10 @@ async def test_the_browser_renders_script_built_pages_and_blocks_internal_sub_re
     except RenderUnavailable as unavailable:
         pytest.skip(f"headless browser not available: {unavailable}")
     assert "Forge reads documentation" in html
+    with pytest.raises(
+        RenderUnavailable, match="HTTP 404"
+    ):  # an error page is not rendered as if it were the page
+        await render_html(f"http://127.0.0.1:{port}/missing", policy)
     assert '<p id="r">BLOCKED</p>' in probe  # the page's own request to localhost was refused
 
     # And through the chain: with the default policy nothing local is fetched at all.

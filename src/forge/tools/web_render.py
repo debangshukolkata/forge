@@ -59,7 +59,9 @@ async def render_html(url: str, policy: WebPolicy, timeout_s: float = RENDER_TIM
             page = await context.new_page()
             page.set_default_timeout(timeout_s * 1000)
             try:
-                await page.goto(url, wait_until="domcontentloaded")
+                response = await page.goto(url, wait_until="domcontentloaded")
+                if response is not None and response.status >= 400:  # an error page is not the page
+                    raise RenderUnavailable(f"the site answered HTTP {response.status}")
                 with contextlib.suppress(PlaywrightError):
                     await page.wait_for_load_state("networkidle", timeout=SETTLE_MS)
                 return await page.content(), page.url

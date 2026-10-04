@@ -79,6 +79,12 @@ def system_prompt(workspace: Workspace) -> str:
 
 
 MAX_QUESTION_NUDGES = 1
+MAX_TODO_NUDGES = 2
+OPEN_TODOS_NOTE = "You ended your turn, but your todo list still has open items: "
+OPEN_TODOS_NOTE_END = (
+    ". Carry on with the next one now. Stop only if you need the user's decision or information (then use "
+    "ask_user), or if the remaining items no longer apply (then update the list with todo_write)."
+)
 ASK_WITH_OPTIONS_NOTE = (
     "You just asked the user a question as plain text. Ask it again by calling ask_user with 2-4 options "
     "(a short description for each, your recommendation marked); the user can also type their own answer "
@@ -140,6 +146,7 @@ class AgentLoop:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
         continuations = 0
         question_nudges = 0
+        todo_nudges = 0
         self.hit_iteration_limit = False
         for _ in range(self.max_iterations):
             # After a cut-off reply, think less so the answer fits in the output limit (D-060).
@@ -184,6 +191,25 @@ class AgentLoop:
                         {"kind": "question_to_options", "text": "Turning the question into options."},
                     )
                     continue
+                open_items = self._open_todos()
+                if (
+                    open_items
+                    and todo_nudges < MAX_TODO_NUDGES
+                    and self.gate.mode != "plan"
+                    and not self._looks_like_question(response.text)
+                ):
+                    todo_nudges += 1
+                    history.append(
+                        Message.system(OPEN_TODOS_NOTE + "; ".join(open_items[:4]) + OPEN_TODOS_NOTE_END)
+                    )
+                    await self.bus.publish(
+                        EventType.NOTICE,
+                        {
+                            "kind": "todo_continue",
+                            "text": "The to-do list still has open items; carrying on.",
+                        },
+                    )
+                    continue
                 return
             continuations = 0
             results: dict[str, Message] = {}
@@ -213,11 +239,20 @@ class AgentLoop:
             },
         )
 
+    def _open_todos(self) -> list[str]:
+        return [
+            str(t.get("content", ""))
+            for t in self.context.todos
+            if t.get("status") in ("pending", "in_progress")
+        ]
+
     def _asked_in_plain_text(self, text: str) -> bool:
         """The reply ends by asking the user something (or lists options) although ask_user is available: the
         user wants questions as clickable options with a box for their own answer, not as text."""
-        if "ask_user" not in self.tools.names():
-            return False
+        return "ask_user" in self.tools.names() and self._looks_like_question(text)
+
+    @staticmethod
+    def _looks_like_question(text: str) -> bool:
         tail = text.strip()[-500:]
         if "?" not in tail:
             return False

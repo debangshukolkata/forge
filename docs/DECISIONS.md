@@ -3074,3 +3074,18 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   item is done it folds by itself ("Todo 6/6 · All done"). The side panel's Tasks tab keeps its normal size.
 - Tests: `test_react_todo_list` (collapsed first, opens, small text, remembered across a reload) and
   `test_react_todo_strip_folds_when_everything_is_done`.
+
+### D-217 — A missing page is reported as missing; a turn does not end with the to-do list half done (found in the live Capability Lab run, 2026-10-04)
+- Live finding 1: `web_fetch` of a URL that answers HTTP 404 went on to the headless browser, which rendered the site's error page, and the tool
+  reported that as a successful fetch ("Example Domain, via browser"), so the model never saw the 404. Now a 404 or 410 skips the browser
+  (it can only show the error page; the archive is still tried), and the browser stage itself refuses any page the site answers with HTTP 400 or
+  more ("browser: unavailable (the site answered HTTP 404)"). The result is a failure that lists the 404 and the archive attempt.
+- Live finding 2: after the prompt's "tell me briefly when each phase starts and ends" the model ended its turn with a status message after
+  Phase 3 while its todo list still had Phases 4-6 open, and Forge announced "Done: work finished" and delivered. D-163 (a plain answer ends the
+  turn) stays the rule, with one addition, in `AgentLoop.run`: when a turn ends with text, the model's todo list still has pending or
+  in-progress items, the text is not a question to the user and the mode is not plan, the loop adds one system note ("carry on with the next item,
+  or use ask_user, or update the list") and continues; at most twice per user message, never for subagents (their todo list is empty).
+  The orchestrator no longer treats a turn as settled (no export, no "work finished") while that list has open items.
+- Cost: one or two extra model calls when the model stops early. If the model still stops, the user simply says "continue".
+- Not changed: design-system search chose "Meditation & Mindfulness" for a reading-list app (the skill's own keyword matching); the model
+  can pass better keywords.
