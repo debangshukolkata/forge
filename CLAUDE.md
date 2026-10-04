@@ -79,6 +79,7 @@ The rules below still describe what goes into briefs and summaries.
   (`free_port(0)`); a test that waits on something a page re-does in the background must poll for it, not assert at once.
   Sequential: `.venv\Scripts\python -m pytest -q` (3.13) and `.venv314\Scripts\python -m pytest -q` (3.14);
   `-m live` for live tests. Also `ruff check .`, `ruff format --check .`, `mypy`, `scripts/check_secrets.py`.
+- Gemini cannot be called from the build machine (no Google credentials): test the translator and error mapping offline and hand live checks to the user (`scripts/dev/gemini_smoke.py` on the office laptop; the drawer's Gemini test).
 - The fixture repo's own suite runs under its own venv (`scripts/dev/setup_fixture_venv.ps1`).
 
 ## Safety invariants (never break; each has a test)
