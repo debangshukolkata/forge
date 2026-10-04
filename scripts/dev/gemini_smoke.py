@@ -1,7 +1,7 @@
 """Live check of Forge's Gemini provider. Run on a machine with Google ADC (the office laptop); it cannot pass
 on a machine without credentials.
 
-    set GOOGLE_CLOUD_PROJECT=<project>  &  set GOOGLE_CLOUD_LOCATION=us-central1
+    (optional) set GOOGLE_CLOUD_PROJECT=<project>  &  set GOOGLE_CLOUD_LOCATION=us-central1
     .venv\\Scripts\\python scripts\\dev\\gemini_smoke.py [model-name]
 
 Each step prints OK or FAIL, so a failure says which piece of the adapter to look at.

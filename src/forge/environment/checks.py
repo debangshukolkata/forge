@@ -174,10 +174,10 @@ GEMINI_STEPS = [
     "Gemini only works on a computer that has Google Cloud access, such as the office laptop. On any other "
     "computer leave the answer above on No; Forge works without it.",
     "Install the package: pip install google-genai",
-    "Add your Google project id and region to the .env file as GOOGLE_CLOUD_PROJECT and "
-    "GOOGLE_CLOUD_LOCATION (for example us-central1). No key goes in this file.",
     "Sign in once: gcloud auth application-default login (or set GOOGLE_APPLICATION_CREDENTIALS to a "
-    "service-account file).",
+    "service-account file). Forge reads the Google credentials itself; no key goes in the .env file.",
+    "Only if the message says no project was found: add GOOGLE_CLOUD_PROJECT to the .env file. "
+    "GOOGLE_CLOUD_LOCATION is optional (the default is us-central1).",
     "Use a model your project can call: gemini-2.5-pro, gemini-2.5-flash or gemini-2.5-flash-lite. Others "
     "can be listed yet answer 404 until your Google Cloud admin enables them.",
     "Test again here, or run scripts/dev/gemini_smoke.py to see which part fails.",
@@ -198,11 +198,6 @@ def check_gemini(config: ForgeConfig) -> Outcome:
 
     provider_config = config.llm.providers.gemini
     secrets = load_secrets(forge_home())
-    missing = [
-        name for name in (provider_config.project_env, provider_config.location_env) if not secrets.get(name)
-    ]
-    if missing:
-        return _gemini_failed(f"missing in .env: {', '.join(missing)}")
     try:
         from forge.llm.gemini import GeminiProvider
     except ImportError:

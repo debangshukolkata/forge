@@ -18,16 +18,20 @@ def isolated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv(name, raising=False)
 
 
-def test_missing_names_fail_with_steps() -> None:
-    outcome = checks.check_gemini(load_config())
-    assert outcome.status == "fail" and "GOOGLE_CLOUD_PROJECT" in outcome.detail
-    assert outcome.steps == checks.GEMINI_STEPS
-
-
 def test_no_credentials_fail_with_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "some-project")
-    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS", str(tmp_path / "missing.json"))
     outcome = checks.check_gemini(load_config())
     assert outcome.status == "fail" and outcome.steps
     assert "some-project" not in str(outcome.to_dict())  # names only, never values
+
+
+def test_project_and_location_are_optional(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from forge.doctor import required_secret_names
+
+    config = load_config()
+    config.llm.models["gem"] = config.llm.models[next(iter(config.llm.models))].model_copy(
+        update={"provider": "gemini", "model_name": "gemini-2.5-pro", "deployment_env": None}
+    )
+    config.llm.roles.vision = "gem"
+    assert not {"GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION"} & required_secret_names(config)

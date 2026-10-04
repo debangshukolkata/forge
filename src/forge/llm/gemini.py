@@ -11,7 +11,7 @@ from google import genai
 from google.genai import types
 
 from forge.config import GeminiProviderConfig, ModelConfig, Secrets
-from forge.errors import LLMError
+from forge.errors import ConfigError, LLMError
 from forge.llm.base import ChatRequest, LLMResponse, TextDeltaCallback
 from forge.llm.gemini_errors import SDK_ERRORS, map_gemini_error
 from forge.llm.translate_gemini import (
@@ -20,6 +20,8 @@ from forge.llm.translate_gemini import (
     to_gemini_request,
     to_gemini_tools,
 )
+
+DEFAULT_LOCATION = "us-central1"
 
 
 class GeminiProvider:
@@ -32,16 +34,23 @@ class GeminiProvider:
         try:
             self._client = genai.Client(
                 vertexai=True,
-                project=secrets.require(provider_config.project_env),
-                location=secrets.require(provider_config.location_env),
+                # Optional: without a project the SDK takes it from the Google credentials; the region
+                # falls back to the one verified on the user's project.
+                project=secrets.get(provider_config.project_env),
+                location=secrets.get(provider_config.location_env) or DEFAULT_LOCATION,
                 http_options=types.HttpOptions(
                     timeout=int(provider_config.timeout_s * 1000),
                     # Forge's own retry layer reports retries to the UI; the SDK must not retry silently.
                     retry_options=types.HttpRetryOptions(attempts=1),
                 ),
             )
-        except SDK_ERRORS as error:  # no credentials at all fails here, before any request
+        except SDK_ERRORS as error:
             raise map_gemini_error(error) from error
+        except ValueError as error:  # the SDK found no project in the credentials or the .env file
+            raise ConfigError(
+                f"{error} Add {provider_config.project_env} to the .env file, "
+                "or use credentials that name a project."
+            ) from error
 
     async def chat(self, request: ChatRequest, on_text_delta: TextDeltaCallback | None = None) -> LLMResponse:
         if request.hosted_tools:
