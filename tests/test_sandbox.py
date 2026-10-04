@@ -106,7 +106,8 @@ async def test_falls_back_with_a_notice_when_the_sandbox_fails(
     notices: list[dict[str, object]] = []
 
     async def publish(kind: str, payload: dict[str, object]) -> None:
-        notices.append(payload)
+        if kind == "notice":  # progress events of a running command are not what this test is about
+            notices.append(payload)
 
     context.publish = publish
     first = await run(context, "Write-Output ok")
