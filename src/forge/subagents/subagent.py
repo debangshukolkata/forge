@@ -39,6 +39,7 @@ WEB_SETTINGS = (
     "secrets",
     "web_search_provider",
     "web_search_order",
+    "web_tavily_topic",
     "hosted_search",
     "summarise",
     "sensitive_terms",

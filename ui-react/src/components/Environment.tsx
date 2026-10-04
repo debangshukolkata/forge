@@ -18,7 +18,7 @@ const ROLE_LABEL: Record<string, string> = { kb_builder: "Knowledge builder", ju
 const shouldRun = (check: CheckInfo, answers: Record<string, boolean>) => !check.ask || answers[check.id] === true;
 
 /** Rows that are a connection say "Connected"; the others say "Working". */
-const CONNECTIONS = new Set(["azure", "postgres_local", "postgres_dev", "gemini"]);
+const CONNECTIONS = new Set(["azure", "postgres_local", "postgres_dev", "gemini", "tavily"]);
 
 const notInUse = (id: string, answer: boolean | undefined): CheckResultView => ({
   id,

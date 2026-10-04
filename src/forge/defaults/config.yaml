@@ -73,7 +73,8 @@ cost:
 
 web:
   search_provider: auto            # auto (search_order with fallback) | searxng | duckduckgo | serpapi | tavily | azure | off
-  search_order: [searxng, duckduckgo, serpapi, azure, tavily]   # providers without a key/URL are skipped
+  search_order: [searxng, tavily, duckduckgo, serpapi, azure]   # providers that are not set up are skipped
+  tavily_topic: General            # the topic sent to the company's Tavily tool (D-210)
   azure_search_role: summariser    # azure: this role's model runs Azure OpenAI's built-in web_search (extra per-search fee)
   allow_hosts: []                  # internal hosts web_fetch / the browser may reach (default: none; D-209)
   deny_domains: []

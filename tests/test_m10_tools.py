@@ -73,7 +73,7 @@ async def test_web_search_providers_without_a_key(original_repo: Path, tmp_path:
     workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
     tavily = ToolContext(workspace=workspace, web_search_provider="tavily")
     result = await WebSearch().run(WebSearch.Args(query="flask-smorest pagination"), tavily)
-    assert not result.ok and "TAVILY_API_KEY" in result.content
+    assert not result.ok and "TAVILY_TOOL_URL" in result.content
     off = await WebSearch().run(
         WebSearch.Args(query="x"), ToolContext(workspace=workspace, web_search_provider="off")
     )
@@ -280,13 +280,19 @@ def test_serpapi_results_and_provider_order(original_repo: Path, tmp_path: Path)
     workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
     serp = Secrets({"SERPAPI_API_KEY": "serp-test-key"}, None)  # check_secrets: fake
     both = Secrets(
-        {"SERPAPI_API_KEY": "serp-test-key", "TAVILY_API_KEY": "tvly-test"}, None
+        {
+            "SERPAPI_API_KEY": "serp-test-key",
+            "TAVILY_TOOL_URL": "https://platform.example/execute-tool",
+            "TAVILY_TOOL_ID": "7",
+            "TAVILY_BEARER_TOKEN": "bearer-test",
+        },
+        None,
     )  # check_secrets: fake
     assert search_chain(ToolContext(workspace=workspace, secrets=serp))[0] == ["duckduckgo", "serpapi"]
     assert search_chain(ToolContext(workspace=workspace, secrets=both))[0] == [
+        "tavily",
         "duckduckgo",
         "serpapi",
-        "tavily",
     ]
     assert (
         search_provider(ToolContext(workspace=workspace, secrets=both, web_search_provider="serpapi"))

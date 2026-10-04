@@ -37,7 +37,7 @@ def test_sessions_get_the_m10_tools_and_their_settings(original_repo: Path, tmp_
     names = set(host.agent.tools.names())
     assert {"web_search", "web_fetch", "memory_read", "memory_write", "browser_open", "http_request"} <= names
     context = host.agent.context
-    assert context.web_search_order == ("searxng", "duckduckgo", "serpapi", "azure", "tavily")
+    assert context.web_search_order == ("searxng", "tavily", "duckduckgo", "serpapi", "azure")
     assert context.hosted_search is not None and context.summarise is not None
 
 

@@ -19,13 +19,14 @@ import httpx
 from pydantic import Field
 
 from forge.config import forge_home
+from forge.environment.tavily_tool import TavilySettings
+from forge.environment.tavily_tool import search as tavily_tool_search
 from forge.safety.redact import default_redactor
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.web_chain import FetchOptions, PageResult, fetch_page, normalise_url
 from forge.tools.web_extract import html_to_text  # noqa: F401  (re-exported for older imports)
 from forge.tools.web_guard import WebPolicy
 
-TAVILY = "https://api.tavily.com"
 CACHE_SECONDS = 24 * 3600
 FETCH_TIMEOUT_S = 20
 MAX_PAGE_CHARS = 60_000
@@ -37,8 +38,8 @@ NO_SERPAPI = (
 )
 NO_SEARXNG = "SearXNG is not set up (SEARXNG_URL is not in Forge's .env)."
 NO_TAVILY = (
-    "Web search is set to Tavily but TAVILY_API_KEY is not in Forge's .env (or set web.search_provider: "
-    "auto to use DuckDuckGo). You can still use web_fetch on a URL you know."
+    "Tavily search is not set up: TAVILY_TOOL_URL, TAVILY_TOOL_ID and TAVILY_BEARER_TOKEN must all be in "
+    "Forge's .env (the Environment drawer explains). You can still use web_fetch on a URL you know."
 )
 
 
@@ -63,11 +64,6 @@ class WebCache:
     def put(self, key: str, value: Any) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
         self._path(key).write_text(json.dumps({"at": time.time(), "value": value}), encoding="utf-8")
-
-
-def _tavily_key(context: ToolContext) -> str | None:
-    key: str | None = context.secrets.get("TAVILY_API_KEY") if context.secrets is not None else None
-    return key
 
 
 class WebSearch(Tool):
@@ -121,8 +117,8 @@ PROVIDERS = ("searxng", "duckduckgo", "serpapi", "azure", "tavily")
 
 def search_chain(context: ToolContext) -> tuple[list[str], list[str]]:
     """The providers to try, in order, and why others are skipped. `auto` walks web.search_order (default:
-    SearXNG (if SEARXNG_URL is set) -> DuckDuckGo -> SerpAPI -> Azure -> Tavily, D-088); a named provider is
-    tried alone."""
+    SearXNG (if set) -> Tavily (if set up) -> DuckDuckGo -> SerpAPI -> Azure, D-088/D-210); a named
+    provider is tried alone."""
     configured = context.web_search_provider
     wanted = list(context.web_search_order) if configured == "auto" else [configured]
     chain: list[str] = []
@@ -143,7 +139,7 @@ def search_provider(context: ToolContext) -> str:
 
 
 def _unavailable(provider: str, context: ToolContext) -> str | None:
-    if provider == "tavily" and not _tavily_key(context):
+    if provider == "tavily" and TavilySettings.from_secrets(context.secrets) is None:
         return NO_TAVILY
     if provider == "serpapi" and not _key(context, "SERPAPI_API_KEY"):
         return NO_SERPAPI
@@ -159,14 +155,14 @@ def _unavailable(provider: str, context: ToolContext) -> str | None:
 async def _search_with(provider: str, context: ToolContext, query: str, max_results: int) -> ToolResult:
     if provider == "azure":
         return await _azure_search(context, query, max_results)
+    if provider == "tavily":
+        return await _tavily_search(context, query, max_results)
     cache = WebCache()
     cache_key = f"search|{provider}|{query}|{max_results}"
     results = cache.get(cache_key)
     if results is None:
         try:
-            if provider == "tavily":
-                results = await _tavily_search(_tavily_key(context) or "", query, max_results)
-            elif provider == "serpapi":
+            if provider == "serpapi":
                 results = await serpapi_search(_key(context, "SERPAPI_API_KEY") or "", query, max_results)
             elif provider == "searxng":
                 results = await searxng_search(_key(context, "SEARXNG_URL") or "", query, max_results)
@@ -177,10 +173,16 @@ async def _search_with(provider: str, context: ToolContext, query: str, max_resu
         if not results:
             return ToolResult(ok=False, content="no results")
         cache.put(cache_key, results)
+    return _present(provider, results, cache)
+
+
+def _present(provider: str, results: list[dict[str, str]], cache: WebCache, answer: str = "") -> ToolResult:
     for item in results:  # kept so web_fetch can fall back to the snippet when the page itself fails
         if item.get("url") and item.get("content"):
             cache.put(f"snippet|{normalise_url(item['url'])}", item["content"])
     lines = [UNTRUSTED, f"(search: {provider})"]
+    if answer:
+        lines.append(f"Answer: {answer}")
     for item in results:
         lines.append(
             f"- {item.get('title', '')} — {item.get('url', '')}\n  {(item.get('content') or '')[:400]}"
@@ -278,14 +280,24 @@ def parse_serpapi(data: dict[str, Any], max_results: int) -> list[dict[str, str]
     return results[:max_results]
 
 
-async def _tavily_search(key: str, query: str, max_results: int) -> list[dict[str, str]]:
-    async with httpx.AsyncClient(timeout=FETCH_TIMEOUT_S) as client:
-        response = await client.post(
-            f"{TAVILY}/search", json={"api_key": key, "query": query, "max_results": max_results}
-        )
-        response.raise_for_status()
-        results: list[dict[str, str]] = response.json().get("results", [])
-        return results
+async def _tavily_search(context: ToolContext, query: str, max_results: int) -> ToolResult:
+    """The company's Tavily tool on the agent platform (D-210); the search order moves on if it fails."""
+    settings = TavilySettings.from_secrets(context.secrets)
+    if settings is None:
+        return ToolResult(ok=False, content=NO_TAVILY)
+    cache = WebCache()
+    key = f"search|tavily|{query}|{max_results}"
+    cached = cache.get(key)
+    if cached is None:
+        try:
+            reply = await tavily_tool_search(settings, query, max_results, context.web_tavily_topic)
+        except (httpx.HTTPError, ValueError) as error:  # TavilyToolError is a ValueError
+            return ToolResult(ok=False, content=f"Tavily search failed: {type(error).__name__}: {error}")
+        if not reply.results and not reply.answer:
+            return ToolResult(ok=False, content="no results")
+        cached = {"answer": reply.answer, "results": reply.results}
+        cache.put(key, cached)
+    return _present("tavily", cached["results"], cache, cached["answer"])
 
 
 async def searxng_search(base_url: str, query: str, max_results: int) -> list[dict[str, str]]:
@@ -396,7 +408,6 @@ class WebFetch(Tool):
             return ToolResult(ok=False, content="Only http(s) URLs can be fetched.")
         options = FetchOptions(
             policy=context.web_policy or WebPolicy(),
-            tavily_key=_tavily_key(context),
             render=context.web_render,
             archive=context.web_archive,
             cache=WebCache(),

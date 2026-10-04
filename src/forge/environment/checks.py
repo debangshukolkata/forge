@@ -21,6 +21,8 @@ from forge.doctor import (
     check_secrets,
     missing_secret_names,
 )
+from forge.environment.tavily_tool import TavilyAuthError, TavilySettings, missing_names
+from forge.environment.tavily_tool import search as tavily_search
 from forge.errors import ForgeError
 from forge.safety.redact import default_redactor
 from forge.vision.ocr import find_tesseract
@@ -60,6 +62,13 @@ CHECKS = (
         True,
         "A second model provider (Google Vertex AI); tested with one short call",
         ask="Is Gemini enabled for you?",
+    ),
+    CheckInfo(
+        "tavily",
+        "Tavily web search",
+        True,
+        "Web search through your company's Tavily tool (a URL, a tool id, a bearer token in .env)",
+        ask="Is the Tavily web search service available to you?",
     ),
     CheckInfo(
         "tesseract",
@@ -228,6 +237,43 @@ def check_gemini(config: ForgeConfig) -> Outcome:
     return Outcome("gemini", "ok", f"{model.model_name} answered: {answer or '(no text)'}")
 
 
+TAVILY_STEPS = [
+    "Open the .env file (the setup guide shows where it is) and add three lines: TAVILY_TOOL_URL=<the tool's "
+    "execute-tool address>, TAVILY_TOOL_ID=<the tool's number> and TAVILY_BEARER_TOKEN=<the bearer token>. "
+    "Keys and tokens are never typed into this app.",
+    "The bearer token usually expires. If the test says it was rejected (401 or 403), copy a fresh "
+    "token into the file and test again.",
+    "The platform's address must be reachable from this computer (the office network or VPN).",
+    "Without it Forge uses the other search providers; nothing else changes. Answer No to stop it "
+    "being tried.",
+]
+
+
+def _tavily_failed(
+    detail: str, hint: str = "Search falls back to the other providers; see the steps."
+) -> Outcome:
+    return Outcome("tavily", "fail", detail, hint, steps=TAVILY_STEPS)
+
+
+def check_tavily(config: ForgeConfig) -> Outcome:
+    """Only run when the user said the service is available (D-201): one real, small search."""
+    secrets = load_secrets(forge_home())
+    settings = TavilySettings.from_secrets(secrets)
+    if settings is None:
+        return _tavily_failed(f"missing in .env: {', '.join(missing_names(secrets))}")
+    try:
+        reply = asyncio.run(tavily_search(settings, "python", 1, config.web.tavily_topic))
+    except TavilyAuthError as error:
+        return _tavily_failed(str(error), "Put a fresh bearer token in the .env file, then test again.")
+    except Exception as error:  # a network or platform failure: say what happened, never the token
+        detail = default_redactor.redact(f"{type(error).__name__}: {str(error)[:200]}")
+        return _tavily_failed(detail)
+    count = len(reply.results)
+    return Outcome(
+        "tavily", "ok", f"The search service answered ({count} result{'s' if count != 1 else ''})."
+    )
+
+
 def _ocr_reads_a_test_image(binary: str) -> tuple[bool, str]:
     """Draws the word "Forge" and has the same OCR code the `ocr_image` tool uses read it back: proves the
     install, its language data and the command line work together, not only that the program starts."""
@@ -296,6 +342,7 @@ async def run_check(check_id: str) -> Outcome:
             "postgres_local": lambda: check_postgres(config, "local"),
             "postgres_dev": lambda: check_postgres(config, "dev"),
             "gemini": lambda: check_gemini(config),
+            "tavily": lambda: check_tavily(config),
             "tesseract": check_tesseract,
         }[check_id]
         return await asyncio.wait_for(asyncio.to_thread(blocking), CHECK_TIMEOUT_S)

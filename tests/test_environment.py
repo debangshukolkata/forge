@@ -138,6 +138,7 @@ def test_environment_endpoints(
         "postgres_local",
         "postgres_dev",
         "gemini",
+        "tavily",
         "tesseract",
     ]
     assert overview["saved"]["confirmed_at"] is None and len(overview["plan"]["roles"]) == len(ROLES)
@@ -196,7 +197,7 @@ def test_azure_check_names_the_missing_values_without_calling_the_network(
 
 def test_the_overview_says_which_checks_ask_a_question(client: TestClient) -> None:
     asked = {c["id"]: c["ask"] for c in client.get("/api/environment").json()["checks"] if c["ask"]}
-    assert set(asked) == {"gemini", "tesseract"} and "installed" in asked["tesseract"]
+    assert set(asked) == {"gemini", "tavily", "tesseract"} and "installed" in asked["tesseract"]
 
 
 WINDOWS_TESSERACT = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")

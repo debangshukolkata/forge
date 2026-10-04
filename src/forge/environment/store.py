@@ -64,6 +64,11 @@ def tesseract_ready(home: Path) -> bool:
     )
 
 
+def tavily_declined(home: Path) -> bool:
+    """The user answered that the Tavily search service is not available to them: it is never tried."""
+    return load(home)["answers"].get("tavily") is False
+
+
 def save_plan(home: Path, plan: dict[str, str]) -> None:
     data = load(home)
     data["plan"] = dict(plan)

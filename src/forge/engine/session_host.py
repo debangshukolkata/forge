@@ -24,7 +24,7 @@ from forge.db.credential_tables import credential_tables
 from forge.db.scratch import ScratchError
 from forge.db.session import DbSession
 from forge.engine.slash_commands import SlashCommandHandler
-from forge.environment.store import tesseract_ready
+from forge.environment.store import tavily_declined, tesseract_ready
 from forge.errors import BudgetExceededError, ConfigError, LLMError
 from forge.llm.base import ChatRequest, Message
 from forge.llm.router import LLMRouter
@@ -247,7 +247,12 @@ class SessionHost:
         web = self.router.config.web
         context.secrets = self.secrets
         context.web_search_provider = web.search_provider
-        context.web_search_order = tuple(web.search_order)
+        context.web_search_order = tuple(
+            name
+            for name in web.search_order
+            if not (name == "tavily" and tavily_declined(forge_home()))  # the user said it is not available
+        )
+        context.web_tavily_topic = web.tavily_topic
         context.web_policy = WebPolicy.from_config(web)
         context.web_render = web.render == "auto"
         context.web_archive = web.archive_fallback

@@ -2961,7 +2961,7 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Design (modules in `tools/`): `web_guard.py` (address policy), `web_extract.py` (HTML via Trafilatura if installed else the
   in-house converter; PDF via pypdfium2; text/JSON), `web_render.py` (read-only headless Edge/Chrome via Playwright),
   `web_chain.py` (the stages), `web.py` (the tools). Stages for one page: cache -> direct HTTP (3 tries, backoff, Retry-After,
-  per-host pacing, guarded redirects) -> headless browser (only when the page came back empty/thin) -> Tavily extract (if keyed) ->
+  per-host pacing, guarded redirects) -> headless browser (only when the page came back empty/thin) ->
   archive.org copy (only if the page could not be reached) -> the search snippet seen earlier. Each stage that cannot help records why;
   the result says which stage answered. A thin page or a snippet is a PARTIAL result (ok, with the reason and what was tried), not
   an error; only when nothing at all exists is it a failure, and then it lists every attempt and what to do next.
@@ -2983,3 +2983,26 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   without it the in-house converter is used. Playwright was already an optional extra.
 - Left out on purpose: click/type/scroll tools on external sites, login or cookie storage for the web, robots.txt checks for single
   pages the user asked for. Not built: domain rules in the web UI.
+
+### D-210 — Tavily search through the company's agent platform; the direct Tavily key is gone (user decision 2026-10-04)
+- Context: the Tavily key only works from a server, not from the office laptop (the network blocks it). The user deployed
+  a Tavily tool on the agent platform and registered it as an API (a bearer-token POST to `.../tool-operation/execute-tool`
+  with `{"args": {query, topic, max_result, exclude_domains, include_domains}, "tool_instance_id": N}`; read from the user's
+  screenshots, 2026-10-04). The platform wraps the reply (a JSON string inside JSON).
+- Removed: every direct use of the Tavily key: the `api.tavily.com` search, the Tavily `/extract` stage of `web_fetch`
+  (D-209), `TAVILY_API_KEY` everywhere (guide, `.env.example`, tests). The platform tool only searches, so `web_fetch` has no
+  Tavily stage any more.
+- Added: `environment/tavily_tool.py` (client). Settings come from the `.env` file only: `TAVILY_TOOL_URL`, `TAVILY_TOOL_ID`,
+  `TAVILY_BEARER_TOKEN` (the token is registered for redaction like any `*TOKEN*`). Provider `tavily` in the search order, now
+  second (after SearXNG, before DuckDuckGo): the reason it was last (blocked network) is gone; a failing call falls through to
+  the next provider. The reply is unwrapped until `{"answer", "results"}` is found, so a change in wrapping does not break it;
+  the answer is shown above the results.
+- Asked, as for Tesseract and Gemini (D-201): the drawer and the first-run guide ask "Is the Tavily web search service
+  available to you?"; after a Yes the Test button makes one small real search. No keeps Tavily out of the search order
+  (`tavily_declined`). A failure shows an (i) icon with the steps. Following the user's rule (D-204), the token, URL and id are
+  not typed into the app: the question tells the user which three lines to put in the `.env` file.
+- Expired token: HTTP 401/403 says so ("put a fresh one in TAVILY_BEARER_TOKEN"); the token never appears in a message.
+- Unverified (no token on the build machine): the reply shape of the real `execute-tool` call (parsed tolerantly), whether
+  `topic` accepts `General` (the only known-good value is `News`; a refused topic is retried once with `News`), and
+  `max_result` as a string (as the platform's own test sends it). `web.tavily_topic` sets the topic.
+- The platform address in the screenshots is `sit.nonprod`: the user should confirm the production address before relying on it.

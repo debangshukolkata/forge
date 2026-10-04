@@ -65,17 +65,18 @@ class ToolContext:
     shell: ShellSession | None = None
     background: BackgroundManager | None = None
     db: Any = None  # forge.db.session.DbSession, when a database is configured
-    secrets: Any = None  # forge.config.Secrets: optional service keys (e.g. TAVILY_API_KEY); never shown
+    secrets: Any = None  # forge.config.Secrets: optional service keys (e.g. SERPAPI_API_KEY); never shown
     summarise: Callable[[str, str], Awaitable[str]] | None = None  # (text, instruction) -> summary
     browser: Any = None  # forge.tools.browser.BrowserSession, started on first use
     web_search_provider: str = "auto"  # config web.search_provider
     web_search_order: tuple[str, ...] = (
         "searxng",
+        "tavily",
         "duckduckgo",
         "serpapi",
         "azure",
-        "tavily",
     )  # web.search_order
+    web_tavily_topic: str = "General"  # web.tavily_topic: the topic sent to the Tavily tool (D-210)
     web_policy: Any = None  # forge.tools.web_guard.WebPolicy: which addresses web_fetch may reach (D-209)
     web_render: bool = True  # web.render: use the headless browser for pages that need JavaScript
     web_archive: bool = True  # web.archive_fallback

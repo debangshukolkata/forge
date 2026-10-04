@@ -40,7 +40,9 @@ def env_file(isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch) -> Path
         "LOCAL_PG_URL",
         "DEV_PG_URL",
         "SERPAPI_API_KEY",
-        "TAVILY_API_KEY",
+        "TAVILY_TOOL_URL",
+        "TAVILY_TOOL_ID",
+        "TAVILY_BEARER_TOKEN",
     ):
         monkeypatch.delenv(name, raising=False)
     return path
@@ -82,7 +84,9 @@ def test_it_names_what_forge_reads_and_what_is_required(isolated_forge_home: Pat
     )
     assert variables["DEV_PG_URL"]["group"] == "Development database (read-only)"
     assert "never writes" in variables["DEV_PG_URL"]["why"]  # read-only, said in words
-    assert {"SERPAPI_API_KEY", "TAVILY_API_KEY"} <= set(variables)
+    assert {"SERPAPI_API_KEY", "TAVILY_TOOL_URL", "TAVILY_TOOL_ID", "TAVILY_BEARER_TOKEN"} <= set(variables)
+    assert "TAVILY_API_KEY" not in variables  # the key itself is not used (D-210)
+    assert not any(variables[n]["required"] for n in variables if n.startswith("TAVILY"))
     assert "FORGE_PG_URL" not in variables  # that one is for testing Forge itself, not for using it
 
 
@@ -101,14 +105,14 @@ def test_the_guide_never_returns_a_value_only_whether_a_name_is_filled(
     isolated_forge_home: Path, env_file: Path
 ) -> None:
     env_file.write_text(
-        f"AZURE_OPENAI_API_KEY={SECRET}\nLOCAL_PG_URL={FAKE_PG}\nTAVILY_API_KEY=\n", encoding="utf-8"
+        f"AZURE_OPENAI_API_KEY={SECRET}\nLOCAL_PG_URL={FAKE_PG}\nTAVILY_TOOL_URL=\n", encoding="utf-8"
     )
     info = guide(isolated_forge_home)
     assert SECRET not in json.dumps(info) and "pw-0123" not in json.dumps(info)
     filled = {v["name"]: v["filled"] for v in info["variables"]}  # type: ignore[attr-defined, union-attr]
     assert filled["AZURE_OPENAI_API_KEY"] is True and filled["LOCAL_PG_URL"] is True
     assert (
-        filled["AZURE_OPENAI_ENDPOINT"] is False and filled["TAVILY_API_KEY"] is False
+        filled["AZURE_OPENAI_ENDPOINT"] is False and filled["TAVILY_TOOL_URL"] is False
     )  # empty counts as not set
 
 

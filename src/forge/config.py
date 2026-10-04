@@ -204,14 +204,15 @@ class WebConfig(_Strict):
     # auto: try search_order, falling back to the next provider on errors / no results; or name one provider.
     # azure = the model's built-in web_search tool (Responses API; model tokens + Azure's per-search fee).
     search_provider: Literal["auto", "searxng", "tavily", "serpapi", "duckduckgo", "azure", "off"] = "auto"
-    search_order: list[Literal["searxng", "duckduckgo", "serpapi", "tavily", "azure"]] = [
+    search_order: list[Literal["searxng", "tavily", "duckduckgo", "serpapi", "azure"]] = [
         "searxng",  # skipped unless SEARXNG_URL is in .env
+        "tavily",  # the company's Tavily tool (D-210); skipped unless its three .env values are set
         "duckduckgo",
         "serpapi",
         "azure",
-        "tavily",  # last: blocked on the office laptop's network
     ]
     azure_search_role: str = "summariser"  # whose model runs the azure search
+    tavily_topic: str = "General"  # the topic sent to the company's Tavily tool; "News" is also known to work
     # What web_fetch and the headless browser may reach (D-209). Local and internal addresses (this computer,
     # the intranet, cloud metadata) are refused unless listed in allow_hosts.
     allow_hosts: list[str] = []

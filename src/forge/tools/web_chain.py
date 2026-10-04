@@ -1,7 +1,7 @@
 """Fetching one page through a chain of independent stages (D-209), so a failure of one never means no answer.
 
     cache -> direct HTTP (retries, guarded redirects) -> headless browser (only if the page came back empty or
-    thin) -> Tavily extract (if a key exists) -> an archived copy (archive.org) -> the search snippet we saw
+    thin) -> an archived copy (archive.org) -> the search snippet we saw
 
 Each stage that cannot help records why and the next one runs. The result says which stage answered and what
 the others did, and is 'partial' (not an error) when only a thin page or a snippet could be found."""
@@ -21,7 +21,6 @@ from forge.tools.web_extract import Extracted, ExtractError, extract, from_html,
 from forge.tools.web_guard import WebPolicy, check_resolving
 from forge.tools.web_render import RenderUnavailable, render_html
 
-TAVILY = "https://api.tavily.com"
 WAYBACK = "https://archive.org/wayback/available"
 FETCH_TIMEOUT_S = 20
 MAX_TRIES = 3
@@ -47,7 +46,7 @@ class PageResult:
     final_url: str = ""
     title: str = ""
     text: str = ""
-    via: str = ""  # cache | direct | browser | tavily | archive | snippet
+    via: str = ""  # cache | direct | browser | archive | snippet
     status: Status = "failed"
     attempts: list[str] = field(default_factory=list)  # what each stage did, for the model and the log
     note: str = ""
@@ -56,7 +55,6 @@ class PageResult:
 @dataclass
 class FetchOptions:
     policy: WebPolicy = field(default_factory=WebPolicy)
-    tavily_key: str | None = None
     render: bool = True
     archive: bool = True
     cache: Any = None  # WebCache: get(key) / put(key, value)
@@ -112,10 +110,6 @@ async def fetch_page(url: str, options: FetchOptions) -> PageResult:
                     return _store(done, options)
             except RenderUnavailable as unavailable:
                 result.attempts.append(f"browser: unavailable ({unavailable})")
-        if options.tavily_key and error_kind != "blocked":
-            content = await _tavily(client, options.tavily_key, key, result.attempts)
-            if (done := consider("tavily", content, key)) is not None:
-                return _store(done, options)
         if options.archive and direct_failed and error_kind != "blocked":
             archived = await _archive(client, key, options, result.attempts)
             if (done := consider("archive", archived, key)) is not None:
@@ -231,19 +225,6 @@ def _retry_delay(response: httpx.Response, attempt: int) -> float:
         return min(float(response.headers.get("retry-after", "")), 5.0)
     except ValueError:
         return 0.5 * attempt
-
-
-async def _tavily(client: httpx.AsyncClient, key: str, url: str, attempts: list[str]) -> Extracted | None:
-    try:
-        response = await client.post(f"{TAVILY}/extract", json={"api_key": key, "urls": [url]})
-        results = response.json().get("results") or [] if response.status_code == 200 else []
-    except (httpx.HTTPError, ValueError) as error:
-        attempts.append(f"tavily: {type(error).__name__}")  # never the request: it holds the key
-        return None
-    if results and results[0].get("raw_content"):
-        return Extracted("", str(results[0]["raw_content"]), "tavily")
-    attempts.append(f"tavily: no content (HTTP {response.status_code})")
-    return None
 
 
 async def _archive(

@@ -1309,7 +1309,7 @@ hooks: { post_edit: [] }
 
 The workspace mode (`A` or `B`) is recorded in `workspace.json`. The toolset, phases and prompts are selected from it.
 
-`.env` holds `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_VERSION`, optionally `GEMINI_API_KEY`, `TAVILY_API_KEY`, `LOCAL_PG_URL` and `DEV_PG_URL`. The context windows above are defaults; confirm them for your deployments.
+`.env` holds `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_VERSION`, optionally `GEMINI_API_KEY`, `TAVILY_TOOL_URL`/`TAVILY_TOOL_ID`/`TAVILY_BEARER_TOKEN` (D-210; there is no `TAVILY_API_KEY`), `LOCAL_PG_URL` and `DEV_PG_URL`. The context windows above are defaults; confirm them for your deployments.
 
 ---
 

@@ -13,9 +13,16 @@ from typing import Any
 from forge.config import ForgeConfig, Secrets, env_file_path
 from forge.doctor import required_secret_names
 
-SEARCH_KEYS = (
-    ("SERPAPI_API_KEY", "<SerpAPI key>", "Web search through Google (SerpAPI)."),
-    ("TAVILY_API_KEY", "<Tavily key>", "Web search through Tavily."),
+SEARCH_KEYS = (("SERPAPI_API_KEY", "<SerpAPI key>", "Web search through Google (SerpAPI)."),)
+
+TAVILY_ROWS = (
+    (
+        "TAVILY_TOOL_URL",
+        "<the tool's execute-tool address>",
+        "Where the platform runs the Tavily search tool.",
+    ),
+    ("TAVILY_TOOL_ID", "<the tool's number, e.g. 2361>", "The tool instance id."),
+    ("TAVILY_BEARER_TOKEN", "<bearer token>", "The platform's bearer token for that call."),
 )
 
 
@@ -87,9 +94,19 @@ def _variables(config: ForgeConfig) -> tuple[list[Group], list[Variable]]:
             expects = "postgresql://<user>:<password>@<host>:5432/<database>"
         variables.append(Variable(connection.url_env, title, expects, why, False))
 
-    groups.append(Group("Web search", "With neither key Forge uses DuckDuckGo.", False))
+    groups.append(Group("Web search", "Without a key Forge uses DuckDuckGo.", False))
     for name, expects, why in SEARCH_KEYS:
         variables.append(Variable(name, "Web search", expects, why, False))
+    groups.append(
+        Group(
+            "Tavily web search",
+            "Your company's Tavily search tool on the agent platform. The bearer token usually expires: "
+            "paste a fresh one here when the test says it was rejected.",
+            False,
+        )
+    )
+    for name, expects, why in TAVILY_ROWS:
+        variables.append(Variable(name, "Tavily web search", expects, why, False))
 
     gemini = getattr(config.llm.providers, "gemini", None)  # present only with the Gemini provider
     if gemini is not None:

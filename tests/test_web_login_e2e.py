@@ -338,6 +338,13 @@ def test_optional_tools_are_asked_before_they_are_tested(
         calls.append("gemini")
         return gemini_outcome[0]
 
+    tavily_outcome = [checks.Outcome("tavily", "ok", "The search service answered (1 result).")]
+
+    def fake_tavily(config: object) -> checks.Outcome:
+        calls.append("tavily")
+        return tavily_outcome[0]
+
+    monkeypatch.setattr(checks, "check_tavily", fake_tavily)
     monkeypatch.setattr(checks, "check_models", answers)
     monkeypatch.setattr(checks, "check_tesseract", fake_tesseract)
     monkeypatch.setattr(checks, "check_gemini", fake_gemini)
@@ -368,7 +375,7 @@ def test_optional_tools_are_asked_before_they_are_tested(
         tesseract = drawer.locator("[role=group][aria-label='Is Tesseract installed on this computer?']")
         gemini = drawer.locator("[role=group][aria-label='Is Gemini enabled for you?']")
         tesseract.wait_for()
-        assert drawer.locator("text=Answer the question to test it.").count() == 2
+        assert drawer.locator("text=Answer the question to test it.").count() == 3
         assert calls == []  # nothing is tested until the user says yes
 
         tesseract.locator("button:has-text('Yes')").click()
@@ -413,9 +420,26 @@ def test_optional_tools_are_asked_before_they_are_tested(
         assert "gcloud auth application-default login" in drawer.locator("[data-testid=steps]").inner_text()
         page.screenshot(path=str(shots / "environment-gemini-steps-light.png"))
 
+        # The Tavily service: when it does not work, an (i) icon says what goes in the .env file.
+        tavily = drawer.locator(
+            "[role=group][aria-label='Is the Tavily web search service available to you?']"
+        )
+        tavily_outcome[0] = checks.Outcome(
+            "tavily",
+            "fail",
+            "The platform rejected the bearer token (fake).",
+            "Fresh token.",
+            steps=checks.TAVILY_STEPS,
+        )
+        tavily.locator("button:has-text('Yes')").click()
+        page.wait_for_selector("text=rejected the bearer token (fake).")
+        drawer.locator("button[aria-label='How to fix Tavily web search']").click()
+        assert "TAVILY_BEARER_TOKEN" in drawer.locator("[data-check=tavily] [data-testid=steps]").inner_text()
+        tavily.locator("button:has-text('No')").click()
+
         gemini.locator("button:has-text('No')").click()
         tesseract.locator("button:has-text('No')").click()
-        page.wait_for_selector("text=Not in use. >> nth=1")
+        page.wait_for_selector("text=Not in use. >> nth=2")
         assert drawer.locator("text=read a test image correctly").count() == 0
         browser.close()
     assert not problems, problems
