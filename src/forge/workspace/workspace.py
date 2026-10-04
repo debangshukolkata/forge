@@ -106,6 +106,16 @@ class Workspace:
 
     # --- reading ---
 
+    def own_folders(self) -> list[Path]:
+        """What counts as the workspace. Mode A: the whole root. Mode B: only Forge's own folders, because the
+        project folder may also hold the user's other files, which are not part of it (D-211)."""
+        if not self.mode_b:
+            return [self.root]
+        return [self.repo_dir, self.harness_dir, self.output_dir, self.forge_dir, self.root / ".venv"]
+
+    def is_own(self, resolved: Path) -> bool:
+        return any(is_within(resolved, real_path(folder)) for folder in self.own_folders())
+
     def resolve_readable(self, raw: str) -> Path | None:
         """The real path when raw is an absolute path inside a place the user granted for reading (or an
         installed skill), else None. Never used for writing: the jail still decides that."""
@@ -116,7 +126,7 @@ class Workspace:
         if candidate is None or not candidate.is_absolute():
             return None
         resolved = real_path(candidate)
-        if is_within(resolved, real_path(self.root)):
+        if self.is_own(resolved):
             return None  # the workspace's own files go through the normal rules
         return resolved if self.read_grants.allows(resolved) else None
 

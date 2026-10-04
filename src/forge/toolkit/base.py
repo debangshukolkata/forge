@@ -85,6 +85,8 @@ class ToolContext:
     sensitive_terms: tuple[str, ...] = ()  # Mode B: host-identifying words that must never reach a web search
     hosted_search: Callable[[str], Awaitable[tuple[str, list[dict[str, str]]]]] | None = None  # azure search
     interaction: Any = None  # the orchestrator (tools/interaction.Interaction), when orchestrated
+    # Chat sessions: asks the user through the host's question channel (clickable options + a text box).
+    ask_user: Callable[[str, str, list[Any], str | None], Awaitable[str]] | None = None
     end_turn: bool = False  # a phase tool finished its phase: the agent loop stops after this step
     step: int = 0  # increases with every tool call; used for 'no claim without evidence'
     last_edit_step: int = 0

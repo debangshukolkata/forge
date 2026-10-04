@@ -3018,3 +3018,16 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   the rule is "Forge's folders only" and not a promise about what a program does.
 - Nothing deletes the project folder: `forge cleanup` only drops recorded database objects, and the output builder only clears `output/`.
 - Not changed: the folder is still required on the form (the Create button waits for a value).
+
+### D-212 — Questions in a chat session are clickable options plus a text box; files beside project/ are not "the workspace" (user report 2026-10-04)
+- Found in the first live run of the Capability Lab prompt (the project folder was the sample-inputs folder):
+  1. The model asked its question as plain text. The clickable question card (options, Recommended badge, "type your own answer") already
+     existed, but its `ask_user` tool was registered only for orchestrated runs, so a normal chat had no way to use it.
+     Now every chat session has `ask_user` (via `ToolContext.ask_user` -> `SessionHost._ask_user` -> the question broker); orchestrated
+     runs keep their own path. Both system prompts tell the model to use it instead of asking in plain text. A typed message still answers
+     an open question as free text. The returned text is "The user chose: X (. They added: ...)" or "The user answered: ...".
+  2. The model could not read `brief.md` / `.env` beside `project/`: with D-211 those files are in the project folder but not in Forge's own
+     folders, and D-208 treated "inside the workspace root" as already handled, so typing their path granted nothing. Fixed with
+     `Workspace.own_folders()` / `is_own()`: Mode B's workspace is Forge's own folders only, so a typed path (or `/allow-read`) to a file
+     beside them is a normal read grant (file only; `.env` still shows key names only). The shell's own-folders rule (D-211) uses the same method.
+- Side effect to know: a chat session now offers `ask_user` to the model; subagents do not get it.

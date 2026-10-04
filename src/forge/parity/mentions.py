@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 from forge.errors import ForgeError
-from forge.safety.paths import is_within, real_path
+from forge.safety.paths import real_path
 from forge.workspace.read_grants import ReadGrantError
 from forge.workspace.workspace import Workspace
 
@@ -110,7 +110,7 @@ def _grant(text: str, workspace: Workspace, result: Expanded) -> None:
     if not candidate.is_absolute() or not candidate.exists():
         return
     resolved = real_path(candidate)
-    if is_within(resolved, real_path(workspace.root)) or workspace.read_grants.allows(resolved):
+    if workspace.is_own(resolved) or workspace.read_grants.allows(resolved):
         return
     try:
         granted = workspace.read_grants.grant(text)

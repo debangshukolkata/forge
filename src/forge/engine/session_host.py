@@ -50,6 +50,7 @@ from forge.subagents.spawn_tool import SpawnSubagent
 from forge.toolkit.background import BackgroundManager
 from forge.toolkit.base import Tool, ToolContext
 from forge.toolkit.shell import ShellSession, execute
+from forge.tools.interaction import AskUser
 from forge.tools.modeb import modeb_tools
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
 from forge.tools.todo import PIN_SLOT as TODO_PIN_SLOT
@@ -259,6 +260,7 @@ class SessionHost:
         context.hosted_search = azure_hosted_search(self.router, web.azure_search_role)
         context.summarise = self._summarise
         context.router = self.router
+        context.ask_user = self._ask_user
         if workspace.mode_b:
             context.profile = self.host_profile()
             context.sensitive_terms = host_identifying_terms(context.profile)
@@ -270,7 +272,13 @@ class SessionHost:
             self.router,
             self.bus,
             ToolRegistry(
-                [SpawnSubagent(), *default_tools(), *(db_tools() if context.db else []), *self.extra_tools]
+                [
+                    SpawnSubagent(),
+                    AskUser(),
+                    *default_tools(),
+                    *(db_tools() if context.db else []),
+                    *self.extra_tools,
+                ]
             ),
             context,
             gate,
@@ -480,6 +488,25 @@ class SessionHost:
                 EventType.NOTICE, {"kind": "mentions", "text": "Attached: " + ", ".join(expanded.notes)}
             )
         return expanded.text
+
+    async def _ask_user(
+        self, question: str, context: str, options: list[Any], recommended: str | None
+    ) -> str:
+        """The ask_user tool in a chat session: a question card with the options and a box for the user's own
+        answer. A typed message also answers it (QuestionBroker.answer_all_with_text)."""
+        answer = await self.questions.ask(
+            EventType.QUESTION_ASKED,
+            {
+                "question": question,
+                "context": context,
+                "recommended": recommended,
+                "options": [option.model_dump() for option in options],
+            },
+        )
+        if answer.choice:
+            extra = f". They added: {answer.text}" if answer.text else ""
+            return f"The user chose: {answer.choice}{extra}"
+        return f"The user answered: {answer.text or '(no answer)'}"
 
     def _mention_lookup(self) -> dict[str, object]:
         def dbr(ident: str) -> str | None:

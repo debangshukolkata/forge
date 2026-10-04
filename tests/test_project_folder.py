@@ -9,8 +9,13 @@ import pytest
 
 from forge.modeb.profile import ProfileStore
 from forge.modeb.workspace import RESERVED_NAMES, check_project_folder, create_standalone_workspace
+from forge.parity.mentions import expand
+from forge.safety.paths import JailViolationError
 from forge.safety.shell_classifier import classify
+from forge.toolkit.base import ToolContext
 from forge.toolkit.shell import ShellSession
+from forge.tools.files import ReadFile
+from forge.workspace.read_grants import ReadGrants
 from forge.workspace.workspace import WorkspaceError
 
 
@@ -87,3 +92,32 @@ def test_a_missing_or_empty_folder_is_fine(tmp_path: Path) -> None:
     empty.mkdir()
     check_project_folder(empty)
     assert os.listdir(empty) == []
+
+
+async def test_files_beside_project_can_be_opened_by_typing_their_path(
+    tmp_path: Path, isolated_forge_home: Path
+) -> None:
+    """The case from a live run: the project folder held brief.md and .env next to project/. They are not
+    part of the workspace, so reading them needs the user's own words, like any file elsewhere."""
+    folder = tmp_path / "inputs"
+    folder.mkdir()
+    (folder / "brief.md").write_text("Reading Radar brief", encoding="utf-8")
+    (folder / ".env").write_text("API_TOKEN=do-not-show-me-123\n", encoding="utf-8")  # check_secrets: fake
+    (folder / "other.txt").write_text("not mentioned", encoding="utf-8")
+    workspace = make(tmp_path, isolated_forge_home, folder)
+    workspace.read_grants = ReadGrants.for_workspace(workspace.root, isolated_forge_home)  # type: ignore[attr-defined]
+    context = ToolContext(workspace=workspace)  # type: ignore[arg-type]
+
+    with pytest.raises(JailViolationError):  # nothing is open until the user says so
+        await ReadFile().run(ReadFile.Args(path=str(folder / "brief.md")), context)
+
+    typed = f"Please read {folder / 'brief.md'} and also look at {folder / '.env'}"
+    opened = expand(typed, workspace)  # type: ignore[arg-type]
+    assert len(opened.grants) == 2 and all("may now read" in line for line in opened.grants)
+
+    brief = await ReadFile().run(ReadFile.Args(path=str(folder / "brief.md")), context)
+    assert brief.ok and "Reading Radar brief" in brief.content
+    secret = await ReadFile().run(ReadFile.Args(path=str(folder / ".env")), context)
+    assert "do-not-show-me-123" not in secret.content and "API_TOKEN" in secret.content  # names only
+    with pytest.raises(JailViolationError):  # the file that was not mentioned stays closed
+        await ReadFile().run(ReadFile.Args(path=str(folder / "other.txt")), context)

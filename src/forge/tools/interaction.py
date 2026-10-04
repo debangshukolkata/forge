@@ -69,9 +69,11 @@ class AskUser(Tool):
     name = "ask_user"
     read_only = True  # asking changes nothing; it waits for the user
     description = (
-        "Ask the user a multiple-choice question when there is a real design choice, a new dependency, a DB "
-        "or config change, or a change to shared code. Give 2-3 options with pros/cons/risks and recommend "
-        "one. Returns the user's choice (or their own answer). Don't use it for trivia you can decide."
+        "Ask the user a question. Use this, not plain text, whenever you need the user's decision or "
+        "information: a design choice, a new dependency, a DB or config change, a change to shared code, "
+        "or something you cannot find out yourself. It shows 2-4 clickable options (plus a box for their own "
+        "answer); give each a short description, add pros/cons/risks where they matter, and recommend one. "
+        "Returns the user's choice (or their own answer). Don't use it for trivia you can decide."
     )
 
     class Args(ToolArgs):
@@ -85,9 +87,10 @@ class AskUser(Tool):
 
     async def run(self, args: AskUser.Args, context: ToolContext) -> ToolResult:
         interaction = _interaction(context)
-        if interaction is None:
+        asker = interaction.ask_user if interaction is not None else context.ask_user
+        if asker is None:
             return NOT_AVAILABLE
-        answer = await interaction.ask_user(args.question, args.context, args.options, args.recommended)
+        answer = await asker(args.question, args.context, args.options, args.recommended)
         return ToolResult(ok=True, content=answer)
 
 
