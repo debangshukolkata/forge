@@ -266,6 +266,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] Shell: indirect `.env` reads always ask (D-187); Forge's own variables hidden from commands (D-202)
 - [x] Tesseract: the `ocr_image` tool the model can call (D-203)
 - [x] Gemini provider built and pushed (D-150, D-205): adapter, router dispatch, drawer real call + (i) steps; project/location optional
+- [x] Mode B project folder may be non-empty (D-211)
 - [x] Tavily through the company platform (D-210); direct Tavily key code removed; untested against the real platform (needs the user's token)
 - [ ] PARKED (user, 2026-10-04): one-click install from the GitHub zip (starter script -> venv + pip install -> .env template -> `forge doctor` -> open UI -> shortcut).
   Waiting on the user's probe of what the office laptop allows (script run, pip reach, Python 3.13) and a choice: `.cmd` starter vs signed `.exe`, bundled embeddable Python or not.

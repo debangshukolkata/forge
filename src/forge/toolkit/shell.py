@@ -132,9 +132,21 @@ class ShellSession:
             workspace_root=self.workspace.root,
             original_repo=Path(self.workspace.info.repo_path) if self.workspace.info.repo_path else None,
             strict=self.workspace.mode_b,
+            own_folders=self._own_folders() if self.workspace.mode_b else None,
             cwd=self.cwd,
             readable_roots=readable,
         )
+
+    def _own_folders(self) -> list[Path]:
+        """What belongs to the workspace in Mode B: the project folder may hold the user's other files too."""
+        workspace = self.workspace
+        return [
+            workspace.repo_dir,
+            workspace.harness_dir,
+            workspace.output_dir,
+            workspace.forge_dir,
+            workspace.root / ".venv",
+        ]
 
     def resolve_cwd(self, relative: str | None) -> Path:
         return self.workspace.path_of(relative) if relative else self.cwd

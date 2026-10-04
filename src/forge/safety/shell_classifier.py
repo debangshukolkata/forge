@@ -210,6 +210,9 @@ class ShellScope:
     cwd: Path
     readable_roots: list[Path] = field(default_factory=list)  # e.g. the app's venv (reading is fine)
     strict: bool = False  # Mode B (spec §6A.8): anything outside the workspace is blocked, not asked
+    # Mode B: inside the workspace root only these folders count as the workspace; other files the user
+    # already had in the project folder are outside it (D-211). None = the whole root (Mode A).
+    own_folders: list[Path] | None = None
 
 
 def classify(command: str, scope: ShellScope) -> Classification:
@@ -290,7 +293,9 @@ def _check_path(raw: str, scope: ShellScope, result: Classification, writing: bo
         if writing:
             result.raise_to("blocked", f"writes into the original repository: {text}")
         return  # reading the original repository is allowed (read-only reference, spec §6.1)
-    if is_within(candidate, scope.workspace_root):
+    if is_within(candidate, scope.workspace_root) and (
+        scope.own_folders is None or any(is_within(candidate, folder) for folder in scope.own_folders)
+    ):
         return
     if not writing and any(is_within(candidate, root) for root in scope.readable_roots):
         return

@@ -3006,3 +3006,15 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   `topic` accepts `General` (the only known-good value is `News`; a refused topic is retried once with `News`), and
   `max_result` as a string (as the platform's own test sends it). `web.tavily_topic` sets the topic.
 - The platform address in the screenshots is `sit.nonprod`: the user should confirm the production address before relying on it.
+
+### D-211 — A Mode B project folder may already hold other files (user request 2026-10-04)
+- Context: creating a standalone project refused any folder that was not empty ("choose a new folder"); the user picked a folder that
+  held their sample inputs and wanted that to work. Mode A never had the rule.
+- Now: any folder is accepted, except one that is already a Forge project (open it instead), a file, or one that already uses a name Forge
+  needs for its own folders: `project`, `_harness`, `output`, `.forge`, `.venv` (the error names them). Existing files are never changed.
+- Isolation kept (invariant 2): in Mode B the shell's workspace is only Forge's own folders (`ShellScope.own_folders`), so a command cannot read
+  or list the user's other files in the folder (`type ..\notes.txt` is blocked; `..` itself is no longer allowed). The file tools already only
+  reach `project/` and `_harness/`. Code the model runs can still open files by itself (the same limit as everywhere), which is why
+  the rule is "Forge's folders only" and not a promise about what a program does.
+- Nothing deletes the project folder: `forge cleanup` only drops recorded database objects, and the output builder only clears `output/`.
+- Not changed: the folder is still required on the form (the Create button waits for a value).

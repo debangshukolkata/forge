@@ -65,6 +65,32 @@ the other. Delivered code in project/ never contains the host's own package `__i
 """
 
 
+RESERVED_NAMES = (
+    "project",
+    "_harness",
+    "output",
+    ".forge",
+    ".venv",
+)  # the folders Forge creates in a project folder
+
+
+def check_project_folder(root: Path) -> None:
+    """The project folder may already hold other files (they stay untouched and Forge's tools never open
+    them); it only has to leave Forge's own folder names free, and not be a Forge project already (D-211)."""
+    if not root.exists():
+        return
+    if not root.is_dir():
+        raise WorkspaceError(f"{root} is a file, not a folder.")
+    if (root / ".forge" / "workspace.json").exists():
+        raise WorkspaceError(f"{root} is already a Forge project: open it from the project list instead.")
+    taken = [name for name in RESERVED_NAMES if (root / name).exists()]
+    if taken:
+        raise WorkspaceError(
+            f"{root} already has {', '.join(taken)}, which Forge needs for its own folders. "
+            "Choose another folder, or move or rename those first."
+        )
+
+
 def create_standalone_workspace(
     root: Path,
     profile: HostProfile,
@@ -76,8 +102,7 @@ def create_standalone_workspace(
             on_progress(phase)
 
     root = root.resolve()
-    if root.exists() and any(root.iterdir()):
-        raise WorkspaceError(f"{root} is not empty: choose a new folder for the workspace.")
+    check_project_folder(root)
     notify("Creating workspace folders…")
     for folder in ("project", "_harness/host_stubs", "output", ".forge"):
         (root / folder).mkdir(parents=True, exist_ok=True)
