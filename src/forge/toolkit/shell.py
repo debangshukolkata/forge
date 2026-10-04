@@ -213,13 +213,19 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
             f"project/ itself, so don't prefix it). Leave cwd out to stay in {shell.display(shell.cwd)}.",
         )
     sandboxed = shell.prepare_sandbox()
+
+    async def report(progress: dict[str, object]) -> None:
+        await context.emit("tool_progress", {"source": "command", **progress})
+
     try:
         outcome = await run_powershell(
-            command, start_dir, shell.environment(), timeout_s, shell.scratch_dir, sandboxed
+            command, start_dir, shell.environment(), timeout_s, shell.scratch_dir, sandboxed, report
         )
     except SandboxUnavailableError as error:
         shell.disable_sandbox(str(error))
-        outcome = await run_powershell(command, start_dir, shell.environment(), timeout_s, shell.scratch_dir)
+        outcome = await run_powershell(
+            command, start_dir, shell.environment(), timeout_s, shell.scratch_dir, on_progress=report
+        )
     shell.cwd = outcome.cwd
     passed = not outcome.timed_out and outcome.exit_code == 0
     if passed and "playwright" in command.lower():
@@ -234,7 +240,10 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
         lines.insert(0, f"[{shell.pending_notice}]")
         shell.pending_notice = None
     if outcome.timed_out:
-        lines.append(f"[timed out after {timeout_s}s; the process and its children were stopped]")
+        lines.append(
+            f"[timed out after {timeout_s}s; the process and its children were stopped. If it needs "
+            "longer, run it with start_background and follow it with monitor]"
+        )
         if outcome.waiting_for_input:
             lines.append(
                 "[it looked like it was waiting for input; pass answers as arguments or flags instead]"

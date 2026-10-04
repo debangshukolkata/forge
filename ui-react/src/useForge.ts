@@ -149,6 +149,8 @@ function endStream(items: ChatItem[]): ChatItem[] {
 export interface LiveActivity {
   kind: "idle" | "thinking" | "tool" | "writing" | "waiting";
   tool?: { name: string; summary: string };
+  // A running command or monitor (D-219): its newest output line, a progress figure if the output shows one, and quiet time.
+  progress?: { line: string; percent: number | null; stalled_s: number | null; lines: number; elapsed_s: number };
   waitingFor?: string;
   since: number;
 }
@@ -293,6 +295,22 @@ export function useForge(): Forge {
         break;
       case "tool_call_started":
         setActivity({ kind: "tool", tool: { name: p.name, summary: p.summary || "" }, since: now });
+        break;
+      case "tool_progress":
+        setActivity((a) =>
+          a.kind === "tool"
+            ? {
+                ...a,
+                progress: {
+                  line: String(p.line ?? ""),
+                  percent: typeof p.percent === "number" ? p.percent : null,
+                  stalled_s: typeof p.stalled_s === "number" ? p.stalled_s : null,
+                  lines: Number(p.lines ?? 0),
+                  elapsed_s: Number(p.elapsed_s ?? 0),
+                },
+              }
+            : a,
+        );
         break;
       case "tool_call_finished":
       case "message_done":

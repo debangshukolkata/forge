@@ -3107,3 +3107,21 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
    still shows "<Role> is working" (D-214).
 - Tests: `test_a_new_request_that_reuses_an_old_id_can_still_be_answered` (real browser), `test_request_ids_do_not_repeat_from_one_session_to_the_next`,
   and added checks in `test_activity_line_and_run_totals`.
+
+### D-219 — Long-running work is never a blind wait (user request 2026-10-04: "can we make it generic")
+- Context: a full test suite run piped through `tail` showed nothing until the end; the user asked that Forge handle any long job the way the
+  assistant handled it (run it so it does not block, watch its output, report progress, cover every way it can end), not only tests.
+- Layer 1, needs nothing from the model or the program: `toolkit/progress.py` (`ProgressTracker`) watches the output of every command (and
+  `monitor`) and publishes `tool_progress` events at most every 2 s, only when something changed: the newest line (ANSI and carriage-return
+  redraws handled), a progress figure when the output shows one (`NN%`, `[n/m]`, `n of m`; the last figure is kept), the line count, the elapsed
+  time, and `stalled_s` once nothing has been printed for 2 minutes (repeated each further minute). The page shows it on the activity line:
+  the line, the figure with a thin progress bar, "no output for N min" in the warning colour. Redaction runs on the events like any event.
+- Layer 2, model side: the prompts tell the model to start anything likely to take over a minute with `start_background`, say what it is
+  watching, follow it with `monitor` (whose pattern covers failure as well as success) and report where it stands and the outcome;
+  `monitor` now publishes the same progress while it waits and ends its result with a note when the output holds Traceback/FAILED/ERROR/Killed/
+  fatal lines ("silence is not success"); a foreground command that hits its time limit is told to use start_background + monitor.
+- Decided with the user (recommended defaults): live output lines on the activity line (redacted, at most one update per 2 s); the quiet-time
+  note after 2 minutes. **Not built yet:** moving a foreground command to the background by itself at ~5 minutes (the process is started with
+  its own pipes, so handing it over needs more care), and layer 3, a Jobs strip listing every background process with its live tail and a Stop button.
+- Tests: `tests/test_progress.py` (figures, throttling, redrawn bars, quiet time, a real PowerShell command, `monitor`) and added checks in
+  `test_activity_line_and_run_totals` (browser). Found by them: a progress bar redrawn without newlines showed the previous figure.

@@ -77,6 +77,11 @@ Rules
 - Do the work yourself where you can: to install a package into the workspace's virtual environment run
   `python -m pip install ...` with run_command (the user is asked to approve it). Hand a step to the user
   (request_user_action) only for what you cannot do, or after your attempt was refused or failed.
+- For anything likely to take more than a minute (a full test suite, a build, an install, a download, an
+  evaluation) start it with start_background (its output is kept for you), say in one sentence what you are
+  watching, then follow it with monitor, whose pattern covers failure as well as success. Tell the user
+  where it stands when you check in, and finish with the outcome. Silence is not success: read the exit
+  code or the failure lines.
 - When you need the user's decision or information, call ask_user (2-4 options with your recommendation; the
   user can always type their own answer) instead of asking in plain text, then continue with the answer.
 - Be concise. Give a short summary of what you changed and how you verified it when you finish.

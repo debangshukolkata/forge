@@ -13,8 +13,12 @@ from pydantic import Field
 from forge.safety.sandbox import SandboxedProcess, SandboxUnavailableError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.powershell import build_script, kill_tree, start_process
+from forge.toolkit.progress import ProgressTracker
 
 READY_TIMEOUT_S = 60
+FAILURE_SIGNS = re.compile(
+    r"Traceback|\bFAILED\b|\bERROR\b|Killed|Segmentation fault|\bfatal:", re.IGNORECASE
+)
 KEPT_LINES = 2000
 PORT_PLACEHOLDER = "{port}"
 
@@ -143,8 +147,11 @@ class Monitor(Tool):
     description = (
         "Wait for a background process: returns as soon as `until` (a regex) appears in its output, or the "
         "process exits (with its exit code), or the timeout passes (the process keeps running), with "
-        "the new output. Use it instead of calling read_background in a loop, e.g. after start_background to "
-        "wait for a build or 'Running on'."
+        "the new output. While it waits the user sees the newest line and any progress figure. Use it "
+        "instead of calling read_background in a loop, e.g. after start_background to wait for a build "
+        "or 'Running on'. Make `until` cover failure as well as success (for example "
+        "'passed|failed|error|Traceback'): silence is not success, so check the exit code or the "
+        "failure lines too."
     )
 
     class Args(ToolArgs):
@@ -166,6 +173,12 @@ class Monitor(Tool):
         except re.error as error:
             return ToolResult(ok=False, content=f"Invalid regex: {error}")
         seen = entry.total_lines  # output printed from now on counts as new
+        tracker = ProgressTracker(
+            lambda progress: context.emit(
+                "tool_progress", {"source": "monitor", "name": args.name, **progress}
+            )
+        )
+        fed = entry.total_lines
         deadline = asyncio.get_running_loop().time() + args.timeout_s
         outcome = "timeout"
         while True:
@@ -178,6 +191,11 @@ class Monitor(Tool):
             if asyncio.get_running_loop().time() >= deadline:
                 break
             await asyncio.sleep(0.2)
+            news = max(entry.total_lines - fed, 0)
+            if news:
+                tracker.feed("\n".join(list(entry.lines)[-news:]) + "\n")
+                fed = entry.total_lines
+            await tracker.tick()
         fresh = max(entry.total_lines - seen, 0)
         shown = list(entry.lines)[-fresh:] if fresh else []
         text, _ = context.cap_output("\n".join(shown), "shell")
@@ -186,7 +204,12 @@ class Monitor(Tool):
             "exited": f"exited ({entry.process.returncode})",
             "timeout": f"timed out after {args.timeout_s}s; still running",
         }[outcome]
-        return ToolResult(ok=True, content=f"[{state}]\n{text}" if text else f"[{state}]")
+        trouble = (
+            "\n[the output shows trouble: look at the Traceback / error lines above]"
+            if FAILURE_SIGNS.search(text)
+            else ""
+        )
+        return ToolResult(ok=True, content=(f"[{state}]\n{text}" if text else f"[{state}]") + trouble)
 
 
 class StopBackground(Tool):

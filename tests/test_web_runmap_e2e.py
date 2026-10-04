@@ -212,6 +212,34 @@ def test_activity_line_and_run_totals(
         )
         page.wait_for_selector("[role=status]:has-text('Running tests')")
         assert "tests/test_masking.py" in status.first.inner_text()
+        # A running command's newest output line, progress figure and quiet time show on the line (D-219).
+        publish(
+            EventType.TOOL_PROGRESS,
+            {
+                "source": "command",
+                "line": "tests/test_masking.py::test_pan PASSED [ 40%]",
+                "percent": 40.0,
+                "lines": 12,
+                "elapsed_s": 31,
+                "stalled_s": None,
+            },
+        )
+        page.wait_for_selector("[role=status]:has-text('test_pan PASSED')")
+        assert "40%" in status.first.inner_text()
+        assert page.locator("[data-testid=activity-progress]").get_attribute("aria-valuenow") == "40"
+        publish(
+            EventType.TOOL_PROGRESS,
+            {
+                "source": "command",
+                "line": "building",
+                "percent": None,
+                "lines": 13,
+                "elapsed_s": 190,
+                "stalled_s": 130,
+            },
+        )
+        page.wait_for_selector("[role=status]:has-text('no output for 2 min')")
+        assert page.locator("[data-testid=activity-progress]").count() == 0  # no figure on that line: no bar
         publish(
             EventType.TOOL_CALL_FINISHED,
             {"id": "t1", "name": "run_tests", "ok": True, "summary": "run tests", "duration_s": 3.1},

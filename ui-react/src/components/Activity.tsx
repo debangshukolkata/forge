@@ -95,11 +95,13 @@ export function ActivityLine({ forge }: { forge: Forge }) {
   const now = useNow(running);
   if (!running || !state.workspace) return null;
   const task = state.tasks?.find((t) => t.id === state.current_task);
+  const progress = activity.kind === "tool" ? activity.progress : undefined;
   let label: string;
   let detail: string | undefined;
   let loader: LoaderStyle;
   if (activity.kind === "tool" && activity.tool) {
     ({ label, detail, loader } = toolActivity(activity.tool.name, activity.tool.summary));
+    if (activity.progress?.line) detail = activity.progress.line; // what the command printed last
     const helper = [...forge.timeline.items].reverse().find((item) => item.kind === "tool" && item.agent && item.state === "running");
     if (activity.tool.name === "spawn_subagent" && helper?.kind === "tool" && helper.agent) {
       label = `${roleLabel(helper.agent.role)} is working`;
@@ -134,6 +136,25 @@ export function ActivityLine({ forge }: { forge: Forge }) {
       <div className="min-w-0 flex-1 text-[13px]">
         <span className={cx("font-medium", activity.kind === "waiting" ? "text-warn" : "text-fg")}>{label}</span>
         {detail && <span className="ml-2 truncate font-mono text-[12px] text-fg-muted">{detail}</span>}
+        {progress?.percent != null && (
+          <span className="ml-2 font-mono text-[12px] tabular-nums text-accent">{Math.round(progress.percent)}%</span>
+        )}
+        {progress?.stalled_s != null && (
+          <span className="ml-2 text-[12px] text-warn">no output for {Math.floor(progress.stalled_s / 60)} min</span>
+        )}
+        {progress?.percent != null && (
+          <div className="mt-1 h-0.5 w-full overflow-hidden rounded bg-raised">
+            <div
+              data-testid="activity-progress"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress.percent)}
+              className="h-full bg-accent transition-[width] duration-500"
+              style={{ width: `${Math.min(100, Math.max(0, progress.percent))}%` }}
+            />
+          </div>
+        )}
       </div>
       {taskUsage && (
         <span className="shrink-0 flex items-center gap-1.5" title="Cost and time on the current task">

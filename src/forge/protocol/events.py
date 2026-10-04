@@ -49,6 +49,9 @@ class EventType(StrEnum):
     )
     AGENT_FINISHED = "agent_finished"
     SUBAGENT_STEP = "subagent_step"  # a step of a running subagent (tool started/finished, thinking) (D-179)
+    TOOL_PROGRESS = (
+        "tool_progress"  # a running command or monitor: newest output line, progress, stall (D-219)
+    )
     NOTICE = "notice"  # informational: retries, fallbacks, queued input, slash-command output
     ERROR = "error"
 

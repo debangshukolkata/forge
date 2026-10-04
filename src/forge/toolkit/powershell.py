@@ -10,18 +10,22 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import codecs
 import contextlib
 import os
 import re
 import shutil
 import sys
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import psutil
 
 from forge.safety.sandbox import SandboxedProcess, spawn_low_integrity
+from forge.toolkit.progress import ProgressTracker
 
 # CreateProcess limits a command line to 32,767 characters; base64 of UTF-16 needs ~2.7x the script.
 MAX_SCRIPT_CHARS = 11_000
@@ -116,7 +120,13 @@ def kill_tree(pid: int) -> None:
 
 
 async def run_powershell(
-    command: str, cwd: Path, env: dict[str, str], timeout_s: float, scratch_dir: Path, sandboxed: bool = False
+    command: str,
+    cwd: Path,
+    env: dict[str, str],
+    timeout_s: float,
+    scratch_dir: Path,
+    sandboxed: bool = False,
+    on_progress: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
 ) -> CommandOutcome:
     scratch_dir.mkdir(parents=True, exist_ok=True)
     cwd_file = scratch_dir / f"cwd-{uuid.uuid4().hex}.txt"
@@ -131,13 +141,18 @@ async def run_powershell(
         )
     process = await start_process(script, cwd, env, sandboxed)
     chunks: list[bytes] = []
+    tracker = ProgressTracker(on_progress) if on_progress is not None else None
+    decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
 
     async def collect() -> None:
         assert process.stdout is not None
         while block := await process.stdout.read(65536):
             chunks.append(block)
+            if tracker is not None:
+                tracker.feed(decoder.decode(block))
 
     reader = asyncio.create_task(collect())
+    ticker = asyncio.create_task(tracker.run()) if tracker is not None else None
     timed_out = False
     try:
         await asyncio.wait_for(process.wait(), timeout_s)
@@ -148,6 +163,8 @@ async def run_powershell(
         kill_tree(process.pid)
         raise
     finally:
+        if ticker is not None:
+            ticker.cancel()
         try:
             await asyncio.wait_for(reader, 5)
         except (TimeoutError, asyncio.CancelledError):
