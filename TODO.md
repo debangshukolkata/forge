@@ -266,6 +266,6 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] Shell: indirect `.env` reads always ask (D-187); Forge's own variables hidden from commands (D-202)
 - [x] Tesseract: the `ocr_image` tool the model can call (D-203)
 - [ ] Gemini for real (video input): needs the parked provider (D-150) and the office laptop to verify; the drawer asks first (D-201), detect-only until then
-- [ ] Nothing is pushed yet: the redesign is 23 local commits on main, 953e2c5 onwards (push only when the user says so)
+- [x] Pushed 2026-10-04: the redesign (953e2c5 .. 38c6912, 24 commits) is on origin/main
 - [ ] The full test suite takes ~6 min (browser tests); consider splitting browser tests into a marker run if it gets slower
 - [ ] `write_secret_values` in config.py is no longer used by the web app (config.py holds the user's uncommitted Gemini edits; remove it with that work)
