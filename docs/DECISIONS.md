@@ -3058,3 +3058,10 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   submits; the next model call carries the answer; "Answer later" and the way back) and an added check in `test_react_subagent_steps_are_nested`.
 - Not deployed to the running server when built (the user's session was in progress): the UI change reaches a browser on its next reload
   and the Python side is unchanged by this entry.
+
+### D-215 — Approval card layout with long commands (user screenshot 2026-10-04)
+- A long answer such as "Always allowed 'python "C:\...\search.py" "reading list…"'" squeezed the title ("Allow run_command?") to nothing, so the two
+  overlapped, and the "Always allow <command>" button wrapped into a tall pill with centred text.
+- Now: the answer badge is capped at 40% of the header and cut with an ellipsis (the full text is its tooltip); the title keeps the rest and never
+  collapses; "Always allow <command>" is its own full-width, left-aligned row with the command cut on one line (full command as tooltip).
+- Test: `tests/test_web_approval_e2e.py` (the model asks to run a long command; the card is measured: no overlap, one-line button).

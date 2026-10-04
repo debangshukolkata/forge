@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from contextlib import contextmanager
 
 import httpx2
 import pytest
@@ -45,6 +46,34 @@ def model_requests() -> list[dict[str, object]]:
     return []
 
 
+@contextmanager
+def serve(handler, home):  # type: ignore[no-untyped-def]
+    """A real Forge web server whose model answers through `handler` (network layer)."""
+    port = free_port(0)
+    security = ServerSecurity(port=port)
+    manager = WebSessionManager(
+        home,
+        lambda ws: SessionHost(
+            mocked_router(handler),
+            EventBus(ws.forge_dir / "transcripts" / "events.jsonl", redactor=Redactor()),
+            workspace=ws,
+        ),
+    )
+    app = create_app(manager, security)
+    config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", ws="websockets-sansio")
+    uv = uvicorn.Server(config)
+    thread = threading.Thread(target=uv.run, daemon=True)
+    thread.start()
+    deadline = time.monotonic() + 15
+    while not uv.started and time.monotonic() < deadline:
+        time.sleep(0.05)
+    try:
+        yield security
+    finally:
+        uv.should_exit = True
+        thread.join(timeout=10)
+
+
 @pytest.fixture
 def server(isolated_forge_home, model_requests):  # type: ignore[no-untyped-def]
     def handler(request: httpx2.Request) -> httpx2.Response:
@@ -53,32 +82,8 @@ def server(isolated_forge_home, model_requests):  # type: ignore[no-untyped-def]
             return reply(request, responses_body([function_call_output("ask_user", ASK_ARGS)]))
         return reply(request, responses_body([text_output("Going with the answer you gave.")]))
 
-    port = free_port(0)
-    security = ServerSecurity(port=port)
-    manager = WebSessionManager(
-        isolated_forge_home,
-        lambda ws: SessionHost(
-            mocked_router(handler),
-            EventBus(ws.forge_dir / "transcripts" / "events.jsonl", redactor=Redactor()),
-            workspace=ws,
-        ),
-    )
-    config = uvicorn.Config(
-        create_app(manager, security),
-        host="127.0.0.1",
-        port=port,
-        log_level="warning",
-        ws="websockets-sansio",
-    )
-    uv = uvicorn.Server(config)
-    thread = threading.Thread(target=uv.run, daemon=True)
-    thread.start()
-    deadline = time.monotonic() + 15
-    while not uv.started and time.monotonic() < deadline:
-        time.sleep(0.05)
-    yield security
-    uv.should_exit = True
-    thread.join(timeout=10)
+    with serve(handler, isolated_forge_home) as security:
+        yield security
 
 
 def open_project_and_ask(p, server, workspace):  # type: ignore[no-untyped-def]  # noqa: F811

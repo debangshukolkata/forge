@@ -234,8 +234,16 @@ function AskCard({ kind, icon, title, answered, children }: { kind: "approval" |
         <span className={cx("flex h-7 w-7 items-center justify-center rounded-full", answered === undefined ? "bg-warn-soft text-warn" : "bg-raised text-fg-muted")}>
           {icon}
         </span>
-        <h4 className="min-w-0 flex-1 font-semibold">{title}</h4>
-        {answered !== undefined && <Badge>{answered || "Answered"}</Badge>}
+        <h4 className="min-w-0 flex-1 break-words font-semibold">{title}</h4>
+        {answered !== undefined && (
+          <span
+            data-testid="answered-badge"
+            title={answered || "Answered"}
+            className="min-w-0 max-w-[40%] shrink-0 truncate rounded-full border border-border bg-raised px-2 py-0.5 text-[11.5px] font-medium text-fg-muted"
+          >
+            {answered || "Answered"}
+          </span>
+        )}
       </div>
       {/* min-w-0: a fieldset's default min-width is its widest content, so a long code line would widen the whole chat. */}
       <fieldset disabled={answered !== undefined} className="min-w-0 space-y-3">
@@ -282,15 +290,22 @@ function ApprovalCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
         <Button variant="primary" onClick={() => reply({ kind: "approve", request_id: p.id, scope: "once" }, "Allowed once")}>
           Allow once
         </Button>
-        {prefix && (
-          <Button onClick={() => reply({ kind: "approve", request_id: p.id, scope: "prefix" }, `Always allowed '${prefix}'`)}>
-            Always allow <span className="font-mono">{prefix}</span>
-          </Button>
-        )}
         <Button variant="danger" onClick={() => reply({ kind: "reject", request_id: p.id, instruction: text || null }, "Denied")}>
           Deny
         </Button>
       </div>
+      {prefix && (
+        <button
+          type="button"
+          data-testid="always-allow"
+          title={prefix}
+          onClick={() => reply({ kind: "approve", request_id: p.id, scope: "prefix" }, `Always allowed '${prefix}'`)}
+          className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-border bg-raised px-3 py-2 text-left text-[13px] font-medium transition-colors duration-150 hover:border-border-strong hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <span className="shrink-0">Always allow</span>
+          <span className="min-w-0 flex-1 truncate font-mono text-[12px] font-normal text-fg-muted">{prefix}</span>
+        </button>
+      )}
     </AskCard>
   );
 }
