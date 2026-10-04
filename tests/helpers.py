@@ -18,6 +18,10 @@ FAKE_SECRETS = {
     "AZURE_OPENAI_API_VERSION": "2025-04-01-preview",
     "AZURE_OPENAI_DEPLOYMENT": "primary-deployment",
     "AZURE_OPENAI_SECONDARY_DEPLOYMENT": "secondary-deployment",
+    "AZURE_FALLBACK_ENDPOINT": "https://unit-test-fallback.openai.azure.com/",
+    "AZURE_FALLBACK_API_KEY": "unit-test-fallback-key-0123456789",
+    "AZURE_FALLBACK_API_VERSION": "2025-04-01-preview",
+    "AZURE_FALLBACK_DEPLOYMENT": "fallback-deployment",
 }
 
 Handler = Callable[[httpx2.Request], httpx2.Response]

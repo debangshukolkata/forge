@@ -21,7 +21,7 @@ from forge.web.server import create_app
 from tests.helpers import default_config, mocked_router
 from tests.test_web import direct_session
 
-BOTH = {"azure": {"status": "ok", "models": {"gpt51": True, "gpt41": True}}}
+BOTH = {"azure": {"status": "ok", "models": {"gpt51": True, "gpt41": True, "gpt4o": True}}}
 
 
 def by_role(plan: dict[str, object]) -> dict[str, dict[str, str]]:

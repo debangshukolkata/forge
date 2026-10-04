@@ -219,3 +219,40 @@ def test_connection_errors_name_the_real_cause() -> None:
     assert "SSLCertVerificationError" in mapped and "Windows certificate store" in mapped
     assert "resolved" in connection_hint("getaddrinfo failed")
     assert "HTTPS_PROXY" in connection_hint("ConnectTimeout: timed out")
+
+
+async def test_fallback_without_its_env_values_is_skipped_and_the_original_error_stands() -> None:
+    from forge.config import Secrets
+    from forge.llm.router import LLMRouter
+    from tests.helpers import default_config
+
+    config = default_config()
+    assert config.llm.roles.fallback == "gpt4o"
+    values = {
+        "AZURE_OPENAI_ENDPOINT": "https://e",
+        "AZURE_OPENAI_API_KEY": "k",
+        "AZURE_OPENAI_API_VERSION": "v",
+    }
+    values |= {"AZURE_OPENAI_DEPLOYMENT": "primary-deployment"}  # nothing for AZURE_FALLBACK_*
+    router = LLMRouter(config, Secrets(values, None))
+
+    assert not router._configured("gpt4o")
+    assert router._configured("gpt51")
+
+
+async def test_fallback_model_uses_its_own_endpoint_key_and_version() -> None:
+    from forge.config import Secrets
+    from tests.helpers import default_config
+
+    config = default_config()
+    own = {
+        "AZURE_FALLBACK_ENDPOINT": "https://other.openai.azure.com/",  # check_secrets: fake
+        "AZURE_FALLBACK_API_KEY": "fallback-key",  # check_secrets: fake
+        "AZURE_FALLBACK_API_VERSION": "2025-04-01-preview",
+        "AZURE_FALLBACK_DEPLOYMENT": "fallback-deployment",
+    }
+    provider = AzureOpenAIProvider(
+        "gpt4o", config.llm.models["gpt4o"], config.llm.providers.azure, Secrets(own, None)
+    )
+    assert provider.deployment == "fallback-deployment"
+    assert "other.openai.azure.com" in str(provider._client.base_url)

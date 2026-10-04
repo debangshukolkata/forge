@@ -172,3 +172,29 @@ def test_write_secret_values_registers_for_redaction_immediately(
     )
 
     assert redactor.redact("key typed-just-now-0123456789") == "key [REDACTED:AZURE_OPENAI_API_KEY]"
+
+
+def test_fallback_model_is_optional_for_the_setup_guide() -> None:
+    from forge.config import model_secret_names
+    from forge.doctor import optional_models, required_secret_names
+
+    config = load_config()
+    assert optional_models(config) == ["gpt4o"]
+    fallback_names = model_secret_names(config, config.llm.models["gpt4o"])
+    assert fallback_names == {
+        "AZURE_FALLBACK_ENDPOINT",
+        "AZURE_FALLBACK_API_KEY",
+        "AZURE_FALLBACK_API_VERSION",
+        "AZURE_FALLBACK_DEPLOYMENT",
+    }
+    assert not fallback_names & required_secret_names(config)
+
+
+def test_own_resource_names_go_together() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    from forge.config import ModelConfig
+
+    with pytest.raises(ValidationError):
+        ModelConfig(label="x", deployment_env="D", endpoint_env="E", context_window=1, max_output=1)

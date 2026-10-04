@@ -42,9 +42,9 @@ class AzureOpenAIProvider:
         self.fell_back_to_chat = False
         self._served_model: str | None = None
         self._client = AsyncAzureOpenAI(
-            azure_endpoint=secrets.require(provider_config.endpoint_env),
-            api_key=secrets.require(provider_config.api_key_env),
-            api_version=secrets.require(provider_config.api_version_env),
+            azure_endpoint=secrets.require(model.endpoint_env or provider_config.endpoint_env),
+            api_key=secrets.require(model.api_key_env or provider_config.api_key_env),
+            api_version=secrets.require(model.api_version_env or provider_config.api_version_env),
             timeout=provider_config.timeout_s,
             max_retries=0,  # Forge's own retry layer honours Retry-After and reports retries to the UI
             http_client=http_client,

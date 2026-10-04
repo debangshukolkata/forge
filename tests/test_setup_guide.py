@@ -69,8 +69,13 @@ def test_it_names_what_forge_reads_and_what_is_required(isolated_forge_home: Pat
         "AZURE_OPENAI_API_KEY",
         "AZURE_OPENAI_DEPLOYMENT",
         "AZURE_OPENAI_SECONDARY_DEPLOYMENT",
+        "AZURE_FALLBACK_ENDPOINT",
+        "AZURE_FALLBACK_API_VERSION",
+        "AZURE_FALLBACK_API_KEY",
+        "AZURE_FALLBACK_DEPLOYMENT",
     }
-    assert all(variables[n]["required"] for n in azure)
+    # The fallback model's four values are optional: without them Forge works, it just has no fallback.
+    assert all(variables[n]["required"] == (not n.startswith("AZURE_FALLBACK")) for n in azure)
     # Two databases, each with its own variable and its own words; both optional.
     assert (
         variables["LOCAL_PG_URL"]["group"] == "Forge database" and not variables["LOCAL_PG_URL"]["required"]

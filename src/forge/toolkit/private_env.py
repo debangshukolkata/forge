@@ -14,7 +14,7 @@ from pathlib import Path
 
 from dotenv import dotenv_values
 
-from forge.config import env_file_path, forge_home, load_config
+from forge.config import env_file_path, forge_home, load_config, model_secret_names
 from forge.errors import ForgeError
 
 ALWAYS = ("FORGE_ENV_FILE", "FORGE_HOME")
@@ -33,7 +33,8 @@ def _names(home: str, env_file: str, env_file_mtime: int) -> frozenset[str]:
         return frozenset(names)
     azure = config.llm.providers.azure
     names |= {azure.endpoint_env, azure.api_key_env, azure.api_version_env}
-    names |= {model.deployment_env for model in config.llm.models.values() if model.deployment_env}
+    for model in config.llm.models.values():
+        names |= model_secret_names(config, model)
     gemini = getattr(config.llm.providers, "gemini", None)  # present only with the Gemini provider
     if gemini is not None:
         names |= {gemini.project_env, gemini.location_env}

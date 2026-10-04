@@ -2896,3 +2896,15 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Drawer (user request 2026-10-04): the Gemini row now makes one real call once the user answers Yes (was detect-only).
   If it fails for any reason (names missing in .env, `google-genai` missing, no credentials, model 404), the row shows the
   reason and an (i) icon that opens the numbered steps (`GEMINI_STEPS` in `environment/checks.py`). Any check can carry `steps`.
+
+### D-206 — A second Azure OpenAI resource as the fallback model (user decision 2026-10-04)
+- Context: the user has another resource (`gpt-4o-2024-11-20`, vision works, own quota). Value is resilience: when the first
+  resource returns 429/5xx after the retries, the router's fallback role goes to a resource with separate quota.
+- Chosen: a model entry may name its own `endpoint_env` / `api_key_env` / `api_version_env` (all three or none, Azure only);
+  new model `gpt4o` (`AZURE_FALLBACK_ENDPOINT`, `_API_KEY`, `_API_VERSION`, `_DEPLOYMENT`) is the default `fallback` role.
+  gpt-4o is not used for any other role: accuracy first (D-161).
+- Optional by design: a model used only as the fallback is not "required" (setup guide rows are optional, doctor skips it
+  when unset, the router skips it and re-raises the original error). A machine without the four values behaves as before.
+- The user's own `.env` lowercase entries (`openai_api_*`, `deployment_name`) were renamed to these names and
+  `openai_api_type` was removed (implied by `provider: azure`); a notebook that read the lowercase names must be updated.
+- Live check (2026-10-04): gpt41, gpt51 and gpt4o all answer; gpt-4o uses the Chat Completions API (auto-fallback from Responses).

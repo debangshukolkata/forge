@@ -29,6 +29,18 @@ llm:
       reasoning_effort: null      # not a reasoning model
       vision: true
       price_per_mtok: { input: 2.0, cached_input: 0.5, output: 8.0 }
+    gpt4o:                        # fallback only (D-206): another Azure OpenAI resource, so its quota is separate
+      provider: azure
+      label: gpt-4o
+      deployment_env: AZURE_FALLBACK_DEPLOYMENT
+      endpoint_env: AZURE_FALLBACK_ENDPOINT
+      api_key_env: AZURE_FALLBACK_API_KEY
+      api_version_env: AZURE_FALLBACK_API_VERSION
+      context_window: 128000
+      max_output: 16384
+      reasoning_effort: null      # not a reasoning model
+      vision: true
+      price_per_mtok: { input: 2.5, cached_input: 1.25, output: 10.0 }   # USD; confirm tenant pricing
 
   roles:                          # DECISIONS D-024
     coder: gpt51
@@ -37,7 +49,7 @@ llm:
     vision: gpt51
     reviewer: gpt41
     judge: gpt41
-    fallback: gpt41
+    fallback: gpt4o
 
   role_reasoning_effort: {}       # overrides the model's default effort for a role (none: accuracy first, D-161)
 

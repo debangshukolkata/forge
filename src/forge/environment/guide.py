@@ -52,6 +52,13 @@ def _variables(config: ForgeConfig) -> tuple[list[Group], list[Variable]]:
         (azure.api_key_env, "<key>", "The key for that resource."),
     ]
     for model in config.llm.models.values():
+        if model.endpoint_env and model.api_key_env and model.api_version_env:
+            own = f"{model.label}, on its own Azure OpenAI resource (the optional fallback)"
+            azure_rows += [
+                (model.endpoint_env, "https://<resource>.openai.azure.com/", f"The endpoint of {own}."),
+                (model.api_version_env, "<api version>", f"The API version for {model.label}."),
+                (model.api_key_env, "<key>", f"The key for {model.label}'s resource."),
+            ]
         if model.deployment_env:
             azure_rows.append(
                 (model.deployment_env, "<deployment name>", f"The deployment name of {model.label}.")

@@ -64,6 +64,11 @@ class ModelConfig(_Strict):
     # stays indirected through .env like a secret). Gemini: no deployment to look up — model_name is the
     # literal model string (e.g. "gemini-2.5-pro"), safe in config.yaml directly per D-014.
     deployment_env: str | None = None
+    # Azure only: a model on another Azure OpenAI resource names its own endpoint, key and API version (all
+    # three, or none to use providers.azure). Used by the fallback model, whose separate quota is the point.
+    endpoint_env: str | None = None
+    api_key_env: str | None = None
+    api_version_env: str | None = None
     model_name: str | None = None
     context_window: int = Field(gt=0)
     max_output: int = Field(gt=0)
@@ -78,6 +83,9 @@ class ModelConfig(_Strict):
             raise ValueError("an azure model needs deployment_env")
         if self.provider == "gemini" and not self.model_name:
             raise ValueError("a gemini model needs model_name")
+        own_resource = [self.endpoint_env, self.api_key_env, self.api_version_env]
+        if any(own_resource) and not (all(own_resource) and self.provider == "azure"):
+            raise ValueError("endpoint_env, api_key_env and api_version_env go together, on an azure model")
         return self
 
 
@@ -252,6 +260,21 @@ class ForgeConfig(BaseModel):
 def forge_home() -> Path:
     configured = os.environ.get("FORGE_HOME")
     return Path(configured).expanduser() if configured else Path.home() / ".forge"
+
+
+def model_secret_names(config: ForgeConfig, model: ModelConfig) -> set[str]:
+    """The .env names one model needs: its own endpoint, key and version when it names them."""
+    names: set[str] = set()
+    if model.provider == "azure":
+        azure = config.llm.providers.azure
+        names |= {
+            model.endpoint_env or azure.endpoint_env,
+            model.api_key_env or azure.api_key_env,
+            model.api_version_env or azure.api_version_env,
+        }
+    if model.deployment_env:
+        names.add(model.deployment_env)
+    return names
 
 
 def permission_rules() -> PermissionRules:

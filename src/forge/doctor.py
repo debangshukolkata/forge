@@ -11,7 +11,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from forge.config import ROLES, ForgeConfig, Secrets, env_file_path, forge_home, load_config, load_secrets
+from forge.config import (
+    ROLES,
+    ForgeConfig,
+    Secrets,
+    env_file_path,
+    forge_home,
+    load_config,
+    load_secrets,
+    model_secret_names,
+)
 from forge.errors import ForgeError
 from forge.llm.base import ChatRequest, Message
 from forge.llm.router import LLMRouter
@@ -102,12 +111,18 @@ def required_secret_names(config: ForgeConfig) -> set[str]:
     other's env vars. Gemini asks for nothing here: its credentials are ADC (found by the SDK itself,
     never stored by Forge) and its project/location env vars are optional."""
     needed: set[str] = set()
-    models_in_use = [config.llm.models[key] for key in _models_in_use(config)]
-    if any(model.provider == "azure" for model in models_in_use):
-        azure = config.llm.providers.azure
-        needed |= {azure.endpoint_env, azure.api_key_env, azure.api_version_env}
-    needed |= {model.deployment_env for model in models_in_use if model.deployment_env}
+    optional = set(optional_models(config))
+    for key in _models_in_use(config):
+        if key not in optional:
+            needed |= model_secret_names(config, config.llm.models[key])
     return needed
+
+
+def optional_models(config: ForgeConfig) -> list[str]:
+    """Models only the fallback role uses: without their .env values Forge works, it just has no fallback."""
+    roles = config.llm.roles
+    used_elsewhere = {getattr(roles, role) for role in ROLES if role != "fallback"}
+    return [key for key in [roles.fallback] if key and key not in used_elsewhere]
 
 
 def missing_secret_names(config: ForgeConfig, secrets: Secrets) -> list[str]:
@@ -130,6 +145,8 @@ async def check_models(config: ForgeConfig, secrets: Secrets) -> list[CheckResul
     results = []
     for model_key in _models_in_use(config):
         model = config.llm.models[model_key]
+        if model_key in optional_models(config) and not _all_set(model_secret_names(config, model), secrets):
+            continue  # an optional fallback that was never set up is not a failure
         started = time.perf_counter()
         try:
             router.set_role_model("coder", model_key)
@@ -179,6 +196,10 @@ def check_databases(config: ForgeConfig, secrets: Secrets) -> list[CheckResult]:
             )
         results.append(CheckResult(label, status, detail))
     return results
+
+
+def _all_set(names: set[str], secrets: Secrets) -> bool:
+    return all(secrets.get(name) for name in names)
 
 
 def _models_in_use(config: ForgeConfig) -> list[str]:

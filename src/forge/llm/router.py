@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from forge.config import ROLES, ForgeConfig, Secrets
+from forge.config import ROLES, ForgeConfig, Secrets, model_secret_names
 from forge.errors import ConfigError, LLMError
 from forge.llm.azure_openai import AzureOpenAIProvider
 from forge.llm.base import ChatRequest, LLMProvider, LLMResponse, TextDeltaCallback
@@ -58,6 +58,13 @@ class LLMRouter:
             )
         self.role_models[role] = model_key
 
+    def _configured(self, model_key: str) -> bool:
+        """A fallback whose .env values were never added is not available; the original error stands."""
+        if self._provider_factory != self._create_provider:
+            return True  # a test supplied its own providers
+        names = model_secret_names(self.config, self.config.llm.models[model_key])
+        return all(self._secrets.get(name) for name in names)
+
     def provider(self, model_key: str) -> LLMProvider:
         if model_key not in self._providers:
             self._providers[model_key] = self._provider_factory(model_key)
@@ -87,7 +94,12 @@ class LLMRouter:
             response = await self._call_with_retries(role, model_key, request, on_text_delta)
         except LLMError as error:
             fallback = self.role_models.get("fallback")
-            if not error.retryable or fallback is None or fallback == model_key:
+            if (
+                not error.retryable
+                or fallback is None
+                or fallback == model_key
+                or not self._configured(fallback)
+            ):
                 raise
             await self._notice(
                 "fallback",
