@@ -196,8 +196,10 @@ def _skill(args: argparse.Namespace) -> int:
 
 async def _doctor(offline: bool) -> int:
     from forge.doctor import render_results, run_doctor
+    from forge.tools.web_doctor import check_web_research
 
     results = await run_doctor(offline=offline)
+    results.insert(5, await check_web_research())  # after the basic checks, before config and models
     console = Console()
     console.print(describe())
     render_results(results, console.print)
