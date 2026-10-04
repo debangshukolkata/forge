@@ -34,7 +34,9 @@ def _parse(path: Path) -> Skill | None:
     match = FRONT.match(text)
     meta = dict(re.findall(r"^(\w+):\s*(.+)$", match.group(1), re.M)) if match else {}
     name = meta.get("name", path.parent.name).strip()
-    description = meta.get("description", text.strip().splitlines()[0] if text.strip() else "").strip()
+    description = (
+        meta.get("description", text.strip().splitlines()[0] if text.strip() else "").strip().strip("\"'")
+    )
     return Skill(name, description, path) if name else None
 
 

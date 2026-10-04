@@ -2925,4 +2925,10 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Checked live (listing only, nothing installed): nextlevelbuilder/ui-ux-pro-max-skill (7 skills, several with Python scripts) and
   leonxlnx/taste-skill (many single-file skills) both parse. Many of those skills assume Claude/Codex tools (image generation,
   a skill's own search script), so some instructions will not apply in Forge.
+- **Found by a live run (2026-10-04, ui-ux-pro-max installed for real):** Mode B refuses to run or read anything outside its code
+  folder, so the skill's script in `<home>/skills` was blocked (safety invariant 2 holds; no exception made). Fix: `load_skill`
+  copies the skill's folder into `<code folder>/.forge/skills/<name>/` (never delivered: `.forge/` is in the default excludes) and
+  tells the model that full path. Re-run: the model ran `search.py` from the copy and got the design-system recommendation.
+  Side finding: a workspace created under a Windows 8.3 short folder name (`DEBANG~1`) makes the path check treat the resolved long
+  path as outside the workspace; not fixed (rare), use a normal path.
 - Not built: install from the web UI, private repositories, updating an installed skill, a skill marketplace.

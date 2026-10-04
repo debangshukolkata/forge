@@ -157,6 +157,12 @@ def main(argv: list[str] | None = None) -> int:
     return _interactive(args.workspace, direct=args.direct)
 
 
+def _printable(console: Console, text: str) -> str:
+    """Third-party text can hold characters the Windows console cannot show; that must not stop the output."""
+    encoding = console.encoding or "utf-8"
+    return text.encode(encoding, errors="replace").decode(encoding)
+
+
 def _skill(args: argparse.Namespace) -> int:
     from forge.config import forge_home
     from forge.parity import skill_install
@@ -166,7 +172,7 @@ def _skill(args: argparse.Namespace) -> int:
     skills_root = forge_home() / "skills"
     if args.skill_command == "list":
         for skill in sorted(discover(skills_root).values(), key=lambda s: s.name):
-            console.print(f"{skill.name}: {skill.description}", markup=False)
+            console.print(_printable(console, f"{skill.name}: {skill.description}"), markup=False)
         return 0
     if args.skill_command == "remove":
         removed = skill_install.remove(args.name, skills_root)
@@ -174,10 +180,7 @@ def _skill(args: argparse.Namespace) -> int:
         return 0 if removed else 1
 
     def confirm(candidate: skill_install.Candidate) -> bool:
-        # A description can hold characters the Windows console cannot show; never let that stop the listing.
-        encoding = console.encoding or "utf-8"
-        shown = skill_install.summary(candidate).encode(encoding, errors="replace").decode(encoding)
-        console.print(shown, markup=False)
+        console.print(_printable(console, skill_install.summary(candidate)), markup=False)
         if args.list:
             return False
         return args.yes or input("Install this skill? [y/N] ").strip().lower() in ("y", "yes")
@@ -187,7 +190,7 @@ def _skill(args: argparse.Namespace) -> int:
     except ForgeError as error:
         console.print(str(error), markup=False)
         return 1
-    console.print("\n".join(lines), markup=False)
+    console.print(_printable(console, "\n".join(lines)), markup=False)
     return 0
 
 
