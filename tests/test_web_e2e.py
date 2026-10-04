@@ -637,10 +637,22 @@ def test_react_todo_list(server: ServerSecurity, workspace: Workspace) -> None:
         strip = page.locator("button[aria-expanded]:has-text('Todo')")
         strip.wait_for()
         assert "1/3" in strip.inner_text()  # the latest list, not the first
-        items = page.locator("ol[aria-label='Todo list']").first
+        # One quiet line by default: progress and the item in progress; the list is not shown until asked for (D-216).
+        page.wait_for_selector("button[aria-expanded=false]:has-text('Add export_csv()')")
+        lists = page.locator("ol[aria-label='Todo list']")
+        before = lists.count()  # the side panel may show its own copy; the strip adds one only when open
+        page.screenshot(path=str(shots / "todo-strip-collapsed-light.png"))
+        strip.click()  # open: the whole list, in small text
+        page.wait_for_function(
+            "n => document.querySelectorAll(\"ol[aria-label='Todo list']\").length === n + 1", arg=before
+        )
+        items = lists.first
         assert "Add export_csv()" in items.inner_text() and "Write tests" in items.inner_text()
+        assert items.locator("li").first.evaluate("e => parseFloat(getComputedStyle(e).fontSize)") <= 12
         page.screenshot(path=str(shots / "todo-strip-light.png"))
-        strip.click()  # collapse: progress and the item in progress
+        page.reload()  # the choice is remembered
+        page.wait_for_selector("button[aria-expanded=true]:has-text('Todo')")
+        page.locator("button[aria-expanded]:has-text('Todo')").click()
         page.wait_for_selector("button[aria-expanded=false]:has-text('Add export_csv()')")
         page.click("[role=tab]:has-text('Tasks')")
         page.wait_for_selector("text=Forge's todo list")
@@ -874,3 +886,38 @@ def test_react_project_list_shows_what_forge_remembers(
         page.screenshot(path=str(shots / "projects-memory-light.png"))
         browser.close()
     assert not problems, problems
+
+
+def test_react_todo_strip_folds_when_everything_is_done(server: ServerSecurity, workspace: Workspace) -> None:
+    """D-216: even for someone who keeps the list open, a finished list folds to one line."""
+    import asyncio
+
+    from forge.protocol.events import EventBus, EventType
+
+    async def script() -> None:
+        bus = EventBus(workspace.forge_dir / "transcripts" / "events.jsonl", redactor=Redactor())
+        await bus.publish(EventType.USER_MESSAGE, {"text": "Add a CSV export"})
+        done = [
+            {"content": "Add export_csv()", "status": "completed"},
+            {"content": "Write tests", "status": "completed"},
+        ]
+        await bus.publish(EventType.TODO_UPDATED, {"items": done})
+
+    asyncio.run(script())
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+        page.add_init_script("window.localStorage.setItem('forge.todo.open', '1')")  # this user keeps it open
+        page.goto(server.url())
+        page.wait_for_selector("text=Start something new.")
+        page.evaluate(
+            "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'},"
+            " body: JSON.stringify({workspace: p})})",
+            str(workspace.root),
+        )
+        page.reload()
+        page.wait_for_selector("button[aria-expanded=false]:has-text('2/2'):has-text('All done')")
+        browser.close()

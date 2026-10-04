@@ -3065,3 +3065,12 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Now: the answer badge is capped at 40% of the header and cut with an ellipsis (the full text is its tooltip); the title keeps the rest and never
   collapses; "Always allow <command>" is its own full-width, left-aligned row with the command cut on one line (full command as tooltip).
 - Test: `tests/test_web_approval_e2e.py` (the model asks to run a long command; the card is measured: no overlap, one-line button).
+
+### D-216 — The to-do strip is one line by default, in smaller text (user choice A, 2026-10-04)
+- Options discussed: A collapsed by default (chosen), B inline in the chat, C side panel only. Claude Code shows the checklist inline and the
+  active item on its status line (from memory, unverified); A is the closest without losing the list.
+- Now: the strip above the message box shows "Todo 3/6 · <item in progress>" in 12 px text; a click opens the whole list (12 px, smaller icons,
+  max height 10 rem); the choice is remembered in the browser (`forge.todo.open`, optional: blocked storage just means collapsed); when every
+  item is done it folds by itself ("Todo 6/6 · All done"). The side panel's Tasks tab keeps its normal size.
+- Tests: `test_react_todo_list` (collapsed first, opens, small text, remembered across a reload) and
+  `test_react_todo_strip_folds_when_everything_is_done`.
