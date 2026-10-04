@@ -23,10 +23,20 @@ original differ, this file wins. Tokens live in `ui-react/src/index.css`; shared
 - Cards 18 px radius with a 1 px `--border`; inputs 8 px; search is a pill; chips and badges are pills.
 - Top bar is frosted (`bg-surface/80` + backdrop blur). 150 ms colour transitions; reduced motion is respected.
 
+## Screens built on it (2026-10-03 / 2026-10-04)
+- **Landing screens** (sign-in, home, project list, account, new project, setup guide): large tight headlines, light and dark
+  tiles side by side on the home screen, 18 px cards. The home screen stacks on narrow windows.
+- **Environment drawer** (right side, 460 px; opens by itself on New project): one row per connection with a status word
+  (Connected / Failed / Warning / Not in use / Not tested yet), a Test button per row and Test all; nothing is tested until asked.
+- **Chat, "Conversation" look (D-189):** a centred 760 px column; your message a soft blue pill on the right; Forge's reply as
+  plain text; tool calls one quiet line each (IN / OUT blocks when opened, edits as inline diffs, read/search runs folded,
+  failures open); narration dim italic; a pill composer; Forge's todo list as a strip above it.
+- **Side panel and Run map:** the same tokens, dense sizes; no shadows on graph nodes.
+
 ## Not used from the original
 Photography tiles, the product drop-shadow, the two-row Apple nav, the configurator chips and the store grid (no product
 images in Forge). Hover is styled lightly because a desktop tool needs it, although the original documents none.
 
 ## Added by us (the original has none)
-Dark theme; error, validation and check states (ok / warn / fail / running) for the login form and the coming environment
-checks; the `ok` green token.
+Dark theme; error, validation and check states (ok / warn / fail / off / running / not tested) for the login form and the
+Environment drawer; the `ok` green token; the `tile` colours for the landing bands.

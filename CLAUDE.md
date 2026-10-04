@@ -40,7 +40,9 @@ The rules below still describe what goes into briefs and summaries.
 - `src/` layout: package at `src/forge/`. Module map follows spec §4.
 - The **engine is UI-agnostic**: it emits typed events and receives inputs through one interface
   (spec §15A.2). Terminal UI and web UI are thin clients. No `print()` in engine code.
-- Web UI = React in `ui-react/` (D-117); look and feel per docs/DESIGN.md (D-185: one blue accent, `ok` green for success only); `npm run build` writes `src/forge/web/react/`; commit source and build
+- Web UI = React in `ui-react/` (D-117); look and feel per docs/DESIGN.md (D-185: one blue accent, `ok` green for success only); the app has a local login
+  (D-184) and **keys are never typed into it**: the user edits the `.env` file, the first-run guide shows where and what goes
+  in it, the drawer tests connections only on request (D-204); `npm run build` writes `src/forge/web/react/`; commit source and build
   together. UI views derive their state from events (the Run map replays the event list), so a reopened
   project looks the same as a live one. Browser tests (`tests/test_web_e2e.py`, headless Edge) take screenshots
   to `test-artifacts/react-ui/` — look at them before reporting UI work done.
@@ -71,8 +73,10 @@ The rules below still describe what goes into briefs and summaries.
 - Postgres tests (`pg` marker, run by default) use the local Postgres (`LOCAL_PG_URL` in `.env`); skipped when
   unset or unreachable. They only create `forge_*` schemas/roles and drop them afterwards.
 - Tests never touch the real `%USERPROFILE%\.forge`; they set `FORGE_HOME` to a tmp dir.
-- Run (fast, parallel, ~1.5 min for everything): `.venv\Scripts\python -m pytest -q -n 12 --dist loadfile`
-  (`pytest-xdist`, dev only; `loadfile` keeps each test file on one worker). One module: `pytest tests/test_<module>*.py`.
+- Run (parallel, ~6 min for everything since ~20 browser tests each start Edge): `.venv\Scripts\python -m pytest -q -n 6 --dist loadfile`
+  (`pytest-xdist`, dev only; `loadfile` keeps each test file on one worker; with `-n 12` the load can make the local-Postgres
+  tests time out and skip). One module: `pytest tests/test_<module>*.py`. Browser-test fixtures take a free port from the OS
+  (`free_port(0)`); a test that waits on something a page re-does in the background must poll for it, not assert at once.
   Sequential: `.venv\Scripts\python -m pytest -q` (3.13) and `.venv314\Scripts\python -m pytest -q` (3.14);
   `-m live` for live tests. Also `ruff check .`, `ruff format --check .`, `mypy`, `scripts/check_secrets.py`.
 - The fixture repo's own suite runs under its own venv (`scripts/dev/setup_fixture_venv.ps1`).
@@ -80,7 +84,9 @@ The rules below still describe what goes into briefs and summaries.
 ## Safety invariants (never break; each has a test)
 1. Forge never writes to the user's original repo (code-level jail + OS-level low-integrity sandbox, D-050).
 2. In Mode B, Forge never reads outside the workspace and the profile folder.
-3. Secrets never reach the LLM, transcripts, memory files, events or the browser.
+3. Secrets never reach the LLM, transcripts, memory files, events or the browser. Nothing in the web app can write the `.env`
+   file or show a key (D-204); commands the model runs do not inherit Forge's own variables (D-202) and a read of the `.env`
+   by variable or quoted name always asks (D-187); saved tool outputs are redacted (D-195).
 4. DB writes only happen in the scratch schema for the current requirement.
 5. Forge cannot modify its own install folder or `config.yaml`.
 6. Actions Forge can't or mustn't do are handed to the user; if the user can't either, Forge proposes a

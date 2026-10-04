@@ -66,3 +66,8 @@ are folded into the spec itself as amendments (§0.2, tags `[A-n]`) and listed h
 - **§5.3 session budget cap, summariser effort (D-161):** default budget is 0 = no cap; the summariser role no longer
   runs at low reasoning effort. Cost is shown, never enforced, unless the user sets a cap.
 - **§4 module map (D-152/D-154):** superseded by docs/MODULES.md (tiers, MODULE.md per module).
+- **§15A web UI (D-184, D-185, D-186, D-204):** the web UI now starts with a local sign-in and a home screen, uses the Apple-style design of docs/DESIGN.md, asks for the settings on a first-run guide (where the `.env` file is, a template) instead of a form, and tests connections from a drawer only on request. Keys are never typed into the app.
+- **§9.5 databases (D-204):** two named databases in the UI: the **Forge database** (`LOCAL_PG_URL`, scratch schemas, the only one Forge writes to) and the read-only **Development database** (`DEV_PG_URL`); no "use one for both" option.
+- **§9.1 tool output (D-195):** the event carries a preview; the full result is saved redacted in `.forge/tool-output` and served on request.
+- **§13A vision (D-201, D-203):** Tesseract OCR is an optional tool (`ocr_image`) offered only after the user says it is installed and a test passes; Gemini is detect-only until its provider (D-150) is in.
+- **§14 shell safety (D-187, D-202):** a read of the `.env` by variable or quoted name always asks; commands the model runs do not inherit Forge's own variables.

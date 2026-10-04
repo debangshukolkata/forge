@@ -257,13 +257,15 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [ ] Campaign case: Forge builds a small MCP-using tool and tests it with a dummy stdio MCP server it writes itself (needs the `mcp` package via an approved pip install; the server is not wired into Forge's own `config.yaml`). Not yet run live.
 - [x] (done 2026-10-03, D-189) UI: Claude Code layout for tool calls in the web chat (user chose option A, 2026-10-03): each call a card in order with the tool name, an IN block (command/path/arguments) and an OUT block, long output collapsed behind "show more" (about 15 lines), edits shown as diffs, failures open, reasoning summaries dim, subagent calls nested and collapsed (D-181). Redaction applies. Check with headless Edge screenshots.
 
-## UI redesign (D-184..D-186, 2026-10-03)
-- [x] Login (local account), hub (new / open), project list, Apple-style theme on the whole app, Inter font, `ok` green token
-- [x] Setup screen after "new project" and from the top bar: live checks (system, Azure, Postgres, Gemini, Tesseract), model plan to confirm,
-  remembered per machine (D-186)
+## UI redesign (D-184..D-204, 2026-10-03 / 2026-10-04) — done
+- [x] Login, home, project list with memory summary, account screen (change password), Apple-style design on the whole app (D-184..D-197)
+- [x] Setup: first-run guide for the `.env` file (path, template, what is filled in), keys never typed into the app (D-204); Environment drawer with a test per
+  connection incl. the Forge database and the read-only Development database; model plan to confirm; Tesseract/Gemini asked first (D-186, D-201)
+- [x] Chat: welcome, Conversation look, tool-call blocks, diffs, folded read/search runs, nested subagents, todo strip, full tool output (D-188..D-192, D-195)
+- [x] Run map tests rewritten and per-agent cost (D-193); Contracts panel (D-194); Learning tab removed (D-198); cleanups (D-199)
+- [x] Shell: indirect `.env` reads always ask (D-187); Forge's own variables hidden from commands (D-202)
 - [x] Tesseract: the `ocr_image` tool the model can call (D-203)
-- [ ] Gemini for real (video input): needs the parked provider (D-150) and the office laptop to verify; the drawer asks first (D-201)
-- [x] Azure key/endpoint entry on the Environment drawer (D-200)
-- [x] Project list: memory summary (handoff goal/next, note count, FORGE.md) on each project (D-196)
-- [x] FORGE.md was listed as a memory note in the store and the pinned index: fixed (D-199)
-- [x] Change password / account screen (D-197)
+- [ ] Gemini for real (video input): needs the parked provider (D-150) and the office laptop to verify; the drawer asks first (D-201), detect-only until then
+- [ ] Nothing is pushed yet: the redesign is 23 local commits on main, 953e2c5 onwards (push only when the user says so)
+- [ ] The full test suite takes ~6 min (browser tests); consider splitting browser tests into a marker run if it gets slower
+- [ ] `write_secret_values` in config.py is no longer used by the web app (config.py holds the user's uncommitted Gemini edits; remove it with that work)

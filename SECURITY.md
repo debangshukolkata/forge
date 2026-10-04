@@ -12,8 +12,19 @@ in spec §14 (docs/FORGE_BUILD_SPEC.md):
 6. Actions Forge cannot or must not do are handed to you; if you cannot do them either, Forge proposes a
    workaround or a code change.
 
-The local web UI listens on 127.0.0.1 only and requires a random per-run token (spec §15A.3). Prompt-injection
-markers are flagged in tool results (spec §14.4).
+The local web UI listens on 127.0.0.1 only and requires a random per-run token (spec §15A.3) and, on top of that, a
+local sign-in (a salted scrypt hash in `account.json`, a pause after five wrong passwords; it keeps other people on a shared
+computer out, it is not protection against a local administrator). Prompt-injection markers are flagged in tool results
+(spec §14.4).
+
+How keys are handled (D-187, D-195, D-202, D-204):
+- Keys live only in the `.env` file you edit yourself. Nothing in the web app can write that file or show a key; the setup
+  guide only reports which names are filled in.
+- Commands the model runs do not inherit Forge's own variables (the names in `.env`, `FORGE_ENV_FILE`, `FORGE_HOME`, the
+  provider settings). A command that reads the `.env` file through a variable or a quoted name always asks first.
+- The full output of a tool call is saved under the workspace's `.forge/tool-output`, redacted like every event, and capped
+  at 200 MB per workspace; only the page you are signed in on can fetch it, by an id Forge made.
+- OCR (`ocr_image`) runs Tesseract on this computer; nothing is sent anywhere.
 
 ## Reporting a problem
 Tell the maintainer privately before opening a public issue if you find a way to break one of the rules above

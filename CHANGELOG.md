@@ -2,6 +2,34 @@
 
 Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
 
+## Unreleased — web UI redesign (2026-10-03 / 2026-10-04)
+- **Login and landing (D-184, D-197):** a local account (user ID + password kept as a salted scrypt hash in
+  `<forge home>\account.json`; "forgot password" = delete the file), a home screen (new project / open an existing
+  one), a project list with each project's last request and what Forge remembers (handoff goal and next step, note count,
+  FORGE.md; D-196), and an account screen to change the password. Every request but the page shell needs a signed-in session.
+- **New look (D-185, docs/DESIGN.md):** one blue accent, white and parchment surfaces with near-black tiles, Inter,
+  pill buttons; green only for success. `python -m forge ...` works like `forge ...`.
+- **Setup (D-186, D-204):** the first run shows **where the `.env` file is**, a copyable template built from Forge's own
+  settings and which names are filled in (never a value; "this page cannot see your keys"). Keys are never typed into the
+  app and no endpoint can write the file. The **Environment drawer** (right side, also on New project) tests the system,
+  Azure OpenAI, the **Forge database** (`LOCAL_PG_URL`) and the **read-only Development database** (`DEV_PG_URL`) one at a
+  time or all at once (Connected / Failed with the reason), and proposes the model for each role, which the user confirms
+  and Forge remembers (D-186). Tesseract and Gemini are asked about first and tested only after a yes (D-201).
+- **Chat (D-188, D-189, D-190, D-191, D-192):** a welcome with starter prompts, a conversation layout (your message a soft
+  pill, Forge's reply as plain text), tool calls as quiet lines with IN / OUT blocks, edits as inline diffs, runs of
+  read/search calls folded, narration between calls, failures open by themselves, subagent steps nested in their row,
+  Forge's todo list above the message box, a floating pill composer.
+- **Full tool output (D-195):** long results are saved (redacted, capped at 200 MB per workspace, D-199) and shown on request.
+- **Run map (D-193), Contracts panel (D-194):** the Run map's tests are rewritten for the live-growing graph and show what
+  each helper agent cost (`agent_finished` now carries `cost_usd`); Standalone projects get a Contracts tab to pin, revise and
+  forget interface contracts. The empty Learning tab is gone and the "/" suggestions match the real commands (D-198).
+- **OCR (D-203):** a read-only `ocr_image` tool reads exact text from images and PDFs with Tesseract, on this computer; it
+  is offered only after a yes on the drawer and a passing test.
+- **Safety (D-187, D-202):** a read of Forge's `.env` by variable or inside a quoted string always asks; commands the model
+  runs no longer inherit Forge's own variables (the names in `.env`, `FORGE_ENV_FILE`, `FORGE_HOME`, the provider settings).
+- **Other fixes:** FORGE.md is no longer listed as a memory note (D-199); a Run-map node added later could stay hidden under load;
+  the browser-test servers take a free port from the OS.
+
 ## Unreleased — revamp: Forge behaves like Claude Code (2026-10-02)
 - **Run log (D-151):** every model call writes an `llm_call` event (latency, time to first token, tokens, tool
   calls) to `.forge/transcripts/events.jsonl`; `forge log-summary --workspace <dir>` prints where the time went.

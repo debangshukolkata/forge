@@ -102,6 +102,11 @@ Inline changes are tagged `[A-n]`. Details and rationale are in docs/DECISIONS.m
 | D-153 | A chat message while approval cards or questions are open answers them (declines, with the message as the instruction). |
 | D-155 | §13.3 removed: no stuck detector and no escalation ladder; the model improvises recovery. Iteration and budget caps remain. |
 | D-156 | Verification (§9.8, §13.1/13.2), memory and learning (§9.9, §12) and repo knowledge (§9.2 KB tools, §11) replicate Claude Code: shell-based checks, FORGE.md + auto-memory + skills, on-demand search. The verify ladders, the requirements library, lessons, retro, metrics, improvement proposals and the KB are superseded; code removal is staged (see D-156). |
+| D-184 / D-197 | The web UI opens on a local sign-in (one account per machine, salted scrypt hash in `account.json`; reset by deleting the file; change password on the account screen), then a home screen: new project or open an existing one (the list shows the last request and what Forge remembers). |
+| D-186 / D-204 | Setup: the first run shows where the `.env` file is, a copyable template and which names are filled in (never values); keys are never typed into the app. An Environment drawer tests the system, Azure, the Forge database (`LOCAL_PG_URL`) and the read-only Development database (`DEV_PG_URL`) only on request; it proposes a model per role, the user confirms, and the choice is remembered per machine. |
+| D-195 | The full result of a tool call is saved (redacted, capped) and shown on request; the event keeps a preview. |
+| D-201 / D-203 | Tesseract and Gemini are asked about first and tested only after a yes; Tesseract gives the model a read-only `ocr_image` tool. |
+| D-187 / D-202 | A read of Forge's `.env` by variable or quoted name always asks; commands the model runs do not inherit Forge's own variables. |
 
 ---
 
