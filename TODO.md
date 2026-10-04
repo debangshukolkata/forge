@@ -193,26 +193,26 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
   repo, not just written: caught and fixed a real failure (a previous `forge ui` window locking its own
   `forge.exe` during reinstall) with a clear error message instead of a raw pip WinError.
 
-- **PARKED 2026-10-02 (user's call, see D-151)** (D-150, started 2026-09-30): **Gemini as a second model provider** (Vertex AI direct SDK,
+- **RESUMED 2026-10-04 (user sent the office-laptop signatures)** (D-150, started 2026-09-30): **Gemini as a second model provider** (Vertex AI direct SDK,
   `google-genai`, no LangChain — assignable to any role, not just vision). Live-verified on the user's office
   laptop (this dev machine has no GCP credentials): ADC auth, text calls, tool-calling round-trip, streaming,
   image vision, video input, and which models are actually callable on the user's project (`gemini-2.5-pro`,
   `gemini-2.5-flash`, `gemini-2.5-flash-lite`; `2.0-flash`/`2.0-flash-lite`/`3-pro-preview` are 404 — listed
   in Model Garden but not provisioned). See D-150 for the full picture.
-  - [~] `config.py`: `GeminiProviderConfig`, `ModelConfig.provider`/`model_name` generalized — done, mid-review.
-  - [~] `doctor.required_secret_names`: provider-conditional (Azure vars only if Azure in use, Gemini's
+  - [x] `config.py`: `GeminiProviderConfig`, `ModelConfig.provider`/`model_name` generalized — done, mid-review.
+  - [x] `doctor.required_secret_names`: provider-conditional (Azure vars only if Azure in use, Gemini's
     `project_env`/`location_env` only if Gemini in use) — done, mid-review.
-  - [ ] `llm/translate_gemini.py`: message/tool-call translation to/from `google-genai` types.
-  - [ ] `llm/gemini.py`: `GeminiProvider` (implements the same `LLMProvider` protocol as
+  - [x] `llm/translate_gemini.py`: message/tool-call translation to/from `google-genai` types.
+  - [x] `llm/gemini.py`: `GeminiProvider` (implements the same `LLMProvider` protocol as
     `AzureOpenAIProvider`), error mapping (`google.genai.errors` → Forge's `LLMError` subclasses, including
     `DefaultCredentialsError` → a clear ADC-setup `LLMAuthError`), `automatic_function_calling.disable=True`
     set explicitly (Forge's loop must own every tool call, never the SDK).
-  - [ ] `llm/router.py`: `_create_azure_provider` → a provider-dispatching factory reading `model.provider`.
+  - [x] `llm/router.py`: `_create_azure_provider` → a provider-dispatching factory reading `model.provider`.
   - [ ] `doctor.check_models` needs no change (already generic over every model in use) — a Gemini model
     assigned to any role gets the live "reply: ready" startup/connectivity check for free once the router
     can dispatch to it.
-  - [ ] `.env.example`: document `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION` names only, no values.
-  - [ ] Unit tests for the translator (message/tool round-trip, image parts) with no live calls; a
+  - [x] `.env.example`: document `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION` names only, no values.
+  - [x] Unit tests for the translator (message/tool round-trip, image parts) with no live calls; a
     `@pytest.mark.live` round-trip test gated on ADC being present (skipped otherwise, same pattern as
     Azure's live tests) — can only really be run on the office laptop, not this dev machine.
   - [ ] **Blocked on the user**: `view_video` tool — whether Vertex AI video input goes through the Files
@@ -237,7 +237,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [ ] MCP review and security design (Mode B) before extending; LSP design
 - [x] **DROPPED (D-161)**: role-specific toolsets, lazy tool schemas, prompt fragments. Forge does not optimise token cost at runtime; accuracy and speed first
 - [ ] Full test run after the revamp code steps; commit in logical parts
-- [ ] **Parked:** D-150 Gemini provider (uncommitted in config.py, doctor.py)
+- [ ] D-150 Gemini provider: code + unit tests done (uncommitted); run `scripts/dev/gemini_smoke.py` on the office laptop to verify live
 
 - [x] First Mode B end-to-end campaign (2026-10-03): attendance, bakery, invoice projects; D-162..D-170; report in docs/E2E_CAMPAIGN_2026-10-03.md
 - [ ] Next campaign ideas: a project with a database and a REST API (verifier on an API), a CLI tool, a Mode A repo; watch whether the verifier is called on larger features

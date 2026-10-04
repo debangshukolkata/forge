@@ -5,11 +5,8 @@ goes through the redactor before it leaves this module."""
 from __future__ import annotations
 
 import asyncio
-import os
 import subprocess
-import sys
 from dataclasses import asdict, dataclass, field
-from pathlib import Path
 from typing import Any, Literal
 
 from forge.config import ForgeConfig, forge_home, load_config, load_secrets
@@ -61,7 +58,7 @@ CHECKS = (
         "gemini",
         "Gemini",
         True,
-        "Video input (reserved; not used by this version of Forge)",
+        "A second model provider (Google Vertex AI); tested with one short call",
         ask="Is Gemini enabled for you?",
     ),
     CheckInfo(
@@ -84,6 +81,9 @@ class Outcome:
     hint: str = ""
     models: dict[str, bool] = field(default_factory=dict)  # azure: model key -> answered
     missing: list[str] = field(default_factory=list)  # azure: env var NAMES not set (never values)
+    steps: list[str] = field(
+        default_factory=list
+    )  # what to do when it does not work: shown under an (i) icon
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -169,33 +169,68 @@ def check_postgres(config: ForgeConfig, which: str) -> Outcome:
     return Outcome(check_id, status, results[0].detail, hint)
 
 
-def _adc_file() -> Path:
-    configured = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    if configured:
-        return Path(configured)
-    if sys.platform == "win32":
-        return Path(os.environ.get("APPDATA", "")) / "gcloud" / "application_default_credentials.json"
-    return Path.home() / ".config" / "gcloud" / "application_default_credentials.json"
+GEMINI_PROBE_MODEL = "gemini-2.5-flash-lite"  # callable on the user's project; a listing alone proves nothing
+GEMINI_STEPS = [
+    "Gemini only works on a computer that has Google Cloud access, such as the office laptop. On any other "
+    "computer leave the answer above on No; Forge works without it.",
+    "Install the package: pip install google-genai",
+    "Add your Google project id and region to the .env file as GOOGLE_CLOUD_PROJECT and "
+    "GOOGLE_CLOUD_LOCATION (for example us-central1). No key goes in this file.",
+    "Sign in once: gcloud auth application-default login (or set GOOGLE_APPLICATION_CREDENTIALS to a "
+    "service-account file).",
+    "Use a model your project can call: gemini-2.5-pro, gemini-2.5-flash or gemini-2.5-flash-lite. Others "
+    "can be listed yet answer 404 until your Google Cloud admin enables them.",
+    "Test again here, or run scripts/dev/gemini_smoke.py to see which part fails.",
+]
+
+
+def _gemini_failed(detail: str) -> Outcome:
+    return Outcome(
+        "gemini", "fail", detail, "Gemini does not work on this computer; see the steps.", steps=GEMINI_STEPS
+    )
 
 
 def check_gemini(config: ForgeConfig) -> Outcome:
-    provider = getattr(config.llm.providers, "gemini", None)
-    if provider is None:
-        return Outcome("gemini", "warn", "Not part of this version of Forge yet.", "Nothing to do for now.")
+    """Only run when the user said Gemini is enabled (D-201): one short real call."""
+    from forge.config import ModelConfig
+    from forge.errors import LLMError
+    from forge.llm.base import ChatRequest, Message
+
+    provider_config = config.llm.providers.gemini
     secrets = load_secrets(forge_home())
-    missing = [name for name in (provider.project_env, provider.location_env) if not secrets.get(name)]
+    missing = [
+        name for name in (provider_config.project_env, provider_config.location_env) if not secrets.get(name)
+    ]
     if missing:
-        return Outcome(
-            "gemini", "warn", f"missing in .env: {', '.join(missing)}", "Optional: add them to enable video."
-        )
-    if not _adc_file().exists():
-        return Outcome(
-            "gemini",
-            "warn",
-            "No Google application-default credentials found.",
-            "Optional: run `gcloud auth application-default login`.",
-        )
-    return Outcome("gemini", "ok", "Credentials found (not called live).")
+        return _gemini_failed(f"missing in .env: {', '.join(missing)}")
+    try:
+        from forge.llm.gemini import GeminiProvider
+    except ImportError:
+        return _gemini_failed("The google-genai package is not installed.")
+    model = next((m for m in config.llm.models.values() if m.provider == "gemini"), None) or ModelConfig(
+        provider="gemini",
+        label="Gemini",
+        model_name=GEMINI_PROBE_MODEL,
+        context_window=1_000_000,
+        max_output=500,
+    )
+
+    async def probe() -> str:
+        gemini = GeminiProvider("gemini_check", model, provider_config, secrets)
+        try:
+            # Room for the model's own thinking, which can use up a tight limit and leave no text.
+            request = ChatRequest(
+                messages=[Message.user("Reply with the single word: ready")], max_output_tokens=500
+            )
+            return (await gemini.chat(request)).text.strip()
+        finally:
+            await gemini.close()
+
+    try:
+        answer = asyncio.run(probe())
+    except LLMError as error:
+        return _gemini_failed(str(error)[:300])
+    return Outcome("gemini", "ok", f"{model.model_name} answered: {answer or '(no text)'}")
 
 
 def _ocr_reads_a_test_image(binary: str) -> tuple[bool, str]:

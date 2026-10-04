@@ -31,7 +31,7 @@ class LLMRouter:
     ) -> None:
         self.config = config
         self._secrets = secrets
-        self._provider_factory = provider_factory or self._create_azure_provider
+        self._provider_factory = provider_factory or self._create_provider
         self._providers: dict[str, LLMProvider] = {}
         self._redactor = redactor
         self._sleep = sleep
@@ -63,8 +63,17 @@ class LLMRouter:
             self._providers[model_key] = self._provider_factory(model_key)
         return self._providers[model_key]
 
-    def _create_azure_provider(self, model_key: str) -> LLMProvider:
+    def _create_provider(self, model_key: str) -> LLMProvider:
         model = self.config.llm.models[model_key]
+        if model.provider == "gemini":
+            try:
+                from forge.llm.gemini import GeminiProvider  # optional dependency, imported only when used
+            except ImportError as error:
+                raise ConfigError(
+                    f"Model '{model_key}' uses Gemini, which needs the google-genai package: "
+                    "pip install google-genai"
+                ) from error
+            return GeminiProvider(model_key, model, self.config.llm.providers.gemini, self._secrets)
         return AzureOpenAIProvider(model_key, model, self.config.llm.providers.azure, self._secrets)
 
     # --- calls ---

@@ -97,10 +97,19 @@ def check_forge_home(home: Path) -> CheckResult:
 
 def required_secret_names(config: ForgeConfig) -> set[str]:
     """The env var names Forge needs to talk to its configured models (spec §15/D-145's setup screen and
-    check_secrets share this one computation — no duplicate list anywhere else)."""
-    provider = config.llm.providers.azure
-    needed = {provider.endpoint_env, provider.api_key_env, provider.api_version_env}
-    needed |= {config.llm.models[key].deployment_env for key in _models_in_use(config)}
+    check_secrets share this one computation — no duplicate list anywhere else). Only asks for a provider's
+    values when a role actually uses it, so a Gemini-only or Azure-only setup doesn't get asked for the
+    other's env vars. Gemini's own credentials are never requested here: Forge never stores them (ADC,
+    found by the SDK itself) — only the project/location env vars it needs to point the right place."""
+    needed: set[str] = set()
+    models_in_use = [config.llm.models[key] for key in _models_in_use(config)]
+    if any(model.provider == "azure" for model in models_in_use):
+        azure = config.llm.providers.azure
+        needed |= {azure.endpoint_env, azure.api_key_env, azure.api_version_env}
+    if any(model.provider == "gemini" for model in models_in_use):
+        gemini = config.llm.providers.gemini
+        needed |= {gemini.project_env, gemini.location_env}
+    needed |= {model.deployment_env for model in models_in_use if model.deployment_env}
     return needed
 
 

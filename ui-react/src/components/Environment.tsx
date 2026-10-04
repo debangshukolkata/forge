@@ -3,7 +3,7 @@
 // Nothing is tested until the user asks (and the two optional tools only after a yes, D-201). Then Forge proposes
 // which model serves each role from what answered; the user confirms and the choice is remembered per machine.
 // It opens by itself on the New project screen and from "Environment" in the top bar.
-import { AlertTriangle, CheckCircle2, CircleDashed, FileText, Minus, RotateCw, X, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleDashed, FileText, Info, Minus, RotateCw, X, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, cx, timeAgo } from "../lib";
 import type { CheckInfo, CheckResultView, EnvironmentOverview, ModelPlan } from "../types";
@@ -251,6 +251,8 @@ function CheckRow({
   const result = row?.result ?? null;
   const running = row?.running ?? false;
   const word = statusWord(check, row);
+  const [showSteps, setShowSteps] = useState(false);
+  const steps = result?.steps ?? [];
   return (
     <div className="flex items-start gap-3 px-5 py-3.5" data-check={check.id}>
       <div className="mt-0.5 w-5 shrink-0" aria-live="polite">
@@ -272,6 +274,17 @@ function CheckRow({
         <div className="flex items-center gap-2">
           <span className="text-[13.5px] font-semibold">{check.label}</span>
           {check.optional && <Badge>Optional</Badge>}
+          {!running && steps.length > 0 && (
+            <button
+              type="button"
+              aria-label={`How to fix ${check.label}`}
+              aria-expanded={showSteps}
+              onClick={() => setShowSteps((open) => !open)}
+              className="cursor-pointer text-accent hover:opacity-80"
+            >
+              <Info className="h-4 w-4" aria-hidden />
+            </button>
+          )}
           <span data-testid="status" className={cx("ml-auto text-[12px] font-semibold", word.tone)}>
             {word.text}
           </span>
@@ -297,6 +310,13 @@ function CheckRow({
           >
             Open the setup guide
           </button>
+        )}
+        {!running && showSteps && steps.length > 0 && (
+          <ol data-testid="steps" className="mt-2 list-decimal space-y-1 rounded-md border border-border bg-surface py-2 pl-7 pr-3 text-[12px] text-fg-muted">
+            {steps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
         )}
         {result?.checked_at && !running && result.status !== "off" && <div className="mt-0.5 text-[11px] text-fg-muted">Tested {timeAgo(result.checked_at)}</div>}
       </div>

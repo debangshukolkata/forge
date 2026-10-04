@@ -34,8 +34,19 @@ class AzureProviderConfig(_Strict):
     timeout_s: float = 180.0
 
 
+class GeminiProviderConfig(_Strict):
+    """Vertex AI (not the Google AI Studio API key path): auth is Application Default Credentials, found
+    automatically by the SDK (gcloud ADC, or GOOGLE_APPLICATION_CREDENTIALS pointing at a service-account
+    file) — Forge never stores or reads credentials itself, only the project/location to call."""
+
+    project_env: str = "GOOGLE_CLOUD_PROJECT"
+    location_env: str = "GOOGLE_CLOUD_LOCATION"
+    timeout_s: float = 180.0
+
+
 class ProvidersConfig(_Strict):
     azure: AzureProviderConfig = AzureProviderConfig()
+    gemini: GeminiProviderConfig = GeminiProviderConfig()
 
 
 class PriceConfig(_Strict):
@@ -47,14 +58,27 @@ class PriceConfig(_Strict):
 
 
 class ModelConfig(_Strict):
-    provider: Literal["azure"] = "azure"
+    provider: Literal["azure", "gemini"] = "azure"
     label: str
-    deployment_env: str
+    # Azure: the env var naming which deployment to call (the deployment name can be tenant-specific, so it
+    # stays indirected through .env like a secret). Gemini: no deployment to look up — model_name is the
+    # literal model string (e.g. "gemini-2.5-pro"), safe in config.yaml directly per D-014.
+    deployment_env: str | None = None
+    model_name: str | None = None
     context_window: int = Field(gt=0)
     max_output: int = Field(gt=0)
     reasoning_effort: ReasoningEffort | None = None
     vision: bool = False
+    video: bool = False
     price_per_mtok: PriceConfig = PriceConfig()
+
+    @model_validator(mode="after")
+    def model_identifier_present(self) -> ModelConfig:
+        if self.provider == "azure" and not self.deployment_env:
+            raise ValueError("an azure model needs deployment_env")
+        if self.provider == "gemini" and not self.model_name:
+            raise ValueError("a gemini model needs model_name")
+        return self
 
 
 class RolesConfig(_Strict):
@@ -97,7 +121,7 @@ class LLMConfig(_Strict):
 class LimitsConfig(_Strict):
     session_budget_usd: float = 20.0
     max_iterations_per_task: int = 40
-    max_fix_attempts: int = 5
+    max_fix_attempts: int = 5  # unused since D-155 (no escalation ladder); kept so existing config.yaml loads
 
 
 class CostLimits(_Strict):
@@ -230,6 +254,12 @@ def forge_home() -> Path:
     return Path(configured).expanduser() if configured else Path.home() / ".forge"
 
 
+def permission_rules() -> PermissionRules:
+    """allow/deny rules from <home>/settings.json (D-183). Only the user's own file counts: a project folder
+    the model can write to must never be able to grant itself permissions."""
+    return PermissionRules.load(forge_home() / "settings.json")
+
+
 def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     merged = dict(base)
     for key, value in override.items():
@@ -254,12 +284,6 @@ def load_config(home: Path | None = None) -> ForgeConfig:
         except yaml.YAMLError as error:
             raise ConfigError(f"{user_file} is not valid YAML: {error}") from error
         if not isinstance(user_data, dict):
-def permission_rules() -> PermissionRules:
-    """allow/deny rules from <home>/settings.json (D-183). Only the user's own file counts: a project folder
-    the model can write to must never be able to grant itself permissions."""
-    return PermissionRules.load(forge_home() / "settings.json")
-
-
             raise ConfigError(f"{user_file} must contain a YAML mapping")
         data = deep_merge(data, user_data)
     try:

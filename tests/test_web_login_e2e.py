@@ -332,9 +332,11 @@ def test_optional_tools_are_asked_before_they_are_tested(
         calls.append("tesseract")
         return checks.Outcome("tesseract", "ok", "tesseract v5.4.0 read a test image correctly (fake)")
 
+    gemini_outcome = [checks.Outcome("gemini", "ok", "Credentials found (fake).")]
+
     def fake_gemini(config: object) -> checks.Outcome:
         calls.append("gemini")
-        return checks.Outcome("gemini", "ok", "Credentials found (fake).")
+        return gemini_outcome[0]
 
     monkeypatch.setattr(checks, "check_models", answers)
     monkeypatch.setattr(checks, "check_tesseract", fake_tesseract)
@@ -400,6 +402,18 @@ def test_optional_tools_are_asked_before_they_are_tested(
         )
         assert status == "off" and "gemini" not in calls
 
+        # When Gemini does not run on this computer, an (i) icon opens the steps to fix it.
+        gemini_outcome[0] = checks.Outcome(
+            "gemini", "fail", "No credentials (fake).", "See the steps.", steps=checks.GEMINI_STEPS
+        )
+        gemini.locator("button:has-text('Yes')").click()
+        page.wait_for_selector("text=No credentials (fake).")
+        assert drawer.locator("[data-testid=steps]").count() == 0
+        drawer.locator("button[aria-label='How to fix Gemini']").click()
+        assert "gcloud auth application-default login" in drawer.locator("[data-testid=steps]").inner_text()
+        page.screenshot(path=str(shots / "environment-gemini-steps-light.png"))
+
+        gemini.locator("button:has-text('No')").click()
         tesseract.locator("button:has-text('No')").click()
         page.wait_for_selector("text=Not in use. >> nth=1")
         assert drawer.locator("text=read a test image correctly").count() == 0

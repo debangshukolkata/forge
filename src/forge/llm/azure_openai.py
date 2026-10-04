@@ -9,7 +9,7 @@ import openai
 from openai import AsyncAzureOpenAI
 
 from forge.config import AzureProviderConfig, ModelConfig, Secrets
-from forge.errors import LLMError, LLMNotFoundError
+from forge.errors import ConfigError, LLMError, LLMNotFoundError
 from forge.llm.azure_errors import map_openai_error
 from forge.llm.base import ChatRequest, LLMResponse, TextDeltaCallback
 from forge.llm.translate_chat import (
@@ -35,6 +35,8 @@ class AzureOpenAIProvider:
     ) -> None:
         self.model_key = model_key
         self.model = model
+        if not model.deployment_env:
+            raise ConfigError(f"Model '{model_key}' needs deployment_env")
         self.deployment = secrets.require(model.deployment_env)
         self.api = provider_config.api
         self.fell_back_to_chat = False

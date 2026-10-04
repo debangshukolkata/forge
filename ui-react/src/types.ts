@@ -191,6 +191,7 @@ export interface CheckResultView {
   hint: string;
   models: Record<string, boolean>;
   missing?: string[]; // azure: names of required values that are not set (never values)
+  steps?: string[]; // what to do when it does not work, shown under an (i) icon
   checked_at?: string;
 }
 

@@ -2880,3 +2880,19 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   a restart picks up edits, and the drawer's Azure test always reads the file fresh. Tests: `tests/test_setup_guide.py`,
   `tests/test_web_setup_guide_e2e.py` (`setup-guide-light.png`, `environment-tests-light.png`), updated drawer tests in
   `tests/test_web_login_e2e.py`. `write_secret_values` stays in config.py, now unused by the web app.
+
+
+### D-205 — Gemini provider built from the office-laptop signatures, verified there only (2026-10-04)
+- Context: this dev machine has no Google credentials, so no live Gemini call can run here; the user's notebook
+  screenshots (text, `thinking_budget`, function declarations, inline image `Blob`, per-model probe) are the evidence.
+- Built: `llm/gemini.py` (client `vertexai=True`, `client.aio`, SDK retries off, automatic function calling disabled),
+  `llm/translate_gemini.py`, `llm/gemini_errors.py`, router dispatch on `model.provider`, `gemini` extra in pyproject.
+- Choices (small, reversible): tool schemas go in `parameters_json_schema` (full JSON schema; the screenshot used the
+  OpenAPI-style `parameters`, so this is the one unverified call: the smoke script tests it with a real schema);
+  thinking uses the integer budget only (`thinking_level` is rejected there); the model's raw parts, with thought
+  signatures, ride in `provider_items` and are replayed only to the same model; `output_tokens` includes thinking.
+- Not done: `view_video` (video mechanism still unprobed), Google Search as a hosted tool.
+- Verify: `scripts/dev/gemini_smoke.py [model]` on the office laptop.
+- Drawer (user request 2026-10-04): the Gemini row now makes one real call once the user answers Yes (was detect-only).
+  If it fails for any reason (names missing in .env, `google-genai` missing, no credentials, model 404), the row shows the
+  reason and an (i) icon that opens the numbered steps (`GEMINI_STEPS` in `environment/checks.py`). Any check can carry `steps`.

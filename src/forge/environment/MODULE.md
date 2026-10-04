@@ -7,7 +7,7 @@ database, Gemini, Tesseract; each run on request), the model plan Forge proposes
 Shown by the web UI's Environment drawer (D-186); the confirmed plan is applied to the router whenever a session starts, and
 `tesseract_ready` decides whether the `ocr_image` tool is offered (D-203).
 
-- **Depends on:** config, doctor, errors, safety, vision
+- **Depends on:** config, doctor, errors, llm, safety, vision
 - **Invariants:** no secret value is ever stored or returned (details are redacted, only env var *names* appear); the saved file only
   holds check results and role -> model keys; a stale or unknown model key in it is ignored, never fatal.
 - **Tests:** test_environment.py, test_setup_guide.py, test_ocr.py
