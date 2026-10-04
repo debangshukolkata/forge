@@ -2932,3 +2932,24 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   Side finding: a workspace created under a Windows 8.3 short folder name (`DEBANG~1`) makes the path check treat the resolved long
   path as outside the workspace; not fixed (rare), use a normal path.
 - Not built: install from the web UI, private repositories, updating an installed skill, a skill marketplace.
+
+### D-208 — The user can open files and folders for reading, in Mode B too (user decision 2026-10-04)
+- Context: copying each installed skill into every project (D-207's first fix) wastes space, and Mode B ignored an explicit
+  "read this file". Safety invariant 2 (Mode B never reads outside the workspace and profile folder) is amended, not dropped.
+- Options considered: (A) `/allow-read <path>`, (B) a path the user types or @-mentions, (C) ask on the model's own reads.
+  Chosen: A + B + installed skills always readable; C rejected (the model could talk the user into opening host code).
+  User answers: grants last for the project; a folder includes everything under it.
+- How: `workspace/read_grants.py` (`ReadGrants`). Always-readable root: `<home>/skills`. Grants are stored in
+  `<home>/read_grants/<hash of the workspace>.json`, outside every folder a tool can write, so only the user's own actions can add
+  to it: `/allow-read [path]` (no path lists), `/revoke-read <path>`, `@C:\full\path`, or a full path typed in a message that also
+  has a reading word (read, open, review, inspect, analyse, summarise, study, examine, go through, refer to, check out). A long paste
+  never grants. Each grant is announced (`read_grant` notice) with how to undo it, and the model is told the full path to use.
+- Where it applies: `Workspace.path_of` / `is_secret` (so read_file, list_dir, glob, grep, view_image), and the shell's readable roots
+  (reading only; a program still goes through approval). `..` paths that land in a granted place also work (the model often turns a
+  full path into `../x`). Writes: the write jail is unchanged, a grant never allows one. Secret files (.env, keys) still show key
+  names only; the shell still asks for them.
+- Refused as too broad: a drive root, the user's profile folder or any folder containing it, and Forge's own folder (keys, accounts).
+- Supersedes: `load_skill` no longer copies a skill into the project; it names the skill's own folder.
+- Live check (Mode B, real Azure): told to read a file by its full path and use ui-ux-pro-max, the model read the file, ran the
+  skill's script from `~\.forge\skills`, and used the brief's colour; the project folder held only the page.
+- Not built: a button or panel in the web UI for grants (commands only), a per-grant expiry.

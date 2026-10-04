@@ -1,6 +1,6 @@
 # workspace
 
-The per-requirement workspace: copy, baseline manifest, the single write gate (jail + checkpoint), output/ builder, checkpoints, Python/Node environment detection.
+The per-requirement workspace: copy, baseline manifest, the single write gate (jail + checkpoint), output/ builder, checkpoints, Python/Node environment detection, read grants (`read_grants.py`: read-only places the user opened, D-208).
 
 - **Depends on:** errors, safety
 - **Invariants:** Every write goes through Workspace (safety invariant 1). Preserve BOM and line endings.

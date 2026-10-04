@@ -84,7 +84,9 @@ The rules below still describe what goes into briefs and summaries.
 
 ## Safety invariants (never break; each has a test)
 1. Forge never writes to the user's original repo (code-level jail + OS-level low-integrity sandbox, D-050).
-2. In Mode B, Forge never reads outside the workspace and the profile folder.
+2. In Mode B, Forge never reads outside the workspace and the profile folder, except read-only places the user opened:
+   the installed skills, and files or folders the user granted for this project (`/allow-read`, a path they typed or
+   @-mentioned; D-208). The model cannot grant; writes are never opened up.
 3. Secrets never reach the LLM, transcripts, memory files, events or the browser. Nothing in the web app can write the `.env`
    file or show a key (D-204); commands the model runs do not inherit Forge's own variables (D-202) and a read of the `.env`
    by variable or quoted name always asks (D-187); saved tool outputs are redacted (D-195).

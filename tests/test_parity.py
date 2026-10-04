@@ -282,9 +282,7 @@ async def test_load_skill_lists_and_reads_files_inside_its_folder(
     context = ToolContext(workspace=workspace)
 
     body = await LoadSkill().run(LoadSkill.Args(name="with-data"), context)
-    assert body.ok and "data/styles.csv" in body.content and "copied this skill" in body.content
-    staged = workspace.repo_dir / ".forge" / "skills" / "with-data" / "data" / "styles.csv"
-    assert staged.is_file()  # Mode B can only run or read what is inside its code folder
+    assert body.ok and "data/styles.csv" in body.content and "This skill's folder is" in body.content
     data = await LoadSkill().run(LoadSkill.Args(name="with-data", file="data/styles.csv"), context)
     assert data.ok and "glass" in data.content
     for outside in ("../../secret.txt", r"..\..\secret.txt", "C:/Windows/win.ini"):

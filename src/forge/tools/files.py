@@ -26,7 +26,8 @@ class ReadFile(Tool):
     description = (
         "Read a text file from the workspace copy of the repository. Returns numbered lines "
         f"(up to {DEFAULT_READ_LIMIT} by default); use offset/limit for large files. You must read a "
-        "file before editing or overwriting it. Secret files (.env etc.) show key names only."
+        "file before editing or overwriting it. Secret files (.env etc.) show key names only. A full path "
+        "works for places the user opened for reading (their message or a skill's folder names it)."
     )
 
     class Args(ToolArgs):

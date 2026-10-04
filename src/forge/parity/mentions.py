@@ -15,6 +15,8 @@ from datetime import datetime
 from pathlib import Path
 
 from forge.errors import ForgeError
+from forge.safety.paths import is_within, real_path
+from forge.workspace.read_grants import ReadGrantError
 from forge.workspace.workspace import Workspace
 
 MENTION = re.compile(r"(?<![\w@])@([A-Za-z]:[\\/][^\s]+|[\w./\\-]+(?::\d+-\d+)?)")
@@ -29,6 +31,7 @@ class Expanded:
     text: str
     images: list[Path] = field(default_factory=list)  # attached images (saved under .forge/inputs/)
     notes: list[str] = field(default_factory=list)  # what was resolved, for the UI
+    grants: list[str] = field(default_factory=list)  # read access the user's own words opened (D-208)
 
 
 def expand(message: str, workspace: Workspace, lookup: dict[str, object] | None = None) -> Expanded:
@@ -43,6 +46,8 @@ def expand(message: str, workspace: Workspace, lookup: dict[str, object] | None 
             "read it with read_file …]"
         )
         result.notes.append(f"long paste saved to {relative}")
+    if stored is None:  # a long paste is not the user's own instruction
+        _grant_typed_paths(message, workspace, result)
     attachments: list[str] = []
     for token in dict.fromkeys(MENTION.findall(message)):
         block = _resolve(token, workspace, lookup or {}, result)
@@ -68,6 +73,8 @@ def _resolve(token: str, workspace: Workspace, lookup: dict[str, object], result
         return _resolve_input(token.replace("\\", "/")[len(INPUTS_PREFIX) :], workspace, result)
     path_text, _, span = token.partition(":") if re.search(r":\d+-\d+$", token) else (token, "", "")
     candidate = Path(path_text)
+    if candidate.is_absolute() and candidate.suffix.lower() not in IMAGE_SUFFIXES:
+        _grant(path_text, workspace, result)  # an explicit @path outside the project is a request to read it
     if candidate.suffix.lower() in IMAGE_SUFFIXES:
         return _attach_image(candidate, workspace, result)
     try:
@@ -86,6 +93,38 @@ def _resolve(token: str, workspace: Workspace, lookup: dict[str, object], result
     body = "\n".join(f"{start + i:>5}\t{line}" for i, line in enumerate(chosen))[:MAX_FILE_CHARS]
     result.notes.append(f"@{token}")
     return f"[@{label}]\n```\n{body}\n```"
+
+
+def _grant_typed_paths(message: str, workspace: Workspace, result: Expanded) -> None:
+    """A path the user typed with a word like 'read' or 'review' is a request to read it: folders include
+    everything under them. Only the user's own message is looked at, never tool output or file contents."""
+    if not READ_INTENT.search(message):
+        return
+    for match in TYPED_PATH.finditer(message):
+        text = (match.group(1) or match.group(2) or match.group(3)).rstrip(".,;:)")
+        _grant(text, workspace, result)
+
+
+def _grant(text: str, workspace: Workspace, result: Expanded) -> None:
+    candidate = Path(text)
+    if not candidate.is_absolute() or not candidate.exists():
+        return
+    resolved = real_path(candidate)
+    if is_within(resolved, real_path(workspace.root)) or workspace.read_grants.allows(resolved):
+        return
+    try:
+        granted = workspace.read_grants.grant(text)
+    except ReadGrantError as error:
+        result.grants.append(f"Not opened for reading: {error}")
+        return
+    result.grants.append(
+        f"Forge may now read {granted} (everything under it too) in this project; read only. "
+        f"/revoke-read {granted} undoes it."
+    )
+    result.text += (
+        f"\n\n[The user opened {granted} for reading. Use that full path with read_file, list_dir, glob "
+        "and grep; do not turn it into a relative path.]"
+    )
 
 
 def _attach_image(candidate: Path, workspace: Workspace, result: Expanded) -> str | None:
@@ -108,6 +147,14 @@ def _attach_image(candidate: Path, workspace: Workspace, result: Expanded) -> st
 
 
 INPUTS_PREFIX = ".forge/inputs/"
+TYPED_PATH = re.compile(
+    r'"([A-Za-z]:[\\/][^"]+)"|(?<![\w@/\\])([A-Za-z]:[\\/][^\s"\'<>|*?]+)|(?<![\w.:/\\@])(/(?:[\w.-]+/)*[\w.-]+)'
+)
+READ_INTENT = re.compile(
+    r"\b(read|open|look(?:ing)? at|take a look|review|inspect|analy[sz]e|summari[sz]e|study|examine"
+    r"|go through|refer to|check out)\b",
+    re.IGNORECASE,
+)
 TEXT_SUFFIXES = {
     ".txt",
     ".md",

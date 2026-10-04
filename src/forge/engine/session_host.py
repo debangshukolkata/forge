@@ -58,6 +58,7 @@ from forge.tools.todo import render as render_todos
 from forge.tools.vision import ocr_tools
 from forge.tools.web import azure_hosted_search
 from forge.workflow.orchestrator import Orchestrator
+from forge.workspace.read_grants import ReadGrants
 from forge.workspace.workspace import Workspace
 
 DEFAULT_SYSTEM_PROMPT = (
@@ -80,6 +81,8 @@ class SessionHost:
         self.router = router
         self.bus = bus
         self.workspace = workspace
+        if workspace is not None:
+            workspace.read_grants = ReadGrants.for_workspace(workspace.root, forge_home())
         self.secrets = secrets
         self.approvals = ApprovalBroker(bus)
         self.questions = QuestionBroker(bus)
@@ -460,6 +463,8 @@ class SessionHost:
         if self.workspace is None:
             return text
         expanded = expand_mentions(text, self.workspace, self._mention_lookup())
+        for line in expanded.grants:
+            await self.bus.publish(EventType.NOTICE, {"kind": "read_grant", "text": line})
         if expanded.notes:
             await self.bus.publish(
                 EventType.NOTICE, {"kind": "mentions", "text": "Attached: " + ", ".join(expanded.notes)}

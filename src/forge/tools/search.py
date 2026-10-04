@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import fnmatch
+import os
 import re
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -15,6 +16,7 @@ from pydantic import Field
 from forge.safety.paths import is_within
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.workspace.copy_repo import iter_source_files
+from forge.workspace.ignore import IgnoreRules
 from forge.workspace.workspace import Workspace
 
 MAX_GLOB_RESULTS = 200
@@ -25,6 +27,10 @@ SECRET_HIDDEN = "[secret file: content hidden]"
 
 def workspace_files(workspace: Workspace, under: str = ".") -> Iterator[str]:
     """Every non-ignored file in the workspace copy, as repo-relative POSIX paths."""
+    external = workspace.resolve_readable(under)
+    if external is not None:
+        yield from _external_files(external)
+        return
     rules = workspace.ignore_rules()
     base = workspace.path_of(under) if under not in (".", "") else workspace.repo_dir
     root = _root_for(workspace, base)
@@ -43,10 +49,39 @@ def workspace_files(workspace: Workspace, under: str = ".") -> Iterator[str]:
             yield relative
 
 
+MAX_EXTERNAL_FILES = 20_000
+
+
+def _external_files(base: Path) -> Iterator[str]:
+    """Files of a granted folder as absolute POSIX paths (their own folder is the root for ignore rules)."""
+    if base.is_file():
+        yield base.as_posix()
+        return
+    rules = IgnoreRules(base)
+    count = 0
+    for directory, subdirectories, filenames in os.walk(base, followlinks=False):
+        relative_dir = Path(os.path.relpath(directory, base)).as_posix().removeprefix(".").lstrip("/")
+        subdirectories[:] = sorted(
+            name
+            for name in subdirectories
+            if not rules.is_ignored(f"{relative_dir}/{name}".lstrip("/"), is_dir=True)
+        )
+        for name in sorted(filenames):
+            relative = f"{relative_dir}/{name}".lstrip("/")
+            if rules.is_ignored(relative, is_dir=False):
+                continue
+            yield (Path(directory) / name).as_posix()
+            count += 1
+            if count >= MAX_EXTERNAL_FILES:
+                return
+
+
 def _root_for(workspace: Workspace, path: Path) -> Path:
     """Paths are shown relative to the repository copy; Mode B's _harness/ sits beside project/, so its
     paths are relative to the workspace root (which is how path_of resolves them)."""
-    return workspace.repo_dir if is_within(path, workspace.repo_dir) else workspace.root
+    if is_within(path, workspace.repo_dir):
+        return workspace.repo_dir
+    return workspace.root if is_within(path, workspace.root) else path  # a granted folder is its own root
 
 
 class Glob(Tool):
@@ -207,6 +242,7 @@ def _file_filter(relative: str, pattern: str | None) -> bool:
 
 
 def _glob_match(relative: str, pattern: str, under: str) -> bool:
+    under = under.replace("\\", "/")
     base = "" if under in (".", "") else under.rstrip("/") + "/"
     candidate = relative[len(base) :] if base and relative.startswith(base) else relative
     return Path(candidate).match(pattern) or fnmatch.fnmatch(candidate, pattern.removeprefix("**/"))

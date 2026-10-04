@@ -127,6 +127,7 @@ class ShellSession:
     def scope(self) -> ShellScope:
         env = self.workspace.info.python_env
         readable = [Path(env.venv)] if env else []
+        readable += self.workspace.read_grants.roots()  # skills and what the user granted (D-208)
         return ShellScope(
             workspace_root=self.workspace.root,
             original_repo=Path(self.workspace.info.repo_path) if self.workspace.info.repo_path else None,

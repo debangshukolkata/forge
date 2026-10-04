@@ -16,13 +16,14 @@ from typing import Literal
 from pydantic import BaseModel
 
 from forge.errors import ForgeError
-from forge.safety.paths import WriteJail, os_path, resolve_inside
+from forge.safety.paths import WriteJail, is_within, os_path, real_path, resolve_inside
 from forge.workspace.checkpoints import Checkpoint, CheckpointStore
 from forge.workspace.copy_repo import CopyReport
 from forge.workspace.ignore import IgnoreRules
 from forge.workspace.manifest import BaselineManifest
 from forge.workspace.nodeenv import NodeEnvironment
 from forge.workspace.pyenv import PythonEnvironment
+from forge.workspace.read_grants import ReadGrants
 from forge.workspace.text_format import FileFormat, Newline, decode_text, detect_format, encode_text
 
 WORKSPACE_FORMAT_VERSION = 1
@@ -77,6 +78,8 @@ class Workspace:
         self.jail = WriteJail(writable, forbidden_roots=forbidden)
         self.checkpoints = CheckpointStore(self.forge_dir / "checkpoints", self.repo_dir, self.jail)
         self._manifest: BaselineManifest | None = None
+        # Read-only places outside the workspace that the user opened up (D-208); a session attaches them.
+        self.read_grants = ReadGrants.none()
 
     # --- persistence ---
 
@@ -103,7 +106,24 @@ class Workspace:
 
     # --- reading ---
 
+    def resolve_readable(self, raw: str) -> Path | None:
+        """The real path when raw is an absolute path inside a place the user granted for reading (or an
+        installed skill), else None. Never used for writing: the jail still decides that."""
+        text = raw.strip().strip("'\"")
+        candidate = Path(text).expanduser() if text else None
+        if candidate is not None and not candidate.is_absolute() and ".." in candidate.parts:
+            candidate = self.repo_dir / candidate  # the model often turns a full path into ../folder/file
+        if candidate is None or not candidate.is_absolute():
+            return None
+        resolved = real_path(candidate)
+        if is_within(resolved, real_path(self.root)):
+            return None  # the workspace's own files go through the normal rules
+        return resolved if self.read_grants.allows(resolved) else None
+
     def path_of(self, relative: str) -> Path:
+        external = self.resolve_readable(relative)
+        if external is not None:
+            return external
         normalised = relative.replace("\\", "/")
         if self.mode_b and (normalised == "_harness" or normalised.startswith("_harness/")):
             inside = normalised.removeprefix("_harness").lstrip("/")
@@ -124,6 +144,9 @@ class Workspace:
         return resolve_inside(self.repo_dir, relative)
 
     def is_secret(self, relative: str) -> bool:
+        external = self.resolve_readable(relative)
+        if external is not None:  # judged by its own name: .env, keys and certificates show names only
+            return IgnoreRules(external.parent).is_secret(external.name)
         entry = self.manifest.files.get(relative)
         return entry.secret if entry else self.ignore_rules().is_secret(relative)
 

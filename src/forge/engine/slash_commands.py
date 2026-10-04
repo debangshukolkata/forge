@@ -12,6 +12,7 @@ from forge.memory.scope import scope_of
 from forge.memory.store import CommandStore, MemoryStore
 from forge.protocol.events import EventType
 from forge.workspace.output import build_output
+from forge.workspace.read_grants import ReadGrantError
 from forge.workspace.workspace import Workspace, WorkspaceError
 
 if TYPE_CHECKING:
@@ -52,6 +53,9 @@ HELP_TEXT = """Available commands:
   /effort [low|medium|high] reasoning effort for this session ('think hard: ...' raises it for one message)
   /style [concise|explanatory|learning]   how much Forge explains while working
   /skills | /agents         the skills and custom subagents Forge can use
+  /allow-read [path]        let Forge read a file or folder (and everything under it) outside the project,
+                            read only, kept for this project; without a path: list what is allowed
+  /revoke-read <path>       take that permission back
   /bg [kill <name>]         background processes (dev servers...) with the tail of their output
   /log | /diff <task|hash>  the workspace's local history: one commit per completed task
   /rename <name>            name this session/workspace
@@ -85,6 +89,7 @@ class SlashCommandHandler:
 
     async def handle(self, text: str) -> None:
         name, *args = text.strip().split()
+        self._rest = text.strip()[len(name) :].strip()  # the rest as typed: a path may hold spaces
         handlers = {
             "/help": self._help,
             "/model": self._model,
@@ -109,6 +114,8 @@ class SlashCommandHandler:
             "/effort": self._effort,
             "/style": self._style,
             "/skills": self._skills,
+            "/allow-read": self._allow_read,
+            "/revoke-read": self._revoke_read,
             "/agents": self._agents,
             "/bg": self._bg,
             "/log": self._log,
@@ -476,6 +483,35 @@ class SlashCommandHandler:
 
     async def _skills(self, args: list[str]) -> None:
         await self._say(self.host.context_manager.pinned.get("skills") or "No skills found.")
+
+    async def _allow_read(self, args: list[str]) -> None:
+        workspace = self.host.workspace
+        if workspace is None:
+            await self._say("No project is open.")
+            return
+        grants = workspace.read_grants
+        if not self._rest:
+            granted = [str(path) for path in grants.granted()]
+            always = [str(path) for path in grants.roots() if str(path) not in granted]
+            lines = ["Forge may read (read only), besides this project:"]
+            lines += [f"  {path}  (installed skills)" for path in always] or []
+            lines += [f"  {path}  (you allowed it)" for path in granted]
+            await self._say("\n".join(lines))
+            return
+        try:
+            granted_path = grants.grant(self._rest)
+        except ReadGrantError as error:
+            await self._say(str(error))
+            return
+        await self._say(
+            f"Forge may now read {granted_path} (and everything under it) in this project; read only. "
+            f"/revoke-read {granted_path} undoes it."
+        )
+
+    async def _revoke_read(self, args: list[str]) -> None:
+        workspace = self.host.workspace
+        removed = workspace is not None and workspace.read_grants.revoke(self._rest)
+        await self._say("Removed." if removed else "That path was not one you allowed.")
 
     async def _agents(self, args: list[str]) -> None:
         from forge.parity.agents import load_agents
