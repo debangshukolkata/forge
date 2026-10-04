@@ -18,6 +18,7 @@ from forge.llm.base import Message
 from forge.modeb.assumptions import AssumptionRegister
 from forge.modeb.output import build_modeb_output
 from forge.parity.history import History
+from forge.parity.mentions import grant_from_message
 from forge.protocol.events import EventType
 from forge.subagents.spawn_tool import SpawnSubagent
 from forge.toolkit.base import Tool, ToolContext, ToolResult
@@ -137,6 +138,10 @@ class Orchestrator:
 
     async def resume(self) -> None:
         await self._notice("resume", f"Resuming: {self.state.resume_summary()}")
+        for line in grant_from_message(
+            f"{self.state.requirement}\n{self.state.change_request}", self.workspace
+        ):
+            await self._notice("read_grant", line)
         await self.host.prepare_database()
         if self.state.current_task:
             self._start_task(self.state.task(self.state.current_task), resumed=True)  # type: ignore[arg-type]

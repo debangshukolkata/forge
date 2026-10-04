@@ -95,6 +95,19 @@ def _resolve(token: str, workspace: Workspace, lookup: dict[str, object], result
     return f"[@{label}]\n```\n{body}\n```"
 
 
+def grant_from_message(message: str, workspace: Workspace) -> list[str]:
+    """Opens for reading what the user's own words named (typed paths with a reading word, @full paths) and
+    returns what was newly opened. Used when a saved request is resumed: grants are kept per project, but a
+    project whose first message came before they could be made would otherwise stay closed."""
+    result = Expanded(text=message)
+    _grant_typed_paths(message, workspace, result)
+    for token in dict.fromkeys(MENTION.findall(message)):
+        path_text = token.partition(":")[0] if re.search(r":\d+-\d+$", token) else token
+        if Path(path_text).is_absolute() and Path(path_text).suffix.lower() not in IMAGE_SUFFIXES:
+            _grant(path_text, workspace, result)
+    return result.grants
+
+
 def _grant_typed_paths(message: str, workspace: Workspace, result: Expanded) -> None:
     """A path the user typed with a word like 'read' or 'review' is a request to read it: folders include
     everything under them. Only the user's own message is looked at, never tool output or file contents."""

@@ -3031,3 +3031,15 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
      `Workspace.own_folders()` / `is_own()`: Mode B's workspace is Forge's own folders only, so a typed path (or `/allow-read`) to a file
      beside them is a normal read grant (file only; `.env` still shows key names only). The shell's own-folders rule (D-211) uses the same method.
 - Side effect to know: a chat session now offers `ask_user` to the model; subagents do not get it.
+
+### D-213 — A plain-text question becomes a card; a resumed project reopens the files its request named (user report 2026-10-04)
+- Correction to D-212: in the web UI (orchestrated sessions) `ask_user` and its option card already existed all along; the model simply
+  chose to write its question as text (even with "Option A/B/C" lines) in the first run and again after a resume, whatever the prompt said.
+  D-212's `ask_user` for direct chat sessions stays (it helps non-orchestrated sessions) but was not the cause.
+- Fix: in `AgentLoop.run`, when a turn ends with a reply that asks the user something (ends in "?" or lists options) and `ask_user` is
+  available, the loop adds one system note ("ask it again with ask_user, 2-4 options, or carry on with your judgment") and lets the model
+  continue; at most once per turn, and never for subagents (they have no ask_user). Cost: one extra model call on such turns.
+  A false positive just costs that call: the model carries on or ends the turn again.
+- The resume bug: reopening a project re-runs its saved request, which bypassed the step that opens the files a typed path names, so a
+  project whose first message pre-dated the fix stayed closed ("does not exist"). `Orchestrator.resume` now calls
+  `grant_from_message` on the saved request (and change request) and announces anything newly opened.

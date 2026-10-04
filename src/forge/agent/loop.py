@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import os
+import re
 import time
 import traceback
 from datetime import date
@@ -77,6 +78,13 @@ def system_prompt(workspace: Workspace) -> str:
     )
 
 
+MAX_QUESTION_NUDGES = 1
+ASK_WITH_OPTIONS_NOTE = (
+    "You just asked the user a question as plain text. Ask it again by calling ask_user with 2-4 options "
+    "(a short description for each, your recommendation marked); the user can also type their own answer "
+    "there. Do not repeat the question in text. If you were not waiting for an answer, carry on with your "
+    "best judgment instead."
+)
 HOOKED_TOOLS = {"write_file", "edit_file", "multi_edit"}
 HOOK_TIMEOUT_S = 120
 
@@ -131,6 +139,7 @@ class AgentLoop:
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
         continuations = 0
+        question_nudges = 0
         self.hit_iteration_limit = False
         for _ in range(self.max_iterations):
             # After a cut-off reply, think less so the answer fits in the output limit (D-060).
@@ -167,6 +176,14 @@ class AgentLoop:
                         },
                     )
                     continue
+                if question_nudges < MAX_QUESTION_NUDGES and self._asked_in_plain_text(response.text):
+                    question_nudges += 1
+                    history.append(Message.system(ASK_WITH_OPTIONS_NOTE))
+                    await self.bus.publish(
+                        EventType.NOTICE,
+                        {"kind": "question_to_options", "text": "Turning the question into options."},
+                    )
+                    continue
                 return
             continuations = 0
             results: dict[str, Message] = {}
@@ -195,6 +212,20 @@ class AgentLoop:
                 "Say 'continue' to go on.",
             },
         )
+
+    def _asked_in_plain_text(self, text: str) -> bool:
+        """The reply ends by asking the user something (or lists options) although ask_user is available: the
+        user wants questions as clickable options with a box for their own answer, not as text."""
+        if "ask_user" not in self.tools.names():
+            return False
+        tail = text.strip()[-500:]
+        if "?" not in tail:
+            return False
+        ends_with_question = tail.rstrip(" \n*_)\"'\u201d").endswith("?")
+        lists_options = bool(re.search(r"(?im)^\s*(?:option\s+)?[A-D][\).:]\s", tail)) or bool(
+            re.search(r"(?i)\boption [A-D]\b", tail)
+        )
+        return ends_with_question or lists_options
 
     def _adaptive_effort(self) -> str | None:
         """EXPERIMENT (env FORGE_ADAPTIVE_EFFORT=low|medium): the reasoning effort for a step that only
