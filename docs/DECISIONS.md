@@ -2953,3 +2953,33 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Live check (Mode B, real Azure): told to read a file by its full path and use ui-ux-pro-max, the model read the file, ran the
   skill's script from `~\.forge\skills`, and used the brief's colour; the project folder held only the page.
 - Not built: a button or panel in the web UI for grants (commands only), a per-grant expiry.
+
+### D-209 — Web research as a chain of independent stages that never ends in nothing (user decision 2026-10-04)
+- Context: `web_fetch` was one path (Tavily or a plain GET); any failure was an error, a script-built page came back empty, PDFs were
+  rejected, and nothing stopped it reaching `localhost` or the intranet. The user asked for it to be modular so that something
+  is always returned, with subagents to dig deeper.
+- Design (modules in `tools/`): `web_guard.py` (address policy), `web_extract.py` (HTML via Trafilatura if installed else the
+  in-house converter; PDF via pypdfium2; text/JSON), `web_render.py` (read-only headless Edge/Chrome via Playwright),
+  `web_chain.py` (the stages), `web.py` (the tools). Stages for one page: cache -> direct HTTP (3 tries, backoff, Retry-After,
+  per-host pacing, guarded redirects) -> headless browser (only when the page came back empty/thin) -> Tavily extract (if keyed) ->
+  archive.org copy (only if the page could not be reached) -> the search snippet seen earlier. Each stage that cannot help records why;
+  the result says which stage answered. A thin page or a snippet is a PARTIAL result (ok, with the reason and what was tried), not
+  an error; only when nothing at all exists is it a failure, and then it lists every attempt and what to do next.
+- Guard (default on): loopback, private, link-local, shared and metadata addresses, `*.local`/`*.internal`, credentials in the URL
+  and non-http(s) schemes are refused; names that resolve to internal addresses too; every redirect hop and every browser
+  sub-request is re-checked. `web.allow_hosts` opens a named internal host; `web.deny_domains` / `web.allow_domains` are lists.
+  `web.ask_new_domains` (default off, speed first, D-161) asks once per site, remembered per host, through the existing
+  approval flow; the user's `permissions.deny` rules can also name a site, e.g. `web_fetch(*evil.example*)`.
+- Browser: fresh profile, no cookies, downloads and service workers off, images/media/fonts not loaded, 25 s limit; no click/type
+  on external pages (a page's hidden instructions could drive them). Unavailable (Playwright or browser missing) is recorded, not fatal.
+- Search: SearXNG added as an optional provider (`SEARXNG_URL` in .env, first in the default order, skipped when unset); every
+  result's snippet is remembered so `web_fetch` can fall back to it.
+- Subagent `researcher` (`spawn_subagent`): searches and reads several sources, cross-checks, reports claims with URLs, what
+  disagrees and what could not be read; if it stops early the caller still gets a message with next steps. Skill `web-research`
+  holds the protocol for the main agent.
+- Security fix found on the way: subagents did not inherit the web settings, so in Mode B an explore/reviewer subagent's
+  `web_search` skipped the host-term filter and its own keys. They now inherit them all (`inherit_web_settings`).
+- New optional dependency: `trafilatura` (Apache-2.0; pulls lxml BSD, justext BSD, courlan and htmldate Apache), extra `webtext`;
+  without it the in-house converter is used. Playwright was already an optional extra.
+- Left out on purpose: click/type/scroll tools on external sites, login or cookie storage for the web, robots.txt checks for single
+  pages the user asked for. Not built: domain rules in the web UI.

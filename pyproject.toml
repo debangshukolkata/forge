@@ -34,6 +34,7 @@ dependencies = [
 # Optional features; each degrades with a `forge doctor` message when missing (D-098).
 browser = ["playwright>=1.45"]  # browser_open / screenshots (Apache-2.0)
 mcp = ["mcp>=2.0"]  # MCP client (MIT)
+webtext = ["trafilatura>=1.12"]  # cleaner Markdown from web pages for web_fetch (Apache-2.0); optional, D-209
 gemini = ["google-genai>=1.0"]  # Gemini on Vertex AI (Apache-2.0); auth is ADC, D-150
 dev = [
     "pytest>=8.0",

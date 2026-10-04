@@ -5,11 +5,14 @@ can't nest (spec §13B)."""
 from __future__ import annotations
 
 from forge.config import forge_home
+from forge.errors import LLMError
 from forge.parity.agents import load_agents
 from forge.subagents.review import REVIEWER_PROMPT
 from forge.subagents.subagent import (
     DEBUGGER_PROMPT,
     EXPLORE_PROMPT,
+    RESEARCHER_ITERATIONS,
+    RESEARCHER_PROMPT,
     VERIFIER_ITERATIONS,
     VERIFIER_PROMPT,
     _run_subagent,
@@ -26,6 +29,7 @@ class SpawnSubagent(Tool):
     description = (
         "Delegate a self-contained job to a subagent with its own fresh context: 'explore' "
         "(read-only search), "
+        "'researcher' (digs into a question on the web, cross-checks sources, reports with URLs), "
         "'reviewer' (second opinion on a change), 'debugger' (root cause of a failure), 'verifier' "
         "(independently derives acceptance checks from the requirement, writes and runs its own "
         "Playwright or test scripts against the running app and reports PASS/FAIL), or a custom agent "
@@ -49,6 +53,24 @@ class SpawnSubagent(Tool):
             report = await _run_subagent(
                 router, context, ToolRegistry(read_only), EXPLORE_PROMPT, args.task, 25, "coder"
             )
+        elif args.agent == "researcher":
+            try:
+                report = await _run_subagent(
+                    router,
+                    context,
+                    ToolRegistry(read_only),
+                    RESEARCHER_PROMPT,
+                    args.task,
+                    RESEARCHER_ITERATIONS,
+                    "coder",
+                    needs_user_approvals=True,
+                )
+            except LLMError as error:  # whatever the model could not finish, the caller still gets an answer
+                report = (
+                    f"The researcher stopped early ({error}). Search with web_search yourself, or ask "
+                    "again with "
+                    "a narrower question."
+                )
         elif args.agent == "debugger":
             tools = ToolRegistry([*read_only, RunCommand()])
             report = await _run_subagent(router, context, tools, DEBUGGER_PROMPT, args.task, 20, "reviewer")

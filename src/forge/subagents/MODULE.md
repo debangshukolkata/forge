@@ -1,7 +1,7 @@
 # subagents
 
 Fresh-context helpers the main agent can delegate to: explore (read-only search), reviewer (second opinion on a
-change), debugger (root cause of a failure), and custom agents from `<forge_home>/agents/`. Each runs its own
+change), debugger (root cause of a failure), researcher (web research with sources, D-209), and custom agents from `<forge_home>/agents/`. Each runs its own
 AgentLoop with a restricted toolset and returns one report. Also the `spawn_subagent` tool.
 
 - **Depends on:** agent, config, context, errors, llm, parity, protocol, safety, toolkit, tools, workspace

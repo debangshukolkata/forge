@@ -69,7 +69,16 @@ class ToolContext:
     summarise: Callable[[str, str], Awaitable[str]] | None = None  # (text, instruction) -> summary
     browser: Any = None  # forge.tools.browser.BrowserSession, started on first use
     web_search_provider: str = "auto"  # config web.search_provider
-    web_search_order: tuple[str, ...] = ("duckduckgo", "serpapi", "azure", "tavily")  # web.search_order
+    web_search_order: tuple[str, ...] = (
+        "searxng",
+        "duckduckgo",
+        "serpapi",
+        "azure",
+        "tavily",
+    )  # web.search_order
+    web_policy: Any = None  # forge.tools.web_guard.WebPolicy: which addresses web_fetch may reach (D-209)
+    web_render: bool = True  # web.render: use the headless browser for pages that need JavaScript
+    web_archive: bool = True  # web.archive_fallback
     profile: Any = None  # forge.modeb.profile.HostProfile (Mode B)
     router: Any = None  # forge.llm.router.LLMRouter, for tools that run subagents
     sensitive_terms: tuple[str, ...] = ()  # Mode B: host-identifying words that must never reach a web search

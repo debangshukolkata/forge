@@ -57,6 +57,7 @@ from forge.tools.todo import TodoItem
 from forge.tools.todo import render as render_todos
 from forge.tools.vision import ocr_tools
 from forge.tools.web import azure_hosted_search
+from forge.tools.web_guard import WebPolicy
 from forge.workflow.orchestrator import Orchestrator
 from forge.workspace.read_grants import ReadGrants
 from forge.workspace.workspace import Workspace
@@ -247,6 +248,9 @@ class SessionHost:
         context.secrets = self.secrets
         context.web_search_provider = web.search_provider
         context.web_search_order = tuple(web.search_order)
+        context.web_policy = WebPolicy.from_config(web)
+        context.web_render = web.render == "auto"
+        context.web_archive = web.archive_fallback
         context.hosted_search = azure_hosted_search(self.router, web.azure_search_role)
         context.summarise = self._summarise
         context.router = self.router
@@ -256,6 +260,7 @@ class SessionHost:
         self.refresh_memory_pin()
         self.style: str | None = None
         gate = PermissionGate(mode, workspace.forge_dir / "permissions.json", permission_rules())
+        gate.ask_new_domains = web.ask_new_domains
         loop = AgentLoop(
             self.router,
             self.bus,

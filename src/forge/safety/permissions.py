@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
 
 from forge.errors import ConfigError
 from forge.safety.shell_classifier import Classification, ShellScope, classify
@@ -111,6 +112,7 @@ class PermissionGate:
         self.mode: PermissionMode = mode
         self._rules_file = rules_file
         self.rules = rules or PermissionRules()
+        self.ask_new_domains = False  # web.ask_new_domains: ask before the first fetch from each site (D-209)
 
     def decide(
         self,
@@ -123,6 +125,14 @@ class PermissionGate:
         denied = self.rules.denied_by(tool_name, command)
         if denied is not None:
             return Decision("deny", f"denied by your settings rule '{denied.text}'")
+        if tool_name == "web_fetch" and command and self.ask_new_domains and self.mode != "auto":
+            host = (urlparse(command).hostname or "").lower()
+            if (
+                host
+                and host not in self.allowed_prefixes()
+                and self.rules.allowed_by(tool_name, command) is None
+            ):
+                return Decision("ask", f"first fetch from {host}", command_prefix=host)
         if read_only:
             return Decision("allow", "read-only")
         if self.mode == "plan":

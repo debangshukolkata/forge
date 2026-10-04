@@ -266,6 +266,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed 
 - [x] Shell: indirect `.env` reads always ask (D-187); Forge's own variables hidden from commands (D-202)
 - [x] Tesseract: the `ocr_image` tool the model can call (D-203)
 - [x] Gemini provider built and pushed (D-150, D-205): adapter, router dispatch, drawer real call + (i) steps; project/location optional
+- [x] Web research chain (D-209): guard, PDF + Markdown extraction, headless-browser fallback, archive/snippet fallbacks, `researcher` subagent, `web-research` skill, SearXNG provider
 - [x] Read grants (D-208): `/allow-read`, `/revoke-read`, typed paths, installed skills readable in both modes; no skill copies
 - [x] `forge skill add/list/remove` (D-207): third-party skills like Claude Code; `load_skill` reads a skill's own files
 - [ ] Gemini: run `scripts/dev/gemini_smoke.py` / the drawer test on the office laptop (never called live here); `view_video` waits for the video probe

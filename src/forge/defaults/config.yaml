@@ -72,9 +72,15 @@ cost:
     phase: {usd: [0.10, 0.50], tokens: [150000, 600000]}
 
 web:
-  search_provider: auto            # auto (search_order with fallback) | duckduckgo | serpapi | tavily | azure | off
-  search_order: [duckduckgo, serpapi, azure, tavily]   # providers without a key are skipped
+  search_provider: auto            # auto (search_order with fallback) | searxng | duckduckgo | serpapi | tavily | azure | off
+  search_order: [searxng, duckduckgo, serpapi, azure, tavily]   # providers without a key/URL are skipped
   azure_search_role: summariser    # azure: this role's model runs Azure OpenAI's built-in web_search (extra per-search fee)
+  allow_hosts: []                  # internal hosts web_fetch / the browser may reach (default: none; D-209)
+  deny_domains: []
+  allow_domains: []                # when not empty, only these domains and their subdomains
+  ask_new_domains: false           # true: ask before the first fetch from each site
+  render: auto                     # auto | off: headless browser for pages that need JavaScript
+  archive_fallback: true           # try archive.org for a page that cannot be reached
 
 hooks:
   post_edit: []                    # e.g. ["ruff format {file}"] — runs after every file edit ({file} = edited path)
