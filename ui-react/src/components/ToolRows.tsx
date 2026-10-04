@@ -2,7 +2,7 @@
 // diffs, and runs of read/search calls folded into one line. A call is one quiet line; opening it shows what
 // went in and what came out. Failed calls and edits open by themselves.
 import { AlertOctagon, CheckCircle2, ChevronRight, XCircle } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Code, api, cx } from "../lib";
 import type { ChatItem } from "../types";
 import { AgentSteps, agentCounts, latestStepText, roleLabel } from "./AgentSteps";
@@ -117,6 +117,11 @@ export function ToolCard({ item }: { item: ToolItem }) {
   const failed = item.state === "fail" && !retried;
   const [open, setOpen] = useState(Boolean(item.diff));
   const [showAll, setShowAll] = useState(false);
+  // A running helper agent shows its steps as they happen; it folds away when it is done (unless the user chose).
+  const touched = useRef(false);
+  useEffect(() => {
+    if (item.agent && !touched.current) setOpen(item.state === "running");
+  }, [item.agent !== undefined, item.state]); // eslint-disable-line react-hooks/exhaustive-deps
   // A failure shows what went wrong without a click (once, when it fails; the user can still close it).
   useEffect(() => {
     if (failed) setOpen(true);
@@ -144,7 +149,10 @@ export function ToolCard({ item }: { item: ToolItem }) {
     <div>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          touched.current = true;
+          setOpen((v) => !v);
+        }}
         aria-expanded={open}
         className={cx(
           "flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-fg-muted transition-colors duration-150 hover:bg-surface",

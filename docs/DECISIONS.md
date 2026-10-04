@@ -3043,3 +3043,18 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - The resume bug: reopening a project re-runs its saved request, which bypassed the step that opens the files a typed path names, so a
   project whose first message pre-dated the fix stayed closed ("does not exist"). `Orchestrator.resume` now calls
   `grant_from_message` on the saved request (and change request) and announces anything newly opened.
+
+### D-214 — The question is a pop-up with select-then-submit; a working helper shows what it is doing (user request 2026-10-04, screenshots)
+- Before: clicking an option sent the answer at once, with no sign of what was selected, and the question sat in the chat.
+- Now (`ui-react/src/components/QuestionDialog.tsx`): the oldest unanswered question opens as a pop-up. Options are a radio list
+  (click selects, click again clears; keys 1-4 select); a box takes the user's own answer, or a note when an option is selected; a line
+  above the button says exactly what will be sent; "Submit answer" sends (Enter or Ctrl+Enter also). "Answer later" (X, or Esc, which does
+  not stop the run) leaves the question in the chat as the same form, with "Show as a pop-up" to bring it back. After answering, the chat
+  card shows "You chose: X" (or "You answered: ..."). A question that is no longer pending (e.g. a reopened project) never pops up.
+- Helpers: a running helper agent's row in the chat opens by itself, so its tool calls and notes appear as they happen, and folds away when
+  it is done (unless the user opened or closed it themselves). The activity line above the message box now says "<Role> is working" with
+  its call count and its newest step instead of repeating the task text.
+- Tests: `tests/test_web_question_e2e.py` (real path in headless Edge: the model asks, the user selects, changes their mind, adds a note,
+  submits; the next model call carries the answer; "Answer later" and the way back) and an added check in `test_react_subagent_steps_are_nested`.
+- Not deployed to the running server when built (the user's session was in progress): the UI change reaches a browser on its next reload
+  and the Python side is unchanged by this entry.

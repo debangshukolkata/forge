@@ -11,6 +11,7 @@ import { duration } from "../runmap";
 import type { UsageBucket } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
+import { agentCounts, latestStepText, roleLabel } from "./AgentSteps";
 
 /** Re-renders every second while `active` (for timers). */
 function useNow(active: boolean): number {
@@ -99,6 +100,11 @@ export function ActivityLine({ forge }: { forge: Forge }) {
   let loader: LoaderStyle;
   if (activity.kind === "tool" && activity.tool) {
     ({ label, detail, loader } = toolActivity(activity.tool.name, activity.tool.summary));
+    const helper = [...forge.timeline.items].reverse().find((item) => item.kind === "tool" && item.agent && item.state === "running");
+    if (activity.tool.name === "spawn_subagent" && helper?.kind === "tool" && helper.agent) {
+      label = `${roleLabel(helper.agent.role)} is working`;
+      detail = `${agentCounts(helper.agent)} · ${latestStepText(helper.agent)}`;
+    }
   } else if (activity.kind === "writing") {
     label = "Writing the reply";
     loader = "type";

@@ -1,12 +1,13 @@
 import {
   AlertOctagon, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload,
 } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
 import type { ChatItem, EnvironmentOverview, UserInput } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
 import { Composer, useAttachments } from "./Composer";
+import { QuestionDialog, QuestionForm, QuestionPopup } from "./QuestionDialog";
 import { TodoStrip } from "./TodoList";
 import { LookingGroup, ThinkingLine, ToolCard, groupLookingRuns } from "./ToolRows";
 import { Badge, Button, CopyButton, Textarea } from "./ui";
@@ -18,6 +19,12 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
   const { items } = forge.timeline;
   const attachments = useAttachments();
   const [dragging, setDragging] = useState(false);
+  // The oldest question still waiting for an answer opens as a pop-up; "Answer later" leaves it in the chat.
+  const pending = items.find(
+    (item): item is Extract<ChatItem, { kind: "question" }> => item.kind === "question" && forge.timeline.answered[item.id] === undefined,
+  );
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  const popupId = pending && forge.controls && !dismissed.includes(pending.id) ? pending.id : null;
 
   useLayoutEffect(() => {
     const box = scroller.current;
@@ -25,6 +32,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
   }, [items, forge.replaying]);
 
   return (
+    <QuestionPopup.Provider value={{ popupId, reopen: (id) => setDismissed((list) => list.filter((x) => x !== id)) }}>
     <div
       className="relative flex min-h-0 flex-1 flex-col"
       onDragOver={(e) => {
@@ -82,7 +90,11 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
       </div>
       <TodoStrip todos={forge.timeline.todos} />
       <Composer forge={forge} attachments={attachments} />
+      {pending && popupId && (
+        <QuestionDialog id={pending.id} p={pending.payload} forge={forge} onDismiss={() => setDismissed((list) => [...list, pending.id])} />
+      )}
     </div>
+    </QuestionPopup.Provider>
   );
 }
 
@@ -284,64 +296,29 @@ function ApprovalCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
 }
 
 function QuestionCard({ id, p, forge }: { id: string; p: P; forge: Forge }) {
-  const [text, setText] = useState("");
   const answered = forge.timeline.answered[id];
-  const options: P[] = p.options || [];
-  const choose = (label: string) => forge.answer(id, { kind: "answer", question_id: p.id, choice: label }, `You chose: ${label}`);
-  const onKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    const option = options[Number(event.key) - 1];
-    if (option && answered === undefined && event.target === event.currentTarget) choose(option.label);
-  };
-  return (
-    <div tabIndex={0} onKeyDown={onKey} className="rounded-xl outline-none">
-      <AskCard kind="question" icon={<HelpCircle className="h-4 w-4" />} title={p.question} answered={answered}>
-        {p.context && <Markdown text={p.context} className="text-fg-muted" />}
-        <div className="space-y-2">
-          {options.map((option, index) => {
-            const recommended = option.label === p.recommended;
-            return (
-              <button
-                key={option.label}
-                type="button"
-                data-recommended={recommended ? "" : undefined}
-                onClick={() => choose(option.label)}
-                className={cx(
-                  "flex w-full cursor-pointer gap-3 rounded-lg border p-3 text-left transition-colors duration-150",
-                  recommended ? "border-accent/60 bg-accent-soft hover:border-accent" : "border-border hover:border-border-strong hover:bg-raised",
-                )}
-              >
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border border-border-strong font-mono text-[11px] text-fg-muted">
-                  {index + 1}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2 font-medium">
-                    {option.label}
-                    {recommended && <Badge tone="accent">Recommended</Badge>}
-                  </span>
-                  {option.description && <span className="mt-0.5 block text-[12.5px] text-fg-muted">{option.description}</span>}
-                  {(option.pros || option.cons || option.risks) && (
-                    <span className="mt-1 block space-y-0.5 text-[12px]">
-                      {option.pros && <span className="block text-ok">Pros: {option.pros}</span>}
-                      {option.cons && <span className="block text-warn">Cons: {option.cons}</span>}
-                      {option.risks && <span className="block text-danger">Risks: {option.risks}</span>}
-                    </span>
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="flex gap-2">
-          <Textarea rows={1} value={text} onChange={(e) => setText(e.target.value)} placeholder="Or type your own answer…" className="flex-1" />
-          <Button
-            disabled={!text.trim()}
-            onClick={() => forge.answer(id, { kind: "answer", question_id: p.id, text: text.trim() }, `You answered: ${text.trim()}`)}
-          >
-            Send
-          </Button>
-        </div>
+  const { popupId, reopen } = useContext(QuestionPopup);
+  const icon = <HelpCircle className="h-4 w-4" />;
+  if (answered === undefined && popupId === id) {
+    // The question is open as a pop-up: this card only marks the place in the conversation.
+    return (
+      <AskCard kind="question" icon={icon} title={p.question} answered={undefined}>
+        <div className="text-[13px] text-fg-muted">Waiting for your answer in the pop-up.</div>
       </AskCard>
-    </div>
+    );
+  }
+  return (
+    <AskCard kind="question" icon={icon} title={p.question} answered={answered}>
+      {p.context && <Markdown text={p.context} className="text-fg-muted" />}
+      {answered === undefined && (
+        <>
+          <QuestionForm id={id} p={p} forge={forge} />
+          <button type="button" onClick={() => reopen(id)} className="cursor-pointer text-[12px] font-semibold text-accent hover:underline">
+            Show as a pop-up
+          </button>
+        </>
+      )}
+    </AskCard>
   );
 }
 

@@ -572,6 +572,10 @@ def test_react_subagent_steps_are_nested(server: ServerSecurity, workspace: Work
         assert "2 calls, 1 failed" in reviewer.inner_text()
         assert "grep: def authenticate" in explorer.inner_text()
         assert page.locator("ol[aria-label='Reviewer steps']").count() == 0
+        # A helper that is still working shows its steps by itself, without a click (D-214).
+        running_steps = page.locator("ol[aria-label='Explorer steps']")
+        running_steps.wait_for()
+        assert "def authenticate" in running_steps.inner_text()
         # The agent was paired with its own spawn row: no extra row was made for it.
         assert page.locator("button:has-text('spawn_subagent')").count() == 0
 

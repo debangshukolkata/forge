@@ -123,6 +123,9 @@ def test_run_map_grows_from_the_events(
             {"id": "A7", "title": "Approve the audit change", "body": "…", "options": ["approve", "reject"]},
         )
 
+        # A pending question opens as a pop-up (D-214); these tests are about the run map, so set it aside.
+        page.locator("[role=dialog][aria-label='Question from Forge']").wait_for(timeout=5000)
+        page.click("button[aria-label='Answer later']")
         page.click("[role=tab]:has-text('Run map')")
         page.wait_for_selector("[data-testid=run-map]")
         page.wait_for_selector("[data-task=T1][data-status=done]")
@@ -218,6 +221,8 @@ def test_activity_line_and_run_totals(
             {"id": "Q9", "question": "Keep the BIN?", "options": [{"label": "No"}], "recommended": "No"},
         )
         page.wait_for_selector("[role=status]:has-text('Waiting for your answer')")
+        page.locator("[role=dialog][aria-label='Question from Forge']").wait_for(timeout=5000)
+        page.click("button[aria-label='Answer later']")  # the pop-up (D-214) would cover the page
         # The cost counts up to each new total, then settles on the exact value.
         publish(EventType.COST_UPDATED, {"total_usd": 0.5578, "budget_usd": 5.0, "calls": 52})
         page.wait_for_selector("span[title^='Estimated cost'] >> text=$0.5578", timeout=5000)
