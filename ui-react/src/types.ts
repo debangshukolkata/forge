@@ -75,11 +75,21 @@ export interface DoctorResult {
   detail: string;
 }
 
-/** GET /api/setup: which required env values are missing, so the app can decide whether to show the
- * guided first-run setup screen at all (D-145/D-146) before rendering anything else. */
+/** GET /api/setup: where the .env file is, which names it should hold and which are filled in (names only,
+ * never a value), and a template to copy (D-204). `missing` is the required names not filled in: the app
+ * shows the setup guide first when it is not empty. */
 export interface SetupStatus {
   missing: string[];
   config_error: string | null;
+}
+
+export interface SetupGuideInfo extends SetupStatus {
+  path: string;
+  exists: boolean;
+  overridden: boolean; // the location comes from the FORGE_ENV_FILE variable
+  groups: { title: string; note: string; required: boolean }[];
+  variables: { name: string; group: string; expects: string; why: string; required: boolean; filled: boolean }[];
+  template: string;
 }
 
 export interface ContextInfo {

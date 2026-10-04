@@ -210,6 +210,10 @@ def test_environment_screen_in_edge(
         page.click("button:has-text('Environment')")
         drawer = page.locator("[role=dialog][aria-label=Environment]")
         drawer.wait_for()
+        page.wait_for_selector(
+            "[data-check=azure] >> text=Not tested yet"
+        )  # opening the drawer tests nothing
+        drawer.locator("button:has-text('Test all')").click()
         page.wait_for_selector("text=Azure OpenAI")
         page.wait_for_selector("text=no answer from the deployment")  # the azure row finished
         page.wait_for_selector("text=Tesseract OCR")
@@ -355,6 +359,8 @@ def test_optional_tools_are_asked_before_they_are_tested(
         page.click("button:has-text('Environment')")
         drawer = page.locator("[role=dialog][aria-label=Environment]")
         drawer.wait_for()
+        assert calls == []  # opening the drawer tests nothing
+        drawer.locator("button:has-text('Test all')").click()
         page.wait_for_selector("text=serves gpt-5.1")
 
         tesseract = drawer.locator("[role=group][aria-label='Is Tesseract installed on this computer?']")
@@ -371,19 +377,21 @@ def test_optional_tools_are_asked_before_they_are_tested(
         assert calls == ["tesseract"]
         page.screenshot(path=str(shots / "environment-ask-light.png"))
 
-        # The answers are remembered: after a reload the drawer shows them and tests only what was a yes.
+        # The answers are remembered: after a reload the drawer shows them and the last results, tests
+        # nothing, and "Test all" then tests only what was a yes.
         page.reload()
         page.click("button:has-text('Environment')")
         tesseract.wait_for()
         assert tesseract.locator("button:has-text('Yes')").get_attribute("aria-pressed") == "true"
         assert gemini.locator("button:has-text('No')").get_attribute("aria-pressed") == "true"
-        # The saved result shows at once; the yes is tested again in the background: wait for that call.
+        page.wait_for_selector("text=read a test image correctly")  # the saved result, not a new test
+        assert calls == ["tesseract"] and "Not in use." in drawer.inner_text()
+        drawer.locator("button:has-text('Test all')").click()
         for _ in range(100):
             if len(calls) >= 2:
                 break
             page.wait_for_timeout(100)
-        page.wait_for_selector("text=read a test image correctly")
-        assert calls == ["tesseract", "tesseract"] and "Not in use." in drawer.inner_text()
+        assert calls == ["tesseract", "tesseract"]  # Gemini (a no) was left alone
 
         # The server holds to the answer whatever a page asks for.
         status = page.evaluate(

@@ -8,7 +8,7 @@ import { Hub } from "./components/Hub";
 import { Login } from "./components/Login";
 import { NewProject } from "./components/NewProject";
 import { ProjectList } from "./components/ProjectList";
-import { Setup } from "./components/Setup";
+import { SetupGuide } from "./components/SetupGuide";
 import { IconButton, Spinner } from "./components/ui";
 import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
@@ -18,7 +18,7 @@ import type { AuthStatus, SetupStatus } from "./types";
 import { useForge } from "./useForge";
 
 type Theme = "dark" | "light";
-type View = "hub" | "new" | "open" | "account" | "chat";
+type View = "hub" | "new" | "open" | "account" | "setup" | "chat";
 
 // Login first (D-184); the engine session and everything else only start once signed in.
 export function App() {
@@ -133,7 +133,16 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
   }
 
   if (missingSecrets.length > 0) {
-    return <Setup missing={missingSecrets} onDone={() => setMissingSecrets([])} />;
+    // Right after the guide, the Environment drawer opens by itself so the connections can be tested (D-204).
+    return (
+      <SetupGuide
+        first
+        onDone={() => {
+          setMissingSecrets([]);
+          setEnvOpen(true);
+        }}
+      />
+    );
   }
 
   return (
@@ -146,6 +155,8 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
             <div className="min-h-0 flex-1 overflow-y-auto bg-bg">
               {view === "new" ? (
                 <NewProject onBack={() => setView("hub")} onOpenEnvironment={() => setEnvOpen(true)} onCreated={async () => { setEnvOpen(false); await forge.enter(); setView("chat"); }} />
+              ) : view === "setup" ? (
+                <SetupGuide first={false} onDone={() => setView(forge.state.workspace ? "chat" : "hub")} onBack={() => setView(forge.state.workspace ? "chat" : "hub")} />
               ) : view === "account" ? (
                 <Account user={user} onBack={() => setView(forge.state.workspace ? "chat" : "hub")} />
               ) : view === "open" ? (
@@ -166,7 +177,15 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
             </>
           )}
         </main>
-        {envOpen && <EnvironmentDrawer onClose={() => setEnvOpen(false)} />}
+        {envOpen && (
+          <EnvironmentDrawer
+            onClose={() => setEnvOpen(false)}
+            onOpenGuide={() => {
+              setEnvOpen(false);
+              setView("setup");
+            }}
+          />
+        )}
         {!envOpen && view === "chat" && surface === "chat" && forge.state.workspace && (
           <Panels forge={forge} collapsed={panelsCollapsed} onExpand={() => collapsePanels(false)} />
         )}

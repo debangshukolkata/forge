@@ -2787,7 +2787,7 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - **Phase leftovers hidden:** the top bar's status badge ("direct") and the Tasks tab's "Phase direct" line showed the engine's coarse
   status string, which means nothing to a user since the phase pipeline went (D-131). Removed; the engine still sends the field.
 
-### D-200 — Azure keys on the Environment drawer (2026-10-03)
+### D-200 — Azure keys on the Environment drawer (2026-10-03; REPLACED by D-204: keys are no longer typed into the app)
 - The **Azure OpenAI** row of the drawer now lets you fix what it reports: when required values are missing it lists them (names
   only) in a form (the key field is masked), and "Save and test" writes them and re-runs the check at once; when everything is set a
   quiet **Update keys** button opens the same form with every required name, empty, where a blank field keeps the saved value. Until
@@ -2855,3 +2855,28 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   (**chosen**: costs nothing unused, the model asks when exact text matters). Tests: `tests/test_ocr.py` (real Tesseract: a screenshot, a
   region, a two-page PDF, a blank image; skipped without Tesseract) plus the gating tests. Gemini is unchanged: still only detected, and
   it cannot be verified on the build machine (see memory note on build-machine tools).
+
+### D-204 — The settings-file guide and the test-by-request drawer (user decisions 2026-10-04; replaces D-200)
+- **The first run now shows a guide, not a form.** "Set up Forge" says **where the .env file is** (its exact path, whether it exists, and
+  when the location comes from `FORGE_ENV_FILE`; a Copy path button), says plainly that **the page cannot see the keys** (it only checks
+  which names are filled in; a key is never shown or sent to the browser) and asks the user to edit the file themselves. It lists every
+  name Forge reads, grouped, with what each should hold and whether it is required, offers a **Copy template** (generated from Forge's
+  own configuration in `environment/guide.py`, placeholders only), and after the user saves the file a **Check the file** button shows
+  each name as filled in or missing (names only). The two optional-tool questions (Tesseract installed? Gemini enabled?, D-201) are
+  asked here too. **Continue** needs the required Azure names filled in; "Skip for now" stays. The same guide opens later from the
+  Environment drawer ("Where is the file, and what goes in it?").
+- **Two databases, two rows (user decision):** the **Forge database** (`LOCAL_PG_URL`: where Forge develops, writing only its own
+  scratch schema per requirement) and the **Development database, read-only** (`DEV_PG_URL`: an existing database Forge may read, never
+  writes). Both optional, each with its own text and its own Test; there is **no "use one database for both" suggestion** anywhere.
+  `FORGE_PG_URL` (the build repo's own test database) is not in the template. A database that is set but does not answer is **Failed**
+  with the reason (the doctor's "warning" is raised to a failure here); one that is not set is a Warning that names the variable.
+- **The drawer tests only when asked:** opening it shows the last results ("Tested 5 minutes ago") and tests nothing; each row has a
+  **Test** button, and **Test all** tests every row that applies (the two optional tools only after a yes). Wording: Connected / Failed /
+  Warning / Not in use / Not tested yet ("Working" for the two rows that are not connections). Saving the models needs Azure tested.
+  After the guide's Continue the drawer opens by itself. A row cannot be tested before its yes/no is answered; the server holds to that.
+- **Keys are never typed into the app (user decision), so the writing path is gone:** `POST /api/setup/secrets`, the first-run form
+  (`Setup.tsx`) and the drawer's key form (`AzureKeys.tsx`, D-200) are removed; no endpoint of the web app can write the .env file.
+  A project that is already open keeps the keys it started with (the model router reads them when the session starts); a new project or
+  a restart picks up edits, and the drawer's Azure test always reads the file fresh. Tests: `tests/test_setup_guide.py`,
+  `tests/test_web_setup_guide_e2e.py` (`setup-guide-light.png`, `environment-tests-light.png`), updated drawer tests in
+  `tests/test_web_login_e2e.py`. `write_secret_values` stays in config.py, now unused by the web app.

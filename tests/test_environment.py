@@ -72,8 +72,8 @@ def test_saved_choice_is_kept_and_unknown_keys_ignored() -> None:
 
 def test_database_note_only_when_it_is_not_ok() -> None:
     config = default_config()
-    assert propose_plan(config, {"postgres": {"status": "ok"}}, {})["notes"] == []
-    assert propose_plan(config, {"postgres": {"status": "warn"}}, {})["notes"]
+    assert propose_plan(config, {"postgres_local": {"status": "ok"}}, {})["notes"] == []
+    assert propose_plan(config, {"postgres_local": {"status": "warn"}}, {})["notes"]
 
 
 def test_validate_plan_rejects_what_cannot_be_applied() -> None:
@@ -132,7 +132,14 @@ def test_environment_endpoints(
 ) -> None:
     origin = {"origin": "http://127.0.0.1:8797"}
     overview = client.get("/api/environment").json()
-    assert [c["id"] for c in overview["checks"]] == ["system", "azure", "postgres", "gemini", "tesseract"]
+    assert [c["id"] for c in overview["checks"]] == [
+        "system",
+        "azure",
+        "postgres_local",
+        "postgres_dev",
+        "gemini",
+        "tesseract",
+    ]
     assert overview["saved"]["confirmed_at"] is None and len(overview["plan"]["roles"]) == len(ROLES)
 
     tested: list[str] = []
@@ -184,7 +191,7 @@ def test_azure_check_names_the_missing_values_without_calling_the_network(
     outcome = asyncio.run(checks.run_check("azure"))
 
     assert outcome.status == "fail" and "AZURE_OPENAI_API_KEY" in outcome.missing
-    assert "Enter them below" in outcome.hint and outcome.to_dict()["missing"] == outcome.missing
+    assert "setup guide" in outcome.hint and outcome.to_dict()["missing"] == outcome.missing
 
 
 def test_the_overview_says_which_checks_ask_a_question(client: TestClient) -> None:

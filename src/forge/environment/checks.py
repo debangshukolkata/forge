@@ -45,7 +45,18 @@ class CheckInfo:
 CHECKS = (
     CheckInfo("system", "This computer", False, "Python, packages, certificates and the Forge folder"),
     CheckInfo("azure", "Azure OpenAI", False, "The models Forge works with"),
-    CheckInfo("postgres", "PostgreSQL", True, "A database for scratch schemas and data checks"),
+    CheckInfo(
+        "postgres_local",
+        "Forge database",
+        True,
+        "Where Forge develops: its own scratch schema for each requirement (LOCAL_PG_URL)",
+    ),
+    CheckInfo(
+        "postgres_dev",
+        "Development database (read-only)",
+        True,
+        "An existing database Forge may read for reference; it never writes to it (DEV_PG_URL)",
+    ),
     CheckInfo(
         "gemini",
         "Gemini",
@@ -115,7 +126,7 @@ async def check_azure(config: ForgeConfig) -> Outcome:
             "azure",
             "fail",
             present.detail,
-            "Enter them below, or add them to the .env file in the Forge folder (see .env.example).",
+            "Add them to the .env file (the setup guide shows where and what), then test again.",
             missing=missing_secret_names(config, secrets),
         )
     models = await check_models(config, secrets)
@@ -128,15 +139,34 @@ async def check_azure(config: ForgeConfig) -> Outcome:
     return outcome
 
 
-def check_postgres(config: ForgeConfig) -> Outcome:
-    results = check_databases(config, load_secrets(forge_home()))
-    optional_hint = "Optional: set LOCAL_PG_URL (or DEV_PG_URL) in .env and start PostgreSQL."
+def check_postgres(config: ForgeConfig, which: str) -> Outcome:
+    """One database at a time: `local` is the Forge database, `dev` the read-only development database."""
+    check_id = f"postgres_{which}"
+    setting = config.postgres.connections.get(which)
+    if setting is None:
+        return Outcome(check_id, "warn", "This database is not configured.", "Nothing to do for now.")
+    if not load_secrets(forge_home()).get(setting.url_env):
+        return Outcome(
+            check_id,
+            "warn",
+            f"{setting.url_env} is not set.",
+            f"Optional: add {setting.url_env} to the .env file, then test again.",
+        )
+    # Test this one database only: a config that holds just its connection (a failure of the other one is
+    # not this row's business, and its connection attempt would only slow this test down).
+    single = config.model_copy(
+        update={"postgres": config.postgres.model_copy(update={"connections": {which: setting}})}
+    )
+    results = check_databases(single, load_secrets(forge_home()))
     if not results:
-        return Outcome("postgres", "warn", "No database is configured.", optional_hint)
-    # One reachable database is enough for the scratch-schema features; the detail names each one.
-    best = min((r.status for r in results), key=lambda status: RANK[status])
-    detail = "; ".join(f"{r.name}: {r.detail}" for r in results)
-    return Outcome("postgres", best, detail, "" if best == "ok" else optional_hint)
+        return Outcome(check_id, "warn", "This database is not configured.", "Nothing to do for now.")
+    # The doctor calls "could not connect" a warning; here the URL is set, so a database that does not answer
+    # is a failed connection with the reason (the password is redacted from the detail).
+    status: Status = "ok" if results[0].status == "ok" else "fail"
+    hint = (
+        "" if status == "ok" else f"Check {setting.url_env} in the .env file and that PostgreSQL is running."
+    )
+    return Outcome(check_id, status, results[0].detail, hint)
 
 
 def _adc_file() -> Path:
@@ -233,7 +263,8 @@ async def run_check(check_id: str) -> Outcome:
             return await asyncio.wait_for(check_azure(config), CHECK_TIMEOUT_S)
         blocking = {
             "system": check_system,
-            "postgres": lambda: check_postgres(config),
+            "postgres_local": lambda: check_postgres(config, "local"),
+            "postgres_dev": lambda: check_postgres(config, "dev"),
             "gemini": lambda: check_gemini(config),
             "tesseract": check_tesseract,
         }[check_id]

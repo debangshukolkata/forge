@@ -1,13 +1,14 @@
-// Environment and model plan (D-186) as a drawer on the right: the checks run live and flip from "checking" to a
-// result one by one, then Forge proposes which model serves each role from what actually answered. The user
-// confirms (or changes a row) and the choice is remembered per machine; next time the saved results show at once
-// while the checks re-run. It opens by itself on the New project screen and from "Environment" in the top bar.
-import { AlertTriangle, CheckCircle2, Minus, RotateCw, X, XCircle } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+// The Environment drawer (D-186, D-204): it reads what the .env file holds (the server never sends a value) and
+// lets the user test each connection on its own, or all at once, with a clear Connected / Failed and the reason.
+// Nothing is tested until the user asks (and the two optional tools only after a yes, D-201). Then Forge proposes
+// which model serves each role from what answered; the user confirms and the choice is remembered per machine.
+// It opens by itself on the New project screen and from "Environment" in the top bar.
+import { AlertTriangle, CheckCircle2, CircleDashed, FileText, Minus, RotateCw, X, XCircle } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, cx, timeAgo } from "../lib";
 import type { CheckInfo, CheckResultView, EnvironmentOverview, ModelPlan } from "../types";
-import { AzureKeys } from "./AzureKeys";
 import { Badge, Button, IconButton, Select, Spinner } from "./ui";
+import { YesNo } from "./YesNo";
 
 type Row = { result: CheckResultView | null; running: boolean };
 
@@ -15,6 +16,9 @@ const ROLE_LABEL: Record<string, string> = { kb_builder: "Knowledge builder", ju
 
 /** Tools the user may not have (Tesseract, Gemini) are tested only after a yes (D-201). */
 const shouldRun = (check: CheckInfo, answers: Record<string, boolean>) => !check.ask || answers[check.id] === true;
+
+/** Rows that are a connection say "Connected"; the others say "Working". */
+const CONNECTIONS = new Set(["azure", "postgres_local", "postgres_dev", "gemini"]);
 
 const notInUse = (id: string, answer: boolean | undefined): CheckResultView => ({
   id,
@@ -24,7 +28,17 @@ const notInUse = (id: string, answer: boolean | undefined): CheckResultView => (
   models: {},
 });
 
-export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
+function statusWord(check: CheckInfo, row: Row | undefined): { text: string; tone: string } {
+  if (row?.running) return { text: "Testing…", tone: "text-fg-muted" };
+  const status = row?.result?.status;
+  if (!status) return { text: "Not tested yet", tone: "text-fg-muted" };
+  if (status === "ok") return { text: CONNECTIONS.has(check.id) ? "Connected" : "Working", tone: "text-ok" };
+  if (status === "warn") return { text: "Warning", tone: "text-warn" };
+  if (status === "off") return { text: "Not in use", tone: "text-fg-muted" };
+  return { text: "Failed", tone: "text-danger" };
+}
+
+export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => void; onOpenGuide: () => void }) {
   const [checks, setChecks] = useState<CheckInfo[]>([]);
   const [rows, setRows] = useState<Record<string, Row>>({});
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
@@ -53,12 +67,13 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
         adopt(done.plan);
       } catch (failure) {
         const detail = (failure as Error).message;
-        setRows((prev) => ({ ...prev, [id]: { result: { id, status: "fail", detail, hint: "Retry.", models: {} }, running: false } }));
+        setRows((prev) => ({ ...prev, [id]: { result: { id, status: "fail", detail, hint: "Test again.", models: {} }, running: false } }));
       }
     },
     [adopt],
   );
 
+  // Opening the drawer tests nothing: it shows the last results, each with when it was tested.
   useEffect(() => {
     api<EnvironmentOverview>("/api/environment")
       .then((overview) => {
@@ -69,17 +84,14 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
           Object.fromEntries(
             overview.checks.map((c) => [
               c.id,
-              shouldRun(c, said)
-                ? { result: overview.saved.results[c.id] ?? null, running: true }
-                : { result: notInUse(c.id, said[c.id]), running: false },
+              { result: shouldRun(c, said) ? (overview.saved.results[c.id] ?? null) : notInUse(c.id, said[c.id]), running: false },
             ]),
           ),
         );
         adopt(overview.plan);
-        overview.checks.filter((c) => shouldRun(c, said)).forEach((c) => void runCheck(c.id));
       })
       .catch((failure: Error) => setError(failure.message));
-  }, [adopt, runCheck]);
+  }, [adopt]);
 
   const answer = async (check: CheckInfo, enabled: boolean) => {
     setAnswers((prev) => ({ ...prev, [check.id]: enabled }));
@@ -94,8 +106,10 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
   };
 
   const azure = rows["azure"];
-  const waiting = checks.filter((c) => !c.optional).some((c) => rows[c.id]?.running);
-  const canSave = !waiting && azure?.result?.status !== "fail" && Boolean(choice["coder"]) && plan !== null;
+  const testing = checks.some((c) => rows[c.id]?.running);
+  const azureTested = azure?.result?.status === "ok" || azure?.result?.status === "warn";
+  const canSave = !testing && azureTested && Boolean(choice["coder"]) && plan !== null;
+  const testAll = () => checks.filter((c) => shouldRun(c, answers)).forEach((c) => void runCheck(c.id));
 
   const save = async () => {
     setSaving(true);
@@ -119,7 +133,16 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
       <div className="flex items-start gap-2 border-b border-border px-5 py-4">
         <div className="min-w-0 flex-1">
           <h2 className="text-[19px] font-semibold tracking-[-0.3px]">Environment</h2>
-          <p className="mt-0.5 text-[12.5px] text-fg-muted">Forge tests each connection, then picks the models from what works. No keys are shown.</p>
+          <p className="mt-0.5 text-[12.5px] text-fg-muted">
+            Forge uses the values in your .env file but cannot show them. Test a connection, or test all.
+          </p>
+          <button
+            type="button"
+            onClick={onOpenGuide}
+            className="mt-1 inline-flex cursor-pointer items-center gap-1 text-[12.5px] font-semibold text-accent hover:underline"
+          >
+            <FileText className="h-3.5 w-3.5" aria-hidden /> Where is the file, and what goes in it?
+          </button>
         </div>
         <IconButton label="Close" onClick={onClose}>
           <X className="h-4 w-4" />
@@ -138,14 +161,10 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
               key={check.id}
               check={check}
               row={rows[check.id]}
-              onRetry={() => void runCheck(check.id)}
+              onTest={() => void runCheck(check.id)}
               answer={answers[check.id]}
               onAnswer={(enabled) => void answer(check, enabled)}
-              extra={
-                check.id === "azure" && rows[check.id] && !rows[check.id].running && rows[check.id].result ? (
-                  <AzureKeys missing={rows[check.id].result?.missing ?? []} onSaved={() => void runCheck("azure")} />
-                ) : null
-              }
+              onOpenGuide={onOpenGuide}
             />
           ))}
         </div>
@@ -204,11 +223,11 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
             {saving && <Spinner />}
             Save models
           </Button>
-          <Button variant="secondary" disabled={waiting} icon={<RotateCw className="h-3.5 w-3.5" />} onClick={() => checks.filter((c) => shouldRun(c, answers)).forEach((c) => void runCheck(c.id))}>
-            Check again
+          <Button variant="secondary" disabled={testing} icon={<RotateCw className="h-3.5 w-3.5" />} onClick={testAll}>
+            Test all
           </Button>
         </div>
-        {!canSave && !waiting && plan && <p className="mt-2 text-[12px] text-fg-muted">Azure OpenAI has to work before models can be saved.</p>}
+        {!canSave && !testing && plan && <p className="mt-2 text-[12px] text-fg-muted">Test Azure OpenAI first: models can only be saved once it answers.</p>}
       </div>
     </aside>
   );
@@ -217,74 +236,79 @@ export function EnvironmentDrawer({ onClose }: { onClose: () => void }) {
 function CheckRow({
   check,
   row,
-  onRetry,
-  extra,
+  onTest,
   answer,
   onAnswer,
+  onOpenGuide,
 }: {
   check: CheckInfo;
   row: Row | undefined;
-  onRetry: () => void;
-  extra?: ReactNode;
+  onTest: () => void;
   answer?: boolean;
   onAnswer?: (enabled: boolean) => void;
+  onOpenGuide: () => void;
 }) {
   const result = row?.result ?? null;
-  const running = row?.running ?? true;
+  const running = row?.running ?? false;
+  const word = statusWord(check, row);
   return (
-    <div className="flex items-start gap-3 px-5 py-3.5">
+    <div className="flex items-start gap-3 px-5 py-3.5" data-check={check.id}>
       <div className="mt-0.5 w-5 shrink-0" aria-live="polite">
         {running ? (
           <Spinner className="text-fg-muted" />
         ) : result?.status === "ok" ? (
-          <CheckCircle2 className="h-5 w-5 text-ok" aria-label="Working" />
+          <CheckCircle2 className="h-5 w-5 text-ok" aria-hidden />
         ) : result?.status === "warn" ? (
-          <AlertTriangle className="h-5 w-5 text-warn" aria-label="Warning" />
+          <AlertTriangle className="h-5 w-5 text-warn" aria-hidden />
         ) : result?.status === "off" ? (
-          <Minus className="h-5 w-5 text-fg-muted" aria-label="Not in use" />
+          <Minus className="h-5 w-5 text-fg-muted" aria-hidden />
+        ) : result ? (
+          <XCircle className="h-5 w-5 text-danger" aria-hidden />
         ) : (
-          <XCircle className="h-5 w-5 text-danger" aria-label="Failed" />
+          <CircleDashed className="h-5 w-5 text-fg-muted" aria-hidden />
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="text-[13.5px] font-semibold">{check.label}</span>
           {check.optional && <Badge>Optional</Badge>}
+          <span data-testid="status" className={cx("ml-auto text-[12px] font-semibold", word.tone)}>
+            {word.text}
+          </span>
         </div>
         <div className="text-[12px] text-fg-muted">{check.purpose}</div>
         {check.ask && onAnswer && (
-          <div role="group" aria-label={check.ask} className="mt-2 flex flex-wrap items-center gap-2 text-[12.5px]">
-            <span>{check.ask}</span>
-            {([true, false] as const).map((value) => (
-              <button
-                key={String(value)}
-                type="button"
-                aria-pressed={answer === value}
-                onClick={() => onAnswer(value)}
-                className={cx(
-                  "h-6 cursor-pointer rounded-full border px-3 text-[12px] font-semibold transition-colors duration-150 active:scale-95",
-                  answer === value ? "border-transparent bg-action text-accent-fg" : "border-border hover:bg-raised",
-                )}
-              >
-                {value ? "Yes" : "No"}
-              </button>
-            ))}
+          <div className="mt-2">
+            <YesNo question={check.ask} answer={answer} onAnswer={onAnswer} />
           </div>
         )}
         {result && (
           <div className="mt-1 break-words text-[12.5px]">
             {result.detail}
-            {running && <span className="text-fg-muted"> (earlier result, checking again…)</span>}
+            {running && <span className="text-fg-muted"> (testing again…)</span>}
           </div>
         )}
         {result && !running && result.hint && <div className="mt-0.5 text-[12px] text-fg-muted">{result.hint}</div>}
-        {result?.checked_at && !running && <div className="mt-0.5 text-[11px] text-fg-muted">Checked {timeAgo(result.checked_at)}</div>}
-        {!result && running && <div className="mt-1 text-[12.5px] text-fg-muted">Checking…</div>}
-        {extra}
+        {result && !running && check.id === "azure" && (result.missing?.length ?? 0) > 0 && (
+          <button
+            type="button"
+            onClick={onOpenGuide}
+            className="mt-1 cursor-pointer text-[12px] font-semibold text-accent hover:underline"
+          >
+            Open the setup guide
+          </button>
+        )}
+        {result?.checked_at && !running && result.status !== "off" && <div className="mt-0.5 text-[11px] text-fg-muted">Tested {timeAgo(result.checked_at)}</div>}
       </div>
-      <IconButton label={`Check ${check.label} again`} disabled={running || (Boolean(check.ask) && answer !== true)} onClick={onRetry}>
-        <RotateCw className="h-3.5 w-3.5" />
-      </IconButton>
+      <Button
+        size="sm"
+        variant="secondary"
+        aria-label={`Test ${check.label}`}
+        disabled={running || (Boolean(check.ask) && answer !== true)}
+        onClick={onTest}
+      >
+        Test
+      </Button>
     </div>
   );
 }

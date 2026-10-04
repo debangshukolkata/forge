@@ -67,13 +67,6 @@ class OpenWorkspace(BaseModel):
     workspace: str
 
 
-class SetupSecrets(BaseModel):
-    """Body for POST /api/setup/secrets: name -> value, restricted to doctor's own required-names list
-    (never an arbitrary-file-write primitive — see the handler)."""
-
-    values: dict[str, str]
-
-
 def create_app(
     manager: WebSessionManager,
     security: ServerSecurity,
@@ -411,48 +404,24 @@ def create_app(
 
     @app.get("/api/setup")
     async def setup_status() -> dict[str, Any]:
-        """Cheap (no live network calls): which required env values are missing, so the frontend can decide
-        whether to show the setup screen at all before doing anything else (D-145 — no flash of UI when
-        everything's already configured)."""
+        """Cheap (no live network calls): where the .env file is, which names it should hold and which are
+        filled in (names only, never a value), and a template to copy. `missing` is the required names not
+        filled in: the page uses it to decide whether to show the setup guide first (D-204)."""
         from forge.config import forge_home, load_config, load_secrets
-        from forge.doctor import missing_secret_names, required_secret_names
+        from forge.doctor import missing_secret_names
+        from forge.environment.guide import build_guide
 
         home = forge_home()
         try:
             config = load_config(home)
         except ForgeError as error:
-            return {"missing": [], "required": [], "config_error": str(error)[:500]}
+            return {"missing": [], "config_error": str(error)[:500]}
         secrets = load_secrets(home)
-        # `required` (names only) is what the Environment drawer offers when the user wants to replace a key.
         return {
             "missing": missing_secret_names(config, secrets),
-            "required": sorted(required_secret_names(config)),
             "config_error": None,
+            **build_guide(config, secrets, home),
         }
-
-    @app.post("/api/setup/secrets")
-    async def setup_secrets(body: SetupSecrets) -> dict[str, bool]:
-        """Writes submitted values into Forge's .env. Only names doctor itself lists as required are
-        accepted (validated against missing_secret_names/required_secret_names — never an arbitrary-file-
-        write primitive). Never echoes a value back, on success or failure."""
-        from forge.config import forge_home, load_config, write_secret_values
-        from forge.doctor import required_secret_names
-
-        home = forge_home()
-        try:
-            config = load_config(home)
-        except ForgeError as error:
-            raise HTTPException(400, str(error)) from error
-        allowed = required_secret_names(config)
-        unknown = sorted(set(body.values) - allowed)
-        if unknown:
-            raise HTTPException(400, f"Unrecognized field(s): {', '.join(unknown)}")
-        submitted = {name: value.strip() for name, value in body.values.items() if value.strip()}
-        # One line per variable: a pasted line break could otherwise add a second variable to the .env file.
-        if any("\n" in value or "\r" in value for value in submitted.values()):
-            raise HTTPException(400, "A value can't contain a line break.")
-        write_secret_values(submitted, home)
-        return {"ok": True}
 
     @app.post("/api/quit")
     async def quit_server() -> dict[str, bool]:

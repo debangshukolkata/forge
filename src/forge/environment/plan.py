@@ -63,9 +63,11 @@ def propose_plan(config: ForgeConfig, results: dict[str, Any], saved: dict[str, 
         for key, model in sorted(models.items())
     ]
     notes = []
-    postgres = results.get("postgres")
-    if isinstance(postgres, dict) and postgres.get("status") != "ok":
-        notes.append("No database is reachable: Forge cannot check data or use scratch schemas.")
+    forge_database = results.get("postgres_local")
+    if isinstance(forge_database, dict) and forge_database.get("status") != "ok":
+        notes.append(
+            "The Forge database is not reachable: Forge cannot run database checks or use scratch schemas."
+        )
     return {"roles": roles, "options": options, "notes": notes}
 
 
