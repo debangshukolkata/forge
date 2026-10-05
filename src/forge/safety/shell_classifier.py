@@ -300,7 +300,14 @@ def _check_path(raw: str, scope: ShellScope, result: Classification, writing: bo
     if not writing and any(is_within(candidate, root) for root in scope.readable_roots):
         return
     if scope.strict:
-        result.raise_to("blocked", f"Mode B: outside the workspace: {text}")
+        # The model reads this text: say how to carry on, or it gives up on the whole command (a skill's
+        # script is fine to run; it was the path argument outside the project that was refused).
+        result.raise_to(
+            "blocked",
+            f"Mode B: outside the workspace: {text}. Retry with that path inside the project or "
+            "output folder (running a skill's script from the skills folder is allowed and asks the "
+            "user); do not give up on the command.",
+        )
         return
     result.raise_to(
         "ask", f"{'writes' if writing else 'reads'} outside the workspace: {text}", always_ask=True
