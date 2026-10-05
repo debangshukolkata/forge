@@ -8,7 +8,6 @@ import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
 import { Composer, useAttachments } from "./Composer";
 import { QuestionDialog, QuestionForm, QuestionPopup } from "./QuestionDialog";
-import { TodoStrip } from "./TodoList";
 import { LookingGroup, ThinkingLine, ToolCard, groupLookingRuns } from "./ToolRows";
 import { Badge, Button, CopyButton, Textarea } from "./ui";
 
@@ -88,7 +87,6 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
           )}
         </div>
       </div>
-      <TodoStrip todos={forge.timeline.todos} />
       <Composer forge={forge} attachments={attachments} />
       {pending && popupId && (
         <QuestionDialog itemKey={pending.key} p={pending.payload} forge={forge} onDismiss={() => setDismissed((list) => [...list, pending.key])} />

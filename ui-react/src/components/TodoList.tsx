@@ -1,8 +1,6 @@
-// Forge's own todo list (D-177): the model sends the whole list each time with `todo_write`. It shows as a strip
-// above the message box and in the side panel's Tasks tab. The strip is one quiet line by default (progress and the
-// item in progress); it opens to the whole list on a click, remembers that choice, and folds when everything is done (D-216).
-import { CheckCircle2, ChevronRight, Circle } from "lucide-react";
-import { useEffect, useState } from "react";
+// Forge's own todo list (D-177): the model sends the whole list each time with `todo_write`. It shows in the side
+// panel's Tasks tab only; the strip above the message box was removed (D-221).
+import { CheckCircle2, Circle } from "lucide-react";
 import { cx } from "../lib";
 import type { TodoItem } from "../types";
 import { Spinner } from "./ui";
@@ -40,64 +38,5 @@ export function TodoItems({ todos, small }: { todos: TodoItem[]; small?: boolean
         </li>
       ))}
     </ol>
-  );
-}
-
-const OPEN_KEY = "forge.todo.open";
-
-function readOpen(): boolean {
-  try {
-    return window.localStorage.getItem(OPEN_KEY) === "1";
-  } catch {
-    return false; // storage can be blocked: the default is the quiet one-line strip
-  }
-}
-
-function saveOpen(open: boolean): void {
-  try {
-    window.localStorage.setItem(OPEN_KEY, open ? "1" : "0");
-  } catch {
-    /* a remembered choice is a convenience only */
-  }
-}
-
-/** The strip above the message box: one line by default (progress and the item being worked on), the whole list on a
- * click. The choice is remembered, and the strip folds by itself once every item is done. */
-export function TodoStrip({ todos }: { todos: TodoItem[] }) {
-  const { done, total, current } = todoSummary(todos);
-  const finished = total > 0 && done === total;
-  const [open, setOpen] = useState(readOpen);
-  useEffect(() => {
-    if (finished) setOpen(false);
-  }, [finished]);
-  if (total === 0) return null;
-  const toggle = () =>
-    setOpen((value) => {
-      saveOpen(!value);
-      return !value;
-    });
-  return (
-    <div className="shrink-0 bg-bg px-6 pt-1">
-      <div className="mx-auto max-w-[760px] rounded-[16px] border border-border bg-surface">
-        <button
-          type="button"
-          onClick={toggle}
-          aria-expanded={open}
-          className="flex w-full cursor-pointer items-center gap-2 rounded-[16px] px-3.5 py-1.5 text-left text-[12px] transition-colors duration-150 hover:bg-raised"
-        >
-          <ChevronRight className={cx("h-3 w-3 shrink-0 text-fg-muted transition-transform duration-150", open && "rotate-90")} aria-hidden />
-          <span className="font-semibold">Todo</span>
-          <span className="font-mono text-[11px] tabular-nums text-fg-muted">
-            {done}/{total}
-          </span>
-          {!open && <span className="min-w-0 flex-1 truncate text-fg-muted">{current}</span>}
-        </button>
-        {open && (
-          <div className="max-h-40 overflow-y-auto px-3.5 pb-2.5 pt-1">
-            <TodoItems todos={todos} small />
-          </div>
-        )}
-      </div>
-    </div>
   );
 }

@@ -3133,3 +3133,8 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   folder; both system prompts say skill scripts run from the skills folder and add a "helpful colleague" rule: flag gaps/risks in one line with a
   recommendation, end a finished turn with 1-3 next steps (ask_user when there are real options), never start unrequested work, skip when nothing
   is worth saying. Prompt-only: reversible by deleting the bullet. Not built: a dedicated "suggestions" UI chip row (discuss first if wanted).
+
+### D-221 — The todo strip above the message box is removed (user request 2026-10-05)
+- Context: the strip stayed on the last list after a task finished and carried over into the next request, so it looked stale; the user asked for it to go.
+- Decided: `TodoStrip` is deleted (supersedes D-216). The model's list still shows in the side panel's Tasks tab; `todo_write`, events and the
+  open-todo nudge (D-217) are unchanged. Test `test_react_todo_list` now checks that no strip exists; the fold test is gone.
