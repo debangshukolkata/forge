@@ -3125,3 +3125,11 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   its own pipes, so handing it over needs more care), and layer 3, a Jobs strip listing every background process with its live tail and a Stop button.
 - Tests: `tests/test_progress.py` (figures, throttling, redrawn bars, quiet time, a real PowerShell command, `monitor`) and added checks in
   `test_activity_line_and_run_totals` (browser). Found by them: a progress bar redrawn without newlines showed the previous figure.
+
+### D-220 — Recovery hint on a Mode B path block; Forge suggests next steps (user request 2026-10-05)
+- Context: in the Capability Lab run a skill script was refused because of `--output-dir ".."`; the model told the user the script "can't be run here"
+  instead of retrying. The user also noted Claude Code is recommendative (flags small gaps, offers next steps) and Forge is not.
+- Decided (recommended defaults): the Mode B "outside the workspace" block text now tells the model to retry with the path inside the project/output
+  folder; both system prompts say skill scripts run from the skills folder and add a "helpful colleague" rule: flag gaps/risks in one line with a
+  recommendation, end a finished turn with 1-3 next steps (ask_user when there are real options), never start unrequested work, skip when nothing
+  is worth saying. Prompt-only: reversible by deleting the bullet. Not built: a dedicated "suggestions" UI chip row (discuss first if wanted).
