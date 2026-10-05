@@ -21,6 +21,9 @@ from forge.workspace.workspace import Workspace
 
 FileStatus = Literal["added", "modified", "deleted"]
 
+# Data the app wrote while Forge ran it (a SQLite file with test rows): not code, so never delivered (D-222).
+RUNTIME_DATA_SUFFIXES = (".sqlite", ".sqlite3", ".db", ".db-journal", ".db-wal", ".db-shm")
+
 
 class FileChange(BaseModel):
     path: str
@@ -55,6 +58,8 @@ def compute_changes(workspace: Workspace) -> list[FileChange]:
     changes: dict[str, FileChange] = {}
     for relative, data in current.items():
         entry = manifest.get(relative)
+        if relative.lower().endswith(RUNTIME_DATA_SUFFIXES):
+            continue
         if entry is None or entry.sha256 != sha256_of(data):
             changes[relative] = FileChange(
                 path=relative,

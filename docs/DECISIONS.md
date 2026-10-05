@@ -3138,3 +3138,12 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Context: the strip stayed on the last list after a task finished and carried over into the next request, so it looked stale; the user asked for it to go.
 - Decided: `TodoStrip` is deleted (supersedes D-216). The model's list still shows in the side panel's Tasks tab; `todo_write`, events and the
   open-todo nudge (D-217) are unchanged. Test `test_react_todo_list` now checks that no strip exists; the fold test is gone.
+
+### D-222 — From the Capability Lab log review (2026-10-05)
+- Runtime data (`*.sqlite`, `*.sqlite3`, `*.db` and their journal/wal/shm files) is never delivered: `compute_changes` skips them, in both modes
+  (a run had shipped an app database with test rows). Test: `test_runtime_data_files_are_not_delivered`.
+- `system_modeb.md` has a "Paths in Mode B" rule (paths relative to project/, no `project/` prefix, bare `python`, start apps by module,
+  keep every path inside project/output/_harness); about 12 of the run's 26 failed calls were path guesses.
+- A subagent's own model and tool calls are saved to `.forge/transcripts/subagents/<utc-stamp>-<agent-id>.jsonl` (redacted, text deltas left
+  out), so a run can be judged afterwards. The session log still holds only start/finish. Ids restart each process, hence the timestamp.
+- Event timestamps already carry a UTC offset (`+00:00`); the "no timezone" worry in the review was a misreading of truncated output.

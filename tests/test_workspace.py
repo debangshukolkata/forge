@@ -329,3 +329,17 @@ def test_output_manifest_is_machine_readable(workspace: Workspace) -> None:
     assert data["files"][0]["path"] == "backend/claims_app/y.py"
     assert data["repository"] == workspace.info.repo_path
     assert os.path.isabs(data["repository"])
+
+
+def test_runtime_data_files_are_not_delivered(workspace: Workspace) -> None:
+    """D-222: a SQLite file the app wrote while Forge ran it is data, not code."""
+    workspace.write_text("backend/claims_app/services/export_service.py", "x = 1\n", reason="New service")
+    (workspace.repo_dir / "backend" / "claims_app" / "app.sqlite").write_bytes(b"SQLite format 3\x00")
+    (workspace.repo_dir / "backend" / "claims_app" / "app.db-journal").write_bytes(b"journal")
+
+    report = build_output(workspace)
+
+    paths = {change.path for change in report.files}
+    assert "backend/claims_app/services/export_service.py" in paths
+    assert not any(path.endswith((".sqlite", ".db-journal")) for path in paths)
+    assert not (workspace.output_dir / "backend" / "claims_app" / "app.sqlite").exists()

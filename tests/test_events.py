@@ -119,3 +119,32 @@ async def test_subagent_runs_are_announced_with_their_outcome(tmp_path) -> None:
     assert [e for e in emitted if e[0] == "agent_finished"][-1][1][
         "ok"
     ] is False  # a crash still closes the bar
+
+
+async def test_a_subagent_keeps_its_own_log_without_the_streamed_text(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    """D-222: the session log only has start and finish; the helper's own calls are saved for later review."""
+    import json
+    from types import SimpleNamespace
+
+    from forge.protocol.events import EventBus, EventType
+    from forge.subagents.subagent import _tracked_run
+
+    class Context:
+        workspace = SimpleNamespace(
+            jail=SimpleNamespace(check=lambda path: path), forge_dir=tmp_path / ".forge"
+        )
+
+        async def emit(self, kind: str, payload: dict) -> None:
+            return None
+
+    class Loop:
+        async def run(self, history: list, on_delta: object) -> None:
+            await bus.publish(EventType.LLM_CALL, {"model": "m", "usage": {"input_tokens": 5}})
+            await bus.publish(EventType.MESSAGE_DELTA, {"text": "streamed"})
+            await bus.publish(EventType.TOOL_CALL_FINISHED, {"ok": True, "name": "read_file"})
+
+    bus = EventBus()
+    await _tracked_run(Context(), Loop(), bus, [], "verifier", "Check it")  # type: ignore[arg-type]
+    (saved,) = list((tmp_path / ".forge" / "transcripts" / "subagents").glob("*-agent-*.jsonl"))
+    kinds = [json.loads(line)["type"] for line in saved.read_text(encoding="utf-8").splitlines()]
+    assert kinds == ["llm_call", "tool_call_finished"]

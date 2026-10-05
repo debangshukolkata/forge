@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 import itertools
 import time
+from datetime import UTC, datetime
 
 from forge.agent.loop import AgentLoop
 from forge.config import permission_rules
@@ -240,6 +241,7 @@ async def _tracked_run(
     finally:
         await asyncio.sleep(0)  # let the relay deliver what is already queued
         relayer.cancel()
+        _save_transcript(context, agent_id, bus)
         finished = [e for e in bus.events_since(0) if e.type == EventType.TOOL_CALL_FINISHED]
         router = getattr(loop, "router", None)  # a loop without a router (a test stand-in) has no cost
         cost = _cost_of_calls(router, bus) if router is not None else 0.0
@@ -255,6 +257,24 @@ async def _tracked_run(
                 "cost_usd": cost,
             },
         )
+
+
+def _save_transcript(context: ToolContext, agent_id: str, bus: EventBus) -> None:
+    """Keeps the subagent's own model and tool calls (already redacted) in `.forge/transcripts/subagents/`,
+    so a finished run can be judged afterwards; the session log only holds start and finish (D-222).
+    The streamed text deltas are left out. Logging must never break the run."""
+    try:
+        workspace = context.workspace
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
+        target = workspace.jail.check(
+            workspace.forge_dir / "transcripts" / "subagents" / f"{stamp}-{agent_id}.jsonl"
+        )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        skipped = {EventType.MESSAGE_DELTA, EventType.THINKING_DELTA}
+        lines = [e.model_dump_json() for e in bus.events_since(0) if e.type not in skipped]
+        target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    except Exception:  # a log file is a convenience, not part of the work
+        return
 
 
 def _cost_of_calls(router: LLMRouter, bus: EventBus) -> float:

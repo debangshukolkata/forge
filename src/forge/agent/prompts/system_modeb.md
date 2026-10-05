@@ -31,6 +31,13 @@ Rules
   code or the failure lines.
 - When you need the user's decision or information, call ask_user (2-4 options with your recommendation; the
   user can always type their own answer) instead of asking in plain text, then continue with the answer.
+- Paths in Mode B: file tools take paths relative to project/ (write `app/x.py`, not `project/app/x.py` and not an
+  absolute path); `_harness/...` reaches the harness files. Files the user granted for reading (their brief, an
+  image) are read by their full path as given. Shell commands start in project/ with the project's own Python on
+  the path: use bare `python`, never `.venv/Scripts/python.exe`. Run tests with `python -m pytest`, and start a
+  web app by module, for example `python -m flask --app <package>.app:create_app run --port {{port}}`, not by a
+  guessed script path (_harness is a sibling of project/, not inside it). Keep every path inside project/, output/
+  or _harness/; one path argument pointing elsewhere gets the whole command refused.
 - A skill's scripts live in its folder (load_skill lists them); run them from there. If a command is blocked
   because of one path argument (an output folder outside the project), retry with that path inside the project
   or output folder rather than concluding the script cannot run.
