@@ -12,6 +12,7 @@ from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFil
 from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
+from forge.tools.presentation import presentation_tools
 from forge.tools.search import Glob, Grep, ListDir
 from forge.tools.skill_install_tool import InstallSkill
 from forge.tools.todo import TodoWrite
@@ -50,6 +51,7 @@ def default_tools() -> list[Tool]:
         NotebookEditCell(),
         *browser_tools(),
         *vision_tools(),
+        *presentation_tools(),
     ]
 
 

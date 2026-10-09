@@ -183,6 +183,15 @@ class Workspace:
         self._log(Change(checkpoint=checkpoint.id, op="write", path=relative, reason=reason, ts=_now()))
         return checkpoint
 
+    def write_bytes(self, relative: str, data: bytes, reason: str = "") -> Checkpoint:
+        """Writes a binary file (a generated .pptx) through the same gate as text: jail, checkpoint, log."""
+        target = self.jail.check(self.path_of(relative))
+        checkpoint = self.checkpoints.create(f"write {relative}", [relative])
+        self._save_baseline(relative)
+        self._atomic_write(target, data)
+        self._log(Change(checkpoint=checkpoint.id, op="write", path=relative, reason=reason, ts=_now()))
+        return checkpoint
+
     def delete(self, relative: str, reason: str = "") -> Checkpoint:
         target = self.jail.check(self.path_of(relative))
         if not target.is_file():

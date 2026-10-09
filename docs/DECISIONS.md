@@ -3275,3 +3275,20 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   showed only "^". Now such names are skipped (also in the library list) and the message is the ERROR line. Unit tests with fakes had not caught it.
 - Verified live: deps.dev answered for Python and npm; 187 of 242 licenses came from installed copies, 55 from deps.dev, 5 stayed unknown (the project itself, a font package). Not verified: the
   office laptop's access to api.deps.dev.
+
+### D-240 — Presentation making: a built-in skill plus two tools that build a real .pptx and look at it (user request 2026-10-09)
+- Question: Claude Code has strong presentation skills; can Forge have the same? **Anthropic's own pptx/docx/xlsx/pdf skills cannot be copied**: their LICENSE.txt forbids keeping copies outside Anthropic's
+  services and making derivative works (checked in github.com/anthropics/skills). So this is Forge's own work, using only its own ideas and the open python-pptx library (MIT).
+- User choices (options discussed): output = real editable `.pptx` (alternatives: HTML deck exported to PDF; both); visual check = PowerPoint if installed, else layout rules only (alternatives: rules only;
+  installing LibreOffice).
+- Built: module `slides` (tier 5): `spec.py` (outline as JSON/YAML, ten layouts: title, section, bullets, two_column, image, table, chart, quote, stats, closing; mistakes reported in words), `themes.py` (clean,
+  dark, warm; fonts every Office has), `fit.py` (text sized to its box, pessimistic estimate), `build.py` (python-pptx: every slide uses the "Title Only" layout so each has a real title; native charts and
+  tables; speaker notes; alt text; nothing is a picture of text; min 16 pt; warnings name the slide), `preview.py` (PowerPoint exports a PNG per slide through PowerShell COM, paths via environment variables,
+  Forge's own variables hidden (D-202), PowerPoint closed afterwards only if this started it). Tools `build_presentation` and `preview_presentation` (`tools/presentation.py`) run in Forge's own process, so the
+  project's Python environment is not involved; python-pptx is the optional extra `forge[slides]` (added to Start-Forge.cmd). The built-in skill `make-presentation` teaches the story-first method, the outline
+  format, the design rules and the build, look, fix loop. `Workspace.write_bytes` writes binary output through the same gate as text (jail, checkpoint, log).
+- Verified live on this machine (PowerPoint installed): the real model loaded the skill, wrote an outline, built a 6-slide deck, had PowerPoint draw it and looked at the pictures, with no invented numbers
+  (`tests/test_live_slides.py`, `-m live`; it keeps the deck and pictures in test-artifacts/slides-live/). Looking at the pictures found and fixed: centred titles, small table text, top-heavy short lists.
+- Known limits: the pictures need PowerPoint (without it the model only has the rules; it is told to say so); the look is a template, not free design (Claude's skills can restyle anything), so decks
+  are clean but plain; slide titles in the live run were topics rather than takeaways despite the skill; no slide master/template import, animations or speaker-view timings; the office laptop's PowerPoint COM
+  behaviour (Protected View, policies) is untested.

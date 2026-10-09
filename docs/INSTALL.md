@@ -12,6 +12,8 @@ folder's `Start-Forge.cmd` (the first run in a new folder installs again). Needs
 projects in `%USERPROFILE%\.forge` are not touched. If Forge from that folder is still running, close it first.
 It is a `.cmd` rather than an `.exe` because unsigned downloaded programs are often blocked on managed laptops (D-230).
 
+> Optional extras `Start-Forge.cmd` installs: `audit` (pip-audit, a second vulnerability source in the Deps tab) and `slides` (python-pptx, for making PowerPoint decks; pictures of the slides need PowerPoint itself).
+
 ## What you need
 
 | Item | Where it comes from |
