@@ -33,7 +33,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
   return (
     <QuestionPopup.Provider value={{ popupId, reopen: (id) => setDismissed((list) => list.filter((x) => x !== id)) }}>
     <div
-      className="relative flex min-h-0 flex-1 flex-col"
+      className="chat-scale relative flex min-h-0 flex-1 flex-col"
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes("Files")) {
           e.preventDefault();

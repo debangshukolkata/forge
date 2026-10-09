@@ -122,6 +122,11 @@ body {
   line-height: 1.5;
 }
 
+/* The middle (chat) column is scaled as a whole so messages, cards, tool rows and the message box shrink together (D-233). */
+.chat-scale {
+  zoom: 0.92;
+}
+
 :focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;

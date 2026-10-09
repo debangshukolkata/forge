@@ -3213,3 +3213,7 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   chosen one ticked and highlighted, the user's note under it, or their own typed answer as "Other". New event `question_answered` (id, choice, text) published by
   `QuestionBroker.ask`, so a reopened project shows the same card (it replays from the event log). Questions answered before this change (no event in the log)
   keep the old look: a card with the short answer badge. Approvals and "a step for you" cards are unchanged.
+
+### D-233 — The middle (chat) column is 8% smaller (user request 2026-10-09)
+- CSS `zoom: 0.92` on the chat column (`.chat-scale`), so messages, cards, tool rows, code and the message box shrink together, on top of D-231 (message text 13.5px).
+  Side panels, top bar and the left pane are unchanged. To change it, edit the one value in `ui-react/src/index.css`.
