@@ -3324,3 +3324,12 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   quality of a free design depends on the model; the checks stop the ugly mistakes, they do not make it a designer.
 - Not built: gradients, shadows, rotated text, grouping, icons or an icon library, image generation, animations, master/template-aware free-form (free-form slides use the deck's blank "Title Only" layout and
   theme, not an imported template's look).
+
+### D-243 — show_app: open the running app in the user's browser, only after proving it is the app (user request 2026-10-09)
+**Context:** "Run the app" only started it; checks used a hidden browser. Ports are often taken by other programs, so an
+answering port proves nothing. **Options:** (a) open the URL start_background printed; (b) a tool that first checks the
+port belongs to the started process tree (psutil), then that the page answers (< HTTP 500), then opens it; (c) ask the
+user each time. **Chosen:** (b), `tools/show_app.py`, local 127.0.0.1 only, no approval question (it only shows a page on
+this computer). If the port is held by something else it names the holder and the model fixes it. When psutil cannot list
+the process's sockets it falls back to the port the app printed itself. Prompt lines added to both system prompts.
+**Not done:** the Auto-mode `full` level (nested shells/network/installs) still waits for the user's decision.

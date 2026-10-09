@@ -133,15 +133,19 @@ export function ActivityLine({ forge }: { forge: Forge }) {
   return (
     <div role="status" aria-live="polite" className="mx-auto mb-2 flex max-w-3xl items-center gap-3 px-1">
       <Loader style={loader} />
-      <div className="min-w-0 flex-1 text-[13px]">
+      <div className="min-w-0 flex-1 overflow-hidden text-[13px]">
+        {/* One truncating line: `truncate` only clips inline text when it is on the block that holds it, so a long
+            detail ends in "…" instead of running over the timers beside it. */}
+        <div className="truncate" title={detail ? `${label} ${detail}` : label}>
         <span className={cx("font-medium", activity.kind === "waiting" ? "text-warn" : "text-fg")}>{label}</span>
-        {detail && <span className="ml-2 truncate font-mono text-[12px] text-fg-muted">{detail}</span>}
+        {detail && <span className="ml-2 font-mono text-[12px] text-fg-muted">{detail}</span>}
         {progress?.percent != null && (
           <span className="ml-2 font-mono text-[12px] tabular-nums text-accent">{Math.round(progress.percent)}%</span>
         )}
         {progress?.stalled_s != null && (
           <span className="ml-2 text-[12px] text-warn">no output for {Math.floor(progress.stalled_s / 60)} min</span>
         )}
+        </div>
         {progress?.percent != null && (
           <div className="mt-1 h-0.5 w-full overflow-hidden rounded bg-raised">
             <div

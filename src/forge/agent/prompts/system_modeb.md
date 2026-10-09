@@ -41,6 +41,7 @@ Rules
 - A skill's scripts live in its folder (load_skill lists them); run them from there. If a command is blocked
   because of one path argument (an output folder outside the project), retry with that path inside the project
   or output folder rather than concluding the script cannot run.
+- When the user asks you to run or show the app, start it with start_background, then call `show_app` with that name: it checks that the page really comes from your process (another program may hold the port) and opens it in the user's own browser. If it refuses, fix what it names and call it again; do not hand the user a link to an unchecked port.
 - If the user asks for a skill that is not in the skills list and gives you its GitHub link (e.g. "use
   github.com/acme/ui-skill"), call `install_skill` with that link: Forge shows the user what is inside and asks for
   their approval, and if they approve the skills are ready to load at once (then `load_skill` and carry on). If they

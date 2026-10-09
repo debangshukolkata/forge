@@ -14,6 +14,7 @@ from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
 from forge.tools.presentation import presentation_tools
 from forge.tools.search import Glob, Grep, ListDir
+from forge.tools.show_app import ShowApp
 from forge.tools.skill_install_tool import InstallSkill
 from forge.tools.todo import TodoWrite
 from forge.tools.vision import vision_tools
@@ -50,6 +51,7 @@ def default_tools() -> list[Tool]:
         NotebookRead(),
         NotebookEditCell(),
         *browser_tools(),
+        ShowApp(),
         *vision_tools(),
         *presentation_tools(),
     ]

@@ -148,11 +148,12 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
     if ("Notification" in window && Notification.permission === "default") void Notification.requestPermission();
   };
 
-  const cycleMode = () => {
-    const next = MODES[(MODES.indexOf(mode as (typeof MODES)[number]) + 1) % MODES.length];
+  const setMode = (next: string) => {
     forge.send({ kind: "slash_command", text: `/mode ${next}` });
     window.setTimeout(() => void forge.reload(), 300);
   };
+  const cycleMode = () => setMode(MODES[(MODES.indexOf(mode as (typeof MODES)[number]) + 1) % MODES.length]);
+  const autoOn = mode === "auto";
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Tab" && event.shiftKey) {
@@ -302,6 +303,20 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
             <kbd className="font-mono">Enter</kbd> sends · <kbd className="font-mono">Shift+Enter</kbd> new line · <kbd className="font-mono">/</kbd> commands ·{" "}
             <kbd className="font-mono">@</kbd> files · <kbd className="font-mono">↑</kbd> history · <kbd className="font-mono">Esc</kbd> stops
           </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoOn}
+            aria-label="Auto mode"
+            onClick={() => setMode(autoOn ? "default" : "auto")}
+            title="Auto mode: run commands without asking (secret files, network, installs and paths outside the workspace still ask)"
+            className="ml-auto flex cursor-pointer items-center gap-1.5 rounded px-1 hover:text-fg"
+          >
+            <span className={`relative inline-block h-4 w-7 rounded-full transition-colors ${autoOn ? "bg-accent" : "bg-border"}`}>
+              <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${autoOn ? "left-3.5" : "left-0.5"}`} />
+            </span>
+            Auto
+          </button>
           <button type="button" onClick={cycleMode} title={MODE_HELP[mode]} className="flex cursor-pointer items-center gap-1.5 rounded px-1 hover:text-fg">
             <Badge tone={mode === "auto" ? "warn" : mode === "plan" ? "info" : "neutral"}>{mode} mode</Badge>
             <kbd className="font-mono">Shift+Tab</kbd>
