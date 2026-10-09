@@ -131,7 +131,15 @@ async def test_a_refused_topic_is_retried_with_the_known_good_one() -> None:
         )
 
     reply = await search(SETTINGS, "q", topic="General", client_factory=client_for(handler))
-    assert topics == ["General", "News"] and reply.results
+    assert topics == ["General", "general"] and reply.results  # the same word in the other case is tried next
+
+
+async def test_every_refused_topic_is_reported_with_the_platforms_words() -> None:
+    handler = lambda request: httpx.Response(422, text="topic must be news")  # noqa: E731
+    with pytest.raises(TavilyToolError) as raised:
+        await search(SETTINGS, "q", topic="finance", client_factory=client_for(handler))
+    message = str(raised.value)
+    assert "topic 'finance'" in message and "topic 'News'" in message and "topic must be news" in message
 
 
 async def test_errors_never_carry_the_token() -> None:

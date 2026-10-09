@@ -3225,3 +3225,8 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 
 ### D-235 — The Tavily token may be pasted with or without "Bearer" (user question 2026-10-09)
 - Forge builds the header as `Bearer <token>`; a pasted `Bearer eyJ...` (or a quoted token) is now tidied (`clean_token`) instead of sending "Bearer Bearer ...". The guidance stays: paste the token only.
+
+### D-236 — Tavily test failing although the API works (user report 2026-10-09)
+- Forge sent the topic only as "General", then "News". Now it tries the configured topic, the same word in the other letter case (Tavily documents lowercase `general`, `news`, `finance`),
+  then `News` / `news`; if all are refused, the failure lists each topic with the platform's own words (up to 700 characters in the Environment row), so the real cause is visible.
+  `web.tavily_topic` in config.yaml still sets the first topic (for example `finance`). The real reason for the user's failure is not known yet: it needs the message from their laptop.

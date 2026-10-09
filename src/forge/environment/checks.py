@@ -266,7 +266,7 @@ def check_tavily(config: ForgeConfig) -> Outcome:
     except TavilyAuthError as error:
         return _tavily_failed(str(error), "Put a fresh bearer token in the .env file, then test again.")
     except Exception as error:  # a network or platform failure: say what happened, never the token
-        detail = default_redactor.redact(f"{type(error).__name__}: {str(error)[:200]}")
+        detail = default_redactor.redact(f"{type(error).__name__}: {str(error)[:700]}")
         return _tavily_failed(detail)
     count = len(reply.results)
     return Outcome(

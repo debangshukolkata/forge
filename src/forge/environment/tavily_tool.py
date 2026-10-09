@@ -59,6 +59,14 @@ class TavilySettings:
         return cls(url, tool_id, clean_token(token))
 
 
+def topic_candidates(topic: str) -> list[str]:
+    """The configured topic first, then the same word in the other letter case (the platform's own examples
+    use "News"; Tavily's API documents "general", "news" and "finance"), then the known-good fallback."""
+    wanted = topic.strip() or "General"
+    options = [wanted, wanted.lower(), wanted.capitalize(), FALLBACK_TOPIC, FALLBACK_TOPIC.lower()]
+    return list(dict.fromkeys(options))
+
+
 def clean_token(token: str) -> str:
     """The header is built as "Bearer <token>", so a pasted "Bearer eyJ..." or a quoted token is tidied up."""
     cleaned = token.strip().strip("\"'").strip()
@@ -88,9 +96,8 @@ async def search(
         tool_id = int(settings.tool_id)
     except ValueError as error:
         raise TavilyToolError("TAVILY_TOOL_ID must be the tool's number, for example 2361") from error
-    topics = [topic] if topic == FALLBACK_TOPIC else [topic, FALLBACK_TOPIC]
-    last: TavilyToolError | None = None
-    for attempt in topics:
+    refusals: list[str] = []
+    for attempt in topic_candidates(topic):
         body = {
             "args": {
                 "query": query,
@@ -106,8 +113,8 @@ async def search(
         except TavilyAuthError:
             raise  # another topic will not help
         except _Refused as refused:
-            last = TavilyToolError(str(refused))
-    raise last or TavilyToolError("the search failed")
+            refusals.append(f"topic '{attempt}': {refused}")
+    raise TavilyToolError("; ".join(refusals) or "the search failed")
 
 
 async def _post(
