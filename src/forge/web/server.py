@@ -67,6 +67,10 @@ class OpenWorkspace(BaseModel):
     workspace: str
 
 
+class ForgetLearnings(BaseModel):
+    selections: dict[str, list[str]]  # group id -> item ids
+
+
 def create_app(
     manager: WebSessionManager,
     security: ServerSecurity,
@@ -246,6 +250,21 @@ def create_app(
         except (ForgeError, OSError, ValueError) as error:
             raise HTTPException(400, str(error)) from error
         return {"deleted": body.workspace}
+
+    @app.get("/api/learnings")
+    async def learnings() -> list[dict[str, Any]]:
+        from forge.web.learnings import list_learnings
+
+        return list_learnings(manager.home, manager.recent())
+
+    @app.post("/api/learnings/delete")
+    async def forget_learnings(body: ForgetLearnings) -> dict[str, int]:
+        from forge.web.learnings import delete_learnings
+
+        try:
+            return {"removed": delete_learnings(manager.home, manager.recent(), body.selections)}
+        except (ForgeError, OSError) as error:
+            raise HTTPException(400, str(error)) from error
 
     @app.get("/api/profiles")
     async def profiles() -> list[str]:

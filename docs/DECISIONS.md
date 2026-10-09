@@ -3178,3 +3178,11 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Options for the memories / Mode B host profile: delete with the project, or keep (chosen). They belong to the repository or host and are shared by
   every project of it (and a Mode B profile is reused when the same name returns), so removing them with one project would silently wipe the others' knowledge. A
   separate "forget what Forge learned" action can be added if wanted.
+
+### D-227 — "What Forge learned": pick and forget notes, grouped by project (user request 2026-10-09)
+- A button on "Your projects" opens a list of everything Forge keeps (notes, the handoff, FORGE.md), grouped by memory scope. A scope is shared by every
+  project of a repository or host, so the group title lists those projects; the user's own preferences are one more group, and notes whose project was deleted
+  appear as "No project (left behind)". Tick items (or a whole group), confirm, forget. `web/learnings.py`, `GET /api/learnings`, `POST /api/learnings/delete`.
+- Only known groups and `note:<name>` / `instructions` items are accepted, so no path from the browser reaches the disk. The Mode B host profile itself
+  (structure, exemplars) is not listed; only its FORGE.md. Options: per-project grouping with copies of shared notes (rejected: the same note would
+  appear twice and deleting one copy would be misleading), or one flat list (rejected: the user asked for grouping).

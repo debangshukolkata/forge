@@ -879,3 +879,48 @@ def test_react_project_list_shows_what_forge_remembers(
         assert not (tmp_path / "wsb").exists()
         browser.close()
     assert not problems, problems
+
+
+def test_react_learnings_pick_and_forget(
+    server: ServerSecurity, isolated_forge_home: Path, tmp_path: Path
+) -> None:
+    """D-227: notes are grouped by project; only the ticked ones are forgotten."""
+    from forge.memory.store import MemoryStore
+    from forge.modeb.profile import ProfileStore
+
+    ProfileStore(isolated_forge_home).create("learn-host")
+    store = MemoryStore(isolated_forge_home, "profile:learn-host")
+    store.save("uses-pytest", "Uses pytest", "project", "Run python -m pytest -q.")
+    store.save("keep-me", "Keep this one", "project", "Stays.")
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
+        problems: list[str] = []
+        page.on("console", lambda m: problems.append(m.text) if m.type == "error" else None)
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Start something new.")
+        page.evaluate(
+            "p => fetch('/api/standalone', {method: 'POST', headers: {'Content-Type': 'application/json'},"
+            " body: JSON.stringify({workspace: p, profile: 'learn-host'})})",
+            str(tmp_path / "wsl"),
+        )
+        page.reload()
+        page.click("button:has-text('Home')")
+        page.click("button:has-text('Open a project')")
+        page.click("button:has-text('What Forge learned')")
+        page.wait_for_selector("text=uses-pytest")
+        page.screenshot(path=str(shots / "learnings-light.png"))
+        page.check("input[aria-label='Forget uses-pytest']")
+        page.click("button:has-text('Forget selected')")
+        page.click("button:has-text('Yes, forget')")
+        page.wait_for_selector("text=keep-me")
+        page.wait_for_selector("text=uses-pytest", state="detached")
+        browser.close()
+    assert not problems, problems
+    assert [m.name for m in store.all()] == ["keep-me"]

@@ -7,6 +7,7 @@ import { EnvironmentDrawer } from "./components/Environment";
 import { Hub } from "./components/Hub";
 import { Login } from "./components/Login";
 import { NewProject } from "./components/NewProject";
+import { Learnings } from "./components/Learnings";
 import { ProjectList } from "./components/ProjectList";
 import { SetupGuide } from "./components/SetupGuide";
 import { IconButton, Spinner } from "./components/ui";
@@ -18,7 +19,7 @@ import type { AuthStatus, SetupStatus } from "./types";
 import { useForge } from "./useForge";
 
 type Theme = "dark" | "light";
-type View = "hub" | "new" | "open" | "account" | "setup" | "chat";
+type View = "hub" | "new" | "open" | "learned" | "account" | "setup" | "chat";
 
 // Login first (D-184); the engine session and everything else only start once signed in.
 export function App() {
@@ -160,7 +161,9 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
               ) : view === "account" ? (
                 <Account user={user} onBack={() => setView(forge.state.workspace ? "chat" : "hub")} />
               ) : view === "open" ? (
-                <ProjectList onBack={() => setView("hub")} onOpen={open} />
+                <ProjectList onBack={() => setView("hub")} onOpen={open} onLearned={() => setView("learned")} />
+              ) : view === "learned" ? (
+                <Learnings onBack={() => setView("open")} />
               ) : (
                 <Hub user={user} projectCount={forge.state.recent?.length ?? 0} onNew={() => showView("new")} onOpen={() => setView("open")} />
               )}

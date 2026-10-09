@@ -1,13 +1,13 @@
 // "Open an existing project" (D-184): newest first, with what the user last asked for. Opening replays the
 // project's events and loads its memory, so work continues where it stopped.
-import { ArrowLeft, ChevronRight, FolderGit2, Layers, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, Brain, ChevronRight, FolderGit2, Layers, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api, timeAgo } from "../lib";
 import type { ProjectEntry } from "../types";
 import { Headline, Tagline } from "./landing";
 import { Badge, Button, Empty, Input, Spinner } from "./ui";
 
-export function ProjectList({ onBack, onOpen }: { onBack: () => void; onOpen: (path: string) => void }) {
+export function ProjectList({ onBack, onOpen, onLearned }: { onBack: () => void; onOpen: (path: string) => void; onLearned: () => void }) {
   const [projects, setProjects] = useState<ProjectEntry[] | null>(null);
   const [filter, setFilter] = useState("");
   const [error, setError] = useState("");
@@ -41,7 +41,12 @@ export function ProjectList({ onBack, onOpen }: { onBack: () => void; onOpen: (p
       <Button variant="ghost" size="sm" icon={<ArrowLeft className="h-3.5 w-3.5" />} onClick={onBack} className="-ml-3 mb-4">
         Back
       </Button>
-      <Headline className="!text-[34px]">Your projects.</Headline>
+      <div className="flex items-start justify-between gap-4">
+        <Headline className="!text-[34px]">Your projects.</Headline>
+        <Button variant="secondary" size="sm" icon={<Brain className="h-3.5 w-3.5" />} onClick={onLearned} className="mt-3 shrink-0">
+          What Forge learned
+        </Button>
+      </div>
       <Tagline className="mt-2">Choose one to continue. Forge picks up from its memory and history.</Tagline>
       <div className="relative mt-6">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-muted" aria-hidden />
