@@ -3169,3 +3169,12 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   the command; it never downloads on its own. D-224 prompts/`load_skill` message now point at `/skill add`.
 
 - The prompts (both modes) also tell Forge how to explain installing and using a skill when the user asks (/skill add, /skill list, naming the skill in a request).
+
+### D-226 — Delete a project from the project list (user request 2026-10-09)
+- Each row in "Your projects" has a Delete button; it asks first (path shown), then `POST /api/projects/delete` removes the project's whole workspace
+  folder (repo copy, output, transcripts, saved outputs) and its recent-list entry. Closes the session first if the project is open.
+- Refused: a folder Forge does not list as a project, a folder holding Forge's own home, or one that contains the user's original repo. Read-only files are
+  cleared before removal (Windows). Code: `web/project_delete.py`, `WebSessionManager.delete_project`.
+- Options for the memories / Mode B host profile: delete with the project, or keep (chosen). They belong to the repository or host and are shared by
+  every project of it (and a Mode B profile is reused when the same name returns), so removing them with one project would silently wipe the others' knowledge. A
+  separate "forget what Forge learned" action can be added if wanted.

@@ -238,6 +238,15 @@ def create_app(
     async def project_list() -> list[dict[str, Any]]:
         return describe_projects(manager.recent(), manager.home)
 
+    @app.post("/api/projects/delete")
+    async def delete_project(body: OpenWorkspace) -> dict[str, str]:
+        """Removes the project's workspace folder and its recent-list entry (D-226)."""
+        try:
+            await manager.delete_project(Path(body.workspace))
+        except (ForgeError, OSError, ValueError) as error:
+            raise HTTPException(400, str(error)) from error
+        return {"deleted": body.workspace}
+
     @app.get("/api/profiles")
     async def profiles() -> list[str]:
         from forge.modeb.profile import ProfileStore

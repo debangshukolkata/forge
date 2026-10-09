@@ -125,6 +125,17 @@ class WebSessionManager:
             return []
         return [e for e in entries if (Path(e["path"]) / ".forge" / "workspace.json").exists()]
 
+    async def delete_project(self, path: Path) -> None:
+        from forge.web.project_delete import check_deletable, remove_project_folder
+
+        known = self.recent()
+        check_deletable(path, self.home, known)
+        if self.workspace is not None and self.workspace.root.resolve() == path.resolve():
+            await self.close_session()  # release the event log and any running commands first
+        await asyncio.to_thread(remove_project_folder, path.resolve())
+        kept = [e for e in known if Path(e["path"]).resolve() != path.resolve()]
+        self._recent_file.write_text(json.dumps(kept, indent=1), encoding="utf-8")
+
     def _remember(self, workspace: Workspace) -> None:
         entry = {
             "path": str(workspace.root),

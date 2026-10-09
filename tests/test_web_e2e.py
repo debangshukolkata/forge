@@ -867,5 +867,15 @@ def test_react_project_list_shows_what_forge_remembers(
         page.wait_for_selector("text=No match")
         page.fill("input[aria-label='Search projects']", "")
         page.screenshot(path=str(shots / "projects-memory-light.png"))
+        # D-226: deleting asks first, then removes the project's folder and its row.
+        page.click("button[aria-label^='Delete ']")
+        page.wait_for_selector("[role=alertdialog]")
+        page.screenshot(path=str(shots / "projects-delete-confirm-light.png"))
+        page.click("button:has-text('Cancel')")
+        assert (tmp_path / "wsb").exists()
+        page.click("button[aria-label^='Delete ']")
+        page.click("button:has-text('Delete project')")
+        page.wait_for_selector("text=No projects yet")
+        assert not (tmp_path / "wsb").exists()
         browser.close()
     assert not problems, problems

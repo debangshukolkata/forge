@@ -1,6 +1,6 @@
 // "Open an existing project" (D-184): newest first, with what the user last asked for. Opening replays the
 // project's events and loads its memory, so work continues where it stopped.
-import { ArrowLeft, ChevronRight, FolderGit2, Layers, Search } from "lucide-react";
+import { ArrowLeft, ChevronRight, FolderGit2, Layers, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api, timeAgo } from "../lib";
 import type { ProjectEntry } from "../types";
@@ -19,7 +19,22 @@ export function ProjectList({ onBack, onOpen }: { onBack: () => void; onOpen: (p
         setProjects([]);
       });
   }, []);
-  const shown = (projects ?? []).filter((p) => `${p.name} ${p.repo} ${p.last_request} ${p.memory.state?.goal ?? ""} ${p.memory.state?.next ?? ""}`.toLowerCase().includes(filter.toLowerCase()));
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  async function remove(path: string) {
+    setDeleting(true);
+    setError("");
+    try {
+      await api("/api/projects/delete", { method: "POST", body: { workspace: path } });
+      setProjects((list) => (list ?? []).filter((p) => p.path !== path));
+      setConfirming(null);
+    } catch (failure) {
+      setError((failure as Error).message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+  const shown =(projects ?? []).filter((p) => `${p.name} ${p.repo} ${p.last_request} ${p.memory.state?.goal ?? ""} ${p.memory.state?.next ?? ""}`.toLowerCase().includes(filter.toLowerCase()));
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10">
@@ -48,8 +63,36 @@ export function ProjectList({ onBack, onOpen }: { onBack: () => void; onOpen: (p
       ) : (
         <ul className="mt-5 space-y-3">
           {shown.map((project) => (
-            <li key={project.path}>
+            <li key={project.path} className="relative">
+              {confirming === project.path ? (
+                <div role="alertdialog" aria-label={`Delete ${project.name}`} className="rounded-[18px] border border-danger/40 bg-surface p-5">
+                  <p className="text-[15px] font-semibold">Delete “{project.name}”?</p>
+                  <p className="mt-1 text-[13px] text-fg-muted">
+                    This permanently deletes the folder <span className="break-all font-mono text-fg">{project.path}</span> and everything in it. Your original
+                    repository is not touched, and what Forge learned about the repository or host is kept.
+                  </p>
+                  <div className="mt-4 flex gap-2">
+                    <Button variant="danger" size="sm" disabled={deleting} onClick={() => remove(project.path)}>
+                      {deleting ? "Deleting…" : "Delete project"}
+                    </Button>
+                    <Button variant="ghost" size="sm" disabled={deleting} onClick={() => setConfirming(null)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`Delete ${project.name}`}
+                  title="Delete this project"
+                  icon={<Trash2 className="h-3.5 w-3.5" />}
+                  onClick={() => setConfirming(project.path)}
+                  className="absolute right-12 top-4 z-10"
+                />
+              )}
               <button
+                hidden={confirming === project.path}
                 type="button"
                 onClick={() => onOpen(project.path)}
                 title={project.path}
