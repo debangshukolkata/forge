@@ -279,3 +279,11 @@ def test_answering_no_keeps_tavily_out_of_the_search_order(isolated_forge_home: 
     assert store.tavily_declined(isolated_forge_home) is True
     store.save_answer(isolated_forge_home, "tavily", True)
     assert store.tavily_declined(isolated_forge_home) is False
+
+
+def test_a_pasted_bearer_prefix_or_quotes_are_removed() -> None:
+    from forge.environment.tavily_tool import clean_token
+
+    assert clean_token("Bearer abc.def") == "abc.def"
+    assert clean_token('  "bearer   abc.def"  ') == "abc.def"
+    assert clean_token("abc.def") == "abc.def"

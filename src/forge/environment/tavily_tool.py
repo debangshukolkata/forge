@@ -53,7 +53,18 @@ class TavilySettings:
         if secrets is None:
             return None
         values = [secrets.get(name) for name in TAVILY_NAMES]
-        return cls(*values) if all(values) else None
+        if not all(values):
+            return None
+        url, tool_id, token = values
+        return cls(url, tool_id, clean_token(token))
+
+
+def clean_token(token: str) -> str:
+    """The header is built as "Bearer <token>", so a pasted "Bearer eyJ..." or a quoted token is tidied up."""
+    cleaned = token.strip().strip("\"'").strip()
+    if cleaned.lower().startswith("bearer "):
+        cleaned = cleaned[7:].strip()
+    return cleaned
 
 
 @dataclass

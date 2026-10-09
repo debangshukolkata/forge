@@ -3222,3 +3222,6 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Options discussed: remove the pane and make the name a switcher (chosen), keep the thin rail collapsed by default, remove it with no replacement. Supersedes D-229 (the
   fold button): `Sidebar.tsx` is gone. The name in the top bar opens a menu with the recent projects (the open one ticked), a trash icon on each row (asks first; deleting
   the open project returns to Home) and "New project". Home / "Open a project" still show the full list. The top bar got its own stacking level so the menu sits above the chat.
+
+### D-235 — The Tavily token may be pasted with or without "Bearer" (user question 2026-10-09)
+- Forge builds the header as `Bearer <token>`; a pasted `Bearer eyJ...` (or a quoted token) is now tidied (`clean_token`) instead of sending "Bearer Bearer ...". The guidance stays: paste the token only.
