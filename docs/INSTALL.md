@@ -3,6 +3,15 @@
 This guide is for installing Forge on a work laptop that may have no internet access for `pip` and no
 administrator rights. Everything installs into your user profile.
 
+## Quickest way: double-click Start-Forge.cmd
+
+After downloading and unzipping the Forge source (for example `forge-main`), double-click `Start-Forge.cmd` in that folder.
+First run: it creates a private Python environment inside the folder (`.venv`), installs Forge into it (pip needs internet once)
+and opens the web UI. Later runs reuse it and just start Forge. For a newer Forge, download it and double-click the new
+folder's `Start-Forge.cmd` (the first run in a new folder installs again). Needs Python 3.13 for your user. Your `.env`, accounts and
+projects in `%USERPROFILE%\.forge` are not touched. If Forge from that folder is still running, close it first.
+It is a `.cmd` rather than an `.exe` because unsigned downloaded programs are often blocked on managed laptops (D-230).
+
 ## What you need
 
 | Item | Where it comes from |

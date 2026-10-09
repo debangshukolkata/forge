@@ -3198,3 +3198,9 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 
 ### D-229 — The projects pane on the left can be folded (user request 2026-10-09)
 - A button at the top of the pane folds it into a thin rail (show-projects and new-project buttons); the choice is remembered in the browser (`forge-sidebar-collapsed`). Small reversible UI change.
+
+### D-230 — Start-Forge.cmd: double-click to run the downloaded version (user request 2026-10-09)
+- `Start-Forge.cmd` in the repo root calls `scripts/run_forge.ps1 -Extras mcp,browser` (process-scope execution-policy bypass, no admin): venv in the folder, editable
+  install, open the UI. Chosen over a signed `.exe` (unsigned downloads are often blocked on managed laptops) and over a shared %LOCALAPPDATA% install (an older
+  copy can shadow a newer one, seen live). Pauses with a message when it fails. Tested here from a clean copy of the repo (venv created, installed, UI started);
+  the office laptop's SmartScreen/AppLocker behaviour for a downloaded `.cmd` is untested. Supersedes the parked installer idea for the simple case.
