@@ -2,6 +2,8 @@
 
 Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed + user sign-off)
 
+Things asked about and deliberately postponed (for example the DebCraft rename) are in [docs/TODO_LATER.md](docs/TODO_LATER.md).
+
 ## Step 1 — Pre-build review
 - [x] Understanding, risks, ambiguities, order proposal
 - [x] User answers recorded (DECISIONS D-001…D-015), spec amended (§0.2), docs created
