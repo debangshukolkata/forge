@@ -3292,3 +3292,17 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Known limits: the pictures need PowerPoint (without it the model only has the rules; it is told to say so); the look is a template, not free design (Claude's skills can restyle anything), so decks
   are clean but plain; slide titles in the live run were topics rather than takeaways despite the skill; no slide master/template import, animations or speaker-view timings; the office laptop's PowerPoint COM
   behaviour (Protected View, policies) is untested.
+
+### D-241 — Read and edit existing decks, and use a company template (user request 2026-10-09, after the comparison with Claude's skill)
+- User chose to build the biggest practical gap first: reading and editing existing decks. Template use came with it, through the deck's own layouts.
+- Tools (`tools/presentation.py`): `read_presentation` (read-only: every slide's layout, title, shapes with ids, tables, chart numbers, picture alt text, notes, and the layouts the deck offers;
+  `.pptx` and `.potx` only; nothing is run) and `edit_presentation` (a list of operations applied in order to the deck loaded by python-pptx, so the deck's own formatting stays; if any step fails
+  nothing is saved). Operations (`slides/edit.py`): replace_text (works across formatting runs, optionally in notes), set_text (new text takes the first run's and paragraph's look; two leading spaces =
+  one bullet level), set_notes, delete_slide, move_slide, duplicate_slide (pictures and links are copied; a slide with a chart or embedded object is refused, not copied wrongly), add_slide (by the deck's
+  layout name, fills title/body/placeholders, removes empty placeholders, optional position), update_chart (keeps the chart's formatting), update_table (same size only).
+- Template use: `edit_presentation(path=template.potx, output=new.pptx, ...)`: a `.potx` opens as a deck built on its layouts (content type patched in memory), slides are added from its layouts and the sample
+  slides deleted. A template is never overwritten (output required). `Workspace.write_bytes` records every save as a checkpoint, so in-place edits can be undone.
+- Found by tests: a damaged `.potx` raised a raw zip error (now "could not be opened ... damaged or password-protected?"). Builder: sub-bullets now carry their bullet level, so reading a Forge deck shows indentation.
+- Live check (real model): asked to describe a deck, retitle slide 2, add a "Risks" slide after slide 3 and save a copy, it used read_presentation + edit_presentation, did not rebuild, put the slide in the right
+  place and left the original untouched (`tests/test_live_slides.py`). Not tried: a real company template (only a template made from a Forge deck), and PowerPoint's rendering of edited decks beyond the preview tool.
+- Still not built (the rest of the gap to Claude's skill): free-form slide design, building a new deck directly on a template's styles through `build_presentation`, animations/comments/master edits, other formats (.docx, .xlsx, .pdf).

@@ -70,3 +70,27 @@ Layouts and their fields:
 
 If `build_presentation` says python-pptx is not installed, tell the user the one command that fixes it
 (`pip install python-pptx`) instead of trying to work around it.
+
+## 5. Existing decks and company templates
+
+**Summarise or review a deck:** `read_presentation(path)` lists every slide (layout, title, text, tables, chart
+numbers, picture alt text, speaker notes). Base what you say on that, slide by slide; say when a slide has
+nothing to read (a picture without alt text, for instance). Never guess what a slide says.
+
+**Change a deck:** read it first, then `edit_presentation(path, operations=[...], output=...)`. It keeps the deck's
+own formatting, so prefer it over rebuilding whenever someone else made the deck or a template is involved.
+Operations: `replace_text`, `set_text`, `set_notes`, `delete_slide`, `move_slide`, `duplicate_slide`,
+`add_slide`, `update_chart`, `update_table`. Give `output` (a new file name) unless the user asked to change the
+file itself; in place is allowed and can be undone. If one operation fails, nothing is saved and the message
+says which: fix that one and send the list again. Afterwards `preview_presentation` and look at the changed
+slides (a longer sentence in a fixed box can overflow; PowerPoint will not warn you).
+
+**Use a company template** (a `.potx`, or any `.pptx` with the right masters): `read_presentation(template)` shows
+its layout names and placeholders. Then `edit_presentation(template, output="docs/new.pptx", operations=[
+add_slide ... for each slide, then delete_slide for the template's sample slides])`. Use the template's layout
+names (for example "Title and Content") and put text in its placeholders (`title`, `body`, and `placeholders`
+by number for the rest). Do not rebuild a template deck with `build_presentation`: that ignores its look.
+
+Limits to tell the user plainly: copying a slide that holds a chart or an embedded object is not possible (build
+it again with `add_slide` and `update_chart`); animations, comments and slide-master changes are not edited;
+`.ppt`, `.pptm` and password-protected files cannot be opened.

@@ -51,3 +51,55 @@ async def test_model_makes_a_deck_looks_at_it_and_delivers_a_pptx(make_host) -> 
     previews = host.workspace.forge_dir / "reports" / "slides"
     if previews.is_dir():
         shutil.copytree(previews, keep / "preview")
+
+
+async def test_model_reads_a_deck_and_edits_it_without_rebuilding(make_host) -> None:  # type: ignore[no-untyped-def]
+    import io
+    import json
+
+    from PIL import Image
+    from pptx import Presentation
+
+    from forge.slides.build import build_deck
+    from forge.slides.spec import parse_deck
+
+    outline = {
+        "title": "Claims team update",
+        "theme": "warm",
+        "slides": [
+            {"layout": "title", "title": "Claims team update", "subtitle": "October"},
+            {
+                "layout": "bullets",
+                "title": "Backlog is shrinking",
+                "bullets": ["Open claims: 120", "Closed this week: 45"],
+            },
+            {
+                "layout": "chart",
+                "title": "Closed per week",
+                "categories": ["W1", "W2"],
+                "series": [{"name": "Closed", "values": [30, 45]}],
+            },
+            {"layout": "closing", "title": "Questions?"},
+        ],
+    }
+    host = make_host("auto")
+    buffer = io.BytesIO()
+    Image.new("RGB", (10, 10)).save(buffer, "PNG")
+    deck_bytes = build_deck(parse_deck(json.dumps(outline)), lambda name: buffer.getvalue()).data
+    host.workspace.write_bytes("docs/team.pptx", deck_bytes)
+    await run_turn(
+        host,
+        "Open docs/team.pptx. First tell me in one line what it covers. Then, keeping everything else "
+        "exactly as it is, change the title of slide 2 to 'Backlog fell by a third', and add a new slide "
+        "after slide 3 titled 'Risks' with three short bullets about staffing, tooling and training. Save it "
+        "as docs/team-v2.pptx and leave the original untouched.",
+    )
+    names = tool_names(host)
+    assert "read_presentation" in names and "edit_presentation" in names, names
+    assert "build_presentation" not in names, names  # editing must not rebuild the deck
+    edited = Presentation(str(host.workspace.path_of("docs/team-v2.pptx")))
+    titles = [slide.shapes.title.text_frame.text for slide in edited.slides]
+    assert titles[1] == "Backlog fell by a third" and "Risks" in titles and len(titles) == 5, titles
+    assert titles.index("Risks") == 3, titles
+    original = Presentation(str(host.workspace.path_of("docs/team.pptx")))
+    assert original.slides[1].shapes.title.text_frame.text == "Backlog is shrinking"

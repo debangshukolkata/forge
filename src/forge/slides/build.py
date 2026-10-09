@@ -171,6 +171,7 @@ class _Builder:
 
     def bullet(self, paragraph: Any, level: int) -> None:
         indent = 0.3
+        paragraph.level = level  # also recorded as a level, so reading the deck back shows the indentation
         properties = paragraph._p.get_or_add_pPr()
         properties.set("marL", str(int(self.m["inches"](indent * (level + 1)))))
         properties.set("indent", str(-int(self.m["inches"](indent))))
