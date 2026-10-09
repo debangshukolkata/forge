@@ -3241,3 +3241,22 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   re-indexed at once (`skills_changed` -> `refresh_instructions`), so they are ready to load in the same turn. Prompts (both modes) and the load_skill not-found message now say this.
   `/skill add` and `forge skill add` are unchanged. Not tested with the live model, only the tool and its safeguards (`tests/test_install_skill_tool.py`).
 - Also fixed: `tests/test_ocr.py` replaced `find_tesseract` with a no-argument function after D-228 added the argument; added a test for `TESSERACT_CMD`.
+
+### D-238 — Dependencies section: libraries of the open project and their known vulnerabilities (user request 2026-10-09)
+- User choices: the open project's dependencies (not Forge's own); vulnerability data from BOTH OSV.dev and pip-audit, and each vulnerability must say which source found it.
+- New module `deps` (tier 5): `scan.py` reads requirements*.txt (with -r includes), pyproject.toml (project, optional groups, dependency-groups, poetry), poetry.lock, uv.lock,
+  Pipfile.lock, package.json + package-lock.json (v1-v3), and the `*.dist-info` folders of the project's Python environment (file reading only: nothing in the project is run).
+  A direct library without a pinned version takes the locked, then the installed version; if there is none it is listed as "version unknown" and not checked. A standalone (Mode B)
+  project has no manifests of the host, so the host profile's package list is used. Skipped folders: node_modules, venvs, .git, build output; depth 3.
+- `osv.py`: `api.osv.dev` querybatch + per-vulnerability details (summary, severity from the advisory's label, fixed versions; fixing commit hashes are dropped). `audit.py`: runs
+  `pip-audit --no-deps --disable-pip` on a temporary file of `name==version` lines (Python only; optional extra `forge[audit]`, Apache-2.0, added to Start-Forge.cmd's extras; absent
+  = a status line "not installed", not an error). `check.py` runs both at once and merges: the same vulnerability under different ids (GHSA/PYSEC/CVE) is one finding with
+  `found_by: [osv.dev, pip-audit]`. A source that fails becomes a status line (never an exception).
+- **Data leaving the computer (security-relevant):** only library names and versions, only after the user clicks "Check for vulnerabilities" and confirms a notice that says so (with an
+  extra sentence for standalone projects, whose names describe the host). Listing is offline. The last result is kept in the project (`.forge/dependency_check.json`, written through the
+  write jail) and shown on reopening. The model has no tool for this.
+- UI: a "Deps" tab in the right panel: counts by severity, one line per source (ok / not installed / unreachable), search, "Vulnerable only", libraries worst-first; expanding one shows
+  each vulnerability (link, severity, summary, aliases, fixed-in, Found by). Routes in `web/deps_routes.py`.
+- Verified live (build machine): osv.dev and pip-audit both answered for requests 2.19.0, jinja2 2.10, lodash 4.17.15; of 15 merged findings 11 came from both sources and 4 (npm) from OSV only.
+  Not verified: the office laptop's access to api.osv.dev and pypi.org (a block shows as "unavailable" with the reason). Not built: Forge's own libraries, yarn/pnpm locks, other ecosystems,
+  CVSS scores (severity is the advisory's own label), a `forge doctor` line for pip-audit (the tab says so itself).

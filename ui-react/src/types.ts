@@ -243,3 +243,39 @@ export interface Contract {
   pinned: string;
   revised: string;
 }
+
+// The Dependencies section (D-238).
+export interface Dependency {
+  name: string;
+  ecosystem: "PyPI" | "npm";
+  version: string | null;
+  spec: string;
+  direct: boolean;
+  dev: boolean;
+  file: string;
+}
+export interface DepFinding {
+  id: string;
+  aliases: string[];
+  package: string;
+  ecosystem: "PyPI" | "npm";
+  version: string;
+  summary: string;
+  severity: "critical" | "high" | "moderate" | "low" | "unknown";
+  fixed_in: string[];
+  link: string;
+  found_by: string[];
+}
+export interface DepsCheck {
+  checked_at: string;
+  dependencies: Dependency[];
+  findings: DepFinding[];
+  sources: Array<{ name: string; status: string; detail: string; checked: number; found: number }>;
+  unchecked: number;
+}
+export interface DepsResponse {
+  dependencies: Dependency[];
+  last_check: DepsCheck | null;
+  pip_audit_installed: boolean;
+  standalone: boolean;
+}

@@ -35,6 +35,7 @@ dependencies = [
 browser = ["playwright>=1.45"]  # browser_open / screenshots (Apache-2.0)
 mcp = ["mcp>=2.0"]  # MCP client (MIT)
 webtext = ["trafilatura>=1.12"]  # cleaner Markdown from web pages for web_fetch (Apache-2.0); optional, D-209
+audit = ["pip-audit>=2.7"]  # second vulnerability source for the Dependencies section (Apache-2.0), D-238
 gemini = ["google-genai>=1.0"]  # Gemini on Vertex AI (Apache-2.0); auth is ADC, D-150
 dev = [
     "pytest>=8.0",

@@ -6,7 +6,7 @@ rem The install step lists each package as pip fetches it (a few minutes the fir
 rem Needs Python 3.13 installed for your user (no admin rights). No data in %USERPROFILE%\.forge is touched.
 title Forge
 cd /d "%~dp0"
-powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\run_forge.ps1" -Extras "mcp,browser"
+powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\run_forge.ps1" -Extras "mcp,browser,audit"
 if errorlevel 1 (
     echo.
     echo Forge did not start. The message above says why.

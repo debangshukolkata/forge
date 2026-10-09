@@ -13,7 +13,7 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 | 2 | config, protocol, workspace | settings; events/inputs/approvals; the workspace write gate |
 | 3 | llm, memory | providers, router, tokens, cost; auto-memory (user + project scope) |
 | 4 | context, toolkit | context window; tool contract + shell runners |
-| 5 | db, parity, vision | database; skills/agents/MCP; vision |
+| 5 | db, deps, parity, vision | database; skills/agents/MCP; vision |
 | 6 | doctor | setup checks |
 | 7 | modeb, environment | host profiles, contracts; per-machine checks and the model plan |
 | 8 | tools | tool implementations + registry |
