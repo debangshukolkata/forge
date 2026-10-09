@@ -149,6 +149,13 @@ def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, 
         "textarea[aria-label=Message]", timeout=120_000
     )  # the repo copy is slow under parallel load
     assert "Payments Masking" in page.inner_text("nav[aria-label=Projects]")
+    # The project list pane folds into a thin rail and back (remembered across reloads).
+    page.click("button[aria-label='Hide projects']")
+    assert "Payments Masking" not in page.inner_text("nav[aria-label=Projects]")
+    page.reload()
+    page.wait_for_selector("button[aria-label='Show projects']")
+    page.click("button[aria-label='Show projects']")
+    assert "Payments Masking" in page.inner_text("nav[aria-label=Projects]")
 
     page.click("button:has-text('Home')")
     page.click("button:has-text('New project')")

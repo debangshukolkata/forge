@@ -3195,3 +3195,6 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   install usually lives elsewhere. Now it also looks in Program Files (x86), `C:\Tesseract-OCR`, `%LOCALAPPDATA%\Programs\Tesseract-OCR`, `%LOCALAPPDATA%\Tesseract-OCR`
   and the scoop folder, and reads an optional `TESSERACT_CMD` from the `.env` (a full path to tesseract.exe or its folder; it wins). The failure message says
   how to set it. Not verified on the office laptop itself.
+
+### D-229 — The projects pane on the left can be folded (user request 2026-10-09)
+- A button at the top of the pane folds it into a thin rail (show-projects and new-project buttons); the choice is remembered in the browser (`forge-sidebar-collapsed`). Small reversible UI change.
