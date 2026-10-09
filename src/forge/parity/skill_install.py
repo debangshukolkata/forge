@@ -56,6 +56,22 @@ def github_zip_url(source: str) -> tuple[str, str]:
     return f"https://codeload.github.com/{owner}/{repo}/zip/{reference}", (match["path"] or "").strip("/")
 
 
+_LINKED_REPO = re.compile(r"github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)")
+
+
+def repo_key(source: str) -> str:
+    """'owner/repo' (lower case) of a github.com link; raises when it is not one."""
+    github_zip_url(source)  # validates the link
+    match = GITHUB.match(urlparse(source).path)
+    assert match is not None
+    return f"{match['owner']}/{match['repo']}".lower().removesuffix(".git")
+
+
+def repos_in(text: str) -> set[str]:
+    """Every 'owner/repo' mentioned as a github.com link in `text` (what the user typed)."""
+    return {f"{owner}/{repo}".lower().removesuffix(".git") for owner, repo in _LINKED_REPO.findall(text)}
+
+
 def fetch(source: str, destination: Path, client: httpx.Client | None = None) -> Path:
     """Puts the source's files under destination and returns the folder to search for skills."""
     local = Path(source).expanduser()

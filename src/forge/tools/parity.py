@@ -85,7 +85,8 @@ class LoadSkill(Tool):
                 content=(
                     f"No skill {args.name!r} is installed on this machine. "
                     f"Skills: {', '.join(sorted(skills))}. "
-                    "The user installs more with `/skill add <github link>` in the chat box."
+                    "If the user gave you its GitHub link, use install_skill; otherwise ask for the link "
+                    "or tell them to run `/skill add <github link>`."
                 ),
             )
         if args.file:

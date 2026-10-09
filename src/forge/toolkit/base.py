@@ -87,6 +87,10 @@ class ToolContext:
     interaction: Any = None  # the orchestrator (tools/interaction.Interaction), when orchestrated
     # Chat sessions: asks the user through the host's question channel (clickable options + a text box).
     ask_user: Callable[[str, str, list[Any], str | None], Awaitable[str]] | None = None
+    user_github_repos: Callable[[], set[str]] | None = (
+        None  # 'owner/repo' links in the user's own messages (D-237)
+    )
+    skills_changed: Callable[[], None] | None = None  # tells the host to re-read the installed skills
     end_turn: bool = False  # a phase tool finished its phase: the agent loop stops after this step
     step: int = 0  # increases with every tool call; used for 'no claim without evidence'
     last_edit_step: int = 0

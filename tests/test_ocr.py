@@ -95,7 +95,7 @@ async def test_a_blank_image_says_so(workspace: Workspace) -> None:
 async def test_bad_requests_become_clear_errors(
     workspace: Workspace, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(ocr, "find_tesseract", lambda: "tesseract-fake")
+    monkeypatch.setattr(ocr, "find_tesseract", lambda configured=None: "tesseract-fake")
     path = saved(workspace, "small.png", picture("x"))
     assert await ocr_of(workspace, path=".forge/inputs/missing.png") == (
         False,
@@ -117,7 +117,7 @@ async def test_bad_requests_become_clear_errors(
 async def test_without_tesseract_the_tool_explains(
     workspace: Workspace, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(ocr, "find_tesseract", lambda: None)
+    monkeypatch.setattr(ocr, "find_tesseract", lambda configured=None: None)
     ok, text = await ocr_of(workspace, path="anything.png")
     assert not ok and "Environment panel" in text
 
@@ -195,3 +195,16 @@ def test_tesseract_is_found_on_path_or_in_the_windows_default(monkeypatch: pytes
     monkeypatch.setattr(shutil, "which", lambda name: None)
     monkeypatch.setattr(ocr.Path, "exists", lambda self: False)
     assert ocr.find_tesseract() is None
+
+
+def test_a_configured_tesseract_path_wins(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    exe = tmp_path / "tesseract.exe"
+    exe.write_text("", encoding="utf-8")
+    monkeypatch.setattr(shutil, "which", lambda name: "/usr/bin/tesseract")
+    assert ocr.find_tesseract(str(exe)) == str(exe)
+    assert ocr.find_tesseract(f'"{tmp_path}"') == str(
+        exe
+    )  # a folder, even in quotes, means its tesseract.exe
+    assert (
+        ocr.find_tesseract(str(tmp_path / "missing.exe")) == "/usr/bin/tesseract"
+    )  # a wrong path falls through

@@ -33,6 +33,7 @@ from forge.memory.scope import repo_level_dir, scope_of
 from forge.memory.store import combined_index
 from forge.modeb.profile import HostProfile, ProfileError, ProfileStore, host_identifying_terms
 from forge.modeb.workspace import profile_ref
+from forge.parity import skill_install
 from forge.parity.history import History
 from forge.parity.instructions import InstructionFile, instruction_files
 from forge.parity.instructions import append_line as append_instruction
@@ -96,6 +97,7 @@ class SessionHost:
             system_prompt(workspace) if workspace is not None else DEFAULT_SYSTEM_PROMPT
         )
         self.history: list[Message] = [Message.system(self.system_prompt)]
+        self.user_github_repos: set[str] = set()  # repositories the user linked in this session (D-237)
         self._inputs: asyncio.Queue[UserInput] = asyncio.Queue()
         self._current_turn: asyncio.Task[None] | None = None
         self._streamed: list[str] = []
@@ -261,6 +263,8 @@ class SessionHost:
         context.summarise = self._summarise
         context.router = self.router
         context.ask_user = self._ask_user
+        context.user_github_repos = lambda: self.user_github_repos
+        context.skills_changed = self.refresh_instructions
         if workspace.mode_b:
             context.profile = self.host_profile()
             context.sensitive_terms = host_identifying_terms(context.profile)
@@ -319,6 +323,9 @@ class SessionHost:
                 )
             return
         if isinstance(user_input, SendMessage):
+            self.user_github_repos |= skill_install.repos_in(
+                user_input.text
+            )  # what install_skill may use (D-237)
             await self.bus.publish(EventType.USER_MESSAGE, {"text": user_input.text})
             if not user_input.text.lstrip().startswith("/"):  # slash commands don't answer cards
                 await self._supersede_open_requests(user_input.text)

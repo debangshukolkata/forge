@@ -3230,3 +3230,14 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Forge sent the topic only as "General", then "News". Now it tries the configured topic, the same word in the other letter case (Tavily documents lowercase `general`, `news`, `finance`),
   then `News` / `news`; if all are refused, the failure lists each topic with the platform's own words (up to 700 characters in the Environment row), so the real cause is visible.
   `web.tavily_topic` in config.yaml still sets the first topic (for example `finance`). The real reason for the user's failure is not known yet: it needs the message from their laptop.
+
+### D-237 — Forge can install a skill the user linked, after the user approves (user request 2026-10-09; changes D-207's "the model has no install tool")
+- Options discussed: an approval card limited to a link the user typed (chosen), the same for any link the model proposes (rejected: a web page or file could steer it to a hostile
+  repository, leaving the user as the only safeguard), keep it as it was.
+- New tool `install_skill(source)` (`tools/skill_install_tool.py`). Safeguards: (1) only a github.com link whose `owner/repo` appears in the user's own messages this session
+  (`SessionHost.user_github_repos`, filled in `submit`, survives compaction); subagents have no such list, so they cannot use it; (2) Forge fetches the repository first and the question
+  card is built from its real contents (skills, files, programs inside), not from model text; (3) only the option "Install" proceeds, a typed answer or "Don't install" installs nothing,
+  in every permission mode (plan mode still denies the tool); (4) a skill's `allowed-tools` is still ignored and every command it leads to still asks. After approval the skills are
+  re-indexed at once (`skills_changed` -> `refresh_instructions`), so they are ready to load in the same turn. Prompts (both modes) and the load_skill not-found message now say this.
+  `/skill add` and `forge skill add` are unchanged. Not tested with the live model, only the tool and its safeguards (`tests/test_install_skill_tool.py`).
+- Also fixed: `tests/test_ocr.py` replaced `find_tesseract` with a no-argument function after D-228 added the argument; added a test for `TESSERACT_CMD`.
