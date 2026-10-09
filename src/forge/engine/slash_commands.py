@@ -6,6 +6,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from forge.config import ROLES, forge_home
+from forge.engine.skill_command import run_skill_command
 from forge.errors import ConfigError
 from forge.llm.cost import format_money
 from forge.memory.scope import scope_of
@@ -53,6 +54,8 @@ HELP_TEXT = """Available commands:
   /effort [low|medium|high] reasoning effort for this session ('think hard: ...' raises it for one message)
   /style [concise|explanatory|learning]   how much Forge explains while working
   /skills | /agents         the skills and custom subagents Forge can use
+  /skill add <github link|folder> [--yes]   show (then with --yes install) skills from GitHub; also
+                            /skill list and /skill remove <name>
   /allow-read [path]        let Forge read a file or folder (and everything under it) outside the project,
                             read only, kept for this project; without a path: list what is allowed
   /revoke-read <path>       take that permission back
@@ -114,6 +117,7 @@ class SlashCommandHandler:
             "/effort": self._effort,
             "/style": self._style,
             "/skills": self._skills,
+            "/skill": self._skill,
             "/allow-read": self._allow_read,
             "/revoke-read": self._revoke_read,
             "/agents": self._agents,
@@ -483,6 +487,10 @@ class SlashCommandHandler:
 
     async def _skills(self, args: list[str]) -> None:
         await self._say(self.host.context_manager.pinned.get("skills") or "No skills found.")
+
+    async def _skill(self, args: list[str]) -> None:
+        if await run_skill_command(self._rest, forge_home() / "skills", self._say):
+            self.host.refresh_instructions()  # the new skill is usable from the next message on
 
     async def _allow_read(self, args: list[str]) -> None:
         workspace = self.host.workspace

@@ -117,6 +117,13 @@ class ShellSession:
             # Sandboxed processes can't write to the user's %TEMP% or pip cache; give them their own.
             variables["TEMP"] = variables["TMP"] = str(self.scratch_dir)
             variables["PIP_CACHE_DIR"] = str(self.sandbox_dir / "pip-cache")
+            # npm, yarn and pnpm default to caches under the user's profile, which low integrity can't write:
+            # npm install / npm create failed with EPERM and the model handed the step to the user (D-223).
+            variables["npm_config_cache"] = str(self.sandbox_dir / "npm-cache")
+            variables["npm_config_devdir"] = str(self.sandbox_dir / "node-gyp")
+            variables["npm_config_update_notifier"] = "false"
+            variables["YARN_CACHE_FOLDER"] = str(self.sandbox_dir / "yarn-cache")
+            variables["npm_config_store_dir"] = str(self.sandbox_dir / "pnpm-store")
         if self.workspace.mode_b:  # the host stand-ins load for any pytest the model runs (D-159)
             existing = variables.get("PYTEST_ADDOPTS", "")
             if "harness_conftest" not in existing:

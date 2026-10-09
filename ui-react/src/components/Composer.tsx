@@ -13,7 +13,7 @@ const SLASH = [
   "/requirements", "/plan", "/tasks", "/db", "/db requests",
   "/db done", "/db cant", "/db cleanup", "/diagnose", "/remember", "/memory", "/profile", "/assumptions", "/contract",
   "/revision", "/forget-snippet", "/contracts", "/handoff", "/effort", "/style",
-  "/skills", "/allow-read", "/revoke-read", "/agents", "/bg", "/log", "/diff", "/rename", "/export-chat", "/mcp", "/init",
+  "/skills", "/skill add", "/allow-read", "/revoke-read", "/agents", "/bg", "/log", "/diff", "/rename", "/export-chat", "/mcp", "/init",
 ];
 const MODES = ["default", "auto", "plan"] as const;
 const MODE_HELP: Record<string, string> = {

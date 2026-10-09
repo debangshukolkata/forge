@@ -81,7 +81,12 @@ class LoadSkill(Tool):
         skill = skills.get(args.name.strip())
         if skill is None:
             return ToolResult(
-                ok=False, content=f"No skill {args.name!r}. Skills: {', '.join(sorted(skills))}"
+                ok=False,
+                content=(
+                    f"No skill {args.name!r} is installed on this machine. "
+                    f"Skills: {', '.join(sorted(skills))}. "
+                    "The user installs more with `/skill add <github link>` in the chat box."
+                ),
             )
         if args.file:
             return read_skill_file(skill, args.file)

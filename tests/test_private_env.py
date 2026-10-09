@@ -82,3 +82,17 @@ def test_a_command_the_model_runs_does_not_see_them(
         check=True,
     ).stdout
     assert SECRET not in shown and "FORGE_ENV_FILE" not in shown and "MY_UNRELATED" in shown
+
+
+def test_sandboxed_node_tools_get_caches_inside_the_sandbox_folder(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    # Low integrity can't write the profile's npm cache, so npm install failed with EPERM (D-223).
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    shell = ShellSession(workspace, sandbox="off")
+    shell.sandbox_active = True
+    environment = shell.environment()
+    for name in ("npm_config_cache", "YARN_CACHE_FOLDER", "npm_config_store_dir"):
+        assert Path(environment[name]).is_relative_to(shell.sandbox_dir)
+    shell.sandbox_active = False
+    assert "npm_config_cache" not in shell.environment()

@@ -3147,3 +3147,25 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - A subagent's own model and tool calls are saved to `.forge/transcripts/subagents/<utc-stamp>-<agent-id>.jsonl` (redacted, text deltas left
   out), so a run can be judged afterwards. The session log still holds only start/finish. Ids restart each process, hence the timestamp.
 - Event timestamps already carry a UTC offset (`+00:00`); the "no timezone" worry in the review was a misreading of truncated output.
+
+### D-223 — Sandboxed npm failed with EPERM, so Forge handed "run the app" to the user (2026-10-09)
+- Seen in a Mode B build: `npm create vite` / `npm install` ran at low integrity and could not write `%LOCALAPPDATA%\npm-cache` (EPERM), so the
+  frontend never installed (SWC native binding missing) and the model told the user to run the commands themselves.
+- Options: (a) redirect the node package-manager caches into `.forge/sandbox/` like `PIP_CACHE_DIR` (chosen: keeps the sandbox, reproduced and
+  verified with a real sandboxed `npm create vite`); (b) turn the sandbox off for npm (rejected: weakens invariant 1); (c) only change the prompt (rejected: the failure was environmental).
+- `ShellSession.environment()` now sets `npm_config_cache`, `npm_config_devdir`, `npm_config_update_notifier`, `YARN_CACHE_FOLDER`, `npm_config_store_dir` while sandboxed.
+
+### D-224 — Asked for an uninstalled skill, Forge improvised from a web fetch (2026-10-09)
+- On the office laptop `ui-ux-pro-max` was not installed (skills were installed with `forge skill add` on the build machine only, D-207), so the model
+  read the repo through web_fetch and applied "ideas manually" without telling the user how to install it.
+- Fix: the prompts (both modes) and the `load_skill` not-found message now say the skill is not installed here and give the exact `forge skill add` command.
+  Still the user's own command; no model install tool (D-207). A chat `/skill add` command was not built (new UI feature: discuss first).
+
+### D-225 — `/skill` chat command (2026-10-09)
+- `/skill add <github link|folder> [--yes] [--force]`, `/skill list`, `/skill remove <name>` in the chat (`engine/skill_command.py`), same code as
+  `forge skill add`. Without `--yes` it only shows each skill's summary (what it does, scripts, size); `--yes` installs. A new skill is pinned to the
+  index at once (no restart). Options for the confirm step: a two-step command (chosen, works in terminal and web alike), an approval card (more UI
+  work), install-on-first-run (no look first, rejected). The model still has no install tool (D-207): "use a skill from GitHub" makes it tell the user
+  the command; it never downloads on its own. D-224 prompts/`load_skill` message now point at `/skill add`.
+
+- The prompts (both modes) also tell Forge how to explain installing and using a skill when the user asks (/skill add, /skill list, naming the skill in a request).
