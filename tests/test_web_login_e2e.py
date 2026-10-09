@@ -139,7 +139,7 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
         page.fill("input[aria-label='Search projects']", "zzz-nothing")
         page.wait_for_selector("text=No match")
         page.fill("input[aria-label='Search projects']", "payments")
-        page.click("button:has-text('Payments Masking')")
+        page.click("main button:has-text('Payments Masking')")  # the card, not the top-bar switcher
         page.wait_for_selector("textarea[aria-label=Message]")
         page.wait_for_selector("pre:has-text('/rewind')")  # the earlier conversation is replayed
 

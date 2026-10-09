@@ -1,6 +1,7 @@
 import { Anvil, Gauge, Home, LogOut, Moon, Power, ShieldCheck, Sun, UserRound } from "lucide-react";
 import type { Forge } from "../useForge";
 import { AnimatedCost } from "./AnimatedCost";
+import { ProjectSwitcher } from "./ProjectSwitcher";
 import { Badge, Button, IconButton, Spinner } from "./ui";
 
 export function TopBar({
@@ -13,6 +14,9 @@ export function TopBar({
   onSignOut,
   onEnvironment,
   onAccount,
+  onOpenProject,
+  onNewProject,
+  onProjectDeleted,
 }: {
   forge: Forge;
   theme: "dark" | "light";
@@ -23,11 +27,14 @@ export function TopBar({
   onSignOut: () => void;
   onEnvironment: () => void;
   onAccount: () => void;
+  onOpenProject: (path: string) => void;
+  onNewProject: () => void;
+  onProjectDeleted: (path: string, wasCurrent: boolean) => void;
 }) {
   const { state, context, cost, waiting, connected, controls, replaying } = forge;
   const workspace = state.workspace;
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur-xl">
+    <header className="relative z-30 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur-xl">
       <div className="flex items-center gap-2">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-action text-accent-fg">
           <Anvil className="h-4 w-4" aria-hidden />
@@ -37,9 +44,7 @@ export function TopBar({
       <div className="mx-1 h-5 w-px bg-border" />
       {workspace ? (
         <div className="flex min-w-0 items-center gap-2">
-          <span className="truncate font-medium" title={workspace.path}>
-            {workspace.name}
-          </span>
+          <ProjectSwitcher forge={forge} onOpen={onOpenProject} onNew={onNewProject} onDeleted={onProjectDeleted} />
           <Badge tone={workspace.mode === "B" ? "info" : "neutral"}>{workspace.mode === "B" ? "Standalone" : "Repository"}</Badge>
           {waiting ? (
             <Badge tone="warn">Waiting for you</Badge>

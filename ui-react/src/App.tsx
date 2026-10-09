@@ -11,7 +11,6 @@ import { Learnings } from "./components/Learnings";
 import { ProjectList } from "./components/ProjectList";
 import { SetupGuide } from "./components/SetupGuide";
 import { IconButton, Spinner } from "./components/ui";
-import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { api, cx, SIGNED_OUT_EVENT, storageGet, storageSet } from "./lib";
 import { Panels } from "./panels/Panels";
@@ -113,6 +112,11 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
     }
   };
 
+  const projectDeleted = async (_path: string, wasCurrent: boolean) => {
+    await forge.reload(); // the list of recent projects (and, if it was the open one, no workspace any more)
+    if (wasCurrent) setView("hub");
+  };
+
   const quit = async () => {
     if (!confirm("Stop Forge (the server and any running work)?")) return;
     await api("/api/quit", { method: "POST" }).catch(() => undefined);
@@ -148,9 +152,8 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
 
   return (
     <div className="flex h-full flex-col">
-      <TopBar forge={forge} theme={theme} onToggleTheme={onToggleTheme} onHome={() => setView("hub")} onQuit={quit} user={user} onSignOut={onSignOut} onEnvironment={() => setEnvOpen((open) => !open)} onAccount={() => setView("account")} />
+      <TopBar forge={forge} theme={theme} onToggleTheme={onToggleTheme} onHome={() => setView("hub")} onQuit={quit} user={user} onSignOut={onSignOut} onEnvironment={() => setEnvOpen((open) => !open)} onAccount={() => setView("account")} onOpenProject={open} onNewProject={() => showView("new")} onProjectDeleted={projectDeleted} />
       <div className="flex min-h-0 flex-1">
-        {!landing && <Sidebar forge={forge} onNew={() => showView("new")} onOpen={open} />}
         <main className="flex min-w-0 flex-1 flex-col">
           {landing ? (
             <div className="min-h-0 flex-1 overflow-y-auto bg-bg">

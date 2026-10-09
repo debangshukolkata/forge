@@ -148,14 +148,13 @@ def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, 
     page.wait_for_selector(
         "textarea[aria-label=Message]", timeout=120_000
     )  # the repo copy is slow under parallel load
-    assert "Payments Masking" in page.inner_text("nav[aria-label=Projects]")
-    # The project list pane folds into a thin rail and back (remembered across reloads).
-    page.click("button[aria-label='Hide projects']")
-    assert "Payments Masking" not in page.inner_text("nav[aria-label=Projects]")
-    page.reload()
-    page.wait_for_selector("button[aria-label='Show projects']")
-    page.click("button[aria-label='Show projects']")
-    assert "Payments Masking" in page.inner_text("nav[aria-label=Projects]")
+    # D-234: no permanent project list in a project; the name in the top bar opens the switcher.
+    assert page.locator("nav[aria-label=Projects]").count() == 0
+    page.click("header button[aria-haspopup=menu]")
+    menu = page.locator("[role=menu][aria-label=Projects]")
+    assert "Payments Masking" in menu.inner_text() and "New project" in menu.inner_text()
+    page.keyboard.press("Escape")
+    menu.wait_for(state="detached")
 
     page.click("button:has-text('Home')")
     page.click("button:has-text('New project')")
@@ -214,7 +213,7 @@ def test_react_ui_in_edge(server: ServerSecurity, tmp_path: Path) -> None:
         page.wait_for_selector("button[aria-label='Light theme']")
         assert page.evaluate("document.documentElement.classList.contains('dark')") is True
         # The recent list loads after the reload, so wait for it rather than read it at once.
-        page.wait_for_selector("nav[aria-label=Projects] >> text=Payments Masking", timeout=5000)
+        page.wait_for_selector("header button[aria-haspopup=menu] >> text=Payments Masking", timeout=5000)
         browser.close()
     assert not problems, problems
 
@@ -931,3 +930,39 @@ def test_react_learnings_pick_and_forget(
         browser.close()
     assert not problems, problems
     assert [m.name for m in store.all()] == ["keep-me"]
+
+
+def test_react_project_switcher_deletes_from_the_top_bar(
+    server: ServerSecurity, isolated_forge_home: Path, tmp_path: Path
+) -> None:
+    """D-234: the top-bar menu lists recent projects and deletes one (after asking), also the open one."""
+    from forge.modeb.profile import ProfileStore
+
+    ProfileStore(isolated_forge_home).create("switch-host")
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        page = browser.new_context(viewport={"width": 1280, "height": 800}).new_page()
+        problems: list[str] = []
+        page.on("pageerror", lambda e: problems.append(str(e)))
+        page.goto(server.url())
+        page.wait_for_selector("text=Start something new.")
+        page.evaluate(
+            "p => fetch('/api/standalone', {method: 'POST', headers: {'Content-Type': 'application/json'},"
+            " body: JSON.stringify({workspace: p, profile: 'switch-host'})})",
+            str(tmp_path / "wss"),
+        )
+        page.reload()
+        page.click("header button[aria-haspopup=menu]")
+        page.screenshot(path=str(shots / "project-switcher-light.png"))
+        page.click("button[aria-label^='Delete ']")
+        page.wait_for_selector("[role=alertdialog]")
+        page.click("button:has-text('Delete project')")
+        page.wait_for_selector("text=Start something new.")  # the open project went, so back to Home
+        assert not (tmp_path / "wss").exists()
+        browser.close()
+    assert not problems, problems

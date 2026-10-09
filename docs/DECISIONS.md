@@ -3217,3 +3217,8 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 ### D-233 — The middle (chat) column is 8% smaller (user request 2026-10-09)
 - CSS `zoom: 0.92` on the chat column (`.chat-scale`), so messages, cards, tool rows, code and the message box shrink together, on top of D-231 (message text 13.5px).
   Side panels, top bar and the left pane are unchanged. To change it, edit the one value in `ui-react/src/index.css`.
+
+### D-234 — No "Recent" pane inside a project; the project name in the top bar is a switcher (user choice 2026-10-09)
+- Options discussed: remove the pane and make the name a switcher (chosen), keep the thin rail collapsed by default, remove it with no replacement. Supersedes D-229 (the
+  fold button): `Sidebar.tsx` is gone. The name in the top bar opens a menu with the recent projects (the open one ticked), a trash icon on each row (asks first; deleting
+  the open project returns to Home) and "New project". Home / "Open a project" still show the full list. The top bar got its own stacking level so the menu sits above the chat.
