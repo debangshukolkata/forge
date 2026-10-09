@@ -38,7 +38,8 @@ $venv = Join-Path $root ".venv"
 $venvPython = Join-Path $venv "Scripts\python.exe"
 $venvForge = Join-Path $venv "Scripts\forge.exe"
 
-if (-not (Test-Path $venvPython)) {
+$firstRun = -not (Test-Path $venvPython)
+if ($firstRun) {
     $python = $null
     try { $python = (& py "-$PythonVersion" -c "import sys; print(sys.executable)").Trim() } catch { }
     if (-not $python) {
@@ -69,17 +70,19 @@ if (Test-Path $venvForge) {
     }
 }
 
+# The first install lists every package as it is fetched (it takes minutes); later starts stay quiet.
+$pipVerbosity = if ($firstRun) { @("--progress-bar", "off") } else { @("--quiet") }
 $spec = if ($Extras) { ".[$Extras]" } else { "." }
 if ($Wheelhouse) {
     # Matches install_forge.ps1's offline path: a wheelhouse folder bundled alongside the unzipped source
     # means no network is needed at install time, for the real office-laptop-may-be-offline case (CLAUDE.md).
     $wheels = (Resolve-Path $Wheelhouse).Path
     Invoke-Checked "Installing Forge from $root (offline, wheelhouse $wheels)" {
-        & $venvPython -m pip install --no-index --find-links $wheels -e $spec --quiet --disable-pip-version-check
+        & $venvPython -m pip install --no-index --find-links $wheels -e $spec --disable-pip-version-check @pipVerbosity
     }
 } else {
     Invoke-Checked "Installing Forge from $root" {
-        & $venvPython -m pip install -e $spec --quiet --disable-pip-version-check
+        & $venvPython -m pip install -e $spec --disable-pip-version-check @pipVerbosity
     }
 }
 
