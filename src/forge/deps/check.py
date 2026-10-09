@@ -6,7 +6,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 
-from forge.deps import audit, osv
+from forge.deps import audit, licenses, osv
 from forge.deps.model import CheckResult, Dependency, Finding, SourceStatus, normalise
 
 SEVERITY_ORDER = ["critical", "high", "moderate", "low", "unknown"]
@@ -45,13 +45,16 @@ def run_check(
     dependencies: list[Dependency],
     osv_check: osv.ClientFactory | None = None,
     audit_runner: audit.Runner | None = None,
+    license_client: licenses.ClientFactory | None = None,
 ) -> CheckResult:
-    with ThreadPoolExecutor(max_workers=2) as pool:
+    with ThreadPoolExecutor(max_workers=3) as pool:
         first = pool.submit(osv.check, dependencies, osv_check)
         second = pool.submit(audit.check, dependencies, audit_runner)
+        third = pool.submit(licenses.fill_licenses, dependencies, license_client)
         osv_findings, osv_status = first.result()
         audit_findings, audit_status = second.result()
-    sources: list[SourceStatus] = [osv_status, audit_status]
+        license_status = third.result()
+    sources: list[SourceStatus] = [osv_status, audit_status, license_status]
     return CheckResult(
         checked_at=datetime.now(UTC).isoformat(timespec="seconds"),
         dependencies=dependencies,

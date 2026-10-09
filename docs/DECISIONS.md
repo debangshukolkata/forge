@@ -3260,3 +3260,18 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Verified live (build machine): osv.dev and pip-audit both answered for requests 2.19.0, jinja2 2.10, lodash 4.17.15; of 15 merged findings 11 came from both sources and 4 (npm) from OSV only.
   Not verified: the office laptop's access to api.osv.dev and pypi.org (a block shows as "unavailable" with the reason). Not built: Forge's own libraries, yarn/pnpm locks, other ecosystems,
   CVSS scores (severity is the advisory's own label), a `forge doctor` line for pip-audit (the tab says so itself).
+
+### D-239 — License information in the Dependencies tab (user request 2026-10-09)
+- User choices (options discussed): source = installed files first, deps.dev for the rest (alternatives: installed files only; PyPI + npm registries directly); use = show the license
+  plus a risk category (alternatives: license name only; plus a company allow/forbid policy in config.yaml, not built).
+- Read offline (`license_read.py`): Python `*.dist-info/METADATA` (`License-Expression`, else the `License ::` classifier, else a short `License:` line; a long value is the license text itself
+  and is ignored) for the installed version only; npm `node_modules/<name>/package.json` (`license`, the old `licenses` list) when its version matches. Libraries not installed here
+  stay empty until the user's "Check" click, which also asks `api.deps.dev` (`licenses.py`: names and versions only, 8 at a time, cap 600, "non-standard" = unknown; several licenses on one
+  version are joined with AND, the cautious reading). Result stored with the project's last check and re-applied to the list on reopening.
+- Category (`license_kinds.py`, informational, not legal advice): permissive (MIT, BSD, Apache, ISC, PSF, ...), weak copyleft (LGPL, MPL, EPL, CDDL, EUPL), strong copyleft (GPL, AGPL, SSPL),
+  unknown (no license, "UNKNOWN", proprietary text). SPDX expressions: `A OR B` takes the easier alternative, `A AND B` the stricter, `WITH` exceptions are ignored.
+- UI: each library shows its license (red for strong, amber for weak copyleft); chips above the list count each category and filter it; the Check notice and the source lines mention deps.dev.
+- Found by a live run on this repository (242 libraries, ~3 s): a leftover `~orge-0.1.0.dist-info` folder (half-removed reinstall) made pip-audit reject its whole input and the failure message
+  showed only "^". Now such names are skipped (also in the library list) and the message is the ERROR line. Unit tests with fakes had not caught it.
+- Verified live: deps.dev answered for Python and npm; 187 of 242 licenses came from installed copies, 55 from deps.dev, 5 stayed unknown (the project itself, a font package). Not verified: the
+  office laptop's access to api.deps.dev.

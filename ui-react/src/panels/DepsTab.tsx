@@ -9,6 +9,9 @@ import type { DepFinding, DepsCheck, DepsResponse, Dependency } from "../types";
 
 const SEVERITIES = ["critical", "high", "moderate", "low", "unknown"] as const;
 const TONE: Record<string, "danger" | "warn" | "neutral"> = { critical: "danger", high: "danger", moderate: "warn", low: "neutral", unknown: "neutral" };
+const CATEGORIES = ["strong_copyleft", "weak_copyleft", "unknown", "permissive"] as const;
+const CATEGORY_LABEL: Record<string, string> = { permissive: "Permissive", weak_copyleft: "Weak copyleft", strong_copyleft: "Strong copyleft", unknown: "License unknown" };
+const CATEGORY_TONE: Record<string, "danger" | "warn" | "neutral"> = { strong_copyleft: "danger", weak_copyleft: "warn", unknown: "neutral", permissive: "neutral" };
 const slug = (name: string) => name.toLowerCase().replace(/[-_.]+/g, "-");
 const rank = (level: string | null) => (level === null ? SEVERITIES.length : SEVERITIES.indexOf(level as (typeof SEVERITIES)[number])); // worst first, clean last
 const keyOf = (name: string, ecosystem: string, version: string | null) => `${ecosystem}:${slug(name)}@${version ?? ""}`;
@@ -21,6 +24,7 @@ export function DepsTab() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
   const [onlyVulnerable, setOnlyVulnerable] = useState(false);
+  const [category, setCategory] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -86,6 +90,7 @@ export function DepsTab() {
   const shown = libraries
     .filter((d) => `${d.name} ${d.ecosystem}`.toLowerCase().includes(filter.toLowerCase()))
     .filter((d) => !onlyVulnerable || worst(d) !== null)
+    .filter((d) => category === null || d.license_category === category)
     .sort((a, b) => rank(worst(a)) - rank(worst(b)));
   const counts = SEVERITIES.map((level) => [level, (check?.findings ?? []).filter((f) => f.severity === level).length] as const).filter(([, n]) => n > 0);
   const direct = libraries.filter((d) => d.direct).length;
@@ -109,7 +114,7 @@ export function DepsTab() {
       {asking && (
         <div role="alertdialog" aria-label="Check for vulnerabilities" className="rounded-xl border border-warn/50 bg-warn-soft p-3 text-[13px]">
           <p>
-            This sends each library's <strong>name and version</strong> (nothing else) over the internet to <strong>osv.dev</strong> and, through pip-audit, to <strong>PyPI</strong>.
+            This sends each library's <strong>name and version</strong> (nothing else) over the internet to <strong>osv.dev</strong>, to <strong>deps.dev</strong> (licenses of libraries that are not installed here) and, through pip-audit, to <strong>PyPI</strong>.
             {data.standalone && " In a standalone project these names describe the host, so only continue if that is allowed."}
           </p>
           <div className="mt-2 flex gap-2">
@@ -149,7 +154,7 @@ export function DepsTab() {
               <li key={source.name} data-source={source.name} className="flex gap-2">
                 <span className="w-20 shrink-0 font-medium">{source.name}</span>
                 <span className={cx(source.status === "ok" ? "text-ok" : "text-warn")}>
-                  {source.status === "ok" ? `${source.checked} checked, ${source.found} reported` : source.detail || source.status}
+                  {source.status === "ok" ? (source.detail === "licenses" ? `${source.checked} licenses looked up, ${source.found} found` : `${source.checked} checked, ${source.found} reported`) : source.detail || source.status}
                 </span>
               </li>
             ))}
@@ -157,6 +162,20 @@ export function DepsTab() {
           {check.unchecked > 0 && <p className="text-[12px] text-fg-muted">{check.unchecked} librar{check.unchecked === 1 ? "y has" : "ies have"} no known version and could not be checked.</p>}
         </div>
       )}
+
+      <div data-testid="license-summary" className="flex flex-wrap items-center gap-1.5">
+        <span className="text-[12px] text-fg-muted">Licenses:</span>
+        {CATEGORIES.map((level) => {
+          const n = libraries.filter((d) => d.license_category === level).length;
+          return n === 0 ? null : (
+            <button key={level} type="button" aria-pressed={category === level} data-category={level} onClick={() => setCategory(category === level ? null : level)} className={cx("cursor-pointer rounded-full", category === level && "ring-2 ring-accent/50")}>
+              <Badge tone={CATEGORY_TONE[level]}>
+                {n} {CATEGORY_LABEL[level].toLowerCase()}
+              </Badge>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="flex items-center gap-2">
         <Input aria-label="Search libraries" placeholder="Search libraries" value={filter} onChange={(e) => setFilter(e.target.value)} className="h-8 flex-1" />
@@ -182,6 +201,9 @@ export function DepsTab() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-medium">{dependency.name}</span>
                   <span className="block truncate font-mono text-[11.5px] text-fg-muted">{dependency.version ?? `version unknown${dependency.spec ? ` (${dependency.spec})` : ""}`}</span>
+                  <span data-license={dependency.license_category} title={dependency.license_source ? `from ${dependency.license_source}` : undefined} className={cx("block truncate text-[11.5px]", dependency.license_category === "strong_copyleft" ? "font-medium text-danger" : dependency.license_category === "weak_copyleft" ? "font-medium text-warn" : "text-fg-muted")}>
+                    {dependency.license || "license unknown"}
+                  </span>
                 </span>
                 <Badge>{dependency.ecosystem === "npm" ? "npm" : "Python"}</Badge>
                 {!dependency.direct && <Badge>indirect</Badge>}

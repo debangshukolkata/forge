@@ -10,7 +10,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-from forge.deps.model import Dependency, Ecosystem, normalise
+from forge.deps.license_read import npm_installed_license, python_installed_licenses
+from forge.deps.model import SOURCE_INSTALLED, Dependency, Ecosystem, normalise
 
 SKIP_FOLDERS = {
     "node_modules",
@@ -273,7 +274,7 @@ def installed_python_packages(venv: Path) -> dict[str, tuple[str, str]]:
             continue
         for info in site.glob("*.dist-info"):
             name, _, version = info.name[: -len(".dist-info")].rpartition("-")
-            if name and version:
+            if name[:1].isalnum() and version:  # a leftover "~orge-1.0.dist-info" is not a package
                 found[normalise(name)] = (name.replace("_", "-"), version)
     return found
 
@@ -309,7 +310,9 @@ def scan_project(
         direct.append(
             Dependency(name=name, ecosystem="PyPI", version=str(version) or None, file="host profile")
         )
-    return _merged(direct, indirect, installed)
+    merged = _merged(direct, indirect, installed)
+    _read_installed_licenses(merged, root, venv)
+    return merged
 
 
 def _merged(
@@ -335,3 +338,17 @@ def _merged(
                 file="installed in the project environment",
             )
     return sorted(result.values(), key=lambda d: (not d.direct, d.dev, d.ecosystem, normalise(d.name)))
+
+
+def _read_installed_licenses(dependencies: list[Dependency], root: Path, venv: Path | None) -> None:
+    """License names from the installed copies; libraries not installed here stay empty for deps.dev."""
+    python = python_installed_licenses(venv) if venv is not None else {}
+    for dependency in dependencies:
+        if dependency.ecosystem == "PyPI":
+            entry = python.get(normalise(dependency.name))
+            found = entry[1] if entry and entry[0] == dependency.version else ""
+        else:
+            folder = root / Path(dependency.file).parent
+            found = npm_installed_license(folder, dependency.name, dependency.version)
+        if found:
+            dependency.license, dependency.license_source = found, SOURCE_INSTALLED

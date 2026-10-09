@@ -56,6 +56,12 @@ def add_deps_routes(app: FastAPI, manager: WebSessionManager) -> None:
         workspace = current()
         found = await asyncio.to_thread(_scan, workspace)
         saved = _saved(workspace)
+        if saved is not None:  # licenses an earlier check looked up for libraries not installed here
+            known = {d.key: d for d in saved.dependencies if d.license}
+            for dependency in found:
+                earlier = known.get(dependency.key)
+                if earlier is not None and not dependency.license:
+                    dependency.license, dependency.license_source = earlier.license, earlier.license_source
         return {
             "dependencies": [d.model_dump() for d in found],
             "last_check": saved.model_dump() if saved else None,
@@ -65,7 +71,7 @@ def add_deps_routes(app: FastAPI, manager: WebSessionManager) -> None:
 
     @app.post("/api/dependencies/check")
     async def check() -> dict[str, Any]:
-        """Sends library names and versions to osv.dev and PyPI: the page asks the user first."""
+        """Sends library names and versions to osv.dev, PyPI and deps.dev: the page asks the user first."""
         workspace = current()
         found = await asyncio.to_thread(_scan, workspace)
         result = await asyncio.to_thread(run_check, found)

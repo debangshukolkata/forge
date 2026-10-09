@@ -6,11 +6,15 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
+
+from forge.deps.license_kinds import Category, classify
 
 Ecosystem = Literal["PyPI", "npm"]
 SOURCE_OSV = "osv.dev"
 SOURCE_PIP_AUDIT = "pip-audit"
+SOURCE_DEPS_DEV = "deps.dev"
+SOURCE_INSTALLED = "installed copy"  # where an installed library's own license name was read
 
 
 def normalise(name: str) -> str:
@@ -26,6 +30,13 @@ class Dependency(BaseModel):
     direct: bool = True  # named in a manifest, as opposed to pulled in by another library
     dev: bool = False  # development-only (dev/test groups, devDependencies)
     file: str = ""  # where it was found, relative to the project
+    license: str = ""  # the license name (SPDX where known); "" when nobody could say
+    license_source: str = ""  # SOURCE_INSTALLED or SOURCE_DEPS_DEV
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def license_category(self) -> Category:
+        return classify(self.license)
 
     @property
     def key(self) -> str:

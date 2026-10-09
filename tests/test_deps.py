@@ -11,6 +11,7 @@ import httpx
 
 from forge.deps import audit, osv
 from forge.deps.check import merge, run_check
+from forge.deps.licenses import ClientFactory
 from forge.deps.model import Dependency, Finding
 from forge.deps.scan import installed_python_packages, scan_project
 
@@ -202,6 +203,30 @@ def test_run_check_combines_sources_and_counts_unchecked() -> None:
         Dependency(name="lodash", ecosystem="npm", version="4.17.15"),
         Dependency(name="mystery", ecosystem="PyPI"),
     ]
-    result = run_check(deps, _osv_client([]), _fake_pip_audit("{}"))
-    assert [s.name for s in result.sources] == ["osv.dev", "pip-audit"] and result.unchecked == 1
+    result = run_check(deps, _osv_client([]), _fake_pip_audit("{}"), _no_licenses())
+    assert [s.name for s in result.sources] == ["osv.dev", "pip-audit", "deps.dev"]
+    assert result.unchecked == 1
     assert len(result.findings) == 1 and result.findings[0].found_by == ["osv.dev"]
+
+
+def _no_licenses() -> ClientFactory:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, text="version not found")
+
+    return lambda: httpx.Client(transport=httpx.MockTransport(handler))
+
+
+def test_pip_audit_is_given_only_names_it_can_read_and_failures_say_why() -> None:
+    def run(command: list[str]) -> subprocess.CompletedProcess[str]:
+        listed = Path(command[command.index("-r") + 1]).read_text(encoding="utf-8")
+        assert listed == "Good==1.0\n"  # a name like '~orge' would make pip-audit reject the whole file
+        stderr = "WARNING:pip_audit._cli:a warning\nERROR:pip_audit._cli:requirement file is invalid\n    ^\n"
+        return subprocess.CompletedProcess(command, 1, "", stderr)
+
+    deps = [
+        Dependency(name="Good", ecosystem="PyPI", version="1.0"),
+        Dependency(name="~orge", ecosystem="PyPI", version="1"),
+    ]
+    findings, status = audit.check(deps, run)
+    assert findings == [] and status.status == "unavailable"
+    assert "requirement file is invalid" in status.detail  # the ERROR line, not the last line (a caret)

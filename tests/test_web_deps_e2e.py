@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from forge.deps import audit, osv
+from forge.deps import audit, licenses, osv
 from forge.deps.model import Dependency, Finding, SourceStatus
 from forge.safety.server_security import ServerSecurity
 from forge.workspace.workspace import Workspace
@@ -51,6 +51,12 @@ def test_dependencies_tab_lists_checks_and_names_the_source(
             name="pip-audit", status="ok", checked=len(known), found=1
         )
 
+    def fake_licenses(dependencies: list[Dependency], client_factory: object = None) -> SourceStatus:
+        for dependency in dependencies[:2]:
+            dependency.license, dependency.license_source = "GPL-3.0-only", "deps.dev"
+        return SourceStatus(name="deps.dev", status="ok", detail="licenses", checked=2, found=2)
+
+    monkeypatch.setattr(licenses, "fill_licenses", fake_licenses)
     monkeypatch.setattr(osv, "check", fake_osv)
     monkeypatch.setattr(audit, "check", fake_audit)
     shots = REPO_ROOT / "test-artifacts" / "react-ui"
@@ -87,6 +93,13 @@ def test_dependencies_tab_lists_checks_and_names_the_source(
         summary = page.locator("[data-testid=deps-summary]")
         summary.wait_for()
         assert "osv.dev" in summary.inner_text() and "pip-audit" in summary.inner_text()
+        assert "deps.dev" in summary.inner_text() and "2 licenses looked up" in summary.inner_text()
+        page.locator(
+            "[data-testid=license-summary] [data-category=strong_copyleft]"
+        ).click()  # filter by category
+        assert page.locator("[data-library]").count() == 2
+        assert page.locator("[data-license=strong_copyleft]").first.inner_text() == "GPL-3.0-only"
+        page.locator("[data-testid=license-summary] [data-category=strong_copyleft]").click()
         assert sent and len(sent[0]) > 0 and "==" in sent[0][0]  # only names and versions
         assert (
             page.locator("[data-library]").first.get_attribute("data-vulnerable") is not None

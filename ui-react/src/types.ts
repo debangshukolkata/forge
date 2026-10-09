@@ -253,6 +253,9 @@ export interface Dependency {
   direct: boolean;
   dev: boolean;
   file: string;
+  license: string;
+  license_source: string;
+  license_category: "permissive" | "weak_copyleft" | "strong_copyleft" | "unknown";
 }
 export interface DepFinding {
   id: string;

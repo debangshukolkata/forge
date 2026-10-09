@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -16,7 +17,15 @@ from typing import Any
 from forge.deps.model import SOURCE_PIP_AUDIT, Dependency, Finding, SourceStatus
 
 TIMEOUT_S = 300
+_SAFE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")  # a name pip-audit can read as a requirement
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
+
+
+def _reason(done: subprocess.CompletedProcess[str]) -> str:
+    """The line that says what went wrong: pip-audit's ERROR line, else the last non-blank line."""
+    lines = [line.strip() for line in (done.stderr or done.stdout).splitlines() if line.strip()]
+    errors = [line for line in lines if "ERROR" in line or "Error" in line]
+    return (errors or lines or ["no output"])[0][:300]
 
 
 def available() -> bool:
@@ -51,7 +60,7 @@ def _parse(report: dict[str, Any], by_name: dict[str, Dependency]) -> list[Findi
 
 def check(dependencies: list[Dependency], runner: Runner | None = None) -> tuple[list[Finding], SourceStatus]:
     """Never raises: any failure becomes the status."""
-    python = [d for d in dependencies if d.ecosystem == "PyPI" and d.version]
+    python = [d for d in dependencies if d.ecosystem == "PyPI" and d.version and _SAFE.fullmatch(d.name)]
     if runner is None and not available():
         return [], SourceStatus(
             name=SOURCE_PIP_AUDIT,
@@ -78,9 +87,8 @@ def check(dependencies: list[Dependency], runner: Runner | None = None) -> tuple
     try:
         report = json.loads(done.stdout)  # exit code 1 only means "vulnerabilities found"
     except ValueError:
-        reason = (done.stderr or done.stdout).strip().splitlines()[-1:] or ["no output"]
         return [], SourceStatus(
-            name=SOURCE_PIP_AUDIT, status="unavailable", detail=f"pip-audit failed: {reason[0][:300]}"
+            name=SOURCE_PIP_AUDIT, status="unavailable", detail=f"pip-audit failed: {_reason(done)}"
         )
     by_name = {d.name.lower().replace("_", "-"): d for d in python}
     findings = _parse(report, by_name)
