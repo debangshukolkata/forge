@@ -296,13 +296,14 @@ def _ocr_reads_a_test_image(binary: str) -> tuple[bool, str]:
 
 def check_tesseract() -> Outcome:
     """Only run when the user said Tesseract is installed (D-201), so not finding it is a failure."""
-    found = find_tesseract()
+    found = find_tesseract(load_secrets().get("TESSERACT_CMD"))
     if not found:
         return Outcome(
             "tesseract",
             "fail",
-            "You said it is installed, but Forge cannot find it.",
-            "Add its folder to PATH, or answer No above.",
+            "You said it is installed, but Forge cannot find it on PATH or in the usual folders.",
+            "Open the .env file and add a line TESSERACT_CMD=<full path to tesseract.exe> (search File "
+            "Explorer for tesseract.exe and copy its path), then run Test again. Or answer No above.",
         )
     try:
         completed = subprocess.run(

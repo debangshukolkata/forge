@@ -16,6 +16,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
+from forge.config import load_secrets
 from forge.errors import ForgeError
 from forge.llm.base import ChatRequest, Message
 from forge.safety.paths import resolve_inside
@@ -295,7 +296,7 @@ class OcrImage(Tool):
         return f"ocr {args.path}" + (f" {args.region}" if args.region else "")
 
     async def run(self, args: OcrImage.Args, context: ToolContext) -> ToolResult:
-        binary = ocr.find_tesseract()
+        binary = ocr.find_tesseract(load_secrets().get("TESSERACT_CMD"))
         if binary is None:
             return ToolResult(
                 ok=False,

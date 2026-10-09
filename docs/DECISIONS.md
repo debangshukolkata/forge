@@ -3189,3 +3189,9 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Update (same day, user asked): the Mode B host profile is now listed as an item ("Host profile") in its group. Forgetting it removes the whole profile folder
   (its description of the code, examples, and the FORGE.md kept there); projects using it still open (a missing profile is handled) and start from scratch, and
   a new project with the same name recreates it. The item's description says so before the user ticks it.
+
+### D-228 — Tesseract not found on the office laptop (user report 2026-10-09)
+- The Environment test said "cannot find it" although Tesseract was installed: Forge looked only on PATH and in `C:\Program Files\Tesseract-OCR`, and a no-admin
+  install usually lives elsewhere. Now it also looks in Program Files (x86), `C:\Tesseract-OCR`, `%LOCALAPPDATA%\Programs\Tesseract-OCR`, `%LOCALAPPDATA%\Tesseract-OCR`
+  and the scoop folder, and reads an optional `TESSERACT_CMD` from the `.env` (a full path to tesseract.exe or its folder; it wins). The failure message says
+  how to set it. Not verified on the office laptop itself.

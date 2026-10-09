@@ -5,6 +5,7 @@ drawer whether it is installed (D-201) and Forge only offers the tool once the t
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import tempfile
@@ -22,11 +23,40 @@ class OcrError(RuntimeError):
     """A message safe to show the model: what went wrong and what to try."""
 
 
-def find_tesseract() -> str | None:
+def candidate_locations() -> list[Path]:
+    """Where Tesseract usually is when it is not on PATH. Per-user installs (no admin rights) go under the
+    user's AppData or home folder rather than Program Files."""
+    places = [
+        WINDOWS_DEFAULT,
+        Path(r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"),
+        Path(r"C:\Tesseract-OCR\tesseract.exe"),
+    ]
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        places += [
+            Path(local) / "Programs" / "Tesseract-OCR" / "tesseract.exe",
+            Path(local) / "Tesseract-OCR" / "tesseract.exe",
+        ]
+    places += [
+        Path.home() / "scoop" / "apps" / "tesseract" / "current" / "tesseract.exe",
+        Path.home() / "Tesseract-OCR" / "tesseract.exe",
+    ]
+    return places
+
+
+def find_tesseract(configured: str | None = None) -> str | None:
+    """`configured` is TESSERACT_CMD from the .env (a full path, or the folder holding tesseract.exe).
+    It wins; then PATH; then the usual places."""
+    chosen = (configured or "").strip().strip('"')
+    if chosen:
+        path = Path(chosen)
+        path = path / "tesseract.exe" if path.is_dir() else path
+        if path.exists():
+            return str(path)
     found = shutil.which("tesseract")
     if found:
         return found
-    return str(WINDOWS_DEFAULT) if WINDOWS_DEFAULT.exists() else None
+    return next((str(place) for place in candidate_locations() if place.exists()), None)
 
 
 def _prepared(image: Image.Image) -> Image.Image:
