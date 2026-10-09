@@ -88,9 +88,14 @@ class QuestionBroker:
         self._pending[question_id] = future
         await self._bus.publish(event_type, {"id": question_id, **payload})
         try:
-            return await future
+            answer = await future
         finally:
             self._pending.pop(question_id, None)
+        # An event, so the chat card shows the chosen option also after a reopen.
+        await self._bus.publish(
+            EventType.QUESTION_ANSWERED, {"id": question_id, "choice": answer.choice, "text": answer.text}
+        )
+        return answer
 
     def answer_all_with_text(self, text: str) -> int:
         """Like ApprovalBroker.reject_all: a typed message answers every open question as free text."""

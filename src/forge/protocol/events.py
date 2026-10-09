@@ -32,6 +32,7 @@ class EventType(StrEnum):
     TOOL_CALL_FINISHED = "tool_call_finished"
     APPROVAL_REQUESTED = "approval_requested"
     QUESTION_ASKED = "question_asked"
+    QUESTION_ANSWERED = "question_answered"  # what the user chose or typed (D-232)
     USER_ACTION_REQUESTED = "user_action_requested"
     DB_REQUEST_CREATED = "db_request_created"
     DB_REQUEST_UPDATED = "db_request_updated"

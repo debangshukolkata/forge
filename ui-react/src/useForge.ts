@@ -8,6 +8,7 @@ import type { AppState, ChatItem, ContextInfo, CostColors, CostInfo, ForgeEvent,
 interface Timeline {
   items: ChatItem[];
   answered: Record<string, string>; // card key (unique per card) -> how it was settled ("Approved", "superseded", …)
+  questionAnswers: Record<string, { choice: string | null; text: string | null }>; // question id -> what the user chose / typed (D-232)
   todos: TodoItem[]; // Forge's own todo list, the whole list as of the last `todo_updated` (D-177)
 }
 
@@ -18,7 +19,7 @@ type Action =
   | { type: "answered"; id: string; label: string }
   | { type: "settle"; pending: string[] };
 
-const initial: Timeline = { items: [], answered: {}, todos: [] };
+const initial: Timeline = { items: [], answered: {}, questionAnswers: {}, todos: [] };
 
 function reducer(state: Timeline, action: Action): Timeline {
   switch (action.type) {
@@ -122,6 +123,8 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
       return { ...state, items: agentStep(items, p) };
     case "agent_finished":
       return { ...state, items: agentFinished(items, p) };
+    case "question_answered":
+      return { ...state, questionAnswers: { ...state.questionAnswers, [p.id]: { choice: p.choice ?? null, text: p.text ?? null } } };
     case "approval_requested":
     case "question_asked":
     case "user_action_requested": {

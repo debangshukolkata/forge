@@ -3207,3 +3207,9 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 
 ### D-231 — Chat message text 14.5px -> 13.5px (user request 2026-10-09)
 - Only the conversation text (your messages and Forge's replies) in the main chat area; headings, code blocks, tool rows and panels are unchanged.
+
+### D-232 — An answered question shows its options and the chosen one (user request 2026-10-09)
+- After the user answers one of Forge's questions, the chat card becomes "Question · Answered · 1 question" (folds with the chevron): the question, every option, the
+  chosen one ticked and highlighted, the user's note under it, or their own typed answer as "Other". New event `question_answered` (id, choice, text) published by
+  `QuestionBroker.ask`, so a reopened project shows the same card (it replays from the event log). Questions answered before this change (no event in the log)
+  keep the old look: a card with the short answer badge. Approvals and "a step for you" cards are unchanged.

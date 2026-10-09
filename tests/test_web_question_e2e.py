@@ -138,7 +138,18 @@ def test_choosing_selects_and_the_answer_is_sent_with_submit(  # type: ignore[no
         submit.click()
         dialog.wait_for(state="hidden")
         page.wait_for_selector("text=Going with the answer you gave.")
-        page.wait_for_selector("text=You chose: SQLite (with a note)")
+        # D-232: the settled question lists every option with the chosen one marked, also after a reload.
+        answered = page.locator("[data-card=question][data-answered]")
+        answered.wait_for()
+        assert "Answered" in answered.inner_text() and "keep it simple" in answered.inner_text()
+        assert answered.locator("[data-chosen]").count() == 1
+        assert "SQLite" in answered.locator("[data-chosen]").inner_text()
+        assert answered.locator("li").count() == 2 and "Postgres" in answered.inner_text()
+        page.screenshot(path=str(shots / "question-answered-light.png"))
+        answered.locator("button[aria-expanded]").click()  # folds away
+        assert answered.locator("li").count() == 0
+        page.reload()
+        page.locator("[data-card=question][data-answered]").wait_for()
         browser.close()
     sent = json.dumps(model_requests[1])
     assert "The user chose: SQLite. They added: keep it simple" in sent
@@ -165,7 +176,11 @@ def test_own_answer_alone_and_answering_later(  # type: ignore[no-untyped-def]
         dialog.locator("textarea[aria-label='Your own answer or a note']").fill("a JSON file")
         dialog.locator("button:has-text('Submit answer')").click()
         dialog.wait_for(state="hidden")
-        page.wait_for_selector("text=You answered: a JSON file")
+        answered = page.locator("[data-card=question][data-answered]")
+        answered.wait_for()
+        assert (
+            "a JSON file" in answered.locator("[data-chosen]").inner_text()
+        )  # an own answer shows as "Other"
         browser.close()
     assert "The user answered: a JSON file" in json.dumps(model_requests[1])
     assert not problems, problems

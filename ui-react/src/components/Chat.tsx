@@ -1,5 +1,5 @@
 import {
-  AlertOctagon, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload,
+  AlertOctagon, Check, ChevronDown, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload,
 } from "lucide-react";
 import { useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
@@ -312,6 +312,8 @@ function QuestionCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: For
   const answered = forge.timeline.answered[itemKey];
   const { popupId, reopen } = useContext(QuestionPopup);
   const icon = <HelpCircle className="h-4 w-4" />;
+  const given = forge.timeline.questionAnswers[p.id];
+  if (answered !== undefined && given !== undefined) return <AnsweredQuestion p={p} given={given} />;
   if (answered === undefined && popupId === itemKey) {
     // The question is open as a pop-up: this card only marks the place in the conversation.
     return (
@@ -332,6 +334,58 @@ function QuestionCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: For
         </>
       )}
     </AskCard>
+  );
+}
+
+// A settled question (D-232): the question, every option, and the one the user picked (plus their note or own
+// answer), folded away with the chevron. Built from the question_answered event, so it also shows after a reopen.
+function AnsweredQuestion({ p, given }: { p: P; given: { choice: string | null; text: string | null } }) {
+  const [open, setOpen] = useState(true);
+  const options: P[] = p.options || [];
+  const own = given.choice === null ? given.text : null;
+  return (
+    <div data-card="question" data-answered="" className="rounded-xl border border-border bg-surface p-4">
+      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="flex w-full cursor-pointer items-center gap-2 text-left">
+        <HelpCircle className="h-4 w-4 shrink-0 text-fg-muted" aria-hidden />
+        <span className="font-semibold">Question</span>
+        <span className="text-[12.5px] text-fg-muted">Answered · 1 question</span>
+        <ChevronDown className={cx("ml-auto h-4 w-4 shrink-0 text-fg-muted transition-transform duration-150", open && "rotate-180")} aria-hidden />
+      </button>
+      {open && (
+        <div className="mt-3 space-y-3">
+          <h4 className="break-words font-semibold">{p.question}</h4>
+          {p.context && <Markdown text={p.context} className="text-fg-muted" />}
+          <ul className="space-y-2">
+            {options.map((option) => {
+              const chosen = given.choice === option.label;
+              return (
+                <li key={option.label} data-chosen={chosen ? "" : undefined} className={cx("flex gap-3 rounded-lg border p-3", chosen ? "border-accent bg-accent-soft" : "border-border opacity-60")}>
+                  <span className={cx("mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border", chosen ? "border-accent bg-accent text-accent-fg" : "border-border-strong")}>
+                    {chosen && <Check className="h-3 w-3" aria-hidden />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">{option.label}</span>
+                    {option.description && <span className="mt-0.5 block text-[12.5px] text-fg-muted">{option.description}</span>}
+                    {chosen && given.text && <span className="mt-1 block text-[12.5px]">Your note: {given.text}</span>}
+                  </span>
+                </li>
+              );
+            })}
+            {own && (
+              <li data-chosen="" className="flex gap-3 rounded-lg border border-accent bg-accent-soft p-3">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-accent bg-accent text-accent-fg">
+                  <Check className="h-3 w-3" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">Other</span>
+                  <span className="mt-0.5 block whitespace-pre-wrap break-words text-[12.5px]">{own}</span>
+                </span>
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 
