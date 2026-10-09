@@ -25,3 +25,8 @@ Decide when picking it up:
 - GitHub repository name: renaming it on GitHub is a separate step by the user (the old link keeps redirecting).
 - The zip folder name users download changes from `forge-main` to the new repository name (the start file works from any folder).
 - Decisions in `docs/DECISIONS.md` keep saying "Forge" (history); add one new decision for the rename.
+
+## Presentations: everything still needed to match Claude's PowerPoint abilities (asked 2026-10-09)
+
+The full task list (about 40 items in priorities P0 to P3, each with size and what it needs, the four decisions the user must make, and a suggested order)
+is in [docs/PPT_PARITY.md](PPT_PARITY.md). Nothing in it is started except what its "Done so far" section lists (D-240 to D-242).
