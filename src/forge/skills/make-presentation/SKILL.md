@@ -39,6 +39,7 @@ Layouts and their fields:
 | `image` | a screenshot, diagram or photo | `title`, `image` (workspace path), `alt`, `caption` |
 | `quote` | one memorable sentence | `quote`, `by` |
 | `closing` | the last slide | `title`, `subtitle` (contact) |
+| `freeform` | a designed slide you lay out yourself: cover, diagram, timeline, comparison | `title`, `elements`: see section 6 |
 
 ## 3. Design rules (the tool applies the look; you supply good content)
 
@@ -94,3 +95,57 @@ by number for the rest). Do not rebuild a template deck with `build_presentation
 Limits to tell the user plainly: copying a slide that holds a chart or an embedded object is not possible (build
 it again with `add_slide` and `update_chart`); animations, comments and slide-master changes are not edited;
 `.ppt`, `.pptm` and password-protected files cannot be opened.
+
+## 6. Free-form design (`layout: "freeform"`)
+
+The ten fixed layouts are fine for plain content. When the user wants a designed deck (a cover with impact, a
+process diagram, a timeline, a comparison, a picture-led slide), use `freeform`: you place every element yourself.
+You are the designer, so design on purpose, and let `build_presentation`'s warnings and `preview_presentation` be
+your critic.
+
+**The canvas** is 13.333 x 7.5 inches; positions and sizes are in inches, origin top-left. Elements are drawn in
+list order (first = back). Keep 0.8 in side margins and 0.5 in top/bottom for text; only full-bleed shapes and
+pictures go to the edge. Every slide still has a `title` (for navigation and screen readers). It is shown at
+`title_box` (default top-left, 34 pt); set `title_visible: false` when the design makes the headline part of the
+artwork (a cover), and put the real headline in a text element.
+
+**Elements:** `text` (size, bold, color, align, valign, optional `fill`/`line`/`rounded` to make a card,
+`bullets`, `font`: title/body/mono; text shrinks to fit its box down to `min_size`), `shape` (rect, rounded,
+oval, triangle, diamond, chevron, pentagon, arrow_right, plus; `text` inside; `rotate`), `line` (x1,y1 to x2,y2,
+`arrow`, `dash`), `image` (`fit`: contain or cover, `alt` required), `chart`, `table`.
+**Colours:** use theme names so the deck stays consistent and readable in all three themes: `text`, `muted`,
+`accent`, `accent_text` (text on an accent fill), `surface` (card background), `background`, `series1`..`series6`
+(the chart palette). Use `#RRGGBB` only for a brand colour the user gave you.
+
+**Design rules**
+- **One focal point per slide**, and a clear reading order (top-left to bottom-right). The most important thing
+  is the biggest: 44-72 pt for a hero line, 28-36 for a headline, 18-24 for body, 14-16 for captions, never
+  below 12. Use at most two sizes of body text on a slide.
+- **A grid, not a scatter.** Pick 2-4 columns and align left edges and tops. Equal gaps (0.3-0.5 in) between
+  siblings, equal widths for equal things. Whitespace is a feature: leave a third of the slide empty.
+- **Colour with purpose:** `accent` for the one thing to look at, `muted` for secondary text, `surface` for
+  cards. Do not rainbow: one accent plus one `series` colour is plenty. Text on a coloured fill: use
+  `accent_text` for `accent`, and `text` (dark) on the lighter `series` colours; the builder warns on low contrast.
+- **Show structure with shape, not words:** numbers in circles, steps as chevrons joined by arrows, comparisons
+  as two cards, a timeline as a line with dots. Keep words in diagrams to a few per node.
+- **Never overlap by accident.** A card (a `fill`ed text element or a shape) may contain text on top of it;
+  nothing else should collide.
+
+**Recipes** (change the words and sizes, keep the proportions)
+- *Cover:* background shape `rect` x0 y0 w0.35 h7.5 `accent`; headline text x1.1 y1.3 w8 h2.9 size 64-72 bold
+  `font:"title"` valign middle; subtitle x1.1 y4.4 w7 size 24 `muted`; a number or badge in an `oval`
+  (x9.6 y1.5 w3.2 h3.2, `fill:"series2"`, text `color:"text"`, size 40 bold); `title_visible:false`.
+- *Three steps:* three `chevron` shapes y2.4 h1.5 at x0.8, 4.8, 8.8, w3.8 (`accent`, `series2`, `series3`) with
+  `1  Plan` labels (22 pt bold; `color:"text"` on series fills), and under each a `text` card (`fill:"surface"`,
+  `rounded:true`) at y4.3 w3.6 h1.8, size 20.
+- *Comparison:* two `text` cards x0.8 and x6.9, y2.2, w5.6, h4: the first line a bold heading (a separate
+  small text element above in `accent`), the rest short lines with `bullets:true`.
+- *Big number:* one huge text (size 96, `accent`, bold) at the left third, and a short explanation at the right
+  two thirds (size 24) aligned to its vertical centre.
+- *Timeline:* a `line` x0.8 y3.8 to x12.5 y3.8 (width 3); an `oval` (w0.4) on it per event; the date above (bold,
+  18 pt) and a 16-18 pt note below, alternating nothing: keep all labels on the same sides.
+- *Picture-led:* an `image` with `fit:"cover"` over the whole slide (x0 y0 w13.333 h7.5) and a `text` card
+  (`fill:"background"`, `rounded:true`) on top for the words, so they stay readable.
+
+After building, **look**: preview, then check every slide for balance, alignment, crowding and reading order
+before you call it done. Fix by changing the numbers and rebuilding; that is cheap.

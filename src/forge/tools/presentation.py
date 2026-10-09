@@ -31,7 +31,8 @@ class BuildPresentation(Tool):
     description = (
         "Make a PowerPoint (.pptx) from an outline file you wrote (JSON or YAML; load the "
         "`make-presentation` skill for its format and the design rules). Slides get real titles, text "
-        "boxes, native charts and tables, speaker notes, and text sized to fit. Returns per-slide warnings "
+        "boxes, native charts and tables, speaker notes, and text sized to fit; the `freeform` layout lets "
+        "you place every element yourself for a designed look. Returns per-slide warnings "
         "(text too long, too many bullets, ...) that you should fix by editing the outline and building "
         "again. Then call preview_presentation and look at the pictures."
     )

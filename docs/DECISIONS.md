@@ -3306,3 +3306,21 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Live check (real model): asked to describe a deck, retitle slide 2, add a "Risks" slide after slide 3 and save a copy, it used read_presentation + edit_presentation, did not rebuild, put the slide in the right
   place and left the original untouched (`tests/test_live_slides.py`). Not tried: a real company template (only a template made from a Forge deck), and PowerPoint's rendering of edited decks beyond the preview tool.
 - Still not built (the rest of the gap to Claude's skill): free-form slide design, building a new deck directly on a template's styles through `build_presentation`, animations/comments/master edits, other formats (.docx, .xlsx, .pdf).
+
+### D-242 — Free-form slide design (user request 2026-10-09, the next gap after D-241)
+- New layout `freeform` (`slides/spec.py`, `slides/freeform.py`): the model places every element in inches on the 13.333 x 7.5 canvas, in drawing order. Elements: `text` (size, bold, colour, alignment,
+  optional fill/line/rounded card, bullets, title/body/mono font, shrink-to-fit down to `min_size`), `shape` (rect, rounded, oval, triangle, diamond, chevron, pentagon, arrow_right, plus; label; rotation),
+  `line` (connector with arrow head and dash), `image` (contain, or cover with centred crop; alt text), `chart`, `table` (the last three share code with the fixed layouts: `add_chart`, `add_table`,
+  `add_picture` were extracted from the layout methods). Colours are theme names (`text`, `muted`, `accent`, `accent_text`, `surface`, `background`, `series1..6`) or `#RRGGBB`, so a deck stays consistent
+  across the three themes. Every slide keeps a real title (navigation and screen readers); `title_visible: false` parks it above the slide for cover designs; `title_box` moves and sizes it.
+- Guard rails, because nothing is laid out for the model (each names the slide and element): extends beyond the slide, unfilled text closer than 0.3 in to an edge, two elements colliding (a card or
+  shape fully containing another element is not a collision), text not fitting even at `min_size`, text under 12 pt, text contrast under 4.5:1 (3:1 for large text) measured against what is really behind it
+  (own fill, else the card it sits on, else the slide background), a picture without alt text. Found by the first test: even a hand-made test slide collided with its own title and put white text on orange.
+- The skill (`make-presentation` section 6) carries the design knowledge: canvas and margins, type scale, grid and whitespace, colour discipline, structure by shape, and recipes (cover, three steps,
+  comparison, big number, timeline, picture-led).
+- Verified: unit tests; a hand-built cover, process diagram and deliberately bad slide looked right in PowerPoint pictures (the bad one tripped every check); and a live run: the real model designed a
+  4-slide dark deck as free-form slides, previewed and looked at it (`tests/test_live_slides.py`, keeps the result in test-artifacts/slides-freeform-live/). Honest result: clearly better than the plain
+  templates (bold cover, step diagram, comparison cards, closing line) but still conservative: it used rectangles where the recipe suggested chevrons and left empty space at the bottom of cards. The
+  quality of a free design depends on the model; the checks stop the ugly mistakes, they do not make it a designer.
+- Not built: gradients, shadows, rotated text, grouping, icons or an icon library, image generation, animations, master/template-aware free-form (free-form slides use the deck's blank "Title Only" layout and
+  theme, not an imported template's look).

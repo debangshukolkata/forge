@@ -103,3 +103,55 @@ async def test_model_reads_a_deck_and_edits_it_without_rebuilding(make_host) -> 
     assert titles.index("Risks") == 3, titles
     original = Presentation(str(host.workspace.path_of("docs/team.pptx")))
     assert original.slides[1].shapes.title.text_frame.text == "Backlog is shrinking"
+
+
+async def test_model_designs_free_form_slides_and_fixes_what_it_sees(make_host) -> None:  # type: ignore[no-untyped-def]
+    host = make_host("auto")
+    await run_turn(
+        host,
+        "Design a 4-slide deck for a conference talk called 'Release without fear' about moving a team from "
+        "monthly to daily releases. I want it to look designed, not like a plain template: slide 1 a bold "
+        "cover, slide 2 the three-step process (plan small, ship daily, measure) as a diagram, slide 3 a "
+        "before/after comparison (monthly vs daily releases: lead time, risk, feedback), slide 4 a closing "
+        "slide with one memorable line. Use the dark theme. Do not invent statistics. Save as "
+        "docs/release-talk.pptx.",
+    )
+    names = tool_names(host)
+    assert "build_presentation" in names, names
+    from pptx import Presentation
+
+    from forge.slides import preview
+
+    deck = Presentation(str(host.workspace.path_of("docs/release-talk.pptx")))
+    assert len(deck.slides) == 4
+    outline = (
+        next(
+            host.workspace.path_of(p)
+            for p in ("docs/release-talk-outline.json", "docs/release-talk.json")
+            if host.workspace.path_of(p).is_file()
+        )
+        if any(
+            host.workspace.path_of(p).is_file()
+            for p in ("docs/release-talk-outline.json", "docs/release-talk.json")
+        )
+        else None
+    )
+    if outline is not None:
+        assert "freeform" in outline.read_text(
+            encoding="utf-8"
+        )  # it really designed, not used the plain layouts
+    if preview.available():
+        assert "preview_presentation" in names and "view_image" in names, names
+    import shutil
+
+    from tests.conftest import REPO_ROOT
+
+    keep = REPO_ROOT / "test-artifacts" / "slides-freeform-live"
+    shutil.rmtree(keep, ignore_errors=True)
+    keep.mkdir(parents=True)
+    shutil.copy(host.workspace.path_of("docs/release-talk.pptx"), keep / "release-talk.pptx")
+    previews = host.workspace.forge_dir / "reports" / "slides"
+    if previews.is_dir():
+        shutil.copytree(previews, keep / "preview")
+    for candidate in host.workspace.path_of("docs").glob("*.json"):
+        shutil.copy(candidate, keep / candidate.name)

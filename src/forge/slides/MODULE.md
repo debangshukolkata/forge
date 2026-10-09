@@ -7,7 +7,7 @@ to write a good deck is `skills/make-presentation/SKILL.md`.
 
 - **Depends on:** errors, toolkit
 - **Invariants:** python-pptx is imported lazily (a missing library is a clear message, never a crash); PowerPoint gets its paths through environment variables, never through the command text, and never sees Forge's own variables (D-202); a user's open PowerPoint is not closed.
-- **Tests:** test_slides.py, test_slides_edit.py
+- **Tests:** test_slides.py, test_slides_edit.py, test_slides_freeform.py
 - **Decisions:** docs/DECISIONS.md (D-240); layering is enforced by tests/test_module_boundaries.py.
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.

@@ -14,6 +14,7 @@ from typing import Any
 
 from forge.errors import ForgeError
 from forge.slides import fit
+from forge.slides.freeform import build_freeform
 from forge.slides.spec import (
     BulletGroup,
     BulletsSlide,
@@ -21,9 +22,11 @@ from forge.slides.spec import (
     ClosingSlide,
     Column,
     Deck,
+    FreeformSlide,
     ImageSlide,
     QuoteSlide,
     SectionSlide,
+    Series,
     StatsSlide,
     TableSlide,
     TitleSlide,
@@ -72,7 +75,8 @@ def _modules() -> Any:
         from pptx.chart.data import CategoryChartData
         from pptx.dml.color import RGBColor
         from pptx.enum.chart import XL_CHART_TYPE, XL_LEGEND_POSITION
-        from pptx.enum.shapes import MSO_SHAPE
+        from pptx.enum.dml import MSO_LINE
+        from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
         from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
         from pptx.oxml.ns import qn
         from pptx.util import Emu, Inches, Pt
@@ -87,6 +91,8 @@ def _modules() -> Any:
         "chart_type": XL_CHART_TYPE,
         "legend": XL_LEGEND_POSITION,
         "shape": MSO_SHAPE,
+        "connector": MSO_CONNECTOR,
+        "line_style": MSO_LINE,
         "anchor": MSO_ANCHOR,
         "align": PP_ALIGN,
         "qn": qn,
@@ -132,8 +138,9 @@ class _Builder:
         bold: bool = False,
         italic: bool = False,
         heading: bool = False,
+        font: str | None = None,
     ) -> None:
-        run.font.name = self.theme.title_font if heading else self.theme.body_font
+        run.font.name = font or (self.theme.title_font if heading else self.theme.body_font)
         run.font.size = self.m["pt"](size)
         run.font.bold, run.font.italic = bold, italic
         run.font.color.rgb = self.colour(colour)
@@ -157,6 +164,7 @@ class _Builder:
             options.get("bold", False),
             options.get("italic", False),
             options.get("heading", False),
+            options.get("font"),
         )
         if options.get("align"):
             paragraph.alignment = {
@@ -180,9 +188,7 @@ class _Builder:
         )
         properties.append(marker)
 
-    def title(
-        self, slide: Any, text: str, size: float = 34, colour: str | None = None, **frame: float
-    ) -> Any:
+    def title(self, slide: Any, text: str, size: float = 34, colour: str | None = None, **frame: Any) -> Any:
         placeholder = slide.shapes.title
         x, y, w, h = (
             frame.get("x", MARGIN),
@@ -196,7 +202,12 @@ class _Builder:
         frame_ = placeholder.text_frame
         frame_.word_wrap = True
         frame_.margin_left = frame_.margin_right = frame_.margin_top = frame_.margin_bottom = 0
-        frame_.vertical_anchor = self.m["anchor"].MIDDLE if frame.get("middle") else self.m["anchor"].BOTTOM
+        anchor = frame.get("anchor") or ("middle" if frame.get("middle") else "bottom")
+        frame_.vertical_anchor = {
+            "top": self.m["anchor"].TOP,
+            "middle": self.m["anchor"].MIDDLE,
+            "bottom": self.m["anchor"].BOTTOM,
+        }[anchor]
         chosen, fits = fit.fit_size([(text, 1.0, True)], w, h, size, 22)
         if not fits:
             self.warn(f"the title is too long for its space: shorten it ({len(text.split())} words)")
@@ -229,12 +240,15 @@ class _Builder:
         slide = self.new_slide(layout, title, notes)
         self.title(slide, title)
         self.rectangle(slide, MARGIN, TITLE_TOP + TITLE_HEIGHT + 0.12, 0.9, 0.06, self.theme.accent)
+        self.add_footer(slide)
+        return slide
+
+    def add_footer(self, slide: Any) -> None:
         footer = self.deck.footer or self.deck.title
         small = self.textbox(slide, MARGIN, 7.0, 8, 0.3)
         self.paragraph(small, True, footer, 11, self.theme.muted)
         number = self.textbox(slide, WIDTH - MARGIN - 1, 7.0, 1, 0.3)
         self.paragraph(number, True, str(len(self.prs.slides)), 11, self.theme.muted, align="right")
-        return slide
 
     # --- bullets shared by the bullets and two-column layouts ---
 
@@ -331,6 +345,11 @@ class _Builder:
             top += 0.65
         self.write_bullets(slide, self.bullet_items(column.bullets), x, top, width, BODY_BOTTOM - top, 24)
 
+    def add_picture(self, slide: Any, data: bytes, x: float, y: float, w: float, h: float, alt: str) -> Any:
+        shape = slide.shapes.add_picture(io.BytesIO(data), *(self.m["inches"](v) for v in (x, y, w, h)))
+        shape._element.nvPicPr.cNvPr.set("descr", alt)
+        return shape
+
     def image_slide(self, slide_spec: ImageSlide) -> None:
         from PIL import Image
 
@@ -342,30 +361,35 @@ class _Builder:
         area_w, area_h = CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height
         w, h = (area_w, area_w / ratio) if area_w / ratio <= area_h else (area_h * ratio, area_h)
         x, y = MARGIN + (area_w - w) / 2, BODY_TOP + (area_h - h) / 2
-        shape = slide.shapes.add_picture(io.BytesIO(data), *(self.m["inches"](v) for v in (x, y, w, h)))
-        shape._element.nvPicPr.cNvPr.set("descr", slide_spec.alt or slide_spec.caption or slide_spec.title)
+        self.add_picture(slide, data, x, y, w, h, slide_spec.alt or slide_spec.caption or slide_spec.title)
         if not (slide_spec.alt or slide_spec.caption):
             self.warn("the picture has no alt text or caption: say what it shows")
         if slide_spec.caption:
             frame = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
             self.paragraph(frame, True, slide_spec.caption, 14, self.theme.muted, italic=True, align="center")
 
-    def table_slide(self, slide_spec: TableSlide) -> None:
-        slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
-        columns, rows = slide_spec.columns, slide_spec.rows
+    def add_table(
+        self,
+        slide: Any,
+        columns: list[str],
+        rows: list[list[str | int | float]],
+        box: tuple[float, float, float, float],
+        descr: str,
+        size: float | None = None,
+    ) -> None:
+        """A native table in `box` (x, y, width, maximum height). Row text is sized by the number of rows."""
+        x, y, width, area_h = box
         if any(len(row) != len(columns) for row in rows):
             raise BuildError(
                 f"slide {self.report.number}: every table row needs {len(columns)} cells (one per column)"
             )
         if len(rows) > MAX_TABLE_ROWS:
             self.warn(f"{len(rows)} table rows: more than {MAX_TABLE_ROWS} is hard to read, split the table")
-        size = 24 if len(rows) <= 4 else 20 if len(rows) <= 6 else 16 if len(rows) <= 8 else 14
-        caption_height = 0.5 if slide_spec.caption else 0.0
-        area_h = BODY_BOTTOM - BODY_TOP - caption_height
+        size = size or (24 if len(rows) <= 4 else 20 if len(rows) <= 6 else 16 if len(rows) <= 8 else 14)
         every_row: list[list[str | int | float]] = [list(columns), *rows]
         grid = [[str(cell) for cell in cells] for cells in every_row]
         weights = [max(len(row[i]) for row in grid) + 4 for i in range(len(columns))]
-        widths = [CONTENT_WIDTH * wt / sum(weights) for wt in weights]
+        widths = [width * wt / sum(weights) for wt in weights]
         needed = 0.0
         for row_number, cells in enumerate(grid):
             lines = max(
@@ -377,12 +401,12 @@ class _Builder:
         frame = slide.shapes.add_table(
             len(rows) + 1,
             len(columns),
-            *(self.m["inches"](v) for v in (MARGIN, BODY_TOP, CONTENT_WIDTH, min(needed, area_h))),
+            *(self.m["inches"](v) for v in (x, y, width, min(needed, area_h))),
         )
-        frame._element.nvGraphicFramePr.cNvPr.set("descr", slide_spec.caption or slide_spec.title)
+        frame._element.nvGraphicFramePr.cNvPr.set("descr", descr)
         table = frame.table
-        for index, width in enumerate(widths):
-            table.columns[index].width = self.m["inches"](width)
+        for index, column_width in enumerate(widths):
+            table.columns[index].width = self.m["inches"](column_width)
         for row_index, cells in enumerate(grid):
             for column_index, value in enumerate(cells):
                 cell = table.cell(row_index, column_index)
@@ -401,52 +425,61 @@ class _Builder:
                 run = paragraph.add_run()
                 run.text = value
                 self.style(run, size, self.theme.accent_text if header else self.theme.text, bold=header)
+
+    def table_slide(self, slide_spec: TableSlide) -> None:
+        slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
+        caption_height = 0.5 if slide_spec.caption else 0.0
+        box = (MARGIN, BODY_TOP, CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height)
+        self.add_table(
+            slide, slide_spec.columns, slide_spec.rows, box, slide_spec.caption or slide_spec.title
+        )
         if slide_spec.caption:
             note = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
             self.paragraph(note, True, slide_spec.caption, 14, self.theme.muted, italic=True)
 
-    def chart_slide(self, slide_spec: ChartSlide) -> None:
-        slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
-        for series in slide_spec.series:
-            if len(series.values) != len(slide_spec.categories):
+    def add_chart(
+        self,
+        slide: Any,
+        kind: str,
+        categories: list[str],
+        series_list: list[Series],
+        box: tuple[float, float, float, float],
+        descr: str,
+        font_size: float = 16,
+    ) -> None:
+        """A native chart in `box` (x, y, width, height), coloured from the theme's palette."""
+        for series in series_list:
+            if len(series.values) != len(categories):
                 raise BuildError(
                     f"slide {self.report.number}: series '{series.name}' has {len(series.values)} values "
-                    f"but there are {len(slide_spec.categories)} categories"
+                    f"but there are {len(categories)} categories"
                 )
-        if slide_spec.kind == "pie" and len(slide_spec.series) != 1:
+        if kind == "pie" and len(series_list) != 1:
             raise BuildError(f"slide {self.report.number}: a pie chart takes exactly one series")
         data = self.m["chart_data"]()
-        data.categories = slide_spec.categories
-        for series in slide_spec.series:
+        data.categories = categories
+        for series in series_list:
             data.add_series(series.name, series.values)
         kinds = self.m["chart_type"]
-        kind = {
+        chart_kind = {
             "bar": kinds.BAR_CLUSTERED,
             "column": kinds.COLUMN_CLUSTERED,
             "line": kinds.LINE_MARKERS,
             "pie": kinds.PIE,
-        }[slide_spec.kind]
-        caption_height = 0.5 if slide_spec.caption else 0.0
-        frame = slide.shapes.add_chart(
-            kind,
-            *(
-                self.m["inches"](v)
-                for v in (MARGIN, BODY_TOP, CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height)
-            ),
-            data,
-        )
-        frame._element.nvGraphicFramePr.cNvPr.set("descr", slide_spec.caption or slide_spec.title)
+        }[kind]
+        frame = slide.shapes.add_chart(chart_kind, *(self.m["inches"](v) for v in box), data)
+        frame._element.nvGraphicFramePr.cNvPr.set("descr", descr)
         chart = frame.chart
-        chart.font.size, chart.font.name = self.m["pt"](16), self.theme.body_font
+        chart.font.size, chart.font.name = self.m["pt"](font_size), self.theme.body_font
         chart.font.color.rgb = self.colour(self.theme.text)
         chart.has_title = False
-        many = len(slide_spec.series) > 1
-        chart.has_legend = many or slide_spec.kind == "pie"
+        many = len(series_list) > 1
+        chart.has_legend = many or kind == "pie"
         if chart.has_legend:
             chart.legend.position = self.m["legend"].BOTTOM
             chart.legend.include_in_layout = False
         plot = chart.plots[0]
-        if slide_spec.kind == "pie":
+        if kind == "pie":
             plot.has_data_labels = True
             plot.data_labels.number_format, plot.data_labels.number_format_is_linked = "0.#", False
             for index, point in enumerate(plot.series[0].points):
@@ -458,7 +491,7 @@ class _Builder:
             plot.has_data_labels = not many
             for index, series in enumerate(plot.series):
                 colour = self.colour(self.theme.palette[index % len(self.theme.palette)])
-                if slide_spec.kind == "line":
+                if kind == "line":
                     series.format.line.color.rgb = colour
                     series.format.line.width = self.m["pt"](3)
                 else:
@@ -466,6 +499,19 @@ class _Builder:
                     series.format.fill.fore_color.rgb = colour
             chart.value_axis.major_gridlines.format.line.color.rgb = self.colour(self.theme.surface)
             chart.value_axis.format.line.fill.background()
+
+    def chart_slide(self, slide_spec: ChartSlide) -> None:
+        slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
+        caption_height = 0.5 if slide_spec.caption else 0.0
+        box = (MARGIN, BODY_TOP, CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height)
+        self.add_chart(
+            slide,
+            slide_spec.kind,
+            slide_spec.categories,
+            slide_spec.series,
+            box,
+            slide_spec.caption or slide_spec.title,
+        )
         if slide_spec.caption:
             note = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
             self.paragraph(note, True, slide_spec.caption, 14, self.theme.muted, italic=True)
@@ -526,6 +572,8 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
             builder.chart_slide(slide_spec)
         elif isinstance(slide_spec, QuoteSlide):
             builder.quote_slide(slide_spec)
+        elif isinstance(slide_spec, FreeformSlide):
+            build_freeform(builder, slide_spec)
         else:
             builder.stats_slide(slide_spec)
         del index
