@@ -167,7 +167,7 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
       // Your message: a soft blue pill on the right, no avatar.
       return (
         <div className="flex justify-end">
-          <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-[20px] bg-accent-soft px-4 py-2.5 text-[14.5px] leading-[1.5]">
+          <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-[20px] bg-accent-soft px-4 py-2.5 text-[13.5px] leading-[1.5]">
             {item.text}
           </div>
         </div>
@@ -175,7 +175,7 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
     case "assistant":
       // Forge's reply: plain text on the page, no box and no avatar.
       return (
-        <div className="min-w-0 text-[14.5px] leading-[1.6]">
+        <div className="min-w-0 text-[13.5px] leading-[1.6]">
           {item.streaming ? (
             <div className="caret whitespace-pre-wrap break-words">{item.text}</div>
           ) : (

@@ -3204,3 +3204,6 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
   install, open the UI. Chosen over a signed `.exe` (unsigned downloads are often blocked on managed laptops) and over a shared %LOCALAPPDATA% install (an older
   copy can shadow a newer one, seen live). Pauses with a message when it fails. Tested here from a clean copy of the repo (venv created, installed, UI started);
   the office laptop's SmartScreen/AppLocker behaviour for a downloaded `.cmd` is untested. Supersedes the parked installer idea for the simple case.
+
+### D-231 — Chat message text 14.5px -> 13.5px (user request 2026-10-09)
+- Only the conversation text (your messages and Forge's replies) in the main chat area; headings, code blocks, tool rows and panels are unchanged.
