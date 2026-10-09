@@ -3186,3 +3186,6 @@ Not built: G3 (compaction robustness; only if real runs need it), G5 (no change 
 - Only known groups and `note:<name>` / `instructions` items are accepted, so no path from the browser reaches the disk. The Mode B host profile itself
   (structure, exemplars) is not listed; only its FORGE.md. Options: per-project grouping with copies of shared notes (rejected: the same note would
   appear twice and deleting one copy would be misleading), or one flat list (rejected: the user asked for grouping).
+- Update (same day, user asked): the Mode B host profile is now listed as an item ("Host profile") in its group. Forgetting it removes the whole profile folder
+  (its description of the code, examples, and the FORGE.md kept there); projects using it still open (a missing profile is handled) and start from scratch, and
+  a new project with the same name recreates it. The item's description says so before the user ticks it.

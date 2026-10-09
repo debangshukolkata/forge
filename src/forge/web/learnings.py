@@ -7,18 +7,20 @@ by a deleted project still show up under "no project"."""
 from __future__ import annotations
 
 import contextlib
+import shutil
 from pathlib import Path
 from typing import Any
 
 from forge.errors import ForgeError
 from forge.memory.scope import project_dir
 from forge.memory.store import INSTRUCTIONS_FILE, MemoryStore
-from forge.modeb.profile import ProfileError, ProfileStore
+from forge.modeb.profile import HostProfile, ProfileError, ProfileStore
 from forge.web.project_memory import _scope
 
 MAX_TEXT_CHARS = 4000
 USER_GROUP = "user"
 INSTRUCTIONS_ITEM = "instructions"
+PROFILE_ITEM = "profile"
 
 
 class LearningsError(ForgeError):
@@ -31,6 +33,7 @@ class _Group:
         self.title = ""
         self.projects: list[str] = []
         self.notes_folder, self.instructions_folder = notes_folder, instructions_folder
+        self.profile_root: Path | None = None  # Mode B: the host profile folder
 
     def store(self, home: Path) -> MemoryStore:
         store = MemoryStore(home, "folder")  # only the folder matters here
@@ -56,7 +59,7 @@ def _groups(home: Path, recent: list[dict[str, Any]]) -> list[_Group]:
         group = groups.setdefault(folder.name, _Group(folder.name, folder, folder))
         if profile_name is not None:  # Mode B keeps FORGE.md in the host profile folder
             with contextlib.suppress(ProfileError):
-                group.instructions_folder = ProfileStore(home).open(profile_name).root
+                group.profile_root = group.instructions_folder = ProfileStore(home).open(profile_name).root
         group.projects.append(str(entry.get("name", "")))
     scopes = home / "memory" / "scopes"
     for folder in sorted(scopes.iterdir()) if scopes.is_dir() else []:
@@ -81,6 +84,24 @@ def list_learnings(home: Path, recent: list[dict[str, Any]]) -> list[dict[str, A
             }
             for m in group.store(home).all()
         ]
+        if group.profile_root is not None:
+            document = group.profile_root / "PROFILE.md"
+            examples = len(HostProfile(group.profile_root).exemplars())
+            items.insert(
+                0,
+                {
+                    "id": PROFILE_ITEM,
+                    "title": "Host profile",
+                    "kind": "profile",
+                    "description": (
+                        f"What Forge was told about your code ({examples} example(s)). "
+                        "Forgetting it also removes this project's FORGE.md; the project starts from scratch."
+                    ),
+                    "text": document.read_text(encoding="utf-8", errors="replace")[:MAX_TEXT_CHARS]
+                    if document.is_file()
+                    else "",
+                },
+            )
         instructions = group.instructions_file()
         if instructions is not None and instructions.is_file():
             text = instructions.read_text(encoding="utf-8", errors="replace")[:MAX_TEXT_CHARS]
@@ -117,7 +138,11 @@ def delete_learnings(home: Path, recent: list[dict[str, Any]], selections: dict[
         store = group.store(home)
         for item_id in item_ids:
             instructions = group.instructions_file()
-            if item_id == INSTRUCTIONS_ITEM and instructions is not None:
+            if item_id == PROFILE_ITEM and group.profile_root is not None:
+                if group.profile_root.is_dir():
+                    shutil.rmtree(group.profile_root)
+                    removed += 1
+            elif item_id == INSTRUCTIONS_ITEM and instructions is not None:
                 if instructions.is_file():
                     instructions.unlink()
                     removed += 1

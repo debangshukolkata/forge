@@ -31,7 +31,12 @@ def test_groups_by_project_with_user_and_leftover(tmp_path: Path) -> None:
     recent = _setup(home, tmp_path)
     groups = {g["title"]: g for g in list_learnings(home, recent)}
     assert set(groups) == {"Your preferences", "Acme", "No project (left behind)"}
-    assert {i["title"] for i in groups["Acme"]["items"]} == {"FORGE.md", "uses-pytest", "other-note"}
+    assert {i["title"] for i in groups["Acme"]["items"]} == {
+        "Host profile",
+        "FORGE.md",
+        "uses-pytest",
+        "other-note",
+    }
 
 
 def test_delete_only_what_was_picked(tmp_path: Path) -> None:
@@ -40,7 +45,7 @@ def test_delete_only_what_was_picked(tmp_path: Path) -> None:
     acme = next(g for g in list_learnings(home, recent) if g["title"] == "Acme")
     assert delete_learnings(home, recent, {acme["id"]: ["note:uses-pytest", "instructions"]}) == 2
     left = next(g for g in list_learnings(home, recent) if g["title"] == "Acme")
-    assert [i["title"] for i in left["items"]] == ["other-note"]
+    assert [i["title"] for i in left["items"]] == ["Host profile", "other-note"]
     assert MemoryStore(home).get("likes-short") is not None
 
 
@@ -49,3 +54,13 @@ def test_unknown_group_is_refused(tmp_path: Path) -> None:
     recent = _setup(home, tmp_path)
     with pytest.raises(LearningsError):
         delete_learnings(home, recent, {"..": ["note:x"]})
+
+
+def test_forgetting_the_host_profile_removes_its_folder(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    recent = _setup(home, tmp_path)
+    acme = next(g for g in list_learnings(home, recent) if g["title"] == "Acme")
+    assert delete_learnings(home, recent, {acme["id"]: ["profile"]}) == 1
+    assert not (home / "profiles" / "acme").exists()
+    left = next(g for g in list_learnings(home, recent) if g["title"] == "Acme")
+    assert {i["title"] for i in left["items"]} == {"uses-pytest", "other-note"}
