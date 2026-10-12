@@ -3430,3 +3430,14 @@ Decision: `engine/run_report.py` builds a markdown report from events.jsonl only
 
 ### D-260 — Token lint in the screenshot audit (TODO L8, overnight 2026-10-13)
 Decision: `tools/token_lint.py` reads the project's own UI source (no browser). It speaks only when the project defines tokens (`@theme` or a `:root` with custom properties). Flags: a file with three or more distinct hard-coded colours that are not token values; font families outside the theme tokens; Tailwind default palette classes (`bg-blue-500`) when the project defines its own colours. Not counted: black, white and grey (and translucent overlays of them, spread of 8 or less), colours that are only the fallback of `var(--x, ...)`, token values written literally, one or two odd colours (drawn graphics). Our own recipes folder passes the lint (test). Why a threshold of three: SVG illustrations legitimately use a few literal fills; three or more is drift. Off-scale spacing is not linted (arbitrary values are too common to judge without false alarms); revisit after the rerun.
+
+### D-261 — Harness parity audit against Claude Code (TODO C12, overnight 2026-10-13)
+Method: read the code for each feature the TODO lists; nothing was run.
+| Feature | DebCraft today | Gap | Next step |
+|---|---|---|---|
+| (a) hooks | only `hooks.post_edit` (config, run after each successful edit; loop.py `_post_edit_hooks`) | no before-tool hook, no stop hook (verify before a turn ends), no session-start hook | the stop hook is the same job as the quality gates in `C2`; build both together after `C1` shows which checks pay off. A before-tool hook touches the approval gate (security-relevant): discuss first |
+| (b) path-scoped rules | FORGE.md per project/repository (memory/scope.py), always loaded | no instruction file that loads only when matching files are touched | small: a `paths:` front-matter list in extra rule files, loaded when a read or edit matches; useful for Mode A on big repos |
+| (c) forked skills | skills load into the main context; subagents exist for explore, reviewer, verifier, critic | no skill that runs in its own context and returns a conclusion | covered in practice by subagents; a `context: fork` flag is cheap but only worth it if `S4` shows noisy skills fill the window |
+| (d) rewind | `/checkpoints`, `/undo`, `/rewind <id>` (slash_commands.py) and UI controls (Panels.tsx, Composer.tsx) | none found | nothing to build |
+| (e) context warnings | micro-compaction at `micro_compact_at` with a notice, auto-compaction at `auto_compact_at`, `context_updated` events feed the UI meter | no warning before quality drops, no hint to the model | add a notice at about 70% of the budget; measure with `S4` first |
+Skipped, already present: plan mode, subagents, skills, memory, MCP, compaction, history. No gap is built in this pass: each needs either the benchmark (`C1`) or a security discussion.
