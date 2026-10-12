@@ -1,4 +1,4 @@
-"""An open workspace (spec §6.2) and the single gate through which Forge changes files in it (§6.3).
+"""An open workspace (spec §6.2) and the single gate through which DebCraft changes files in it (§6.3).
 
 Every write: jail check -> checkpoint (for /undo) -> copy-on-first-write baseline -> atomic write in the
 file's original encoding/line endings -> change log entry (for CHANGES.md).
@@ -98,7 +98,7 @@ class Workspace:
         root = Path(root)
         info_path = root / ".forge" / "workspace.json"
         if not info_path.is_file():
-            raise WorkspaceError(f"{root} is not a Forge workspace (no .forge/workspace.json)")
+            raise WorkspaceError(f"{root} is not a DebCraft workspace (no .forge/workspace.json)")
         return cls(root, WorkspaceInfo.model_validate_json(info_path.read_text(encoding="utf-8")))
 
     def ignore_rules(self) -> IgnoreRules:
@@ -107,7 +107,7 @@ class Workspace:
     # --- reading ---
 
     def own_folders(self) -> list[Path]:
-        """What counts as the workspace. Mode A: the whole root. Mode B: only Forge's own folders, because the
+        """What counts as the workspace. Mode A: the whole root. Mode B: only DebCraft's own folders, because the
         project folder may also hold the user's other files, which are not part of it (D-211)."""
         if not self.mode_b:
             return [self.root]
@@ -167,7 +167,7 @@ class Workspace:
             raise WorkspaceError(f"{relative} is a binary file")
         return decode_text(data, file_format), file_format
 
-    # --- writing (the only way Forge changes workspace files) ---
+    # --- writing (the only way DebCraft changes workspace files) ---
 
     def write_text(self, relative: str, text: str, reason: str = "") -> Checkpoint:
         target = self.jail.check(self.path_of(relative))
@@ -249,7 +249,7 @@ class Workspace:
     # --- internals ---
 
     def _save_baseline(self, relative: str) -> None:
-        """Copy-on-first-write: keep the original of every pre-existing file Forge changes."""
+        """Copy-on-first-write: keep the original of every pre-existing file DebCraft changes."""
         if relative not in self.manifest.files:
             return
         saved = self.jail.check(self.forge_dir / "baseline" / relative)

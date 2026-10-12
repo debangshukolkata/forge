@@ -1,4 +1,4 @@
-/* Forge design system (D-185, docs/DESIGN.md): the Apple-style language from the user's design.md, adapted to a
+/* DebCraft design system (D-185, docs/DESIGN.md): the Apple-style language from the user's design.md, adapted to a
    developer tool. One blue accent for everything interactive, white/parchment surfaces (near-black tiles in the
    dark theme), hairline borders, no shadows, pill buttons, tight Inter headings. Success is its own green
    (`ok`) so blue only ever means "you can click this". Light by default (D-125); dark swaps the same tokens.
@@ -68,7 +68,7 @@
   /* the dark "tile" used on the landing screens in both themes */
   --tile: #272729;
   --tile-fg: #ffffff;
-  /* Native controls and scrollbars follow Forge's theme, not the OS theme. */
+  /* Native controls and scrollbars follow DebCraft's theme, not the OS theme. */
   color-scheme: light;
 }
 
@@ -556,7 +556,7 @@ kbd,
   100% { box-shadow: 0 0 0 2px transparent; }
 }
 
-/* The current step in the progress header: a spinning arc and a soft halo while Forge works on it, an amber
+/* The current step in the progress header: a spinning arc and a soft halo while DebCraft works on it, an amber
    pulse while it waits for you. */
 .step-working::after,
 .step-waiting::after {

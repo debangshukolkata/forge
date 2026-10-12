@@ -1,4 +1,4 @@
-// Plain-language descriptions of what Forge is doing, from its events (tool names, phases). No invented
+// Plain-language descriptions of what DebCraft is doing, from its events (tool names, phases). No invented
 // percentages: progress bars only show real counts (phases, tasks); everything else is an animated indicator.
 
 export type ActivityKind = "idle" | "thinking" | "tool" | "writing" | "waiting";
@@ -68,7 +68,7 @@ export function toolActivity(name: string, summary: string): Pick<Activity, "lab
 const PHASE_THINKING: Record<string, string> = {
   intake: "Reading your request",
   clarify: "Understanding the requirement",
-  kb_check: "Checking what Forge knows about this code",
+  kb_check: "Checking what DebCraft knows about this code",
   explore: "Exploring the code",
   plan: "Planning the tasks",
   execute: "Working on the task",

@@ -1,4 +1,4 @@
-<!-- Forge's instructions for a requirement (spec §7, D-128/D-130/D-132): one flat set, not per-phase
+<!-- DebCraft's instructions for a requirement (spec §7, D-128/D-130/D-132): one flat set, not per-phase
 sections. Sent once as a system message when a requirement starts (and again, scaled down, for a change
 request or restructure). Placeholders: {requirement}, {task}, {task_board}, {test_command}, {explore_notes}. -->
 
@@ -54,7 +54,7 @@ follow the vision-document-pipeline skill.
 Database work (see "Databases" in the pinned context): new DDL/DML goes in a new .sql file in the repo's
 SQL folder, following its naming and numbering, idempotent where existing scripts are, with a commented
 rollback section. Try it with scratch_exec in the scratch schema; read real tables with db_schema/db_query
-only. If Forge lacks the rights, write a db_request and block only the tasks that need it. Tests that need
+only. If DebCraft lacks the rights, write a db_request and block only the tasks that need it. Tests that need
 a database you can't reach or write to: mark_server_run — never claim they passed.
 
 **Cadence:** follow whatever the user last told you in chat — "go ahead with the recommended

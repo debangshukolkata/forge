@@ -49,7 +49,7 @@ class MemoryRead(Tool):
 
 class MemoryWrite(Tool):
     name = "memory_write"
-    read_only = True  # writes only to Forge Home, never the workspace or the user's repository
+    read_only = True  # writes only to DebCraft Home, never the workspace or the user's repository
     description = (
         "Save something worth remembering in later sessions: a preference or correction the user stated "
         "(type user/feedback), a fact about this project that code and git don't show (project), or where to "
@@ -80,7 +80,7 @@ class MemoryWrite(Tool):
 
 class MemoryForget(Tool):
     name = "memory_forget"
-    read_only = True  # Forge Home only
+    read_only = True  # DebCraft Home only
     description = "Delete a saved memory by name (when it is wrong or the user asks to forget it)."
 
     class Args(ToolArgs):
@@ -94,9 +94,9 @@ class MemoryForget(Tool):
 
 class InstructionsWrite(Tool):
     name = "instructions_write"
-    read_only = True  # writes only the repository-level FORGE.md in Forge Home, never the workspace
+    read_only = True  # writes only the repository-level FORGE.md in DebCraft Home, never the workspace
     description = (
-        "Write the repository-level FORGE.md: short instructions Forge reads at the start of every session "
+        "Write the repository-level FORGE.md: short instructions DebCraft reads at the start of every session "
         "on this codebase (conventions to follow, commands to run, things never to do). Used by /init after "
         "exploring the repo. Replaces the file only when the user asked for /init; never include secrets."
     )

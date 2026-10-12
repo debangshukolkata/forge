@@ -1,5 +1,5 @@
 // The cost in the top bar: counts up smoothly to each new total and flashes briefly when it increases (the
-// user's choice: counter only, USD). Figures are Forge's estimates (tokens x configured prices), not the bill.
+// user's choice: counter only, USD). Figures are DebCraft's estimates (tokens x configured prices), not the bill.
 import { Coins } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cx, money } from "../lib";

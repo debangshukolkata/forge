@@ -1,14 +1,14 @@
 # Presentations: the open tasks to match Claude's PowerPoint abilities
 
-Goal (user, 2026-10-09): Forge should be able to make presentations the way Claude does: same range of skills, same quality of
+Goal (user, 2026-10-09): DebCraft should be able to make presentations the way Claude does: same range of skills, same quality of
 result. This file lists everything still open, in order, with size and how we will know it is done. Nothing below is started
 unless marked. Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## Read this first: what "exactly" can and cannot mean
 
 - **We cannot copy Claude's skill.** Anthropic's pptx skill is under a license that forbids keeping copies and making derivative
-  works (checked 2026-10-09). Forge's version is our own work: same *capabilities*, own code, own wording.
-- **Identical output is not possible and not the target.** The result depends on the model (Forge runs on the user's Azure
+  works (checked 2026-10-09). DebCraft's version is our own work: same *capabilities*, own code, own wording.
+- **Identical output is not possible and not the target.** The result depends on the model (DebCraft runs on the user's Azure
   deployment, Claude on Claude) as much as on the tooling. The target is **equivalent capability and equivalent quality**,
   proved by a benchmark (task P0.1), not by comparing files.
 - Claude's skill is a bundle: a way to *create* decks (design from code), a way to *edit* decks at the file-format level, a way to
@@ -27,7 +27,7 @@ unless marked. Status: `[ ]` open, `[~]` in progress, `[x]` done.
 ## Decisions the user must make (they change the size of the work)
 
 1. **Design engine.** (a) keep improving the free-form element list (cheaper, already built), or (b) add an HTML/CSS design path:
-   the model writes a slide as HTML, a headless browser measures every element, and Forge writes the same boxes and styles into
+   the model writes a slide as HTML, a headless browser measures every element, and DebCraft writes the same boxes and styles into
    the .pptx (Claude's approach; much more design freedom, large job). Recommendation: do the cheap free-form helpers first (P1),
    decide on (b) after the benchmark shows where quality is lacking.
 2. **Rendering without PowerPoint.** Today pictures need PowerPoint. Options: LibreOffice if present (needs an install, often
@@ -35,7 +35,7 @@ unless marked. Status: `[ ]` open, `[~]` in progress, `[x]` done.
    laptop without PowerPoint. Recommendation: optional LibreOffice support, plus PowerPoint as now.
 3. **Icons and images.** Icons need a licensed icon set (Lucide ISC, Material Symbols Apache-2.0 are candidates) turned into
    pictures or shapes. Generated images (photos, illustrations) need an image model: do we have one on the Azure side? Without it
-   Forge can only use pictures the user supplies, draw shapes, and make charts.
+   DebCraft can only use pictures the user supplies, draw shapes, and make charts.
 4. **Reference decks.** Collect 5 to 10 decks (made by Claude or anyone) that the user likes. They become design targets and the
    benchmark's reference (P0.1).
 
@@ -47,7 +47,7 @@ unless marked. Status: `[ ]` open, `[~]` in progress, `[x]` done.
   as judge looking at the rendered slides, plus the user's own ratings of a sample. Re-run after every change; record scores in
   `docs/PPT_BENCHMARK.md`. Size M. Needs decision 4.
 - [ ] **P0.2 Verify on the office laptop** (user action): python-pptx installs through pip; PowerPoint picture export works under company
-  policy and Protected View; `Start-Forge.cmd` installs the `slides` extra. Size S.
+  policy and Protected View; `Start-DebCraft.cmd` installs the `slides` extra. Size S.
 
 ## P1 Quick wins (small, high value)
 
@@ -81,7 +81,7 @@ Create / design
 - [ ] **P2.6 Diagram toolkit.** Connectors that stay attached to shapes (straight and elbow), grouping, align and distribute operations,
   ready recipes (process, cycle, hierarchy, 2x2 matrix, timeline, funnel, roadmap). Size M.
 - [ ] **P2.7 Real masters and theme.** Generate proper slide masters, layouts, placeholders, footer and slide-number fields and theme
-  fonts/colours, so a Forge deck re-themes correctly in PowerPoint and new slides added by hand look right. Size L.
+  fonts/colours, so a DebCraft deck re-themes correctly in PowerPoint and new slides added by hand look right. Size L.
 - [ ] **P2.8 Slide features.** Sections, hidden slides, transitions, basic entrance animations, slide numbers, comments (read and add). Size M to L.
 - [ ] **P2.9 Accessibility pass.** Reading order, alt text everywhere, document language and title, colour-blind-safe palettes. Size S.
 
@@ -108,7 +108,7 @@ Looking at the result
   instead of our estimate; without it keep the estimate. Size M.
 
 Input and workflow
-- [ ] **P2.19 Build from documents.** Read Word, Excel/CSV and PDF sources (Forge has PDF page rendering only) and turn them into a deck:
+- [ ] **P2.19 Build from documents.** Read Word, Excel/CSV and PDF sources (DebCraft has PDF page rendering only) and turn them into a deck:
   summarise, pick charts, cite sources in notes. Size M.
 - [ ] **P2.20 Storyline guides.** Short guides in the skill for common decks (board update, pitch, QBR, design review, training, project
   status), including slide counts, timing and speaker-note style. Size S.
@@ -123,7 +123,7 @@ Input and workflow
 - [ ] **P3.3 Performance and size.** Large decks (100+ slides), image downscaling and compression, file-size limits, time limits on preview. Size M.
 - [ ] **P3.4 Security review of the presentation tools.** Untrusted decks (zip and XML bombs, external relationships/links, embedded
   objects), PowerPoint COM launch, files outside the workspace, Mode B (host-identifying terms in slide text). Size M.
-- [ ] **P3.5 Documentation.** A user guide ("how to ask Forge for a deck"), examples gallery generated from the benchmark. Size S.
+- [ ] **P3.5 Documentation.** A user guide ("how to ask DebCraft for a deck"), examples gallery generated from the benchmark. Size S.
 
 ## Sibling skills (not in this list, same method if wanted)
 

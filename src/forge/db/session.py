@@ -58,7 +58,7 @@ class DbSession:
         return self.reports
 
     def preferred_target(self) -> str | None:
-        """Where the scratch schema lives: the preferred database if Forge can write there, else the other."""
+        """Where the scratch schema lives: the preferred database if DebCraft can write there, else the other."""
         order = [self.config.prefer, *[n for n in self.targets if n != self.config.prefer]]
         writable = [n for n in order if n in self.reports and self.reports[n].level == AccessLevel.WRITE]
         return writable[0] if writable else None
@@ -77,7 +77,7 @@ class DbSession:
         return scratch
 
     def command_environment(self) -> dict[str, str]:
-        """Added to every command Forge runs once the scratch schema is ready."""
+        """Added to every command DebCraft runs once the scratch schema is ready."""
         return {"PGOPTIONS": pgoptions(self.scratch.schema)} if self.scratch else {}
 
     def status_line(self) -> str:
@@ -87,7 +87,7 @@ class DbSession:
         lines.append(
             f"Scratch schema in use: {self.scratch.target.name} / {self.scratch.schema}"
             if self.scratch
-            else "No scratch schema in use: Forge can't run SQL or DB-backed tests here. For every new SQL "
+            else "No scratch schema in use: DebCraft can't run SQL or DB-backed tests here. For every new SQL "
             "script, call db_request (exact SQL + verification query; the user or their DBA runs it), and "
             "mark_server_run any test that needs the database. Never present such SQL as checked."
         )
@@ -111,14 +111,14 @@ class DbSession:
         )
 
     def verify_request(self, request: DbRequest, pasted: str | None) -> tuple[bool, str]:
-        """At L2/L3 Forge runs the verification query itself; at L1 it relies on the pasted result."""
+        """At L2/L3 DebCraft runs the verification query itself; at L1 it relies on the pasted result."""
         reachable = [n for n, r in self.reports.items() if r.level != AccessLevel.NONE]
         if not reachable:
             if pasted and pasted.strip():
                 return True, "Verified from the result you pasted."
             return (
                 False,
-                "Forge can't reach the database: paste the verification query's result (no data rows).",
+                "DebCraft can't reach the database: paste the verification query's result (no data rows).",
             )
         try:
             check_read_only(request.verification_query, self.deny_tables)

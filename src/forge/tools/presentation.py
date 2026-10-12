@@ -1,7 +1,7 @@
 """build_presentation and preview_presentation (D-240): make a real .pptx from an outline, then look at it.
 
 The skill `make-presentation` teaches how to write the outline and how to work: outline, build, preview, fix.
-These tools run inside Forge itself (python-pptx is Forge's optional extra `slides`), so they do not depend on
+These tools run inside DebCraft itself (python-pptx is DebCraft's optional extra `slides`), so they do not depend on
 the project's own Python environment."""
 
 from __future__ import annotations

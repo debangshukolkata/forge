@@ -67,10 +67,10 @@ async def serve(
     config.app = create_app(manager, security, on_quit=stop, accounts=AccountStore(forge_home()))
     if workspace is not None:
         await manager.open_workspace(workspace)
-    print(f"Forge web UI: {security.url()}")
+    print(f"DebCraft web UI: {security.url()}")
     if dev:
         print(f"Dev mode: start the React dev server (cd ui-react; npm run dev); the link opens {DEV_ORIGIN}")
-    print("Keep this window open; Ctrl+C stops Forge.")
+    print("Keep this window open; Ctrl+C stops DebCraft.")
     if not no_browser:
         open_browser(security.url())
     try:

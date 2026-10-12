@@ -36,7 +36,7 @@ SKIP_DIRS = {
     "test-artifacts",  # local live-run evidence (gitignored); holds captured test output
 }
 SKIP_FILE_PREFIXES = (".env",)
-# Fixture files hold deliberately fake credentials so Forge's secret handling can be tested.
+# Fixture files hold deliberately fake credentials so DebCraft's secret handling can be tested.
 # Lines carrying the marker comment "check_secrets: fake" hold deliberately fake test values.
 FAKE_MARKERS = (
     "fixture-not-a-real",

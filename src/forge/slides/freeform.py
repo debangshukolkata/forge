@@ -140,8 +140,7 @@ class _Freeform:
             )
             if not fits:
                 b.warn(
-                    f"{label}: the text does not fit its box even at {el.min_size:g} pt: "
-                    "enlarge the box or cut words"
+                    f"{label}: the text does not fit its box even at {el.min_size:g} pt: enlarge the box or cut words"
                 )
         if size < 12:
             b.warn(f"{label}: {size:g} pt text is too small to read in a presentation")

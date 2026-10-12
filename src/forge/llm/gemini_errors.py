@@ -1,4 +1,4 @@
-"""Maps google-genai / google-auth exceptions to Forge's provider-independent LLM errors (D-150)."""
+"""Maps google-genai / google-auth exceptions to DebCraft's provider-independent LLM errors (D-150)."""
 
 from __future__ import annotations
 
@@ -52,7 +52,9 @@ def map_gemini_error(error: BaseException) -> LLMError:
     status = error.code
     lowered = message.lower()
     if status == 429:
-        return LLMRateLimitError(message)  # no Retry-After on this API; Forge's exponential backoff applies
+        return LLMRateLimitError(
+            message
+        )  # no Retry-After on this API; DebCraft's exponential backoff applies
     if status in (401, 403):
         return LLMAuthError(
             f"Vertex AI refused the credentials ({status}). {ADC_HELP}: {message}", status_code=status

@@ -244,10 +244,7 @@ def fixture_app_context(tmp_path: Path) -> ToolContext:
 
 async def test_flask_app_runs_in_the_background_and_answers(fixture_app_context: ToolContext) -> None:
     context = fixture_app_context
-    command = (
-        "$env:DATABASE_URL = 'sqlite:///claims.db'; "
-        "python -m flask --app claims_app:create_app run --port {port}"
-    )
+    command = "$env:DATABASE_URL = 'sqlite:///claims.db'; python -m flask --app claims_app:create_app run --port {port}"
     started = await call(StartBackground(), context, name="api", command=command, timeout_s=60)
     try:
         assert started.ok, started.content

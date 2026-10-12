@@ -22,7 +22,7 @@ def _profile(context: ToolContext) -> Any:
 
 def _remember_contract(context: ToolContext, contract: Any) -> None:
     """D-129 as amended by D-156: a pinned or revised contract is saved as a project-scope memory for this
-    host profile, so Forge builds to it again on a later requirement instead of re-deriving or re-asking.
+    host profile, so DebCraft builds to it again on a later requirement instead of re-deriving or re-asking.
     The user stated it directly, so there is no approval step."""
     from forge.config import forge_home
     from forge.memory.scope import scope_of
@@ -97,7 +97,7 @@ class ProfileRead(Tool):
 
 class ProfileUpdate(Tool):
     name = "profile_update"
-    read_only = True  # changes Forge Home, never the workspace; the user approves every change
+    read_only = True  # changes DebCraft Home, never the workspace; the user approves every change
     description = (
         "Propose a change to the host profile when you learned a lasting fact about the host (from "
         "the user). "
@@ -126,7 +126,7 @@ class ProfileUpdate(Tool):
 
 class ProfileAddExemplar(Tool):
     name = "profile_add_exemplar"
-    read_only = True  # Forge Home only; the user approves the cleaned snippet first
+    read_only = True  # DebCraft Home only; the user approves the cleaned snippet first
     description = (
         "Save a snippet the user pasted (e.g. one existing MethodView blueprint with the logic removed) "
         "as a profile exemplar, so later work mirrors it. The user sees the cleaned version (secrets "
@@ -209,7 +209,7 @@ class ContractRead(Tool):
 
 class ContractPin(Tool):
     name = "contract_pin"
-    read_only = True  # Forge Home only (the profile), never the workspace
+    read_only = True  # DebCraft Home only (the profile), never the workspace
     description = (
         "Record a user-pinned interface contract for a seam (e.g. seam='llm_call_wrapper', "
         "signature='def call_llm(prompt: str, **kwargs) -> LLMResponse'). Use this when the user tells "

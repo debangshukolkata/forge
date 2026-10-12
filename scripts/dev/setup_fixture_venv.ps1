@@ -1,5 +1,5 @@
 # Creates the fixture app's own venv (tests/fixtures/sample_repo/backend/venv), the way a real
-# host app keeps its venv inside the app folder (spec §2). Forge's tests reuse this interpreter.
+# host app keeps its venv inside the app folder (spec §2). DebCraft's tests reuse this interpreter.
 param(
     [string]$PythonVersion = "3.13"
 )

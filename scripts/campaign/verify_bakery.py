@@ -1,4 +1,4 @@
-"""Playwright check of the bakery site Forge built. Usage: python verify_bakery.py <app_dir> <python> <phase>"""
+"""Playwright check of the bakery site DebCraft built. Usage: python verify_bakery.py <app_dir> <python> <phase>"""
 
 from __future__ import annotations
 

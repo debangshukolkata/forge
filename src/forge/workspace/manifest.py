@@ -1,4 +1,4 @@
-"""The baseline manifest: what every copied file looked like before Forge touched it (spec §6.1 step 4)."""
+"""The baseline manifest: what every copied file looked like before DebCraft touched it (spec §6.1 step 4)."""
 
 from __future__ import annotations
 

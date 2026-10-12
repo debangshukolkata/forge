@@ -42,19 +42,19 @@ class CheckInfo:
 
 
 CHECKS = (
-    CheckInfo("system", "This computer", False, "Python, packages, certificates and the Forge folder"),
-    CheckInfo("azure", "Azure OpenAI", False, "The models Forge works with"),
+    CheckInfo("system", "This computer", False, "Python, packages, certificates and the DebCraft folder"),
+    CheckInfo("azure", "Azure OpenAI", False, "The models DebCraft works with"),
     CheckInfo(
         "postgres_local",
-        "Forge database",
+        "DebCraft database",
         True,
-        "Where Forge develops: its own scratch schema for each requirement (LOCAL_PG_URL)",
+        "Where DebCraft develops: its own scratch schema for each requirement (LOCAL_PG_URL)",
     ),
     CheckInfo(
         "postgres_dev",
         "Development database (read-only)",
         True,
-        "An existing database Forge may read for reference; it never writes to it (DEV_PG_URL)",
+        "An existing database DebCraft may read for reference; it never writes to it (DEV_PG_URL)",
     ),
     CheckInfo(
         "gemini",
@@ -122,7 +122,7 @@ def check_system() -> Outcome:
     outcome = _combine("system", results, "Run `forge doctor` in a terminal for the full report.")
     if outcome.status == "ok":  # nothing to act on: keep the row short
         python = results[0].detail
-        outcome.detail = f"Python {python}; packages, certificates and the Forge folder are fine."
+        outcome.detail = f"Python {python}; packages, certificates and the DebCraft folder are fine."
     return outcome
 
 
@@ -143,13 +143,13 @@ async def check_azure(config: ForgeConfig) -> Outcome:
     outcome = _combine("azure", models, "Check the endpoint, key and deployment names in .env, then retry.")
     outcome.models = answered
     if any(answered.values()) and outcome.status == "fail":
-        # Some model answers, so Forge can work: the plan moves the silent one's roles (warn, not stop).
+        # Some model answers, so DebCraft can work: the plan moves the silent one's roles (warn, not stop).
         outcome.status = "warn"
     return outcome
 
 
 def check_postgres(config: ForgeConfig, which: str) -> Outcome:
-    """One database at a time: `local` is the Forge database, `dev` the read-only development database."""
+    """One database at a time: `local` is the DebCraft database, `dev` the read-only development database."""
     check_id = f"postgres_{which}"
     setting = config.postgres.connections.get(which)
     if setting is None:
@@ -181,10 +181,10 @@ def check_postgres(config: ForgeConfig, which: str) -> Outcome:
 GEMINI_PROBE_MODEL = "gemini-2.5-flash-lite"  # callable on the user's project; a listing alone proves nothing
 GEMINI_STEPS = [
     "Gemini only works on a computer that has Google Cloud access, such as the office laptop. On any other "
-    "computer leave the answer above on No; Forge works without it.",
+    "computer leave the answer above on No; DebCraft works without it.",
     "Install the package: pip install google-genai",
     "Sign in once: gcloud auth application-default login (or set GOOGLE_APPLICATION_CREDENTIALS to a "
-    "service-account file). Forge reads the Google credentials itself; no key goes in the .env file.",
+    "service-account file). DebCraft reads the Google credentials itself; no key goes in the .env file.",
     "Only if the message says no project was found: add GOOGLE_CLOUD_PROJECT to the .env file. "
     "GOOGLE_CLOUD_LOCATION is optional (the default is us-central1).",
     "Use a model your project can call: gemini-2.5-pro, gemini-2.5-flash or gemini-2.5-flash-lite. Others "
@@ -244,8 +244,7 @@ TAVILY_STEPS = [
     "The bearer token usually expires. If the test says it was rejected (401 or 403), copy a fresh "
     "token into the file and test again.",
     "The platform's address must be reachable from this computer (the office network or VPN).",
-    "Without it Forge uses the other search providers; nothing else changes. Answer No to stop it "
-    "being tried.",
+    "Without it DebCraft uses the other search providers; nothing else changes. Answer No to stop it being tried.",
 ]
 
 
@@ -275,7 +274,7 @@ def check_tavily(config: ForgeConfig) -> Outcome:
 
 
 def _ocr_reads_a_test_image(binary: str) -> tuple[bool, str]:
-    """Draws the word "Forge" and has the same OCR code the `ocr_image` tool uses read it back: proves the
+    """Draws the word "DebCraft" and has the same OCR code the `ocr_image` tool uses read it back: proves the
     install, its language data and the command line work together, not only that the program starts."""
     from PIL import Image, ImageDraw, ImageFont
 
@@ -286,12 +285,12 @@ def _ocr_reads_a_test_image(binary: str) -> tuple[bool, str]:
         font = ImageFont.load_default(size=84)
     except (TypeError, OSError):  # an older Pillow without a sizeable default font
         font = ImageFont.load_default()
-    ImageDraw.Draw(image).text((28, 30), "Forge", fill=0, font=font)
+    ImageDraw.Draw(image).text((28, 30), "DebCraft", fill=0, font=font)
     try:
         text = read_image(binary, image, timeout=30)
     except OcrError as error:
         return False, str(error)[:200]
-    return "forge" in "".join(ch for ch in text.lower() if ch.isalnum()), ""
+    return "debcraft" in "".join(ch for ch in text.lower() if ch.isalnum()), ""
 
 
 def check_tesseract() -> Outcome:
@@ -301,7 +300,7 @@ def check_tesseract() -> Outcome:
         return Outcome(
             "tesseract",
             "fail",
-            "You said it is installed, but Forge cannot find it on PATH or in the usual folders.",
+            "You said it is installed, but DebCraft cannot find it on PATH or in the usual folders.",
             "Open the .env file and add a line TESSERACT_CMD=<full path to tesseract.exe> (search File "
             "Explorer for tesseract.exe and copy its path), then run Test again. Or answer No above.",
         )

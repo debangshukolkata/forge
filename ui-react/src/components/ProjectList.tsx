@@ -44,10 +44,10 @@ export function ProjectList({ onBack, onOpen, onLearned }: { onBack: () => void;
       <div className="flex items-start justify-between gap-4">
         <Headline className="!text-[34px]">Your projects.</Headline>
         <Button variant="secondary" size="sm" icon={<Brain className="h-3.5 w-3.5" />} onClick={onLearned} className="mt-3 shrink-0">
-          What Forge learned
+          What DebCraft learned
         </Button>
       </div>
-      <Tagline className="mt-2">Choose one to continue. Forge picks up from its memory and history.</Tagline>
+      <Tagline className="mt-2">Choose one to continue. DebCraft picks up from its memory and history.</Tagline>
       <div className="relative mt-6">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-muted" aria-hidden />
         <Input aria-label="Search projects" placeholder="Search projects" value={filter} onChange={(e) => setFilter(e.target.value)} className="h-11 rounded-full pl-10" />
@@ -74,7 +74,7 @@ export function ProjectList({ onBack, onOpen, onLearned }: { onBack: () => void;
                   <p className="text-[15px] font-semibold">Delete “{project.name}”?</p>
                   <p className="mt-1 text-[13px] text-fg-muted">
                     This permanently deletes the folder <span className="break-all font-mono text-fg">{project.path}</span> and everything in it. Your original
-                    repository is not touched, and what Forge learned about the repository or host is kept.
+                    repository is not touched, and what DebCraft learned about the repository or host is kept.
                   </p>
                   <div className="mt-4 flex gap-2">
                     <Button variant="danger" size="sm" disabled={deleting} onClick={() => remove(project.path)}>

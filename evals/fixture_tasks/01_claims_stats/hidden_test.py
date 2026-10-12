@@ -1,4 +1,4 @@
-"""Hidden acceptance test: copied into the workspace only after Forge has finished."""
+"""Hidden acceptance test: copied into the workspace only after DebCraft has finished."""
 
 
 def test_stats_counts_by_status(client, auth_headers):

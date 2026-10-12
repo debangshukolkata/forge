@@ -1,4 +1,4 @@
-"""Live check of Forge's Gemini provider. Run on a machine with Google ADC (the office laptop); it cannot pass
+"""Live check of DebCraft's Gemini provider. Run on a machine with Google ADC (the office laptop); it cannot pass
 on a machine without credentials.
 
     (optional) set GOOGLE_CLOUD_PROJECT=<project>  &  set GOOGLE_CLOUD_LOCATION=us-central1
@@ -72,7 +72,7 @@ async def main(model_name: str) -> None:
     request = ChatRequest(
         messages=[Message.user("Read the file config.yaml and tell me what's in it.")], tools=[READ_FILE]
     )
-    first = await step("tool call (Forge's own JSON schema)", provider.chat(request))
+    first = await step("tool call (DebCraft's own JSON schema)", provider.chat(request))
     calls = getattr(first, "tool_calls", [])
     if calls:
         print("      call:", calls[0].name, calls[0].arguments)

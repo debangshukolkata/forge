@@ -1,7 +1,7 @@
 """Gemini adapter: Vertex AI through the google-genai SDK, authenticated by Application Default
 Credentials (D-150).
 
-Forge never stores or reads Google credentials; only the project and location names come from .env."""
+DebCraft never stores or reads Google credentials; only the project and location names come from .env."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ class GeminiProvider:
                 location=secrets.get(provider_config.location_env) or DEFAULT_LOCATION,
                 http_options=types.HttpOptions(
                     timeout=int(provider_config.timeout_s * 1000),
-                    # Forge's own retry layer reports retries to the UI; the SDK must not retry silently.
+                    # DebCraft's own retry layer reports retries to the UI; the SDK must not retry silently.
                     retry_options=types.HttpRetryOptions(attempts=1),
                 ),
             )
@@ -48,8 +48,7 @@ class GeminiProvider:
             raise map_gemini_error(error) from error
         except ValueError as error:  # the SDK found no project in the credentials or the .env file
             raise ConfigError(
-                f"{error} Add {provider_config.project_env} to the .env file, "
-                "or use credentials that name a project."
+                f"{error} Add {provider_config.project_env} to the .env file, or use credentials that name a project."
             ) from error
 
     async def chat(self, request: ChatRequest, on_text_delta: TextDeltaCallback | None = None) -> LLMResponse:
@@ -87,7 +86,7 @@ class GeminiProvider:
         params: dict[str, Any] = {
             "system_instruction": system_instruction,
             "max_output_tokens": request.max_output_tokens or self.model.max_output,
-            # Forge's loop owns every tool call; the SDK must never run tools or loop on its own.
+            # DebCraft's loop owns every tool call; the SDK must never run tools or loop on its own.
             "automatic_function_calling": types.AutomaticFunctionCallingConfig(disable=True),
         }
         if request.tools:

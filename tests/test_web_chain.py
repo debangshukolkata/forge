@@ -25,7 +25,7 @@ from forge.tools.web_guard import WebPolicy, check_resolving, check_url
 from forge.tools.web_render import RenderUnavailable, render_html
 from tests.test_parity import workspace  # noqa: F401  (fixture)
 
-LONG_TEXT = "Forge reads documentation pages and reports what they say. " * 12
+LONG_TEXT = "DebCraft reads documentation pages and reports what they say. " * 12
 GOOD_PAGE = (
     f"<html><head><title>Docs</title></head><body><main><h1>Docs</h1><p>{LONG_TEXT}</p></main></body></html>"
 )
@@ -149,10 +149,10 @@ def make_pdf(text: str) -> bytes:
 
 def test_html_is_extracted_with_or_without_trafilatura(monkeypatch: pytest.MonkeyPatch) -> None:
     basic = web_extract.from_html(GOOD_PAGE, "https://x.example/")
-    assert "Forge reads documentation" in basic.text
+    assert "DebCraft reads documentation" in basic.text
     monkeypatch.setitem(sys.modules, "trafilatura", None)  # as if the optional package were not installed
     fallback = web_extract.from_html(GOOD_PAGE, "https://x.example/")
-    assert fallback.method == "basic" and "Forge reads documentation" in fallback.text
+    assert fallback.method == "basic" and "DebCraft reads documentation" in fallback.text
 
 
 def test_pdf_text_and_a_pdf_without_text() -> None:
@@ -453,7 +453,7 @@ async def test_the_browser_renders_script_built_pages_and_blocks_internal_sub_re
         probe, _ = await render_html(f"http://127.0.0.1:{port}/probe", policy)
     except RenderUnavailable as unavailable:
         pytest.skip(f"headless browser not available: {unavailable}")
-    assert "Forge reads documentation" in html
+    assert "DebCraft reads documentation" in html
     with pytest.raises(
         RenderUnavailable, match="HTTP 404"
     ):  # an error page is not rendered as if it were the page

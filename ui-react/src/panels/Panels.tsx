@@ -99,7 +99,7 @@ export function Panels({ forge, collapsed, onExpand }: { forge: Forge; collapsed
   );
 }
 
-/** Loads data for a tab and reloads it when Forge reports changes. */
+/** Loads data for a tab and reloads it when DebCraft reports changes. */
 function useData<T>(path: string, tick: number): { data: T | null; error: string; reload: () => void } {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState("");
@@ -132,7 +132,7 @@ function TasksTab({ forge }: { forge: Forge }) {
     return (
       <div>
         <div className="mb-3 flex items-center justify-between text-[13px]">
-          <span className="font-medium">Forge's todo list</span>
+          <span className="font-medium">DebCraft's todo list</span>
           <span className="font-mono text-[12px] tabular-nums text-fg-muted">{todoDone}/{total} done</span>
         </div>
         <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
@@ -343,13 +343,13 @@ function DiffsTab({ forge }: { forge: Forge }) {
 
 function DbTab({ forge }: { forge: Forge }) {
   const { state } = forge;
-  if (!state.database) return <Empty icon={<Database className="h-8 w-8" />} title="No database configured">Set LOCAL_PG_URL / DEV_PG_URL in Forge's .env.</Empty>;
+  if (!state.database) return <Empty icon={<Database className="h-8 w-8" />} title="No database configured">Set LOCAL_PG_URL / DEV_PG_URL in DebCraft's .env.</Empty>;
   return (
     <div className="space-y-4">
       <Code text={state.database} />
       <div className="flex gap-2">
         <Button size="sm" onClick={() => forge.command("/db status")}>Re-check access</Button>
-        <Button size="sm" variant="danger" onClick={() => confirm("Drop every object Forge created in the scratch schema?") && forge.command("/db cleanup")}>
+        <Button size="sm" variant="danger" onClick={() => confirm("Drop every object DebCraft created in the scratch schema?") && forge.command("/db cleanup")}>
           Clean up scratch objects
         </Button>
       </div>
@@ -376,7 +376,7 @@ function DbRequestCard({ request, forge }: { request: NonNullable<Forge["state"]
       <Code text={request.verification_query} language="sql" />
       {pending && (
         <>
-          <Textarea rows={2} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="If Forge can't reach the DB: paste the verification query's result (column names, no data rows)" />
+          <Textarea rows={2} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="If DebCraft can't reach the DB: paste the verification query's result (column names, no data rows)" />
           <div className="flex gap-2">
             <Button size="sm" variant="primary" onClick={() => forge.command(`/db done ${request.id} ${pasted}`.trim())}>Mark done</Button>
             <Button size="sm" onClick={() => forge.command(`/db cant ${request.id} ${pasted || "no access"}`)}>I can't</Button>
@@ -396,7 +396,7 @@ function EvalsTab({ forge }: { forge: Forge }) {
   const runs = useData<EvalRun[]>("/api/evals", forge.changeTick);
   const [report, setReport] = useState<{ n: number; markdown: string; overlays: string[] } | null>(null);
   if (!runs.data) return <Loading error={runs.error} />;
-  if (!runs.data.length) return <Empty icon={<Target className="h-8 w-8" />} title="No eval runs yet">For extraction or perception work Forge keeps an eval set in evals/&lt;name&gt;/ and measures accuracy against it.</Empty>;
+  if (!runs.data.length) return <Empty icon={<Target className="h-8 w-8" />} title="No eval runs yet">For extraction or perception work DebCraft keeps an eval set in evals/&lt;name&gt;/ and measures accuracy against it.</Empty>;
   return (
     <div className="space-y-2">
       {runs.data.slice().reverse().map((run) => (
@@ -519,7 +519,7 @@ function UsageTables({ forge }: { forge: Forge }) {
         </>
       )}
       <p className="mt-3 text-[11.5px] text-fg-muted">
-        Estimates from token counts × the prices in Forge's config. Colours: green / yellow / red by the limits in
+        Estimates from token counts × the prices in DebCraft's config. Colours: green / yellow / red by the limits in
         config (cost.colors).
       </p>
     </>
@@ -536,7 +536,7 @@ function SettingsTab({ forge }: { forge: Forge }) {
   const select = "h-8 rounded-md border border-border bg-bg px-2 text-[13px] text-fg cursor-pointer hover:border-border-strong";
   return (
     <div>
-      <p className="mb-4 text-[12.5px] text-fg-muted">Keys and endpoints stay in Forge's .env; they can't be viewed or edited here.</p>
+      <p className="mb-4 text-[12.5px] text-fg-muted">Keys and endpoints stay in DebCraft's .env; they can't be viewed or edited here.</p>
       <SectionTitle>Model per role</SectionTitle>
       <div className="space-y-2">
         {Object.entries(data.roles || {}).map(([role, model]) => (

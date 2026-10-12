@@ -1,4 +1,4 @@
-// Forge's own todo list (D-177): the model sends the whole list each time with `todo_write`. It shows in the side
+// DebCraft's own todo list (D-177): the model sends the whole list each time with `todo_write`. It shows in the side
 // panel's Tasks tab only; the strip above the message box was removed (D-221).
 import { CheckCircle2, Circle } from "lucide-react";
 import { cx } from "../lib";

@@ -64,7 +64,7 @@ def test_download_find_summary_and_install(tmp_path: Path) -> None:
         first.name == "pretty-ui" and first.scripts == ["scripts/search.py"] and first.allowed_tools == "Bash"
     )
     text = skill_install.summary(first)
-    assert "scripts/search.py" in text and "Forge ignores this" in text
+    assert "scripts/search.py" in text and "DebCraft ignores this" in text
 
     skills_root = tmp_path / "skills"
     asked: list[str] = []

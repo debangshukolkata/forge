@@ -1,4 +1,4 @@
-"""Hidden acceptance test: copied into the workspace only after Forge has finished."""
+"""Hidden acceptance test: copied into the workspace only after DebCraft has finished."""
 
 
 def test_health_category_is_kept(client, auth_headers, fake_llm_responses):

@@ -3,7 +3,7 @@
 Things the user asked about and chose NOT to do yet. Nothing here is started. Each item says what it is, how big it is
 and what to decide when it is picked up again. (The build plan itself is in `TODO.md`.)
 
-## Rename Forge to "DebCraft" (asked 2026-10-09, parked)
+## Rename Forge to "DebCraft" — visible part DONE 2026-10-12 (D-244); the internal rename below is still parked
 
 Sizing done on 2026-10-09 (counts from `git grep`, excluding the built UI and test artifacts):
 

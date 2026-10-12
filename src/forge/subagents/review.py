@@ -19,7 +19,7 @@ from forge.workspace.workspace import Workspace
 REVIEW_ITERATIONS = 20
 MAX_DIFF_CHARS = 40_000
 
-REVIEWER_PROMPT = """You are Forge's reviewer subagent: a senior engineer reviewing another agent's change to
+REVIEWER_PROMPT = """You are DebCraft's reviewer subagent: a senior engineer reviewing another agent's change to
 this codebase. You can read files and search; you can't edit. Check, in this order:
 1. Does the change do what the requirement asks (every acceptance criterion)? Trace each one to the code that
    ships, not to the tests: an external integration the requirement names (a model API, a database, a
@@ -34,7 +34,7 @@ Report ONLY real problems, one per line, exactly in this form:
 - [blocking] path:line — the problem — the fix — evidence: `the exact offending code, copied from the file`
 - [minor] path:line — the problem — the fix
 For something MISSING (a required behaviour with no code), quote the requirement sentence instead:
-evidence: `…exact words from the requirement…`. A blocking finding without evidence Forge can find in the file
+evidence: `…exact words from the requirement…`. A blocking finding without evidence DebCraft can find in the file
 or the requirement is downgraded to minor.
 Then a last line: VERDICT: pass   or   VERDICT: changes needed
 Blocking = a requirement not met by the shipped code, a bug with a concrete input that breaks it, weakened
@@ -54,7 +54,7 @@ _PATH = re.compile(r"([\w./\\-]+\.[A-Za-z0-9]+)(?::[\d,-]+)?")
 class ReviewFinding:
     blocking: bool
     text: str
-    note: str = ""  # why Forge downgraded it to minor
+    note: str = ""  # why DebCraft downgraded it to minor
 
     def render(self) -> str:
         note = f" (downgraded: {self.note})" if self.note else ""

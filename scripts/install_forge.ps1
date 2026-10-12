@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-  Installs Forge from an offline wheelhouse, per user, without admin rights (docs\INSTALL.md).
+  Installs DebCraft from an offline wheelhouse, per user, without admin rights (docs\INSTALL.md).
 
 .DESCRIPTION
-  Creates a private venv under %LOCALAPPDATA%\Forge\venv (outside every repository, so Forge's own install
-  is never inside a folder it works on), installs Forge from the wheelhouse with --no-index, prepares
+  Creates a private venv under %LOCALAPPDATA%\DebCraft\venv (outside every repository, so DebCraft's own install
+  is never inside a folder it works on), installs DebCraft from the wheelhouse with --no-index, prepares
   %USERPROFILE%\.forge with a .env template, copies Playwright's Chromium when the wheelhouse has it, and
-  adds a `forge.cmd` shim to %LOCALAPPDATA%\Forge\bin (you add that folder to your user PATH).
-  Re-running it upgrades Forge in place; your .env and config.yaml are never overwritten.
+  adds a `forge.cmd` shim to %LOCALAPPDATA%\DebCraft\bin (you add that folder to your user PATH).
+  Re-running it upgrades DebCraft in place; your .env and config.yaml are never overwritten.
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File install_forge.ps1 -Wheelhouse .\wheels
@@ -17,7 +17,7 @@ param(
     [Parameter(Mandatory = $true)][string]$Wheelhouse,
     [string]$PythonVersion = "3.13",
     [string]$Extras = "mcp,browser",
-    [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA "Forge"),
+    [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA "DebCraft"),
     [string]$ForgeHome = $(if ($env:FORGE_HOME) { $env:FORGE_HOME } else { Join-Path $env:USERPROFILE ".forge" })
 )
 $ErrorActionPreference = "Stop"
@@ -53,7 +53,7 @@ if (-not (Test-Path (Join-Path $venv "Scripts\python.exe"))) {
 }
 $venvPython = Join-Path $venv "Scripts\python.exe"
 $spec = if ($Extras) { "forge[$Extras]" } else { "forge" }
-Invoke-Checked "Installing Forge (offline)" {
+Invoke-Checked "Installing DebCraft (offline)" {
     & $venvPython -m pip install --no-index --find-links $wheels --upgrade $spec --quiet --disable-pip-version-check
 }
 
@@ -68,7 +68,7 @@ New-Item -ItemType Directory -Force $ForgeHome | Out-Null
 $envFile = Join-Path $ForgeHome ".env"
 if (-not (Test-Path $envFile)) {
     @(
-        "# Forge secrets. Fill in, keep private, never commit.",
+        "# DebCraft secrets. Fill in, keep private, never commit.",
         "AZURE_OPENAI_ENDPOINT=",
         "AZURE_OPENAI_API_VERSION=",
         "AZURE_OPENAI_DEPLOYMENT=",

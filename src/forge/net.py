@@ -2,7 +2,7 @@
 
 Company networks often inspect HTTPS with their own root certificate, which Windows trusts but Python's
 bundled certificate list does not: every Azure call then fails with a bare "Connection error". truststore
-makes Python verify certificates against the operating system's store, so whatever Windows trusts, Forge
+makes Python verify certificates against the operating system's store, so whatever Windows trusts, DebCraft
 trusts — no certificate files to export. Set FORGE_SYSTEM_CERTS=0 to keep Python's own list.
 """
 
@@ -35,7 +35,7 @@ def connection_hint(detail: str) -> str:
     lowered = detail.lower()
     if "certificate" in lowered or "ssl" in lowered:
         return (
-            "the company's HTTPS inspection certificate isn't trusted: keep FORGE_SYSTEM_CERTS unset (Forge "
+            "the company's HTTPS inspection certificate isn't trusted: keep FORGE_SYSTEM_CERTS unset (DebCraft "
             "then uses the Windows certificate store) and make sure the 'truststore' package is installed"
         )
     if "getaddrinfo" in lowered or "name or service not known" in lowered or "nodename" in lowered:

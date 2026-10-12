@@ -182,7 +182,7 @@ def _free_port() -> int:
 
 @pytest.fixture
 def app_with_new_endpoint(tmp_path: Path) -> Iterator[tuple[Workspace, int]]:
-    """The fixture app, in a workspace where 'Forge' added GET /api/exports/, running on a free port."""
+    """The fixture app, in a workspace where 'DebCraft' added GET /api/exports/, running on a free port."""
     if not FIXTURE_PYTHON.exists():
         pytest.skip("run scripts/dev/setup_fixture_venv.ps1 first")
     workspace = create_workspace(FIXTURE_REPO, tmp_path / "ws", "backend")
@@ -418,7 +418,7 @@ async def test_azure_search_provider_formats_answer_and_sources(
 async def test_azure_built_in_web_search(
     original_repo: Path, tmp_path: Path, isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Azure OpenAI's own web_search tool through Forge's router (cost recorded like any call)."""
+    """Azure OpenAI's own web_search tool through DebCraft's router (cost recorded like any call)."""
     from forge.config import load_config, load_secrets
     from forge.llm.router import LLMRouter
     from forge.tools.web import azure_hosted_search

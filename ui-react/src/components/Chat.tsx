@@ -109,7 +109,7 @@ const STARTERS: Record<"A" | "B", string[]> = {
   ],
 };
 
-// What a new project's chat opens with (D-186): what Forge is about to work with, and ways to begin.
+// What a new project's chat opens with (D-186): what DebCraft is about to work with, and ways to begin.
 function Welcome({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment?: () => void }) {
   const workspace = forge.state.workspace;
   const mode = workspace?.mode === "B" ? "B" : "A";
@@ -128,8 +128,8 @@ function Welcome({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment
       </h1>
       <p className="mx-auto mt-3 max-w-lg text-[17px] leading-[1.47] tracking-[-0.37px] text-fg-muted">
         {mode === "B"
-          ? "Say what to build. Paste any function signatures or snippets it must use: Forge uses them exactly and asks what it needs to know."
-          : "Describe the change. Forge reads the copy of your repository, proposes requirements and a plan for your approval, then builds and tests it."}
+          ? "Say what to build. Paste any function signatures or snippets it must use: DebCraft uses them exactly and asks what it needs to know."
+          : "Describe the change. DebCraft reads the copy of your repository, proposes requirements and a plan for your approval, then builds and tests it."}
       </p>
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
         {workspace && <Badge>{workspace.name}</Badge>}
@@ -173,7 +173,7 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
         </div>
       );
     case "assistant":
-      // Forge's reply: plain text on the page, no box and no avatar.
+      // DebCraft's reply: plain text on the page, no box and no avatar.
       return (
         <div className="min-w-0 text-[13.5px] leading-[1.6]">
           {item.streaming ? (
@@ -283,7 +283,7 @@ function ApprovalCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: For
     <AskCard kind="approval" icon={<Terminal className="h-4 w-4" />} title={<>Allow <span className="font-mono">{p.tool}</span>?</>} answered={answered}>
       {p.command ? <Code text={p.command} language="powershell" /> : <div className="text-[13px]">{p.summary}</div>}
       {p.reason && <div className="text-[12.5px] text-fg-muted">{p.reason}</div>}
-      <Textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="If you deny: tell Forge what to do instead (optional)" />
+      <Textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="If you deny: tell DebCraft what to do instead (optional)" />
       <div className="flex flex-wrap gap-2">
         <Button variant="primary" onClick={() => reply({ kind: "approve", request_id: p.id, scope: "once" }, "Allowed once")}>
           Allow once
@@ -407,7 +407,7 @@ function ActionCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: Forge
       </ol>
       {p.verify_command && (
         <div className="text-[12.5px] text-fg-muted">
-          Forge will check with <code className="rounded bg-muted px-1 font-mono">{p.verify_command}</code>
+          DebCraft will check with <code className="rounded bg-muted px-1 font-mono">{p.verify_command}</code>
         </div>
       )}
       <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason, or paste the output if it failed" />

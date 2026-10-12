@@ -48,11 +48,11 @@ Details of every choice go to docs/DECISIONS.md; open issues to TODO.md / RISKS.
 - [x] "tables exist in scratch before DB-backed runs" check (D-107: reported before each test run; schema-qualified writes on the shared DB refused)
 
 ## 6. After development: the user's end-to-end check
-- [x] Run Forge (new-project workspace, Mode A on an empty repo) and ask it to build a Python **multimodal RAG chatbot** using **FAISS**
-      for the embeddings index (Azure OpenAI embeddings + vision from Forge's .env)
+- [x] Run DebCraft (new-project workspace, Mode A on an empty repo) and ask it to build a Python **multimodal RAG chatbot** using **FAISS**
+      for the embeddings index (Azure OpenAI embeddings + vision from DebCraft's .env)
 - [x] Then ask it to use that chatbot to **extract the signature** from
       `C:\Work\Projects\Handwritten Prescription.jpg`
-- [x] Review the code Forge wrote (structure, correctness, tests) and report honestly what worked and what didn't (D-106)
+- [x] Review the code DebCraft wrote (structure, correctness, tests) and report honestly what worked and what didn't (D-106)
 
 ## Notes
 - The prescription image is personal health data: it is only sent to the user's own Azure OpenAI deployment
@@ -64,5 +64,5 @@ Details of every choice go to docs/DECISIONS.md; open issues to TODO.md / RISKS.
 - [x] Tables-exist-in-scratch check (D-107)
 - [x] Reviewer: evidence-checked findings, at most 5 blocking (D-108) — live: 2/2 fixture evals pass
 - [x] Mode B: tests using host setup must request a host fixture (D-109) — live: first delivery passes in host
-- [x] Chatbot change requests 4–5: vision probe bug FIXED (works on the real deployment); signature crop NOT improved on the real photo (still 406,907–600,1045: scribble + printed caption, handwritten number missed) although Forge's new synthetic tests pass — synthetic samples didn't transfer to the real photo
+- [x] Chatbot change requests 4–5: vision probe bug FIXED (works on the real deployment); signature crop NOT improved on the real photo (still 406,907–600,1045: scribble + printed caption, handwritten number missed) although DebCraft's new synthetic tests pass — synthetic samples didn't transfer to the real photo
 - [x] Final offline suites on 3.13 and 3.14 (432 passed each), committed and pushed (a3c6819)

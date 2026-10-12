@@ -1,4 +1,4 @@
-"""Playwright check of the invoice extraction app Forge built. Usage: python verify_invoice.py <app_dir> <python> <phase>"""
+"""Playwright check of the invoice extraction app DebCraft built. Usage: python verify_invoice.py <app_dir> <python> <phase>"""
 
 from __future__ import annotations
 

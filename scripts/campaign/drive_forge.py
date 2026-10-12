@@ -1,4 +1,4 @@
-"""Runs Forge on a workspace like `forge run --auto-approve`, but also approves `pip install` into the
+"""Runs DebCraft on a workspace like `forge run --auto-approve`, but also approves `pip install` into the
 workspace's own environment (always-ask, so plain headless mode refuses it). Logs every approval it grants.
 Usage: python drive_forge.py <workspace> <prompt_file> <result_json>"""
 

@@ -51,7 +51,7 @@ def export_claims() -> list[dict[str, object]]:
 
 @pytest.fixture
 def delivered(tmp_path: Path) -> tuple[Path, Workspace]:
-    """A real repository and a workspace where 'Forge' added an export endpoint and built output/."""
+    """A real repository and a workspace where 'DebCraft' added an export endpoint and built output/."""
     real = build_original_repo(tmp_path / "real", tmp_path / "outside")
     workspace = create_workspace(real, tmp_path / "ws", "backend")
     workspace.write_text("backend/claims_app/api/export/__init__.py", "")
@@ -99,7 +99,7 @@ def test_each_simulated_mistake_is_detected_with_its_instruction(delivered: tupl
 
     assert any("export_service.py" in f and "Copy `output/" in f for f in kinds["missing_file"])
     assert any(
-        "routes.py" in f and "line(s) of Forge's version are missing" in f for f in kinds["partial_paste"]
+        "routes.py" in f and "line(s) of DebCraft's version are missing" in f for f in kinds["partial_paste"]
     )
     registration = kinds["missing_registration"][0]
     assert "api/__init__.py" in registration and "api.register_blueprint(export_blp)" in registration

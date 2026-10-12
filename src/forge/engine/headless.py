@@ -1,10 +1,10 @@
 """Headless runs (spec §8, §13B): `forge run --workspace W --requirement-file F --auto-approve`.
 
---auto-approve is the free-hand cadence (D-130) for the whole run: Forge picks the recommended option at
+--auto-approve is the free-hand cadence (D-130) for the whole run: DebCraft picks the recommended option at
 design forks and approves ordinary commands — but never the always-ask list (A-9): those are refused and
 the task is marked blocked. Requests for the user to do something are answered "can't" for the same reason.
-Without --auto-approve, a question a headless run can't answer just gets Forge's best judgement (there is
-no approval gate to refuse, per D-128 — Forge proceeds and states its assumptions).
+Without --auto-approve, a question a headless run can't answer just gets DebCraft's best judgement (there is
+no approval gate to refuse, per D-128 — DebCraft proceeds and states its assumptions).
 """
 
 from __future__ import annotations

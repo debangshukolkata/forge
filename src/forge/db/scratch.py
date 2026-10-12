@@ -1,8 +1,8 @@
-"""The requirement's scratch schema (spec §9.5, A-4): where Forge may create and change things.
+"""The requirement's scratch schema (spec §9.5, A-4): where DebCraft may create and change things.
 
-- One schema per requirement; the user creates it (DB request) unless Forge may create it itself.
-- A registry in Forge home locks the schema to one workspace and records every object Forge creates, so
-  cleanup (at the end or via `forge cleanup`) drops only Forge's own objects — never anything else.
+- One schema per requirement; the user creates it (DB request) unless DebCraft may create it itself.
+- A registry in DebCraft home locks the schema to one workspace and records every object DebCraft creates, so
+  cleanup (at the end or via `forge cleanup`) drops only DebCraft's own objects — never anything else.
 - The app and tests reach it through PGOPTIONS search_path = scratch ONLY (no fall-through to public, A-5).
 """
 
@@ -42,7 +42,7 @@ def scratch_name_for(workspace: Workspace) -> str:
 
 
 class ScratchRegistry:
-    """<forge_home>/scratch_registry.json: which workspace owns which schema, and what Forge created in it."""
+    """<forge_home>/scratch_registry.json: which workspace owns which schema, and what DebCraft created in it."""
 
     def __init__(self, home: Path) -> None:
         self.path = home / "scratch_registry.json"
@@ -112,7 +112,7 @@ class ScratchSchema:
         self.registry.claim(self.key, str(self.workspace.root))
 
     def create_schema(self) -> None:
-        """Only when Forge's role may and the user approved (scratch.create: forge_if_allowed)."""
+        """Only when DebCraft's role may and the user approved (scratch.create: forge_if_allowed)."""
         self.claim()
         with connect(self.target, self.secrets) as connection:
             connection.execute(f'CREATE SCHEMA IF NOT EXISTS "{self.schema}"')
@@ -141,13 +141,12 @@ class ScratchSchema:
         source, name = safe_schema_name(source_schema), safe_schema_name(table)
         with connect(self.target, self.secrets) as connection:
             connection.execute(
-                f'CREATE TABLE IF NOT EXISTS "{self.schema}"."{name}" (LIKE "{source}"."{name}" '
-                f"INCLUDING ALL)"
+                f'CREATE TABLE IF NOT EXISTS "{self.schema}"."{name}" (LIKE "{source}"."{name}" INCLUDING ALL)'
             )
         self.registry.record(self.key, "table", name)
 
     def cleanup(self) -> list[str]:
-        """Drops only the objects Forge recorded, never with CASCADE: dependants first (views, then objects
+        """Drops only the objects DebCraft recorded, never with CASCADE: dependants first (views, then objects
         in reverse creation order, so a referencing table goes before the one it references), repeated
         while that makes progress. Whatever can't be dropped stays in the registry for a later retry."""
         remaining = [
@@ -190,5 +189,5 @@ class ScratchSchema:
 
 
 def pgoptions(schema: str) -> str:
-    """For every command Forge runs: libpq applies this to all the app's connections (A-5: scratch only)."""
+    """For every command DebCraft runs: libpq applies this to all the app's connections (A-5: scratch only)."""
     return f"-c search_path={safe_schema_name(schema)}"

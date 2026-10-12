@@ -1,6 +1,6 @@
 """Creating a Mode B (standalone) workspace (spec §6A.1): no repository is read or even named.
 
-<workspace>/project/    the deliverable, host-relative paths      (Forge's "repo" in this mode)
+<workspace>/project/    the deliverable, host-relative paths      (DebCraft's "repo" in this mode)
 <workspace>/_harness/   host_stubs/ (on PYTHONPATH after project/), harness_conftest.py (pytest -p),
                         run_app.py
 <workspace>/output/     built at EXPORT
@@ -26,7 +26,7 @@ from forge.workspace.workspace import Workspace, WorkspaceError, WorkspaceInfo
 
 SetupProgressCallback = Callable[[str], None]
 
-HARNESS_CONFTEST = '''"""Forge Mode B test harness (NOT delivered): loaded with `pytest -p harness_conftest`.
+HARNESS_CONFTEST = '''"""DebCraft Mode B test harness (NOT delivered): loaded with `pytest -p harness_conftest`.
 
 Put fixtures that stand in for the host here — e.g. a database session bound to the scratch schema, an app
 built by _harness/run_app.py, fake LLM clients — so project/tests run without the host.
@@ -71,22 +71,22 @@ RESERVED_NAMES = (
     "output",
     ".forge",
     ".venv",
-)  # the folders Forge creates in a project folder
+)  # the folders DebCraft creates in a project folder
 
 
 def check_project_folder(root: Path) -> None:
-    """The project folder may already hold other files (they stay untouched and Forge's tools never open
-    them); it only has to leave Forge's own folder names free, and not be a Forge project already (D-211)."""
+    """The project folder may already hold other files (they stay untouched and DebCraft's tools never open
+    them); it only has to leave DebCraft's own folder names free, and not be a DebCraft project already (D-211)."""
     if not root.exists():
         return
     if not root.is_dir():
         raise WorkspaceError(f"{root} is a file, not a folder.")
     if (root / ".forge" / "workspace.json").exists():
-        raise WorkspaceError(f"{root} is already a Forge project: open it from the project list instead.")
+        raise WorkspaceError(f"{root} is already a DebCraft project: open it from the project list instead.")
     taken = [name for name in RESERVED_NAMES if (root / name).exists()]
     if taken:
         raise WorkspaceError(
-            f"{root} already has {', '.join(taken)}, which Forge needs for its own folders. "
+            f"{root} already has {', '.join(taken)}, which DebCraft needs for its own folders. "
             "Choose another folder, or move or rename those first."
         )
 

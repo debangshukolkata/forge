@@ -66,13 +66,13 @@ def propose_plan(config: ForgeConfig, results: dict[str, Any], saved: dict[str, 
     forge_database = results.get("postgres_local")
     if isinstance(forge_database, dict) and forge_database.get("status") != "ok":
         notes.append(
-            "The Forge database is not reachable: Forge cannot run database checks or use scratch schemas."
+            "The DebCraft database is not reachable: DebCraft cannot run database checks or use scratch schemas."
         )
     return {"roles": roles, "options": options, "notes": notes}
 
 
 def validate_plan(config: ForgeConfig, roles: dict[str, str]) -> dict[str, str]:
-    """The user's confirmed choice; raises ValueError (shown on the screen) for anything Forge can't apply."""
+    """The user's confirmed choice; raises ValueError (shown on the screen) for anything DebCraft can't apply."""
     unknown_roles = sorted(set(roles) - set(ROLES))
     if unknown_roles:
         raise ValueError(f"Unknown role: {', '.join(unknown_roles)}")

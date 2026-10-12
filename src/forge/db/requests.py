@@ -1,4 +1,4 @@
-"""DB requests (spec §9.5.2): when Forge can't make a database change itself, it writes exact SQL for the
+"""DB requests (spec §9.5.2): when DebCraft can't make a database change itself, it writes exact SQL for the
 user or their DBA, keeps working on independent tasks, and verifies once they say it's done.
 
 .forge/db_requests/DBR-<n>/request.sql, REQUEST.md, status.json
@@ -99,8 +99,10 @@ class DbRequests:
             f"**Why:** {request.purpose}\n\n**Where:** {request.target}\n\n**Who runs it:** {request.who} "
             "(pgAdmin, DBeaver or psql all work)\n\n"
             f"## SQL (also in request.sql)\n\n```sql\n{request.sql.strip()}\n```\n\n"
-            f"## How Forge checks it worked\n\n```sql\n{request.verification_query.strip()}\n```\n\n"
-            "When it's done, tell Forge: `/db done " + request.id + "` (if Forge can't reach this database, "
+            f"## How DebCraft checks it worked\n\n```sql\n{request.verification_query.strip()}\n```\n\n"
+            "When it's done, tell DebCraft: `/db done "
+            + request.id
+            + "` (if DebCraft can't reach this database, "
             "add the verification query's result, column names only — never data rows). If you can't run it: "
             f"`/db cant {request.id} <why>`.\n"
         )

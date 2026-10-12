@@ -195,7 +195,7 @@ async def test_standalone_feature_passes_in_harness_and_in_the_host(
     if first.returncode == 0:
         return
 
-    # 3. Acceptance 3 (spec M10B): the user pastes the host's failure; Forge classifies it, fixes the code and
+    # 3. Acceptance 3 (spec M10B): the user pastes the host's failure; DebCraft classifies it, fixes the code and
     #    issues a revision whose notes list only the changed files; the revision passes in a fresh host copy.
     before = {p.relative_to(out).as_posix(): p.read_bytes() for p in out.rglob("*") if p.is_file()}
     pasted = (

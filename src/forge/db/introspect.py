@@ -70,8 +70,7 @@ def _tables(connection: psycopg.Connection[Any], schema: str, only: str | None) 
         info.foreign_keys = [
             r[0]
             for r in connection.execute(
-                "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = %s::regclass "
-                "AND contype = 'f'",
+                "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = %s::regclass AND contype = 'f'",
                 (f'"{schema}"."{name}"',),
             ).fetchall()
         ]

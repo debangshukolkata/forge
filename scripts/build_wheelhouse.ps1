@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-  Builds an offline wheelhouse for installing Forge on a Windows laptop without internet or admin rights
+  Builds an offline wheelhouse for installing DebCraft on a Windows laptop without internet or admin rights
   (spec §3 packaging, A-6: cp313 win_amd64).
 
 .DESCRIPTION
   Run on a machine WITH internet access. It
-    1. builds the Forge wheel from this repository,
+    1. builds the DebCraft wheel from this repository,
     2. downloads every dependency as a binary wheel for CPython 3.13 / win_amd64 (no source builds),
     3. optionally stores Playwright's Chromium for the browser tool,
     4. writes SHA256SUMS.txt, and
@@ -43,7 +43,7 @@ $out = if ([IO.Path]::IsPathRooted($OutDir)) { $OutDir } else { Join-Path $repo 
 New-Item -ItemType Directory -Force $out | Out-Null
 Get-ChildItem $out -Filter "forge-*.whl" -ErrorAction SilentlyContinue | Remove-Item -Force
 
-Invoke-Checked "Building the Forge wheel" { & $python -m pip wheel $repo --no-deps --wheel-dir $out --quiet }
+Invoke-Checked "Building the DebCraft wheel" { & $python -m pip wheel $repo --no-deps --wheel-dir $out --quiet }
 # pip wheel leaves build/ in the repository; it would otherwise be linted and scanned.
 Remove-Item -Recurse -Force (Join-Path $repo "build") -ErrorAction SilentlyContinue
 $forgeWheel = Get-ChildItem $out -Filter "forge-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1

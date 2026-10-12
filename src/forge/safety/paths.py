@@ -1,4 +1,4 @@
-"""The write jail (spec §14.1): every write Forge makes is checked here first.
+"""The write jail (spec §14.1): every write DebCraft makes is checked here first.
 
 A path is writable only if its *real* location — after resolving `..`, symlinks and Windows
 junctions — is inside one of the allowed roots and not inside a forbidden root (the user's

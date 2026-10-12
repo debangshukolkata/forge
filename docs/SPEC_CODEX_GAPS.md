@@ -5,7 +5,7 @@ Source: high-level comparison with github.com/openai/codex (survey only, not run
 Status: **pending** — recorded in TODO.md; decisions go to DECISIONS.md when built.
 
 ## G1. Parallel subagents (verify first, then fix)
-- **Problem:** Codex runs many agents at once. Forge's `spawn_subagent` is `read_only = True`, so the loop may already
+- **Problem:** Codex runs many agents at once. DebCraft's `spawn_subagent` is `read_only = True`, so the loop may already
   batch several calls in one turn (`agent/loop.py`, `asyncio.gather`); unverified. The verifier and debugger are not
   read-only and write under `tests/e2e/` or run commands, so two at once could collide.
 - **Change:** (1) Test whether two `explore` calls in one turn really run concurrently. (2) Allow parallel only for
@@ -16,7 +16,7 @@ Status: **pending** — recorded in TODO.md; decisions go to DECISIONS.md when b
   verifiers are serialised; cap respected; no subagent has `spawn_subagent`; budget and redaction unchanged.
 
 ## G2. Compaction hooks
-- **Problem:** Codex runs pre- and post-compact hooks. Forge has only `HooksConfig.post_edit`.
+- **Problem:** Codex runs pre- and post-compact hooks. DebCraft has only `HooksConfig.post_edit`.
 - **Change:** add `pre_compact` and `post_compact` command lists to `HooksConfig` (run in the workspace, sandboxed,
   like `post_edit`). A pre-compact hook's stdout (capped, redacted) is added to the summary input, e.g. "keep these
   facts". Hook failure never blocks compaction.
@@ -24,25 +24,25 @@ Status: **pending** — recorded in TODO.md; decisions go to DECISIONS.md when b
   output is redacted; the tool-pair invariant in `context/compaction.py` still holds.
 
 ## G3. Compaction robustness (optional, measure first)
-- **Problem:** Codex has model fallback for compaction and an image budget. Forge compaction is pure functions plus
+- **Problem:** Codex has model fallback for compaction and an image budget. DebCraft compaction is pure functions plus
   one summariser call.
 - **Change:** (1) If the summariser call fails or exceeds the window, fall back to the emergency trim (check it exists
   for this path). (2) Count images in the budget and drop old screenshots first. Only if real runs show a need.
 - **Acceptance:** injected summariser failure (MockTransport 5xx/overflow) still yields a valid, smaller message list.
 
 ## G4. Subagent roles as config
-- **Problem:** Codex loads agent roles from files with their own settings. Forge custom agents (`<forge_home>/agents/`)
+- **Problem:** Codex loads agent roles from files with their own settings. DebCraft custom agents (`<forge_home>/agents/`)
   carry prompt, tools and role only.
 - **Change:** allow optional `max_steps`, `model role` and `write_only_under` per custom agent file; validate with
   pydantic; unknown tools rejected with a clear message. Writes still go through the jail (invariant 1).
 - **Acceptance:** a custom agent with `max_steps: 5` stops at 5; a write outside its allowed folder is refused.
 
 ## G5. Task breakdown (decide, do not build yet)
-- Codex has structured goal/plan tools. Forge has optional `propose_plan`/`update_plan`/`task_update`. Under D-155
+- Codex has structured goal/plan tools. DebCraft has optional `propose_plan`/`update_plan`/`task_update`. Under D-155
   nothing is added. Revisit only if the e2e campaign shows large features losing track of steps.
 
 ## G6. Todo list tool (Claude Code TodoWrite style)
-- **Problem:** Forge only has `propose_plan`/`update_plan`/`task_update`: structured, approval-bound, tied to
+- **Problem:** DebCraft only has `propose_plan`/`update_plan`/`task_update`: structured, approval-bound, tied to
   verification. No lightweight list the model keeps for its own step-tracking.
 - **Change:** one `todo_write` tool: the model sends the full list each time (items: text, status
   pending/in_progress/completed; at most one in_progress). No approval, no verification gate, `read_only = True`.
@@ -63,7 +63,7 @@ Status: **pending** — recorded in TODO.md; decisions go to DECISIONS.md when b
 
 ## Not copied (deliberately)
 Codex's large orchestrator (thread manager, message board, forking history), remote compaction, voice, cloud tasks:
-they conflict with the flat-loop direction or need infrastructure Forge does not have.
+they conflict with the flat-loop direction or need infrastructure DebCraft does not have.
 
 ## Order
 G1 (verify, 1 test) → G2 → G6 → G7 → G4 → G3 → G5. G1 and G2 are small; none touches the safety invariants.

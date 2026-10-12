@@ -38,7 +38,7 @@ FIXTURE_PYTHON = FIXTURE_BACKEND / "venv" / "Scripts" / "python.exe"
 
 @pytest.fixture(scope="module")
 def shared_home(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """One Forge home for the module, so the KB is built once."""
+    """One DebCraft home for the module, so the KB is built once."""
     return tmp_path_factory.mktemp("forge_home_orchestrator")
 
 
@@ -53,7 +53,7 @@ def live_env(shared_home: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture(autouse=True)
 def drop_scratch_objects(live_env: Path, tmp_path: Path) -> Iterator[None]:
-    """Forge creates its scratch schema on the local DB (forge_if_allowed); drop it after each test."""
+    """DebCraft creates its scratch schema on the local DB (forge_if_allowed); drop it after each test."""
     yield
     if (tmp_path / "ws" / ".forge").exists():
         assert _cleanup(tmp_path / "ws", yes=True) == 0

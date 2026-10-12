@@ -5,7 +5,7 @@ user's decision. Each part: context, options with trade-offs, recommendation, wh
 
 ## 1. Plugins, project folder, settings, hooks
 
-**Context.** Forge already loads skills, custom agents, custom slash commands, FORGE.md and MCP servers, but from different
+**Context.** DebCraft already loads skills, custom agents, custom slash commands, FORGE.md and MCP servers, but from different
 places (`<home>/skills`, `<home>/agents`, `<home>/commands`, `<home>/memory/scopes/<scope>/`), and has one hook (`post_edit`,
 plus `pre_compact`/`post_compact` since D-176). There is no project-level folder and no settings file with permission rules.
 
@@ -22,7 +22,7 @@ plus `pre_compact`/`post_compact` since D-176). There is no project-level folder
    project folders.
 2. *Plugins*: `plugin.json` (name, version, description, what it adds). A plugin is **off until the user enables it**; the
    prompt lists exactly what it adds (commands, agents, skills, hooks, MCP servers). Mode B: a plugin may only come from
-   Forge Home, never from a folder inside the workspace.
+   DebCraft Home, never from a folder inside the workspace.
 3. *Hooks*: events `pre_tool`, `post_tool`, `session_start`, `session_end`, `user_message`, plus the existing compaction hooks.
    A hook command runs through **the same shell classifier, permission gate and sandbox as any command the model runs**;
    its output is untrusted text (injection markers apply) and is capped and redacted. A hook cannot approve anything.
@@ -32,7 +32,7 @@ plus `pre_compact`/`post_compact` since D-176). There is no project-level folder
 ## 2. MCP in Mode B
 
 **Context.** `parity/mcp_client.py` and `McpHub` exist (stdio servers from `config.yaml` `mcp.*`, off by default). Mode B's
-promise: Forge never sees the host's code. An MCP server is a process Forge does not control: its tools can read anything it
+promise: DebCraft never sees the host's code. An MCP server is a process DebCraft does not control: its tools can read anything it
 can reach, and what they return goes to the model.
 
 | Option | What | Risks |
@@ -53,7 +53,7 @@ language-aware lookup would be faster and more exact. "LSP" is one way; the need
 | Option | What | Pros | Risks |
 |---|---|---|---|
 | A. Stay with grep | nothing new | Simple | Slow on large code, imprecise for dynamic names |
-| B. `jedi` in process (recommended first) | pure-Python library (MIT), three tools: `find_definition`, `find_references`, `list_symbols`, read-only | Offline-friendly wheel, no server to manage, Python repos are Forge's main case | Python only, no live diagnostics |
+| B. `jedi` in process (recommended first) | pure-Python library (MIT), three tools: `find_definition`, `find_references`, `list_symbols`, read-only | Offline-friendly wheel, no server to manage, Python repos are DebCraft's main case | Python only, no live diagnostics |
 | C. Real LSP clients | pyright or pylsp, typescript-language-server | Diagnostics, multi-language | pyright needs Node and a download; process management; more moving parts |
 
 **Recommendation: B now; C only for TypeScript/Angular projects when the workspace already has `node_env`.** All tools are

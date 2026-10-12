@@ -11,7 +11,7 @@ EXTEND_PATH_LINE = '__path__ = __import__("pkgutil").extend_path(__path__, __nam
 def ensure_shared_stub_packages(workspace: Workspace) -> list[str]:
     """Every stub package that project/ also has must extend its __path__, or the stub hides the new code
     ("cannot import name 'x_service' from 'pkg.services'", seen live, the agent losing tasks to it). This is
-    plumbing, not a design choice, so Forge does it before each test run. Returns the fixed files."""
+    plumbing, not a design choice, so DebCraft does it before each test run. Returns the fixed files."""
     stubs = workspace.harness_dir / "host_stubs"
     fixed = []
     for init in sorted(stubs.rglob("__init__.py")) if stubs.is_dir() else []:

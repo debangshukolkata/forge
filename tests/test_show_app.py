@@ -1,4 +1,4 @@
-"""show_app (D-243): only opens a page that comes from the process Forge started."""
+"""show_app (D-243): only opens a page that comes from the process DebCraft started."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-// The settings-file guide (D-204): shown on the first run, and later from the Environment drawer. Forge reads its
+// The settings-file guide (D-204): shown on the first run, and later from the Environment drawer. DebCraft reads its
 // keys and connections from one .env file. This page says where it is, which names it reads and what each should
 // hold, offers a template to copy, and checks which names are filled in. Nothing is typed into this page, and
 // it cannot see a key: the server tells it only whether a name is filled in.
@@ -65,9 +65,9 @@ export function SetupGuide({ first, onDone, onBack }: { first: boolean; onDone: 
           Back
         </Button>
       )}
-      <Headline className="!text-[34px]">{first ? "Set up Forge." : "Forge's settings file."}</Headline>
+      <Headline className="!text-[34px]">{first ? "Set up DebCraft." : "DebCraft's settings file."}</Headline>
       <Tagline className="mt-2">
-        Forge reads its keys and connections from one file. Edit it there: nothing is typed into this page.
+        DebCraft reads its keys and connections from one file. Edit it there: nothing is typed into this page.
       </Tagline>
 
       <Card className="mt-6 p-5">
@@ -94,7 +94,7 @@ export function SetupGuide({ first, onDone, onBack }: { first: boolean; onDone: 
         <Lock className="mt-0.5 h-4 w-4 shrink-0 text-info" aria-hidden />
         <p>
           <span className="font-semibold">This page cannot see your keys.</span> It only checks which names in the file are filled in, and
-          Forge never shows a key or sends one to your browser. Double-check the values yourself in the file.
+          DebCraft never shows a key or sends one to your browser. Double-check the values yourself in the file.
         </p>
       </div>
 
@@ -156,7 +156,7 @@ export function SetupGuide({ first, onDone, onBack }: { first: boolean; onDone: 
       {asks.length > 0 && (
         <Card className="mt-4 space-y-3 p-5">
           <h2 className="text-[15px] font-semibold">Optional tools</h2>
-          <p className="text-[12.5px] text-fg-muted">Forge tests these only if you say yes. You can change the answers later on the Environment panel.</p>
+          <p className="text-[12.5px] text-fg-muted">DebCraft tests these only if you say yes. You can change the answers later on the Environment panel.</p>
           {asks.map((check) => (
             <YesNo key={check.id} question={check.ask ?? ""} answer={answers[check.id]} onAnswer={(enabled) => void answer(check, enabled)} />
           ))}

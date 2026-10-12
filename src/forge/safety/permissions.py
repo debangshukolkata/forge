@@ -141,15 +141,15 @@ class PermissionGate:
             return Decision("ask", "deleting your files always needs approval", always_ask=True)
         if tool_name in ALWAYS_ASK_TOOLS:
             if self.mode == "auto":
-                return Decision("allow", "auto mode: a file Forge created in this workspace")
-            return Decision("ask", "deletes a file Forge created in this workspace")
+                return Decision("allow", "auto mode: a file DebCraft created in this workspace")
+            return Decision("ask", "deletes a file DebCraft created in this workspace")
         if tool_name.startswith("mcp__"):  # an external tool server: it can do anything (spec §13B)
             if self.mode == "auto":
                 return Decision("allow", "auto mode: MCP tool")
             allowed = self.rules.allowed_by(tool_name, command)
             if allowed is not None:
                 return Decision("allow", f"your settings allow '{allowed.text}'")
-            return Decision("ask", "an MCP server tool (outside Forge)")
+            return Decision("ask", "an MCP server tool (outside DebCraft)")
         if tool_name not in SHELL_TOOLS or command is None or scope is None:
             return Decision("allow", "workspace edit")
         return self._decide_command(tool_name, command, scope)

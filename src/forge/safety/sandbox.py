@@ -1,11 +1,11 @@
 """Low-integrity sandbox for shell commands (DECISIONS D-049, D-050). Windows only, no admin needed.
 
 A process running at LOW integrity may read everything but can only write to objects labelled low.
-Forge labels just the workspace's repo/ copy and its scratch folders low, so a command that slips past
-the classifier still cannot write to the user's original repository, their profile, or Forge's own
+DebCraft labels just the workspace's repo/ copy and its scratch folders low, so a command that slips past
+the classifier still cannot write to the user's original repository, their profile, or DebCraft's own
 state (.forge/permissions.json, checkpoints, baseline, output/). Uses documented Win32 calls only.
 
-SandboxedProcess mimics the parts of asyncio.subprocess.Process that Forge uses (pid, returncode,
+SandboxedProcess mimics the parts of asyncio.subprocess.Process that DebCraft uses (pid, returncode,
 stdout, wait), so the PowerShell runner treats both kinds of process the same way.
 """
 
@@ -44,7 +44,7 @@ def label_low(folder: Path) -> None:
     """Marks a folder (and everything in and below it, now and later) as writable at low integrity."""
     folder.mkdir(parents=True, exist_ok=True)
     # Changing a mandatory label needs WRITE_OWNER, which inherited "Modify" rights (e.g. under C:\Work on
-    # an enterprise laptop) don't give; %TEMP% gives Full control, which hid this. The user owns Forge's
+    # an enterprise laptop) don't give; %TEMP% gives Full control, which hid this. The user owns DebCraft's
     # own workspace folders, so they may grant themselves Full control there first.
     _icacls(folder, "/grant", f"*{_current_user_sid()}:(OI)(CI)F")  # the folder only: children inherit it
     # /T /C labels what it can; single items in use may fail, as before. What matters is the folder itself:

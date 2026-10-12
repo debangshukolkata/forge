@@ -1,5 +1,5 @@
-"""The settings-file guide (D-204): where Forge's `.env` lives, which names it reads, what each should
-hold, and a template to copy. Built from Forge's own configuration, so it cannot drift from what Forge reads.
+"""The settings-file guide (D-204): where DebCraft's `.env` lives, which names it reads, what each should
+hold, and a template to copy. Built from DebCraft's own configuration, so it cannot drift from what DebCraft reads.
 
 It never returns a value: only whether each name is filled in. The user edits the file themselves."""
 
@@ -48,7 +48,7 @@ def _variables(config: ForgeConfig) -> tuple[list[Group], list[Variable]]:
     variables: list[Variable] = []
 
     azure = config.llm.providers.azure
-    groups.append(Group("Azure OpenAI", "The models Forge works with.", True))
+    groups.append(Group("Azure OpenAI", "The models DebCraft works with.", True))
     azure_rows = [
         (azure.endpoint_env, "https://<resource>.openai.azure.com/", "Your Azure OpenAI endpoint."),
         (
@@ -75,15 +75,15 @@ def _variables(config: ForgeConfig) -> tuple[list[Group], list[Variable]]:
 
     shapes = {
         "local": (
-            "Forge database",
-            "Where Forge develops: it creates its own scratch schema for each requirement and writes only "
-            "there. Without it Forge cannot run database checks.",
-            "The Forge database: Forge creates and writes only its own scratch schemas here.",
+            "DebCraft database",
+            "Where DebCraft develops: it creates its own scratch schema for each requirement and writes only "
+            "there. Without it DebCraft cannot run database checks.",
+            "The DebCraft database: DebCraft creates and writes only its own scratch schemas here.",
         ),
         "dev": (
             "Development database (read-only)",
-            "An existing database Forge may read to see existing data. Forge never writes to it.",
-            "The existing development database. Read-only: Forge never writes to it.",
+            "An existing database DebCraft may read to see existing data. DebCraft never writes to it.",
+            "The existing development database. Read-only: DebCraft never writes to it.",
         ),
     }
     for key, connection in config.postgres.connections.items():
@@ -94,7 +94,7 @@ def _variables(config: ForgeConfig) -> tuple[list[Group], list[Variable]]:
             expects = "postgresql://<user>:<password>@<host>:5432/<database>"
         variables.append(Variable(connection.url_env, title, expects, why, False))
 
-    groups.append(Group("Web search", "Without a key Forge uses DuckDuckGo.", False))
+    groups.append(Group("Web search", "Without a key DebCraft uses DuckDuckGo.", False))
     for name, expects, why in SEARCH_KEYS:
         variables.append(Variable(name, "Web search", expects, why, False))
     groups.append(
@@ -128,7 +128,7 @@ def _variables(config: ForgeConfig) -> tuple[list[Group], list[Variable]]:
 
 
 def template_text(groups: list[Group], variables: list[Variable]) -> str:
-    lines = ["# Forge settings. Keep this file private and never commit it.", ""]
+    lines = ["# DebCraft settings. Keep this file private and never commit it.", ""]
     for group in groups:
         lines.append(f"# {group.title}: " + ("required" if group.required else "optional"))
         lines.append(f"# {group.note}")

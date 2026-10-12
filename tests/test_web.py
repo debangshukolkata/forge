@@ -70,7 +70,7 @@ def test_requests_without_the_token_are_refused(client: TestClient, security: Se
     assert client.get("/assets/anything.js").status_code == 403
     login(client, security)
     page = client.get("/")
-    assert page.status_code == 200 and "<title>Forge</title>" in page.text
+    assert page.status_code == 200 and "<title>DebCraft</title>" in page.text
     assert client.cookies.get(security.cookie_name) == security.token
 
 

@@ -19,7 +19,7 @@ const MODES = ["default", "auto", "plan"] as const;
 const MODE_HELP: Record<string, string> = {
   default: "asks before commands that change things",
   auto: "runs ordinary commands without asking (never the always-ask list)",
-  plan: "read-only: Forge only looks and plans",
+  plan: "read-only: DebCraft only looks and plans",
 };
 const HISTORY_LIMIT = 50;
 
@@ -272,7 +272,7 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
                 }
               }}
               disabled={!forge.controls}
-              placeholder="Message Forge. / for commands, @ for files"
+              placeholder="Message DebCraft. / for commands, @ for files"
               aria-label="Message"
               className="max-h-60 min-h-[40px] flex-1 resize-none appearance-none border-0 bg-transparent px-1 py-2 text-[14px] leading-relaxed text-fg placeholder:text-fg-muted/70 focus:outline-none focus:ring-0"
             />

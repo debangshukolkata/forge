@@ -1,4 +1,4 @@
-"""Configuration loading: built-in defaults + <forge_home>/config.yaml, plus secrets from Forge's .env."""
+"""Configuration loading: built-in defaults + <forge_home>/config.yaml, plus secrets from DebCraft's .env."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ class AzureProviderConfig(_Strict):
 class GeminiProviderConfig(_Strict):
     """Vertex AI (not the Google AI Studio API key path): auth is Application Default Credentials, found
     automatically by the SDK (gcloud ADC, or GOOGLE_APPLICATION_CREDENTIALS pointing at a service-account
-    file) — Forge never stores or reads credentials itself, only the project/location to call."""
+    file) — DebCraft never stores or reads credentials itself, only the project/location to call."""
 
     project_env: str = "GOOGLE_CLOUD_PROJECT"
     location_env: str = "GOOGLE_CLOUD_LOCATION"
@@ -183,13 +183,13 @@ class PgConnectionConfig(_Strict):
 
 
 class ScratchConfig(_Strict):
-    # forge_if_allowed: Forge creates the scratch schema itself when its role may and the user approves;
+    # forge_if_allowed: DebCraft creates the scratch schema itself when its role may and the user approves;
     # ask_user: always a DB request for the user/DBA (A-4).
     create: Literal["forge_if_allowed", "ask_user"] = "forge_if_allowed"
 
 
 class PostgresConfig(_Strict):
-    prefer: Literal["local", "dev"] = "local"  # A-5: local first; the shared dev DB is read-only for Forge
+    prefer: Literal["local", "dev"] = "local"  # A-5: local first; the shared dev DB is read-only for DebCraft
     connections: dict[str, PgConnectionConfig] = Field(
         default_factory=lambda: {
             "local": PgConnectionConfig(url_env="LOCAL_PG_URL"),
@@ -242,7 +242,7 @@ class LearningConfig(_Strict):
 class McpServerConfig(_Strict):
     command: str
     args: list[str] = []
-    env_names: list[str] = []  # names from Forge's .env passed to the server (values never shown)
+    env_names: list[str] = []  # names from DebCraft's .env passed to the server (values never shown)
     cwd: str | None = None
 
 
@@ -326,7 +326,7 @@ def load_config(home: Path | None = None) -> ForgeConfig:
 
 
 class Secrets:
-    """Values from Forge's own .env. Deliberately never read from the current directory: Forge runs
+    """Values from DebCraft's own .env. Deliberately never read from the current directory: DebCraft runs
     inside other people's repos, whose .env files hold *their* secrets."""
 
     def __init__(self, values: dict[str, str], source: Path | None) -> None:
@@ -339,7 +339,7 @@ class Secrets:
     def require(self, name: str) -> str:
         value = self.get(name)
         if not value:
-            where = self.source or "the Forge .env file"
+            where = self.source or "the DebCraft .env file"
             raise ConfigError(f"{name} is not set. Add it to {where} (see .env.example).")
         return value
 
@@ -372,7 +372,7 @@ def register_secret_values(values: dict[str, str], redactor: Redactor) -> None:
 def write_secret_values(
     values: dict[str, str], home: Path | None = None, redactor: Redactor = default_redactor
 ) -> None:
-    """Writes name->value pairs into Forge's own .env, preserving every unrelated line untouched
+    """Writes name->value pairs into DebCraft's own .env, preserving every unrelated line untouched
     (comments, blank lines, values for names not being written). Creates the file if needed.
 
     Registers the new values for redaction immediately (D-145/D-146): a key just typed into the setup

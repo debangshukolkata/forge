@@ -1,4 +1,4 @@
-# Forge
+# DebCraft
 
 A local, Windows-first coding agent that behaves like Claude Code, powered by Azure OpenAI.
 It works in a per-requirement workspace and never edits your repository; it delivers only the

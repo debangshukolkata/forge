@@ -186,7 +186,7 @@ def test_export_chat_writes_markdown(host: SessionHost, workspace: Workspace) ->
     ]
     path = export_chat(workspace, events)
     text = path.read_text(encoding="utf-8")
-    assert "## You\n\nAdd an endpoint" in text and "## Forge\n\nDone: added GET /x" in text
+    assert "## You\n\nAdd an endpoint" in text and "## DebCraft\n\nDone: added GET /x" in text
 
 
 MCP_SERVER = '''from mcp.server.mcpserver import MCPServer

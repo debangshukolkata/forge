@@ -1,4 +1,4 @@
-"""The fixture host app must itself be healthy, or every later Forge test is meaningless."""
+"""The fixture host app must itself be healthy, or every later DebCraft test is meaningless."""
 
 from __future__ import annotations
 

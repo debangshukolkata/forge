@@ -1,12 +1,12 @@
-"""Runs Forge on the realistic fixture tasks in evals/fixture_tasks/ (spec M11) and scores each one with its
-hidden acceptance test, which Forge never sees: it is copied into the workspace only after the run.
+"""Runs DebCraft on the realistic fixture tasks in evals/fixture_tasks/ (spec M11) and scores each one with its
+hidden acceptance test, which DebCraft never sees: it is copied into the workspace only after the run.
 
-Usage (live: uses the Azure deployment in Forge's .env):
+Usage (live: uses the Azure deployment in DebCraft's .env):
     .venv\\Scripts\\python scripts\\run_fixture_evals.py                 # all tasks
     .venv\\Scripts\\python scripts\\run_fixture_evals.py 01_claims_stats  # some tasks
 
-Per task it records: Forge's exit code and final phase, whether the hidden test passes, whether the fixture's
-whole suite (old + Forge's new tests + hidden) passes, and the duration. The report goes to
+Per task it records: DebCraft's exit code and final phase, whether the hidden test passes, whether the fixture's
+whole suite (old + DebCraft's new tests + hidden) passes, and the duration. The report goes to
 test-artifacts/evals-<timestamp>/REPORT.md with each workspace kept next to it for inspection.
 """
 

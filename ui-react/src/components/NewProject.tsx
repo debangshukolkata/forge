@@ -72,18 +72,18 @@ export function NewProject({ onCreated, onBack, onOpenEnvironment }: { onCreated
               onSelect={() => setMode("B")}
               icon={<Layers className="h-5 w-5" aria-hidden />}
               title="Standalone"
-              text="Forge builds new code and never sees yours. Paste signatures or snippets in the chat."
+              text="DebCraft builds new code and never sees yours. Paste signatures or snippets in the chat."
             />
             <ModeOption
               selected={mode === "A"}
               onSelect={() => setMode("A")}
               icon={<FolderGit2 className="h-5 w-5" aria-hidden />}
               title="From an existing repository"
-              text="Forge works on a copy of your repository and never writes to the original."
+              text="DebCraft works on a copy of your repository and never writes to the original."
             />
           </div>
 
-          <Field label="Project name" hint={mode === "B" ? "Reusing a name reuses what Forge learned about that project." : undefined}>
+          <Field label="Project name" hint={mode === "B" ? "Reusing a name reuses what DebCraft learned about that project." : undefined}>
             <Input required list="known-projects" value={project} onChange={(e) => setProject(e.target.value)} placeholder="e.g. payments-masking" autoFocus />
             <datalist id="known-projects">
               {known.map((name) => (
@@ -92,12 +92,12 @@ export function NewProject({ onCreated, onBack, onOpenEnvironment }: { onCreated
             </datalist>
           </Field>
 
-          <Field label="Project folder" hint="A new, empty folder. Forge works here and puts the result in its output folder.">
+          <Field label="Project folder" hint="A new, empty folder. DebCraft works here and puts the result in its output folder.">
             <Input required value={folder} onChange={(e) => setFolder(e.target.value)} placeholder="C:\Work\LocalDevelopment\payments-masking" />
           </Field>
 
           {mode === "A" && (
-            <Field label="Existing project / repository path" hint="Read only: Forge copies it into the project folder.">
+            <Field label="Existing project / repository path" hint="Read only: DebCraft copies it into the project folder.">
               <Input required value={repo} onChange={(e) => setRepo(e.target.value)} placeholder="C:\Work\LocalDevelopment\claims-repo" />
             </Field>
           )}

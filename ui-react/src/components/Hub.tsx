@@ -20,7 +20,7 @@ export function Hub({ user, projectCount, onNew, onOpen }: { user: string | null
         <Tagline className="mt-3 max-w-md">
           {projectCount === 0
             ? "Projects you have worked on will appear here, with their memory and history."
-            : `${projectCount} project${projectCount === 1 ? "" : "s"}. Forge resumes from what it remembers.`}
+            : `${projectCount} project${projectCount === 1 ? "" : "s"}. DebCraft resumes from what it remembers.`}
         </Tagline>
         <Button
           variant="primary"

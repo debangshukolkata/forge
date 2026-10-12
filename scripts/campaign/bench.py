@@ -3,7 +3,7 @@ filter + CSV enhancement) run under one setting, each step checked by the indepe
 
 python bench.py <name> <port> [--env KEY=VALUE ...] [--config "yaml text"]
 
-Everything lives under C:\\Work\\ForgeRuns (workspace bench_<name>, Forge home bench_<name>_home). Prints and writes
+Everything lives under C:\\Work\\ForgeRuns (workspace bench_<name>, DebCraft home bench_<name>_home). Prints and writes
 bench_<name>.json: per step wall time, model calls, model time, tokens, and the independent check result.
 """
 
@@ -20,7 +20,7 @@ from datetime import datetime
 from pathlib import Path
 
 RUNS = Path(r"C:\Work\ForgeRuns")
-FORGE = Path(r"C:\Work\Projects\Forge")
+FORGE = Path(r"C:\Work\Projects\DebCraft")
 PYTHON = FORGE / ".venv" / "Scripts" / "python.exe"
 CAMPAIGN = FORGE / "scripts" / "campaign"
 STEPS = [

@@ -1,4 +1,4 @@
-"""M7: the SQL guard (offline) and Forge's database layer against the local Postgres (marker pg).
+"""M7: the SQL guard (offline) and DebCraft's database layer against the local Postgres (marker pg).
 
 The pg tests use LOCAL_PG_URL from the repo's .env and skip when that server isn't reachable. They only
 touch schemas and roles named forge_test_* / forge_ws_*, and drop them afterwards.
@@ -406,7 +406,7 @@ async def test_db_done_verifies_then_continues_the_workflow(
     assert host.db is not None and host.orchestrator is not None
     cleanup_schemas.append(host.db.scratch_schema_name)
     await host.prepare_database()
-    assert host.db.scratch is not None  # L3 locally: Forge created its scratch schema
+    assert host.db.scratch is not None  # L3 locally: DebCraft created its scratch schema
     assert host.context_manager.pinned.get("database") is not None
     assert host.agent is not None and host.agent.context.shell is not None
     assert host.agent.context.shell.extra_env["PGOPTIONS"].endswith(host.db.scratch_schema_name)

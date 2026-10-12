@@ -30,7 +30,7 @@ def build_session(
     config = config or load_config(home)
     secrets = secrets or load_secrets(home)
     if log_path is None:
-        # With a workspace, the transcript lives in it (spec §6.2); otherwise in Forge home (D-029).
+        # With a workspace, the transcript lives in it (spec §6.2); otherwise in DebCraft home (D-029).
         log_path = (
             workspace.forge_dir / "transcripts" / "events.jsonl" if workspace else new_session_log_path(home)
         )

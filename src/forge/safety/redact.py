@@ -1,9 +1,9 @@
 """Secret redaction (DECISIONS D-016).
 
 Two layers:
-1. Exact values: every secret Forge loads is registered here and masked wherever it appears.
+1. Exact values: every secret DebCraft loads is registered here and masked wherever it appears.
 2. Patterns: secret-shaped text (JWTs, bearer tokens, passwords in URLs, key=value assignments)
-   is masked even when Forge never saw the value — e.g. credentials printed in a traceback.
+   is masked even when DebCraft never saw the value — e.g. credentials printed in a traceback.
 
 Redaction runs on everything that leaves the engine: LLM requests, events, transcripts, logs.
 """

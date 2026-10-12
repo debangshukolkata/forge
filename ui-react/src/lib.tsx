@@ -99,7 +99,7 @@ export interface Attachment {
   kind: "image" | "pdf" | "text" | "file";
 }
 
-/** Sends a file to Forge (raw body, the name in the query); Forge stores it in the project's .forge/inputs/. */
+/** Sends a file to DebCraft (raw body, the name in the query); DebCraft stores it in the project's .forge/inputs/. */
 export async function uploadFile(file: File): Promise<Attachment> {
   const response = await fetch(`/api/upload?name=${encodeURIComponent(file.name || "pasted.png")}`, {
     method: "POST",

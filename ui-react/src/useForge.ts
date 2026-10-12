@@ -1,4 +1,4 @@
-// The connection to Forge: loads /api/state, keeps one WebSocket to the engine (replaying every event since the
+// The connection to DebCraft: loads /api/state, keeps one WebSocket to the engine (replaying every event since the
 // last one seen, so a reload or reconnect never loses anything) and turns events into the chat timeline.
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { agentFinished, agentStarted, agentStep } from "./agentTimeline";
@@ -9,7 +9,7 @@ interface Timeline {
   items: ChatItem[];
   answered: Record<string, string>; // card key (unique per card) -> how it was settled ("Approved", "superseded", …)
   questionAnswers: Record<string, { choice: string | null; text: string | null }>; // question id -> what the user chose / typed (D-232)
-  todos: TodoItem[]; // Forge's own todo list, the whole list as of the last `todo_updated` (D-177)
+  todos: TodoItem[]; // DebCraft's own todo list, the whole list as of the last `todo_updated` (D-177)
 }
 
 type Action =
@@ -148,7 +148,7 @@ function endStream(items: ChatItem[]): ChatItem[] {
   return last && last.kind === "assistant" && last.streaming ? [...items.slice(0, -1), { ...last, streaming: false }] : items;
 }
 
-/** What Forge is doing right now (labels are derived in the UI from the tool name and phase). */
+/** What DebCraft is doing right now (labels are derived in the UI from the tool name and phase). */
 export interface LiveActivity {
   kind: "idle" | "thinking" | "tool" | "writing" | "waiting";
   tool?: { name: string; summary: string };
@@ -168,7 +168,7 @@ export interface Forge {
   context: ContextInfo | null;
   cost: CostInfo | null;
   changeTick: number; // increments on file/task changes so panels can refresh
-  costColors: CostColors | null; // green / yellow / red limits from Forge's config (cost.colors)
+  costColors: CostColors | null; // green / yellow / red limits from DebCraft's config (cost.colors)
   events: ForgeEvent[]; // every event of the project (replayed + live), for the Run map
   activity: LiveActivity;
   runStartedAt: number | null; // when the current stretch of work began (for the elapsed timer)
@@ -257,10 +257,10 @@ export function useForge(): Forge {
         case "user_action_requested":
           if (live) {
             const title =
-              event.type === "approval_requested" ? "Approval needed" : event.type === "question_asked" ? "Forge has a question" : "A step for you";
+              event.type === "approval_requested" ? "Approval needed" : event.type === "question_asked" ? "DebCraft has a question" : "A step for you";
             setWaiting(title);
             if (document.hidden && "Notification" in window && Notification.permission === "granted") {
-              new Notification("Forge", { body: title });
+              new Notification("DebCraft", { body: title });
             }
           }
           break;
@@ -390,7 +390,7 @@ export function useForge(): Forge {
   const send = useCallback((input: UserInput) => {
     const socket = socketRef.current;
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      dispatch({ type: "local", item: { key: `x${Date.now()}`, kind: "error", text: "Not connected to Forge; reconnecting…" } });
+      dispatch({ type: "local", item: { key: `x${Date.now()}`, kind: "error", text: "Not connected to DebCraft; reconnecting…" } });
       return;
     }
     socket.send(JSON.stringify({ type: "input", input }));

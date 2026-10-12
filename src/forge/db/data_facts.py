@@ -1,5 +1,5 @@
 """Finds the code that reads credentials from a database table into environment variables (spec §9.5.1),
-so Forge can refuse to read those tables (D-160). Kept from the retired knowledge base: it is a safety
+so DebCraft can refuse to read those tables (D-160). Kept from the retired knowledge base: it is a safety
 function, not knowledge."""
 
 from __future__ import annotations

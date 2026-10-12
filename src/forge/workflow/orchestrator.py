@@ -1,5 +1,5 @@
 """The requirement workflow (spec §7, D-128/D-130/D-132): a flat agent loop, not a fixed phase state
-machine. Forge understands, explores, plans and executes a requirement using its own judgment about when to
+machine. DebCraft understands, explores, plans and executes a requirement using its own judgment about when to
 ask the user or check in — the same way this assistant works — instead of marching through mandatory
 CLARIFY/PLAN/REVIEW gates. Change requests and RESTRUCTURE (§6.7) reuse the same loop with a smaller brief.
 
@@ -308,7 +308,7 @@ class Orchestrator:
 
     async def _export(self) -> None:
         """Builds output/ once every task is settled (done or blocked). Judgment-based, not a mandatory
-        gated REVIEW step (D-132): Forge has already verified as it went; this just packages the result."""
+        gated REVIEW step (D-132): DebCraft has already verified as it went; this just packages the result."""
         output = build_modeb_output(self.workspace) if self.workspace.mode_b else build_output(self.workspace)
         report = final_report(self.state, self._requirement_text(), output, self.workspace, self.host.db)
         if self._restructure_baseline is not None:
@@ -364,7 +364,7 @@ class Orchestrator:
 
     async def propose_requirements(self, markdown: str) -> ToolResult:
         """Optional (D-128): writes REQUIREMENTS.md for the record. Not a turn-blocking approval gate —
-        Forge can keep working without calling this at all for a small requirement."""
+        DebCraft can keep working without calling this at all for a small requirement."""
         self.store.write_document("REQUIREMENTS.md", markdown)
         self._refresh_pinned()
         return ToolResult(ok=True, content="Saved REQUIREMENTS.md.")
@@ -375,7 +375,7 @@ class Orchestrator:
 
     async def propose_plan(self, markdown: str, tasks: list[TaskSpec]) -> ToolResult:
         """Optional (D-128): writes PLAN.md and sets the task list. Not a turn-blocking approval gate —
-        used when Forge judges a written plan is worth having (a real design fork, or a larger requirement),
+        used when DebCraft judges a written plan is worth having (a real design fork, or a larger requirement),
         or when the user asks to see one first."""
         if self.workspace.mode_b:  # surface the assumptions at plan approval (spec §6A.2)
             open_assumptions = AssumptionRegister(self.workspace).summary_for_plan()

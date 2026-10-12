@@ -1,6 +1,6 @@
 """Dev-only, run by the user (docs/DECISIONS.md D-019).
 
-One-off: copy Orchestrix's Azure chat provider into Forge's .env. Read-only on Orchestrix's DB.
+One-off: copy Orchestrix's Azure chat provider into DebCraft's .env. Read-only on Orchestrix's DB.
 Never prints secret values — only presence, lengths and the endpoint host."""
 
 import asyncio
@@ -13,7 +13,7 @@ from app.models.llm_model import LLMModel
 from app.models.llm_provider import LLMProvider
 from sqlalchemy import select
 
-FORGE_ENV = r"c:\Work\Projects\Forge\.env"
+FORGE_ENV = r"c:\Work\Projects\DebCraft\.env"
 
 
 async def main() -> None:

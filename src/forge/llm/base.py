@@ -101,7 +101,7 @@ class ChatRequest(BaseModel):
     max_output_tokens: int | None = None
     reasoning_effort: str | None = None
     parallel_tool_calls: bool = True
-    # Tools the provider runs itself (Responses API), e.g. "web_search". Only used by Forge's search tool.
+    # Tools the provider runs itself (Responses API), e.g. "web_search". Only used by DebCraft's search tool.
     hosted_tools: list[str] = Field(default_factory=list)
     # Called with each finished piece of the model's reasoning summary while it thinks (D-174); local only.
     on_thinking: TextDeltaCallback | None = Field(default=None, exclude=True)

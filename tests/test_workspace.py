@@ -332,7 +332,7 @@ def test_output_manifest_is_machine_readable(workspace: Workspace) -> None:
 
 
 def test_runtime_data_files_are_not_delivered(workspace: Workspace) -> None:
-    """D-222: a SQLite file the app wrote while Forge ran it is data, not code."""
+    """D-222: a SQLite file the app wrote while DebCraft ran it is data, not code."""
     workspace.write_text("backend/claims_app/services/export_service.py", "x = 1\n", reason="New service")
     (workspace.repo_dir / "backend" / "claims_app" / "app.sqlite").write_bytes(b"SQLite format 3\x00")
     (workspace.repo_dir / "backend" / "claims_app" / "app.db-journal").write_bytes(b"journal")

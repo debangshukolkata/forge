@@ -140,7 +140,7 @@ class DbRequestTool(Tool):
     name = "db_request"
     read_only = True  # it only writes a request for a person; nothing runs
     description = (
-        "When a database step needs rights Forge doesn't have (create the scratch schema or "
+        "When a database step needs rights DebCraft doesn't have (create the scratch schema or "
         "tables, grant access, "
         "install an extension), write it for the user or their DBA: exact idempotent SQL with a commented "
         "rollback, and a read-only verification query. Then keep working on tasks that don't "
@@ -172,7 +172,7 @@ class DbRequestTool(Tool):
                 ),
             },
         )
-        return ToolResult(ok=True, content=f"Created {request.id}. The user will run it and tell Forge.")
+        return ToolResult(ok=True, content=f"Created {request.id}. The user will run it and tell DebCraft.")
 
 
 class MarkServerRun(Tool):

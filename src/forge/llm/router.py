@@ -77,8 +77,7 @@ class LLMRouter:
                 from forge.llm.gemini import GeminiProvider  # optional dependency, imported only when used
             except ImportError as error:
                 raise ConfigError(
-                    f"Model '{model_key}' uses Gemini, which needs the google-genai package: "
-                    "pip install google-genai"
+                    f"Model '{model_key}' uses Gemini, which needs the google-genai package: pip install google-genai"
                 ) from error
             return GeminiProvider(model_key, model, self.config.llm.providers.gemini, self._secrets)
         return AzureOpenAIProvider(model_key, model, self.config.llm.providers.azure, self._secrets)

@@ -1,5 +1,5 @@
 """Detects an existing Node/React app in a Mode A app folder (D-137/D-138): the package manager, the node
-binary, and the real script names the repo's own package.json defines — Forge never assumes 'npm run build'
+binary, and the real script names the repo's own package.json defines — DebCraft never assumes 'npm run build'
 or 'npm test' literally, since repos customise these (mirrors pyenv.py's shape for the Python side)."""
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ INSTALL_COMMAND: dict[PackageManager, str] = {
 
 
 class NodeEnvironment(BaseModel):
-    """How Forge runs an existing React/Node app: which package manager it uses, the node binary found on
+    """How DebCraft runs an existing React/Node app: which package manager it uses, the node binary found on
     this machine, and the real script names from the app's own package.json (never assumed)."""
 
     node: str  # the node binary path (shutil.which result)

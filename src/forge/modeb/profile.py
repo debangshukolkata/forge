@@ -1,4 +1,4 @@
-"""Host Profiles (spec §6A.2): the Mode B equivalent of the knowledge base — what Forge knows about a host
+"""Host Profiles (spec §6A.2): the Mode B equivalent of the knowledge base — what DebCraft knows about a host
 codebase it may not see, built from the interview, an imported structure export and approved snippets.
 
 <forge_home>/profiles/<name>/
@@ -176,7 +176,7 @@ class HostProfile:
 
     def import_structure(self, data: dict[str, Any]) -> ImportReport:
         if data.get("format") != "forge-structure-export" or not isinstance(data.get("modules"), dict):
-            raise ProfileError("Not a Forge structure export (run forge_structure_export.py on the host).")
+            raise ProfileError("Not a DebCraft structure export (run forge_structure_export.py on the host).")
         raw = json.dumps(data)
         hits = self.sensitive_hits(raw)
         cleaned_text = self.clean(raw)

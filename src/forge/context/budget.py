@@ -6,7 +6,7 @@ pinned  = pinned blocks (capped at a share of usable)
 history = usable - fixed - pinned
 
 Estimates use tiktoken, scaled by how the last real request's estimate compared with the provider's
-reported input tokens. That folds in what Forge can't count itself (encrypted reasoning items, per-message
+reported input tokens. That folds in what DebCraft can't count itself (encrypted reasoning items, per-message
 framing) without guessing.
 """
 

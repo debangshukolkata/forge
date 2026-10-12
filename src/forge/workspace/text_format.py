@@ -1,6 +1,6 @@
 """Detects and preserves a file's encoding, BOM and line endings (spec §9.1).
 
-Forge edits text with "\\n" line endings internally and writes it back in the file's original format,
+DebCraft edits text with "\\n" line endings internally and writes it back in the file's original format,
 so a CRLF, BOM-prefixed or cp1252 file stays exactly that way.
 """
 

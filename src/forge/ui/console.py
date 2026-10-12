@@ -20,7 +20,7 @@ from forge.llm.cost import format_money
 from forge.protocol.events import Event, EventType
 from forge.protocol.inputs import Answer, Approve, Interrupt, Reject, SendMessage, SlashCommand, UserInput
 
-WELCOME = "Forge — type a message, /help for commands, Esc to interrupt, Ctrl+D to quit."
+WELCOME = "DebCraft — type a message, /help for commands, Esc to interrupt, Ctrl+D to quit."
 DIFF_PREVIEW_LINES = 40
 
 
@@ -116,7 +116,7 @@ def render_event(event: Event, console: Console, state: ConsoleState) -> None:
         for number, step in enumerate(payload.get("steps") or [], start=1):
             console.print(Text(f"  {number}. {step}"))
         if payload.get("verify_command"):
-            console.print(Text(f"  Forge will check with: {payload['verify_command']}", style="dim"))
+            console.print(Text(f"  DebCraft will check with: {payload['verify_command']}", style="dim"))
         console.print(Text("  [done]   [skip]   [cant <why>]", style="bold magenta"))
     elif kind == EventType.APPROVAL_REQUESTED:
         state.pending_approval = str(payload["id"])

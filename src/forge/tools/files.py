@@ -181,7 +181,7 @@ class DeleteFile(Tool):
         return f"delete {args.path}"
 
     def own_files_only(self, args: DeleteFile.Args, context: ToolContext) -> bool:
-        # Not in the baseline manifest = Forge wrote it in this workspace; the user's files always ask.
+        # Not in the baseline manifest = DebCraft wrote it in this workspace; the user's files always ask.
         return args.path.replace("\\", "/") not in context.workspace.manifest.files
 
     async def run(self, args: DeleteFile.Args, context: ToolContext) -> ToolResult:

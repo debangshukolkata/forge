@@ -36,27 +36,27 @@ HELP_TEXT = """Available commands:
   /mode [plan|default|auto] show or change the permission mode
   /requirements | /plan | /tasks   the approved requirements, the plan, the task board
   /restructure <how>        reshape delivered code to fit your repo (behaviour kept)
-  /db [status]              what Forge may do on each database, and the scratch schema
-  /db requests              DB requests Forge wrote for you or your DBA
-  /db done <DBR-n> [result] you ran it: Forge verifies and unblocks the tasks waiting on it
-  /db cant <DBR-n> <why>    it can't be run: Forge looks for a workaround
-  /db skip <DBR-n>          drop it; Forge works around it
-  /db cleanup               drop every object Forge created in the scratch schema
+  /db [status]              what DebCraft may do on each database, and the scratch schema
+  /db requests              DB requests DebCraft wrote for you or your DBA
+  /db done <DBR-n> [result] you ran it: DebCraft verifies and unblocks the tasks waiting on it
+  /db cant <DBR-n> <why>    it can't be run: DebCraft looks for a workaround
+  /db skip <DBR-n>          drop it; DebCraft works around it
+  /db cleanup               drop every object DebCraft created in the scratch schema
   /diagnose [error text]    after copying output/ into your repo: find what is wrong
   /remember [project] <text>          remember a preference for all future work
   /profile [show|list|terms <t1,t2,...>]   Mode B: the host profile (sensitive terms masked everywhere)
-  /assumptions [confirm|wrong <id> [note]] Mode B: what Forge assumed about the host
+  /assumptions [confirm|wrong <id> [note]] Mode B: what DebCraft assumed about the host
   /contract | /revision     Mode B: the interface contract; the current revision and what changed
   /contracts [pin <seam> <signature> | forget <seam|id>]   Mode B: user-pinned interface contracts (D-129)
   /forget-snippet <id>      Mode B: remove a pasted snippet (exemplar) from the profile
-  /init                     draft the repository-level FORGE.md (instructions Forge always follows)
+  /init                     draft the repository-level FORGE.md (instructions DebCraft always follows)
   # <text>                  (a message starting with #) save an instruction to a FORGE.md
   /effort [low|medium|high] reasoning effort for this session ('think hard: ...' raises it for one message)
-  /style [concise|explanatory|learning]   how much Forge explains while working
-  /skills | /agents         the skills and custom subagents Forge can use
+  /style [concise|explanatory|learning]   how much DebCraft explains while working
+  /skills | /agents         the skills and custom subagents DebCraft can use
   /skill add <github link|folder> [--yes]   show (then with --yes install) skills from GitHub; also
                             /skill list and /skill remove <name>
-  /allow-read [path]        let Forge read a file or folder (and everything under it) outside the project,
+  /allow-read [path]        let DebCraft read a file or folder (and everything under it) outside the project,
                             read only, kept for this project; without a path: list what is allowed
   /revoke-read <path>       take that permission back
   /bg [kill <name>]         background processes (dev servers...) with the tail of their output
@@ -66,7 +66,7 @@ HELP_TEXT = """Available commands:
   /mcp                      connected MCP servers and their tools (optional; config mcp.*)
   /handoff [note]           save where the work stands (decisions, done, next steps, how to run) to memory,
                             so it can be picked up later, even in a new session
-  /memory [delete <name>]   list (or delete) what Forge remembers (user + this project)
+  /memory [delete <name>]   list (or delete) what DebCraft remembers (user + this project)
   /<name> [args]            your custom commands: <forge home>/commands/<name>.md ($ARGUMENTS = args)
   /exit                     end the session
 Other commands from the spec arrive with later milestones."""
@@ -138,7 +138,7 @@ class SlashCommandHandler:
         handler = handlers.get(name)
         if handler is None:
             expanded = CommandStore(forge_home()).expand(name.lstrip("/"), " ".join(args))
-            if expanded is not None:  # a custom command: its text goes to Forge as a message
+            if expanded is not None:  # a custom command: its text goes to DebCraft as a message
                 await self.host.run_message(expanded)
                 return
             custom = ", ".join(f"/{n}" for n in CommandStore(forge_home()).names())
@@ -154,7 +154,7 @@ class SlashCommandHandler:
 
     def _workspace(self) -> Workspace:
         if self.host.workspace is None:
-            raise WorkspaceError("No workspace is attached. Start Forge with --workspace <path>.")
+            raise WorkspaceError("No workspace is attached. Start DebCraft with --workspace <path>.")
         return self.host.workspace
 
     async def _checkpoints(self, args: list[str]) -> None:
@@ -198,7 +198,7 @@ class SlashCommandHandler:
         agent = self.host.agent
         if agent is None:
             raise WorkspaceError(
-                "Permission modes apply to workspace sessions. Start Forge with --workspace <path>."
+                "Permission modes apply to workspace sessions. Start DebCraft with --workspace <path>."
             )
         if args:
             if args[0] not in ("plan", "default", "auto"):
@@ -213,7 +213,9 @@ class SlashCommandHandler:
     async def _db(self, args: list[str]) -> None:
         db = self.host.db
         if db is None:
-            await self._say("No database configured: set LOCAL_PG_URL (and/or DEV_PG_URL) in Forge's .env.")
+            await self._say(
+                "No database configured: set LOCAL_PG_URL (and/or DEV_PG_URL) in DebCraft's .env."
+            )
             return
         action = args[0].lower() if args else "status"
         if action == "status":
@@ -231,12 +233,11 @@ class SlashCommandHandler:
                 return
             dropped = await asyncio.to_thread(db.scratch.cleanup)
             db.scratch = None
-            await self._say("Dropped: " + (", ".join(dropped) or "nothing (Forge created no objects)"))
+            await self._say("Dropped: " + (", ".join(dropped) or "nothing (DebCraft created no objects)"))
             return
         if action not in ("done", "cant", "skip") or len(args) < 2:
             await self._say(
-                "Usage: /db [status] | requests | done <DBR-n> [result] | cant <DBR-n> <why> | "
-                "skip <DBR-n> | cleanup"
+                "Usage: /db [status] | requests | done <DBR-n> [result] | cant <DBR-n> <why> | skip <DBR-n> | cleanup"
             )
             return
         request = db.requests.get(args[1])
@@ -269,7 +270,7 @@ class SlashCommandHandler:
         host = self.host
         if self._workspace().mode_b:  # spec §6A.7: chat-driven diagnose, no repository to copy
             await self._say(
-                "In Mode B, paste the error, test output or behaviour as a message (never secrets): Forge "
+                "In Mode B, paste the error, test output or behaviour as a message (never secrets): DebCraft "
                 "classifies it (wrong assumption, version mismatch, missed step or bug), asks for the "
                 "minimum "
                 "detail it needs, fixes the code and issues a new revision."
@@ -376,7 +377,7 @@ class SlashCommandHandler:
                 return
             await self._say(
                 f"{item.id} marked {item.status}."
-                + (" Tell Forge what is true instead." if item.status == "wrong" else "")
+                + (" Tell DebCraft what is true instead." if item.status == "wrong" else "")
             )
             return
         await self._say(register.markdown())
@@ -447,7 +448,7 @@ class SlashCommandHandler:
         )
 
     async def _init(self, args: list[str]) -> None:
-        """Like Claude Code's /init: Forge reads the repository and writes the repository-level FORGE.md."""
+        """Like Claude Code's /init: DebCraft reads the repository and writes the repository-level FORGE.md."""
         level = self.host.repo_level_dir()
         if level is None:
             await self._say("No project yet to hold a FORGE.md.")
@@ -501,7 +502,7 @@ class SlashCommandHandler:
         if not self._rest:
             granted = [str(path) for path in grants.granted()]
             always = [str(path) for path in grants.roots() if str(path) not in granted]
-            lines = ["Forge may read (read only), besides this project:"]
+            lines = ["DebCraft may read (read only), besides this project:"]
             lines += [f"  {path}  (installed skills)" for path in always] or []
             lines += [f"  {path}  (you allowed it)" for path in granted]
             await self._say("\n".join(lines))
@@ -512,7 +513,7 @@ class SlashCommandHandler:
             await self._say(str(error))
             return
         await self._say(
-            f"Forge may now read {granted_path} (and everything under it) in this project; read only. "
+            f"DebCraft may now read {granted_path} (and everything under it) in this project; read only. "
             f"/revoke-read {granted_path} undoes it."
         )
 
@@ -600,8 +601,7 @@ class SlashCommandHandler:
             for status in ("added", "modified", "deleted")
         }
         await self._say(
-            f"output/ rebuilt: {counts['added']} added, {counts['modified']} modified, "
-            f"{counts['deleted']} deleted."
+            f"output/ rebuilt: {counts['added']} added, {counts['modified']} modified, {counts['deleted']} deleted."
         )
 
     async def _say(self, text: str) -> None:

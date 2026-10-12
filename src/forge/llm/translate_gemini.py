@@ -1,4 +1,4 @@
-"""Translation between Forge's messages and the google-genai (Vertex AI) types (D-150)."""
+"""Translation between DebCraft's messages and the google-genai (Vertex AI) types (D-150)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from google.genai import types
 from forge.llm.base import FinishReason, LLMResponse, Message, ToolSpec, Usage
 from forge.llm.tool_args import make_tool_call
 
-# Thinking budgets (tokens) for Forge's effort names. Only the integer budget is accepted on the user's Vertex
+# Thinking budgets (tokens) for DebCraft's effort names. Only the integer budget is accepted on the user's Vertex
 # API version; the newer thinking_level enum is rejected as "not supported by this model" (verified live).
 THINKING_BUDGETS = {"minimal": 128, "low": 1024, "medium": 8192, "high": 24576}
 
@@ -183,7 +183,7 @@ def gemini_usage(usage: types.GenerateContentResponseUsageMetadata | None) -> Us
     if usage is None:
         return Usage()
     thoughts = usage.thoughts_token_count or 0
-    # Gemini reports thinking apart from the answer; Forge's output_tokens includes it (as with OpenAI).
+    # Gemini reports thinking apart from the answer; DebCraft's output_tokens includes it (as with OpenAI).
     return Usage(
         input_tokens=usage.prompt_token_count or 0,
         cached_input_tokens=usage.cached_content_token_count or 0,

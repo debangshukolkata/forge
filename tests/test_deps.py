@@ -36,8 +36,7 @@ def test_requirements_pyproject_and_locks(tmp_path: Path) -> None:
     )
     _write(
         tmp_path / "poetry.lock",
-        '[[package]]\nname = "flask"\nversion = "2.3.1"\n'
-        '[[package]]\nname = "itsdangerous"\nversion = "2.1.2"\n',
+        '[[package]]\nname = "flask"\nversion = "2.3.1"\n[[package]]\nname = "itsdangerous"\nversion = "2.1.2"\n',
     )
     found = _by_name(scan_project(tmp_path))
     assert found["requests"].version == "2.19.0" and found["requests"].direct

@@ -169,7 +169,7 @@ class Grep(Tool):
             return ToolResult(ok=False, content=f"Invalid regular expression: {error}")
         files = [p for p in workspace_files(context.workspace, args.path) if _file_filter(p, args.glob)]
         # Pure Python, threaded (DECISIONS D-043): ripgrep may not exist on the office laptop and
-        # can't apply Forge's ignore and secret-file rules; one code path behaves the same everywhere.
+        # can't apply DebCraft's ignore and secret-file rules; one code path behaves the same everywhere.
         loop = asyncio.get_running_loop()
         with ThreadPoolExecutor(max_workers=8) as pool:
             results = await asyncio.gather(

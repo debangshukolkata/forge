@@ -1,5 +1,5 @@
 """Persistent orchestrator state (spec §7, §12.6, D-128/D-131/D-132): tasks and cadence — everything needed
-to resume. There is no phase field: Forge runs a flat loop, not a fixed phase state machine (D-128, D-131).
+to resume. There is no phase field: DebCraft runs a flat loop, not a fixed phase state machine (D-128, D-131).
 
 Stored in <workspace>/.forge/state.json and rewritten after every change, so a killed run resumes
 automatically and silently, the way reopening a conversation with this assistant does — no "resume or

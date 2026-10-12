@@ -70,7 +70,7 @@ def server(isolated_forge_home: Path, workspace: Workspace) -> Iterator[ServerSe
 
 
 def answer_waiting_cards(page) -> int:  # type: ignore[no-untyped-def]
-    """Clicks through whatever Forge is waiting for, like a user accepting the recommendations."""
+    """Clicks through whatever DebCraft is waiting for, like a user accepting the recommendations."""
     clicked = 0
     for card in page.query_selector_all("[data-card][data-pending]"):
         kind = card.get_attribute("data-card")
@@ -129,7 +129,7 @@ def test_requirement_through_the_web_ui(server: ServerSecurity, workspace: Works
         while time.monotonic() < deadline:
             clicked = answer_waiting_cards(page)
             text = page.inner_text("main")
-            # Forge sometimes asks in plain chat text and waits: reply like a user would (in the composer).
+            # DebCraft sometimes asks in plain chat text and waits: reply like a user would (in the composer).
             state = page.evaluate("() => fetch('/api/state').then(r => r.json())")
             idle = not state.get("busy") and not page.query_selector("[data-card][data-pending]")
             idle_since = (idle_since or time.monotonic()) if idle and not clicked else None

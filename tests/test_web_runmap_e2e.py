@@ -124,7 +124,7 @@ def test_run_map_grows_from_the_events(
         )
 
         # A pending question opens as a pop-up (D-214); these tests are about the run map, so set it aside.
-        page.locator("[role=dialog][aria-label='Question from Forge']").wait_for(timeout=5000)
+        page.locator("[role=dialog][aria-label='Question from DebCraft']").wait_for(timeout=5000)
         page.click("button[aria-label='Answer later']")
         page.click("[role=tab]:has-text('Run map')")
         page.wait_for_selector("[data-testid=run-map]")
@@ -145,7 +145,7 @@ def test_run_map_grows_from_the_events(
         assert page.locator("[data-task=T1] [title='Helper agents']").inner_text().strip() == "1"
         assert page.locator("[data-task=T2] [title='Stuck warnings']").inner_text().strip() == "1"
         assert page.locator("[data-task=T2] [title='Failed tool calls']").inner_text().strip() == "1"
-        # The summary strip counts the same things, and says Forge is waiting for you.
+        # The summary strip counts the same things, and says DebCraft is waiting for you.
         summary = page.locator("[data-testid=run-map]").inner_text()
         assert "1/5 tasks done" in summary and "1 blocked" in summary and "2 failed calls" in summary
         page.wait_for_selector("[data-testid=run-map-waiting]")
@@ -256,7 +256,7 @@ def test_activity_line_and_run_totals(
             {"id": "Q9", "question": "Keep the BIN?", "options": [{"label": "No"}], "recommended": "No"},
         )
         page.wait_for_selector("[role=status]:has-text('Waiting for your answer')")
-        page.locator("[role=dialog][aria-label='Question from Forge']").wait_for(timeout=5000)
+        page.locator("[role=dialog][aria-label='Question from DebCraft']").wait_for(timeout=5000)
         page.click("button[aria-label='Answer later']")  # the pop-up (D-214) would cover the page
         # The cost counts up to each new total, then settles on the exact value.
         publish(EventType.COST_UPDATED, {"total_usd": 0.5578, "budget_usd": 5.0, "calls": 52})

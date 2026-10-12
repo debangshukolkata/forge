@@ -1,4 +1,4 @@
-// Shapes of the Forge web API and event stream (src/forge/web/server.py, engine/events.py, engine/inputs.py).
+// Shapes of the DebCraft web API and event stream (src/forge/web/server.py, engine/events.py, engine/inputs.py).
 
 export interface WorkspaceSummary {
   path: string;

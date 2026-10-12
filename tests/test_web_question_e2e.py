@@ -48,7 +48,7 @@ def model_requests() -> list[dict[str, object]]:
 
 @contextmanager
 def serve(handler, home):  # type: ignore[no-untyped-def]
-    """A real Forge web server whose model answers through `handler` (network layer)."""
+    """A real DebCraft web server whose model answers through `handler` (network layer)."""
     port = free_port(0)
     security = ServerSecurity(port=port)
     manager = WebSessionManager(
@@ -118,7 +118,7 @@ def test_choosing_selects_and_the_answer_is_sent_with_submit(  # type: ignore[no
     shots.mkdir(parents=True, exist_ok=True)
     with playwright_api.sync_playwright() as p:
         browser, page, problems = open_project_and_ask(p, server, workspace)
-        dialog = page.locator("[role=dialog][aria-label='Question from Forge']")
+        dialog = page.locator("[role=dialog][aria-label='Question from DebCraft']")
         dialog.wait_for()
         assert "Which database should Reading Radar use?" in dialog.inner_text()
         submit = dialog.locator("button:has-text('Submit answer')")
@@ -163,7 +163,7 @@ def test_own_answer_alone_and_answering_later(  # type: ignore[no-untyped-def]
 ) -> None:
     with playwright_api.sync_playwright() as p:
         browser, page, problems = open_project_and_ask(p, server, workspace)
-        dialog = page.locator("[role=dialog][aria-label='Question from Forge']")
+        dialog = page.locator("[role=dialog][aria-label='Question from DebCraft']")
         dialog.wait_for()
 
         dialog.locator("button[aria-label='Answer later']").click()  # the question stays, inside the chat

@@ -1,6 +1,6 @@
-"""Live: a real Forge session (real model) driven entirely through the React UI in headless Edge — New project
+"""Live: a real DebCraft session (real model) driven entirely through the React UI in headless Edge — New project
 form (standalone), an attached signature file, the requirement, and every approval / question / permission card
-clicked like a user accepting the recommendations — until Forge finishes and delivers output/.
+clicked like a user accepting the recommendations — until DebCraft finishes and delivers output/.
 Run with: pytest -m live tests/test_live_web_react.py"""
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def server(isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
 
 
 def answer_waiting_cards(page) -> int:  # type: ignore[no-untyped-def]
-    """Clicks through whatever Forge is waiting for, like a user accepting the recommendations."""
+    """Clicks through whatever DebCraft is waiting for, like a user accepting the recommendations."""
     clicked = 0
     for card in page.query_selector_all("[data-card][data-pending]"):
         kind = card.get_attribute("data-card")
@@ -122,7 +122,7 @@ def test_a_requirement_through_the_react_ui(server: ServerSecurity, tmp_path: Pa
             if state.get("phase") in ("done", "handoff") and not state.get("busy"):
                 done = True
                 break
-            # Forge sometimes asks in plain text (no card) and goes idle: reply like a user would.
+            # DebCraft sometimes asks in plain text (no card) and goes idle: reply like a user would.
             idle_polls = (
                 idle_polls + 1 if not state.get("busy") and not clicked and not state.get("pending") else 0
             )
@@ -134,7 +134,7 @@ def test_a_requirement_through_the_react_ui(server: ServerSecurity, tmp_path: Pa
         evidence.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(evidence / "final.png"), full_page=True)
         browser.close()
-    assert done, f"Forge didn't finish in {RUN_LIMIT_S // 60} minutes; see {evidence}"
+    assert done, f"DebCraft didn't finish in {RUN_LIMIT_S // 60} minutes; see {evidence}"
     assert not problems, problems
     masking = project / "output" / "payments" / "security" / "masking.py"
     assert masking.exists(), sorted(str(p) for p in (project / "output").rglob("*"))

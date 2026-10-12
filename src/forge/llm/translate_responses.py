@@ -1,4 +1,4 @@
-"""Translation between Forge's messages and the OpenAI/Azure Responses API wire format."""
+"""Translation between DebCraft's messages and the OpenAI/Azure Responses API wire format."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ def to_responses_tools(tools: list[ToolSpec]) -> list[dict[str, Any]]:
             "name": tool.name,
             "description": tool.description,
             "parameters": tool.parameters,
-            # Strict mode requires every property to be required; Forge tools have optional arguments.
+            # Strict mode requires every property to be required; DebCraft tools have optional arguments.
             "strict": False,
         }
         for tool in tools

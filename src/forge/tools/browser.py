@@ -1,4 +1,4 @@
-"""Browser tools (spec §9.7) with Playwright: v1 use is checking the app Forge built — its API and Swagger UI
+"""Browser tools (spec §9.7) with Playwright: v1 use is checking the app DebCraft built — its API and Swagger UI
 — so pages are limited to the local machine (localhost/127.0.0.1); other sites are read with web_fetch.
 Launch order: Edge -> Chrome -> Playwright's bundled Chromium. One headless browser per session, started on
 first use; console messages and network requests are recorded for browser_console/browser_network.

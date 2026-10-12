@@ -53,7 +53,7 @@ def check_python() -> CheckResult:
     version = sys.version_info
     text = f"{version.major}.{version.minor}.{version.micro}"
     if version < (3, 10):
-        return CheckResult("Python", "fail", f"{text} — Forge needs 3.10+")
+        return CheckResult("Python", "fail", f"{text} — DebCraft needs 3.10+")
     if (version.major, version.minor) != TARGET_PYTHON:
         return CheckResult("Python", "warn", f"{text} — the office laptop target is 3.13")
     return CheckResult("Python", "ok", text)
@@ -73,7 +73,7 @@ def check_packages() -> CheckResult:
 
 def check_tokenizer() -> CheckResult:
     try:
-        count = count_text_tokens("Forge offline tokenizer check")
+        count = count_text_tokens("DebCraft offline tokenizer check")
     except Exception as error:
         return CheckResult("Tokenizer (offline)", "fail", str(error)[:200])
     return CheckResult("Tokenizer (offline)", "ok", f"o200k_base loaded from the package ({count} tokens)")
@@ -90,7 +90,7 @@ def check_certificates() -> CheckResult:
         "Certificates",
         "warn",
         "Python's bundled list only: behind company HTTPS inspection model calls fail with a certificate "
-        "error. Install 'truststore' (it ships with Forge) and leave FORGE_SYSTEM_CERTS unset.",
+        "error. Install 'truststore' (it ships with DebCraft) and leave FORGE_SYSTEM_CERTS unset.",
     )
 
 
@@ -100,16 +100,16 @@ def check_forge_home(home: Path) -> CheckResult:
         with tempfile.NamedTemporaryFile(dir=home, delete=True):
             pass
     except OSError as error:
-        return CheckResult("Forge home", "fail", f"{home} is not writable: {error}")
-    return CheckResult("Forge home", "ok", str(home))
+        return CheckResult("DebCraft home", "fail", f"{home} is not writable: {error}")
+    return CheckResult("DebCraft home", "ok", str(home))
 
 
 def required_secret_names(config: ForgeConfig) -> set[str]:
-    """The env var names Forge needs to talk to its configured models (spec §15/D-145's setup screen and
+    """The env var names DebCraft needs to talk to its configured models (spec §15/D-145's setup screen and
     check_secrets share this one computation — no duplicate list anywhere else). Only asks for a provider's
     values when a role actually uses it, so a Gemini-only or Azure-only setup doesn't get asked for the
     other's env vars. Gemini asks for nothing here: its credentials are ADC (found by the SDK itself,
-    never stored by Forge) and its project/location env vars are optional."""
+    never stored by DebCraft) and its project/location env vars are optional."""
     needed: set[str] = set()
     optional = set(optional_models(config))
     for key in _models_in_use(config):
@@ -119,7 +119,7 @@ def required_secret_names(config: ForgeConfig) -> set[str]:
 
 
 def optional_models(config: ForgeConfig) -> list[str]:
-    """Models only the fallback role uses: without their .env values Forge works, it just has no fallback."""
+    """Models only the fallback role uses: without their .env values DebCraft works, it just has no fallback."""
     roles = config.llm.roles
     used_elsewhere = {getattr(roles, role) for role in ROLES if role != "fallback"}
     return [key for key in [roles.fallback] if key and key not in used_elsewhere]
@@ -174,7 +174,7 @@ async def check_models(config: ForgeConfig, secrets: Secrets) -> list[CheckResul
 
 
 def check_databases(config: ForgeConfig, secrets: Secrets) -> list[CheckResult]:
-    """Spec §9.5.2: the access level Forge has on each configured database (L3 write / L2 read / L1 none)."""
+    """Spec §9.5.2: the access level DebCraft has on each configured database (L3 write / L2 read / L1 none)."""
     from forge.db.access import AccessLevel, detect
     from forge.db.connection import DbTarget
 
@@ -189,7 +189,7 @@ def check_databases(config: ForgeConfig, secrets: Secrets) -> list[CheckResult]:
         status: Status = "ok" if report.level != AccessLevel.NONE else "warn"
         detail = f"{report.level.value}: {report.reason}"
         if report.can_create_schema:
-            detail += "; may create schemas (scratch schemas can be created by Forge)"
+            detail += "; may create schemas (scratch schemas can be created by DebCraft)"
         if report.can_write_elsewhere:
             detail += (
                 f"; can also write to {', '.join(report.can_write_elsewhere[:5])} (the SQL guard blocks it)"

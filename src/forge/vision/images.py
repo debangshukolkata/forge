@@ -1,4 +1,4 @@
-"""Image utilities for Forge's vision tools (spec §13A.1): info, operations, box overlays, comparison, and
+"""Image utilities for DebCraft's vision tools (spec §13A.1): info, operations, box overlays, comparison, and
 preparing an image for the vision model (EXIF-oriented, downscaled, PNG/JPEG data URL). Pillow only."""
 
 from __future__ import annotations

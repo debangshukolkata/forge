@@ -21,7 +21,7 @@ from forge.workspace.workspace import Workspace
 
 FileStatus = Literal["added", "modified", "deleted"]
 
-# Data the app wrote while Forge ran it (a SQLite file with test rows): not code, so never delivered (D-222).
+# Data the app wrote while DebCraft ran it (a SQLite file with test rows): not code, so never delivered (D-222).
 RUNTIME_DATA_SUFFIXES = (".sqlite", ".sqlite3", ".db", ".db-journal", ".db-wal", ".db-shm")
 
 
@@ -223,7 +223,7 @@ def build_copy_instructions(workspace: Workspace, changes: list[FileChange]) -> 
     checks = load_checks(workspace)
     if checks:
         lines += [
-            f"Forge could not run {len(checks)} DB-dependent check(s): see SERVER_RUN.md for the exact "
+            f"DebCraft could not run {len(checks)} DB-dependent check(s): see SERVER_RUN.md for the exact "
             "commands, and run them once you're connected.",
             "",
         ]

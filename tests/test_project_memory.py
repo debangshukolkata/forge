@@ -1,4 +1,4 @@
-"""D-196: what the project list says Forge remembers about each project. No model calls."""
+"""D-196: what the project list says DebCraft remembers about each project. No model calls."""
 
 from __future__ import annotations
 

@@ -77,13 +77,13 @@ export function ContractsTab({ forge }: { forge: Forge }) {
     );
   }
   if (!listing.available) {
-    return <Empty icon={<FileSignature className="h-8 w-8" />} title="Standalone projects only">Contracts are for a Standalone project, where Forge never sees your code.</Empty>;
+    return <Empty icon={<FileSignature className="h-8 w-8" />} title="Standalone projects only">Contracts are for a Standalone project, where DebCraft never sees your code.</Empty>;
   }
 
   return (
     <div className="space-y-4">
       <p className="text-[13px] text-fg-muted">
-        Pin the exact signature for a seam and Forge builds new code to match it, so the result is easy to retrofit by hand. Pin the
+        Pin the exact signature for a seam and DebCraft builds new code to match it, so the result is easy to retrofit by hand. Pin the
         same seam again to change it.
       </p>
 
@@ -139,7 +139,7 @@ export function ContractsTab({ forge }: { forge: Forge }) {
 
       {listing.contracts.length === 0 ? (
         <Empty icon={<FileSignature className="h-8 w-8" />} title="Nothing pinned yet">
-          Until you pin one, Forge designs the seams itself.
+          Until you pin one, DebCraft designs the seams itself.
         </Empty>
       ) : (
         <ul className="space-y-3" aria-label="Pinned contracts">

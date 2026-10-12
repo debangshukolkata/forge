@@ -1,4 +1,4 @@
-"""SQL guard (spec §9.5, §9.5.1): what Forge may run against a database.
+"""SQL guard (spec §9.5, §9.5.1): what DebCraft may run against a database.
 
 - check_read_only: db_query on real schemas — SELECT/WITH/EXPLAIN/SHOW only, no writing keyword anywhere
   (catches data-modifying CTEs). The session also runs with default_transaction_read_only = on.
@@ -62,7 +62,7 @@ FORBIDDEN_IN_SCRATCH = [
     (("alter", "system"), "changing server settings"),
     (("set", "role"), "switching roles"),
     (("set", "session"), "changing session authorization"),
-    (("set", "search_path"), "changing search_path (Forge sets it)"),
+    (("set", "search_path"), "changing search_path (DebCraft sets it)"),
     (("reset", "role"), "switching roles"),
     (("create", "extension"), "installing extensions (ask the user via a DB request)"),
 ]
@@ -259,14 +259,14 @@ def _aliases(statement: Statement) -> set[str]:
 def _check_common(statement: Statement, deny_tables: list[str]) -> None:
     for table in deny_tables:
         if _references(statement, table):
-            raise SqlGuardError(f"'{table}' holds credentials: Forge never reads or changes its rows.")
+            raise SqlGuardError(f"'{table}' holds credentials: DebCraft never reads or changes its rows.")
     forbidden = sorted(set(statement.functions) & FORBIDDEN_FUNCTIONS)
     if forbidden:
         raise SqlGuardError(f"Not allowed: {', '.join(forbidden)}.")
 
 
 def created_objects(statement: Statement) -> tuple[str, str] | None:
-    """(kind, name) when the statement creates an object Forge must remember to drop later."""
+    """(kind, name) when the statement creates an object DebCraft must remember to drop later."""
     match = _CREATED.match(" ".join(statement.text.lower().split()))
     if match is None:
         return None

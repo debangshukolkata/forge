@@ -65,7 +65,7 @@ from forge.workspace.read_grants import ReadGrants
 from forge.workspace.workspace import Workspace
 
 DEFAULT_SYSTEM_PROMPT = (
-    "You are Forge, a software engineering assistant running on the user's Windows laptop. "
+    "You are DebCraft, a software engineering assistant running on the user's Windows laptop. "
     "Be concise and precise. If you are not sure about something, say so."
 )
 
@@ -118,7 +118,7 @@ class SessionHost:
 
     def refresh_profile_pin(self) -> None:
         """Mode B: the host profile's essentials, plus active interface contracts (§6A.2A, D-129), are pinned.
-        Mode A pins nothing: Forge reads the repository itself (D-160)."""
+        Mode A pins nothing: DebCraft reads the repository itself (D-160)."""
         profile = self.host_profile()
         essentials: str | None = None
         if profile is not None:
@@ -157,7 +157,7 @@ class SessionHost:
 
     async def prepare_database(self, force: bool = False) -> None:
         """Spec §9.5.2 at the start of work: access level per database, then the scratch schema (created
-        by Forge only when its role may and config allows; otherwise the agent writes a DB request)."""
+        by DebCraft only when its role may and config allows; otherwise the agent writes a DB request)."""
         db = self.db
         if db is None or (db.reports and not force):
             return
@@ -329,6 +329,11 @@ class SessionHost:
             await self.bus.publish(EventType.USER_MESSAGE, {"text": user_input.text})
             if not user_input.text.lstrip().startswith("/"):  # slash commands don't answer cards
                 await self._supersede_open_requests(user_input.text)
+        if isinstance(user_input, SlashCommand) and user_input.text.split()[:1] == ["/mode"]:
+            # The gate is read at every tool call, so a mode change takes effect at once; queueing it behind
+            # the running turn made the Auto switch useless exactly when DebCraft was asking questions.
+            await self._commands.handle(user_input.text)
+            return
         if self.busy:
             await self.bus.publish(
                 EventType.NOTICE, {"kind": "queued", "text": "Queued until the current turn ends"}
@@ -337,7 +342,7 @@ class SessionHost:
 
     async def _supersede_open_requests(self, text: str) -> None:
         """A message typed while approval cards or questions are open answers them (D-153); otherwise it
-        would queue behind a turn that is waiting for those very cards and Forge would look deaf."""
+        would queue behind a turn that is waiting for those very cards and DebCraft would look deaf."""
         declined = self.approvals.reject_all(text) + self.questions.answer_all_with_text(text)
         if declined:
             await self.bus.publish(
@@ -527,8 +532,8 @@ class SessionHost:
         answer = await self.questions.ask(
             EventType.QUESTION_ASKED,
             {
-                "question": f"Save this instruction for Forge? “{line}”",
-                "context": "Forge reads FORGE.md files at the start of every session.",
+                "question": f"Save this instruction for DebCraft? “{line}”",
+                "context": "DebCraft reads FORGE.md files at the start of every session.",
                 "options": [
                     {"label": "workspace", "description": "only this requirement"},
                     {"label": "repo", "description": "every requirement on this repository / host"},
@@ -597,7 +602,7 @@ class SessionHost:
                 EventType.ERROR,
                 {
                     "kind": "InternalError",
-                    "message": f"Forge hit an internal error ({type(error).__name__}: {error}). "
+                    "message": f"DebCraft hit an internal error ({type(error).__name__}: {error}). "
                     f"The session is still running. Details: {log_path}",
                 },
             )
@@ -605,7 +610,7 @@ class SessionHost:
         await self.publish_cost()
 
     def _log_internal_error(self) -> str:
-        """Writes the traceback next to the transcript (or Forge home) and returns where."""
+        """Writes the traceback next to the transcript (or DebCraft home) and returns where."""
         folder = self.workspace.forge_dir / "logs" if self.workspace else forge_home() / "logs"
         folder.mkdir(parents=True, exist_ok=True)
         path = folder / f"error-{datetime.now():%Y%m%d-%H%M%S}.log"

@@ -1,4 +1,4 @@
-"""The assumption register (spec §6A.2): everything Forge had to assume about the host, with a confidence
+"""The assumption register (spec §6A.2): everything DebCraft had to assume about the host, with a confidence
 and a one-line check the user can run inside the host. Surfaced at plan approval and delivered as
 output/ASSUMPTIONS.md. Stored in .forge/assumptions.json (redacted)."""
 
@@ -70,8 +70,8 @@ class AssumptionRegister:
         lines = [
             "# Assumptions about the host",
             "",
-            "Forge could not see the host, so the code relies on these. Please check each one in the host "
-            "(the check is one line); tell Forge about any that are wrong and it will adapt the code.",
+            "DebCraft could not see the host, so the code relies on these. Please check each one in the host "
+            "(the check is one line); tell DebCraft about any that are wrong and it will adapt the code.",
             "",
             "| ID | Assumption | Confidence | Impact | How to check | Status |",
             "|---|---|---|---|---|---|",

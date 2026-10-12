@@ -27,7 +27,7 @@ def check_bind_host(host: str) -> str:
     except ValueError as error:
         raise BindError(f"Refusing to bind to {host!r}: use 127.0.0.1") from error
     if not address.is_loopback or address.version != 4:
-        raise BindError(f"Refusing to bind to {host}: Forge's web UI only listens on 127.0.0.1")
+        raise BindError(f"Refusing to bind to {host}: DebCraft's web UI only listens on 127.0.0.1")
     return host
 
 

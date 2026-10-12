@@ -1,10 +1,10 @@
-"""Exception hierarchy. Tools and UIs catch these; nothing else in Forge raises bare Exception."""
+"""Exception hierarchy. Tools and UIs catch these; nothing else in DebCraft raises bare Exception."""
 
 from __future__ import annotations
 
 
 class ForgeError(Exception):
-    """Base class for every error Forge raises on purpose."""
+    """Base class for every error DebCraft raises on purpose."""
 
 
 class ConfigError(ForgeError):

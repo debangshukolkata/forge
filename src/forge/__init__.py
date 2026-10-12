@@ -1,4 +1,4 @@
-"""Forge — a local, Windows-first coding agent."""
+"""DebCraft — a local, Windows-first coding agent."""
 
 from __future__ import annotations
 

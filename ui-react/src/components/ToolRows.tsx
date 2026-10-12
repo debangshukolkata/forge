@@ -1,4 +1,4 @@
-// The timeline rows between your message and Forge's reply (D-151/D-189): narration, tool calls, edits as inline
+// The timeline rows between your message and DebCraft's reply (D-151/D-189): narration, tool calls, edits as inline
 // diffs, and runs of read/search calls folded into one line. A call is one quiet line; opening it shows what
 // went in and what came out. Failed calls and edits open by themselves.
 import { AlertOctagon, CheckCircle2, ChevronRight, XCircle } from "lucide-react";
@@ -74,7 +74,7 @@ function StatusIcon({ item, retried }: { item: ToolItem; retried: boolean }) {
   return <XCircle className="h-3.5 w-3.5 shrink-0 text-danger" aria-label="Failed" />;
 }
 
-/** What Forge said between calls (the model's reasoning summaries): dim, in order. */
+/** What DebCraft said between calls (the model's reasoning summaries): dim, in order. */
 export function ThinkingLine({ text }: { text: string }) {
   return <p className="whitespace-pre-wrap break-words px-2 text-[13px] italic leading-[1.5] text-fg-muted">{text}</p>;
 }

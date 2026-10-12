@@ -1,4 +1,4 @@
-// Forge labelling helper: draw boxes, type field values, mark unreadable fields; saves labels/<sample>.json.
+// DebCraft labelling helper: draw boxes, type field values, mark unreadable fields; saves labels/<sample>.json.
 // No inline scripts or styles (CSP): styling is applied from here.
 
 const $ = (id) => document.getElementById(id);

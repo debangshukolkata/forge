@@ -1,4 +1,4 @@
-"""Playwright check of the attendance app Forge built. Usage: python verify_attendance.py <app_dir> <python> <phase>
+"""Playwright check of the attendance app DebCraft built. Usage: python verify_attendance.py <app_dir> <python> <phase>
 phase 1 = the original requirement; later phases add the checks for each enhancement."""
 
 from __future__ import annotations

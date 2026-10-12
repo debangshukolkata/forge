@@ -60,12 +60,18 @@ def contract_with_host_symbols(contract: str, symbols: list[HostSymbol]) -> str:
             "",
             "The new code relies on these existing host symbols (detected by",
         ]
-        lines += ["Forge from the imports; signatures from the stand-ins it was tested against):", ""]
+        lines += ["DebCraft from the imports; signatures from the stand-ins it was tested against):", ""]
         return "\n".join([*lines, *(s.render() for s in symbols), ""])
     missing = [s for s in symbols if s.name not in contract]
     if not missing:
         return contract
-    extra = ["", "## Also used (detected by Forge from the imports)", "", *(s.render() for s in missing), ""]
+    extra = [
+        "",
+        "## Also used (detected by DebCraft from the imports)",
+        "",
+        *(s.render() for s in missing),
+        "",
+    ]
     return contract.rstrip("\n") + "\n" + "\n".join(extra)
 
 

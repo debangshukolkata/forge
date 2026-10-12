@@ -1,4 +1,4 @@
-"""Translation between Forge's messages and the Chat Completions wire format (fallback API)."""
+"""Translation between DebCraft's messages and the Chat Completions wire format (fallback API)."""
 
 from __future__ import annotations
 

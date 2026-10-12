@@ -1,4 +1,4 @@
-"""Tables the app reads its database credentials from (spec §9.5.1, D-160). Forge never reads their rows: they
+"""Tables the app reads its database credentials from (spec §9.5.1, D-160). DebCraft never reads their rows: they
 join the database deny-list at session start. Found by reading the ORIGINAL repository (read-only) for code
 that loads credentials from a table into environment variables."""
 

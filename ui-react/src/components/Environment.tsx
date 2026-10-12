@@ -1,6 +1,6 @@
 // The Environment drawer (D-186, D-204): it reads what the .env file holds (the server never sends a value) and
 // lets the user test each connection on its own, or all at once, with a clear Connected / Failed and the reason.
-// Nothing is tested until the user asks (and the two optional tools only after a yes, D-201). Then Forge proposes
+// Nothing is tested until the user asks (and the two optional tools only after a yes, D-201). Then DebCraft proposes
 // which model serves each role from what answered; the user confirms and the choice is remembered per machine.
 // It opens by itself on the New project screen and from "Environment" in the top bar.
 import { AlertTriangle, CheckCircle2, CircleDashed, FileText, Info, Minus, RotateCw, X, XCircle } from "lucide-react";
@@ -134,7 +134,7 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
         <div className="min-w-0 flex-1">
           <h2 className="text-[19px] font-semibold tracking-[-0.3px]">Environment</h2>
           <p className="mt-0.5 text-[12.5px] text-fg-muted">
-            Forge uses the values in your .env file but cannot show them. Test a connection, or test all.
+            DebCraft uses the values in your .env file but cannot show them. Test a connection, or test all.
           </p>
           <button
             type="button"

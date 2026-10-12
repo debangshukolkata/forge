@@ -69,7 +69,7 @@ export interface RunModel {
   agents: Agent[];
   failures: Failure[];
   exported: boolean; // output/ has been built at least once (D-133: the deliver node's signal)
-  waitingSince: number | null; // seq of the request Forge is still waiting on, if any
+  waitingSince: number | null; // seq of the request DebCraft is still waiting on, if any
   start: number | null;
   end: number | null;
 }
@@ -83,7 +83,7 @@ function emptyStats(): TaskStats {
   return { failures: 0, stuck: 0, agents: 0, firstSeq: null };
 }
 
-/** `live` is the current time while Forge is working; otherwise the map ends at the last event, so a project
+/** `live` is the current time while DebCraft is working; otherwise the map ends at the last event, so a project
  * reopened days later doesn't stretch its timeline to today. */
 export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], live: number | null = null): RunModel {
   let tasks: Task[] = fallbackTasks;
@@ -101,7 +101,7 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
   let start: number | null = null;
   let end: number | null = null;
 
-  // Forge blocks on a request: whatever event comes next means you answered, so the wait ends there.
+  // DebCraft blocks on a request: whatever event comes next means you answered, so the wait ends there.
   let waitingSeq: number | null = null;
   for (const event of events) {
     const at = time(event);

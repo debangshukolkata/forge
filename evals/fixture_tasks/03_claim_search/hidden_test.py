@@ -1,4 +1,4 @@
-"""Hidden acceptance test: copied into the workspace only after Forge has finished."""
+"""Hidden acceptance test: copied into the workspace only after DebCraft has finished."""
 
 
 def test_search_filters_by_description(client, auth_headers):

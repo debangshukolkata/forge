@@ -1,4 +1,4 @@
-"""Hidden acceptance test: copied into the workspace only after Forge has finished."""
+"""Hidden acceptance test: copied into the workspace only after DebCraft has finished."""
 
 
 def _post(client, auth_headers, amount):

@@ -1,4 +1,4 @@
-"""Which Forge build is this (D-153)? The package version never changes between commits, so an installed copy
+"""Which DebCraft build is this (D-153)? The package version never changes between commits, so an installed copy
 can't be told apart from a newer one. The build id is a short hash of the package's own source files, so it
 is the same for any copy of the same code, with or without a .git folder, and can be recomputed from any
 commit."""

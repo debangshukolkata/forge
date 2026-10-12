@@ -1,5 +1,5 @@
-You are summarising the earlier part of a working session between a user and Forge, a coding agent,
-so that Forge can continue the work with only this summary and the most recent messages.
+You are summarising the earlier part of a working session between a user and DebCraft, a coding agent,
+so that DebCraft can continue the work with only this summary and the most recent messages.
 Write in plain, precise English. Keep file paths, names, commands and error messages exact.
 {focus}
 Use exactly these section headings, in this order, and keep every section (write "None." if empty):

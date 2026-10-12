@@ -1,4 +1,4 @@
-// Live progress while Forge works: an activity line above the message box saying what Forge is doing right
+// Live progress while DebCraft works: an activity line above the message box saying what DebCraft is doing right
 // now, with an animated indicator per kind of activity and an elapsed timer. The old phase stepper
 // (`ProgressHeader`) is gone (D-133): there is no fixed phase pipeline left to represent honestly.
 // D-133 also adds cost/time visibility: a per-task badge on the activity line, and a small persistent
@@ -71,7 +71,7 @@ function currentTaskStartedAt(forge: Forge): number | null {
 }
 
 /** A small persistent strip for the whole run's total cost + elapsed time. Sits above the activity line;
- * shown only while the run is active (D-133) so it never lingers as stale chrome once Forge goes idle. */
+ * shown only while the run is active (D-133) so it never lingers as stale chrome once DebCraft goes idle. */
 export function RunTotals({ forge }: { forge: Forge }) {
   const { state, runStartedAt } = forge;
   const now = useNow(!!state.busy);

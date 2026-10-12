@@ -1,6 +1,6 @@
-"""User-pinned interface contracts (spec §6A.2A, D-129): a signature the user hands Forge upfront for a
+"""User-pinned interface contracts (spec §6A.2A, D-129): a signature the user hands DebCraft upfront for a
 seam (the LLM call wrapper, a file read/write helper, ...) so generated code is easy to retrofit into the
-host repository by hand. Forge builds to a pinned contract instead of inventing its own for that seam.
+host repository by hand. DebCraft builds to a pinned contract instead of inventing its own for that seam.
 
 Stored per host profile (not per workspace): a contract pinned on one requirement should be honoured, and
 recommended, on the next one for the same host. `CONTRACTS.md` in the profile is the human-readable form;
@@ -18,7 +18,9 @@ from pydantic import BaseModel, Field, TypeAdapter
 
 from forge.modeb.profile import HostProfile
 
-ContractSource = Literal["user", "corrected"]  # user: pinned directly; corrected: Forge got it wrong twice+
+ContractSource = Literal[
+    "user", "corrected"
+]  # user: pinned directly; corrected: DebCraft got it wrong twice+
 
 
 class Contract(BaseModel):
@@ -56,8 +58,7 @@ class ContractRegister:
         seam = seam.strip().lower()
         if not _SEAM.fullmatch(seam):
             raise ContractError(
-                f"Seam name {seam!r} should be short and lowercase, e.g. 'llm_call_wrapper' or "
-                "'file_read_write'."
+                f"Seam name {seam!r} should be short and lowercase, e.g. 'llm_call_wrapper' or 'file_read_write'."
             )
         items = [c for c in self.all() if c.seam != seam]
         now = datetime.now().isoformat(timespec="seconds")
@@ -90,12 +91,12 @@ class ContractRegister:
 
     def _write_markdown(self, items: list[Contract]) -> None:
         if not items:
-            text = "# Interface contracts\n\nNone pinned yet: the seams below are Forge's own design.\n"
+            text = "# Interface contracts\n\nNone pinned yet: the seams below are DebCraft's own design.\n"
         else:
             lines = [
                 "# Interface contracts",
                 "",
-                "Signatures the user pinned; Forge builds new code at these seams to match them exactly, "
+                "Signatures the user pinned; DebCraft builds new code at these seams to match them exactly, "
                 "so the result drops into the host with minimal changes.",
                 "",
             ]

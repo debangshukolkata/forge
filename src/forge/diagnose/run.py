@@ -1,7 +1,7 @@
 """Diagnose mode end to end (spec §6.6): integrity check -> fresh copy run -> analysis -> report
 (.forge/reports/diagnose-<n>.md). The analysis step is a read-only subagent on the reviewer model; it
-gets the evidence (findings, failing tests, a pasted error) and traces the cause in Forge's version of the
-code and the KB. Fixes to Forge's own code are made as a change request in the session, which rebuilds
+gets the evidence (findings, failing tests, a pasted error) and traces the cause in DebCraft's version of the
+code and the KB. Fixes to DebCraft's own code are made as a change request in the session, which rebuilds
 output/ and COPY_INSTRUCTIONS."""
 
 from __future__ import annotations
@@ -17,14 +17,14 @@ from forge.toolkit.base import ToolContext
 from forge.workspace.workspace import Workspace
 
 ANALYSIS_ITERATIONS = 20
-ANALYSIS_PROMPT = """You are Forge's diagnose subagent. The user copied Forge's delivered code (output/)
+ANALYSIS_PROMPT = """You are DebCraft's diagnose subagent. The user copied DebCraft's delivered code (output/)
 into their real repository and something doesn't work. You get the evidence: integrity findings (what was
 copied wrongly), the result of running their repository's tests on a fresh copy, and maybe an error they
-pasted. You can read Forge's version of the code (repo/); you can't edit.
+pasted. You can read DebCraft's version of the code (repo/); you can't edit.
 Reply in under 400 words:
 1. The most likely root cause, citing the evidence (file:line, test, traceback line).
-2. Whether it's a copy/setup mistake (the user fixes it: say exactly how) or a defect in Forge's code (say
-   what must change — Forge will fix it as a change request).
+2. Whether it's a copy/setup mistake (the user fixes it: say exactly how) or a defect in DebCraft's code (say
+   what must change — DebCraft will fix it as a change request).
 3. How the user confirms it's fixed (the exact command).
 Never ask for secrets or data rows."""
 
@@ -152,12 +152,11 @@ def render_report(
     lines += ["## Next steps", ""]
     if problems:
         lines.append(
-            "1. Apply the fixes above, then run diagnose again (`forge diagnose --workspace ...` "
-            "or /diagnose)."
+            "1. Apply the fixes above, then run diagnose again (`forge diagnose --workspace ...` or /diagnose)."
         )
     if analysis and "defect" in analysis.lower():
         lines.append(
-            "- If the analysis points at Forge's code, tell Forge in the session and it will fix it as a "
+            "- If the analysis points at DebCraft's code, tell DebCraft in the session and it will fix it as a "
             "change request (output/ and COPY_INSTRUCTIONS are rebuilt)."
         )
     if not problems and not analysis:

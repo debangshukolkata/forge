@@ -1,6 +1,6 @@
-"""What Forge remembers about a project, for the "open an existing project" list (D-196): how many notes it
+"""What DebCraft remembers about a project, for the "open an existing project" list (D-196): how many notes it
 holds, whether a FORGE.md exists, and where the work stands (the `project-state` memory a handoff leaves).
-Read from the Forge folder without opening the project, so a long list stays quick."""
+Read from the DebCraft folder without opening the project, so a long list stays quick."""
 
 from __future__ import annotations
 

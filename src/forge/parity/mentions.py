@@ -1,7 +1,7 @@
 """@-mentions and long pastes (spec §13B).
 
 In a user message: `@path` includes a workspace file, `@path:10-80` a line range; `@image.png` (an image in
-the workspace or a pasted path) is saved to .forge/inputs/ and attached; `@DBR-3` brings in a Forge object.
+the workspace or a pasted path) is saved to .forge/inputs/ and attached; `@DBR-3` brings in a DebCraft object.
 A message longer than LONG_PASTE_CHARS is stored as a file in
 .forge/inputs/ and referenced instead of being sent inline in full.
 """
@@ -131,7 +131,7 @@ def _grant(text: str, workspace: Workspace, result: Expanded) -> None:
         result.grants.append(f"Not opened for reading: {error}")
         return
     result.grants.append(
-        f"Forge may now read {granted} (everything under it too) in this project; read only. "
+        f"DebCraft may now read {granted} (everything under it too) in this project; read only. "
         f"/revoke-read {granted} undoes it."
     )
     result.text += (
@@ -241,7 +241,7 @@ def _resolve_input(name: str, workspace: Workspace, result: Expanded) -> str | N
         return f"[@{relative}]\n```\n{body}\n```"
     result.notes.append(f"file attached: {relative}")
     return (
-        f"[file attached: {relative} ({path.stat().st_size} bytes) — Forge can't read this format directly; "
+        f"[file attached: {relative} ({path.stat().st_size} bytes) — DebCraft can't read this format directly; "
         "ask the user to paste the relevant text if you need it]"
     )
 

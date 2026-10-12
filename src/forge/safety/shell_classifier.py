@@ -223,7 +223,7 @@ def classify(command: str, scope: ShellScope) -> Classification:
         result.raise_to("blocked", "encoded PowerShell commands are not allowed")
     if _HIDDEN_SECRET_PATH.search(command) or _PROFILE_VARIABLE.search(command):
         # A path built from a variable, or a ".env" named inside a quoted string (python -c "open('.env')"),
-        # is invisible to the per-argument checks below, and these files hold Forge's own keys.
+        # is invisible to the per-argument checks below, and these files hold DebCraft's own keys.
         result.raise_to(
             "ask", "refers to a secret file or to the user's profile/Forge folder indirectly", always_ask=True
         )
@@ -253,11 +253,11 @@ def _classify_segment(tokens: list[str], scope: ShellScope, result: Classificati
     if verb == "git":
         sub = args[0].lower() if args else ""
         if sub == "push":
-            result.raise_to("blocked", "git push is never run by Forge")
+            result.raise_to("blocked", "git push is never run by DebCraft")
         elif sub not in SAFE_GIT:
             result.raise_to("ask", f"git {sub} changes repository state")
     if any(_is_secret_file(arg) for arg in args):
-        # read_file shows key names only; the shell would print the values (redaction only knows Forge's
+        # read_file shows key names only; the shell would print the values (redaction only knows DebCraft's
         # own secrets and secret-shaped text, not every value in the app's .env).
         result.raise_to("ask", "touches a secret file (.env, key, certificate)", always_ask=True)
     writes = _write_targets(verb, args)
@@ -269,7 +269,7 @@ def _classify_segment(tokens: list[str], scope: ShellScope, result: Classificati
     if _is_pip_install(verb, args):
         result.raise_to("ask", "installs packages", always_ask=True)
     elif verb in WRITE_VERBS or writes:
-        # Even inside the workspace: shell writes bypass Forge's checkpoints, so they need approval.
+        # Even inside the workspace: shell writes bypass DebCraft's checkpoints, so they need approval.
         result.raise_to("ask", f"{verb} changes files")
     elif verb in READ_ONLY or verb in SAFE_EXECUTABLES or _is_safe_python(verb, args) or verb == "git":
         pass
@@ -373,7 +373,7 @@ _SECRET_FILE = re.compile(
 _HIDDEN_SECRET_PATH = re.compile(
     r"[\\/'\"]\.env(?!\.(?:example|sample|template)\b)(?:\.[\w.-]+)?(?=$|[\\/'\"\s)\]};,])", re.IGNORECASE
 )
-# Where Forge keeps its folder and keys, reached through a variable instead of a literal path.
+# Where DebCraft keeps its folder and keys, reached through a variable instead of a literal path.
 _PROFILE_VARIABLE = re.compile(
     r"\$env:(?:forge_env_file|forge_home|userprofile|home|homepath|appdata|localappdata)\b"
     r"|\$\{?home\b|%(?:forge_env_file|forge_home|userprofile|homepath|appdata|localappdata)%"

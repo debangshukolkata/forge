@@ -79,7 +79,7 @@ export function DepsTab() {
   if (libraries.length === 0) {
     return (
       <Empty icon={<Package className="h-8 w-8" />} title="No libraries found yet">
-        Forge looks for requirements.txt, pyproject.toml, package.json and their lock files in the project.
+        DebCraft looks for requirements.txt, pyproject.toml, package.json and their lock files in the project.
       </Empty>
     );
   }

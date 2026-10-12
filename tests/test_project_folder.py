@@ -78,7 +78,7 @@ def test_an_existing_project_is_not_created_over_and_a_file_is_not_a_folder(
 ) -> None:
     folder = tmp_path / "again"
     make(tmp_path, isolated_forge_home, folder)
-    with pytest.raises(WorkspaceError, match="already a Forge project"):
+    with pytest.raises(WorkspaceError, match="already a DebCraft project"):
         check_project_folder(folder)
     afile = tmp_path / "a.txt"
     afile.write_text("x", encoding="utf-8")

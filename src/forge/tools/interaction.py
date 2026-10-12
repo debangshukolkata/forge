@@ -1,6 +1,6 @@
 """Planning and interaction tools (spec §9.4, D-128): ask_user, propose_requirements, propose_plan,
 task_update, update_plan, request_user_action. They talk to the orchestrator through the Interaction
-protocol. propose_requirements/propose_plan are optional records, not approval gates — Forge calls them
+protocol. propose_requirements/propose_plan are optional records, not approval gates — DebCraft calls them
 when it judges a written-down requirement or plan is worth having, not on every turn."""
 
 from __future__ import annotations

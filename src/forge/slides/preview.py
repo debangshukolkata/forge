@@ -51,7 +51,9 @@ def export_slides(deck: Path, folder: Path) -> list[Path]:
     for old in folder.glob("*.png"):
         old.unlink()
     environment = {
-        **without_private(os.environ),  # the usual Windows variables for PowerShell, none of Forge's (D-202)
+        **without_private(
+            os.environ
+        ),  # the usual Windows variables for PowerShell, none of DebCraft's (D-202)
         "DECK_FILE": str(deck.resolve()),
         "DECK_OUT": str(folder.resolve()),
         "DECK_W": str(WIDTH),

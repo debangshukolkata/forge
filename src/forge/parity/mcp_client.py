@@ -24,7 +24,7 @@ class _AnyArgs(ToolArgs):
 
 
 class McpHub:
-    """One session per configured server, kept open for the whole Forge session."""
+    """One session per configured server, kept open for the whole DebCraft session."""
 
     def __init__(self, servers: dict[str, Any], secrets: Any = None) -> None:
         self.servers = servers

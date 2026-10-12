@@ -41,7 +41,7 @@ def export_chat(workspace: Workspace, events: list[Event]) -> Path:
         if event.type == EventType.USER_MESSAGE:
             lines += ["## You", "", str(payload.get("text", "")), ""]
         elif event.type == EventType.MESSAGE_DONE and payload.get("text"):
-            lines += ["## Forge", "", str(payload["text"]), ""]
+            lines += ["## DebCraft", "", str(payload["text"]), ""]
         elif event.type == EventType.TOOL_CALL_STARTED:
             lines.append(f"> tool: {payload.get('name')} — {payload.get('summary', '')}")
         elif event.type == EventType.QUESTION_ASKED:

@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-  Gets a freshly unzipped Forge folder running: venv, install, open UI. One command (D-145/D-146).
+  Gets a freshly unzipped DebCraft folder running: venv, install, open UI. One command (D-145/D-146).
 
 .DESCRIPTION
-  For someone who downloaded and unzipped the Forge source (not the per-user shared install that
-  install_forge.ps1 does into %LOCALAPPDATA%). Creates a venv INSIDE this folder (.venv), installs Forge into
+  For someone who downloaded and unzipped the DebCraft source (not the per-user shared install that
+  install_forge.ps1 does into %LOCALAPPDATA%). Creates a venv INSIDE this folder (.venv), installs DebCraft into
   it from this same unzipped source, then opens the web UI - which itself now guides through Azure OpenAI keys
   and a live connectivity check (D-146) if none are set up yet. Re-running it is safe: an existing .venv is
-  reused, not recreated, so this also works as "just start Forge" once already set up.
+  reused, not recreated, so this also works as "just start DebCraft" once already set up.
 
   Deliberately does not touch %USERPROFILE%\.forge\.env itself - the web UI's own setup screen (D-146) already
   covers entering and verifying keys, so this script's only job is getting to that screen, not duplicating it.
@@ -32,8 +32,8 @@ function Invoke-Checked([string]$what, [scriptblock]$block) {
 
 # The venv lives inside this same unzipped folder, not %LOCALAPPDATA% - a plain unzipped folder has no
 # earlier install to reuse or collide with, so there is nothing to shim onto PATH and nothing that can end up
-# shadowed by a different, older Forge install the way a global `forge` on PATH silently can (seen live: a
-# stray %LOCALAPPDATA%\Forge\venv from install_forge.ps1 shadowed a freshly replaced repo folder's own copy).
+# shadowed by a different, older DebCraft install the way a global `forge` on PATH silently can (seen live: a
+# stray %LOCALAPPDATA%\DebCraft\venv from install_forge.ps1 shadowed a freshly replaced repo folder's own copy).
 $venv = Join-Path $root ".venv"
 $venvPython = Join-Path $venv "Scripts\python.exe"
 $venvForge = Join-Path $venv "Scripts\forge.exe"
@@ -65,7 +65,7 @@ if (Test-Path $venvForge) {
         $locked = $true
     }
     if ($locked) {
-        throw "Forge is still running from this folder (its own forge.exe is locked). Close that window " +
+        throw "DebCraft is still running from this folder (its own forge.exe is locked). Close that window " +
             "or stop the process first, then re-run this script."
     }
 }
@@ -77,14 +77,14 @@ if ($Wheelhouse) {
     # Matches install_forge.ps1's offline path: a wheelhouse folder bundled alongside the unzipped source
     # means no network is needed at install time, for the real office-laptop-may-be-offline case (CLAUDE.md).
     $wheels = (Resolve-Path $Wheelhouse).Path
-    Invoke-Checked "Installing Forge from $root (offline, wheelhouse $wheels)" {
+    Invoke-Checked "Installing DebCraft from $root (offline, wheelhouse $wheels)" {
         & $venvPython -m pip install --no-index --find-links $wheels -e $spec --disable-pip-version-check @pipVerbosity
     }
 } else {
-    Invoke-Checked "Installing Forge from $root" {
+    Invoke-Checked "Installing DebCraft from $root" {
         & $venvPython -m pip install -e $spec --disable-pip-version-check @pipVerbosity
     }
 }
 
-Write-Host "==> Starting Forge UI"
+Write-Host "==> Starting DebCraft UI"
 & $venvForge ui

@@ -251,7 +251,7 @@ def test_existing_host_files_become_merge_instructions(
     workspace.write_text("hostapp/api/fx.py", "blp = object()\n")
     build_modeb_output(workspace)
     out = workspace.output_dir
-    assert not (out / "hostapp/api/__init__.py").exists()  # never overwrite a host file Forge hasn't seen
+    assert not (out / "hostapp/api/__init__.py").exists()  # never overwrite a host file DebCraft hasn't seen
     assert (out / "_merge" / "hostapp/api/__init__.py.proposed").exists() and (
         out / "hostapp/api/fx.py"
     ).exists()

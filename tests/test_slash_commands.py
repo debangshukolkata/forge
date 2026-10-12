@@ -47,3 +47,15 @@ async def test_cost_help_clear_and_exit() -> None:
     assert outputs[0].startswith("Spent $0.0000 (no cap)")
     assert "/model <role> <model>" in outputs[1]
     assert host.closed
+
+
+async def test_mode_change_is_not_queued_behind_a_running_turn() -> None:
+    host = SessionHost(mocked_router(unreachable), EventBus(redactor=Redactor()))  # type: ignore[arg-type]
+    host._current_turn = asyncio.create_task(asyncio.sleep(30))  # a turn that is still running
+    try:
+        await host.submit(SlashCommand(text="/mode auto"))
+        notices = [e.payload for e in host.bus.events_since(0) if e.type == EventType.NOTICE]
+        # Handled at once (without a workspace the handler explains that), not queued behind the turn.
+        assert all(n.get("kind") != "queued" for n in notices) and notices and host.inputs_empty
+    finally:
+        host._current_turn.cancel()

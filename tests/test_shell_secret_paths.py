@@ -1,4 +1,4 @@
-"""D-187: shell commands that reach Forge's own .env or folder indirectly (a variable, a name inside a quoted
+"""D-187: shell commands that reach DebCraft's own .env or folder indirectly (a variable, a name inside a quoted
 string) are always asked about, never run silently and never remembered as "always allow"."""
 
 from __future__ import annotations

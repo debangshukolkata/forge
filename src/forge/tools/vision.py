@@ -1,4 +1,4 @@
-"""Forge's own vision tools (spec §13A.1) — for building and verifying, separate from the vision features of the
+"""DebCraft's own vision tools (spec §13A.1) — for building and verifying, separate from the vision features of the
 code it writes — plus the eval tools (§13A.2-13A.4).
 
 Images reach the model ONLY through view_image (never as base64 in text); every image sent is logged by hash

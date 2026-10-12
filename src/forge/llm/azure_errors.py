@@ -1,4 +1,4 @@
-"""Maps OpenAI SDK exceptions to Forge's provider-independent LLM errors."""
+"""Maps OpenAI SDK exceptions to DebCraft's provider-independent LLM errors."""
 
 from __future__ import annotations
 

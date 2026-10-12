@@ -29,7 +29,7 @@ def validate_locations(repo: Path, workspace: Path) -> None:
     if not repo.is_dir():
         raise WorkspaceError(f"Repository folder not found: {repo}")
     if is_within(workspace, repo):
-        raise WorkspaceError("The workspace must not be inside the repository (Forge never writes there).")
+        raise WorkspaceError("The workspace must not be inside the repository (DebCraft never writes there).")
     if is_within(repo, workspace):
         raise WorkspaceError("The repository must not be inside the workspace folder.")
     if workspace.exists() and any(workspace.iterdir()):
@@ -97,7 +97,7 @@ def setup_python_environment(workspace: Workspace, original_app_dir: Path) -> Py
                 "The app's venv imports these packages from outside the workspace even after correction: "
                 + json.dumps(still_wrong)
                 + ". Uninstall the editable install (pip uninstall <package>) "
-                "or tell Forge which venv to use."
+                "or tell DebCraft which venv to use."
             )
     return env
 

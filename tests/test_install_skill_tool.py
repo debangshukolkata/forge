@@ -75,7 +75,7 @@ def test_approving_installs_and_refreshes_the_skills(isolated_forge_home: Path, 
     assert result.ok and "installed in" in result.content
     assert (isolated_forge_home / "skills" / "pretty-ui" / "SKILL.md").is_file()
     assert changed == [1]
-    # The card was written by Forge from the repository's real contents, not by the model.
+    # The card was written by DebCraft from the repository's real contents, not by the model.
     question, details = asked[0]
     assert "acme/ui" in question and "pretty-ui" in details and "Makes screens pretty" in details
 

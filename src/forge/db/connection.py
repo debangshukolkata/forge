@@ -1,4 +1,4 @@
-"""Database connections for Forge's own work (spec §9.5.2 "good citizen"): timeouts on every session,
+"""Database connections for DebCraft's own work (spec §9.5.2 "good citizen"): timeouts on every session,
 read-only sessions for real schemas, search_path pinned to the scratch schema for scratch work."""
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ def connect(
 ) -> psycopg.Connection[Any]:
     url = target.url(secrets)
     if not url:
-        raise psycopg.OperationalError(f"{target.url_env} is not set in Forge's .env")
+        raise psycopg.OperationalError(f"{target.url_env} is not set in DebCraft's .env")
     options = [
         f"-c statement_timeout={target.statement_timeout_s * 1000}",
         f"-c lock_timeout={target.lock_timeout_s * 1000}",

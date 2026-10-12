@@ -149,7 +149,7 @@ def integration_guide(
         "",
         *(
             [
-                "**These host files already exist, so they are NOT delivered as files** (Forge never saw "
+                "**These host files already exist, so they are NOT delivered as files** (DebCraft never saw "
                 "your version). Merge only the new lines from the proposed version into yours:",
                 "",
                 *[
@@ -187,10 +187,10 @@ def integration_guide(
         *([f"- Feature tests: `python -m pytest -q {feature_list}`"] if feature_tests else []),
         *([] if tests else ["- No test files delivered."]),
         "",
-        "## 7. If something fails, paste back to Forge",
+        "## 7. If something fails, paste back to DebCraft",
         "",
         "- the traceback or failing test output (whole error, not just the last line);",
-        "- the specific file or section Forge asks for — and nothing more.",
+        "- the specific file or section DebCraft asks for — and nothing more.",
         "- **Never paste secrets, .env contents or customer data.**",
         "",
     ]

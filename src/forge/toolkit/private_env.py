@@ -1,9 +1,9 @@
-"""Forge's own variables, kept out of the commands the model runs (D-202).
+"""DebCraft's own variables, kept out of the commands the model runs (D-202).
 
-A command the model runs inherits the user's environment. Forge does not put its keys there (it reads its
+A command the model runs inherits the user's environment. DebCraft does not put its keys there (it reads its
 .env itself), but a key the user exported, `FORGE_ENV_FILE` (which names the .env file) or the Azure settings
-would show in a plain `Get-ChildItem Env:`, which needs no approval. So the names Forge itself uses are
-removed from what commands inherit. Values Forge sets on purpose (the scratch database of this requirement)
+would show in a plain `Get-ChildItem Env:`, which needs no approval. So the names DebCraft itself uses are
+removed from what commands inherit. Values DebCraft sets on purpose (the scratch database of this requirement)
 are added afterwards and are not touched."""
 
 from __future__ import annotations
@@ -52,6 +52,6 @@ def private_names() -> frozenset[str]:
 
 
 def without_private(variables: Mapping[str, str]) -> dict[str, str]:
-    """`variables` minus Forge's own names (Windows variable names are not case-sensitive)."""
+    """`variables` minus DebCraft's own names (Windows variable names are not case-sensitive)."""
     hidden = private_names()
     return {name: value for name, value in variables.items() if name.upper() not in hidden}

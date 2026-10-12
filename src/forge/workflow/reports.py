@@ -47,12 +47,14 @@ def database_report(workspace: Workspace, db: Any) -> list[str]:
         lines += [f"- {line}" for line in db.status_line().splitlines()]
         if db.scratch is not None:
             lines.append(
-                f"- Commands Forge ran used the scratch schema `{db.scratch.schema}` on the "
+                f"- Commands DebCraft ran used the scratch schema `{db.scratch.schema}` on the "
                 f"{db.scratch.target.name} database (PGOPTIONS search_path); nothing outside it was changed."
             )
         lines += [f"- {r.id} [{r.status}] {r.title}" for r in db.requests.all()]
         if db.scratch is not None and db.scratch.registry.objects(db.scratch.key):
-            lines.append("- Objects Forge created in the scratch schema remain until you run `/db cleanup`.")
+            lines.append(
+                "- Objects DebCraft created in the scratch schema remain until you run `/db cleanup`."
+            )
     if checks:
         lines.append(
             f"- NOT run (server-run, see output/SERVER_RUN.md): {', '.join(c.tests for c in checks)}"

@@ -1,4 +1,4 @@
-// "What Forge has learned" (D-227): the notes and FORGE.md files Forge keeps, grouped by project, with tick
+// "What DebCraft has learned" (D-227): the notes and FORGE.md files DebCraft keeps, grouped by project, with tick
 // boxes so the user picks exactly what to forget. Notes belong to a repository or host, so a group can serve
 // several projects; the group title lists them.
 import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
@@ -74,8 +74,8 @@ export function Learnings({ onBack }: { onBack: () => void }) {
       <Button variant="ghost" size="sm" icon={<ArrowLeft className="h-3.5 w-3.5" />} onClick={onBack} className="-ml-3 mb-4">
         Back
       </Button>
-      <Headline className="!text-[34px]">What Forge has learned.</Headline>
-      <Tagline className="mt-2">Notes and instructions Forge keeps for your projects. Tick what to forget; nothing else changes.</Tagline>
+      <Headline className="!text-[34px]">What DebCraft has learned.</Headline>
+      <Tagline className="mt-2">Notes and instructions DebCraft keeps for your projects. Tick what to forget; nothing else changes.</Tagline>
       {error && (
         <p role="alert" className="mt-4 text-[13px] text-danger">
           {error}
@@ -86,7 +86,7 @@ export function Learnings({ onBack }: { onBack: () => void }) {
           <Spinner />
         </div>
       ) : groups.length === 0 ? (
-        <Empty title="Nothing learned yet">Notes Forge saves while it works will show up here.</Empty>
+        <Empty title="Nothing learned yet">Notes DebCraft saves while it works will show up here.</Empty>
       ) : (
         <div className="mt-6 space-y-5">
           {groups.map((group) => {

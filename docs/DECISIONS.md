@@ -3333,3 +3333,12 @@ user each time. **Chosen:** (b), `tools/show_app.py`, local 127.0.0.1 only, no a
 this computer). If the port is held by something else it names the holder and the model fixes it. When psutil cannot list
 the process's sockets it falls back to the port the app printed itself. Prompt lines added to both system prompts.
 **Not done:** the Auto-mode `full` level (nested shells/network/installs) still waits for the user's decision.
+
+### D-244 — Rename the product to "DebCraft" (user request 2026-10-12; the visible part only)
+Context: the rename was parked on 2026-10-09 (docs/TODO_LATER.md). Options: (A) visible name only; (B) A plus a `debcraft`
+command; (C) full internal rename (package, `.forge` folders, `FORGE.md`, `FORGE_*`) with fallbacks to the old names.
+Chosen: B. Everything people read says DebCraft (web UI and window title, prompts, CLI help, docs, scripts, tests);
+`debcraft` is a second entry point next to `forge`; `Start-Forge.cmd` became `Start-DebCraft.cmd`. Kept on purpose: package
+`forge`, `%USERPROFILE%\.forge` and project `.forge` folders, `FORGE.md`, `FORGE_*` settings, the `Forge` TypeScript type,
+history in DECISIONS/CHANGELOG, and the repo path/URLs. Side effect: the name is 3 characters longer, so `E501` is ignored in
+ruff (the formatter still wraps code). C stays a separate, later decision (it needs read-the-old-name fallbacks).

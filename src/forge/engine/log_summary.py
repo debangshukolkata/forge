@@ -53,7 +53,7 @@ def summarize(events: list[Event]) -> str:
     llm_time = sum(c.get("latency_s", 0.0) for c in llm)
     tool_time = sum(t.get("duration_s", 0.0) for t in tools)
     out += [
-        "# Forge run summary",
+        "# DebCraft run summary",
         "",
         f"- Wall clock: {wall:.0f}s  |  model calls: {len(llm)} ({llm_time:.0f}s)  |  "
         f"tool calls: {len(tools)} ({tool_time:.0f}s, parallel calls overlap)",

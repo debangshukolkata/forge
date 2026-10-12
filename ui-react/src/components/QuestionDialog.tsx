@@ -134,7 +134,7 @@ export function QuestionDialog({ itemKey, p, forge, onDismiss }: { itemKey: stri
         ref={box}
         role="dialog"
         aria-modal="true"
-        aria-label="Question from Forge"
+        aria-label="Question from DebCraft"
         tabIndex={-1}
         onKeyDown={onKey}
         className="max-h-[88vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-border bg-surface p-5 shadow-2xl outline-none"

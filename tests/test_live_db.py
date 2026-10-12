@@ -1,8 +1,8 @@
-"""M7 live acceptance: the real model does database work through Forge's DB tools. Run with: pytest -m live
+"""M7 live acceptance: the real model does database work through DebCraft's DB tools. Run with: pytest -m live
 
 - L3 (local Postgres): the agent writes a migration following the repo's convention and tries it in the
   scratch schema; nothing outside the scratch schema changes.
-- L1 (unreachable server): Forge reports L1, and the agent hands the DB step to the user (DB request) or
+- L1 (unreachable server): DebCraft reports L1, and the agent hands the DB step to the user (DB request) or
   marks the DB check server-run instead of claiming it ran.
 """
 

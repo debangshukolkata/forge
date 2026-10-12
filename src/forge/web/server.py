@@ -55,7 +55,7 @@ class NewProject(BaseModel):
     project: str
     folder: str
     repo: str = ""  # Mode A: the existing project / repository (read only)
-    app_folder: str = ""  # Mode A: only when Forge can't tell which sub-folder holds the Python app
+    app_folder: str = ""  # Mode A: only when DebCraft can't tell which sub-folder holds the Python app
     sensitive_terms: str = ""  # Mode B, new project: names that must never reach a web search
 
 

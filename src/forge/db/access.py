@@ -1,4 +1,4 @@
-"""Detects what Forge may do on each database (spec §9.5.2): L3 write / L2 read-only / L1 no connection."""
+"""Detects what DebCraft may do on each database (spec §9.5.2): L3 write / L2 read-only / L1 no connection."""
 
 from __future__ import annotations
 

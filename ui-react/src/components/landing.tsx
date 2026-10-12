@@ -30,7 +30,7 @@ export function Brand({ className }: { className?: string }) {
       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-action text-accent-fg">
         <Anvil className="h-[18px] w-[18px]" aria-hidden />
       </span>
-      <span className="font-mono text-[15px] font-semibold tracking-tight">Forge</span>
+      <span className="font-mono text-[15px] font-semibold tracking-tight">DebCraft</span>
     </div>
   );
 }

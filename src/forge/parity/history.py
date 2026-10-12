@@ -39,7 +39,7 @@ class History:
         if not (self.git_dir / "HEAD").exists():
             if self._git("init", "--quiet").returncode != 0:
                 return False
-            self._git("config", "user.name", "Forge")
+            self._git("config", "user.name", "DebCraft")
             self._git("config", "user.email", "forge@localhost")
             self._git("config", "core.autocrlf", "false")
             self._write_excludes()

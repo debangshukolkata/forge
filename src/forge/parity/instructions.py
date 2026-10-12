@@ -51,7 +51,7 @@ def append_line(file: InstructionFile, line: str) -> None:
     file.path.parent.mkdir(parents=True, exist_ok=True)
     existing = file.text()
     body = (
-        existing + "\n" if existing else "# Instructions for Forge\n\n"
+        existing + "\n" if existing else "# Instructions for DebCraft\n\n"
     ) + f"- {default_redactor.redact(line.strip())}\n"
     file.path.write_text(body, encoding="utf-8")
 

@@ -31,14 +31,14 @@ SLOT_TITLES = {
         "Summary of earlier conversation (continue the task from its current state and next step "
         "directly, with tool calls; do not stop to announce it)"
     ),
-    "database": "Databases (what Forge may do; DB-backed tests use the scratch schema via PGOPTIONS)",
+    "database": "Databases (what DebCraft may do; DB-backed tests use the scratch schema via PGOPTIONS)",
     "kb_essentials": "Codebase essentials",
     "instructions": "Instructions from FORGE.md files (always follow them)",
     "skills": "Skills",
     "files_modified": "Files modified so far",
     "memory_index": "Memory",
 }
-HEADER = "Pinned context (kept up to date by Forge; it replaces anything older on the same topics):"
+HEADER = "Pinned context (kept up to date by DebCraft; it replaces anything older on the same topics):"
 
 
 class PinnedBlocks:

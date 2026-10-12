@@ -40,7 +40,7 @@ export function Login({ configured, onSignedIn }: { configured: boolean; onSigne
     <div className="flex min-h-full flex-col">
       <Tile dark className="px-6 py-14 text-center sm:py-20">
         <Brand className="mb-8 justify-center" />
-        <Headline>{creating ? "Welcome to Forge." : "Sign in to Forge."}</Headline>
+        <Headline>{creating ? "Welcome to DebCraft." : "Sign in to DebCraft."}</Headline>
         <Tagline className="mx-auto mt-3 max-w-md">
           {creating
             ? "Create the account for this computer. It keeps your projects and keys private."
@@ -79,9 +79,13 @@ export function Login({ configured, onSignedIn }: { configured: boolean; onSigne
           <p className="text-center text-[12px] text-fg-muted">
             {creating
               ? "Stored only on this computer."
-              : "Forgot the password? Delete account.json in the .forge folder and start Forge again. Your projects are kept."}
+              : "Forgot the password? Delete account.json in the .forge folder and start DebCraft again. Your projects are kept."}
           </p>
         </form>
+        <footer className="mx-auto mt-14 max-w-sm border-t border-border pt-5 text-center text-[11px] uppercase tracking-[0.18em] text-fg-muted">
+          <p>Conceptualised and designed by <span className="font-semibold text-fg">Debangshu</span></p>
+          <p className="mt-1 normal-case tracking-normal italic">Built by AI</p>
+        </footer>
       </Tile>
     </div>
   );

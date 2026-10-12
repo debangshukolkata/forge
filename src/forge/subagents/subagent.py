@@ -26,7 +26,7 @@ from forge.tools.registry import ToolRegistry, default_tools
 REPORT_TOKENS = 1500
 EXPLORE_ITERATIONS = 25
 
-EXPLORE_PROMPT = """You are Forge's explore subagent. You only read: search and read the code to
+EXPLORE_PROMPT = """You are DebCraft's explore subagent. You only read: search and read the code to
 find what a developer needs to implement the requirement below in THIS codebase. Report, in under 700 words:
 - the most relevant existing files, and the closest existing example for each kind of new file needed
   (route/MethodView, marshmallow schema, service, repository/raw SQL, model, LangGraph node, test);
@@ -91,7 +91,7 @@ async def run_explore(router: LLMRouter, context: ToolContext, requirement: str)
 
 
 RESEARCHER_ITERATIONS = 30
-RESEARCHER_PROMPT = """You are Forge's researcher subagent: you dig into a question on the web and report back
+RESEARCHER_PROMPT = """You are DebCraft's researcher subagent: you dig into a question on the web and report back
 what is actually established. You can search (web_search), read pages (web_fetch) and read local files.
 
 How to work:
@@ -109,7 +109,7 @@ Reply in under 600 words: the answer first, then the evidence as a list of "clai
 disagrees or is uncertain, then what you could not get to or read (and why). Say how confident you are."""
 
 VERIFIER_ITERATIONS = 90
-VERIFIER_PROMPT = """You are Forge's verifier subagent. You did not write this code and you do not trust
+VERIFIER_PROMPT = """You are DebCraft's verifier subagent. You did not write this code and you do not trust
 it. The main agent gives you the requirement (and what changed) and how to run the app. Your job is to find
 out, by running and using the app the way its users would, whether it really does what was asked, and to
 report evidence. Work through these layers, skipping only those that cannot apply:
@@ -163,7 +163,7 @@ each, with what you saw and any screenshot path), the exact steps to reproduce e
 your script, and a final line `VERDICT: PASS` (everything that applies passed) or `VERDICT: FAIL`."""
 
 DEBUGGER_ITERATIONS = 20
-DEBUGGER_PROMPT = """You are Forge's debugger subagent, called to give the main agent a fresh view of a
+DEBUGGER_PROMPT = """You are DebCraft's debugger subagent, called to give the main agent a fresh view of a
 failure: don't trust its assumptions. You may read code, search and run commands (e.g. the tests) — you
 can't edit.
 Find the root cause of the problem below. Reply in under 500 words:

@@ -118,7 +118,7 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
   };
 
   const quit = async () => {
-    if (!confirm("Stop Forge (the server and any running work)?")) return;
+    if (!confirm("Stop DebCraft (the server and any running work)?")) return;
     await api("/api/quit", { method: "POST" }).catch(() => undefined);
     setStopped(true);
   };
@@ -126,7 +126,7 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
   const landing = view !== "chat" || !forge.state.workspace;
 
   if (stopped) {
-    return <div className="flex h-full items-center justify-center text-fg-muted">Forge has stopped. You can close this tab.</div>;
+    return <div className="flex h-full items-center justify-center text-fg-muted">DebCraft has stopped. You can close this tab.</div>;
   }
 
   if (missingSecrets === null) {

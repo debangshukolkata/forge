@@ -3,7 +3,7 @@ memory with a small frontmatter (name, description, type) and a `MEMORY.md` inde
 
 - user scope, `<forge_home>/memory/`: preferences that apply everywhere ("always ask before adding a
   dependency");
-- project scope, `<forge_home>/memory/scopes/<scope>/`: what Forge learned about one repository or host
+- project scope, `<forge_home>/memory/scopes/<scope>/`: what DebCraft learned about one repository or host
   profile (see forge.memory.scope). Nothing crosses between projects.
 
 The model writes memories itself (memory_write) when the user states something lasting or corrects it. The

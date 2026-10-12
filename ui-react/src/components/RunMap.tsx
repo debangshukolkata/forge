@@ -64,7 +64,7 @@ export function RunMap({ forge, onJump }: { forge: Forge; onJump: (seq: number) 
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <Empty icon={<ListChecks className="h-8 w-8" aria-hidden />} title="Nothing to map yet">
-          Once Forge plans the work, the tasks, helper agents and any failures appear here.
+          Once DebCraft plans the work, the tasks, helper agents and any failures appear here.
         </Empty>
       </div>
     );

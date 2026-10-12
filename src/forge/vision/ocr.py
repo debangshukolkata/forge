@@ -1,7 +1,7 @@
 """Reading text out of pixels with Tesseract (D-203), run on this computer: nothing is sent anywhere.
 
 Used by the `ocr_image` tool and by the Environment drawer's test. Tesseract is optional: the user says on the
-drawer whether it is installed (D-201) and Forge only offers the tool once the test has passed."""
+drawer whether it is installed (D-201) and DebCraft only offers the tool once the test has passed."""
 
 from __future__ import annotations
 

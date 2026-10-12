@@ -38,7 +38,7 @@ def unreachable(request: object) -> object:
 @pytest.fixture(autouse=True)
 def configured_secrets(isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Fake values for every required key, so the UI shows its normal pages and not the first-run setup
-    screen (D-146), which an empty Forge home would otherwise trigger."""
+    screen (D-146), which an empty DebCraft home would otherwise trigger."""
     for name in required_secret_names(load_config(isolated_forge_home)):
         monkeypatch.setenv(name, "https://fake.invalid")  # check_secrets: fake
 
@@ -348,7 +348,7 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
 
 
 def test_react_composer_features(server: ServerSecurity, workspace: Workspace, tmp_path: Path) -> None:
-    # Attach (file picker), @-file suggestions, Shift+Tab mode cycling, history, and the attachment reaching Forge.
+    # Attach (file picker), @-file suggestions, Shift+Tab mode cycling, history, and the attachment reaching DebCraft.
     signature = tmp_path / "signature.py"
     signature.write_text("def mask_pan(pan: str, visible: int = 4) -> str: ...\n", encoding="utf-8")
     with playwright_api.sync_playwright() as p:
@@ -383,7 +383,7 @@ def test_react_composer_features(server: ServerSecurity, workspace: Workspace, t
         page.wait_for_selector("text=auto mode", timeout=5000)
 
         page.keyboard.press("Enter")
-        page.wait_for_selector("text=Attached:")  # Forge resolved both mentions before calling the model
+        page.wait_for_selector("text=Attached:")  # DebCraft resolved both mentions before calling the model
         notice = page.inner_text("text=Attached:")
         assert "claims_service.py" in notice and ".forge/inputs/" in notice
         assert page.locator("span[title^='.forge/inputs/']").count() == 0  # chips cleared after sending
@@ -644,7 +644,7 @@ def test_react_todo_list(server: ServerSecurity, workspace: Workspace) -> None:
             page.locator("button[aria-expanded]:has-text('Todo')").count() == 0
         )  # no strip above the message box (D-221)
         page.click("[role=tab]:has-text('Tasks')")
-        page.wait_for_selector("text=Forge's todo list")
+        page.wait_for_selector("text=DebCraft's todo list")
         page.wait_for_selector("text=1/3 done")
         browser.close()
     assert not problems, problems
@@ -824,7 +824,7 @@ def test_react_full_tool_output(server: ServerSecurity, workspace: Workspace) ->
 def test_react_project_list_shows_what_forge_remembers(
     server: ServerSecurity, isolated_forge_home: Path, tmp_path: Path
 ) -> None:
-    """D-196: each project in the list says where the work stands, from its handoff, and what Forge holds for it."""
+    """D-196: each project in the list says where the work stands, from its handoff, and what DebCraft holds for it."""
     from forge.memory.store import STATE_MEMORY, MemoryStore
     from forge.modeb.profile import ProfileStore
 
@@ -919,7 +919,7 @@ def test_react_learnings_pick_and_forget(
         page.reload()
         page.click("button:has-text('Home')")
         page.click("button:has-text('Open a project')")
-        page.click("button:has-text('What Forge learned')")
+        page.click("button:has-text('What DebCraft learned')")
         page.wait_for_selector("text=uses-pytest")
         page.screenshot(path=str(shots / "learnings-light.png"))
         page.check("input[aria-label='Forget uses-pytest']")

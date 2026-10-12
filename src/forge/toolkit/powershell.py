@@ -1,6 +1,6 @@
 """Runs one PowerShell command in a fresh process (DECISIONS D-042).
 
-Forge carries the working directory between commands (like Claude Code); nothing else persists.
+DebCraft carries the working directory between commands (like Claude Code); nothing else persists.
 The command is wrapped in a generated script that forces UTF-8 output, records the final working
 directory and preserves exit codes. It is passed with -EncodedCommand: no quoting problems, and
 PowerShell's execution policy (which may block .ps1 files on corporate laptops) does not apply.
@@ -134,8 +134,7 @@ async def run_powershell(
     if len(script) > MAX_SCRIPT_CHARS:
         return CommandOutcome(
             None,
-            "Command too long for one shell call. Write long content with "
-            "write_file and run it as a script instead.",
+            "Command too long for one shell call. Write long content with write_file and run it as a script instead.",
             False,
             cwd,
         )

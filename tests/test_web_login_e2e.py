@@ -83,7 +83,7 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
 
         # First run: create the account.
         page.goto(server.url())
-        page.wait_for_selector("text=Welcome to Forge.")
+        page.wait_for_selector("text=Welcome to DebCraft.")
         page.screenshot(path=str(shots / "login-create.png"))
         page.fill("input[autocomplete=username]", "asha")
         page.fill("label:has-text('Password') input", PASSWORD)
@@ -97,7 +97,7 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
 
         # Sign out, wrong password, then in.
         page.click("button:has-text('Sign out')")
-        page.wait_for_selector("text=Sign in to Forge.")
+        page.wait_for_selector("text=Sign in to DebCraft.")
         page.screenshot(path=str(shots / "login-signin.png"))
         page.fill("input[autocomplete=username]", "asha")
         page.fill("input[type=password]", "wrong password")
@@ -150,7 +150,7 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
         page.wait_for_timeout(400)
         page.screenshot(path=str(shots / "hub-dark.png"))
         page.click("button:has-text('Sign out')")
-        page.wait_for_selector("text=Sign in to Forge.")
+        page.wait_for_selector("text=Sign in to DebCraft.")
         page.screenshot(path=str(shots / "login-dark.png"))
         browser.close()
     assert not problems, problems
@@ -167,7 +167,7 @@ def test_unsigned_api_is_refused_in_the_browser(
             pytest.skip(f"headless Edge not available: {error}")
         page = browser.new_context().new_page()
         page.goto(server.url())
-        page.wait_for_selector("text=Welcome to Forge.")
+        page.wait_for_selector("text=Welcome to DebCraft.")
         status = page.evaluate("fetch('/api/state').then(r => r.status)")
         assert status == 401
         browser.close()
@@ -200,7 +200,7 @@ def test_environment_screen_in_edge(
         problems: list[str] = []
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("text=Welcome to Forge.")
+        page.wait_for_selector("text=Welcome to DebCraft.")
         page.fill("input[autocomplete=username]", "asha")
         page.fill("label:has-text('Password') input", PASSWORD)
         page.fill("label:has-text('Repeat the password') input", PASSWORD)
@@ -271,7 +271,7 @@ def test_account_screen_in_edge(server: ServerSecurity) -> None:
         )
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("text=Welcome to Forge.")
+        page.wait_for_selector("text=Welcome to DebCraft.")
         page.fill("input[autocomplete=username]", "asha")
         page.fill("label:has-text('Password') input", PASSWORD)
         page.fill("label:has-text('Repeat the password') input", PASSWORD)
@@ -303,7 +303,7 @@ def test_account_screen_in_edge(server: ServerSecurity) -> None:
         page.click("button:has-text('Back')")
         page.wait_for_selector("text=Start something new.")
         page.click("button:has-text('Sign out')")
-        page.wait_for_selector("text=Sign in to Forge.")
+        page.wait_for_selector("text=Sign in to DebCraft.")
         page.fill("input[autocomplete=username]", "asha")
         page.fill("input[type=password]", PASSWORD)
         page.click("button:has-text('Sign in')")
@@ -359,7 +359,7 @@ def test_optional_tools_are_asked_before_they_are_tested(
         problems: list[str] = []
         page.on("pageerror", lambda e: problems.append(str(e)))
         page.goto(server.url())
-        page.wait_for_selector("text=Welcome to Forge.")
+        page.wait_for_selector("text=Welcome to DebCraft.")
         page.fill("input[autocomplete=username]", "asha")
         page.fill("label:has-text('Password') input", PASSWORD)
         page.fill("label:has-text('Repeat the password') input", PASSWORD)
@@ -404,8 +404,7 @@ def test_optional_tools_are_asked_before_they_are_tested(
 
         # The server holds to the answer whatever a page asks for.
         status = page.evaluate(
-            "fetch('/api/environment/check/gemini', {method: 'POST'})"
-            ".then(r => r.json()).then(j => j.result.status)"
+            "fetch('/api/environment/check/gemini', {method: 'POST'}).then(r => r.json()).then(j => j.result.status)"
         )
         assert status == "off" and "gemini" not in calls
 

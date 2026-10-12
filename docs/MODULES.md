@@ -1,4 +1,4 @@
-# Forge modules (D-152)
+# DebCraft modules (D-152)
 
 One Python package, `src/forge/`, split into modules with a strict one-way layering. A module may import only
 from an **earlier tier**; `tests/test_module_boundaries.py` fails CI on an upward or same-tier import and on a

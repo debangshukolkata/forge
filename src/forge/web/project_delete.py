@@ -1,5 +1,5 @@
 """Deleting a project (D-226): removes the project's workspace folder (repo copy, output, transcripts) and
-its entry in the recent list. What Forge learned about the repository or host (memories, FORGE.md, the
+its entry in the recent list. What DebCraft learned about the repository or host (memories, FORGE.md, the
 Mode B host profile) is shared by every project of that repository or host, so it is kept."""
 
 from __future__ import annotations
@@ -23,13 +23,13 @@ def _is_inside(inner: Path, outer: Path) -> bool:
 
 
 def check_deletable(root: Path, home: Path, known: list[dict[str, Any]]) -> None:
-    """Refuses anything Forge did not make, or whose folder holds something that must survive."""
+    """Refuses anything DebCraft did not make, or whose folder holds something that must survive."""
     resolved = root.resolve()
     entry = next((e for e in known if Path(e["path"]).resolve() == resolved), None)
     if entry is None or not (resolved / ".forge" / "workspace.json").is_file():
-        raise ProjectDeleteError("That is not a project Forge knows about.")
+        raise ProjectDeleteError("That is not a project DebCraft knows about.")
     if resolved.parent == resolved or _is_inside(home.resolve(), resolved):
-        raise ProjectDeleteError("That folder contains Forge's own data folder, so it is not deleted.")
+        raise ProjectDeleteError("That folder contains DebCraft's own data folder, so it is not deleted.")
     repo = str(entry.get("repo", ""))
     if not repo.startswith("standalone") and _is_inside(Path(repo).resolve(), resolved):
         raise ProjectDeleteError(

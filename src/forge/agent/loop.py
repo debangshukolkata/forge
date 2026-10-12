@@ -518,6 +518,6 @@ class AgentLoop:
             return ToolResult(
                 ok=False,
                 content=f"The {tool.name} tool failed unexpectedly ({type(error).__name__}: {error}). This "
-                "is a Forge bug, not your mistake; the details are logged. Check your inputs or continue "
+                "is a DebCraft bug, not your mistake; the details are logged. Check your inputs or continue "
                 "another way.",
             )

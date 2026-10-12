@@ -1,11 +1,11 @@
 # Campaign scripts (2026-10-03)
 
 How the first Mode B end-to-end campaign was run, so it can be repeated or extended. These are dev tools, not part of
-the product, and they use fixed paths under `C:\Work\ForgeRuns` (workspaces, an isolated Forge home, screenshots).
+the product, and they use fixed paths under `C:\Work\ForgeRuns` (workspaces, an isolated DebCraft home, screenshots).
 
 - `req_*.txt`: the original requirements (attendance system, bakery website, invoice extraction tool).
-- `enhancements/`: each enhancement round (`enh_*`) and each piece of user feedback (`fb_*`) given to Forge.
-- `drive_forge.py <workspace> <prompt_file> <result_json>`: runs Forge like `forge run --auto-approve`, and also
+- `enhancements/`: each enhancement round (`enh_*`) and each piece of user feedback (`fb_*`) given to DebCraft.
+- `drive_forge.py <workspace> <prompt_file> <result_json>`: runs DebCraft like `forge run --auto-approve`, and also
   approves `pip install` into the workspace environment (always-ask, so plain headless mode refuses it).
 - `verify_attendance.py`, `verify_bakery.py`, `verify_invoice.py <app_dir> <python> <phase>`: independent Playwright
   checks (Edge, headless); the phase number includes the checks of every enhancement up to that round.

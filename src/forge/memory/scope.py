@@ -1,4 +1,4 @@
-"""Memory scopes (spec §12.2 "scope isolation", kept by D-156): what Forge remembers about a Mode A repository
+"""Memory scopes (spec §12.2 "scope isolation", kept by D-156): what DebCraft remembers about a Mode A repository
 belongs to that repository, what it remembers about a Mode B host belongs to that host profile, and the user's
 own preferences are global. Nothing crosses between repositories or profiles."""
 

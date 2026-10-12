@@ -17,7 +17,7 @@ CALL = ToolCall(
     id="call_1", name="read_file", raw_arguments='{"path": "app.py"}', arguments={"path": "app.py"}
 )
 CONVERSATION = [
-    Message.system("You are Forge."),
+    Message.system("You are DebCraft."),
     Message.user("Open app.py"),
     Message(role="assistant", content="Reading it.", tool_calls=[CALL]),
     Message.tool_result("call_1", "print('hi')"),
@@ -29,7 +29,7 @@ def test_messages_to_responses_input() -> None:
     items = to_responses_input(CONVERSATION, "gpt51")
 
     assert items == [
-        {"role": "system", "content": "You are Forge."},
+        {"role": "system", "content": "You are DebCraft."},
         {"role": "user", "content": "Open app.py"},
         {"role": "assistant", "content": "Reading it."},
         {

@@ -46,7 +46,7 @@ class AzureOpenAIProvider:
             api_key=secrets.require(model.api_key_env or provider_config.api_key_env),
             api_version=secrets.require(model.api_version_env or provider_config.api_version_env),
             timeout=provider_config.timeout_s,
-            max_retries=0,  # Forge's own retry layer honours Retry-After and reports retries to the UI
+            max_retries=0,  # DebCraft's own retry layer honours Retry-After and reports retries to the UI
             http_client=http_client,
         )
 
@@ -92,7 +92,7 @@ class AzureOpenAIProvider:
             "model": self.deployment,
             "input": to_responses_input(request.messages, self.model_key),
             "max_output_tokens": request.max_output_tokens or self.model.max_output,
-            # Stateless: Forge owns the history (compaction, resume), so nothing is stored server-side.
+            # Stateless: DebCraft owns the history (compaction, resume), so nothing is stored server-side.
             "store": False,
         }
         if request.tools:
@@ -144,8 +144,7 @@ class AzureOpenAIProvider:
     async def _call_chat(self, request: ChatRequest, on_text_delta: TextDeltaCallback | None) -> LLMResponse:
         if request.hosted_tools:
             raise LLMError(
-                f"{', '.join(request.hosted_tools)} needs the Responses API; this deployment uses "
-                f"Chat Completions."
+                f"{', '.join(request.hosted_tools)} needs the Responses API; this deployment uses Chat Completions."
             )
         params: dict[str, Any] = {
             "model": self.deployment,

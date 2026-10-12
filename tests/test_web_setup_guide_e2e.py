@@ -54,7 +54,7 @@ def test_the_first_run_guide_and_the_drawer_after_it(
         page.goto(server.url())
 
         # --- the guide ---
-        page.wait_for_selector("text=Set up Forge.")
+        page.wait_for_selector("text=Set up DebCraft.")
         assert page.locator("[data-testid=env-path]").inner_text() == str(env_file)
         page.wait_for_selector("text=Not created yet")
         page.wait_for_selector("text=This page cannot see your keys.")
@@ -62,7 +62,7 @@ def test_the_first_run_guide_and_the_drawer_after_it(
         assert "AZURE_OPENAI_API_KEY=<key>" in template and "LOCAL_PG_URL=postgresql://" in template
         assert "DEV_PG_URL=postgresql://" in template and "SERPAPI_API_KEY=" in template
         assert "FORGE_PG_URL" not in template
-        page.wait_for_selector("h3:has-text('Forge database')")
+        page.wait_for_selector("h3:has-text('DebCraft database')")
         page.wait_for_selector("h3:has-text('Development database (read-only)')")
         assert page.locator("[data-variable=LOCAL_PG_URL]").get_attribute("data-filled") == "no"
 
@@ -88,7 +88,7 @@ def test_the_first_run_guide_and_the_drawer_after_it(
         saved = page.evaluate("fetch('/api/environment').then(r => r.json()).then(j => j.saved.answers)")
         assert saved == {"tesseract": True, "gemini": False}
 
-        # The user edits the file themselves (the test plays the user), then asks Forge to check it.
+        # The user edits the file themselves (the test plays the user), then asks DebCraft to check it.
         lines = [
             f"{name}=value-for-{name.lower()}" for name in sorted(names) if name != "AZURE_OPENAI_API_KEY"
         ]
@@ -116,7 +116,8 @@ def test_the_first_run_guide_and_the_drawer_after_it(
         )
         assert "Not tested yet" in azure.inner_text() and "Not tested yet" in local.inner_text()
         assert (
-            "Forge database" in local.inner_text() and "Development database (read-only)" in dev.inner_text()
+            "DebCraft database" in local.inner_text()
+            and "Development database (read-only)" in dev.inner_text()
         )
         assert "never writes" in dev.inner_text()
 
@@ -136,7 +137,7 @@ def test_the_first_run_guide_and_the_drawer_after_it(
 
         # The drawer links back to the guide, which can be left again.
         page.click("button:has-text('Where is the file, and what goes in it?')")
-        page.wait_for_selector("text=Forge's settings file.")
+        page.wait_for_selector("text=DebCraft's settings file.")
         page.click("button:has-text('Back')")
         page.wait_for_selector("text=Start something new.")
         browser.close()

@@ -196,7 +196,7 @@ async def test_stress_200_tool_calls_never_exceed_the_window() -> None:
     config = small_window_config()
     manager = manager_with(config)
     budget = manager.budget()
-    history: list[Message] = [Message.system("You are Forge.")]
+    history: list[Message] = [Message.system("You are DebCraft.")]
     rng = random.Random(7)
     worst = 0
 

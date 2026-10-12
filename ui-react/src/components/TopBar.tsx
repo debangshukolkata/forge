@@ -39,7 +39,7 @@ export function TopBar({
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-action text-accent-fg">
           <Anvil className="h-4 w-4" aria-hidden />
         </div>
-        <span className="font-mono text-[14px] font-semibold tracking-tight">Forge</span>
+        <span className="font-mono text-[14px] font-semibold tracking-tight">DebCraft</span>
       </div>
       <div className="mx-1 h-5 w-px bg-border" />
       {workspace ? (

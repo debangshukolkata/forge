@@ -1,6 +1,6 @@
 """Installing a skill from a GitHub repository or a folder (D-207), the way Claude Code treats skills:
 installing one is the user's decision to trust it, nothing here scans it, and every command its
-instructions lead to still goes through Forge's normal approval. Only the user's own command reaches
+instructions lead to still goes through DebCraft's normal approval. Only the user's own command reaches
 this module; the model has no tool for it."""
 
 from __future__ import annotations
@@ -203,10 +203,10 @@ def summary(candidate: Candidate) -> str:
     if candidate.allowed_tools:
         lines.append(
             f"It asks for these tools without approval: {candidate.allowed_tools} "
-            "(Forge ignores this: commands still ask)"
+            "(DebCraft ignores this: commands still ask)"
         )
     lines.append(
-        "A skill is instructions Forge follows. Install only skills you trust; read SKILL.md first if unsure."
+        "A skill is instructions DebCraft follows. Install only skills you trust; read SKILL.md first if unsure."
     )
     return "\n".join(lines)
 

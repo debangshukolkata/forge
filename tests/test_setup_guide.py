@@ -76,18 +76,19 @@ def test_it_names_what_forge_reads_and_what_is_required(isolated_forge_home: Pat
         "AZURE_FALLBACK_API_KEY",
         "AZURE_FALLBACK_DEPLOYMENT",
     }
-    # The fallback model's four values are optional: without them Forge works, it just has no fallback.
+    # The fallback model's four values are optional: without them DebCraft works, it just has no fallback.
     assert all(variables[n]["required"] == (not n.startswith("AZURE_FALLBACK")) for n in azure)
     # Two databases, each with its own variable and its own words; both optional.
     assert (
-        variables["LOCAL_PG_URL"]["group"] == "Forge database" and not variables["LOCAL_PG_URL"]["required"]
+        variables["LOCAL_PG_URL"]["group"] == "DebCraft database"
+        and not variables["LOCAL_PG_URL"]["required"]
     )
     assert variables["DEV_PG_URL"]["group"] == "Development database (read-only)"
     assert "never writes" in variables["DEV_PG_URL"]["why"]  # read-only, said in words
     assert {"SERPAPI_API_KEY", "TAVILY_TOOL_URL", "TAVILY_TOOL_ID", "TAVILY_BEARER_TOKEN"} <= set(variables)
     assert "TAVILY_API_KEY" not in variables  # the key itself is not used (D-210)
     assert not any(variables[n]["required"] for n in variables if n.startswith("TAVILY"))
-    assert "FORGE_PG_URL" not in variables  # that one is for testing Forge itself, not for using it
+    assert "FORGE_PG_URL" not in variables  # that one is for testing DebCraft itself, not for using it
 
 
 def test_the_template_has_every_name_and_only_placeholders(isolated_forge_home: Path, env_file: Path) -> None:
@@ -97,7 +98,7 @@ def test_the_template_has_every_name_and_only_placeholders(isolated_forge_home: 
         assert f"{variable['name']}={variable['expects']}" in template
     assert "<key>" in template and "https://<resource>.openai.azure.com/" in template
     assert "postgresql://<user>:<password>@localhost:5432/<database>" in template
-    assert "Azure OpenAI: required" in template and "Forge database: optional" in template
+    assert "Azure OpenAI: required" in template and "DebCraft database: optional" in template
     assert "one database" not in template.lower()  # no "use one database for both" suggestion
 
 
@@ -173,11 +174,11 @@ def test_a_database_that_is_not_set_is_a_warning_with_its_variable_named(
 
 
 def test_the_two_databases_are_tested_on_their_own(env_file: Path, isolated_forge_home: Path) -> None:
-    """An unreachable development database must not change the Forge database row, and the reverse."""
+    """An unreachable development database must not change the DebCraft database row, and the reverse."""
     env_file.write_text(f"DEV_PG_URL={UNREACHABLE_PG}\n", encoding="utf-8")
     local = asyncio.run(checks.run_check("postgres_local"))
     dev = asyncio.run(checks.run_check("postgres_dev"))
-    assert "LOCAL_PG_URL is not set" in local.detail  # the Forge row says nothing about the other database
+    assert "LOCAL_PG_URL is not set" in local.detail  # the DebCraft row says nothing about the other database
     assert dev.status in ("warn", "fail") and "LOCAL_PG_URL" not in dev.detail
 
 

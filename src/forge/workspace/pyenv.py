@@ -21,7 +21,7 @@ ORIGIN_PROBE = (
     "print(spec.origin if spec and spec.origin else '')"
 )
 
-SHIM_TEMPLATE = '''"""Written by Forge (spec §6.1). Runs after .pth files, so it can undo an editable
+SHIM_TEMPLATE = '''"""Written by DebCraft (spec §6.1). Runs after .pth files, so it can undo an editable
 install of the ORIGINAL app that would otherwise shadow the workspace copy.
 Chains to any other sitecustomize."""
 import importlib.util
@@ -68,7 +68,7 @@ class VenvInfo(BaseModel):
 
 
 class PythonEnvironment(BaseModel):
-    """How Forge runs the app: its own venv interpreter, with imports pointed at the workspace copy."""
+    """How DebCraft runs the app: its own venv interpreter, with imports pointed at the workspace copy."""
 
     python: str
     venv: str

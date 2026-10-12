@@ -1,6 +1,6 @@
 # FORGE v1 — Build Specification for a Local Coding Agent (Claude Code–style)
 
-> **How to use this file:** Put it in an empty folder, open Claude Code there, paste the *Kickoff Prompt* (Section 0). Claude Code builds Forge milestone by milestone (Section 17). Everything else is the reference spec.
+> **How to use this file:** Put it in an empty folder, open Claude Code there, paste the *Kickoff Prompt* (Section 0). Claude Code builds DebCraft milestone by milestone (Section 17). Everything else is the reference spec.
 
 **v1 scope:** Two modes — **Mode A** (repo path given) and **Mode B** (standalone, no codebase access) · Windows laptop, **Python 3.13** [A-6] · Python backends (Flask + flask-smorest, SQLAlchemy + raw SQL, PostgreSQL, LangChain/LangGraph) · **Azure OpenAI for every role by default; the model for each role is configurable; Google Gemini is an optional provider** [A-7] · offline-wheel install · the user copies code into the real repo manually · **local web UI is v1** [A-2]. Angular support is a v2 enhancement (Section 19).
 
@@ -9,7 +9,7 @@
 ## 0. Kickoff Prompt (paste into Claude Code)
 
 ```
-You are building "Forge", a local terminal coding agent in Python that replicates the
+You are building "DebCraft", a local terminal coding agent in Python that replicates the
 behaviour of Claude Code, powered by Azure OpenAI (model per role configurable; Gemini optional).
 
 Read FORGE_BUILD_SPEC.md fully before writing any code. It is the source of truth.
@@ -23,7 +23,7 @@ Rules for this build:
    inputs through an interface (Section 15A.2). The terminal UI and the local web UI
    (Section 15A) are both thin clients on the same engine.
    Python 3.13 target (3.10-compatible syntax), type hints, small modules (< ~500 lines each).
-   Plain Python agent loop: NO LangChain/LangGraph inside Forge itself.
+   Plain Python agent loop: NO LangChain/LangGraph inside DebCraft itself.
 4. Minimise dependencies (Section 3). Optional deps must degrade gracefully.
 5. Primary platform is Windows 10/11 without admin rights (PowerShell, CRLF, backslash
    paths, long paths, no symlinks). It must also work on macOS/Linux.
@@ -40,20 +40,20 @@ Rules for this build:
    same fixture app, so generated standalone code can be dropped into the fixture repo and
    run there to prove the integration guide works. Use SQLite for fixture tests plus
    Postgres tests against the local Postgres when FORGE_PG_URL is set.
-8. Forge must NEVER write to the user's original repository. Enforce and test this.
-   Forge has two modes (Section 1): Mode A (repo path given) and Mode B (standalone, no
+8. DebCraft must NEVER write to the user's original repository. Enforce and test this.
+   DebCraft has two modes (Section 1): Mode A (repo path given) and Mode B (standalone, no
    codebase access, Section 6A). In Mode B it must never read anything outside the
    workspace and profile folder. Enforce and test this too.
 9. When the spec is ambiguous, choose the behaviour closest to Claude Code, record it in
    docs/DECISIONS.md, and continue.
 10. After each milestone, run the whole test suite and summarise what was built.
-11. Forge must match Claude Code's capabilities (see the parity table in Section 13B and the
+11. DebCraft must match Claude Code's capabilities (see the parity table in Section 13B and the
     checklist in Section 20). Where the spec is silent, look at how Claude Code behaves and
     copy that behaviour.
 ```
 
 ### 0.1 Collaboration protocol (how Claude Code works with the user during the build)
-1. **Before any code:** summarise the understanding of Forge (10–15 lines). Give a risk list with likelihood, impact and mitigation for each. List ambiguities and parts of the spec you'd challenge. Propose any change to the milestone order. Wait for the go-ahead.
+1. **Before any code:** summarise the understanding of DebCraft (10–15 lines). Give a risk list with likelihood, impact and mitigation for each. List ambiguities and parts of the spec you'd challenge. Propose any change to the milestone order. Wait for the go-ahead.
 2. **Start of each milestone:** a brief covering the plan and tests, design choices with 2–3 options each (pros, cons, risks, recommendation), and new dependencies (licence, whether they work offline on Windows). Wait for approval.
 3. **Stop and discuss** when:
    - the spec is silent, or following it would be worse;
@@ -80,51 +80,51 @@ Inline changes are tagged `[A-n]`. Details and rationale are in docs/DECISIONS.m
 
 | Id | Amendment |
 |---|---|
-| A-1 | Forge has its own CLAUDE.md in its folder; parent-folder instruction files do not apply. |
+| A-1 | DebCraft has its own CLAUDE.md in its folder; parent-folder instruction files do not apply. |
 | A-2 | The local web UI is v1 (§15A). The §19 "web UI instead of terminal" v2 line is removed. The web UI core is built right after M8. |
-| A-3 | Mode A copies the app sub-folder to `repo/<app_subfolder>/`, so paths are relative to the repo root. After the code is built and tested, the user may instruct Forge to **restructure** the output to fit their repo; Forge restructures while keeping behaviour intact and re-verifies (§6.7). |
-| A-4 | One scratch schema per requirement. Forge asks the user to create it (DB request with exact SQL). No per-workspace table prefixes; a lock prevents two workspaces sharing one schema. |
-| A-5 | The shared remote dev DB is **read-only** for Forge and for anything Forge runs. DB-backed tests and app runs use the **local Postgres** when it is reachable; otherwise the remote DB in the requirement's scratch schema with `search_path` set to the scratch schema **only** (no fall-through to `public`). |
+| A-3 | Mode A copies the app sub-folder to `repo/<app_subfolder>/`, so paths are relative to the repo root. After the code is built and tested, the user may instruct DebCraft to **restructure** the output to fit their repo; DebCraft restructures while keeping behaviour intact and re-verifies (§6.7). |
+| A-4 | One scratch schema per requirement. DebCraft asks the user to create it (DB request with exact SQL). No per-workspace table prefixes; a lock prevents two workspaces sharing one schema. |
+| A-5 | The shared remote dev DB is **read-only** for DebCraft and for anything DebCraft runs. DB-backed tests and app runs use the **local Postgres** when it is reachable; otherwise the remote DB in the requirement's scratch schema with `search_path` set to the scratch schema **only** (no fall-through to `public`). |
 | A-6 | Runtime target is Python 3.13. The wheelhouse targets cp313 win_amd64. |
 | A-7 | Model per role (coder, kb_builder, reviewer, summariser, vision, judge, fallback) is configurable via config, `/model <role> <model>`, and the web UI settings. Default: Azure OpenAI for every role. The Gemini adapter is optional and built when keys are available. |
 | A-8 | No FakeLLM. Real Azure for agent-behaviour tests; transport-level mocks only for failure injection; deterministic logic tested without an LLM. |
 | A-9 | The always-ask/critical list (§14.2) is never auto-approved by any mode, including a user-granted free hand [D-130] — not only headless mode. Headless mode asks the user to confirm or to run the step themselves, or marks the task blocked. |
 | A-10 | The workspace git history (§13B) excludes secret files via `.gitignore`. |
-| A-11 | Access fallback chain: when Forge can't run something (DB, network, privileges, tools), it asks the user to run it; if the user can't either, Forge proposes a workaround or a code change as a design-fork discussion. |
+| A-11 | Access fallback chain: when DebCraft can't run something (DB, network, privileges, tools), it asks the user to run it; if the user can't either, DebCraft proposes a workaround or a code change as a design-fork discussion. |
 | A-12 | Multimodal (§13A) is general: the prescription task is one example requirement, not a special case. |
-| A-13 | No JWT or other auth implementation in generated code: the host repo already has JWT; generated code reuses the host's existing auth decorators/dependencies. Forge's own web UI uses a random localhost session token, not JWT. |
-| A-14 | Forge runs live in front of the user, not detached. The fixed phase pipeline (§7) is replaced by a flat Claude-Code-style agent loop: no mandatory CLARIFY/PLAN gates or REQUIREMENTS.md/PLAN.md artifacts; Forge asks inline only when a request is ambiguous or a design fork is consequential, same judgment this assistant applies. Resumability comes from the transcript, an in-session task list, and the existing memory/lessons store, not phase artifacts. Safety invariants (write jail, DB guard, Mode B isolation, redaction) are unaffected — they are already code-level checks, not phase-enforced. See D-128. |
-| D-129 | In Mode B, the user may pin an interface contract (e.g. an LLM call wrapper's signature) upfront via a Contracts panel/`CONTRACTS.md`, or in chat; Forge builds to it, lets the user change it mid-way, and proposes pinned/repeatedly-corrected contracts as lessons so it recommends them on later similar requirements (§6A.2A). |
-| D-130 | Sign-off cadence (free hand / per-step / default) is a live conversational instruction, not a config key or SETUP question — Forge follows whichever cadence the user last stated in chat, the same way this assistant does, and never lets it waive the always-ask/critical list (§14.2). |
-| D-132 | Verification (§13) becomes judgment-based — no mandatory full-suite-plus-reviewer gate before a task/requirement closes, Forge runs the ladder when it judges warranted, same as this assistant. Resume is automatic on reopening a workspace (crash, network drop, days away, or a context limit hit), with cadence (D-130) persisted in state.json so a free-hand grant survives an interruption. |
+| A-13 | No JWT or other auth implementation in generated code: the host repo already has JWT; generated code reuses the host's existing auth decorators/dependencies. DebCraft's own web UI uses a random localhost session token, not JWT. |
+| A-14 | DebCraft runs live in front of the user, not detached. The fixed phase pipeline (§7) is replaced by a flat Claude-Code-style agent loop: no mandatory CLARIFY/PLAN gates or REQUIREMENTS.md/PLAN.md artifacts; DebCraft asks inline only when a request is ambiguous or a design fork is consequential, same judgment this assistant applies. Resumability comes from the transcript, an in-session task list, and the existing memory/lessons store, not phase artifacts. Safety invariants (write jail, DB guard, Mode B isolation, redaction) are unaffected — they are already code-level checks, not phase-enforced. See D-128. |
+| D-129 | In Mode B, the user may pin an interface contract (e.g. an LLM call wrapper's signature) upfront via a Contracts panel/`CONTRACTS.md`, or in chat; DebCraft builds to it, lets the user change it mid-way, and proposes pinned/repeatedly-corrected contracts as lessons so it recommends them on later similar requirements (§6A.2A). |
+| D-130 | Sign-off cadence (free hand / per-step / default) is a live conversational instruction, not a config key or SETUP question — DebCraft follows whichever cadence the user last stated in chat, the same way this assistant does, and never lets it waive the always-ask/critical list (§14.2). |
+| D-132 | Verification (§13) becomes judgment-based — no mandatory full-suite-plus-reviewer gate before a task/requirement closes, DebCraft runs the ladder when it judges warranted, same as this assistant. Resume is automatic on reopening a workspace (crash, network drop, days away, or a context limit hit), with cadence (D-130) persisted in state.json so a free-hand grant survives an interruption. |
 | D-151 | Run log: an `llm_call` event per model call (latency, tokens, tool calls) in `events.jsonl`; `forge log-summary`. The web chat becomes a Claude Code-style timeline (rail, narration between tool rows, inline diffs, nested subagents) — building. |
-| D-152 / D-154 | Forge is split into tiered modules with enforced import boundaries and a MODULE.md each (docs/MODULES.md); `agent` is split into agent / subagents / workflow. §4's module map is superseded by docs/MODULES.md. |
+| D-152 / D-154 | DebCraft is split into tiered modules with enforced import boundaries and a MODULE.md each (docs/MODULES.md); `agent` is split into agent / subagents / workflow. §4's module map is superseded by docs/MODULES.md. |
 | D-153 | A chat message while approval cards or questions are open answers them (declines, with the message as the instruction). |
 | D-155 | §13.3 removed: no stuck detector and no escalation ladder; the model improvises recovery. Iteration and budget caps remain. |
 | D-156 | Verification (§9.8, §13.1/13.2), memory and learning (§9.9, §12) and repo knowledge (§9.2 KB tools, §11) replicate Claude Code: shell-based checks, FORGE.md + auto-memory + skills, on-demand search. The verify ladders, the requirements library, lessons, retro, metrics, improvement proposals and the KB are superseded; code removal is staged (see D-156). |
-| D-184 / D-197 | The web UI opens on a local sign-in (one account per machine, salted scrypt hash in `account.json`; reset by deleting the file; change password on the account screen), then a home screen: new project or open an existing one (the list shows the last request and what Forge remembers). |
-| D-186 / D-204 | Setup: the first run shows where the `.env` file is, a copyable template and which names are filled in (never values); keys are never typed into the app. An Environment drawer tests the system, Azure, the Forge database (`LOCAL_PG_URL`) and the read-only Development database (`DEV_PG_URL`) only on request; it proposes a model per role, the user confirms, and the choice is remembered per machine. |
+| D-184 / D-197 | The web UI opens on a local sign-in (one account per machine, salted scrypt hash in `account.json`; reset by deleting the file; change password on the account screen), then a home screen: new project or open an existing one (the list shows the last request and what DebCraft remembers). |
+| D-186 / D-204 | Setup: the first run shows where the `.env` file is, a copyable template and which names are filled in (never values); keys are never typed into the app. An Environment drawer tests the system, Azure, the DebCraft database (`LOCAL_PG_URL`) and the read-only Development database (`DEV_PG_URL`) only on request; it proposes a model per role, the user confirms, and the choice is remembered per machine. |
 | D-195 | The full result of a tool call is saved (redacted, capped) and shown on request; the event keeps a preview. |
 | D-201 / D-203 | Tesseract and Gemini are asked about first and tested only after a yes; Tesseract gives the model a read-only `ocr_image` tool. |
-| D-187 / D-202 | A read of Forge's `.env` by variable or quoted name always asks; commands the model runs do not inherit Forge's own variables. |
+| D-187 / D-202 | A read of DebCraft's `.env` by variable or quoted name always asks; commands the model runs do not inherit DebCraft's own variables. |
 
 ---
 
 ## 1. Goal
 
-Forge supports **two operating modes**, chosen when a workspace is created:
+DebCraft supports **two operating modes**, chosen when a workspace is created:
 
 | | **Mode A — Repo mode** | **Mode B — Standalone mode** |
 |---|---|---|
-| Codebase access | Given a path; reads, analyses, copies it | **None.** The host codebase is secret. Forge learns about it only from what the user tells it in chat |
+| Codebase access | Given a path; reads, analyses, copies it | **None.** The host codebase is secret. DebCraft learns about it only from what the user tells it in chat |
 | Understanding the host | Knowledge Base built from the code (§11) | **Host Profile** built from a structured chat interview plus snippets the user chooses to paste (§6A.2) |
 | Where code runs | Copy of the repo in the workspace | Standalone project in the workspace, shaped like the host, with a **test harness** that stands in for host pieces (§6A.4) |
 | Deliverable | Changed/new files + copy instructions | Standalone files + integration guide + interface contract + assumptions to verify (§6A.6) |
-| Fixing after integration | Diagnose mode re-copies and runs the real repo (§6.6) | **Chat-driven diagnose.** The user pastes errors and minimal snippets; Forge fixes the code and issues a revised output (§6A.7) |
+| Fixing after integration | Diagnose mode re-copies and runs the real repo (§6.6) | **Chat-driven diagnose.** The user pastes errors and minimal snippets; DebCraft fixes the code and issues a revised output (§6A.7) |
 
 Everything else is shared by both modes: agent loop, tools, context management, approvals, verification, safety, memory. Sections 6.x describe Mode A. Section 6A describes Mode B.
 
-**Mode A flow.** Forge is run on the developer's laptop against an existing codebase. For each requirement it:
+**Mode A flow.** DebCraft is run on the developer's laptop against an existing codebase. For each requirement it:
 
 1. Asks for a **workspace folder path** (one workspace per requirement).
 2. Understands the requirement with the user, asking inline only when it's ambiguous or genuinely consequential [A-14].
@@ -142,13 +142,13 @@ Everything else is shared by both modes: agent loop, tools, context management, 
 ## 2. Environment Assumptions
 
 - Windows 10/11, no admin rights. PowerShell 5.1+ (use `pwsh` if present). Corporate proxy possible.
-- **Python 3.13** on the target laptop [A-6]. The Python app is a **separate folder inside a larger repo**. Its virtualenv lives **inside that app folder** (e.g. `<app>\venv` or `<app>\.venv`), and the app is always run from within that venv. Forge detects the venv and reuses its interpreter; it never copies the venv.
+- **Python 3.13** on the target laptop [A-6]. The Python app is a **separate folder inside a larger repo**. Its virtualenv lives **inside that app folder** (e.g. `<app>\venv` or `<app>\.venv`), and the app is always run from within that venv. DebCraft detects the venv and reuses its interpreter; it never copies the venv.
 - The app loads DB credentials **from a config table in PostgreSQL and exports them into environment variables** at startup (§9.5.1).
 - DB changes are delivered as **raw `.sql` files in the folder the repo already uses** for them (detected by the KB, confirmed with the user once, and remembered).
 - Install is via an offline wheelhouse (`pip install --no-index --find-links wheels forge`).
 - `pip install playwright` works. Edge and Chrome are installed; Playwright launches them via `channel="msedge"` / `"chrome"`, with no browser download needed.
-- Git may or may not be installed; Forge must work without it.
-- **PostgreSQL** [A-5]: a **local PostgreSQL may be installed** on the laptop. Forge checks whether it can connect to it and, if so, uses it for all DB-backed testing (scratch schema, app runs). The **shared remote dev DB** (corporate network, possibly VPN-only, SSL-required, or behind a firewall) is used only read-only (introspection, SELECTs) — and for scratch-schema testing only when the local DB isn't reachable. Forge detects its access level and adapts (§9.5.2). When it can't make a DB change itself, it asks the user (or their DBA) to do it, and verifies afterwards.
+- Git may or may not be installed; DebCraft must work without it.
+- **PostgreSQL** [A-5]: a **local PostgreSQL may be installed** on the laptop. DebCraft checks whether it can connect to it and, if so, uses it for all DB-backed testing (scratch schema, app runs). The **shared remote dev DB** (corporate network, possibly VPN-only, SSL-required, or behind a firewall) is used only read-only (introspection, SELECTs) — and for scratch-schema testing only when the local DB isn't reachable. DebCraft detects its access level and adapts (§9.5.2). When it can't make a DB change itself, it asks the user (or their DBA) to do it, and verifies afterwards.
 
 ---
 
@@ -253,8 +253,8 @@ Use `tiktoken` `o200k_base` (vendored file, `TIKTOKEN_CACHE_DIR`) for OpenAI mod
 ## 6. Workspace Model (copy of the repo, one workspace per requirement)
 
 ### 6.1 Creation flow
-1. Forge asks for **repo path** (remembered per repo) and **workspace path** (new, empty or non-existent folder).
-2. Forge asks which **sub-folder is the Python app** (e.g. `backend/`), auto-suggesting candidates: folders containing a venv plus `app.py`/`wsgi.py`/`create_app`/`requirements.txt`/`pyproject.toml`. The answer is remembered per repo. Only this folder is copied in v1. Other repo folders (e.g. Angular) stay readable in the original repo for context.
+1. DebCraft asks for **repo path** (remembered per repo) and **workspace path** (new, empty or non-existent folder).
+2. DebCraft asks which **sub-folder is the Python app** (e.g. `backend/`), auto-suggesting candidates: folders containing a venv plus `app.py`/`wsgi.py`/`create_app`/`requirements.txt`/`pyproject.toml`. The answer is remembered per repo. Only this folder is copied in v1. Other repo folders (e.g. Angular) stay readable in the original repo for context.
 3. **Copy** the project into `<workspace>/repo/<app_subfolder>/` [A-3], so every path in the workspace is relative to the repo root, exactly as in the real repo:
    - Respect `.gitignore` plus a default exclude list: `.git`, `.venv`, `venv`, `env`, `__pycache__`, `*.pyc`, `.pytest_cache`, `.mypy_cache`, `node_modules`, `dist`, `build`, `*.egg-info`, `logs`, large data files (> configurable size, e.g. 20 MB).
    - Windows long paths: use the `\\?\` prefix where needed.
@@ -268,13 +268,13 @@ Use `tiktoken` `o200k_base` (vendored file, `TIKTOKEN_CACHE_DIR`) for OpenAI mod
    - If the venv's `pyvenv.cfg` base interpreter is missing (the venv is broken), use `request_user_action`.
    - **Never `pip install` into the user's venv without approval.** If a new package is needed, offer:
      - (a) the user installs it into their venv, or
-     - (b) Forge creates `<workspace>/.forge/venv` with `--system-site-packages` and installs only the new packages there, from the internal index or offline wheels.
+     - (b) DebCraft creates `<workspace>/.forge/venv` with `--system-site-packages` and installs only the new packages there, from the internal index or offline wheels.
 6. Knowledge Base staleness check (§11.4) runs at the same time.
 
 ### 6.2 Layout
 ```
 <workspace>/
-  repo/                       # working copy — Forge edits and runs code here
+  repo/                       # working copy — DebCraft edits and runs code here
     <app_subfolder>/...       #   same relative paths as the real repo [A-3]
   output/                     # DELIVERABLE: only new/modified files, same relative paths (repo-root relative)
     <same/relative/paths...>
@@ -288,14 +288,14 @@ Use `tiktoken` `o200k_base` (vendored file, `TIKTOKEN_CACHE_DIR`) for OpenAI mod
     workspace.json            # repo path, project root, baseline time, interpreter, status
     REQUIREMENTS.md  PLAN.md  tasks.json  DECISIONS.md  PROGRESS.md  DISCUSSIONS.md
     baseline_manifest.json
-    baseline/                 # original content of every file Forge modified (copy-on-first-write)
+    baseline/                 # original content of every file DebCraft modified (copy-on-first-write)
     checkpoints/  transcripts/  compactions/  tool_outputs/  reports/  screenshots/  memory/
 ```
 
 ### 6.3 Change tracking
 - Every write goes through `workspace/baseline.py`. On the **first write** to an existing file, its original content is saved to `.forge/baseline/`.
 - `output/` is regenerated on `/export` and at task completion. Each file's status (new, modified, deleted) is computed from the manifest and baseline, and the diff comes from `difflib` (no git needed).
-- Deleted files go into `CHANGES.md` as explicit "delete this file" instructions. Forge never deletes anything in the user's repo.
+- Deleted files go into `CHANGES.md` as explicit "delete this file" instructions. DebCraft never deletes anything in the user's repo.
 
 ### 6.4 COPY_INSTRUCTIONS.md (the user-facing deliverable)
 Ordered, copy-paste-friendly steps:
@@ -307,10 +307,10 @@ Ordered, copy-paste-friendly steps:
 6. New env vars.
 7. How to verify: exact commands (`pytest tests/...`, `flask run`, a curl/HTTPie request, OpenAPI check).
 
-### 6.5 Sync (the real repo changes while Forge works)
+### 6.5 Sync (the real repo changes while DebCraft works)
 `/sync` re-scans the original repo:
 - Unchanged-by-Forge files are refreshed in the copy.
-- Files both changed upstream and by Forge are reported as **conflicts**. The agent proposes a 3-way merge (baseline / upstream / Forge) for approval.
+- Files both changed upstream and by DebCraft are reported as **conflicts**. The agent proposes a 3-way merge (baseline / upstream / DebCraft) for approval.
 - The baseline manifest is then updated.
 
 ### 6.6 Diagnose mode (after the user copies code into the real repo)
@@ -325,10 +325,10 @@ Ordered, copy-paste-friendly steps:
 2. **Fresh copy:** copy the real repo again into `<workspace>/diagnose_run/`, then run the app, the tests and the smoke checks there. Nothing runs inside the real repo.
 3. **Analysis:** collect the tracebacks and failing tests, then trace the root cause with the KB and code search.
 4. **Report** in `.forge/reports/diagnose-<n>.md`: the problem, the evidence, and exact fix instructions for the user. If code changes are needed, updated files go into `output/` with a new COPY_INSTRUCTIONS section.
-5. The user can also paste an error or log from their own run; Forge starts diagnosis from that.
+5. The user can also paste an error or log from their own run; DebCraft starts diagnosis from that.
 
 ### 6.7 Restructure for the repo [A-3]
-After the code is developed and verified, the user may instruct Forge to restructure it so it can be fed into the repo (e.g. "move the service into `app/services/`", "merge these two modules", "split routes per resource", "match our new package layout"). Forge:
+After the code is developed and verified, the user may instruct DebCraft to restructure it so it can be fed into the repo (e.g. "move the service into `app/services/`", "merge these two modules", "split routes per resource", "match our new package layout"). DebCraft:
 1. Treats the instruction as a normal plan with approval (files moved/renamed/merged, imports updated, registrations updated).
 2. Keeps behaviour identical: the full test suite, app smoke and OpenAPI check must produce the same results before and after; public endpoints and SQL must not change unless the user asked.
 3. Regenerates `output/` and COPY_INSTRUCTIONS with the new paths, and records the mapping (old path → new path) in CHANGES.md.
@@ -339,7 +339,7 @@ In Mode B the same command restructures `project/` and the INTEGRATION_GUIDE, an
 
 ## 6A. Mode B — Standalone Mode (no access to the host codebase)
 
-Used when the host codebase must not be shared with Forge or the LLM for secrecy or security reasons. Forge **never** asks for a repo path in this mode, never scans outside the workspace, and treats everything the user pastes as sensitive.
+Used when the host codebase must not be shared with DebCraft or the LLM for secrecy or security reasons. DebCraft **never** asks for a repo path in this mode, never scans outside the workspace, and treats everything the user pastes as sensitive.
 
 ### 6A.1 Workspace layout
 ```
@@ -375,7 +375,7 @@ A reusable, versioned description of a host codebase, built from chat. It lives 
 6. **LLM layer:** how LangChain LLM clients are created; the LangGraph state and graph pattern; where prompts live; how tests fake LLMs.
 7. **Testing:** pytest layout, fixtures, how the DB is handled in tests.
 
-**Structure export (v1, speeds up the interview; code bodies never leave the host).** Forge ships a separate, single-file, stdlib-only script, `forge_structure_export.py` (also printable via `forge profile export-script`). The user copies it to the host machine or folder and runs it **themselves**; Forge never runs it and never sees the host path.
+**Structure export (v1, speeds up the interview; code bodies never leave the host).** DebCraft ships a separate, single-file, stdlib-only script, `forge_structure_export.py` (also printable via `forge profile export-script`). The user copies it to the host machine or folder and runs it **themselves**; DebCraft never runs it and never sees the host path.
 - **What it outputs** (`structure_export.json` + a human-readable `.md`):
   - the folder tree (with the standard excludes);
   - pinned package versions from `requirements*.txt` / `pyproject.toml`;
@@ -387,43 +387,43 @@ A reusable, versioned description of a host codebase, built from chat. It lives 
   - env/config **key names**.
 - **What it never outputs:** function bodies, string literals, constant/config values, comments, `.env` contents, data files. Docstrings are off by default (`--docstrings` to include them).
 - **Options:** `--include` / `--exclude` paths, `--depth`, `--mask <terms file>` (replaces listed sensitive words with placeholders consistently).
-- **Import:** the user reviews the output file (it's plain text) and imports it with `/profile import <file>`. Forge runs redaction and a `sensitive_terms` check on it. It is stored in the profile's `structure.sqlite` index and **never sent to the LLM wholesale**: only the parts relevant to the current requirement are retrieved (by search), just like the Mode A KB. It pre-fills interview sections 1, 2, 5 and 6, so Forge asks only about the gaps.
-- **Refresh:** the user can re-run it any time. Forge diffs the new export against the old one and updates the profile, showing changes for approval.
+- **Import:** the user reviews the output file (it's plain text) and imports it with `/profile import <file>`. DebCraft runs redaction and a `sensitive_terms` check on it. It is stored in the profile's `structure.sqlite` index and **never sent to the LLM wholesale**: only the parts relevant to the current requirement are retrieved (by search), just like the Mode A KB. It pre-fills interview sections 1, 2, 5 and 6, so DebCraft asks only about the gaps.
+- **Refresh:** the user can re-run it any time. DebCraft diffs the new export against the old one and updates the profile, showing changes for approval.
 
-**Snippets.** Forge may ask for a *small, representative, sanitised* example (e.g. "one existing MethodView blueprint, with business logic removed") because mirroring an exemplar beats describing it. Rules:
-- Forge always says **why** it needs a snippet and what to redact.
-- Forge never asks for credentials, `.env` contents, customer data or whole modules.
-- Pasted snippets are scanned by `redact.py`. If something looks like a secret, Forge warns the user and asks whether to keep or drop it.
+**Snippets.** DebCraft may ask for a *small, representative, sanitised* example (e.g. "one existing MethodView blueprint, with business logic removed") because mirroring an exemplar beats describing it. Rules:
+- DebCraft always says **why** it needs a snippet and what to redact.
+- DebCraft never asks for credentials, `.env` contents, customer data or whole modules.
+- Pasted snippets are scanned by `redact.py`. If something looks like a secret, DebCraft warns the user and asks whether to keep or drop it.
 
 **Profile files:**
 - `PROFILE.md`: the structured answers.
 - `exemplars/*.py`: snippets the user approved, each with a note on what it demonstrates.
 - `CONVENTIONS.md`, `INTERFACES.md`: known host symbols and signatures.
-- `CONTRACTS.md`: user-pinned interface contracts (§6A.2A) — separate from `INTERFACES.md`, which records what Forge *learned* about the host; `CONTRACTS.md` records what the user *told Forge to build to*.
+- `CONTRACTS.md`: user-pinned interface contracts (§6A.2A) — separate from `INTERFACES.md`, which records what DebCraft *learned* about the host; `CONTRACTS.md` records what the user *told DebCraft to build to*.
 - `structure_export.json`, `structure.sqlite`: the latest imported structure export and its search index.
 - `CHANGELOG.md`.
 
 Profiles are updated as new facts come in, and every change is shown to the user for approval. `/profile show|edit|update|list|use <name>`.
 
-**Assumption register.** Anything Forge had to assume (not stated by the user) is recorded with a confidence level and is surfaced at plan approval. High-impact assumptions are raised as design-fork questions.
+**Assumption register.** Anything DebCraft had to assume (not stated by the user) is recorded with a confidence level and is surfaced at plan approval. High-impact assumptions are raised as design-fork questions.
 
 ### 6A.2A User-pinned interface contracts [D-129]
-In Mode B, Forge has a free hand to design the solution — except where the user pins a specific
+In Mode B, DebCraft has a free hand to design the solution — except where the user pins a specific
 signature/contract for a seam (e.g. "the LLM call wrapper must be `def call_llm(prompt: str, **kwargs) ->
 LLMResponse`", or a file read/write helper's exact shape) so the generated code is easy to retrofit into
-the host repo by hand. Forge builds to a pinned contract instead of inventing its own for that seam.
+the host repo by hand. DebCraft builds to a pinned contract instead of inventing its own for that seam.
 
 - **Where it's entered:** a dedicated **Contracts** panel in the web UI (workspace-scoped), backed by
-  `CONTRACTS.md` in the profile; also accepted as a normal chat message at any time, which Forge files into
+  `CONTRACTS.md` in the profile; also accepted as a normal chat message at any time, which DebCraft files into
   the same store after confirming it understood the contract correctly. Both routes are equivalent.
-- **Pinned into context** alongside the Host Profile (§10.2), so every file Forge writes for a seam with a
+- **Pinned into context** alongside the Host Profile (§10.2), so every file DebCraft writes for a seam with a
   pinned contract conforms to it, not to a guessed convention.
-- **Changeable mid-way.** The user may pin or change a contract after seeing generated code. Forge
+- **Changeable mid-way.** The user may pin or change a contract after seeing generated code. DebCraft
   reconciles already-written files that used the old shape as part of its next task on that seam, and
   notes the change in `CHANGELOG.md`.
-- **Learned over time.** A contract the user pins, or repeatedly corrects Forge toward, is proposed as a
+- **Learned over time.** A contract the user pins, or repeatedly corrects DebCraft toward, is proposed as a
   **lesson** (§12) the same way other lessons are — reviewed and approved by the user, scoped to the
-  profile or promoted to global — so Forge recommends a known contract on a later, similar requirement
+  profile or promoted to global — so DebCraft recommends a known contract on a later, similar requirement
   instead of re-deriving or re-asking.
 - The plan step (§6A.5) lists, for each new file, which pinned contract (if any) its interface conforms to,
   alongside the exemplar it mirrors.
@@ -440,15 +440,15 @@ the host repo by hand. Forge builds to a pinned contract instead of inventing it
 ### 6A.4 Test harness (running code without the host)
 - `_harness/host_stubs/` recreates **only the host symbols the new code imports**, at the same import paths. `_harness` is placed on `PYTHONPATH` *after* `project/` so real new code wins. The stubs behave the way the profile describes (e.g. a `get_db()` that yields a real psycopg connection to the scratch schema, or a SQLAlchemy session bound to it).
 - Stubs are generated from INTERFACE_CONTRACT.md, so the harness and the contract never drift. The reviewer checks that the stubs don't fake behaviour the real host wouldn't have.
-- **Workspace venv:** Forge creates `.venv` and installs the host's stated package versions (from the offline wheelhouse or internal index, with approval). Tests run against the same library versions the host uses. If an exact version isn't available offline, Forge uses the closest available one and records the gap in ASSUMPTIONS.md.
-- **Database:** tests use the requirement's scratch schema (§9.5), on the **local Postgres** when reachable, otherwise on the remote dev DB [A-5]. Tables are created there from the DDL the user supplied, plus synthetic seed data generated by Forge. Real data is never needed. Forge drops only the objects it created, after approval.
-- **Verification** uses the same ladder as §13: compile, lint, unit tests, `_harness/run_app.py` smoke plus the OpenAPI check, and a LangGraph compile/run with fake LLMs (fakes inside the *generated* code's tests are fine; §0 rule 6 applies to Forge's own tests).
+- **Workspace venv:** DebCraft creates `.venv` and installs the host's stated package versions (from the offline wheelhouse or internal index, with approval). Tests run against the same library versions the host uses. If an exact version isn't available offline, DebCraft uses the closest available one and records the gap in ASSUMPTIONS.md.
+- **Database:** tests use the requirement's scratch schema (§9.5), on the **local Postgres** when reachable, otherwise on the remote dev DB [A-5]. Tables are created there from the DDL the user supplied, plus synthetic seed data generated by DebCraft. Real data is never needed. DebCraft drops only the objects it created, after approval.
+- **Verification** uses the same ladder as §13: compile, lint, unit tests, `_harness/run_app.py` smoke plus the OpenAPI check, and a LangGraph compile/run with fake LLMs (fakes inside the *generated* code's tests are fine; §0 rule 6 applies to DebCraft's own tests).
 - **Contract tests:** small tests that pin each INTERFACE_CONTRACT assumption (e.g. "`get_db()` returns an object with `.execute()` that returns rows as dicts"). They're delivered in `output/` so the user can run them inside the host to validate assumptions quickly.
 
 ### 6A.5 Workflow differences [A-14, D-128]
-Setup (choose or create the Host Profile, create the venv), then Forge understands the requirement inline
+Setup (choose or create the Host Profile, create the venv), then DebCraft understands the requirement inline
 with the user — including any profile gaps relevant to it — the same judgment-based way as §7, not a
-forced CLARIFY round. Before or during implementation Forge still needs a plan for Mode B specifically
+forced CLARIFY round. Before or during implementation DebCraft still needs a plan for Mode B specifically
 (it lists the seams, the assumptions, and which exemplars from the profile each new file mirrors); when
 and how that plan is surfaced to the user for Mode B is still to be agreed (open point in D-128's thread).
 After that: task breakdown → execute/verify in the harness → review → export → handoff.
@@ -462,10 +462,10 @@ There's no KB, and no repo to explore. Explore subagents only read the profile a
 4. Dependencies and SQL scripts, in order.
 5. Assumptions to verify, each with a 1-line check the user can run.
 6. How to run the delivered contract tests and feature tests inside the host.
-7. What to paste back to Forge if something fails: the traceback, the failing test output, and the specific file or section Forge names. **Never paste secrets.**
+7. What to paste back to DebCraft if something fails: the traceback, the failing test output, and the specific file or section DebCraft names. **Never paste secrets.**
 
 ### 6A.7 Chat-driven diagnose & revisions
-- The user pastes errors, test output or behaviour descriptions. Forge:
+- The user pastes errors, test output or behaviour descriptions. DebCraft:
   1. classifies each one (wrong assumption, host-version mismatch, integration step missed, or a genuine bug);
   2. asks for the **minimum** extra detail needed (a specific signature, a table's columns, one function), explaining why;
   3. updates the Host Profile when it learns a new fact about the host (with approval);
@@ -483,9 +483,9 @@ There's no KB, and no repo to explore. Explore subagents only read the profile a
 
 ## 7. Workflow & Approvals (Orchestrator) [A-14, D-128]
 
-Forge runs a **flat agent loop**, not a fixed phase state machine: read the request → act with tools →
+DebCraft runs a **flat agent loop**, not a fixed phase state machine: read the request → act with tools →
 respond, live in front of the user, the same way Claude Code itself works. There is no mandatory CLARIFY
-or PLAN gate and no required REQUIREMENTS.md/PLAN.md artifact. Instead, Forge asks inline — only when a
+or PLAN gate and no required REQUIREMENTS.md/PLAN.md artifact. Instead, DebCraft asks inline — only when a
 request is ambiguous or a design choice is genuinely consequential — and otherwise proceeds directly.
 
 SETUP (choosing Mode A/B, workspace, KB/Host Profile, DB target) still happens once per workspace, and a
@@ -496,16 +496,16 @@ enforced stages:
 | Activity | When it happens | Output |
 |---|---|---|
 | Setup | Once per workspace: Mode A/B, repo copy or Host Profile, venv, DB target detection, scratch-schema request [A-4][A-5]. | workspace.json, ENVIRONMENT.md |
-| Understanding the requirement | Inline, as needed — Forge asks only when scope/APIs/data model/acceptance criteria/edge cases are genuinely unclear, not a forced round. | condensed requirement (pinned context, §10.2) |
-| Exploring the codebase/profile | Forge reads the KB (Mode A) or Host Profile (Mode B) directly, or spawns an `explore` subagent (§9.10) for a focused search, whenever it needs to before or during implementation — not as a separate mandatory stage. | notes used immediately |
-| Planning | Surfaced in chat only for real design forks (see below) or on request; otherwise Forge just proceeds task by task. A short plan may still be written to the workspace for the user's reference, but it is not an approval gate. | plan notes (optional), tasks.json |
+| Understanding the requirement | Inline, as needed — DebCraft asks only when scope/APIs/data model/acceptance criteria/edge cases are genuinely unclear, not a forced round. | condensed requirement (pinned context, §10.2) |
+| Exploring the codebase/profile | DebCraft reads the KB (Mode A) or Host Profile (Mode B) directly, or spawns an `explore` subagent (§9.10) for a focused search, whenever it needs to before or during implementation — not as a separate mandatory stage. | notes used immediately |
+| Planning | Surfaced in chat only for real design forks (see below) or on request; otherwise DebCraft just proceeds task by task. A short plan may still be written to the workspace for the user's reference, but it is not an approval gate. | plan notes (optional), tasks.json |
 | Task breakdown | Small, independently verifiable tasks with dependencies and acceptance checks, created and updated as work proceeds. | tasks.json |
 | Execute/verify | Per task: focused context → implement → verify ladder, run when warranted (§13, [D-132]) → self-correct. | code in repo/ |
-| Review | Judgment-based, not a mandatory gate [D-132]: Forge checks its diff against the requirement, conventions and exemplars — directly, or via a `reviewer` subagent when it judges that useful — and runs whatever of the verify ladder it judges warranted before calling work done. | reports/review.md (when produced) |
+| Review | Judgment-based, not a mandatory gate [D-132]: DebCraft checks its diff against the requirement, conventions and exemplars — directly, or via a `reviewer` subagent when it judges that useful — and runs whatever of the verify ladder it judges warranted before calling work done. | reports/review.md (when produced) |
 | Export | Build output/ and instructions (§6.2–6.4); final report. | output/, reports/final.md |
 | Restructure | Optional, on the user's instruction: reshape the code to fit the repo with behaviour unchanged (§6.7) [A-3]. | updated output/ |
 | Handoff | Walk the user through COPY_INSTRUCTIONS; offer Diagnose mode. | — |
-| Retro | Deliberate, triggered action (by the user or Forge offering) once work is done: write the requirement card and retrospective, propose lessons/improvements (§12) — not a phase every requirement is forced through. | library card, retros/, lessons, improvements/ |
+| Retro | Deliberate, triggered action (by the user or DebCraft offering) once work is done: write the requirement card and retrospective, propose lessons/improvements (§12) — not a phase every requirement is forced through. | library card, retros/, lessons, improvements/ |
 
 `spawn_subagent` (§9.10; types `explore`, `planner`, `reviewer`, `test_writer`, `debugger`) is callable at
 any point in the loop, not restricted to specific stages.
@@ -518,15 +518,15 @@ instead, per [D-128]. By default (no cadence instruction given) the agent **must
 - a new dependency, DB change, env var or config key is needed;
 - an assumption in the approved plan turns out to be wrong (replan);
 - self-correction escalation is reached (§13.3);
-- neither Forge nor the user can perform a needed step, and a workaround or code change is required [A-11].
+- neither DebCraft nor the user can perform a needed step, and a workaround or code change is required [A-11].
 
 **Cadence is a live conversational instruction, not a setting [D-130].** There is no config key or
-per-workspace choice for this. The user tells Forge, in chat, at any point: "go ahead with the recommended
-option each time, don't ask me" (free hand — Forge decides and proceeds through everything except the
-always-ask/critical list, §14.2) or "ask me before every step" (per-step — Forge confirms before each
-action). Forge follows whichever instruction was given most recently, exactly as this assistant follows a
+per-workspace choice for this. The user tells DebCraft, in chat, at any point: "go ahead with the recommended
+option each time, don't ask me" (free hand — DebCraft decides and proceeds through everything except the
+always-ask/critical list, §14.2) or "ask me before every step" (per-step — DebCraft confirms before each
+action). DebCraft follows whichever instruction was given most recently, exactly as this assistant follows a
 mid-session "you have a free hand tonight" or "check with me from now on." Absent any such instruction,
-Forge uses the default judgment-based list above. No instruction, free hand included, ever waives the
+DebCraft uses the default judgment-based list above. No instruction, free hand included, ever waives the
 always-ask/critical list (§14.2) — see [A-9], generalised from headless mode to every mode.
 
 The format is always: the context in 2–3 lines, options A/B/(C) with trade-offs, a recommendation, then wait. The user's choice goes to DECISIONS.md. For small reversible choices the agent decides, notes it in DECISIONS.md, and mentions it in the next check-in. After each task it posts a ≤5-line check-in (done / verified how / next).
@@ -597,26 +597,26 @@ After every mutation: a colored diff in the UI, a checkpoint, post-edit hooks (e
 ### 9.4 Planning & interaction
 - `todo_write(tasks[])`, `task_update(id, status, notes)`.
 - `ask_user(question, options[], recommended?)` for multiple-choice discussion (§7).
-- `request_user_action(title, steps[], verify_command?)`: for OS-level work the agent can't do (install a tool, grant a DB privilege, set an env var, trust a certificate, **run a command Forge lacks access for**). It prints exact PowerShell commands, waits for `done` / `skip` / `I can't (reason)`, then verifies. On "I can't", Forge opens a design-fork discussion with workarounds or code changes [A-11].
+- `request_user_action(title, steps[], verify_command?)`: for OS-level work the agent can't do (install a tool, grant a DB privilege, set an env var, trust a certificate, **run a command DebCraft lacks access for**). It prints exact PowerShell commands, waits for `done` / `skip` / `I can't (reason)`, then verifies. On "I can't", DebCraft opens a design-fork discussion with workarounds or code changes [A-11].
 - `update_plan(markdown)`: needs approval once the plan is approved.
 
 ### 9.5 Database (PostgreSQL)
 **DB targets** [A-5]:
-- **Local Postgres** (`LOCAL_PG_URL`): checked at SETUP. If reachable and Forge can create objects in the requirement's scratch schema, it is the target for every DB-backed test and app run.
+- **Local Postgres** (`LOCAL_PG_URL`): checked at SETUP. If reachable and DebCraft can create objects in the requirement's scratch schema, it is the target for every DB-backed test and app run.
 - **Remote shared dev DB** (`DEV_PG_URL`): read-only. Used for introspection (`db_schema`) and read-only `db_query` to learn real table structures; used for scratch-schema testing only if the local DB isn't available.
 
 Tools:
 - `db_schema(conn, schema?, table?)`: introspection of tables, columns, indexes and FKs; results cached into the KB.
 - `db_query(conn, sql, limit=100)`: **read-only** on real schemas. The SQL guard allows only SELECT/WITH/EXPLAIN, and the session runs with `SET default_transaction_read_only = on`.
 - **Scratch schema lifecycle** [A-4]:
-  - **One scratch schema per requirement.** At SETUP, Forge proposes a name (e.g. `forge_req123`) and asks the user to create it, via a DB request (§9.5.2) with the exact `CREATE SCHEMA` / `GRANT` SQL. If Forge's role has CREATE on the database (typical for the local DB) and the user approves, Forge may create it itself (`scratch.create: forge_if_allowed`).
+  - **One scratch schema per requirement.** At SETUP, DebCraft proposes a name (e.g. `forge_req123`) and asks the user to create it, via a DB request (§9.5.2) with the exact `CREATE SCHEMA` / `GRANT` SQL. If DebCraft's role has CREATE on the database (typical for the local DB) and the user approves, DebCraft may create it itself (`scratch.create: forge_if_allowed`).
   - A lock (`<forge_home>/scratch_registry.json` + an advisory lock) ensures only one workspace uses a schema at a time. No table-name prefixes, so SQL stays identical to what ships.
-  - Forge records every object it creates there (tables, views, sequences, functions, indexes) in the object registry. At workspace completion and on `forge cleanup`, it lists those objects and drops **only them**, after approval. Objects Forge didn't create are never touched. A schema Forge didn't create is never dropped; dropping it is a DB request for the user.
-  - Forge checks at setup that it can `CREATE TABLE` and `DROP` its own objects in that schema, and whether it can write to any other schema (`has_schema_privilege`). If it can, it warns the user, and the SQL guard still blocks those writes.
+  - DebCraft records every object it creates there (tables, views, sequences, functions, indexes) in the object registry. At workspace completion and on `forge cleanup`, it lists those objects and drops **only them**, after approval. Objects DebCraft didn't create are never touched. A schema DebCraft didn't create is never dropped; dropping it is a DB request for the user.
+  - DebCraft checks at setup that it can `CREATE TABLE` and `DROP` its own objects in that schema, and whether it can write to any other schema (`has_schema_privilege`). If it can, it warns the user, and the SQL guard still blocks those writes.
   - `scratch_exec(sql)` runs DDL/DML with `search_path` set to the scratch schema. The guard rejects statements that name any other schema, `DROP DATABASE`, `ALTER ROLE`/`GRANT`, and similar.
   - Tables the new code needs are either cloned structure-only (from `db_schema` output of the remote DB, replayed as DDL in the scratch schema) plus optional synthetic rows, or created from the new DDL. Copying real rows is **not** done from the shared dev DB unless the user explicitly approves each copy.
-  - The app and tests point at the scratch schema **without changing any app code**, by setting `PGOPTIONS=-c search_path=<scratch>` (scratch **only** — no fall-through to `public`) in the environment of every command Forge runs [A-5]. libpq, which both psycopg2 and psycopg3 use, applies this to every connection the app opens.
-    - Every table the code touches (known from the KB) must exist in scratch before DB-backed runs; Forge checks this and refuses the run otherwise.
+  - The app and tests point at the scratch schema **without changing any app code**, by setting `PGOPTIONS=-c search_path=<scratch>` (scratch **only** — no fall-through to `public`) in the environment of every command DebCraft runs [A-5]. libpq, which both psycopg2 and psycopg3 use, applies this to every connection the app opens.
+    - Every table the code touches (known from the KB) must exist in scratch before DB-backed runs; DebCraft checks this and refuses the run otherwise.
     - Schema-qualified names (`public.x`) bypass scratch. The KB flags code that hardcodes schema names; runs that would write to them against the remote DB are refused.
     - Pointing the app at the local DB instead of the remote one (host/port/credentials, including the config-table bootstrap, §9.5.1) is designed in M7 with the user; options include libpq env overrides (`PGHOST`/`PGPORT`/`PGSERVICEFILE`) when the app's DSN allows it, or the repo's own test configuration.
     - If the app uses a non-libpq driver (asyncpg), fall back to the repo's own config pattern, discovered from the KB.
@@ -624,38 +624,38 @@ Tools:
 - New DDL/DML is written as a **raw `.sql` file in the repo's existing SQL folder**, at the same relative path in `output/`, following that folder's naming and numbering convention (e.g. `V012__add_claim_export.sql`, `2026_09_26_add_x.sql`). It also goes into `output/DB_CHANGES.sql` with the run order. Scripts must be idempotent where the repo's existing scripts are (`IF NOT EXISTS`) and include a commented rollback section.
 
 #### 9.5.1 Credentials loaded from a DB config table
-The app bootstraps by connecting to Postgres, reading credentials from a config table, and exporting them into env vars. Forge must respect this without ever seeing the secret values:
-- **Forge's own DB connections** (introspection, scratch schema) use `LOCAL_PG_URL` / `DEV_PG_URL` from Forge's `.env`. They never borrow the app's credentials.
+The app bootstraps by connecting to Postgres, reading credentials from a config table, and exporting them into env vars. DebCraft must respect this without ever seeing the secret values:
+- **DebCraft's own DB connections** (introspection, scratch schema) use `LOCAL_PG_URL` / `DEV_PG_URL` from DebCraft's `.env`. They never borrow the app's credentials.
 - The KB extractor finds the **bootstrap code** (the table name, the columns read, the env var names set) and records it in ARCHITECTURE.md. The user confirms the table name once.
 - That table goes on a **deny-list** in `sql_guard.py`. `db_query`, `scratch_exec` and sample-data copies may not read its rows. `db_schema` may show its column names only. Any tool output containing values that came from it is redacted.
-- When running the app and tests, Forge lets the app's own bootstrap run normally, in the command's environment. Env var **names** the bootstrap sets are known to the agent; **values** are redacted in all output (pattern-based, plus value-based where a wrapper process can capture them without returning them to the model).
+- When running the app and tests, DebCraft lets the app's own bootstrap run normally, in the command's environment. Env var **names** the bootstrap sets are known to the agent; **values** are redacted in all output (pattern-based, plus value-based where a wrapper process can capture them without returning them to the model).
 - If tests need the bootstrap bypassed (e.g. no access to the config table from the scratch search_path, or running against the local DB), the agent follows the repo's existing test fixtures/mocks. If there are none, it proposes an approach at a design-fork discussion.
 
 #### 9.5.2 Database access levels and user-executed DB steps
-Forge treats DB access as something to **detect, not assume**, separately for the local and the remote DB.
+DebCraft treats DB access as something to **detect, not assume**, separately for the local and the remote DB.
 
 **Access levels.** These are detected at SETUP, re-checked at each session start and by `forge doctor`, and recorded in `workspace.json`:
 
-| Level | What Forge can do | Detected by |
+| Level | What DebCraft can do | Detected by |
 |---|---|---|
 | **L3 — write** | Connect, introspect, read, create/drop its own objects in the scratch schema | Connection OK + `has_schema_privilege(scratch, 'CREATE')` + a test `CREATE TABLE`/`DROP` of a temp object |
 | **L2 — read-only** | Connect, introspect, run SELECTs; **cannot** create schemas/tables | Connection OK, CREATE privilege missing or test create fails |
 | **L1 — no connection** | Nothing on the DB | Connection fails: DNS, timeout, SSL, auth, VPN down |
 
-Forge tells the user the level for each DB in one line, and why (e.g. "Local DB: L3. Remote `db-dev01:5432`: timeout. Are you on VPN?"). For L1 it first offers quick fixes via `request_user_action` (connect VPN, check host/port, the SSL mode, a password change), then re-tests.
+DebCraft tells the user the level for each DB in one line, and why (e.g. "Local DB: L3. Remote `db-dev01:5432`: timeout. Are you on VPN?"). For L1 it first offers quick fixes via `request_user_action` (connect VPN, check host/port, the SSL mode, a password change), then re-tests.
 
-**DB change requests (when Forge can't do it itself).** Whenever a step needs something the current level doesn't allow, such as creating the scratch schema, creating or altering tables, seeding test data, or granting privileges, Forge creates a **DB request** instead of failing:
+**DB change requests (when DebCraft can't do it itself).** Whenever a step needs something the current level doesn't allow, such as creating the scratch schema, creating or altering tables, seeding test data, or granting privileges, DebCraft creates a **DB request** instead of failing:
 - It's written to `.forge/db_requests/DBR-<n>/`:
   - `request.sql`: exact, idempotent SQL with a commented rollback section. It uses the schema name placeholders the user confirmed.
   - `REQUEST.md`: what it is for, the target (server / database / schema), who should run it (you or a DBA), the tool hint (pgAdmin, DBeaver, psql), the risk, and a **verification query**.
   - `status`: pending, done, failed, skipped or **cannot** (the user lacks access too).
-- Forge shows a short summary in chat with a `request_user_action`, and **keeps working** on tasks that don't depend on it. Dependent tasks are marked `blocked: DBR-n`.
+- DebCraft shows a short summary in chat with a `request_user_action`, and **keeps working** on tasks that don't depend on it. Dependent tasks are marked `blocked: DBR-n`.
 - **When the user says done:**
-  - at L2/L3, Forge verifies it itself by running the verification query or introspecting;
-  - at L1, Forge asks the user to paste the verification query's result (e.g. the column list). It never asks for data rows.
-- **When the user says they can't** [A-11]: Forge opens a design-fork discussion with workarounds, e.g. use the local DB instead, restructure the tests to mock the DB layer, change the code so the object isn't needed (e.g. a CTE instead of a view), or deliver the DB-dependent tests as server-run with exact instructions for whoever has access.
+  - at L2/L3, DebCraft verifies it itself by running the verification query or introspecting;
+  - at L1, DebCraft asks the user to paste the verification query's result (e.g. the column list). It never asks for data rows.
+- **When the user says they can't** [A-11]: DebCraft opens a design-fork discussion with workarounds, e.g. use the local DB instead, restructure the tests to mock the DB layer, change the code so the object isn't needed (e.g. a CTE instead of a view), or deliver the DB-dependent tests as server-run with exact instructions for whoever has access.
 - Several requests can be batched into one script when that's easier for a DBA. `/db requests` lists them all.
-- Cleanup of objects Forge asked the user to create is also a DB request (the drop script) at workspace completion. It is never assumed done.
+- Cleanup of objects DebCraft asked the user to create is also a DB request (the drop script) at workspace completion. It is never assumed done.
 
 **Testing when the database isn't fully available:**
 - **Local L3:** the full DB-backed tests run against the scratch schema on the local DB.
@@ -667,12 +667,12 @@ Forge tells the user the level for each DB in one line, and why (e.g. "Local DB:
 
   If writes in scratch still aren't possible, those tests are marked **server-run** (below).
 - **L1 everywhere:**
-  - **(a) Optional portable Postgres.** If allowed by IT and it installs from the internal index or offline wheels, Forge can use a pip-installable embedded Postgres (e.g. the `pgserver` package) running under the user's account on localhost. `forge doctor` checks whether it works on this laptop; if it doesn't, this option is disabled.
+  - **(a) Optional portable Postgres.** If allowed by IT and it installs from the internal index or offline wheels, DebCraft can use a pip-installable embedded Postgres (e.g. the `pgserver` package) running under the user's account on localhost. `forge doctor` checks whether it works on this laptop; if it doesn't, this option is disabled.
   - **(b) Otherwise**, pure-logic tests run with mocks. DB-dependent tests are delivered and marked **server-run**, and COPY_INSTRUCTIONS / INTEGRATION_GUIDE gives the exact commands for the user to run them once they're connected, and what to paste back.
-- The final report states plainly **which checks ran against the local DB, which against the remote server, which on a stand-in, and which were not run**. Forge never implies DB verification it didn't do.
+- The final report states plainly **which checks ran against the local DB, which against the remote server, which on a stand-in, and which were not run**. DebCraft never implies DB verification it didn't do.
 
 **Being a good citizen on a shared server:**
-- Every Forge connection sets `statement_timeout` (default 30s), `lock_timeout` (5s) and `idle_in_transaction_session_timeout`.
+- Every DebCraft connection sets `statement_timeout` (default 30s), `lock_timeout` (5s) and `idle_in_transaction_session_timeout`.
 - It uses at most 2 connections, TCP keepalives, and `sslmode` from config (default `prefer`, `require` if the server needs it).
 - SELECTs are auto-limited, and `EXPLAIN` is used before anything that could be heavy.
 - It never runs DDL outside the scratch schema, and never takes locks on real tables.
@@ -760,7 +760,7 @@ At each task start, history is reset to: pinned + task brief + relevant KB modul
 
 ## 11. Knowledge Base (persistent, per repo, shared across workspaces)
 
-> **SUPERSEDED (D-156, 2026-10-02):** Forge builds no Knowledge Base; it explores the repo on demand with Glob/Grep/Read and an explore subagent, guided by FORGE.md. Mode B's Host Profile (§6A.2) is unaffected. The text below is the previous design.
+> **SUPERSEDED (D-156, 2026-10-02):** DebCraft builds no Knowledge Base; it explores the repo on demand with Glob/Grep/Read and an explore subagent, guided by FORGE.md. Mode B's Host Profile (§6A.2) is unaffected. The text below is the previous design.
 
 ### 11.1 Location
 `%USERPROFILE%\.forge\kb\<repo-slug>-<hash>\`. It is built from the original repo (read-only) and reused by every workspace for that repo.
@@ -792,7 +792,7 @@ Deterministic extractors are fast and exact:
 The LLM (the `kb_builder` role) then writes the narrative docs from the extracted facts plus sampled files, in module batches.
 
 ### 11.4 Refresh
-- At workspace start, and on `/kb refresh`, Forge hashes the repo files, finds what changed, and re-extracts only those.
+- At workspace start, and on `/kb refresh`, DebCraft hashes the repo files, finds what changed, and re-extracts only those.
 - Only the module docs that derive from changed files are re-summarised. Global docs get patched rather than rebuilt.
 - `/kb rebuild` does a full rebuild.
 - The user can edit KB docs by hand. Hand edits are marked `<!-- pinned -->` and are never overwritten.
@@ -802,13 +802,13 @@ The KB is never loaded wholesale. Only the essentials are pinned; everything els
 
 ---
 
-## 12. Forge Home, Memory, Learning & Self-Improvement
+## 12. DebCraft Home, Memory, Learning & Self-Improvement
 
-> **SUPERSEDED (D-156, 2026-10-02):** only Forge Home, FORGE.md instruction files, the auto-memory folder (index + typed files, per scope) and skills remain (§12.1, §12.6). The requirements library, lessons, retro, metrics and self-improvement proposals (§12.2–12.5) are removed. The text below is the previous design.
+> **SUPERSEDED (D-156, 2026-10-02):** only DebCraft Home, FORGE.md instruction files, the auto-memory folder (index + typed files, per scope) and skills remain (§12.1, §12.6). The requirements library, lessons, retro, metrics and self-improvement proposals (§12.2–12.5) are removed. The text below is the previous design.
 
-Forge gets better with every requirement. Knowledge about a codebase, past requirements, and lessons about how to work live in **one common place**, Forge Home, shared by all workspaces. Forge can also propose changes to its own prompts and code, but **the user applies them**.
+DebCraft gets better with every requirement. Knowledge about a codebase, past requirements, and lessons about how to work live in **one common place**, DebCraft Home, shared by all workspaces. DebCraft can also propose changes to its own prompts and code, but **the user applies them**.
 
-### 12.1 Forge Home (the common place)
+### 12.1 DebCraft Home (the common place)
 `forge_home` defaults to `%USERPROFILE%\.forge\` and is configurable, e.g. a OneDrive folder for backup.
 ```
 <forge_home>/
@@ -832,10 +832,10 @@ Forge gets better with every requirement. Knowledge about a codebase, past requi
 Workspaces **reference** the KB, profile and library; they don't copy them. The codebase structure is therefore written once per repo (or host) and reused across all requirements, and every refresh benefits every later requirement.
 
 ### 12.2 Requirements library (access to other requirements)
-- At EXPORT (and again on DONE), Forge writes a **requirement card**: the goal, the approach, key decisions, files added and modified (paths), endpoints, tables and graphs touched, patterns introduced, problems hit and how they were fixed, the final status, and links to the workspace's PLAN/DECISIONS/retro.
+- At EXPORT (and again on DONE), DebCraft writes a **requirement card**: the goal, the approach, key decisions, files added and modified (paths), endpoints, tables and graphs touched, patterns introduced, problems hit and how they were fixed, the final status, and links to the workspace's PLAN/DECISIONS/retro.
 - The cards are indexed (BM25, plus symbol and path overlap) in `library/index.sqlite`.
 - **Use:** during CLARIFY and PLAN, an explore subagent searches the library for related past requirements. The plan cites them, e.g. "reuse the export pattern from REQ-0007", or "REQ-0011 already added `claims_audit`; extend it rather than creating a new table". The agent may read a past workspace's files read-only via `library_read(workspace_id, path)`.
-- It detects **overlap and conflicts**: when a new requirement modifies files that an earlier, not-yet-integrated requirement also modified, Forge warns the user and shows both change sets.
+- It detects **overlap and conflicts**: when a new requirement modifies files that an earlier, not-yet-integrated requirement also modified, DebCraft warns the user and shows both change sets.
 - **Scope isolation:**
   - Mode A cards are visible only to workspaces on the same repo.
   - Mode B cards are visible only to workspaces using the same host profile.
@@ -851,7 +851,7 @@ Workspaces **reference** the KB, profile and library; they don't copy them. The 
   - reviewer findings that recur.
 - **Scopes:** `repo:<slug>`, `profile:<name>`, `global` (general engineering and Forge-workflow lessons, kept in PLAYBOOK.md), and `user` (preferences).
 - **Lesson record:** text, scope, trigger/keywords, evidence (the workspace and step that produced it), confidence, times used, times it helped, and created/updated dates.
-- **Approval:** Forge proposes lessons during the retrospective (§12.4) and occasionally mid-run. The user approves, edits or rejects each one. Only approved lessons are used.
+- **Approval:** DebCraft proposes lessons during the retrospective (§12.4) and occasionally mid-run. The user approves, edits or rejects each one. Only approved lessons are used.
 - **Retrieval:** at each task start, the top-k relevant lessons for the current scope (search over task text and file paths) are injected into the pinned block, capped at about 800 tokens. `/lessons` lists, edits and deletes them.
 - **Hygiene:**
   - near-duplicates are merged;
@@ -861,23 +861,23 @@ Workspaces **reference** the KB, profile and library; they don't copy them. The 
 
 ### 12.4 Retrospective & metrics
 - **Metrics** logged per task and per run: iterations, tool calls, tokens and cost, fix attempts, stuck events, compactions, user corrections, plan rejections, the reviewer issue count, and diagnose issues after integration, with their cause category.
-- **Retro** (triggered after export, and again after any diagnose, not a mandatory phase — §7 [A-14]): Forge writes `retros/<id>.md` covering what went well, what went wrong, root causes, proposed lessons, and proposed improvements. The user reviews it in one short approval step (it can be skipped).
+- **Retro** (triggered after export, and again after any diagnose, not a mandatory phase — §7 [A-14]): DebCraft writes `retros/<id>.md` covering what went well, what went wrong, root causes, proposed lessons, and proposed improvements. The user reviews it in one short approval step (it can be skipped).
 - `/stats` shows trends across requirements: cost per requirement, first-pass test success rate, the most common failure causes, and integration issues per requirement.
 
-### 12.5 Self-improvement proposals (Forge changing itself, with the user in control)
-Forge **cannot modify its own installed code, prompts or config**: its install folder and `config.yaml` are outside the write jail. It can only propose, in three tiers:
+### 12.5 Self-improvement proposals (DebCraft changing itself, with the user in control)
+DebCraft **cannot modify its own installed code, prompts or config**: its install folder and `config.yaml` are outside the write jail. It can only propose, in three tiers:
 
 | Tier | Example | How it's applied |
 |---|---|---|
 | 1. Lesson | "Always run `flask openapi write` after adding a blueprint" | Approved in the retro → stored in lessons (§12.3) |
 | 2. Prompt/config tweak | Add a rule to the plan prompt; raise `max_fix_attempts` for this repo; add `pytest -q` to the allowlist | Written as a diff to `prompt_overrides/` or a config snippet. Applied **only after the user types `/improve apply IP-n`** and confirms |
-| 3. Code change | A new parser for the repo's custom test runner; a better grep fallback; a new tool | A full proposal folder that the user reviews and applies to Forge's source themselves, e.g. with Claude Code on another machine or by hand |
+| 3. Code change | A new parser for the repo's custom test runner; a better grep fallback; a new tool | A full proposal folder that the user reviews and applies to DebCraft's source themselves, e.g. with Claude Code on another machine or by hand |
 
 **Each proposal folder** (`improvements/IP-<n>/`) contains:
 - `PROPOSAL.md`: the problem, evidence (metrics, the retros that motivated it), the proposed change, risk, and how to test it.
-- `change.patch` against Forge's own source (Forge can read its own installed source, read-only), or new files.
+- `change.patch` against DebCraft's own source (DebCraft can read its own installed source, read-only), or new files.
 - `tests/`: new or updated tests for the change.
-- `VALIDATION.md`: Forge copies its own source into `IP-<n>/sandbox/`, applies the patch there, and runs Forge's test suite. The pass/fail results are recorded here, so the user knows the patch works before applying it.
+- `VALIDATION.md`: DebCraft copies its own source into `IP-<n>/sandbox/`, applies the patch there, and runs DebCraft's test suite. The pass/fail results are recorded here, so the user knows the patch works before applying it.
 
 **When it's raised:**
 - from the retro;
@@ -885,15 +885,15 @@ Forge **cannot modify its own installed code, prompts or config**: its install f
 - when a tool is missing (the agent needed a capability and had to work around it);
 - on demand with `/improve suggest`.
 
-Forge tells the user in one line ("I've drafted IP-4: a parser for your custom test runner; review when convenient") and never nags.
+DebCraft tells the user in one line ("I've drafted IP-4: a parser for your custom test runner; review when convenient") and never nags.
 
 **Commands:** `/improve list|show|suggest|apply <tier-2 id>|reject`, and `forge improve list`.
 
-**Versioning:** Forge records its own version in every card and metric. After the user upgrades Forge, the retro compares metrics before and after the change to show whether the improvement helped.
+**Versioning:** DebCraft records its own version in every card and metric. After the user upgrades DebCraft, the retro compares metrics before and after the change to show whether the improvement helped.
 
 ### 12.6 Memory & state (carried over) [D-132]
 - **User memory** (`memory/`): preferences across all repos, e.g. "always ask before new deps", "use type hints".
-- **Workspace state:** the `.forge/*.md` files (§6.2) and `state.json`, updated continuously so a human can follow along and Forge can resume.
+- **Workspace state:** the `.forge/*.md` files (§6.2) and `state.json`, updated continuously so a human can follow along and DebCraft can resume.
 - `/remember <text>` saves a memory; `/memory` lists and edits memories.
 - **Resume is automatic, like reopening a chat with this assistant** — a laptop crash, a dropped network, the user returning after days away, or a context/token limit being hit are all the same case: opening the workspace again just continues where it left off (task list, cadence, conversation context), with a brief note of what was in progress. No "resume or start fresh?" prompt. `forge resume --workspace W` (and reopening in the web UI) restores tasks, the current cadence (below), the compaction summary, background-process definitions and the scratch-object registry.
 - **Cadence persists across resume.** A "go ahead with the recommended option, don't ask me" or "ask me before every step" instruction (§7, [D-130]) is saved in `state.json` and still in force after a restart — the user shouldn't have to re-grant a free hand after every interruption. It is still never a config key or SETUP question, and it never waives the always-ask/critical list (§14.2), persisted or not.
@@ -904,16 +904,16 @@ Forge tells the user in one line ("I've drafted IP-4: a parser for your custom t
 
 > **SUPERSEDED (D-156, 2026-10-02):** verification is whatever the model chooses to run through the shell tool; the ladders (§13.1) and the test-weakening guard (§13.2) are removed, and §13.3 was removed by D-155. Prompt rules stay: no claim without evidence, never weaken or skip tests. The text below is the previous design.
 
-Verification is **judgment-based**, like this assistant: Forge runs the ladder below when it judges it
+Verification is **judgment-based**, like this assistant: DebCraft runs the ladder below when it judges it
 warranted — after a meaningful change, before claiming something works, when something seems risky — not
 as a mandatory, blocking gate before a task or requirement can close. There is no forced full-suite-plus-
 reviewer-subagent checkpoint at the end of REVIEW; the reviewer subagent and every ladder step remain
-available tools Forge can reach for at any point, exactly like `spawn_subagent(reviewer, ...)` being
-callable any time (§9.10) rather than only inside a REVIEW phase. Forge still never claims something works
+available tools DebCraft can reach for at any point, exactly like `spawn_subagent(reviewer, ...)` being
+callable any time (§9.10) rather than only inside a REVIEW phase. DebCraft still never claims something works
 without having verified it (§8, "no claim without evidence") — the change is that *which* checks to run and
-*when* is Forge's judgment call, not a fixed, always-maximal ladder with bounded fix-round bookkeeping.
+*when* is DebCraft's judgment call, not a fixed, always-maximal ladder with bounded fix-round bookkeeping.
 
-### 13.1 Verify ladder (steps Forge draws on, run when warranted)
+### 13.1 Verify ladder (steps DebCraft draws on, run when warranted)
 1. `py_compile` on the changed files.
 2. Lint/format check with the repo's tools.
 3. mypy, if the repo uses it.
@@ -922,7 +922,7 @@ without having verified it (§8, "no claim without evidence") — the change is 
 6. **App smoke:** start the app in the background and hit the new endpoints with `http_request`.
 7. **OpenAPI check:** generate the spec (`flask openapi write` or the `/openapi.json` route) and confirm the new endpoints and schemas appear.
 8. A LangGraph check: compile the graph, assert its nodes and edges, and run it with fake LLMs.
-9. The full test suite, when Forge judges the change warrants it (no longer a forced end-of-phase step).
+9. The full test suite, when DebCraft judges the change warrants it (no longer a forced end-of-phase step).
 10. For requirements with accuracy targets (vision, extraction, RAG answers): the eval runner (§13A.3). A task isn't done until its eval targets are met or the user has accepted the gap.
 
 ### 13.2 Self-correction
@@ -946,12 +946,12 @@ On failure, the agent gets the parsed error, the relevant code and KB context. I
 
 ## 13A. Multimodal Capabilities & Eval-Driven Development
 
-[A-12] Forge must handle **any** requirement whose correctness depends on perception or extraction quality — document and image understanding, handwriting, forms, diagrams, charts, scanned PDFs, screenshots, RAG over such content. The handwritten-prescription agent used below is **one example**, not a special case; nothing in Forge is prescription-specific.
+[A-12] DebCraft must handle **any** requirement whose correctness depends on perception or extraction quality — document and image understanding, handwriting, forms, diagrams, charts, scanned PDFs, screenshots, RAG over such content. The handwritten-prescription agent used below is **one example**, not a special case; nothing in DebCraft is prescription-specific.
 
-Some requirements can't be verified by unit tests alone. The code can pass every test and still read "Amoxicillin 500mg" as "Amoxicillin 50mg". For these, Forge must (1) see images itself and (2) measure the built system's accuracy against targets agreed with the user, iterating until they're met.
+Some requirements can't be verified by unit tests alone. The code can pass every test and still read "Amoxicillin 500mg" as "Amoxicillin 50mg". For these, DebCraft must (1) see images itself and (2) measure the built system's accuracy against targets agreed with the user, iterating until they're met.
 
-### 13A.1 Forge's own vision tools
-These are for Forge's use while building and verifying, separate from the vision features of the code it writes.
+### 13A.1 DebCraft's own vision tools
+These are for DebCraft's use while building and verifying, separate from the vision features of the code it writes.
 
 | Tool | Behaviour |
 |---|---|
@@ -959,7 +959,7 @@ These are for Forge's use while building and verifying, separate from the vision
 | `pdf_render(path, pages?, dpi=200)` | Renders PDF pages to PNG in `.forge/scratch_images/` (uses `pypdfium2`, which has a permissive licence; **avoid PyMuPDF because of its AGPL licence**). |
 | `image_info(path)` | Returns size, DPI, mode, EXIF orientation and page count. |
 | `image_ops(path, ops[])` | Crop, rotate, deskew, resize, grayscale, threshold, pad; saves the result and returns its path. |
-| `draw_boxes(path, boxes[], labels?)` | Draws bounding boxes and labels on a copy, so Forge (and the user) can **see** what a detector found. |
+| `draw_boxes(path, boxes[], labels?)` | Draws bounding boxes and labels on a copy, so DebCraft (and the user) can **see** what a detector found. |
 | `compare_images(a, b)` | A side-by-side composite plus a pixel-overlap/IoU number, used to check crops against ground truth. |
 
 **Rules:**
@@ -968,7 +968,7 @@ These are for Forge's use while building and verifying, separate from the vision
 - Images marked sensitive (see 13A.5) go only to the configured enterprise endpoints.
 - The context manager treats an image as its token cost. Old image results are micro-compacted to a text description plus the file path.
 
-**User input:** the user can drop an image or PDF path into chat, or reference it with `@path`. Forge can look at it with `view_image`, e.g. "here's a sample document; the diagram is bottom-right".
+**User input:** the user can drop an image or PDF path into chat, or reference it with `@path`. DebCraft can look at it with `view_image`, e.g. "here's a sample document; the diagram is bottom-right".
 
 ### 13A.2 Eval sets (ground truth)
 - An **eval set** lives in the workspace at `evals/<name>/` and is delivered with the code if the user wants it:
@@ -986,10 +986,10 @@ These are for Forge's use while building and verifying, separate from the vision
 - **Where samples come from:**
   - **(a)** User-supplied samples, sanitised or consented, with labels. This is the only way to measure true accuracy.
   - **(b)** Forge-generated synthetic samples, built for the requirement's document type: rendered with handwriting-style fonts, noise, rotation and blur, with drawn shapes or diagrams composited in, and with labels known exactly. Good for pipeline tests and regressions, but **not** proof of real-world accuracy. Reports label results as synthetic vs. real.
-- **Labelling helper** (`forge label <eval-dir>`): a local, single-file HTML page served on localhost, opened in Edge. For each sample the user can draw boxes, type field values and mark unreadable fields; the result is saved as `labels/*.json`. Forge can **pre-fill** labels using its own vision model, so the user only corrects them. Pre-filled labels are marked `unverified` until the user saves them.
+- **Labelling helper** (`forge label <eval-dir>`): a local, single-file HTML page served on localhost, opened in Edge. For each sample the user can draw boxes, type field values and mark unreadable fields; the result is saved as `labels/*.json`. DebCraft can **pre-fill** labels using its own vision model, so the user only corrects them. Pre-filled labels are marked `unverified` until the user saves them.
 
 ### 13A.3 Metrics & acceptance targets
-- At PLAN, Forge proposes **targets** for the requirement and the user approves or edits them. Examples:
+- At PLAN, DebCraft proposes **targets** for the requirement and the user approves or edits them. Examples:
   - field exact-match or normalised-match rate;
   - domain-specific accuracy (e.g. medication-name accuracy with fuzzy match against a drug list);
   - region-detection recall;
@@ -1002,28 +1002,28 @@ These are for Forge's use while building and verifying, separate from the vision
   - runs the *built system* on the eval set and computes the metrics;
   - writes `reports/eval-<n>.md` with per-sample results and `draw_boxes` overlays of predicted vs. expected regions;
   - keeps a history, so regressions are visible.
-- **LLM-as-judge:** uses the `judge` role — a model different from the one the system under test uses when more than one is configured (otherwise flagged in the report as a limitation). It grades against a fixed rubric, and its verdicts are spot-checked by Forge with `view_image` on disagreements.
-- Eval runs call real LLM APIs, so they cost money. Forge shows an estimate before running, respects the budget cap, and runs a small subset during iteration and the full set at milestones.
+- **LLM-as-judge:** uses the `judge` role — a model different from the one the system under test uses when more than one is configured (otherwise flagged in the report as a limitation). It grades against a fixed rubric, and its verdicts are spot-checked by DebCraft with `view_image` on disagreements.
+- Eval runs call real LLM APIs, so they cost money. DebCraft shows an estimate before running, respects the budget cap, and runs a small subset during iteration and the full set at milestones.
 
 ### 13A.4 Eval-driven loop
 `EXECUTE → unit tests → run_eval(subset) → analyse failures → improve → …` until the targets are met or the attempts run out.
 
 **Analysing failures:**
-- Forge groups errors by category: OCR misread, wrong field mapping, missed region, loose crop, hallucinated value, or a PDF render issue.
+- DebCraft groups errors by category: OCR misread, wrong field mapping, missed region, loose crop, hallucinated value, or a PDF render issue.
 - It uses `view_image` on failing samples to see *why* each one failed.
 - It proposes the next change: preprocessing, prompt or schema changes, a detection-strategy change, or model routing.
 
-If a target isn't met after N rounds, Forge stops and discusses it (§7) with options, e.g. "lower the target", "add more real samples", "use a document-intelligence service", or "add human review for low-confidence fields".
+If a target isn't met after N rounds, DebCraft stops and discusses it (§7) with options, e.g. "lower the target", "add more real samples", "use a document-intelligence service", or "add human review for low-confidence fields".
 
 ### 13A.5 Sensitive data in multimodal work
 - Any sample may contain personal, financial or health data. Samples are flagged `sensitive: true` by default. Sensitive samples:
   - go only to the configured enterprise LLM endpoints;
   - never go to web search;
   - are never used in lessons, library cards or improvement proposals: only metrics and anonymised descriptions are.
-- Synthetic samples are preferred for Forge's own regression tests.
-- For requirements involving personal data (health, identity, financial), Forge raises at CLARIFY that data-protection approval (India's DPDP Act, organisational policy) must be confirmed by the user. For health-type systems, the generated system should include audit logging, a "not medical advice / verify with a professional" notice, and confidence-based human review, unless the user explicitly decides otherwise.
+- Synthetic samples are preferred for DebCraft's own regression tests.
+- For requirements involving personal data (health, identity, financial), DebCraft raises at CLARIFY that data-protection approval (India's DPDP Act, organisational policy) must be confirmed by the user. For health-type systems, the generated system should include audit logging, a "not medical advice / verify with a professional" notice, and confidence-based human review, unless the user explicitly decides otherwise.
 
-### 13A.6 Design guidance Forge applies to vision/document systems (in the plan prompt and the `vision-document-pipeline` skill)
+### 13A.6 Design guidance DebCraft applies to vision/document systems (in the plan prompt and the `vision-document-pipeline` skill)
 - **PDFs:** detect text-layer vs. image-only PDFs. Render image pages at 200–300 DPI with `pypdfium2`.
 - **Preprocess:** fix EXIF orientation, deskew, denoise, and optionally split into tiles for small handwriting.
 - **Extract with structured output:** use JSON schemas with per-field confidence and a source region. The prompt must return `null`/"unreadable" rather than guessing, and values should be validated (units, formats, known vocabularies if a list exists).
@@ -1045,23 +1045,23 @@ If a target isn't met after N rounds, Forge stops and discusses it (§7) with op
 
 ## 13B. Claude Code Parity Features
 
-Forge should feel like Claude Code. These are the features not already covered above.
+DebCraft should feel like Claude Code. These are the features not already covered above.
 
-| Feature | Behaviour in Forge |
+| Feature | Behaviour in DebCraft |
 |---|---|
 | **Instruction files** | `FORGE.md` files, the equivalent of `CLAUDE.md`, loaded hierarchically: `<forge_home>/FORGE.md` (user-wide), then `<kb or profile>/FORGE.md` (repo/host), then `<workspace>/FORGE.md` (requirement). All are always included in pinned context (capped). `/init` drafts the repo-level one from the KB; the `#` prefix in chat ("# always use type hints") appends a line to the chosen file after confirmation. |
-| **@-mentions** | `@path` includes a workspace file (or its range, `@file.py:10-80`); `@image.png` attaches an image; `@DBR-3`, `@REQ-0007`, `@lesson-12` reference Forge objects. Tab-completion for paths. |
+| **@-mentions** | `@path` includes a workspace file (or its range, `@file.py:10-80`); `@image.png` attaches an image; `@DBR-3`, `@REQ-0007`, `@lesson-12` reference DebCraft objects. Tab-completion for paths. |
 | **Pasting images and long text** | A pasted file path or clipboard image (saved to `.forge/inputs/`) is attached to the next message. Long pastes are stored as a file and referenced, not dumped inline. |
 | **Reasoning effort** | `/effort low|medium|high` (`reasoning_effort` / Gemini thinking budget). A per-message keyword (`think hard:`) raises it for one turn. |
 | **Model per role** | `/model <role> <model>` and the web UI settings switch any role's model for the session [A-7]. |
-| **Skills** | Markdown instruction packs with optional helper scripts, in `<forge_home>/skills/<name>/SKILL.md` and `<kb|profile>/skills/`. Only each skill's one-line description is always in context; the model loads a full skill with `load_skill(name)` when a task matches. Built-in skills: `flask-smorest-endpoint`, `langgraph-agent`, `sql-migration-raw`, `pytest-patterns`, `vision-document-pipeline` (§13A.6), `eval-harness`. Users can add their own, and Forge can propose new skills as tier-2 improvements (§12.5). |
+| **Skills** | Markdown instruction packs with optional helper scripts, in `<forge_home>/skills/<name>/SKILL.md` and `<kb|profile>/skills/`. Only each skill's one-line description is always in context; the model loads a full skill with `load_skill(name)` when a task matches. Built-in skills: `flask-smorest-endpoint`, `langgraph-agent`, `sql-migration-raw`, `pytest-patterns`, `vision-document-pipeline` (§13A.6), `eval-harness`. Users can add their own, and DebCraft can propose new skills as tier-2 improvements (§12.5). |
 | **Custom subagents** | User-defined agents in `<forge_home>/agents/<name>.md`: frontmatter lists the tools allowed, the model and the effort; the body is the system prompt. They can be spawned by name like the built-in types. |
 | **MCP client** | Optional: connect to MCP servers (stdio or HTTP) listed in config, e.g. an internal Jira/Confluence/DB tool server. Their tools appear with a `mcp__<server>__` prefix, are subject to the same permission gate, and their outputs are truncated and redacted like any tool. `/mcp` lists servers and tools. Disabled by default; needs the `mcp` package. |
 | **Notebook editing** | `notebook_read` / `notebook_edit_cell` for `.ipynb` files (cell-level, outputs preserved or cleared on request). |
-| **Local history (git-like)** | If git is available, Forge runs `git init` **inside the workspace only** and auto-commits after each completed task (message = task title). The workspace `.gitignore` excludes secret files [A-10]. This gives `/diff <task>`, `/log` and easy rollback. Without git, the checkpoint system (§8/M2) provides the same features. |
-| **Output styles** | `/style concise|explanatory|learning`: controls how much Forge explains while working (explanatory adds short "why" notes; learning leaves small TODOs for the user to implement). |
-| **Status line & notifications** | A configurable status line (model, effort, ctx %, task, cost, DB level, mode A/B). A Windows toast notification (optional, via PowerShell) when Forge is waiting for the user or a long run finishes. |
-| **Permissions UX** | Per-prompt choices: "yes / yes, always for this command prefix / no, and tell Forge what to do instead". The "no + instruction" answer is fed back to the model. |
+| **Local history (git-like)** | If git is available, DebCraft runs `git init` **inside the workspace only** and auto-commits after each completed task (message = task title). The workspace `.gitignore` excludes secret files [A-10]. This gives `/diff <task>`, `/log` and easy rollback. Without git, the checkpoint system (§8/M2) provides the same features. |
+| **Output styles** | `/style concise|explanatory|learning`: controls how much DebCraft explains while working (explanatory adds short "why" notes; learning leaves small TODOs for the user to implement). |
+| **Status line & notifications** | A configurable status line (model, effort, ctx %, task, cost, DB level, mode A/B). A Windows toast notification (optional, via PowerShell) when DebCraft is waiting for the user or a long run finishes. |
+| **Permissions UX** | Per-prompt choices: "yes / yes, always for this command prefix / no, and tell DebCraft what to do instead". The "no + instruction" answer is fed back to the model. |
 | **Background tasks view** | `/bg` lists background processes and subagents with a tail of their output; kill one from the list. |
 | **Session management** | `/rename`, `forge sessions list`, `forge resume` (picker), `/export-chat` (markdown transcript). |
 | **Headless / scripting** | `forge run -p "…" --output-format json|text` for use in scripts; exit code shows success, blocked or failed. |
@@ -1082,7 +1082,7 @@ Forge should feel like Claude Code. These are the features not already covered a
 
 ### 14.2 Permission modes (`/mode`) [D-130]
 - **plan:** read-only.
-- **default:** edits are shown as a diff and applied (workspace only). Shell commands that aren't allowlisted need approval. This is also the state Forge starts a workspace in, and the state it returns to unless the user has given a cadence instruction (§7) currently in force.
+- **default:** edits are shown as a diff and applied (workspace only). Shell commands that aren't allowlisted need approval. This is also the state DebCraft starts a workspace in, and the state it returns to unless the user has given a cadence instruction (§7) currently in force.
 - **auto (free hand):** everything within the workspace runs without asking, except the always-ask/critical list below. Entered and left by the user saying so in chat ("go ahead with the recommended option, don't ask me" / "ask me before every step"), not by a config setting — the same way this assistant is told to proceed unattended or to check in, and follows that instruction until told otherwise.
 
 `/mode` remains available as an explicit command for the same effect, for users who prefer typing a command over a sentence; both routes set the same session state.
@@ -1138,7 +1138,7 @@ forge cleanup         # drop leftover scratch objects, stop orphan processes
 
 ## 15A. Local Web UI (HTML/CSS/JS, no Angular, no Node) — v1 [A-2]
 
-Forge's main interaction screen is a local web page, served by Forge's own Python process and opened in Edge. The terminal UI remains as a fallback and for headless use. No Angular, no Node.js and no build step are needed: the frontend is plain HTML, CSS and ES-module JavaScript files shipped inside the Python package.
+DebCraft's main interaction screen is a local web page, served by DebCraft's own Python process and opened in Edge. The terminal UI remains as a fallback and for headless use. No Angular, no Node.js and no build step are needed: the frontend is plain HTML, CSS and ES-module JavaScript files shipped inside the Python package.
 
 ### 15A.1 Starting it
 - `forge ui` (or `forge` with `ui: web` in config):
@@ -1146,7 +1146,7 @@ Forge's main interaction screen is a local web page, served by Forge's own Pytho
   - generates a random session token (not a JWT — this is a single-user localhost server) [A-13];
   - opens `http://127.0.0.1:<port>/?t=<token>` in Edge (`start msedge <url>`, falling back to the default browser).
 - `forge ui --no-browser` prints the URL instead.
-- Closing the browser tab doesn't stop Forge: work continues, and reopening the URL reconnects and replays the current state.
+- Closing the browser tab doesn't stop DebCraft: work continues, and reopening the URL reconnects and replays the current state.
 - `Ctrl+C` in the console, or the **Quit** button, stops the server and background processes cleanly.
 
 ### 15A.2 Engine / UI separation
@@ -1175,10 +1175,10 @@ Forge's main interaction screen is a local web page, served by Forge's own Pytho
 - **Security:**
   - binds to `127.0.0.1` only; binding to other interfaces is refused;
   - the random session token is required on every request (cookie set after the first load, `HttpOnly`, `SameSite=Strict`);
-  - `Origin`/`Host` header checks to stop other websites or DNS-rebinding attacks from driving Forge;
+  - `Origin`/`Host` header checks to stop other websites or DNS-rebinding attacks from driving DebCraft;
   - a strict Content-Security-Policy (no inline scripts, no external origins);
   - all model/tool output rendered as markdown is sanitised with DOMPurify;
-  - file endpoints are restricted to the workspace, KB/profile and Forge Home, and never serve secret files;
+  - file endpoints are restricted to the workspace, KB/profile and DebCraft Home, and never serve secret files;
   - redaction applies before events leave the engine, so secrets never reach the browser.
 - Offline: every JS/CSS library is vendored in `static/vendor/`, pinned and with its licence recorded. Nothing loads from the internet.
 
@@ -1192,8 +1192,8 @@ Forge's main interaction screen is a local web page, served by Forge's own Pytho
 | Area | What it does |
 |---|---|
 | **Home / new workspace** | Start a Mode A (repo path + workspace path, with a folder browser limited to the drives the user picks) or Mode B (workspace path + choose or create a Host Profile) session; resume a recent workspace; `forge doctor` results as a checklist. |
-| **Chat** | Streaming assistant text with markdown and code highlighting; collapsible tool-call cards (name, args, truncated result, duration); a **Stop** button (interrupt); a message box with `/` command autocomplete and `@` file/image mentions; drag-and-drop or paste of images and PDFs; messages typed while Forge is working are queued and shown as "queued". |
-| **Question / approval cards** | Design-fork discussions rendered as cards: context, options A/B/C with pros, cons and risks, **Recommended** badge; buttons for each option, plus "Other…" (free text). Plan and requirements approval shows the markdown with **Approve / Request changes / Reject**. Permission prompts: **Allow once / Always allow this prefix / Deny + tell Forge what to do**. |
+| **Chat** | Streaming assistant text with markdown and code highlighting; collapsible tool-call cards (name, args, truncated result, duration); a **Stop** button (interrupt); a message box with `/` command autocomplete and `@` file/image mentions; drag-and-drop or paste of images and PDFs; messages typed while DebCraft is working are queued and shown as "queued". |
+| **Question / approval cards** | Design-fork discussions rendered as cards: context, options A/B/C with pros, cons and risks, **Recommended** badge; buttons for each option, plus "Other…" (free text). Plan and requirements approval shows the markdown with **Approve / Request changes / Reject**. Permission prompts: **Allow once / Always allow this prefix / Deny + tell DebCraft what to do**. |
 | **User-action cards** | OS-level steps (`request_user_action`) with copy buttons for each PowerShell command, and **Done / Skip / I can't / It failed (paste output)**. |
 | **Tasks** | A live task list with statuses, the current task highlighted, attempts, and "blocked by DBR-n" badges. |
 | **Files** | A tree of `repo/` (Mode A) or `project/` (Mode B) and `output/`, with new/modified/deleted markers; a read-only viewer with syntax highlighting; **Download output.zip**; COPY_INSTRUCTIONS / INTEGRATION_GUIDE rendered with per-step checkboxes the user can tick as they copy code in. |
@@ -1207,7 +1207,7 @@ Forge's main interaction screen is a local web page, served by Forge's own Pytho
 
 ### 15A.5 UX rules
 - Nothing important is shown only in the terminal: every approval, question, user action and DB request has a web card.
-- A browser notification (and optional Windows toast) fires when Forge is waiting for the user.
+- A browser notification (and optional Windows toast) fires when DebCraft is waiting for the user.
 - Keyboard: `Enter` sends, `Shift+Enter` adds a newline, `Esc` interrupts, `Ctrl+K` opens the command palette, and `1/2/3` choose options on a focused question card.
 - Light and dark themes following the OS; readable at 1366×768 (a typical office laptop); no horizontal scrolling in the chat.
 - Large outputs are virtualised or collapsed, so long sessions stay fast.
@@ -1258,7 +1258,7 @@ postgres:
       url_env: LOCAL_PG_URL          # postgresql://user@localhost:5432/dbname (password in .env)
       sslmode: prefer
     dev:
-      url_env: DEV_PG_URL            # shared remote dev DB — read-only for Forge
+      url_env: DEV_PG_URL            # shared remote dev DB — read-only for DebCraft
       sslmode: prefer                # prefer | require | verify-full
       statement_timeout_s: 30
       lock_timeout_s: 5
@@ -1349,10 +1349,10 @@ Acceptance tests that involve agent behaviour run against the live Azure deploym
 **M7 — Database**
 - Builds: DB target detection (local vs remote), the read-only guard, per-requirement scratch schema with user creation via DB request, lock and object registry, `forge cleanup`, and the DB_CHANGES.sql output.
 - Also builds: access-level detection (L1–L3), DB requests (DBR folders, blocking/unblocking of tasks, verification by query or pasted result, the "I can't" path), the connection guards (timeouts, max connections), the optional embedded-Postgres fallback, and the "server-run" test marking.
-- Acceptance without a DB: with an unreachable host, Forge reports L1 with the reason, creates a DBR for the needed tables, continues with independent tasks, marks DB tests server-run, and the final report lists them as not run.
-- Acceptance at L2 (a read-only role on the local DB): table creation turns into a DBR; after the tables are created externally, Forge verifies them by introspection and unblocks the tasks.
+- Acceptance without a DB: with an unreachable host, DebCraft reports L1 with the reason, creates a DBR for the needed tables, continues with independent tasks, marks DB tests server-run, and the final report lists them as not run.
+- Acceptance at L2 (a read-only role on the local DB): table creation turns into a DBR; after the tables are created externally, DebCraft verifies them by introspection and unblocks the tasks.
 - Acceptance (local Postgres, `FORGE_PG_URL` set):
-  - the scratch schema is used, tests run against it via PGOPTIONS with `search_path` = scratch only, and Forge's objects are dropped;
+  - the scratch schema is used, tests run against it via PGOPTIONS with `search_path` = scratch only, and DebCraft's objects are dropped;
   - DDL on `public` is rejected;
   - reading the credentials config table is rejected and its values never appear in tool output;
   - a new .sql file lands in the fixture's sql/ folder with the next number in sequence.
@@ -1383,13 +1383,13 @@ Acceptance tests that involve agent behaviour run against the live Azure deploym
   - a web search containing a `sensitive_terms` entry is blocked.
 
 **M10C — Learning & self-improvement**
-- Builds: Forge Home layout, requirement cards and library search, lesson store with scopes, approval, retrieval into pinned context and hygiene, metrics, the RETRO phase, improvement proposals (tiers 1–3) with patch validation in a sandbox copy of Forge's source, `/improve apply` for tier 2, the structure export script with `/profile import`, and the library/lessons/improvements web screens.
+- Builds: DebCraft Home layout, requirement cards and library search, lesson store with scopes, approval, retrieval into pinned context and hygiene, metrics, the RETRO phase, improvement proposals (tiers 1–3) with patch validation in a sandbox copy of DebCraft's source, `/improve apply` for tier 2, the structure export script with `/profile import`, and the library/lessons/improvements web screens.
 - Acceptance:
   - after two live runs on the fixture, the second run's plan cites the first run's card;
   - an approved lesson is injected into a later task's context, and a rejected one never is;
   - a Mode B lesson or card is not visible to a Mode A workspace or another profile;
-  - Forge cannot write to its install folder or config.yaml (test);
-  - a generated tier-3 patch is applied to a copy of the source and Forge's test suite runs against it with results recorded;
+  - DebCraft cannot write to its install folder or config.yaml (test);
+  - a generated tier-3 patch is applied to a copy of the source and DebCraft's test suite runs against it with results recorded;
   - the structure export on the fixture repo contains no function bodies, string literals or config values (test by scanning the output for known literals), and imported exports are retrieved by search, not sent wholesale.
 
 **M10E — Claude Code parity**
@@ -1408,8 +1408,8 @@ Acceptance tests that involve agent behaviour run against the live Azure deploym
 - **Deterministic gate:** the vision tools, PDF rendering, synthetic generator, metrics (IoU, field match), eval runner, overlays and sensitive-sample rules pass their unit tests.
 - **Reference task (live, reported rather than gating):**
   1. Generate 10 synthetic "handwritten prescription" images (plus 2 as image-only PDFs), each with a composited hand-drawn diagram and known labels.
-  2. Give Forge the requirement: "build a LangGraph multimodal RAG agent that answers questions about a prescription image/PDF and returns a crop of the hand-drawn diagram when asked".
-  3. Forge must: propose targets at PLAN; build the pipeline following §13A.6; run evals and iterate; produce eval reports with box overlays; never send a `sensitive` sample to web search. Targets for the report: crop IoU ≥ 0.8 on ≥ 8/10 synthetic samples, ≥ 85% field accuracy.
+  2. Give DebCraft the requirement: "build a LangGraph multimodal RAG agent that answers questions about a prescription image/PDF and returns a crop of the hand-drawn diagram when asked".
+  3. DebCraft must: propose targets at PLAN; build the pipeline following §13A.6; run evals and iterate; produce eval reports with box overlays; never send a `sensitive` sample to web search. Targets for the report: crop IoU ≥ 0.8 on ≥ 8/10 synthetic samples, ≥ 85% field accuracy.
 - A second, different reference task (e.g. extracting a table and a stamp from scanned invoices) is run to confirm nothing is prescription-specific.
 
 **M11 — Hardening & packaging**
@@ -1420,7 +1420,7 @@ Acceptance tests that involve agent behaviour run against the live Azure deploym
 ## 18. System Prompt Skeleton (`forge/agent/prompts/system.md`)
 
 ```
-You are Forge, an autonomous software engineering agent.
+You are DebCraft, an autonomous software engineering agent.
 You work ONLY inside the workspace copy of the user's project at {workspace}/repo.
 The original repo at {repo_path} is read-only reference. The user will copy your
 output into it manually, following COPY_INSTRUCTIONS.md, so your output must drop in cleanly.
@@ -1455,11 +1455,11 @@ Rules
 - Before planning, check the requirements library and approved lessons for this repo/profile;
   reuse proven patterns and avoid past mistakes. Cite what you reused.
 - Propose lessons and improvements when you notice recurring problems, but never modify
-  Forge's own code, prompts or config; the user applies improvements.
+  DebCraft's own code, prompts or config; the user applies improvements.
 ```
 **Mode B system prompt** (`system_standalone.md`) replaces the first paragraph and the "Understand before acting" and "Mirror the codebase" rules with:
 ```
-You are Forge in STANDALONE mode. You have NO access to the host codebase and must not
+You are DebCraft in STANDALONE mode. You have NO access to the host codebase and must not
 look for it. Everything you know about the host comes from the Host Profile ({profile_name})
 and what the user says in chat. Work only inside {workspace}.
 - Never invent host APIs. If the profile doesn't state how something works, either ask the
@@ -1490,9 +1490,9 @@ Phase prompts (clarify, plan, task, review, compact, diagnose, restructure, kb_b
 
 ---
 
-## 20. Parity Checklist (Claude Code feature → Forge section)
+## 20. Parity Checklist (Claude Code feature → DebCraft section)
 
-| Claude Code | Forge |
+| Claude Code | DebCraft |
 |---|---|
 | Agentic tool loop, parallel tool calls | §8 |
 | Read / Write / Edit / MultiEdit, read-before-edit | §9.1 |

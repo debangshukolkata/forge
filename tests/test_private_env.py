@@ -1,4 +1,4 @@
-"""D-202: Forge's own variables are not inherited by the commands the model runs."""
+"""D-202: DebCraft's own variables are not inherited by the commands the model runs."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def test_the_names_forge_uses_are_removed_and_the_rest_kept(forge_env: Path) -> 
     inherited = {
         "PATH": "/usr/bin",
         "MY_UNRELATED": "1",
-        "MY_TOOL_TOKEN": SECRET,  # a name in Forge's .env
+        "MY_TOOL_TOKEN": SECRET,  # a name in DebCraft's .env
         "LOCAL_PG_URL": "postgresql://x",  # also in .env
         "FORGE_ENV_FILE": str(forge_env),
         "FORGE_HOME": "/home/a/.forge",
@@ -66,7 +66,7 @@ def test_a_command_the_model_runs_does_not_see_them(
     monkeypatch.setenv("MY_UNRELATED", "kept")
     workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
     shell = ShellSession(workspace, sandbox="off")
-    # What Forge sets on purpose (the scratch database of this requirement) is added after and kept.
+    # What DebCraft sets on purpose (the scratch database of this requirement) is added after and kept.
     shell.extra_env = {"LOCAL_PG_URL": "postgresql://scratch"}
 
     environment = shell.environment()

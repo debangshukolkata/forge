@@ -74,8 +74,7 @@ def _shape_lines(shape: Any, indent: str) -> list[str]:
 
 def describe_deck(deck: Any) -> str:
     out = [
-        f"Slide size {_inches(deck.slide_width)} x {_inches(deck.slide_height)} in; "
-        f"{len(deck.slides)} slides."
+        f"Slide size {_inches(deck.slide_width)} x {_inches(deck.slide_height)} in; {len(deck.slides)} slides."
     ]
     for number, slide in enumerate(deck.slides, start=1):
         title = slide.shapes.title.text_frame.text if slide.shapes.title is not None else "(no title)"

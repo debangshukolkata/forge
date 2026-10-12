@@ -13,7 +13,7 @@ from forge.errors import ConfigError, ForgeError
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="forge", description="Forge coding agent")
+    parser = argparse.ArgumentParser(prog="debcraft", description="DebCraft coding agent")
     parser.add_argument("--version", action="version", version=describe())
     parser.add_argument("--workspace", type=Path, help="attach the interactive session to a workspace")
     parser.add_argument(
@@ -49,7 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
     resume = subcommands.add_parser("resume", help="resume a workspace session where it stopped")
     resume.add_argument("--workspace", type=Path, required=True, dest="resume_workspace")
     cleanup = subcommands.add_parser(
-        "cleanup", help="drop the database objects Forge created in a workspace's scratch schema"
+        "cleanup", help="drop the database objects DebCraft created in a workspace's scratch schema"
     )
     cleanup.add_argument("--workspace", type=Path, required=True, dest="cleanup_workspace")
     cleanup.add_argument("--yes", action="store_true", help="don't ask for confirmation")
@@ -88,7 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
     skill_add.add_argument("--list", action="store_true", help="only show what the source contains")
     skill_add.add_argument("--yes", action="store_true", help="install without asking (you trust the source)")
     skill_add.add_argument("--force", action="store_true", help="replace a skill of the same name")
-    skill_commands.add_parser("list", help="list the skills Forge can load")
+    skill_commands.add_parser("list", help="list the skills DebCraft can load")
     skill_remove = skill_commands.add_parser("remove", help="remove an installed skill")
     skill_remove.add_argument("name")
     ui = subcommands.add_parser("ui", help="start the local web UI (opens Edge)")
@@ -292,7 +292,8 @@ def _new(repo: Path, workspace_path: Path, app_folder: str | None, project: str 
             console.print(f"  {label}: {', '.join(items)}", markup=False)
     if env is None:
         console.print(
-            "  No usable venv found in the app folder; Forge will ask which interpreter to use.", markup=False
+            "  No usable venv found in the app folder; DebCraft will ask which interpreter to use.",
+            markup=False,
         )
     else:
         shim = " (editable install of the original detected and corrected)" if env.shim_dir else ""
@@ -301,7 +302,7 @@ def _new(repo: Path, workspace_path: Path, app_folder: str | None, project: str 
 
 
 def _cleanup(workspace_path: Path, yes: bool) -> int:
-    """Spec §9.5: lists the objects Forge recorded in this workspace's scratch schema(s) and drops only
+    """Spec §9.5: lists the objects DebCraft recorded in this workspace's scratch schema(s) and drops only
     those, after confirmation. A schema the user created is never dropped."""
     from forge.config import forge_home, load_config, load_secrets
     from forge.db.connection import DbTarget
@@ -323,7 +324,7 @@ def _cleanup(workspace_path: Path, yes: bool) -> int:
         if Path(entry.get("workspace", "")).resolve() == workspace.root.resolve()
     }
     if not owned:
-        console.print("Forge created no database objects for this workspace.", markup=False)
+        console.print("DebCraft created no database objects for this workspace.", markup=False)
         return 0
     status = 0
     for key, entry in owned.items():
@@ -445,7 +446,7 @@ def _profile(args: argparse.Namespace) -> int:
             shutil.copyfile(source, target)
             console.print(
                 f"Wrote {target}. Copy it to the host machine and run it there YOURSELF "
-                "(Forge never runs it):\n"
+                "(DebCraft never runs it):\n"
                 "  python forge_structure_export.py <app folder> --out structure_export [--mask terms.txt]\n"
                 "Review structure_export.md, then: forge profile import <name> structure_export.json",
                 markup=False,

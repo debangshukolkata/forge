@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""forge_structure_export.py — describe a Python codebase's STRUCTURE for Forge's Mode B, without its code.
+"""forge_structure_export.py — describe a Python codebase's STRUCTURE for DebCraft's Mode B, without its code.
 
-Run it yourself, on the machine that has the code (Forge never runs it and never sees the path):
+Run it yourself, on the machine that has the code (DebCraft never runs it and never sees the path):
 
     python forge_structure_export.py <app folder> [--out structure_export] [--depth 8]
         [--include PATH ...] [--exclude PATH ...] [--mask terms.txt] [--docstrings]
@@ -382,7 +382,7 @@ def _excluded(path: Path, excludes: list[str]) -> bool:
 
 def to_markdown(data: dict[str, object]) -> str:
     lines = [
-        "# Structure export (review before importing into Forge)",
+        "# Structure export (review before importing into DebCraft)",
         "",
         "Contains names and signatures only — no function bodies, literals, values, comments or .env contents.",
         "",
@@ -434,7 +434,9 @@ def to_markdown(data: dict[str, object]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Export a codebase's structure (no code) for Forge Mode B.")
+    parser = argparse.ArgumentParser(
+        description="Export a codebase's structure (no code) for DebCraft Mode B."
+    )
     parser.add_argument("root", type=Path)
     parser.add_argument("--out", default="structure_export")
     parser.add_argument("--depth", type=int, default=8)
@@ -451,7 +453,7 @@ def main(argv: list[str] | None = None) -> int:
     Path(f"{args.out}.json").write_text(json.dumps(data, indent=1), encoding="utf-8")
     Path(f"{args.out}.md").write_text(to_markdown(data), encoding="utf-8")
     print(
-        f"Wrote {args.out}.json and {args.out}.md — review them, then /profile import {args.out}.json in Forge."
+        f"Wrote {args.out}.json and {args.out}.md — review them, then /profile import {args.out}.json in DebCraft."
     )
     return 0
 

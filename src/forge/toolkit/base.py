@@ -153,7 +153,7 @@ class Tool:
         return None
 
     def own_files_only(self, args: Any, context: ToolContext) -> bool:
-        """True when the call only touches files Forge created in this workspace (none of the user's), so an
+        """True when the call only touches files DebCraft created in this workspace (none of the user's), so an
         always-ask tool may fall back to the ordinary approval rules."""
         return False
 

@@ -62,7 +62,7 @@ class AccountStore:
         """First run only. Returns a session token (the new account is signed in)."""
         if self.configured:
             raise AccountError(
-                "An account already exists. To reset it, delete account.json in the Forge folder."
+                "An account already exists. To reset it, delete account.json in the DebCraft folder."
             )
         user = user.strip()
         if not user or len(user) > 64:

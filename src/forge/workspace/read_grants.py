@@ -2,7 +2,7 @@
 
 Two kinds: folders that are always readable (the installed skills) and folders or files the user granted for
 this project, with everything under a folder included. Only the user's own actions grant (the /allow-read
-command, a path they type or @-mention); the model has no way to. The list is stored under the Forge home,
+command, a path they type or @-mention); the model has no way to. The list is stored under the DebCraft home,
 outside every folder a tool may write to, so the model cannot add to it either. Reading only: writes stay
 inside the workspace jail whatever is granted."""
 
@@ -18,7 +18,7 @@ from forge.safety.paths import is_within, real_path
 
 
 class ReadGrantError(ForgeError):
-    """The path cannot be granted (missing, or too broad, or Forge's own folder)."""
+    """The path cannot be granted (missing, or too broad, or DebCraft's own folder)."""
 
 
 class ReadGrants:
@@ -99,13 +99,13 @@ class ReadGrants:
             raise ReadGrantError(f"{resolved} holds your whole profile; pick a folder inside it.")
         home = self._protected_home
         if home is not None and is_within(home, resolved):
-            raise ReadGrantError("Forge's own folder holds keys and accounts and cannot be granted.")
+            raise ReadGrantError("DebCraft's own folder holds keys and accounts and cannot be granted.")
         if (
             home is not None
             and is_within(resolved, home)
             and not any(is_within(resolved, a) for a in self._always)
         ):
-            raise ReadGrantError("Forge's own folder holds keys and accounts and cannot be granted.")
+            raise ReadGrantError("DebCraft's own folder holds keys and accounts and cannot be granted.")
 
     def _save(self, paths: list[Path]) -> None:
         assert self._store is not None

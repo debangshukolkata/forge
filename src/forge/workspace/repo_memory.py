@@ -1,4 +1,4 @@
-"""Remembers per-repository answers (e.g. which sub-folder is the Python app) in Forge home (spec §6.1)."""
+"""Remembers per-repository answers (e.g. which sub-folder is the Python app) in DebCraft home (spec §6.1)."""
 
 from __future__ import annotations
 

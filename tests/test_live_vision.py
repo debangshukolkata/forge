@@ -1,4 +1,4 @@
-"""M10D live: Forge's view_image on the real vision model reads a synthetic handwritten page (known labels) and
+"""M10D live: DebCraft's view_image on the real vision model reads a synthetic handwritten page (known labels) and
 locates its signature; the image is logged by hash. Run with: pytest -m live tests/test_live_vision.py"""
 
 from __future__ import annotations

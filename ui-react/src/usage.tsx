@@ -1,4 +1,4 @@
-// Tokens and cost badges, coloured green / yellow / red by the configurable limits in Forge's config
+// Tokens and cost badges, coloured green / yellow / red by the configurable limits in DebCraft's config
 // (cost.colors: reply / task / phase). The worse of the cost colour and the token colour wins.
 import { cx } from "./lib";
 import type { CostLimits, UsageBucket } from "./types";

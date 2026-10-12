@@ -1,4 +1,4 @@
-"""What Forge has learned, grouped by project, so the user can pick what to forget (D-227).
+"""What DebCraft has learned, grouped by project, so the user can pick what to forget (D-227).
 
 A group is one memory scope: the notes (and FORGE.md) shared by every project of a repository or host, or
 the user's own preferences. Groups come from the project list plus the folders on disk, so notes left behind
@@ -94,7 +94,7 @@ def list_learnings(home: Path, recent: list[dict[str, Any]]) -> list[dict[str, A
                     "title": "Host profile",
                     "kind": "profile",
                     "description": (
-                        f"What Forge was told about your code ({examples} example(s)). "
+                        f"What DebCraft was told about your code ({examples} example(s)). "
                         "Forgetting it also removes this project's FORGE.md; the project starts from scratch."
                     ),
                     "text": document.read_text(encoding="utf-8", errors="replace")[:MAX_TEXT_CHARS]

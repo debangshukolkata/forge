@@ -93,7 +93,7 @@ class ShellSession:
                     label_low(self.workspace.jail.check(self.workspace.harness_dir))
                     venv = self.workspace.root / ".venv"
                     # Mode B's own venv: pip installs into it run sandboxed. It stays outside the write jail
-                    # (Forge's file tools never edit it), so it is checked to be inside the workspace instead.
+                    # (DebCraft's file tools never edit it), so it is checked to be inside the workspace instead.
                     if venv.is_dir() and is_within(real_path(venv), real_path(self.workspace.root)):
                         label_low(venv)
                 self.workspace.jail.check(marker).write_text(

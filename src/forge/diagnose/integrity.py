@@ -2,10 +2,10 @@
 where COPY_INSTRUCTIONS said, completely? Each finding carries an exact instruction for the user.
 
 - missing files (and the same file name somewhere else: wrong location);
-- partially pasted files: the lines of Forge's version that are missing, with registration lines
+- partially pasted files: the lines of DebCraft's version that are missing, with registration lines
   (register_blueprint, add_url_rule, ...) called out as missing registrations;
 - line-ending/encoding-only differences (harmless, reported as info);
-- files Forge deleted that are still there;
+- files DebCraft deleted that are still there;
 - packages the new code needs that the user's venv doesn't have;
 - environment variables the new code reads that are set nowhere (names only — values are never read);
 - tables/columns from DB_CHANGES.sql that don't exist in the database (read-only introspection).
@@ -106,7 +106,7 @@ def check_integrity(workspace: Workspace, db: Any = None) -> IntegrityReport:
                     "not_deleted",
                     "warning",
                     change.path,
-                    "Forge deleted (or moved) this file, but it is still in your repository",
+                    "DebCraft deleted (or moved) this file, but it is still in your repository",
                     f"Delete `{change.path}`" + (f" (it now lives at `{moved}`)." if moved else "."),
                 )
             continue
@@ -171,7 +171,7 @@ def _compare(report: IntegrityReport, path: str, delivered: str | None, real: st
             "extra_changes",
             "info",
             path,
-            "your file has lines Forge's version doesn't (local edits?)",
+            "your file has lines DebCraft's version doesn't (local edits?)",
             "Fine if intended; otherwise compare with output/ in CHANGES.md.",
         )
         return
@@ -194,7 +194,7 @@ def _compare(report: IntegrityReport, path: str, delivered: str | None, real: st
             "partial_paste",
             "error",
             path,
-            f"{len(missing)} line(s) of Forge's version are missing (partial paste?)",
+            f"{len(missing)} line(s) of DebCraft's version are missing (partial paste?)",
             f"Replace `{path}` with `output/{path}`, or paste the missing lines:\n{shown}{more}",
         )
 
@@ -203,7 +203,7 @@ def _check_packages(report: IntegrityReport, workspace: Workspace, manifest: Out
     env = workspace.info.python_env
     if env is None:
         return
-    # Modules the repository already imported were installed before Forge; only new ones are checked.
+    # Modules the repository already imported were installed before DebCraft; only new ones are checked.
     top_packages = set(env.top_packages) | _modules_already_imported(workspace)
     modules: set[str] = set()
     requirements: set[str] = set()
@@ -269,7 +269,7 @@ def _check_packages(report: IntegrityReport, workspace: Workspace, manifest: Out
 
 
 def _modules_already_imported(workspace: Workspace) -> set[str]:
-    """Imports in the repository as it was before Forge (the baseline): those packages were installed."""
+    """Imports in the repository as it was before DebCraft (the baseline): those packages were installed."""
     names: set[str] = set()
     for relative, entry in workspace.manifest.files.items():
         if not relative.endswith(".py") or entry.secret:
@@ -290,7 +290,7 @@ def _check_env_vars(report: IntegrityReport, workspace: Workspace, manifest: Out
             continue
         new = set(ENV_READ.findall(_text(workspace.output_dir / change.path) or ""))
         old = set(ENV_READ.findall(_text(repo / change.path) or "")) if change.status == "modified" else set()
-        # The user's copy may already be Forge's version: compare against the baseline instead.
+        # The user's copy may already be DebCraft's version: compare against the baseline instead.
         saved = workspace.forge_dir / "baseline" / change.path
         if saved.exists():
             old = set(ENV_READ.findall(_text(saved) or ""))
@@ -313,8 +313,8 @@ def _check_env_vars(report: IntegrityReport, workspace: Workspace, manifest: Out
                 "missing_env_var",
                 "error",
                 path,
-                f"the new code reads `{name}`, which is set nowhere Forge can see",
-                f"Set `{name}` in your environment or the app's .env (see ENV_CHANGES.md). Forge "
+                f"the new code reads `{name}`, which is set nowhere DebCraft can see",
+                f"Set `{name}` in your environment or the app's .env (see ENV_CHANGES.md). DebCraft "
                 f"never needs the value.",
             )
 
