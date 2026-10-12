@@ -3416,3 +3416,7 @@ Not built yet: everything in TODO.md sections 1 to 6; the user's rerun of the th
 ### D-256 — design-critic runs in parallel; screenshot names are unique (TODO X1, overnight run 2026-10-13)
 Context: only explore and reviewer could overlap. Each subagent has its own tool context and browser session, so two critics do not share a page; the only collision was the screenshot file name (stamp to the second).
 Decision: `design-critic` joins `PARALLEL_SUBAGENT_TYPES`; `unique_stamp()` in tools/browser.py adds nanoseconds and a random suffix. Verifier and debugger stay serial. Tests: tests/test_parallel_critic.py.
+
+### D-257 — Build-process rules in the skill and round-trip hints in the prompts (TODO D1, L7, S5, X5; overnight 2026-10-13)
+Decision: `ui-design-quality` gets section 5b (plan sections and tokens, write each screen whole, one section at a time, rewrite instead of a fifth patch). Both system prompts get one bullet: parallel independent tool calls, whole-file writes, installs in the background. Why: cheap, reversible, no quality cost (D-161). Measuring the effect waits for the timing breakdown (S1) and the rerun.
+Deferred: X3 `run_parallel` is parked because it touches the approval gate (security-relevant); options are recorded in TODO.md.

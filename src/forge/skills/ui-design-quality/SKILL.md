@@ -131,6 +131,15 @@ The audit now checks several of these (fold, headline length, placeholders, em d
 6. In the task_update `verification`, say what you looked at and what you improved ("audit clean at 1280 and 375;
    changed X, Y, Z after the first look").
 
+### 5b. Build screens whole, one section at a time (stops drift)
+Many tiny edits make a page drift: spacing, radius and colours slowly stop agreeing. So:
+1. Plan the page's sections first (a short list), then write the tokens (DESIGN.md, CSS variables).
+2. Write each screen or component as a **complete file in one pass** (`write_file`), using only the tokens. Patch with
+   small edits only afterwards, for a specific audit or critic finding.
+3. For a long page, build **one section at a time**, each written whole: screenshot it, read the audit, fix it, then
+   go on to the next. Assemble last and take the full-page screenshots at 1280 and 375.
+4. If you find yourself editing the same UI file for the fifth time, stop: re-read DESIGN.md and rewrite the file whole.
+
 When the user says the result looks bad: do not patch single classes. Re-read sections 0-2, redo the design
 decisions, and rebuild the screen's structure and styles together.
 

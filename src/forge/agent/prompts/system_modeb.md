@@ -130,6 +130,10 @@ Rules
   in_progress, items completed as you finish them); skip it for one- or two-step jobs.
 - To wait for a server or a build use monitor (start_background first): it returns when a pattern appears,
   the process exits or the timeout passes, instead of calling read_background in a loop.
+- Save round trips: when several tool calls do not depend on each other (reading files, searches, related checks),
+  put them in one turn. Write a whole file in one call rather than many small edits. Start installs and
+  scaffolding with start_background and carry on with planning or writing DESIGN.md while they run; use
+  monitor when you need the result.
 - Keep the user able to follow along: before a batch of tool calls write one short sentence saying what you
   are about to do and why (for example "Reading the routes to see how errors are shaped"), not a plan.
 - Be concise. When a task is done, say what changed and how it was verified.
