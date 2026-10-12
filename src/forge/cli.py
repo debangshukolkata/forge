@@ -64,6 +64,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     log_summary.add_argument("--workspace", type=Path, help="a workspace folder (uses its transcripts)")
     log_summary.add_argument("--log", type=Path, help="an events.jsonl file instead of a workspace")
+    run_report = subcommands.add_parser(
+        "run-report", help="scrubbed report of a run you can send for analysis: no source code, no secrets"
+    )
+    run_report.add_argument("--workspace", type=Path, required=True, dest="report_workspace")
+    run_report.add_argument(
+        "--out", type=Path, help="where to write it (default: <workspace>/.forge/run-report.md)"
+    )
     profile = subcommands.add_parser("profile", help="Mode B host profiles")
     profile.add_argument("action", choices=["list", "new", "show", "import", "export-script"])
     profile.add_argument("name", nargs="?", help="the profile name (new/show/import)")
@@ -134,6 +141,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_diagnose(args.diagnose_workspace, error, not args.no_run))
     if args.command == "log-summary":
         return _log_summary(args.workspace, args.log)
+    if args.command == "run-report":
+        return _run_report(args.report_workspace, args.out)
     if args.command == "skill":
         return _skill(args)
     if args.command == "ui":
@@ -347,6 +356,16 @@ def _cleanup(workspace_path: Path, yes: bool) -> int:
             continue
         console.print("Dropped: " + (", ".join(dropped) or "nothing"), markup=False)
     return status
+
+
+def _run_report(workspace_path: Path, out: Path | None) -> int:
+    from forge.engine.run_report import write_run_report
+
+    if not (workspace_path / ".forge" / "transcripts" / "events.jsonl").exists():
+        print("forge run-report needs a workspace that has a transcript (.forge/transcripts/events.jsonl)")
+        return 2
+    print(f"Run report written to {write_run_report(workspace_path, out)}")
+    return 0
 
 
 def _log_summary(workspace_path: Path | None, log_path: Path | None) -> int:

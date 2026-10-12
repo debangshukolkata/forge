@@ -3424,3 +3424,6 @@ Deferred: X3 `run_parallel` is parked because it touches the approval gate (secu
 ### D-258 — Timing: waiting for the user is separate from tool time (TODO S1, overnight 2026-10-13)
 Context: `tool_call_finished.duration_s` included the time an approval card or question was open, so a 5-second install behind a 25-second approval looked like a 30-second tool. Model latency and first-token time were already recorded.
 Decision: `duration_s` now excludes the wait; `waited_s` (only when at least 0.01 s) holds approval time, and for ask_user, propose_requirements, propose_plan and request_user_action the whole call counts as waiting. `forge log-summary` prints the total. Older logs simply have no `waited_s`. Run-map display is left open in TODO.
+
+### D-259 — `forge run-report`: a scrubbed report to send for analysis (TODO C17, overnight 2026-10-13)
+Decision: `engine/run_report.py` builds a markdown report from events.jsonl only (so no source code): the run summary, subagent table with cost, critic/reviewer verdicts with score lines, failed tool calls, screenshot count and the final task list. The redactor masks secrets; the workspace path, the home folder and the account name are replaced with placeholders. Written to `.forge/run-report.md`. Options not taken now: a UI download button (open in TODO).
