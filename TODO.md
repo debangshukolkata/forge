@@ -281,3 +281,24 @@ Things asked about and deliberately postponed (for example the internal part of 
 - [x] Pushed 2026-10-04: the redesign (953e2c5 .. 38c6912, 24 commits) is on origin/main
 - [ ] The full test suite takes ~6 min (browser tests); consider splitting browser tests into a marker run if it gets slower
 - [ ] `write_secret_values` in config.py is no longer used by the web app; remove it
+
+## Design upgrades for apps DebCraft builds (D-245..D-251, 2026-10-12) — goal: world-class UI/UX without a stronger model
+Done and pushed:
+- [x] Style audit on every screenshot, Tailwind setup check, look-before-done gate (D-245)
+- [x] Retry/fallback reason shown in the chat; no design-style questions (D-246)
+- [x] show_app tries 127.0.0.1, localhost and [::1]; start_background `cwd` (D-247, D-248)
+- [x] Reference recipes, independent `design-critic` with a SHIP/REVISE gate, stricter audit, identical-screenshot guard (D-249)
+- [x] DESIGN.md workflow, taste checks, redesign protocol, on-demand brand references (D-250)
+- [x] Tested library: style directions, modern CSS, motion kit, native components, vetted sources (D-251)
+
+Open (from the "how Claude designs" discussion, 2026-10-12):
+- [ ] Write each screen as complete files in one pass, patch only afterwards (many tiny edits make pages drift). Add the rule to the `ui-design-quality` skill and, if the rerun shows uneven pages, to the prompt; consider a check that flags a UI file edited more than N times
+- [ ] Re-run the three-design task (`designs/design-a..c`, ports 5171-5173) on the office laptop and score the result with the seven-line rubric; tune the critic's SHIP bar from real runs (too lenient / too harsh)
+- [ ] Measure cost and time per UI task now that the critic can run several times; limit to one round for small edits if it is too slow
+- [ ] Check that `raw.githubusercontent.com` is reachable from the office laptop (brand DESIGN.md fetch); if blocked, bundle five or six starter DESIGN.md files in our own words
+- [ ] Optional: user installs taste-skill with `forge skill add https://github.com/Leonxlnx/taste-skill` if they want its full rule set (conflicts: it bans Inter, serifs, Lucide)
+- [ ] Code-level check that design variants differ (compare screenshots / DESIGN.md directions automatically), beyond the pixel-identical guard
+- [ ] A "design concept" step in the engine before the first UI edit (design read, dials, direction written down) enforced like the other gates, if the model skips it
+- [ ] Real imagery: a way to get licensed photos or generated illustrations when SVG drawings are not enough (needs a source and a licence decision)
+- [ ] Visual regression check: keep the approved screenshots per screen and flag unplanned visual changes after later edits
+- [ ] Try an automatic second look: when the critic returns REVISE, give the builder the screenshot and the fixes together in one message
