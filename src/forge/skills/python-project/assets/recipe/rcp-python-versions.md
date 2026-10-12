@@ -57,7 +57,11 @@ def describe(value: int | str | list[int]) -> str:
 
 assert Job(name="x").tags == []
 assert [describe(v) for v in (-1, 5, "abc", [1, 2, 3], [])] == [
-    "negative", "number", "text of 3", "list starting 1 with 2 more", "empty list",
+    "negative",
+    "number",
+    "text of 3",
+    "list starting 1 with 2 more",
+    "empty list",
 ]
 assert Path("a") / "b" == Path("a/b")
 ```

@@ -39,7 +39,9 @@ def main(argv: Sequence[str] | None = None, stdin: io.TextIOBase | None = None) 
         print("1.0")
         return 0
     try:
-        text = (stdin or sys.stdin).read() if args.file == "-" else Path(args.file).read_text(encoding="utf-8")
+        text = (
+            (stdin or sys.stdin).read() if args.file == "-" else Path(args.file).read_text(encoding="utf-8")
+        )
     except OSError as error:
         print(f"tool: cannot read {args.file}: {error.strerror}", file=sys.stderr)
         return 1

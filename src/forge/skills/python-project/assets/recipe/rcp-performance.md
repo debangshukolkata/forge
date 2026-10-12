@@ -55,7 +55,9 @@ def fib(n: int) -> int:
 
 rng = random.Random(3)
 sample = [rng.randint(0, 50) for _ in range(300)]
-assert sorted(set(duplicates_slow(sample))) == sorted(duplicates_fast(sample))  # same answer: the old version is the oracle
+assert sorted(set(duplicates_slow(sample))) == sorted(
+    duplicates_fast(sample)
+)  # same answer: the old version is the oracle
 big = [rng.randint(0, 10**6) for _ in range(300_000)]
 start = time.perf_counter()
 duplicates_fast(big)

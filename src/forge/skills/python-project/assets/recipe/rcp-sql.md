@@ -27,7 +27,9 @@ from contextlib import closing
 
 
 def init(db: sqlite3.Connection) -> None:
-    db.execute("CREATE TABLE IF NOT EXISTS stock (sku TEXT PRIMARY KEY, qty INTEGER NOT NULL CHECK (qty >= 0))")
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS stock (sku TEXT PRIMARY KEY, qty INTEGER NOT NULL CHECK (qty >= 0))"
+    )
 
 
 def move(db: sqlite3.Connection, source: str, target: str, qty: int) -> None:

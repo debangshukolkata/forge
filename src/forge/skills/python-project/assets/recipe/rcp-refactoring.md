@@ -31,6 +31,7 @@ Common moves:
 # runnable
 from dataclasses import dataclass
 
+
 # before: nested, repeated, magic numbers
 def shipping_before(country, weight, express):
     if country == "IN":
@@ -55,7 +56,10 @@ class Rate:
 
 
 RATES = {"IN": Rate(40, 60), "US": Rate(400, 600)}
-EXPRESS_LIGHT, EXPRESS_HEAVY = 2.25, 2  # express multiplies the base rate; the old code had these baked into its numbers
+EXPRESS_LIGHT, EXPRESS_HEAVY = (
+    2.25,
+    2,
+)  # express multiplies the base rate; the old code had these baked into its numbers
 
 
 def shipping_after(country: str, weight: float, express: bool) -> int:
