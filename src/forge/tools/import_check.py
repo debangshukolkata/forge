@@ -84,11 +84,17 @@ def _guarded_lines(tree: ast.AST) -> set[int]:
     return guarded
 
 
-def collect_imports(root: Path) -> list[dict[str, object]]:
-    """Absolute imports from the project's Python files, as resolver requests."""
+def collect_imports(root: Path, only: set[Path] | None = None) -> list[dict[str, object]]:
+    """Absolute imports as resolver requests, from the project's Python files (all of them count as local names;
+    only the files in `only`, when given, are read for imports)."""
     requests: dict[tuple[str, str], dict[str, object]] = {}
     files = [p for p in root.rglob("*.py") if not SKIPPED_FOLDERS.intersection(p.relative_to(root).parts)]
+    # Any file or folder name in the project may be a module reached through a src/ layout, a conftest path or
+    # PYTHONPATH, so those top-level names are never reported (only third-party and invented ones are).
+    local_names = {p.stem for p in files} | {part for p in files for part in p.relative_to(root).parts[:-1]}
     for path in sorted(files)[:MAX_FILES]:
+        if only is not None and path.resolve() not in only:
+            continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
         except (SyntaxError, ValueError, OSError):
@@ -101,9 +107,16 @@ def collect_imports(root: Path) -> list[dict[str, object]]:
             where = f"{where_prefix}:{node.lineno}"
             if isinstance(node, ast.Import):
                 for alias in node.names:
+                    if alias.name.split(".")[0] in local_names:
+                        continue
                     key = (alias.name, "")
                     requests.setdefault(key, {"module": alias.name, "names": [], "where": where})
-            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            elif (
+                isinstance(node, ast.ImportFrom)
+                and node.level == 0
+                and node.module
+                and node.module.split(".")[0] not in local_names
+            ):
                 key = (node.module, where)
                 requests[key] = {
                     "module": node.module,
@@ -113,10 +126,12 @@ def collect_imports(root: Path) -> list[dict[str, object]]:
     return list(requests.values())
 
 
-def import_problems(root: Path, python: str) -> list[str]:
+def import_problems(
+    root: Path, python: str, env: dict[str, str] | None = None, only: set[Path] | None = None
+) -> list[str]:
     """Findings such as "app/routes.py:3: no module named 'flask_magic'"; empty when everything resolves or the
     check could not run."""
-    requests = collect_imports(root)
+    requests = collect_imports(root, only)
     if not requests:
         return []
     try:
@@ -127,6 +142,7 @@ def import_problems(root: Path, python: str) -> list[str]:
             text=True,
             timeout=CHECK_TIMEOUT_S,
             cwd=root,
+            env=env,
         )
         found = json.loads(run.stdout.strip().splitlines()[-1]) if run.stdout.strip() else []
     except (OSError, subprocess.SubprocessError, ValueError, IndexError):

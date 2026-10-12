@@ -11,7 +11,9 @@ cadence (D-130) the user last asked for, which persists across the interruption.
 from __future__ import annotations
 
 import asyncio
+import os
 from importlib import resources
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from forge.llm.base import Message
@@ -23,8 +25,10 @@ from forge.protocol.events import EventType
 from forge.subagents.spawn_tool import SpawnSubagent
 from forge.toolkit.base import Tool, ToolContext, ToolResult
 from forge.toolkit.powershell import ps_quote
+from forge.toolkit.private_env import without_private
 from forge.toolkit.pytest_report import parse_pytest
 from forge.toolkit.shell import execute
+from forge.tools.import_check import import_note, import_problems
 from forge.tools.interaction import (
     AskUser,
     OptionSpec,
@@ -484,6 +488,10 @@ class Orchestrator:
                     "blocked either."
                 ),
             )
+        if status == "done" and edited:
+            unresolved = await asyncio.to_thread(self._unresolved_imports)
+            if unresolved:
+                return ToolResult(ok=False, content=import_note(unresolved))
         ui_edited = context.last_ui_edit_step > self._task_start_step
         if status == "done" and ui_edited and context.last_browser_step <= context.last_ui_edit_step:
             return ToolResult(
@@ -529,6 +537,22 @@ class Orchestrator:
             "task", f"{task.id} {task.status}: {task.title}" + (f" — {verification}" if verification else "")
         )
         return ToolResult(ok=True, content=f"Task {task.id} recorded as {task.status}.")
+
+    def _unresolved_imports(self) -> list[str]:
+        """C8: imports in the project's Python files that do not resolve in the app's own environment."""
+        env = self.workspace.info.python_env
+        if env is None or not env.python:
+            return []
+        root = Path(env.app_dir) if env.app_dir else self.workspace.root
+        # Only files DebCraft wrote: a host repository's own imports may need packages this environment lacks.
+        written = {
+            (self.workspace.repo_dir / change.path).resolve()
+            for change in self.workspace.changes()
+            if change.op in ("write", "move") and change.path.endswith(".py")
+        }
+        if not written:
+            return []
+        return import_problems(root, env.python, env.command_env(without_private(dict(os.environ))), written)
 
     async def request_user_action(
         self, title: str, steps: list[str], verify_command: str | None, context: ToolContext

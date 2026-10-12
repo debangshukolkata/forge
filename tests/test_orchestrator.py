@@ -4,6 +4,7 @@ headless (spec §7, D-128/D-130/D-132)."""
 from __future__ import annotations
 
 import asyncio
+import sys
 from pathlib import Path
 
 import httpx2
@@ -20,6 +21,7 @@ from forge.tools.interaction import OptionSpec, TaskSpec
 from forge.workflow.orchestrator import Orchestrator, detect_cadence, requirement_instructions
 from forge.workflow.state import OrchestratorState, StateStore, Task
 from forge.workspace.create import create_workspace
+from forge.workspace.pyenv import PythonEnvironment
 from tests.helpers import mocked_router
 
 
@@ -190,6 +192,30 @@ async def test_no_claim_without_evidence(host: SessionHost) -> None:
     assert not refused.ok and "no passing test run since your last edit" in refused.content
     assert accepted.ok and orch.state.tasks[0].status == "done"
     assert "pytest: 17 passed" in (orch.workspace.forge_dir / "PROGRESS.md").read_text(encoding="utf-8")
+
+
+async def test_an_invented_import_in_a_file_the_model_wrote_blocks_done(host: SessionHost) -> None:
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="Add helper")]
+    orch._start_task(orch.state.tasks[0])
+    context = orch.context
+    app_dir = orch.workspace.app_dir
+    orch.workspace.info.python_env = PythonEnvironment(
+        python=sys.executable, venv="", app_dir=str(app_dir), top_packages=[]
+    )
+    relative = app_dir.relative_to(orch.workspace.repo_dir).as_posix() + "/benchmark_helper.py"
+    orch.workspace.write_text(relative, "import json\nimport magic_forms_toolkit\n")
+    context.step += 1
+    context.last_edit_step = context.step
+    context.last_verified_step = context.step + 1
+    context.step += 1
+
+    refused = await orch.task_update("T1", "done", "", "pytest passed", "", context)
+    orch.workspace.write_text(relative, "import json\n")
+    accepted = await orch.task_update("T1", "done", "Helper added.", "pytest passed", "", context)
+
+    assert not refused.ok and "magic_forms_toolkit" in refused.content
+    assert accepted.ok
 
 
 async def test_design_fork_is_asked_and_logged(host: SessionHost) -> None:

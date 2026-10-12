@@ -77,3 +77,21 @@ def test_a_python_that_cannot_run_gives_no_findings(tmp_path: Path) -> None:
 def test_note_lists_findings_and_caps_them() -> None:
     note = import_note([f"a.py:{n}: no module named 'x{n}'" for n in range(1, 12)])
     assert "Not accepted" in note and "x1'" in note and "and 3 more" in note
+
+
+def test_names_found_anywhere_in_the_project_are_treated_as_local(tmp_path: Path) -> None:
+    (tmp_path / "src" / "shop").mkdir(parents=True)
+    (tmp_path / "src" / "shop" / "cart.py").write_text("X = 1\n", encoding="utf-8")
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_cart.py").write_text(
+        "import json, shop\nfrom shop.cart import X\nimport shop.cart\n", encoding="utf-8"
+    )
+    assert import_problems(tmp_path, sys.executable) == []
+
+
+def test_only_the_named_files_are_read_for_imports(tmp_path: Path) -> None:
+    (tmp_path / "old.py").write_text("import long_standing_host_dependency\n", encoding="utf-8")
+    (tmp_path / "new.py").write_text("import json\nimport invented_by_the_model\n", encoding="utf-8")
+    problems = import_problems(tmp_path, sys.executable, only={(tmp_path / "new.py").resolve()})
+    assert problems == ["new.py:2: no module named 'invented_by_the_model'"]
+    assert import_problems(tmp_path, sys.executable, only=set()) == []
