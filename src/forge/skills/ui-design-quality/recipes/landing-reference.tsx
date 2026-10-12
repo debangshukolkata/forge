@@ -123,16 +123,31 @@ function Stats() {
 
 function How() {
   return (
-    <section id="how" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6 md:py-28">
-      <p className="eyebrow">How it works</p>
-      <h2 className="mt-3 max-w-2xl text-4xl">Three simple steps, about 45 minutes in total</h2>
-      <ol className="mt-12 grid gap-6 md:grid-cols-3">
+    <section
+      id="how"
+      className="mx-auto grid max-w-6xl scroll-mt-20 gap-12 px-4 py-20 sm:px-6 md:grid-cols-[0.8fr_1.2fr] md:py-28"
+    >
+      {/* Asymmetric on purpose: a sticky intro beside a stacked list avoids the generic three-equal-cards row. */}
+      <div className="md:sticky md:top-28 md:self-start">
+        <p className="eyebrow">How it works</p>
+        <h2 className="mt-3 text-4xl">Three simple steps, about 45 minutes in total</h2>
+        <p className="mt-4 max-w-sm leading-relaxed text-ink-700">
+          Nothing to prepare. Bring a photo ID and drink plenty of water the day before.
+        </p>
+      </div>
+      <ol className="space-y-4">
         {steps.map(({ icon: Icon, title, text }, index) => (
-          <li key={title} className="card transition duration-200 hover:-translate-y-1 hover:shadow-lift">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-600"><Icon size={22} /></span>
-            <p className="mt-5 text-xs font-semibold text-ink-500">STEP {index + 1}</p>
-            <h3 className="mt-1 text-xl">{title}</h3>
-            <p className="mt-2 leading-relaxed text-ink-700">{text}</p>
+          <li key={title} className="card flex gap-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-lift">
+            <span className="font-display text-5xl font-semibold leading-none text-brand-500" aria-hidden>
+              {index + 1}
+            </span>
+            <div className="flex-1">
+              <h3 className="text-xl">{title}</h3>
+              <p className="mt-2 leading-relaxed text-ink-700">{text}</p>
+            </div>
+            <span className="hidden h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600 sm:grid">
+              <Icon size={22} />
+            </span>
           </li>
         ))}
       </ol>

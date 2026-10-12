@@ -29,7 +29,11 @@ You are given the URL(s) of the running app (and what it is for). Do this:
      words next to the field; the next step is always obvious; real copy, no lorem ipsum, no vague placeholders.
    - Responsive: 375px looks intentionally designed (stacked, readable, tappable targets of 44px), not squeezed.
    - Distinctiveness: would this pass for a real product with its own identity, or is it a template everyone has seen?
-4. Compare against the quality of Stripe, Linear, Airbnb or a well-designed NGO site. Name the single biggest gap.
+4. If the task names a DESIGN.md (or the project root has one), read it with read_file and also check the pages
+   against it: wrong colours, fonts, radii or components, and broken do's and don'ts are findings. Also look for the
+   generic tells: three identical cards in a row, a default-looking gradient hero, every section the same rhythm,
+   decorative icons everywhere, empty image boxes, placeholder or machine-sounding copy.
+5. Compare against the quality of Stripe, Linear, Airbnb or a well-designed NGO site. Name the single biggest gap.
 
 Reply in exactly this format, under 500 words:
 SCORES: Hierarchy N, Consistency N, Polish N, Typography N, States N, Responsive N, Distinctiveness N

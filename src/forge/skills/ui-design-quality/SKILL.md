@@ -28,8 +28,16 @@ This skill's folder holds worked examples that build, pass the audit and look pr
 - `recipes/landing-reference.tsx`: a complete page (sticky nav, hero with a drawn visual, stats, steps, validated
   form with success state, FAQ, footer) showing spacing, hierarchy and states done right. Copy the discipline, not
   the content or layout: variants and different products must not look like it.
+- `recipes/design-md-template.md`: the DESIGN.md format to write before building (section 0c).
 - `recipes/palettes-and-fonts.md`: palettes by mood, font pairings, type and spacing scales, layout ideas that make
   variants genuinely different, asset ideas without photos, patterns for dashboards, forms, settings, empty states.
+
+## 0c. Write the project's DESIGN.md first
+Before building any screen, write `DESIGN.md` in the project root from `recipes/design-md-template.md`: a one-line design
+read (who it is for, the feeling, what it must not look like), three dials (DESIGN_VARIANCE, MOTION_INTENSITY,
+VISUAL_DENSITY, 1-10), exact colours, type, spacing, shape, components, imagery, do's and don'ts, responsive rules. Build
+every screen from it and keep the CSS tokens identical to it. If the user or their company supplies a DESIGN.md or a
+brand guide, it is binding: use it as is. Give the path to the design critic; it scores the pages against it.
 
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)
 - **Purpose and tone** of the product (a blood donation drive: warm, trustworthy, urgent but calm).
@@ -40,6 +48,24 @@ This skill's folder holds worked examples that build, pass the audit and look pr
 - **Spacing**: one scale (4, 8, 12, 16, 24, 32, 48, 64, 96). Sections get 64-96px of vertical space, cards 24px of
   padding, related items 8-16px apart. Never leave boxed items touching.
 - **Radius, border, shadow**: pick one radius (8-16px) and one soft shadow style and reuse them everywhere.
+
+## 1b. Taste: what separates designed from generated
+- Avoid the generic tells: three identical cards in a row, a centred hero over a purple-blue gradient, every section
+  the same width and rhythm, icons in tinted squares on every card, default blue, the default font, grey boxes for
+  images. Use at least one asymmetric or unexpected composition (sticky side column, offset grid, bento, big numerals,
+  a full-bleed colour band) and vary section rhythm.
+- One accent colour, used with discipline; neutrals tinted toward the brand (warm or cool), never pure black on pure
+  white; shadows tinted, not grey; saturation moderate.
+- Type does the heavy lifting: a distinctive display face for headings paired with a quiet body face, tight tracking on
+  large sizes, real weight contrast, tabular figures for numbers, sentence case, short lines (about 45-75 characters).
+- The hero must show the headline (at most three lines at desktop) and the primary action without scrolling; one idea
+  per section; at most one small eyebrow label per three sections.
+- Copy is part of design: specific, active, short; no placeholder names, no lorem ipsum, no "Welcome to ...", and avoid
+  em dashes (a machine-writing tell). Numbers and names should look real.
+- Motion only where it explains something (entrance, hover, state change), only `transform` and `opacity`, 150-300 ms,
+  and honour `prefers-reduced-motion`. No scroll listeners: use IntersectionObserver or CSS.
+- Use dvh (`min-h-dvh`), not `h-screen`. Never `alert()`. Never `transition: all`.
+The audit now checks several of these (fold, headline length, placeholders, em dashes, alert, scroll listeners).
 
 ## 2. Layout and hierarchy
 - First screen: a hero with one clear headline, one sentence, one primary button and one secondary action, plus a
@@ -107,3 +133,30 @@ Variants that look the same are a failed task, however polished each one is.
   `[cwd: ...]` in the result, then `show_app` per server. If
   `show_app` fails, read its message and fix the cause (it tries 127.0.0.1, localhost and [::1]); do not hand the
   user commands to run instead of running them yourself.
+
+## 7. Improving a UI that already exists (when the user says it looks bad, or asks to restyle)
+Do not patch single classes and do not rewrite from scratch. Follow this order:
+1. **Scan**: framework, styling method, Tailwind version, current tokens, which screens exist.
+2. **Prove the styling works** (section 0). An unstyled-looking page is a setup bug, not a design problem.
+3. **Diagnose**: screenshot every screen at 1280 and 375, read the audit, and list every generic pattern, missing state,
+   inconsistency and weak spot you can name (at least ten, specific to elements).
+4. **Write or update DESIGN.md** with the target system.
+5. **Fix in priority order**, one pass each, checking the screenshot after every pass: (a) fonts, (b) colour cleanup and
+   one accent, (c) hover, focus and press states, (d) layout, spacing and hierarchy, (e) replace weak components,
+   (f) loading, empty and error states, (g) polish: tracking, alignment, shadows, copy. Keep the app working: run
+   its tests and flows after each pass.
+6. **Review** with `design-critic` and fix what it lists.
+If the user asks you to change the look a second time, the first attempt did not change enough: make the change large
+enough to be seen at a glance (palette, type and composition), and say what is now different.
+
+## 8. Matching the feel of a named product (reference styles)
+When the request names a product ("like Stripe", "Linear-style", "Airbnb feel"), look for its design system first
+instead of guessing. The community repository awesome-design-md holds a `DESIGN.md` per site (exact colours, type
+scale, radii, shadows, component specs, do's and don'ts), for example:
+`https://raw.githubusercontent.com/VoltAgent/awesome-design-md/main/design-md/<slug>/DESIGN.md` with slugs such as
+stripe, linear.app, airbnb, notion, apple, vercel, supabase, spotify, revolut, wise, shopify, figma, framer, raycast,
+resend, cal, posthog, claude, mistral.ai, tesla. Fetch it with `web_fetch` (it may be unreachable on a company
+network: then say so and work from what you know). Take the principles and token values that give the feel (type
+scale, spacing, depth, component shapes) and write them into the project's own DESIGN.md. Do not copy the brand's
+logo, name, imagery or exact identity: the result must still be this product, with its own palette decision and copy.
+Never ask the user which style to use: pick, say why in one line, build.

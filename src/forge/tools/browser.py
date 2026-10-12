@@ -241,7 +241,7 @@ class BrowserScreenshot(Tool):
         await context.emit(
             "notice", {"kind": "screenshot", "text": f"Screenshot saved: {path.name}", "path": str(path)}
         )
-        audit = await audit_page(session.page)
+        audit = await audit_page(session.page, context.workspace.root)
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         twin = session.shots.get(digest)
         if twin is not None and twin != session.page.url:

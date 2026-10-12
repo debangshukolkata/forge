@@ -155,7 +155,12 @@ def test_the_skill_ships_its_reference_files() -> None:
 
     skill = discover()["ui-design-quality"]
     listed = skill_files_note(skill)
-    for name in ("recipes/index.css", "recipes/landing-reference.tsx", "recipes/palettes-and-fonts.md"):
+    for name in (
+        "recipes/design-md-template.md",
+        "recipes/index.css",
+        "recipes/landing-reference.tsx",
+        "recipes/palettes-and-fonts.md",
+    ):
         assert name in listed
 
 
@@ -174,3 +179,38 @@ async def test_two_pages_that_look_identical_are_flagged(
         assert "pixel-identical" in second.content and context.ui_audit_blocked
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
+
+
+GENERIC = """<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;font-family:Arial,sans-serif;color:#222}
+.hero{padding:900px 24px 24px}h1{font-size:44px;margin:0 0 12px}
+.cta{display:inline-block;padding:12px 20px;background:#b91c1c;color:#fff;border-radius:12px;text-decoration:none}
+</style></head><body><div class="hero"><h1>Welcome to Acme \u2014 your trusted partner \u2014 today</h1>
+<p>Lorem ipsum dolor sit amet.</p><a class="cta" href="#">Get started</a></div></body></html>"""
+
+
+@pytest.mark.e2e
+async def test_the_audit_flags_generic_tells(tmp_path: Path, original_repo: Path) -> None:
+    pytest.importorskip("playwright.async_api")
+    root = tmp_path / "site2"
+    root.mkdir()
+    (root / "generic.html").write_text(GENERIC, encoding="utf-8")
+    (root / "app.js").write_text("window.alert('hi'); const x = '<img src=a.png>';\n", encoding="utf-8")
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    (workspace.root / "src").mkdir(exist_ok=True)
+    (workspace.root / "src" / "app.js").write_text("window.alert('hi');\n", encoding="utf-8")
+    context = ToolContext(workspace=workspace)
+    try:
+        await BrowserOpen().run(
+            BrowserOpen.Args(url=f"http://127.0.0.1:{server.server_address[1]}/generic.html"), context
+        )
+        shot = await BrowserScreenshot().run(BrowserScreenshot.Args(), context)
+        text = shot.content
+        assert "below the fold" in text and "em dashes" in text and "Placeholder content" in text
+        assert "alert() is used" in text
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)
+        server.shutdown()

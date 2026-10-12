@@ -158,6 +158,24 @@ AUDIT_SCRIPT = r"""
   const wide = paragraphs.filter((el) => { const w = el.getBoundingClientRect().width, f = parseFloat(getComputedStyle(el).fontSize); return (el.innerText || '').length > 120 && w / f > 52; });
   if (wide.length) findings.push('Text lines are too long (more than about 80 characters): ' + sample(wide) + '. Limit with max-w-prose or max-w-2xl.');
 
+  // 11. Taste checks (distilled from common "generic AI page" tells).
+  const firstAction = all.find((el) => (el.tagName === 'A' || el.tagName === 'BUTTON') && visible(el) && !el.closest('header, nav')
+    && getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)');
+  if (firstAction && firstAction.getBoundingClientRect().top + window.scrollY > window.innerHeight) {
+    findings.push('The first primary action ' + label(firstAction) + ' is below the fold at ' + window.innerWidth + 'x' +
+      window.innerHeight + ': the hero must show the headline and the main action without scrolling.');
+  }
+  if (heading && window.innerWidth >= 1024) {
+    const lineHeight = parseFloat(getComputedStyle(heading).lineHeight) || parseFloat(getComputedStyle(heading).fontSize) * 1.2;
+    const lines = Math.round(heading.getBoundingClientRect().height / lineHeight);
+    if (lines > 3) findings.push('The h1 wraps over ' + lines + ' lines at desktop width: shorten the headline or widen its box.');
+  }
+  const bodyText = document.body.innerText || '';
+  const emDashes = (bodyText.match(/—/g) || []).length;
+  if (emDashes >= 2) findings.push(emDashes + ' em dashes in the copy (a common machine-writing tell): use commas, colons or full stops.');
+  const placeholder = bodyText.match(/lorem ipsum|john doe|jane doe|\bacme\b|your (company|name|text) here|sample text|coming soon/i);
+  if (placeholder) findings.push('Placeholder content on the page ("' + placeholder[0] + '"): write real copy.');
+
   return { findings, stats: { elements: all.length, utilityClasses: expected, ineffective: missing, viewport: window.innerWidth + 'x' + window.innerHeight } };
 }
 """
@@ -170,7 +188,7 @@ DESIGN_REMINDER = (
 )
 
 
-async def audit_page(page: Any) -> str:
+async def audit_page(page: Any, root: Path | None = None) -> str:
     """The audit as text for the model: numbered findings, or a clean line; never raises."""
     try:
         result = await page.evaluate(AUDIT_SCRIPT)
@@ -179,6 +197,8 @@ async def audit_page(page: Any) -> str:
     ) as error:  # a page that blocks scripts or is mid-navigation must not break the screenshot
         return f"Style audit could not run: {str(error).splitlines()[0]}"
     findings: list[str] = list(result.get("findings", []))
+    if root is not None:
+        findings.extend(source_taste_problems(root))
     stats = result.get("stats", {})
     header = f"Style audit ({stats.get('viewport', '?')}, {stats.get('elements', 0)} elements)"
     if not findings:
@@ -237,3 +257,47 @@ def tailwind_setup_problem(root: Path) -> str | None:
             if "@tailwind base" not in styles and "@tailwind utilities" not in styles:
                 return f"Tailwind v3 in {where}: no CSS file has the @tailwind base/components/utilities directives."
     return None
+
+
+SOURCE_SUFFIXES = {".tsx", ".jsx", ".ts", ".js", ".vue", ".svelte", ".html", ".css"}
+SOURCE_RULES: list[tuple[re.Pattern[str], str]] = [
+    (
+        re.compile(r"\b(?:window\.)?alert\s*\("),
+        "alert() is used: show a designed toast or inline message instead",
+    ),
+    (
+        re.compile(r"addEventListener\(\s*[\"']scroll"),
+        "a scroll listener: use IntersectionObserver or CSS (scroll handlers cause jank)",
+    ),
+    (
+        re.compile(r"transition:\s*all\b"),
+        "`transition: all`: animate named properties (transform, opacity, colour)",
+    ),
+    (re.compile(r"\bh-screen\b"), "`h-screen`: use min-h-dvh so mobile browser bars do not cut the layout"),
+    (
+        re.compile(r"lorem ipsum|john doe|jane doe", re.IGNORECASE),
+        "placeholder text in the source: write real copy",
+    ),
+    (re.compile(r"<img(?![^>]*\balt=)[^>]*>"), "an <img> without alt text"),
+]
+
+
+def source_taste_problems(root: Path) -> list[str]:
+    """Static scan of the project's own UI source for patterns that make a page feel unfinished (no browser)."""
+    counts: dict[str, list[str]] = {}
+    for path in root.rglob("*"):
+        if path.suffix not in SOURCE_SUFFIXES or SKIPPED_FOLDERS.intersection(path.relative_to(root).parts):
+            continue
+        if "test" in path.name.lower() or path.stat().st_size > 400_000:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for pattern, message in SOURCE_RULES:
+            if pattern.search(text):
+                counts.setdefault(message, []).append(path.relative_to(root).as_posix())
+    return [
+        f"Source: {message} ({', '.join(files[:3])}{', ...' if len(files) > 3 else ''})."
+        for message, files in counts.items()
+    ]
