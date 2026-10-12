@@ -1,0 +1,1068 @@
+{
+ "version": 1,
+ "assets": [
+  {
+   "id": "cmp-data-table",
+   "type": "component",
+   "title": "Sortable, searchable table",
+   "summary": "A table with sortable columns, a search box, numeric alignment and an empty state.",
+   "moods": [
+    "clean",
+    "dense",
+    "technical"
+   ],
+   "products": [
+    "admin",
+    "dashboards",
+    "reports"
+   ],
+   "tags": [
+    "react",
+    "accessible",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [
+    "lucide-react"
+   ],
+   "files": [
+    {
+     "from": "recipes/components-native.tsx",
+     "to": "src/components-native.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (components-native.tsx, D-251)",
+   "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
+   "preview": null,
+   "path": "assets/component/cmp-data-table.md",
+   "size": 8380
+  },
+  {
+   "id": "cmp-dialog",
+   "type": "component",
+   "title": "Accessible dialog",
+   "summary": "A native `<dialog>` modal with focus trapping, Esc to close and a backdrop, no dependency.",
+   "moods": [
+    "clean",
+    "accessible"
+   ],
+   "products": [
+    "forms",
+    "confirmations",
+    "settings"
+   ],
+   "tags": [
+    "react",
+    "accessible",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [
+    "lucide-react"
+   ],
+   "files": [
+    {
+     "from": "recipes/components-native.tsx",
+     "to": "src/components-native.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (components-native.tsx, D-251)",
+   "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
+   "preview": null,
+   "path": "assets/component/cmp-dialog.md",
+   "size": 8359
+  },
+  {
+   "id": "cmp-empty-state",
+   "type": "component",
+   "title": "Empty state",
+   "summary": "A designed empty state with an icon, a title, one sentence and an action.",
+   "moods": [
+    "friendly",
+    "clean"
+   ],
+   "products": [
+    "lists",
+    "dashboards",
+    "search"
+   ],
+   "tags": [
+    "react",
+    "accessible",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [
+    "lucide-react"
+   ],
+   "files": [
+    {
+     "from": "recipes/components-native.tsx",
+     "to": "src/components-native.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (components-native.tsx, D-251)",
+   "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
+   "preview": null,
+   "path": "assets/component/cmp-empty-state.md",
+   "size": 8335
+  },
+  {
+   "id": "cmp-skeleton-rows",
+   "type": "component",
+   "title": "Skeleton rows",
+   "summary": "Placeholder rows for tables and lists while data loads.",
+   "moods": [
+    "clean",
+    "calm"
+   ],
+   "products": [
+    "tables",
+    "lists"
+   ],
+   "tags": [
+    "react",
+    "accessible",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [
+    "lucide-react"
+   ],
+   "files": [
+    {
+     "from": "recipes/components-native.tsx",
+     "to": "src/components-native.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (components-native.tsx, D-251)",
+   "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
+   "preview": null,
+   "path": "assets/component/cmp-skeleton-rows.md",
+   "size": 8357
+  },
+  {
+   "id": "cmp-tabs",
+   "type": "component",
+   "title": "ARIA tabs",
+   "summary": "Keyboard-accessible tabs (arrow keys, Home and End) with proper roles.",
+   "moods": [
+    "clean",
+    "accessible"
+   ],
+   "products": [
+    "settings",
+    "dashboards",
+    "docs"
+   ],
+   "tags": [
+    "react",
+    "accessible",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [
+    "lucide-react"
+   ],
+   "files": [
+    {
+     "from": "recipes/components-native.tsx",
+     "to": "src/components-native.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (components-native.tsx, D-251)",
+   "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
+   "preview": null,
+   "path": "assets/component/cmp-tabs.md",
+   "size": 8366
+  },
+  {
+   "id": "cmp-toasts",
+   "type": "component",
+   "title": "Toast region",
+   "summary": "A live-region toast stack for success and error messages, replacing `alert()`.",
+   "moods": [
+    "clean",
+    "accessible"
+   ],
+   "products": [
+    "forms",
+    "dashboards",
+    "any app"
+   ],
+   "tags": [
+    "react",
+    "accessible",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [
+    "lucide-react"
+   ],
+   "files": [
+    {
+     "from": "recipes/components-native.tsx",
+     "to": "src/components-native.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (components-native.tsx, D-251)",
+   "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
+   "preview": null,
+   "path": "assets/component/cmp-toasts.md",
+   "size": 8362
+  },
+  {
+   "id": "dir-bento",
+   "type": "direction",
+   "title": "Bento and cards",
+   "summary": "An unequal grid of rounded tiles, each holding one idea: a number, a chart, a quote.",
+   "moods": [
+    "modern",
+    "organised",
+    "friendly"
+   ],
+   "products": [
+    "feature overviews",
+    "personal sites",
+    "dashboards"
+   ],
+   "tags": [
+    "visual direction",
+    "any clean sans"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-bento.md",
+   "size": 677
+  },
+  {
+   "id": "dir-bold-poster",
+   "type": "direction",
+   "title": "Bold campaign poster",
+   "summary": "Near-black with one hot colour, huge tight type, hard offset shadows, snappy motion: urgent and loud.",
+   "moods": [
+    "bold",
+    "urgent",
+    "loud",
+    "energetic"
+   ],
+   "products": [
+    "events",
+    "drives",
+    "launches",
+    "sport"
+   ],
+   "tags": [
+    "visual direction",
+    "Space Grotesk or Archivo Black"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-bold-poster.md",
+   "size": 696
+  },
+  {
+   "id": "dir-claymorphism",
+   "type": "direction",
+   "title": "Claymorphism and soft 3D",
+   "summary": "Pastel fills, big radius and double inner shadows that make chunky soft objects.",
+   "moods": [
+    "soft",
+    "playful",
+    "friendly"
+   ],
+   "products": [
+    "onboarding",
+    "games",
+    "kids"
+   ],
+   "tags": [
+    "visual direction",
+    "rounded sans"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-claymorphism.md",
+   "size": 281
+  },
+  {
+   "id": "dir-clean-product",
+   "type": "direction",
+   "title": "Clean product",
+   "summary": "Light, precise and calm: neutral surfaces, one accent, subtle depth and 200 ms hover lifts.",
+   "moods": [
+    "clean",
+    "calm",
+    "precise",
+    "professional"
+   ],
+   "products": [
+    "b2b",
+    "fintech",
+    "dashboards"
+   ],
+   "tags": [
+    "visual direction",
+    "Inter or Geist"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-clean-product.md",
+   "size": 427
+  },
+  {
+   "id": "dir-dark-dashboard",
+   "type": "direction",
+   "title": "Dark dashboard",
+   "summary": "Dense dark UI for data: tight spacing, strong table headers, keyboard hints.",
+   "moods": [
+    "dark",
+    "dense",
+    "technical",
+    "focused"
+   ],
+   "products": [
+    "analytics",
+    "ops",
+    "monitoring"
+   ],
+   "tags": [
+    "visual direction",
+    "Inter with tabular figures"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-dark-dashboard.md",
+   "size": 438
+  },
+  {
+   "id": "dir-glass-aurora",
+   "type": "direction",
+   "title": "Glass and aurora",
+   "summary": "Dark base, frosted glass panels, soft glow and slow drifting colour: modern product feel.",
+   "moods": [
+    "modern",
+    "dark",
+    "premium",
+    "techy"
+   ],
+   "products": [
+    "saas",
+    "ai",
+    "developer tools"
+   ],
+   "tags": [
+    "visual direction",
+    "Inter or Geist"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-glass-aurora.md",
+   "size": 761
+  },
+  {
+   "id": "dir-minimal-monochrome",
+   "type": "direction",
+   "title": "Minimal monochrome",
+   "summary": "Black, white and one grey with one accent used once per screen; large type and huge margins.",
+   "moods": [
+    "minimal",
+    "elegant",
+    "quiet",
+    "luxury"
+   ],
+   "products": [
+    "portfolios",
+    "architecture",
+    "luxury"
+   ],
+   "tags": [
+    "visual direction",
+    "a distinctive display face"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-minimal-monochrome.md",
+   "size": 330
+  },
+  {
+   "id": "dir-neo-brutalist",
+   "type": "direction",
+   "title": "Neo-brutalist",
+   "summary": "Flat saturated colours on cream, thick black outlines, hard shadows, visible grid: playful and raw.",
+   "moods": [
+    "playful",
+    "raw",
+    "bold"
+   ],
+   "products": [
+    "creative tools",
+    "indie products",
+    "playful brands"
+   ],
+   "tags": [
+    "visual direction",
+    "chunky sans or mono"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-neo-brutalist.md",
+   "size": 347
+  },
+  {
+   "id": "dir-playful-friendly",
+   "type": "direction",
+   "title": "Playful and friendly",
+   "summary": "Bright friendly palette, big rounded shapes, thick-stroke icons and bouncy motion.",
+   "moods": [
+    "playful",
+    "friendly",
+    "cheerful"
+   ],
+   "products": [
+    "kids",
+    "food",
+    "community",
+    "consumer apps"
+   ],
+   "tags": [
+    "visual direction",
+    "Nunito, Baloo or Fredoka"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-playful-friendly.md",
+   "size": 372
+  },
+  {
+   "id": "dir-retro-terminal",
+   "type": "direction",
+   "title": "Retro terminal",
+   "summary": "Monospace type, green or amber on black, blinking caret and ASCII dividers.",
+   "moods": [
+    "retro",
+    "nostalgic",
+    "technical"
+   ],
+   "products": [
+    "developer tools",
+    "games",
+    "nostalgic brands"
+   ],
+   "tags": [
+    "visual direction",
+    "a monospace face"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-retro-terminal.md",
+   "size": 248
+  },
+  {
+   "id": "dir-soft-editorial",
+   "type": "direction",
+   "title": "Soft editorial",
+   "summary": "Warm off-white, serif display, generous whitespace and soft shadows: humane and trustworthy.",
+   "moods": [
+    "warm",
+    "calm",
+    "trustworthy",
+    "editorial"
+   ],
+   "products": [
+    "health",
+    "charity",
+    "education",
+    "boutique"
+   ],
+   "tags": [
+    "visual direction",
+    "Fraunces or Playfair with Inter"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (style-directions.md, D-251)",
+   "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
+   "preview": null,
+   "path": "assets/direction/dir-soft-editorial.md",
+   "size": 487
+  },
+  {
+   "id": "fx-aurora",
+   "type": "effect",
+   "title": "Aurora background",
+   "summary": "Blurred colour blobs drifting slowly behind the hero.",
+   "moods": [
+    "modern",
+    "dark",
+    "soft"
+   ],
+   "products": [
+    "saas",
+    "ai",
+    "hero"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-aurora.md",
+   "size": 7869
+  },
+  {
+   "id": "fx-border-beam",
+   "type": "effect",
+   "title": "Rotating border beam",
+   "summary": "A light travels around a card's edge using a masked conic gradient.",
+   "moods": [
+    "modern",
+    "premium",
+    "dark"
+   ],
+   "products": [
+    "saas",
+    "hero card",
+    "pricing"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-border-beam.md",
+   "size": 7794
+  },
+  {
+   "id": "fx-button-shine",
+   "type": "effect",
+   "title": "Button shine",
+   "summary": "A light sweep across a primary button on hover.",
+   "moods": [
+    "bold",
+    "polished"
+   ],
+   "products": [
+    "cta",
+    "landing"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-button-shine.md",
+   "size": 7796
+  },
+  {
+   "id": "fx-count-up",
+   "type": "effect",
+   "title": "Count-up numbers",
+   "summary": "A number that counts up once when it scrolls into view.",
+   "moods": [
+    "bold",
+    "energetic",
+    "trustworthy"
+   ],
+   "products": [
+    "stats",
+    "landing",
+    "dashboard"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    },
+    {
+     "from": "recipes/motion.tsx",
+     "to": "src/motion.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-count-up.md",
+   "size": 12889
+  },
+  {
+   "id": "fx-float",
+   "type": "effect",
+   "title": "Float",
+   "summary": "A gentle idle up-and-down motion for an illustration.",
+   "moods": [
+    "playful",
+    "calm"
+   ],
+   "products": [
+    "illustrations",
+    "hero"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-float.md",
+   "size": 7773
+  },
+  {
+   "id": "fx-glass-surface",
+   "type": "effect",
+   "title": "Glass surface",
+   "summary": "Frosted translucent panels in a light and a dark variant.",
+   "moods": [
+    "modern",
+    "soft",
+    "premium"
+   ],
+   "products": [
+    "saas",
+    "cards",
+    "navigation"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-glass-surface.md",
+   "size": 7865
+  },
+  {
+   "id": "fx-grain",
+   "type": "effect",
+   "title": "Film grain overlay",
+   "summary": "A subtle noise layer that takes the digital flatness off large colour areas.",
+   "moods": [
+    "editorial",
+    "retro",
+    "warm"
+   ],
+   "products": [
+    "posters",
+    "landing",
+    "portfolio"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-grain.md",
+   "size": 7792
+  },
+  {
+   "id": "fx-link-underline",
+   "type": "effect",
+   "title": "Animated link underline",
+   "summary": "An underline that grows from the left on hover.",
+   "moods": [
+    "clean",
+    "editorial"
+   ],
+   "products": [
+    "navigation",
+    "articles"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-link-underline.md",
+   "size": 7808
+  },
+  {
+   "id": "fx-marquee",
+   "type": "effect",
+   "title": "Marquee strip",
+   "summary": "An endless horizontal strip for logos or short phrases, pausing on hover.",
+   "moods": [
+    "bold",
+    "playful",
+    "energetic"
+   ],
+   "products": [
+    "logos",
+    "campaign",
+    "events"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    },
+    {
+     "from": "recipes/motion.tsx",
+     "to": "src/motion.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-marquee.md",
+   "size": 12893
+  },
+  {
+   "id": "fx-page-entrance",
+   "type": "effect",
+   "title": "Page entrance",
+   "summary": "A staggered fade-up of the first screen using `.enter` and `--i` per element.",
+   "moods": [
+    "calm",
+    "polished"
+   ],
+   "products": [
+    "landing",
+    "hero"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-page-entrance.md",
+   "size": 7839
+  },
+  {
+   "id": "fx-scroll-reveal",
+   "type": "effect",
+   "title": "Scroll reveal with stagger",
+   "summary": "Elements fade and slide in when scrolled into view; stagger a list with an index.",
+   "moods": [
+    "calm",
+    "modern",
+    "editorial"
+   ],
+   "products": [
+    "landing",
+    "marketing",
+    "portfolio"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    },
+    {
+     "from": "recipes/motion.tsx",
+     "to": "src/motion.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-scroll-reveal.md",
+   "size": 13086
+  },
+  {
+   "id": "fx-shimmer-text",
+   "type": "effect",
+   "title": "Shimmer gradient text",
+   "summary": "Heading text filled with a slowly panning brand gradient.",
+   "moods": [
+    "modern",
+    "premium"
+   ],
+   "products": [
+    "saas",
+    "ai",
+    "hero"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-shimmer-text.md",
+   "size": 7887
+  },
+  {
+   "id": "fx-skeleton",
+   "type": "effect",
+   "title": "Skeleton loader",
+   "summary": "Pulsing placeholder blocks shown while data loads.",
+   "moods": [
+    "calm",
+    "clean"
+   ],
+   "products": [
+    "dashboard",
+    "lists",
+    "forms"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-skeleton.md",
+   "size": 7836
+  },
+  {
+   "id": "fx-spotlight-card",
+   "type": "effect",
+   "title": "Spotlight card",
+   "summary": "A soft glow follows the pointer across a card.",
+   "moods": [
+    "modern",
+    "premium",
+    "dark"
+   ],
+   "products": [
+    "saas",
+    "features",
+    "bento"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    },
+    {
+     "from": "recipes/motion.tsx",
+     "to": "src/motion.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-spotlight-card.md",
+   "size": 12871
+  },
+  {
+   "id": "fx-tilt-card",
+   "type": "effect",
+   "title": "Tilt card",
+   "summary": "A gentle 3D tilt that follows the pointer on hover (pointer devices only).",
+   "moods": [
+    "playful",
+    "modern"
+   ],
+   "products": [
+    "cards",
+    "portfolio",
+    "products"
+   ],
+   "tags": [
+    "animation",
+    "motion"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion.css",
+     "to": "src/motion.css"
+    },
+    {
+     "from": "recipes/motion.tsx",
+     "to": "src/motion.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit, D-251)",
+   "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
+   "preview": null,
+   "path": "assets/effect/fx-tilt-card.md",
+   "size": 12861
+  }
+ ]
+}

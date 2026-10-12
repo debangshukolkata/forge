@@ -21,6 +21,10 @@ no amount of class tweaking helps. Fix the setup first, then design.
   You may not call a UI task done while it reports one.
 
 ## 0b. Study the reference before you design
+**Search the catalogue first.** `find_asset` (a few words: product and feeling, e.g. "warm charity landing page") returns
+ready-made, tested visual directions, animation effects and accessible components; `add_asset(id, project_dir)` copies the
+files into the project, records the licence in NOTICES.md and returns the usage note to adapt. Use it before building a
+direction, effect or component from memory. The recipes below remain the readable source for the same material.
 This skill's folder holds worked examples that build, pass the audit and look professional. Read them first
 (`load_skill` with `file=` or `read_file`), then build to that bar with your own palette, copy and layout:
 - `recipes/index.css`: Tailwind v4 design tokens (accent and neutral scales, radius, shadow, `@utility` buttons, cards,

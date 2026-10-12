@@ -469,6 +469,9 @@ class AgentLoop:
         if tool_name.startswith("browser_") and tool_name != "browser_close":
             self.context.last_browser_step = self.context.step
             return
+        if tool_name == "add_asset" and result.meta.get("ui_files"):
+            self.context.last_ui_edit_step = self.context.step
+            return
         if tool_name in ("write_file", "edit_file", "multi_edit", "move_file"):
             path = str(arguments.get("path") or arguments.get("destination") or "").replace("\\", "/").lower()
             if path.endswith(UI_SUFFIXES) and not is_test_path(path):
