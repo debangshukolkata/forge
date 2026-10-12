@@ -7,6 +7,7 @@ from __future__ import annotations
 from forge.config import forge_home
 from forge.errors import LLMError
 from forge.parity.agents import load_agents
+from forge.subagents.critic import CRITIC_ITERATIONS, CRITIC_PROMPT, critic_verdict
 from forge.subagents.review import REVIEWER_PROMPT
 from forge.subagents.subagent import (
     DEBUGGER_PROMPT,
@@ -32,7 +33,9 @@ class SpawnSubagent(Tool):
         "'researcher' (digs into a question on the web, cross-checks sources, reports with URLs), "
         "'reviewer' (second opinion on a change), 'debugger' (root cause of a failure), 'verifier' "
         "(independently derives acceptance checks from the requirement, writes and runs its own "
-        "Playwright or test scripts against the running app and reports PASS/FAIL), or a custom agent "
+        "Playwright or test scripts against the running app and reports PASS/FAIL), 'design-critic' "
+        "(an independent designer who looks at the running page at desktop and phone width and scores "
+        "its look and feel, with concrete fixes and a SHIP/REVISE verdict), or a custom agent "
         "defined by the user. "
         "Give it everything it needs in `task`; you get its report back."
     )
@@ -110,6 +113,25 @@ class SpawnSubagent(Tool):
             )
             if "VERDICT: PASS" in report:
                 context.last_browser_step = context.step  # an independent browser check passed (D-167/D-168)
+        elif args.agent == "design-critic":
+            everything = {t.name: t for t in default_tools()}
+            looking = [everything[n] for n in everything if n.startswith("browser_")] + [
+                everything["view_image"]
+            ]
+            report = await _run_subagent(
+                router,
+                context,
+                ToolRegistry([*read_only, *(t for t in looking if t not in read_only)]),
+                CRITIC_PROMPT,
+                args.task,
+                CRITIC_ITERATIONS,
+                "coder",
+            )
+            context.last_critic_step = context.step
+            if critic_verdict(report) == "SHIP":
+                context.critic_ship, context.critic_rounds = True, 0
+            else:
+                context.critic_ship, context.critic_rounds = False, context.critic_rounds + 1
         elif args.agent == "reviewer":
             report = await _run_subagent(
                 router, context, ToolRegistry(read_only), REVIEWER_PROMPT, args.task, 20, "reviewer"

@@ -6,6 +6,7 @@ http_request calls the local app's API directly (smoke tests)."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import time
@@ -43,6 +44,9 @@ class BrowserSession:
         self.channel: str | None = None
         self.console: list[str] = []
         self.network: list[str] = []
+        self.shots: dict[
+            str, str
+        ] = {}  # screenshot hash -> page URL, to catch two "different" pages that look the same
 
     async def ensure(self) -> Any:
         if self.page is not None:
@@ -238,6 +242,14 @@ class BrowserScreenshot(Tool):
             "notice", {"kind": "screenshot", "text": f"Screenshot saved: {path.name}", "path": str(path)}
         )
         audit = await audit_page(session.page)
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        twin = session.shots.get(digest)
+        if twin is not None and twin != session.page.url:
+            audit += (
+                f"\nBLOCKER: this screenshot is pixel-identical to the one of {twin}. Two pages that should differ "
+                "look the same: check which folder each server really runs in (start_background cwd)."
+            )
+        session.shots[digest] = session.page.url
         context.last_screenshot_step = context.step
         context.ui_audit_blocked = "BLOCKER" in audit
         saved = path.relative_to(context.workspace.root).as_posix()

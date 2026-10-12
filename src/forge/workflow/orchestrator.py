@@ -47,6 +47,7 @@ if TYPE_CHECKING:
 # No -q: repos often set it in addopts, and -qq hides the summary line the parser reads.
 PYTEST_ARGS = "-rfE --tb=short --no-header -p no:cacheprovider"
 FULL_SUITE_TIMEOUT_S = 900
+CRITIC_ROUND_LIMIT = 3
 RESUMED_NOTE = (
     "\n\nResumed after an interruption: first check what is already done (files modified are pinned)."
 )
@@ -56,7 +57,8 @@ UI_EVIDENCE_NOTE = (
     "through the feature and its error case, compare what you see with the requirement word by word; for "
     "anything beyond a trivial flow call spawn_subagent with agent 'verifier', giving it the requirement, "
     "what you changed and how to start the app). Fix what you find, then give your final summary and say "
-    "what you saw. Also screenshot the page (browser_screenshot, it runs a style audit), look at the image with "
+    "what you saw. Then have the design reviewed: spawn_subagent with agent 'design-critic' and fix everything it "
+    "lists. Also screenshot the page (browser_screenshot, it runs a style audit), look at the image with "
     "view_image and judge the design: hierarchy, spacing, colour, readability. Improve it if it is not good "
     "enough; the ui-design-quality skill has the checklist."
 )
@@ -67,11 +69,28 @@ UI_LOOK_NOTE = (
     "states, a phone-width view if it should work on a phone. Fix what is weak, screenshot again, then call "
     "task_update again and say what you saw. The ui-design-quality skill has the checklist."
 )
+UI_CRITIC_NOTE = (
+    "Not accepted: the design has not been reviewed by the independent critic since your last change. Aesthetics "
+    "and ease of use are part of done, and you cannot grade your own work. Call spawn_subagent with agent "
+    "'design-critic' and a task that gives the URL(s) of the running app (start it first, with start_background "
+    "and its cwd), what the product is for, and the design brief you followed. If it answers VERDICT: REVISE, "
+    "make every fix it lists (they are concrete), then call it again. After three REVISE rounds you may finish: "
+    "say in the verification which points remain open. Then call task_update again."
+)
 UI_AUDIT_BLOCKED_NOTE = (
     "Not accepted: the last style audit reported a BLOCKER (for example the CSS framework produces no styles, "
     "so the page is unstyled). Fix the cause, restart or rebuild the app, take a new browser_screenshot, make "
     "sure the audit no longer reports a blocker, then call task_update again."
 )
+
+
+def critic_cleared(context: ToolContext) -> bool:
+    """The design critic has passed the page since the last UI edit, or has asked for changes three times (the
+    model then finishes and reports what is still open) (D-249)."""
+    ship_after_edit = context.critic_ship and context.last_critic_step > context.last_ui_edit_step
+    return ship_after_edit or context.critic_rounds >= CRITIC_ROUND_LIMIT
+
+
 FREE_HAND_PHRASES = (
     "don't ask me",
     "dont ask me",
@@ -233,6 +252,8 @@ class Orchestrator:
     def _ui_changed_without_a_browser_check(self) -> bool:
         ctx = self.context
         looked = min(ctx.last_browser_step, ctx.last_screenshot_step)  # used in a browser AND looked at it
+        if not critic_cleared(ctx):
+            looked = min(looked, ctx.last_critic_step)
         return (
             ctx.last_ui_edit_step > max(self._export_step, looked)
             and ctx.last_ui_edit_step > self._ui_nudge_step
@@ -491,6 +512,8 @@ class Orchestrator:
             return ToolResult(ok=False, content=UI_LOOK_NOTE)
         if status == "done" and ui_edited and context.ui_audit_blocked:
             return ToolResult(ok=False, content=UI_AUDIT_BLOCKED_NOTE)
+        if status == "done" and ui_edited and not critic_cleared(context):
+            return ToolResult(ok=False, content=UI_CRITIC_NOTE)
         task.status = "done" if status == "done" else "blocked"
         task.handoff_note, task.verification, task.blocked_reason = handoff_note, verification, blocked_reason
         if task.status == "done":  # local history (spec §13B): one commit per completed task

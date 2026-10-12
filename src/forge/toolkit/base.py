@@ -101,6 +101,11 @@ class ToolContext:
     last_ui_edit_step: int = 0  # a template/stylesheet/script that changes what the user sees (D-167)
     last_browser_step: int = 0  # the app was last used in a browser (browser_* tool or a Playwright run)
     last_screenshot_step: int = 0  # the page was last screenshotted with the style audit (D-245)
+    last_critic_step: int = 0  # the design critic last reviewed the page (D-249)
+    critic_ship: bool = False  # and its verdict was SHIP
+    critic_rounds: int = (
+        0  # REVISE verdicts in a row; after three the model may finish with the open points listed
+    )
     ui_audit_blocked: bool = False  # that audit found a blocker (e.g. the CSS framework produces no styles)
     reads: ReadTracker = field(default_factory=ReadTracker)
     publish: PublishCallback | None = None  # engine event publisher (file diffs, etc.)

@@ -17,6 +17,8 @@ BUILT_IN_TYPES = {
     "debugger": "Fresh-context root-cause analysis of a failure (can run tests); returns a diagnosis and fix.",
     "researcher": "Digs into a question on the web: searches, reads several sources, cross-checks, and "
     "reports findings with source URLs, what disagrees and what could not be read.",
+    "design-critic": "Independent designer: looks at the running page at desktop and phone width, scores its look "
+    "and feel against a rubric and returns concrete fixes with a SHIP or REVISE verdict.",
     "verifier": "Independent acceptance check: derives checks from the requirement, writes and runs its own "
     "Playwright/test scripts against the running app, and reports PASS/FAIL per check.",
 }

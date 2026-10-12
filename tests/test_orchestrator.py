@@ -476,6 +476,13 @@ async def test_a_task_that_changed_the_ui_needs_a_browser_check_before_done(host
     unstyled = await orch.task_update("T1", "done", "", "browser: clicked through", "", context)
     assert not unstyled.ok and "BLOCKER" in unstyled.content
     context.ui_audit_blocked = False
+    unreviewed = await orch.task_update("T1", "done", "", "audit clean", "", context)
+    assert not unreviewed.ok and "design-critic" in unreviewed.content  # no independent review yet (D-249)
+    context.step = context.last_critic_step = 11
+    context.critic_ship = False  # the critic asked for changes twice: still not enough
+    context.critic_rounds = 2
+    assert not (await orch.task_update("T1", "done", "", "audit clean", "", context)).ok
+    context.critic_ship, context.critic_rounds = True, 0  # then it shipped the page
     accepted = await orch.task_update(
         "T1", "done", "Cart works.", "browser: added two items, saw Cart (2)", "", context
     )
@@ -513,6 +520,7 @@ async def test_a_ui_change_that_was_checked_in_a_browser_is_not_questioned(
     context = host.agent.context  # type: ignore[union-attr]
     context.last_edit_step = context.last_ui_edit_step = 5
     context.last_browser_step = context.last_screenshot_step = 8
+    context.last_critic_step, context.critic_ship = 8, True
     await orch.handle_message("Make the calendar fit on a phone.")
     assert len(calls) == 1
 
@@ -542,3 +550,20 @@ def test_the_step_cap_is_a_generous_runaway_guard() -> None:
     from tests.helpers import default_config
 
     assert default_config().limits.max_iterations_per_task >= 100
+
+
+async def test_after_three_critic_rounds_the_model_may_finish_with_open_points(host: SessionHost) -> None:
+    from forge.toolkit.base import ToolContext
+
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="landing page")]
+    orch.state.current_task = "T1"
+    context = host.agent.context  # type: ignore[union-attr]
+    assert isinstance(context, ToolContext)
+    context.step = context.last_ui_edit_step = 5
+    context.last_browser_step = context.last_screenshot_step = context.last_critic_step = 9
+    context.critic_ship, context.critic_rounds = False, 3
+    done = await orch.task_update(
+        "T1", "done", "", "critic still asks for a better hero; left open", "", context
+    )
+    assert done.ok

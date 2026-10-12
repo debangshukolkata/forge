@@ -137,3 +137,40 @@ async def test_show_app_finds_a_server_that_listens_on_ipv6_only() -> None:
         assert "127.0.0.1" not in url
     finally:
         server.shutdown()
+
+
+def test_the_design_critic_verdict_is_read_from_its_report() -> None:
+    from forge.subagents.critic import critic_verdict
+    from forge.tools.parity import BUILT_IN_TYPES
+
+    assert "design-critic" in BUILT_IN_TYPES
+    assert critic_verdict("SCORES: Hierarchy 4\nVERDICT: SHIP") == "SHIP"
+    assert critic_verdict("... VERDICT: revise") == "REVISE"
+    assert critic_verdict("no verdict line") is None
+
+
+def test_the_skill_ships_its_reference_files() -> None:
+    from forge.parity.skills import discover
+    from forge.tools.parity import skill_files_note
+
+    skill = discover()["ui-design-quality"]
+    listed = skill_files_note(skill)
+    for name in ("recipes/index.css", "recipes/landing-reference.tsx", "recipes/palettes-and-fonts.md"):
+        assert name in listed
+
+
+@pytest.mark.e2e
+async def test_two_pages_that_look_identical_are_flagged(
+    site: str, tmp_path: Path, original_repo: Path
+) -> None:
+    pytest.importorskip("playwright.async_api")
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    try:
+        await BrowserOpen().run(BrowserOpen.Args(url=f"{site}/styled.html"), context)
+        first = await BrowserScreenshot().run(BrowserScreenshot.Args(), context)
+        assert "identical" not in first.content
+        await BrowserOpen().run(BrowserOpen.Args(url=f"{site}/styled.html?copy=1"), context)
+        second = await BrowserScreenshot().run(BrowserScreenshot.Args(), context)
+        assert "pixel-identical" in second.content and context.ui_audit_blocked
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)

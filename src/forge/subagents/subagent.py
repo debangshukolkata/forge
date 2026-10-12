@@ -309,6 +309,13 @@ def _purpose(prompt: str, task: str) -> str:
     return f"{kind}: {first[:120]}" if first else kind
 
 
+async def _close_browser(sub_context: ToolContext) -> None:
+    browser = sub_context.browser
+    if browser is not None:
+        sub_context.browser = None
+        await browser.close()
+
+
 async def _run_subagent(
     router: LLMRouter,
     context: ToolContext,
@@ -353,7 +360,10 @@ async def _run_subagent(
     loop.keep_full_output = False
     history = [Message.system(prompt), Message.user(task)]
 
-    await _tracked_run(context, loop, bus, history, role, _purpose(prompt, task))
+    try:
+        await _tracked_run(context, loop, bus, history, role, _purpose(prompt, task))
+    finally:
+        await _close_browser(sub_context)  # a subagent's headless browser must not outlive it (D-249)
     report = _last_text(history)
     if not _ended_with_text(history):
         # Out of steps in the middle of the work (a verifier once used 61 tool calls and returned an empty

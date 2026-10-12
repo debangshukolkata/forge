@@ -20,6 +20,17 @@ no amount of class tweaking helps. Fix the setup first, then design.
 - Proof: `browser_screenshot` runs a style audit; a BLOCKER line there means classes in the markup have no effect.
   You may not call a UI task done while it reports one.
 
+## 0b. Study the reference before you design
+This skill's folder holds worked examples that build, pass the audit and look professional. Read them first
+(`load_skill` with `file=` or `read_file`), then build to that bar with your own palette, copy and layout:
+- `recipes/index.css`: Tailwind v4 design tokens (accent and neutral scales, radius, shadow, `@utility` buttons, cards,
+  fields, focus ring, reduced-motion). Start every project's CSS from it and change the values.
+- `recipes/landing-reference.tsx`: a complete page (sticky nav, hero with a drawn visual, stats, steps, validated
+  form with success state, FAQ, footer) showing spacing, hierarchy and states done right. Copy the discipline, not
+  the content or layout: variants and different products must not look like it.
+- `recipes/palettes-and-fonts.md`: palettes by mood, font pairings, type and spacing scales, layout ideas that make
+  variants genuinely different, asset ideas without photos, patterns for dashboards, forms, settings, empty states.
+
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)
 - **Purpose and tone** of the product (a blood donation drive: warm, trustworthy, urgent but calm).
 - **Palette**: one accent colour (a real brand colour, not default blue), a neutral scale for text and surfaces,
@@ -69,7 +80,13 @@ no amount of class tweaking helps. Fix the setup first, then design.
 3. Fix them in code, reload, screenshot again. Repeat until you would show it to a client. At least two passes for
    a new screen; stop only when the audit is clean and the weaknesses you can name are gone.
 4. Repeat at phone width: `browser_screenshot` with `width: 375` (then `width: 1280` to switch back); the audit runs at that width too.
-5. In the task_update `verification`, say what you looked at and what you improved ("audit clean at 1280 and 375;
+5. **Independent review.** When the audit is clean and you are happy, call `spawn_subagent` with agent
+   `design-critic`: give it the URL(s), what the product is for and the design brief you followed. It scores seven lines
+   (hierarchy, consistency, polish, typography, states, responsive, distinctiveness) and lists concrete fixes with
+   `VERDICT: SHIP` or `REVISE`. On REVISE make every fix it lists and call it again (up to three rounds). A UI task is
+   not accepted as done until the critic has shipped the page after your last change, or three rounds have passed
+   and you state in the verification which points remain open.
+6. In the task_update `verification`, say what you looked at and what you improved ("audit clean at 1280 and 375;
    changed X, Y, Z after the first look").
 
 When the user says the result looks bad: do not patch single classes. Re-read sections 0-2, redo the design

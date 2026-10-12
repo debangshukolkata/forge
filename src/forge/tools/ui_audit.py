@@ -131,13 +131,32 @@ AUDIT_SCRIPT = r"""
 
   // 8. Empty-looking sections: big headings/labels with nothing under them (e.g. stats with no values).
   const emptyStats = all.filter((el) => visible(el) && el.children.length === 0 && !(el.innerText || '').trim()
-    && el.getBoundingClientRect().height > 40 && !['IMG', 'SVG', 'CANVAS', 'VIDEO', 'IFRAME', 'INPUT', 'HR', 'BR'].includes(el.tagName)
+    && el.getBoundingClientRect().height > 40 && !el.closest('svg, [aria-hidden="true"], details:not([open])')
+    && !['img', 'svg', 'canvas', 'video', 'iframe', 'input', 'hr', 'br', 'textarea', 'select'].includes(el.tagName.toLowerCase())
     && getComputedStyle(el).backgroundImage === 'none' && getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)');
   if (emptyStats.length > 2) findings.push(emptyStats.length + ' tall empty elements: a value, chart or image may be missing.');
 
   // 9. A page with only one font size has no hierarchy.
   const sizes = new Set(all.filter(visible).map((el) => Math.round(parseFloat(getComputedStyle(el).fontSize))));
   if (sizes.size < 3) findings.push('Almost no type hierarchy (' + sizes.size + ' font size(s)): use a clear scale for headings, body and captions.');
+
+  // 10. Design-system discipline: too many fonts, sizes, colours or radii means there is no system.
+  const textEls = all.filter((el) => visible(el) && Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim()));
+  const families = new Set(textEls.map((el) => getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase())
+    .filter((f) => !/mono|courier|consolas|menlo/.test(f)));
+  if (families.size > 3) findings.push(families.size + ' different font families in use (' + Array.from(families).join(', ') + '): use at most two.');
+  const textSizes = new Set(textEls.map((el) => Math.round(parseFloat(getComputedStyle(el).fontSize))));
+  if (textSizes.size > 10) findings.push(textSizes.size + ' different text sizes: use one scale (12/14/16/18/20/24/30/36/48/60).');
+  const textColours = new Set(textEls.map((el) => getComputedStyle(el).color));
+  if (textColours.size > 9) findings.push(textColours.size + ' different text colours: reduce to a few neutrals plus the accent.');
+  const radii = new Set(all.filter(visible).map((el) => getComputedStyle(el).borderTopLeftRadius).filter((r) => r !== '0px' && !r.includes('%') && parseFloat(r) < 999));
+  if (radii.size > 6) findings.push(radii.size + ' different corner radii: pick two or three and reuse them.');
+  const heading = document.querySelector('h1');
+  if (!heading) findings.push('No h1 on the page: every page needs one clear main heading.');
+  else if (parseFloat(getComputedStyle(heading).fontSize) < 28) findings.push('The h1 is only ' + Math.round(parseFloat(getComputedStyle(heading).fontSize)) + 'px: the main heading should dominate (36px or more).');
+  const paragraphs = all.filter((el) => el.tagName === 'P' && visible(el) && el.getBoundingClientRect().width > 0);
+  const wide = paragraphs.filter((el) => { const w = el.getBoundingClientRect().width, f = parseFloat(getComputedStyle(el).fontSize); return (el.innerText || '').length > 120 && w / f > 52; });
+  if (wide.length) findings.push('Text lines are too long (more than about 80 characters): ' + sample(wide) + '. Limit with max-w-prose or max-w-2xl.');
 
   return { findings, stats: { elements: all.length, utilityClasses: expected, ineffective: missing, viewport: window.innerWidth + 'x' + window.innerHeight } };
 }
