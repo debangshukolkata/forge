@@ -214,3 +214,45 @@ async def test_the_audit_flags_generic_tells(tmp_path: Path, original_repo: Path
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
         server.shutdown()
+
+
+REVEAL = """<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;font:18px Arial}.spacer{height:2400px}.reveal{opacity:0;transition:opacity .3s}.reveal.is-visible{opacity:1}
+</style></head><body><div class="spacer"></div><h2 id="late" class="reveal">Below the fold</h2><div class="spacer"></div>
+<script>new IntersectionObserver((es)=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('is-visible'))).observe(document.getElementById('late'))</script>
+</body></html>"""
+
+
+@pytest.mark.e2e
+async def test_a_full_page_screenshot_first_plays_reveal_on_scroll_content(
+    tmp_path: Path, original_repo: Path
+) -> None:
+    pytest.importorskip("playwright.async_api")
+    root = tmp_path / "reveal"
+    root.mkdir()
+    (root / "index.html").write_text(REVEAL, encoding="utf-8")
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    try:
+        await BrowserOpen().run(
+            BrowserOpen.Args(url=f"http://127.0.0.1:{server.server_address[1]}/"), context
+        )
+        assert context.browser is not None
+        assert (
+            await context.browser.page.evaluate(
+                "document.getElementById('late').classList.contains('is-visible')"
+            )
+            is False
+        )
+        await BrowserScreenshot().run(BrowserScreenshot.Args(full_page=True), context)
+        assert (
+            await context.browser.page.evaluate(
+                "document.getElementById('late').classList.contains('is-visible')"
+            )
+            is True
+        )
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)
+        server.shutdown()

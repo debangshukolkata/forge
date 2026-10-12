@@ -213,6 +213,27 @@ class BrowserFill(Tool):
         return ToolResult(ok=True, content="Filled.")
 
 
+async def _scroll_through(page: Any) -> None:
+    """Scrolls to the bottom in steps and back, so elements that animate in when visible (IntersectionObserver or
+    scroll-driven CSS) have played before a full-page screenshot; otherwise those sections photograph as blank."""
+    try:
+        await page.evaluate(
+            """async () => {
+              const step = Math.max(window.innerHeight * 0.7, 300);
+              for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+                window.scrollTo(0, y);
+                await new Promise((resolve) => setTimeout(resolve, 120));
+              }
+              window.scrollTo(0, document.documentElement.scrollHeight);
+              await new Promise((resolve) => setTimeout(resolve, 500));
+              window.scrollTo(0, 0);
+              await new Promise((resolve) => setTimeout(resolve, 300));
+            }"""
+        )
+    except Exception:  # a page that blocks scripts is photographed as it is
+        return
+
+
 class BrowserScreenshot(Tool):
     name = "browser_screenshot"
     description = (
@@ -237,6 +258,10 @@ class BrowserScreenshot(Tool):
         folder = context.workspace.jail.check(context.workspace.forge_dir / "screenshots")
         folder.mkdir(parents=True, exist_ok=True)
         path = context.workspace.jail.check(folder / f"shot-{time.strftime('%Y%m%d-%H%M%S')}.png")
+        if args.full_page:
+            await _scroll_through(
+                session.page
+            )  # reveal-on-scroll content must be on screen to be photographed
         await session.page.screenshot(path=str(path), full_page=args.full_page)
         await context.emit(
             "notice", {"kind": "screenshot", "text": f"Screenshot saved: {path.name}", "path": str(path)}

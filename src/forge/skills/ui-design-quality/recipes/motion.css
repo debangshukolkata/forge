@@ -1,0 +1,137 @@
+/* Motion kit: pure CSS effects that need no animation library. Import it from main.tsx after index.css
+   (`import "./motion.css"`); Tailwind v4 theme variables such as --color-brand-500 must exist (see index.css).
+   Rules baked in: animate only transform/opacity (plus background-position and an @property angle), 150-800 ms,
+   content is visible without JavaScript and under prefers-reduced-motion. Pair with motion.tsx for scroll reveal. */
+
+/* ---------- Scroll reveal (class toggled by useReveal in motion.tsx) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--i, 0) * 90ms); /* stagger: style={{ "--i": index }} */
+}
+.reveal.is-visible { opacity: 1; transform: none; }
+.reveal-left { transform: translateX(-24px); }
+.reveal-scale { transform: scale(0.96); }
+
+/* CSS-only alternative where the browser supports scroll-driven animations (no JS needed) */
+@keyframes rise-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@supports (animation-timeline: view()) {
+  .reveal-scroll { animation: rise-in linear both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
+}
+
+/* ---------- Page entrance ---------- */
+@keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.enter { animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 100ms); }
+
+/* ---------- Marquee (duplicate the children once; the track slides by half its width) ---------- */
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee { overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.marquee-track { display: flex; width: max-content; gap: 3rem; animation: marquee 30s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+/* ---------- Gradient text with a slow shimmer ----------
+   Every stop must stay readable on its background: use .text-shimmer on DARK backgrounds, .text-shimmer-light on LIGHT. */
+@keyframes shimmer-pan { to { background-position: 200% center; } }
+.text-shimmer, .text-shimmer-light {
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-pan 6s linear infinite;
+}
+.text-shimmer { background-image: linear-gradient(90deg, var(--color-brand-500), var(--color-brand-200), var(--color-brand-500)); }
+.text-shimmer-light { background-image: linear-gradient(90deg, var(--color-brand-700), var(--color-brand-500), var(--color-brand-700)); }
+
+/* ---------- Skeleton loader ---------- */
+@keyframes skeleton-pan { to { background-position: -200% 0; } }
+.skeleton {
+  border-radius: 0.5rem;
+  background: linear-gradient(90deg, var(--color-ink-100) 25%, var(--color-ink-200) 50%, var(--color-ink-100) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pan 1.4s ease-in-out infinite;
+}
+
+/* ---------- Spotlight card: a soft glow follows the pointer (set --x/--y in onPointerMove, see motion.tsx) ---------- */
+.spotlight { position: relative; overflow: hidden; }
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(360px circle at var(--x, 50%) var(--y, 0%), color-mix(in oklab, var(--color-brand-500) 18%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.spotlight:hover::before { opacity: 1; }
+
+/* ---------- Tilt card: set --rx/--ry (degrees) from the pointer ---------- */
+.tilt { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 0.15s ease-out; will-change: transform; }
+
+/* ---------- Rotating border beam: a light that travels around the card's EDGE (mask keeps only the 1px ring) ----------
+   Needs @property (Chrome, Edge, Safari, Firefox 128+); older browsers show a plain card. */
+@property --beam-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes beam-spin { to { --beam-angle: 360deg; } }
+.beam { position: relative; border-radius: var(--radius-card); background: var(--color-ink-900); }
+.beam::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(from var(--beam-angle), transparent 60%, var(--color-brand-500) 85%, transparent);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: beam-spin 5s linear infinite;
+}
+
+/* ---------- Aurora background: blurred colour blobs drifting slowly (transform only) ---------- */
+@keyframes drift { 50% { transform: translate3d(6%, -8%, 0) scale(1.1); } }
+.aurora { position: absolute; inset: 0; overflow: hidden; z-index: -1; }
+.aurora i { position: absolute; width: 46vmax; height: 46vmax; border-radius: 50%; filter: blur(90px); opacity: 0.5; animation: drift 18s ease-in-out infinite; }
+.aurora i:nth-child(1) { background: var(--color-brand-500); top: -20%; left: -10%; }
+.aurora i:nth-child(2) { background: var(--color-brand-200); bottom: -25%; right: -10%; animation-delay: -6s; }
+
+/* ---------- Surfaces: glass and grain ---------- */
+.glass { background: rgb(255 255 255 / 0.55); backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgb(255 255 255 / 0.6); }
+.glass-dark { background: rgb(15 15 20 / 0.5); backdrop-filter: blur(16px) saturate(140%); border: 1px solid rgb(255 255 255 / 0.1); }
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ---------- Links and buttons ---------- */
+.link-underline { background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat; transition: background-size 0.3s; }
+.link-underline:hover { background-size: 100% 2px; }
+.btn-shine { position: relative; overflow: hidden; }
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s;
+}
+.btn-shine:hover::after { transform: translateX(120%); }
+
+/* ---------- Float (gentle idle motion for an illustration) ---------- */
+@keyframes float { 50% { transform: translateY(-10px); } }
+.float { animation: float 6s ease-in-out infinite; }
+
+/* ---------- View transitions between pages/states (single-page apps: wrap state updates in document.startViewTransition) ---------- */
+@media (prefers-reduced-motion: no-preference) { ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.35s; } }
+
+/* ---------- Accessibility: everything above becomes static for people who ask for less motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-left, .reveal-scale { opacity: 1; transform: none; transition: none; }
+  .reveal-scroll, .enter, .marquee-track, .text-shimmer, .skeleton, .beam::after, .aurora i, .float { animation: none; }
+  .tilt { transform: none; }
+  .btn-shine::after { display: none; }
+}

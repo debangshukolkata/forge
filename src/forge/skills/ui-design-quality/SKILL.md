@@ -29,6 +29,19 @@ This skill's folder holds worked examples that build, pass the audit and look pr
   form with success state, FAQ, footer) showing spacing, hierarchy and states done right. Copy the discipline, not
   the content or layout: variants and different products must not look like it.
 - `recipes/design-md-template.md`: the DESIGN.md format to write before building (section 0c).
+- `recipes/style-directions.md`: ten complete visual directions (soft editorial, bold campaign, neo-brutalist, glass and
+  aurora, clean product, bento, playful, claymorphism, dark dashboard, retro, minimal) with palette, type, shape, depth,
+  layout habit, motion and CSS. Pick one per product; variants must use different directions.
+- `recipes/css-techniques.md`: modern CSS that replaces hacks and libraries (fluid type, container queries, subgrid,
+  :has(), oklch and color-mix, layered shadows, masks, scroll-driven animations, @starting-style, view transitions,
+  @property, native dialog/popover/details, scroll-snap carousels, font handling that works offline).
+- `recipes/motion.css` + `recipes/motion.tsx`: an animation kit that is tested and needs no library: scroll reveal with
+  stagger, entrance, count-up numbers, marquee, shimmer text, skeletons, spotlight and tilt cards, rotating border
+  beam, aurora background, glass, grain, button shine, float; all reduced-motion safe. Import `motion.css` in main.tsx.
+- `recipes/components-native.tsx`: accessible dialog, tabs, toasts, empty state, skeleton, sortable searchable table with
+  no extra dependency.
+- `recipes/sources.md`: vetted external libraries and sources with their licences, how to install them (shadcn/ui, Motion,
+  Magic UI, daisyUI, Open Props, icon sets, fonts, charts), and the ones to avoid copying (GSAP, React Bits, Hover.css).
 - `recipes/palettes-and-fonts.md`: palettes by mood, font pairings, type and spacing scales, layout ideas that make
   variants genuinely different, asset ideas without photos, patterns for dashboards, forms, settings, empty states.
 
@@ -160,3 +173,15 @@ network: then say so and work from what you know). Take the principles and token
 scale, spacing, depth, component shapes) and write them into the project's own DESIGN.md. Do not copy the brand's
 logo, name, imagery or exact identity: the result must still be this product, with its own palette decision and copy.
 Never ask the user which style to use: pick, say why in one line, build.
+
+## 9. Motion and effects: restraint wins
+- Choose the effect budget from the MOTION_INTENSITY dial in DESIGN.md: 1-3 hover and focus only; 4-6 plus scroll reveals
+  and one signature effect; 7-10 plus scroll-driven or pinned sequences. One signature effect per page (a beam, an
+  aurora, a marquee, a count-up row), not all of them.
+- Every animation must explain something (where to look, what changed, that it is loading). Decoration without a reason
+  is noise. Keep motion off text a user is reading.
+- Reveal-on-scroll hides content until it is seen; `browser_screenshot` full_page scrolls through the page first so
+  you and the critic see the revealed result. Content must still be visible with no JavaScript and with reduced motion
+  (the kit guarantees it).
+- After adding motion, check `browser_console` for errors, take the screenshots again, and confirm the page is still
+  readable at 375 px and that nothing shifts layout while animating.
