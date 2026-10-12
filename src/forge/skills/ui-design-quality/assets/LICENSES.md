@@ -36,3 +36,29 @@ Generated from the assets' front-matter; do not edit by hand.
 | `fx-skeleton` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-spotlight-card` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-tilt-card` | original | authored for DebCraft (motion kit, D-251) |
+| `font-archivo` | OFL-1.1 | Fontsource @fontsource-variable/archivo 5.3.0 (copyright holders in the OFL text) |
+| `font-dm-sans` | OFL-1.1 | Fontsource @fontsource-variable/dm-sans 5.3.0 (copyright holders in the OFL text) |
+| `font-fraunces` | OFL-1.1 | Fontsource @fontsource-variable/fraunces 5.3.0 (copyright holders in the OFL text) |
+| `font-inter` | OFL-1.1 | Fontsource @fontsource-variable/inter 5.3.0 (copyright holders in the OFL text) |
+| `font-jetbrains-mono` | OFL-1.1 | Fontsource @fontsource-variable/jetbrains-mono 5.3.0 (copyright holders in the OFL text) |
+| `font-lora` | OFL-1.1 | Fontsource @fontsource-variable/lora 5.3.0 (copyright holders in the OFL text) |
+| `font-manrope` | OFL-1.1 | Fontsource @fontsource-variable/manrope 5.3.0 (copyright holders in the OFL text) |
+| `font-noto-sans-bengali` | OFL-1.1 | Fontsource @fontsource-variable/noto-sans-bengali 5.3.0 (copyright holders in the OFL text) |
+| `font-noto-sans-devanagari` | OFL-1.1 | Fontsource @fontsource-variable/noto-sans-devanagari 5.3.0 (copyright holders in the OFL text) |
+| `font-nunito` | OFL-1.1 | Fontsource @fontsource-variable/nunito 5.3.0 (copyright holders in the OFL text) |
+| `font-outfit` | OFL-1.1 | Fontsource @fontsource-variable/outfit 5.3.0 (copyright holders in the OFL text) |
+| `font-playfair-display` | OFL-1.1 | Fontsource @fontsource-variable/playfair-display 5.3.0 (copyright holders in the OFL text) |
+| `font-plus-jakarta-sans` | OFL-1.1 | Fontsource @fontsource-variable/plus-jakarta-sans 5.3.0 (copyright holders in the OFL text) |
+| `font-space-grotesk` | OFL-1.1 | Fontsource @fontsource-variable/space-grotesk 5.3.0 (copyright holders in the OFL text) |
+| `pair-bengali` | OFL-1.1 | bundled fonts Noto Sans Bengali and Inter (Fontsource, 5.3.0) |
+| `pair-bold-poster` | OFL-1.1 | bundled fonts Space Grotesk and Inter (Fontsource, 5.3.0) |
+| `pair-clean-saas` | OFL-1.1 | bundled fonts Plus Jakarta Sans and Inter (Fontsource, 5.3.0) |
+| `pair-developer-mono` | OFL-1.1 | bundled fonts JetBrains Mono and Inter (Fontsource, 5.3.0) |
+| `pair-elegant-serif` | OFL-1.1 | bundled fonts Playfair Display and DM Sans (Fontsource, 5.3.0) |
+| `pair-fintech-precise` | OFL-1.1 | bundled fonts Manrope and Inter (Fontsource, 5.3.0) |
+| `pair-geometric-modern` | OFL-1.1 | bundled fonts Outfit and Inter (Fontsource, 5.3.0) |
+| `pair-heavy-grotesque` | OFL-1.1 | bundled fonts Archivo and Inter (Fontsource, 5.3.0) |
+| `pair-hindi` | OFL-1.1 | bundled fonts Noto Sans Devanagari and Inter (Fontsource, 5.3.0) |
+| `pair-journal` | OFL-1.1 | bundled fonts Lora and Plus Jakarta Sans (Fontsource, 5.3.0) |
+| `pair-playful-rounded` | OFL-1.1 | bundled fonts Nunito and DM Sans (Fontsource, 5.3.0) |
+| `pair-warm-editorial` | OFL-1.1 | bundled fonts Fraunces and Inter (Fontsource, 5.3.0) |

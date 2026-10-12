@@ -36,6 +36,7 @@ ASSET_TYPES = (
     "component",
     "template",
     "section",
+    "font",
     "font-pairing",
     "palette",
     "css-technique",

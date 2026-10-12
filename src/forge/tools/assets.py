@@ -18,6 +18,19 @@ from forge.tools.parity import skill_roots
 NOTICES_FILE = "NOTICES.md"
 UI_SUFFIXES = (".css", ".tsx", ".jsx", ".ts", ".js", ".html", ".vue", ".svelte")
 MAX_NOTE_CHARS = 6000
+BINARY_SUFFIXES = {
+    ".woff2",
+    ".woff",
+    ".ttf",
+    ".otf",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".webp",
+    ".gif",
+    ".ico",
+    ".pdf",
+}
 
 
 def _catalogues(context: ToolContext) -> list[tuple[Skill, Asset]]:
@@ -111,19 +124,29 @@ class AddAsset(Tool):
                 return ToolResult(
                     ok=False, content=f"Asset {asset.id} points outside its skill folder; not copied."
                 )
-            text = _fill(source.read_text(encoding="utf-8"), args.variables)
+            binary = source.suffix.lower() in BINARY_SUFFIXES
+            data = (
+                source.read_bytes() if binary else _fill(source.read_text(encoding="utf-8"), args.variables)
+            )
             target = context.workspace.path_of(relative)
             if target.is_file():
-                current = target.read_text(encoding="utf-8", errors="replace")
-                if current.replace("\r\n", "\n") == text.replace("\r\n", "\n"):
+                if isinstance(data, bytes):
+                    same = target.read_bytes() == data
+                else:
+                    current = target.read_text(encoding="utf-8", errors="replace")
+                    same = current.replace("\r\n", "\n") == data.replace("\r\n", "\n")
+                if same:
                     skipped.append(f"{relative} (already the same)")
                     continue
                 if not args.overwrite:
                     skipped.append(f"{relative} (exists and differs; pass overwrite=true to replace)")
                     continue
-            result = await _save(context, relative, text, f"asset {asset.id}", "write")
-            if not result.ok:
-                return result
+            if isinstance(data, bytes):
+                await _save_binary(context, relative, data, f"asset {asset.id}")
+            else:
+                result = await _save(context, relative, data, f"asset {asset.id}", "write")
+                if not result.ok:
+                    return result
             written.append(relative)
         if written:
             _record_licence(context, base, asset)
@@ -155,9 +178,17 @@ def _placeholders(folder: Path, asset: Asset) -> set[str]:
     for item in asset.files:
         found.update(PLACEHOLDER.findall(item["to"]))
         source = _inside(folder, item["from"])
-        if source is not None:
+        if source is not None and source.suffix.lower() not in BINARY_SUFFIXES:
             found.update(PLACEHOLDER.findall(source.read_text(encoding="utf-8")))
     return found
+
+
+async def _save_binary(context: ToolContext, relative: str, data: bytes, reason: str) -> None:
+    """Fonts and images: written through the same gate as text, announced like any other file change."""
+    existed = context.workspace.path_of(relative).is_file()
+    context.workspace.write_bytes(relative, data, reason=reason)
+    context.last_edit_step = context.step
+    await context.emit("file_changed", {"path": relative, "op": "write" if existed else "create", "diff": ""})
 
 
 def _inside(folder: Path, relative: str) -> Path | None:

@@ -107,11 +107,15 @@ def test_every_style_direction_heading_has_an_asset() -> None:
 
 def test_search_finds_the_expected_assets() -> None:
     catalogue = load_catalogue(SKILL)
-    assert search(catalogue, "warm charity landing page")[0].id == "dir-soft-editorial"
+    assert "dir-soft-editorial" in [a.id for a in search(catalogue, "warm charity landing page", limit=3)]
+    assert search(catalogue, "warm charity landing page", "direction")[0].id == "dir-soft-editorial"
     assert search(catalogue, "numbers that count up when visible")[0].id == "fx-count-up"
     assert search(catalogue, "modal dialog", "component")[0].id == "cmp-dialog"
     assert "dir-dark-dashboard" in [a.id for a in search(catalogue, "dark dashboard for analytics")]
-    assert search(catalogue, "kids play food")[0].id in {"dir-playful-friendly", "dir-claymorphism"}
+    assert search(catalogue, "kids play food", "direction")[0].id in {
+        "dir-playful-friendly",
+        "dir-claymorphism",
+    }
     assert search(catalogue, "zzzzqqq") == []
     assert {a.type for a in search(catalogue, "dashboard", "direction")} == {"direction"}
 

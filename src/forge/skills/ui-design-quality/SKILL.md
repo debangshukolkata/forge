@@ -52,6 +52,12 @@ This skill's folder holds worked examples that build, pass the audit and look pr
 - `recipes/palettes-and-fonts.md`: palettes by mood, font pairings, type and spacing scales, layout ideas that make
   variants genuinely different, asset ideas without photos, patterns for dashboards, forms, settings, empty states.
 
+**Fonts work offline.** Fourteen font families (Inter, Plus Jakarta Sans, DM Sans, Manrope, Space Grotesk, Outfit, Archivo,
+Fraunces, Playfair Display, Lora, Nunito, JetBrains Mono, Noto Sans Bengali, Noto Sans Devanagari) and twelve ready pairings
+ship in this skill. `find_asset` with type `font-pairing` (for example "warm editorial charity") then `add_asset` copies the
+font files into `public/fonts/`, the CSS into `src/fonts/` and the licence text; nothing is fetched from the internet. Prefer
+a bundled pairing over an unbundled font from a CDN.
+
 ## 0c. Write the project's DESIGN.md first
 Before building any screen, write `DESIGN.md` in the project root from `recipes/design-md-template.md`: a one-line design
 read (who it is for, the feeling, what it must not look like), three dials (DESIGN_VARIANCE, MOTION_INTENSITY,

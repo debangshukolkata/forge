@@ -1063,6 +1063,1332 @@
    "preview": null,
    "path": "assets/effect/fx-tilt-card.md",
    "size": 12861
+  },
+  {
+   "id": "font-archivo",
+   "type": "font",
+   "title": "Archivo",
+   "summary": "Archivo (sans, weights 100 900) bundled offline: Sturdy grotesque with heavy weights for loud headlines.",
+   "moods": [
+    "bold",
+    "strong",
+    "grotesque"
+   ],
+   "products": [
+    "campaigns",
+    "sport",
+    "news"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "sans",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/archivo/archivo-latin-wght-normal.woff2",
+     "to": "public/fonts/archivo-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/archivo/archivo.css",
+     "to": "src/fonts/archivo.css"
+    },
+    {
+     "from": "fonts/archivo/archivo-OFL.txt",
+     "to": "public/fonts/archivo-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/archivo 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-archivo.md",
+   "size": 38857
+  },
+  {
+   "id": "font-dm-sans",
+   "type": "font",
+   "title": "DM Sans",
+   "summary": "DM Sans (sans, weights 100 1000) bundled offline: Low-contrast geometric sans; calm and legible.",
+   "moods": [
+    "clean",
+    "friendly",
+    "geometric"
+   ],
+   "products": [
+    "landing",
+    "portfolio",
+    "editorial"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "sans",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/dm-sans/dm-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/dm-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans.css",
+     "to": "src/fonts/dm-sans.css"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-OFL.txt",
+     "to": "public/fonts/dm-sans-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/dm-sans 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-dm-sans.md",
+   "size": 40706
+  },
+  {
+   "id": "font-fraunces",
+   "type": "font",
+   "title": "Fraunces",
+   "summary": "Fraunces (serif, weights 100 900) bundled offline: Soft old-style serif with personality; the warm editorial headline face.",
+   "moods": [
+    "warm",
+    "editorial",
+    "characterful"
+   ],
+   "products": [
+    "charity",
+    "health",
+    "boutique",
+    "food"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "serif",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/fraunces/fraunces-latin-wght-normal.woff2",
+     "to": "public/fonts/fraunces-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/fraunces/fraunces.css",
+     "to": "src/fonts/fraunces.css"
+    },
+    {
+     "from": "fonts/fraunces/fraunces-OFL.txt",
+     "to": "public/fonts/fraunces-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/fraunces 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-fraunces.md",
+   "size": 40466
+  },
+  {
+   "id": "font-inter",
+   "type": "font",
+   "title": "Inter",
+   "summary": "Inter (sans, weights 100 900) bundled offline: The safe default for interfaces and body text; excellent at small sizes.",
+   "moods": [
+    "clean",
+    "neutral",
+    "modern"
+   ],
+   "products": [
+    "saas",
+    "dashboards",
+    "forms",
+    "any app"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "sans",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/inter 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-inter.md",
+   "size": 51407
+  },
+  {
+   "id": "font-jetbrains-mono",
+   "type": "font",
+   "title": "JetBrains Mono",
+   "summary": "JetBrains Mono (mono, weights 100 800) bundled offline: Monospace made for code; also works as a retro heading face.",
+   "moods": [
+    "technical",
+    "retro",
+    "developer"
+   ],
+   "products": [
+    "developer tools",
+    "terminals",
+    "code",
+    "dashboards"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "mono",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono-latin-wght-normal.woff2",
+     "to": "public/fonts/jetbrains-mono-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono.css",
+     "to": "src/fonts/jetbrains-mono.css"
+    },
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono-OFL.txt",
+     "to": "public/fonts/jetbrains-mono-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/jetbrains-mono 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-jetbrains-mono.md",
+   "size": 44119
+  },
+  {
+   "id": "font-lora",
+   "type": "font",
+   "title": "Lora",
+   "summary": "Lora (serif, weights 400 700) bundled offline: Readable text serif for long reading.",
+   "moods": [
+    "calm",
+    "literary",
+    "readable"
+   ],
+   "products": [
+    "articles",
+    "blogs",
+    "journals"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "serif",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/lora/lora-latin-wght-normal.woff2",
+     "to": "public/fonts/lora-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/lora/lora.css",
+     "to": "src/fonts/lora.css"
+    },
+    {
+     "from": "fonts/lora/lora-OFL.txt",
+     "to": "public/fonts/lora-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/lora 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-lora.md",
+   "size": 41592
+  },
+  {
+   "id": "font-manrope",
+   "type": "font",
+   "title": "Manrope",
+   "summary": "Manrope (sans, weights 200 800) bundled offline: Semi-condensed modern sans with an engineered feel.",
+   "moods": [
+    "modern",
+    "technical",
+    "precise"
+   ],
+   "products": [
+    "fintech",
+    "saas",
+    "dashboards"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "sans",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/manrope/manrope-latin-wght-normal.woff2",
+     "to": "public/fonts/manrope-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/manrope/manrope.css",
+     "to": "src/fonts/manrope.css"
+    },
+    {
+     "from": "fonts/manrope/manrope-OFL.txt",
+     "to": "public/fonts/manrope-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/manrope 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-manrope.md",
+   "size": 29200
+  },
+  {
+   "id": "font-noto-sans-bengali",
+   "type": "font",
+   "title": "Noto Sans Bengali",
+   "summary": "Noto Sans Bengali (indic, weights 100 900) bundled offline: Bengali script with a matching Latin; use when the page has Bengali text.",
+   "moods": [
+    "neutral",
+    "readable"
+   ],
+   "products": [
+    "bengali",
+    "bangla",
+    "west bengal",
+    "bangladesh"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "indic",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/noto-sans-bengali/noto-sans-bengali-bengali-wght-normal.woff2",
+     "to": "public/fonts/noto-sans-bengali-bengali-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/noto-sans-bengali/noto-sans-bengali-latin-wght-normal.woff2",
+     "to": "public/fonts/noto-sans-bengali-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/noto-sans-bengali/noto-sans-bengali.css",
+     "to": "src/fonts/noto-sans-bengali.css"
+    },
+    {
+     "from": "fonts/noto-sans-bengali/noto-sans-bengali-OFL.txt",
+     "to": "public/fonts/noto-sans-bengali-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/noto-sans-bengali 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-noto-sans-bengali.md",
+   "size": 132342
+  },
+  {
+   "id": "font-noto-sans-devanagari",
+   "type": "font",
+   "title": "Noto Sans Devanagari",
+   "summary": "Noto Sans Devanagari (indic, weights 100 900) bundled offline: Devanagari script (Hindi, Marathi, Nepali) with a matching Latin.",
+   "moods": [
+    "neutral",
+    "readable"
+   ],
+   "products": [
+    "hindi",
+    "marathi",
+    "devanagari",
+    "nepali"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "indic",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/noto-sans-devanagari/noto-sans-devanagari-devanagari-wght-normal.woff2",
+     "to": "public/fonts/noto-sans-devanagari-devanagari-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/noto-sans-devanagari/noto-sans-devanagari-latin-wght-normal.woff2",
+     "to": "public/fonts/noto-sans-devanagari-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/noto-sans-devanagari/noto-sans-devanagari.css",
+     "to": "src/fonts/noto-sans-devanagari.css"
+    },
+    {
+     "from": "fonts/noto-sans-devanagari/noto-sans-devanagari-OFL.txt",
+     "to": "public/fonts/noto-sans-devanagari-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/noto-sans-devanagari 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-noto-sans-devanagari.md",
+   "size": 145022
+  },
+  {
+   "id": "font-nunito",
+   "type": "font",
+   "title": "Nunito",
+   "summary": "Nunito (rounded, weights 200 1000) bundled offline: Rounded terminals make it friendly and approachable.",
+   "moods": [
+    "friendly",
+    "playful",
+    "soft"
+   ],
+   "products": [
+    "kids",
+    "food",
+    "community",
+    "consumer apps"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "rounded",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/nunito/nunito-latin-wght-normal.woff2",
+     "to": "public/fonts/nunito-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/nunito/nunito.css",
+     "to": "src/fonts/nunito.css"
+    },
+    {
+     "from": "fonts/nunito/nunito-OFL.txt",
+     "to": "public/fonts/nunito-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/nunito 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-nunito.md",
+   "size": 42841
+  },
+  {
+   "id": "font-outfit",
+   "type": "font",
+   "title": "Outfit",
+   "summary": "Outfit (sans, weights 100 900) bundled offline: Geometric sans with round forms; strong at large sizes.",
+   "moods": [
+    "geometric",
+    "playful",
+    "clean"
+   ],
+   "products": [
+    "landing",
+    "apps",
+    "brands"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "sans",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/outfit/outfit-latin-wght-normal.woff2",
+     "to": "public/fonts/outfit-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/outfit/outfit.css",
+     "to": "src/fonts/outfit.css"
+    },
+    {
+     "from": "fonts/outfit/outfit-OFL.txt",
+     "to": "public/fonts/outfit-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/outfit 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-outfit.md",
+   "size": 36177
+  },
+  {
+   "id": "font-playfair-display",
+   "type": "font",
+   "title": "Playfair Display",
+   "summary": "Playfair Display (serif, weights 400 900) bundled offline: High-contrast display serif; use large, never for small text.",
+   "moods": [
+    "elegant",
+    "luxury",
+    "editorial"
+   ],
+   "products": [
+    "portfolio",
+    "fashion",
+    "hospitality"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "serif",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/playfair-display/playfair-display-latin-wght-normal.woff2",
+     "to": "public/fonts/playfair-display-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display.css",
+     "to": "src/fonts/playfair-display.css"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display-OFL.txt",
+     "to": "public/fonts/playfair-display-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/playfair-display 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-playfair-display.md",
+   "size": 42322
+  },
+  {
+   "id": "font-plus-jakarta-sans",
+   "type": "font",
+   "title": "Plus Jakarta Sans",
+   "summary": "Plus Jakarta Sans (sans, weights 200 800) bundled offline: Rounded geometric feel with warmth; good for headings and body together.",
+   "moods": [
+    "friendly",
+    "modern",
+    "polished"
+   ],
+   "products": [
+    "saas",
+    "startups",
+    "landing"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "sans",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/plus-jakarta-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans.css",
+     "to": "src/fonts/plus-jakarta-sans.css"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-OFL.txt",
+     "to": "public/fonts/plus-jakarta-sans-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/plus-jakarta-sans 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-plus-jakarta-sans.md",
+   "size": 31855
+  },
+  {
+   "id": "font-space-grotesk",
+   "type": "font",
+   "title": "Space Grotesk",
+   "summary": "Space Grotesk (sans, weights 300 700) bundled offline: Distinctive grotesk with character; set large and tight for posters.",
+   "moods": [
+    "bold",
+    "techy",
+    "quirky"
+   ],
+   "products": [
+    "campaigns",
+    "developer tools",
+    "posters"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "sans",
+    "offline",
+    "woff2"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
+     "to": "public/fonts/space-grotesk-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk.css",
+     "to": "src/fonts/space-grotesk.css"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-OFL.txt",
+     "to": "public/fonts/space-grotesk-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "Fontsource @fontsource-variable/space-grotesk 5.3.0 (copyright holders in the OFL text)",
+   "tested": "woff2 files and CSS checked by tests/test_fonts.py; rendered in Edge in the offline font test page (D-268)",
+   "preview": null,
+   "path": "assets/font/font-space-grotesk.md",
+   "size": 26822
+  },
+  {
+   "id": "pair-bengali",
+   "type": "font-pairing",
+   "title": "Bengali content",
+   "summary": "Noto Sans Bengali for Bengali text (it includes a matching Latin), Inter for English interface text.",
+   "moods": [
+    "neutral",
+    "readable"
+   ],
+   "products": [
+    "bengali",
+    "bangla",
+    "west bengal",
+    "bangladesh"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/noto-sans-bengali/noto-sans-bengali-bengali-wght-normal.woff2",
+     "to": "public/fonts/noto-sans-bengali-bengali-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/noto-sans-bengali/noto-sans-bengali-latin-wght-normal.woff2",
+     "to": "public/fonts/noto-sans-bengali-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/noto-sans-bengali/noto-sans-bengali.css",
+     "to": "src/fonts/noto-sans-bengali.css"
+    },
+    {
+     "from": "fonts/noto-sans-bengali/noto-sans-bengali-OFL.txt",
+     "to": "public/fonts/noto-sans-bengali-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Noto Sans Bengali and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-bengali.md",
+   "size": 182846
+  },
+  {
+   "id": "pair-bold-poster",
+   "type": "font-pairing",
+   "title": "Bold poster",
+   "summary": "Space Grotesk huge and tight, Inter for small text. Pairs with `dir-bold-poster`.",
+   "moods": [
+    "bold",
+    "loud",
+    "techy"
+   ],
+   "products": [
+    "events",
+    "campaigns",
+    "launches",
+    "developer tools"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
+     "to": "public/fonts/space-grotesk-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk.css",
+     "to": "src/fonts/space-grotesk.css"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-OFL.txt",
+     "to": "public/fonts/space-grotesk-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Space Grotesk and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-bold-poster.md",
+   "size": 77307
+  },
+  {
+   "id": "pair-clean-saas",
+   "type": "font-pairing",
+   "title": "Clean product",
+   "summary": "Plus Jakarta Sans for headings, Inter for text. Pairs with `dir-clean-product`.",
+   "moods": [
+    "clean",
+    "modern",
+    "polished"
+   ],
+   "products": [
+    "saas",
+    "startups",
+    "landing"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/plus-jakarta-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans.css",
+     "to": "src/fonts/plus-jakarta-sans.css"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-OFL.txt",
+     "to": "public/fonts/plus-jakarta-sans-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Plus Jakarta Sans and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-clean-saas.md",
+   "size": 82293
+  },
+  {
+   "id": "pair-developer-mono",
+   "type": "font-pairing",
+   "title": "Developer mono",
+   "summary": "JetBrains Mono for headings, code and numbers, Inter for text. Pairs with `dir-retro-terminal` and `dir-dark-dashboard`.",
+   "moods": [
+    "technical",
+    "retro",
+    "dark"
+   ],
+   "products": [
+    "developer tools",
+    "terminals",
+    "dark dashboards"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono-latin-wght-normal.woff2",
+     "to": "public/fonts/jetbrains-mono-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono.css",
+     "to": "src/fonts/jetbrains-mono.css"
+    },
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono-OFL.txt",
+     "to": "public/fonts/jetbrains-mono-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts JetBrains Mono and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-developer-mono.md",
+   "size": 94588
+  },
+  {
+   "id": "pair-elegant-serif",
+   "type": "font-pairing",
+   "title": "Elegant serif and clean sans",
+   "summary": "Playfair Display for large headlines, DM Sans for text. Pairs with `dir-minimal-monochrome`.",
+   "moods": [
+    "elegant",
+    "luxury",
+    "calm"
+   ],
+   "products": [
+    "portfolio",
+    "fashion",
+    "hospitality",
+    "architecture"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/playfair-display/playfair-display-latin-wght-normal.woff2",
+     "to": "public/fonts/playfair-display-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display.css",
+     "to": "src/fonts/playfair-display.css"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display-OFL.txt",
+     "to": "public/fonts/playfair-display-OFL.txt"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/dm-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans.css",
+     "to": "src/fonts/dm-sans.css"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-OFL.txt",
+     "to": "public/fonts/dm-sans-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Playfair Display and DM Sans (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-elegant-serif.md",
+   "size": 82131
+  },
+  {
+   "id": "pair-fintech-precise",
+   "type": "font-pairing",
+   "title": "Precise fintech",
+   "summary": "Manrope for headings and numbers, Inter for text.",
+   "moods": [
+    "precise",
+    "technical",
+    "trustworthy"
+   ],
+   "products": [
+    "fintech",
+    "dashboards",
+    "b2b"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/manrope/manrope-latin-wght-normal.woff2",
+     "to": "public/fonts/manrope-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/manrope/manrope.css",
+     "to": "src/fonts/manrope.css"
+    },
+    {
+     "from": "fonts/manrope/manrope-OFL.txt",
+     "to": "public/fonts/manrope-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Manrope and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-fintech-precise.md",
+   "size": 79631
+  },
+  {
+   "id": "pair-geometric-modern",
+   "type": "font-pairing",
+   "title": "Geometric modern",
+   "summary": "Outfit for headings, Inter for text.",
+   "moods": [
+    "geometric",
+    "modern",
+    "playful"
+   ],
+   "products": [
+    "landing",
+    "apps",
+    "brands"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/outfit/outfit-latin-wght-normal.woff2",
+     "to": "public/fonts/outfit-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/outfit/outfit.css",
+     "to": "src/fonts/outfit.css"
+    },
+    {
+     "from": "fonts/outfit/outfit-OFL.txt",
+     "to": "public/fonts/outfit-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Outfit and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-geometric-modern.md",
+   "size": 86589
+  },
+  {
+   "id": "pair-heavy-grotesque",
+   "type": "font-pairing",
+   "title": "Heavy grotesque",
+   "summary": "Archivo at heavy weights for headlines, Inter for text.",
+   "moods": [
+    "bold",
+    "strong",
+    "sporty"
+   ],
+   "products": [
+    "sport",
+    "news",
+    "campaigns"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/archivo/archivo-latin-wght-normal.woff2",
+     "to": "public/fonts/archivo-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/archivo/archivo.css",
+     "to": "src/fonts/archivo.css"
+    },
+    {
+     "from": "fonts/archivo/archivo-OFL.txt",
+     "to": "public/fonts/archivo-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Archivo and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-heavy-grotesque.md",
+   "size": 89300
+  },
+  {
+   "id": "pair-hindi",
+   "type": "font-pairing",
+   "title": "Hindi and Devanagari content",
+   "summary": "Noto Sans Devanagari for Devanagari text, Inter for English interface text.",
+   "moods": [
+    "neutral",
+    "readable"
+   ],
+   "products": [
+    "hindi",
+    "marathi",
+    "devanagari",
+    "nepali"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/noto-sans-devanagari/noto-sans-devanagari-devanagari-wght-normal.woff2",
+     "to": "public/fonts/noto-sans-devanagari-devanagari-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/noto-sans-devanagari/noto-sans-devanagari-latin-wght-normal.woff2",
+     "to": "public/fonts/noto-sans-devanagari-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/noto-sans-devanagari/noto-sans-devanagari.css",
+     "to": "src/fonts/noto-sans-devanagari.css"
+    },
+    {
+     "from": "fonts/noto-sans-devanagari/noto-sans-devanagari-OFL.txt",
+     "to": "public/fonts/noto-sans-devanagari-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Noto Sans Devanagari and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-hindi.md",
+   "size": 195508
+  },
+  {
+   "id": "pair-journal",
+   "type": "font-pairing",
+   "title": "Journal",
+   "summary": "Lora for article text and headings, Plus Jakarta Sans for interface labels.",
+   "moods": [
+    "calm",
+    "literary",
+    "readable"
+   ],
+   "products": [
+    "articles",
+    "blogs",
+    "journals"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/lora/lora-latin-wght-normal.woff2",
+     "to": "public/fonts/lora-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/lora/lora.css",
+     "to": "src/fonts/lora.css"
+    },
+    {
+     "from": "fonts/lora/lora-OFL.txt",
+     "to": "public/fonts/lora-OFL.txt"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/plus-jakarta-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans.css",
+     "to": "src/fonts/plus-jakarta-sans.css"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-OFL.txt",
+     "to": "public/fonts/plus-jakarta-sans-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Lora and Plus Jakarta Sans (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-journal.md",
+   "size": 72507
+  },
+  {
+   "id": "pair-playful-rounded",
+   "type": "font-pairing",
+   "title": "Playful rounded",
+   "summary": "Nunito headings (weight 800) with DM Sans text. Pairs with `dir-playful-friendly`.",
+   "moods": [
+    "playful",
+    "friendly",
+    "soft"
+   ],
+   "products": [
+    "kids",
+    "food",
+    "community",
+    "consumer apps"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/nunito/nunito-latin-wght-normal.woff2",
+     "to": "public/fonts/nunito-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/nunito/nunito.css",
+     "to": "src/fonts/nunito.css"
+    },
+    {
+     "from": "fonts/nunito/nunito-OFL.txt",
+     "to": "public/fonts/nunito-OFL.txt"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/dm-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans.css",
+     "to": "src/fonts/dm-sans.css"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-OFL.txt",
+     "to": "public/fonts/dm-sans-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Nunito and DM Sans (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-playful-rounded.md",
+   "size": 82613
+  },
+  {
+   "id": "pair-warm-editorial",
+   "type": "font-pairing",
+   "title": "Warm editorial",
+   "summary": "Fraunces for headlines, Inter for text. Pairs with direction `dir-soft-editorial`.",
+   "moods": [
+    "warm",
+    "editorial",
+    "trustworthy"
+   ],
+   "products": [
+    "charity",
+    "health",
+    "education",
+    "boutique"
+   ],
+   "tags": [
+    "font",
+    "typography",
+    "pairing",
+    "offline"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "fonts/fraunces/fraunces-latin-wght-normal.woff2",
+     "to": "public/fonts/fraunces-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/fraunces/fraunces.css",
+     "to": "src/fonts/fraunces.css"
+    },
+    {
+     "from": "fonts/fraunces/fraunces-OFL.txt",
+     "to": "public/fonts/fraunces-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "OFL-1.1",
+   "source": "bundled fonts Fraunces and Inter (Fontsource, 5.3.0)",
+   "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
+   "preview": null,
+   "path": "assets/font-pairing/pair-warm-editorial.md",
+   "size": 90948
   }
  ]
 }
