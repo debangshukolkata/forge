@@ -4,16 +4,16 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task 
 
 ## Contents (open items per group)
 - 0. Build order (read this first): **0 open**
-- 1. Waiting on you (your actions and decisions): **10 open**
+- 1. Waiting on you (your actions and decisions): **11 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **21 open**
 - 3. Parallel work and speed: **15 open**
-- 4. Presentations (match Claude's PowerPoint abilities): **35 open**
+- 4. Presentations (match Claude's PowerPoint abilities): **41 open**
 - 5. Platform, runtime and coding competency: **25 open**
-- 6. Parked (not started; your choice when): **4 open**
-- **Total open: 110**
+- 6. Parked (not started; your choice when): **3 open**
+- **Total open: 116**
 
 ## 0. Build order (read this first)
-How to take the work up in the best order. Each phase says what it needs and when it is done. IDs refer to the items below (`D` design, `L` libraries, `X` parallel, `S` speed, `C` coding competency, `P0.x/P1.x/P2.x/P3.x` presentations). Do not start a later phase's big items before the earlier phase's measurements exist.
+How to take the work up in the best order. Each phase says what it needs and when it is done. IDs refer to the items below (`D` design, `L` libraries, `X` parallel, `S` speed, `C` coding competency, `W` documents, `P0.x/P1.x/P2.x/P3.x` presentations). Do not start a later phase's big items before the earlier phase's measurements exist.
 
 **Phase A, measure and unblock** (small; needs your rerun and two laptop checks)
 - Your actions in section 1: rerun the three-design task, the two reachability checks (GitHub raw, shadcn and Magic UI registries).
@@ -45,9 +45,10 @@ How to take the work up in the best order. Each phase says what it needs and whe
 - `C9` tests as the judge (after `X2` and `C1`), `C11` repository outline only if `C1` shows lost context.
 - `S7` and `S8` only with your OK and a benchmark. Done when: the speed benchmark improves without quality loss.
 
-**Phase F, presentations** (a parallel track; reuses Phase B, the critic and the audit)
+**Phase F, presentations and documents** (a parallel track; reuses Phase B, the critic and the audit)
 - P0 first (benchmark, laptop check), then P1.1-P1.8, then P2.1-P2.6 and P2.18, then P2.10-P2.12; decide the engine and rendering from the benchmark; P3 and the rest of P2 last.
 - Reuse for decks: the asset catalogue and tools (slide templates, palettes, fonts), a slide critic that scores the contact sheet, and the same acceptance bar.
+- Documents (section 4b): `W0` clean-room protocol first (small), then the shared pieces together with the presentation items they share (P1.1 contact sheet, P1.8 validator) as `W4`, then `W2` Excel and `W1` Word, then `W3` PDF, then `W5` benchmark. Do not start `W1` to `W3` before `W0` is written.
 
 **Phase G, later (lowest priority; take up after A to F show what is still weak)**
 - `D8` token plan, wireframe and cliché list in the design skill (reconcile the conflicts with our reference page first).
@@ -72,6 +73,7 @@ Things only you can do or decide. Everything else below can be built without you
 - [ ] **Presentations, decision 1: design engine.** Keep improving the free-form element list (cheaper, built) or add the HTML/CSS design path (P3.1; more freedom, large). Recommendation: P1 helpers first, decide after the benchmark.
 - [ ] **Presentations, decision 2: rendering without PowerPoint.** Optional LibreOffice (often needs admin rights), or our own renderer from the HTML path. Recommendation: optional LibreOffice plus PowerPoint as now.
 - [ ] **Presentations, decision 3: icons and images.** A licensed icon set (Lucide ISC, Material Symbols Apache-2.0) and whether an image model exists on the Azure side; without one DebCraft can only use supplied pictures, shapes and charts.
+- [ ] **Documents: order and samples.** Which first, Word, Excel or PDF (my suggestion: Excel and Word first, PDF toolkit third), and 3 to 5 sample documents you like or that are typical for your work (they become design targets and the benchmark reference, `W5`); allow the optional `docs` extra (python-docx, openpyxl, pypdf, reportlab) to be installed through pip.
 - [ ] **Presentations, decision 4: reference decks.** Collect 5 to 10 decks you like (made by Claude or anyone); they become design targets and the benchmark reference (P0.1).
 
 ## 2. Design upgrades for apps DebCraft builds (D-245..D-252)
@@ -206,6 +208,16 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   objects), PowerPoint COM launch, files outside the workspace, Mode B (host-identifying terms in slide text). Size M.
 - [ ] **P3.5 Documentation.** A user guide ("how to ask DebCraft for a deck"), examples gallery generated from the benchmark. Size S.
 
+
+### 4b. Own Word, Excel and PDF skills (agreed 2026-10-12; clean-room builds, replaces the parked "sibling document skills" item)
+Anthropic's `docx`, `pdf`, `pptx` and `xlsx` skills are source-available, not open source (the `pptx` licence forbids copies and derivative works, checked 2026-10-09; the other three were not read individually). DebCraft builds its own, as it did for presentations: same capabilities, own code and wording, made from public format specifications and permissively licensed libraries. Reuses the presentation work: package validator (P1.8), preview rendering and contact sheet (P1.1), palettes and brand kits (P2.1), the critic and the asset catalogue (`L0`).
+- [ ] `W0` **Clean-room protocol and licence check (do first, small).** Write the rules into `docs/DOCUMENTS_CLEAN_ROOM.md`: build from the ECMA-376 (Office Open XML) and PDF specifications, the libraries' own documentation and our own experience; do not fetch, read or keep the source skills' files or scripts; no close paraphrase of their wording; record in `docs/DECISIONS.md` which references each part used; record each library's licence (python-docx MIT, openpyxl MIT, pypdf BSD, pypdfium2 BSD/Apache, reportlab BSD) in the asset ledger. Also read the individual `LICENSE.txt` of `docx`, `pdf` and `xlsx` to learn whether they match `pptx` (for the record only; the plan does not depend on it).
+- [ ] `W1` **Word documents (`make-document` skill plus `build_document` / `read_document` / `edit_document` tools).** Headings, paragraphs, lists, tables, images with alt text, headers and footers, page numbers, table of contents, styles and a company template, hyperlinks, footnotes; read an existing .docx (text as Markdown, comments, tracked changes), edit it keeping formatting (find and replace across runs, set text, add or remove rows and sections), add comments; typography and spacing rules (story first, hierarchy, readable line length, consistent styles), accessibility (language, title, heading order, alt text); preview through Word when present (like the PowerPoint picture export) and an optional LibreOffice path; package validation (shared with P1.8).
+- [ ] `W2` **Excel workbooks (`make-spreadsheet` skill plus `build_workbook` / `read_workbook` / `edit_workbook` tools).** Real formulas, never pasted values; named ranges, number and date formats, tables, conditional formatting, data validation, freeze panes, column widths, native charts; read and edit an existing workbook keeping formulas and formatting; a recalculation and error check (`#REF!`, `#DIV/0!`, circular references, formulas that return text) through Excel when present or a formula engine otherwise; clean messy CSV/TSV into a proper sheet; modelling conventions (inputs, calculations and outputs separated, colour-coded inputs, no hard-coded constants in formulas, an assumptions sheet).
+- [ ] `W3` **PDF toolkit (`pdf-toolkit` skill plus tools).** Extract text and tables with layout, merge, split, rotate, crop, watermark, stamp page numbers, fill forms, encrypt and decrypt, extract images, create a PDF from content (reportlab; check the licence of any HTML-to-PDF library before use), OCR a scanned PDF with the existing Tesseract path, and render pages with the existing `pdf_render`. Mode B rules apply to anything sent to a model.
+- [ ] `W4` **Shared document engine.** One preview and contact-sheet path for Word, Excel, PDF and PowerPoint; one OOXML package validator (zip and XML safety, relationships, element order); one document critic that scores a rendered contact sheet on hierarchy, consistency, readability, tables and charts; document themes and brand kits shared with presentations (P2.1); catalogue entries for document templates under the asset standard in `L0`; the security review (P3.4) extended to documents (zip and XML bombs, external links, embedded objects, macros never executed, files outside the workspace).
+- [ ] `W5` **Document benchmark.** About 15 fixed requests per type (Word: report, proposal, letter, edit-an-existing-document; Excel: budget, tracker, data clean-up, dashboard with charts, edit-an-existing-workbook; PDF: extract, merge, fill a form, OCR), scored by a judge model looking at the rendered result and by checklists (opens cleanly, formulas intact, no overflow); you supply 3 to 5 sample documents you like, and outputs made with Anthropic's skills may be used as a quality reference (their outputs, not their files); results in `docs/DOC_BENCHMARK.md`.
+
 ## 5. Platform, runtime and coding competency
 
 ### 5a. Older open items (platform, runtime, build quality)
@@ -245,7 +257,6 @@ Honest starting point: the model is weaker on deep reasoning, whole-codebase und
   Waiting on the user's probe of what the office laptop allows (script run, pip reach, Python 3.13) and a choice: `.cmd` starter vs signed `.exe`, bundled embeddable Python or not.
 - [ ] Optional: Azure AI Vision / Document Intelligence for handwriting OCR (user has no key yet; would need a yes in the drawer)
 - [ ] **Internal rename `forge` -> `debcraft`** (package, `.forge` folders, `FORGE.md`, `FORGE_*` settings). The visible rename is done (D-244); this part needs a migration or a read-the-old-name fallback. Sizing and the recommended plan are in `docs/TODO_LATER.md`.
-- [ ] **Sibling document skills** (Word, Excel, PDF like Claude's): same method as presentations, each a clean build under its own licence; not planned, ask if wanted.
 
 
 ## 7. Completed work (history)
