@@ -580,6 +580,144 @@
    "size": 7869
   },
   {
+   "id": "fx-bg-dots",
+   "type": "effect",
+   "title": "Dot grid background",
+   "summary": "A faint dot pattern behind a section.",
+   "moods": [
+    "clean",
+    "calm",
+    "technical"
+   ],
+   "products": [
+    "landing",
+    "dashboards",
+    "hero"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "ambient"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-bg-dots.md",
+   "size": 12278
+  },
+  {
+   "id": "fx-bg-fade-edges",
+   "type": "effect",
+   "title": "Fade edges mask",
+   "summary": "Fades a decorative background to transparent toward the edges.",
+   "moods": [
+    "modern",
+    "clean"
+   ],
+   "products": [
+    "hero",
+    "backgrounds"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "ambient"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-bg-fade-edges.md",
+   "size": 12305
+  },
+  {
+   "id": "fx-bg-grid",
+   "type": "effect",
+   "title": "Grid background",
+   "summary": "A faint square grid behind a section.",
+   "moods": [
+    "technical",
+    "clean",
+    "modern"
+   ],
+   "products": [
+    "saas",
+    "developer tools",
+    "hero"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "ambient"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-bg-grid.md",
+   "size": 12326
+  },
+  {
+   "id": "fx-bg-mesh",
+   "type": "effect",
+   "title": "Gradient mesh background",
+   "summary": "Soft overlapping colour glows built from your brand variables.",
+   "moods": [
+    "modern",
+    "soft",
+    "warm"
+   ],
+   "products": [
+    "hero",
+    "saas",
+    "onboarding"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "ambient"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-bg-mesh.md",
+   "size": 12329
+  },
+  {
    "id": "fx-border-beam",
    "type": "effect",
    "title": "Rotating border beam",
@@ -646,6 +784,40 @@
    "size": 7796
   },
   {
+   "id": "fx-check-draw",
+   "type": "effect",
+   "title": "Success check draw",
+   "summary": "A check mark draws itself.",
+   "moods": [
+    "friendly",
+    "clear"
+   ],
+   "products": [
+    "forms",
+    "confirmations",
+    "checkout"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "feedback"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-check-draw.md",
+   "size": 12353
+  },
+  {
    "id": "fx-count-up",
    "type": "effect",
    "title": "Count-up numbers",
@@ -682,6 +854,73 @@
    "preview": null,
    "path": "assets/effect/fx-count-up.md",
    "size": 12889
+  },
+  {
+   "id": "fx-drift-shapes",
+   "type": "effect",
+   "title": "Drifting shapes",
+   "summary": "Decorative shapes float slowly; each uses `--i` for a different phase.",
+   "moods": [
+    "playful",
+    "soft"
+   ],
+   "products": [
+    "hero",
+    "illustration"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "ambient"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-drift-shapes.md",
+   "size": 12313
+  },
+  {
+   "id": "fx-flip-card",
+   "type": "effect",
+   "title": "Flip card",
+   "summary": "A card turns over to show its back on hover or keyboard focus.",
+   "moods": [
+    "playful",
+    "modern"
+   ],
+   "products": [
+    "team",
+    "features",
+    "flashcards"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "3d"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-flip-card.md",
+   "size": 12436
   },
   {
    "id": "fx-float",
@@ -784,6 +1023,413 @@
    "size": 7792
   },
   {
+   "id": "fx-grid-pulse",
+   "type": "effect",
+   "title": "Pulsing grid",
+   "summary": "A grid or pattern layer slowly brightens and fades.",
+   "moods": [
+    "techy",
+    "dark"
+   ],
+   "products": [
+    "ai",
+    "saas",
+    "hero"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "ambient"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-grid-pulse.md",
+   "size": 12290
+  },
+  {
+   "id": "fx-hover-dim-siblings",
+   "type": "effect",
+   "title": "Dim the others",
+   "summary": "While one item in a row is hovered, its siblings fade back.",
+   "moods": [
+    "modern",
+    "focused"
+   ],
+   "products": [
+    "logo rows",
+    "team",
+    "menus"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "hover"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-hover-dim-siblings.md",
+   "size": 12294
+  },
+  {
+   "id": "fx-hover-glow",
+   "type": "effect",
+   "title": "Hover glow ring",
+   "summary": "A soft brand-coloured ring and glow appear on hover or focus.",
+   "moods": [
+    "modern",
+    "friendly"
+   ],
+   "products": [
+    "buttons",
+    "cards",
+    "inputs"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "hover"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-hover-glow.md",
+   "size": 12321
+  },
+  {
+   "id": "fx-hover-lift",
+   "type": "effect",
+   "title": "Hover lift",
+   "summary": "Cards rise 4 px with a deeper shadow on hover or focus.",
+   "moods": [
+    "clean",
+    "polished"
+   ],
+   "products": [
+    "cards",
+    "pricing",
+    "features"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "hover"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-hover-lift.md",
+   "size": 12300
+  },
+  {
+   "id": "fx-hover-slide-underline",
+   "type": "effect",
+   "title": "Sliding underline",
+   "summary": "An underline slides in from the left and out to the right.",
+   "moods": [
+    "clean",
+    "editorial"
+   ],
+   "products": [
+    "navigation",
+    "links"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "hover"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-hover-slide-underline.md",
+   "size": 12304
+  },
+  {
+   "id": "fx-hover-zoom",
+   "type": "effect",
+   "title": "Image zoom on hover",
+   "summary": "The image inside zooms slowly while the frame stays put.",
+   "moods": [
+    "editorial",
+    "warm"
+   ],
+   "products": [
+    "galleries",
+    "cards",
+    "portfolio"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "hover"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-hover-zoom.md",
+   "size": 12317
+  },
+  {
+   "id": "fx-in-blur",
+   "type": "effect",
+   "title": "Entrance: blur to sharp",
+   "summary": "Elements come into focus from a blur.",
+   "moods": [
+    "modern",
+    "dreamy",
+    "premium"
+   ],
+   "products": [
+    "hero",
+    "saas",
+    "ai"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "entrance"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-in-blur.md",
+   "size": 12330
+  },
+  {
+   "id": "fx-in-clip-reveal",
+   "type": "effect",
+   "title": "Entrance: wipe reveal",
+   "summary": "A clip-path wipe reveals the element from left to right.",
+   "moods": [
+    "bold",
+    "editorial"
+   ],
+   "products": [
+    "headlines",
+    "images",
+    "posters"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "entrance"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-in-clip-reveal.md",
+   "size": 12301
+  },
+  {
+   "id": "fx-in-fade",
+   "type": "effect",
+   "title": "Entrance: fade",
+   "summary": "Fade an element in on page load; `--i` staggers siblings by 80 ms.",
+   "moods": [
+    "calm",
+    "polished"
+   ],
+   "products": [
+    "landing",
+    "hero",
+    "any page"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "entrance"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-in-fade.md",
+   "size": 12329
+  },
+  {
+   "id": "fx-in-flip",
+   "type": "effect",
+   "title": "Entrance: flip down",
+   "summary": "Elements tip down into place with a slight 3D rotation.",
+   "moods": [
+    "playful",
+    "modern"
+   ],
+   "products": [
+    "cards",
+    "lists"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "entrance"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-in-flip.md",
+   "size": 12291
+  },
+  {
+   "id": "fx-in-scale",
+   "type": "effect",
+   "title": "Entrance: scale up",
+   "summary": "Elements grow slightly from 92 % while fading in.",
+   "moods": [
+    "friendly",
+    "polished"
+   ],
+   "products": [
+    "cards",
+    "modals",
+    "pricing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "entrance"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-in-scale.md",
+   "size": 12301
+  },
+  {
+   "id": "fx-in-slide",
+   "type": "effect",
+   "title": "Entrance: slide in from the side",
+   "summary": "Elements slide in from the left (`in-left`) or right (`in-right`) while fading.",
+   "moods": [
+    "energetic",
+    "modern"
+   ],
+   "products": [
+    "landing",
+    "features",
+    "split sections"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "entrance"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-in-slide.md",
+   "size": 12346
+  },
+  {
    "id": "fx-link-underline",
    "type": "effect",
    "title": "Animated link underline",
@@ -814,6 +1460,75 @@
    "preview": null,
    "path": "assets/effect/fx-link-underline.md",
    "size": 7808
+  },
+  {
+   "id": "fx-marker-highlight",
+   "type": "effect",
+   "title": "Highlighter marker",
+   "summary": "A marker stroke grows under a phrase.",
+   "moods": [
+    "editorial",
+    "friendly",
+    "warm"
+   ],
+   "products": [
+    "articles",
+    "landing",
+    "emphasis"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "text"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-marker-highlight.md",
+   "size": 12376
+  },
+  {
+   "id": "fx-marquee-vertical",
+   "type": "effect",
+   "title": "Vertical marquee",
+   "summary": "A column of items scrolls upward endlessly, pausing on hover.",
+   "moods": [
+    "bold",
+    "modern"
+   ],
+   "products": [
+    "testimonials",
+    "logos",
+    "feeds"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "ambient"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-marquee-vertical.md",
+   "size": 12388
   },
   {
    "id": "fx-marquee",
@@ -854,6 +1569,40 @@
    "size": 12893
   },
   {
+   "id": "fx-nudge-arrow",
+   "type": "effect",
+   "title": "Arrow nudge",
+   "summary": "An arrow nudges right when its link or card is hovered.",
+   "moods": [
+    "clean",
+    "friendly"
+   ],
+   "products": [
+    "links",
+    "cta",
+    "cards"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "hover"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-nudge-arrow.md",
+   "size": 12298
+  },
+  {
    "id": "fx-page-entrance",
    "type": "effect",
    "title": "Page entrance",
@@ -884,6 +1633,209 @@
    "preview": null,
    "path": "assets/effect/fx-page-entrance.md",
    "size": 7839
+  },
+  {
+   "id": "fx-parallax",
+   "type": "effect",
+   "title": "Parallax drift",
+   "summary": "An element drifts slower or faster than the page as it passes through the viewport.",
+   "moods": [
+    "modern",
+    "dreamy"
+   ],
+   "products": [
+    "hero images",
+    "backgrounds"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "scroll"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-parallax.md",
+   "size": 12377
+  },
+  {
+   "id": "fx-pop",
+   "type": "effect",
+   "title": "Pop",
+   "summary": "A quick overshoot scale for a badge or count that just changed.",
+   "moods": [
+    "playful",
+    "energetic"
+   ],
+   "products": [
+    "badges",
+    "cart",
+    "likes"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "feedback"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-pop.md",
+   "size": 12278
+  },
+  {
+   "id": "fx-press",
+   "type": "effect",
+   "title": "Press feedback",
+   "summary": "Buttons shrink slightly while pressed.",
+   "moods": [
+    "polished",
+    "friendly"
+   ],
+   "products": [
+    "buttons",
+    "mobile"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "hover"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-press.md",
+   "size": 12284
+  },
+  {
+   "id": "fx-progress-ring",
+   "type": "effect",
+   "title": "Progress ring",
+   "summary": "A ring that fills to a percentage and animates between values.",
+   "moods": [
+    "clean",
+    "technical"
+   ],
+   "products": [
+    "dashboards",
+    "goals",
+    "uploads"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "feedback"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-progress-ring.md",
+   "size": 12381
+  },
+  {
+   "id": "fx-pulse-ring",
+   "type": "effect",
+   "title": "Pulse rings",
+   "summary": "Two rings expand and fade from an element, like a live signal.",
+   "moods": [
+    "energetic",
+    "urgent"
+   ],
+   "products": [
+    "live status",
+    "record",
+    "donate",
+    "cta"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "ambient"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-pulse-ring.md",
+   "size": 12307
+  },
+  {
+   "id": "fx-scroll-progress",
+   "type": "effect",
+   "title": "Scroll progress bar",
+   "summary": "A thin bar at the top fills as the page scrolls (scroll-driven, no JavaScript).",
+   "moods": [
+    "clean",
+    "editorial"
+   ],
+   "products": [
+    "articles",
+    "docs",
+    "long pages"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "scroll"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-scroll-progress.md",
+   "size": 12363
   },
   {
    "id": "fx-scroll-reveal",
@@ -922,6 +1874,39 @@
    "preview": null,
    "path": "assets/effect/fx-scroll-reveal.md",
    "size": 13086
+  },
+  {
+   "id": "fx-shake",
+   "type": "effect",
+   "title": "Error shake",
+   "summary": "A short horizontal shake for invalid input.",
+   "moods": [
+    "robust",
+    "clear"
+   ],
+   "products": [
+    "forms",
+    "login"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "feedback"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-shake.md",
+   "size": 12379
   },
   {
    "id": "fx-shimmer-text",
@@ -990,6 +1975,39 @@
    "size": 7836
   },
   {
+   "id": "fx-spinner",
+   "type": "effect",
+   "title": "Spinner",
+   "summary": "A small ring spinner for pending actions.",
+   "moods": [
+    "clean",
+    "neutral"
+   ],
+   "products": [
+    "buttons",
+    "loading"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "feedback"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-spinner.md",
+   "size": 12324
+  },
+  {
    "id": "fx-spotlight-card",
    "type": "effect",
    "title": "Spotlight card",
@@ -1028,6 +2046,107 @@
    "size": 12871
   },
   {
+   "id": "fx-stack-3d",
+   "type": "effect",
+   "title": "3D layer stack",
+   "summary": "Stacked layers separate in depth on hover.",
+   "moods": [
+    "modern",
+    "premium"
+   ],
+   "products": [
+    "hero visuals",
+    "product shots"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "3d"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-stack-3d.md",
+   "size": 12344
+  },
+  {
+   "id": "fx-text-gradient",
+   "type": "effect",
+   "title": "Static gradient text",
+   "summary": "Heading text filled with a brand gradient that does not move.",
+   "moods": [
+    "modern",
+    "premium"
+   ],
+   "products": [
+    "hero",
+    "saas"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "text"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-text-gradient.md",
+   "size": 12329
+  },
+  {
+   "id": "fx-text-sweep",
+   "type": "effect",
+   "title": "Text light sweep",
+   "summary": "A bright band sweeps across heading text on a loop.",
+   "moods": [
+    "premium",
+    "modern",
+    "bold"
+   ],
+   "products": [
+    "hero",
+    "saas",
+    "campaign"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "text"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-text-sweep.md",
+   "size": 12362
+  },
+  {
    "id": "fx-tilt-card",
    "type": "effect",
    "title": "Tilt card",
@@ -1063,6 +2182,108 @@
    "preview": null,
    "path": "assets/effect/fx-tilt-card.md",
    "size": 12861
+  },
+  {
+   "id": "fx-toast-in",
+   "type": "effect",
+   "title": "Toast entrance",
+   "summary": "Toasts slide up and fade in.",
+   "moods": [
+    "clean",
+    "polished"
+   ],
+   "products": [
+    "notifications",
+    "forms"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "feedback"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-toast-in.md",
+   "size": 12304
+  },
+  {
+   "id": "fx-type-writer",
+   "type": "effect",
+   "title": "Typewriter text",
+   "summary": "A line of text types out letter by letter with a blinking caret.",
+   "moods": [
+    "retro",
+    "technical",
+    "playful"
+   ],
+   "products": [
+    "developer tools",
+    "hero",
+    "terminal"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "text"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-type-writer.md",
+   "size": 12404
+  },
+  {
+   "id": "fx-words-rise",
+   "type": "effect",
+   "title": "Words rise one by one",
+   "summary": "Each word of a headline rises into place in sequence.",
+   "moods": [
+    "bold",
+    "polished",
+    "editorial"
+   ],
+   "products": [
+    "hero",
+    "headlines"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "text"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-more.css",
+     "to": "src/motion-more.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 2, D-269)",
+   "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
+   "preview": null,
+   "path": "assets/effect/fx-words-rise.md",
+   "size": 12397
   },
   {
    "id": "font-archivo",

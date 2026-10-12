@@ -42,6 +42,11 @@ This skill's folder holds worked examples that build, pass the audit and look pr
 - `recipes/motion.css` + `recipes/motion.tsx`: an animation kit that is tested and needs no library: scroll reveal with
   stagger, entrance, count-up numbers, marquee, shimmer text, skeletons, spotlight and tilt cards, rotating border
   beam, aurora background, glass, grain, button shine, float; all reduced-motion safe. Import `motion.css` in main.tsx.
+- `recipes/motion-more.css`: 36 more pure-CSS effects by purpose: entrances (fade, slide, scale, blur, wipe, flip), text
+  (typewriter, light sweep, marker, words rise, gradient), hover and focus (lift, glow, zoom, sliding underline, arrow nudge,
+  press, dim siblings), ambient backgrounds (grid, dots, mesh, fade edges, pulse rings, drifting shapes, vertical marquee),
+  feedback (shake, check draw, spinner, progress ring, toast, pop), 3D (flip card, layer stack) and scroll (progress bar,
+  parallax). Each is a catalogue asset (`find_asset`, type `effect`); all stop under reduced motion.
 - `recipes/components-native.tsx`: accessible dialog, tabs, toasts, empty state, skeleton, sortable searchable table with
   no extra dependency.
 - `recipes/component-libraries.md`: the decision (custom design versus daisyUI, shadcn/ui, MUI or Tabler) and tested

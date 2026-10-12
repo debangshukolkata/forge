@@ -222,6 +222,12 @@ RETRIEVAL_PROMPTS = [
     ("refactor duplicated if chains", "rcp-refactoring"),
     ("new python features 3.12 3.13", "rcp-python-versions"),
     ("cli exit codes subcommands stdin", "rcp-cli-design"),
+    ("shake the form when validation fails", "fx-shake"),
+    ("typing effect with a blinking caret", "fx-type-writer"),
+    ("thin progress bar while scrolling an article", "fx-scroll-progress"),
+    ("card that flips over to show the back", "fx-flip-card"),
+    ("dot pattern background for a hero", "fx-bg-dots"),
+    ("progress ring percentage", "fx-progress-ring"),
 ]
 
 

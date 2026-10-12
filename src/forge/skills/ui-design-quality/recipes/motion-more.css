@@ -1,0 +1,142 @@
+/* Motion kit, part 2: more pure-CSS effects grouped by purpose. No library, no JavaScript unless a section says so.
+   Import after motion.css (`import "./motion-more.css"`). Colours come from theme variables with fallbacks, so it also
+   works before a palette exists: --color-brand-500, --color-ink-900. Rules baked in: animate transform/opacity/clip-path
+   (plus background-position and an @property angle), 150-900 ms, content visible without JavaScript, and everything
+   below is switched off under prefers-reduced-motion (last block). Count effects against MOTION_INTENSITY: one signature
+   effect per page, hover and focus effects are free. */
+
+/* ====================== ENTRANCES (add the class; --i staggers siblings by 80 ms) ====================== */
+@keyframes in-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes in-left { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes in-right { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes in-scale { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes in-blur { from { opacity: 0; filter: blur(12px); } to { opacity: 1; filter: blur(0); } }
+@keyframes in-clip { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes in-flip { from { opacity: 0; transform: perspective(700px) rotateX(-40deg); transform-origin: top; } to { opacity: 1; transform: none; } }
+.in-fade, .in-left, .in-right, .in-scale, .in-blur, .in-clip, .in-flip {
+  animation-duration: 0.7s; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); animation-fill-mode: both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+.in-fade { animation-name: in-fade; }
+.in-left { animation-name: in-left; }
+.in-right { animation-name: in-right; }
+.in-scale { animation-name: in-scale; }
+.in-blur { animation-name: in-blur; }
+.in-clip { animation-name: in-clip; animation-duration: 0.9s; }
+.in-flip { animation-name: in-flip; }
+
+/* ====================== TEXT ====================== */
+/* Typewriter: set --chars to the character count of a single line of monospace-ish text. */
+@keyframes typing { from { width: 0; } to { width: calc(var(--chars, 20) * 1ch); } }
+@keyframes caret { 50% { border-color: transparent; } }
+.type-writer { font-family: ui-monospace, Consolas, monospace; display: inline-block; overflow: hidden; white-space: nowrap; width: calc(var(--chars, 20) * 1ch);
+  border-right: 0.12em solid currentColor; animation: typing 2.4s steps(var(--chars, 20)) 1 both, caret 0.8s step-end infinite; }
+/* A bright band sweeps across heading text once or on a loop. */
+@keyframes sweep { to { background-position: -200% 0; } }
+.text-sweep { background: linear-gradient(100deg, currentColor 40%, var(--color-brand-500, #6366f1) 50%, currentColor 60%) 100% 0 / 300% 100%;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: var(--color-ink-900, #111827);
+  animation: sweep 3.5s linear infinite; }
+/* Highlighter marker under a phrase; grows when the phrase scrolls in (add .is-visible) or immediately with .marker-now. */
+.marker { background: linear-gradient(transparent 62%, color-mix(in srgb, var(--color-brand-500, #6366f1) 35%, transparent) 62%) 0 0 / 0% 100% no-repeat;
+  transition: background-size 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s; }
+.marker.is-visible, .marker-now { background-size: 100% 100%; }
+/* Words rise one after another: wrap each word in <span style="--w: N"> (see the usage note). */
+@keyframes word-up { from { opacity: 0; transform: translateY(0.6em); } to { opacity: 1; transform: none; } }
+.words > span { display: inline-block; animation: word-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--w, 0) * 70ms); }
+/* Gradient text that does not move (cheap, safe default for a hero word). */
+.text-gradient { background: linear-gradient(90deg, var(--color-brand-500, #6366f1), var(--color-brand-200, #a5b4fc)); -webkit-background-clip: text;
+  background-clip: text; -webkit-text-fill-color: transparent; color: var(--color-brand-500, #6366f1); }
+
+/* ====================== HOVER AND FOCUS (free: no effect budget) ====================== */
+.hover-lift { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.hover-lift:hover, .hover-lift:focus-visible { transform: translateY(-4px); box-shadow: 0 18px 32px -16px rgb(15 23 42 / 0.3); }
+.hover-glow { transition: box-shadow 0.3s ease; }
+.hover-glow:hover, .hover-glow:focus-visible { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-brand-500, #6366f1) 22%, transparent), 0 10px 30px -10px var(--color-brand-500, #6366f1); }
+.hover-zoom { overflow: hidden; }
+.hover-zoom > img, .hover-zoom > svg, .hover-zoom > picture > img { transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.hover-zoom:hover > img, .hover-zoom:hover > svg, .hover-zoom:hover > picture > img { transform: scale(1.06); }
+.hover-slide-underline { position: relative; text-decoration: none; }
+.hover-slide-underline::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: currentColor;
+  transform: scaleX(0); transform-origin: right; transition: transform 0.3s ease; }
+.hover-slide-underline:hover::after, .hover-slide-underline:focus-visible::after { transform: scaleX(1); transform-origin: left; }
+/* An arrow or icon inside nudges right when its parent (.group) is hovered. */
+.nudge { display: inline-block; transition: transform 0.2s ease; }
+.group:hover .nudge, .group:focus-visible .nudge { transform: translateX(4px); }
+.press { transition: transform 0.12s ease; }
+.press:active { transform: scale(0.97); }
+.hover-dim-siblings:hover > * { opacity: 0.55; transition: opacity 0.2s; }
+.hover-dim-siblings:hover > *:hover { opacity: 1; }
+
+/* ====================== AMBIENT BACKGROUNDS (decorative: aria-hidden, behind content) ====================== */
+.bg-grid { background-image: linear-gradient(to right, rgb(100 116 139 / 0.14) 1px, transparent 1px), linear-gradient(to bottom, rgb(100 116 139 / 0.14) 1px, transparent 1px);
+  background-size: 40px 40px; }
+.bg-dots { background-image: radial-gradient(rgb(100 116 139 / 0.28) 1.2px, transparent 1.2px); background-size: 22px 22px; }
+.bg-fade-edges { mask-image: radial-gradient(ellipse at center, #000 40%, transparent 78%); }
+.bg-mesh { background:
+  radial-gradient(at 12% 18%, color-mix(in srgb, var(--color-brand-500, #6366f1) 38%, transparent) 0, transparent 52%),
+  radial-gradient(at 88% 12%, color-mix(in srgb, var(--color-brand-200, #a5b4fc) 55%, transparent) 0, transparent 50%),
+  radial-gradient(at 50% 92%, color-mix(in srgb, var(--color-brand-500, #6366f1) 22%, transparent) 0, transparent 55%); }
+@keyframes ring-out { from { transform: scale(0.6); opacity: 0.55; } to { transform: scale(1.8); opacity: 0; } }
+.pulse-ring { position: relative; }
+.pulse-ring::before, .pulse-ring::after { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--color-brand-500, #6366f1);
+  animation: ring-out 2.4s ease-out infinite; pointer-events: none; }
+.pulse-ring::after { animation-delay: 1.2s; }
+@keyframes shape-drift { 50% { transform: translate3d(14px, -22px, 0) rotate(8deg); } }
+.drift { animation: shape-drift 9s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -2s); }
+@keyframes grid-glow { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.8; } }
+.grid-pulse { animation: grid-glow 5s ease-in-out infinite; }
+@keyframes marquee-up { to { transform: translateY(-50%); } }
+.marquee-vertical { overflow: hidden; height: var(--h, 16rem); mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent); }
+.marquee-vertical > .track { display: flex; flex-direction: column; gap: 1rem; animation: marquee-up 24s linear infinite; }
+.marquee-vertical:hover > .track { animation-play-state: paused; }
+
+/* ====================== FEEDBACK ====================== */
+@keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+.shake { animation: shake 0.45s ease; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.check-draw path, .check-draw polyline { stroke-dasharray: 48; stroke-dashoffset: 48; animation: draw 0.55s ease 0.1s forwards; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 1.25rem; height: 1.25rem; border-radius: 50%; border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor; animation: spin 0.8s linear infinite; }
+/* Progress ring: set --value from 0 to 100 on the element. */
+@property --ring { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+.progress-ring { --ring: calc(var(--value, 0) * 1%); width: var(--size, 4rem); aspect-ratio: 1; border-radius: 50%;
+  background: conic-gradient(var(--color-brand-500, #6366f1) var(--ring), color-mix(in srgb, currentColor 14%, transparent) 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px)); transition: --ring 0.8s ease; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+.toast-in { animation: toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.pop { animation: pop 0.4s ease both; }
+
+/* ====================== 3D-LITE ====================== */
+/* Card flip on hover or keyboard focus: two faces inside .flip-card > .flip-inner > .face (front) + .face.back. */
+.flip-card { perspective: 900px; }
+.flip-inner { position: relative; transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); transform-style: preserve-3d; }
+.flip-card:hover .flip-inner, .flip-card:focus-within .flip-inner { transform: rotateY(180deg); }
+.flip-inner > .face { backface-visibility: hidden; }
+.flip-inner > .face.back { position: absolute; inset: 0; transform: rotateY(180deg); }
+.stack-3d { transform-style: preserve-3d; }
+.stack-3d > * { transition: transform 0.4s ease; transform: translateZ(calc(var(--i, 0) * 14px)); }
+.stack-3d:hover > * { transform: translateZ(calc(var(--i, 0) * 34px)) translateY(calc(var(--i, 0) * -6px)); }
+
+/* ====================== SCROLL (scroll-driven animations; browsers without support just show the final state) ====================== */
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.scroll-progress { position: fixed; inset: 0 0 auto 0; height: 3px; background: var(--color-brand-500, #6366f1); transform-origin: left;
+  transform: scaleX(0); z-index: 50; }
+@supports (animation-timeline: scroll()) { .scroll-progress { animation: grow-x linear both; animation-timeline: scroll(root); } }
+@keyframes parallax { from { transform: translateY(var(--from, 40px)); } to { transform: translateY(var(--to, -40px)); } }
+@supports (animation-timeline: view()) { .parallax { animation: parallax linear both; animation-timeline: view(); } }
+
+/* ====================== ACCESSIBILITY: all of the above becomes static ====================== */
+@media (prefers-reduced-motion: reduce) {
+  .in-fade, .in-left, .in-right, .in-scale, .in-blur, .in-clip, .in-flip, .words > span, .toast-in, .pop { animation: none; opacity: 1; transform: none; filter: none; clip-path: none; }
+  .type-writer { animation: none; width: auto; border-right: 0; }
+  .text-sweep { animation: none; background-position: 0 0; }
+  .pulse-ring::before, .pulse-ring::after, .drift, .grid-pulse, .marquee-vertical > .track, .spinner { animation: none; }
+  .marker { transition: none; background-size: 100% 100%; }
+  .check-draw path, .check-draw polyline { animation: none; stroke-dashoffset: 0; }
+  .shake { animation: none; }
+  .hover-lift, .hover-glow, .hover-zoom > img, .nudge, .press, .flip-inner, .stack-3d > * { transition: none; }
+  .scroll-progress, .parallax { animation: none; transform: none; }
+  .scroll-progress { display: none; }
+}
