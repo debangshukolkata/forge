@@ -113,7 +113,14 @@ AUDIT_SCRIPT = r"""
   const backdrop = (el) => { for (let n = el; n; n = n.parentElement) {
       const c = parse(getComputedStyle(n).backgroundColor); if (c.length < 4 || c[3] > 0.9) return c; }
     return [255, 255, 255, 1]; };
-  const lowContrast = [];
+  const toHex = (c) => '#' + c.slice(0, 3).map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+  const contrastOf = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+  // The nearest text colour that passes: the same colour moved toward black or white in small steps.
+  const fixedText = (fg, bg, need) => { const to = lum(bg) > 0.5 ? [0, 0, 0] : [255, 255, 255];
+    for (let t = 0.05; t <= 1.0001; t += 0.05) {
+      const c = fg.slice(0, 3).map((v, i) => v + (to[i] - v) * t); if (contrastOf(c, bg) >= need) return c; }
+    return to; };
+  const lowContrast = [], contrastFixes = [];
   for (const el of all) {
     if (!visible(el) || !Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
     const s = getComputedStyle(el);
@@ -122,9 +129,14 @@ AUDIT_SCRIPT = r"""
     const l1 = lum(fg) , l2 = lum(bg);
     const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
     const large = parseFloat(s.fontSize) >= 24 || (parseFloat(s.fontSize) >= 18.66 && parseInt(s.fontWeight) >= 700);
-    if (ratio < (large ? 3 : 4.5)) lowContrast.push(el);
+    if (ratio < (large ? 3 : 4.5)) {
+      lowContrast.push(el);
+      if (contrastFixes.length < 3) contrastFixes.push(label(el) + ' is ' + toHex(fg) + ' on ' + toHex(bg) + ' (' +
+        ratio.toFixed(1) + ':1); use ' + toHex(fixedText(fg, bg, large ? 3 : 4.5)));
+    }
   }
-  if (lowContrast.length) findings.push('Low text contrast (below WCAG AA): ' + sample(lowContrast) + '.');
+  if (lowContrast.length) findings.push('Low text contrast (below WCAG AA): ' + sample(lowContrast) +
+    '. Fix the token, not the single element. Nearest passing colours: ' + contrastFixes.join('; ') + '.');
 
   // 7. Tiny text, broken images, missing alt text.
   const tiny = all.filter((el) => visible(el) && parseFloat(getComputedStyle(el).fontSize) < 12

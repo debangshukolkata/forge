@@ -328,6 +328,7 @@ async def test_the_audit_reads_oklch_and_color_mix_colours(tmp_path: Path, origi
         assert (
             "Readable paragraph" not in text.split("Low text contrast")[1].split("\n")[0]
         )  # the good one is not
+        assert "use #" in text and "Nearest passing colours" in text  # L9: the finding names a colour that passes
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
         server.shutdown()
