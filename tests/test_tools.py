@@ -265,3 +265,30 @@ async def test_flask_app_runs_in_the_background_and_answers(fixture_app_context:
 def test_workspace_for_fixture_never_touches_it(fixture_app_context: ToolContext) -> None:
     workspace: Workspace = fixture_app_context.workspace
     assert Path(workspace.info.repo_path) == FIXTURE_REPO.resolve()
+
+
+async def test_start_background_starts_in_the_folder_it_is_given(tmp_path: Path, original_repo: Path) -> None:
+    """D-248: it used to start wherever an earlier `cd` left the shell, so three dev servers all served one app."""
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace, shell=ShellSession(workspace), background=BackgroundManager())
+    for folder in ("design-a", "design-b"):
+        workspace.path_of(f"designs/{folder}").mkdir(parents=True)
+    await call(RunCommand(), context, command="cd designs/design-b")  # the shell now sits in design-b
+    command = 'Write-Output "in $((Get-Location).Path | Split-Path -Leaf)"; Start-Sleep -Seconds 20'
+    try:
+        started = await call(
+            StartBackground(),
+            context,
+            name="a",
+            command=command,
+            cwd="designs/design-a",
+            ready_pattern="in design-",
+            timeout_s=30,
+        )
+        assert (
+            started.ok and "in design-a" in started.content and "design-a" in started.content.split("\n")[0]
+        )
+        missing = await call(StartBackground(), context, name="x", command="echo hi", cwd="designs/nope")
+        assert not missing.ok and "No such folder" in missing.content
+    finally:
+        await call(StopBackground(), context, name="a")

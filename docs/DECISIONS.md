@@ -3359,3 +3359,7 @@ Context: asked for three design variants opened in the browser, DebCraft never o
 Cause 1: show_app connected to 127.0.0.1 only. Vite on Node 17+/Windows listens on `localhost` = ::1, so 127.0.0.1 refused while the user's browser worked. Fix: try 127.0.0.1, localhost, [::1], open the first that answers; message names all three.
 Cause 2 (not proven, project files not seen): variants were copies of one project or all three ports served design-c. Added section 6 to the ui-design-quality skill: separate folder and own title per variant, different on palette/type/layout, prove each port serves its own folder (titles, sha256 of screenshots, file hashes), run servers itself and never hand commands over.
 Open: no code-level check yet that variants differ (a screenshot-hash comparison tool would be the next step).
+
+### D-248 — start_background takes a cwd and names the folder it started in (user's hash check, 2026-10-12)
+Finding: the three design folders were different (own sources, own titles) but all three ports served design-c. Cause: start_background had no folder argument and used the shell's persistent working directory, which an earlier `cd` had left in design-c; the model assumed otherwise.
+Done: `cwd` argument (relative to the repository root, same rule as run_command, clear error for a missing folder); the result now ends the ready line with `[cwd: ...]`; the ui-design-quality skill tells the model to pass it. Test: tests/test_tools.py.

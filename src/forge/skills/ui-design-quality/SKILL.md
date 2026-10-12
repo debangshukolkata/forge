@@ -85,6 +85,8 @@ Variants that look the same are a failed task, however polished each one is.
 - Prove each port serves its own folder: read the title and heading from `browser_open` for every port, and compare the
   screenshots (each `view_image` prints a sha256; identical hashes mean identical pages) or hash the source files
   (`Get-FileHash designs\*\src\App.tsx`). If two match, fix it before you report.
-- Start servers with `start_background` and the folder as the working directory, then `show_app` per server. If
+- Start each server with `start_background` and its own `cwd` (for example `cwd: designs/design-a`; without it the
+  process starts wherever an earlier `cd` left the shell and several servers end up serving one app). Check the
+  `[cwd: ...]` in the result, then `show_app` per server. If
   `show_app` fails, read its message and fix the cause (it tries 127.0.0.1, localhost and [::1]); do not hand the
   user commands to run instead of running them yourself.

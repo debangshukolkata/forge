@@ -83,6 +83,11 @@ class StartBackground(Tool):
         command: str
         ready_pattern: str | None = Field(default=None, description="Regex that means 'ready' in the output.")
         timeout_s: int = Field(default=READY_TIMEOUT_S, ge=1, le=300)
+        cwd: str | None = Field(
+            default=None,
+            description="Folder to start in, relative to the repository root. Always give it when the project "
+            "has several apps: without it the process starts wherever the last command left the shell.",
+        )
 
     def summary(self, args: StartBackground.Args) -> str:
         return f"start '{args.name}': {args.command}"
@@ -95,15 +100,22 @@ class StartBackground(Tool):
         assert shell is not None and manager is not None
         if args.name in manager.processes:
             await manager.stop(args.name)
+        start_dir = shell.resolve_cwd(args.cwd)
+        if not start_dir.is_dir():
+            return ToolResult(
+                ok=False,
+                content=f"No such folder: {args.cwd!r} (cwd is relative to the repository root; in Mode B that "
+                f"is project/ itself). Leave cwd out to start in {shell.display(shell.cwd)}.",
+            )
         port = free_port() if PORT_PLACEHOLDER in args.command else None
         command = args.command.replace(PORT_PLACEHOLDER, str(port)) if port else args.command
-        script = build_script(command, shell.cwd, None)
+        script = build_script(command, start_dir, None)
         sandboxed = shell.prepare_sandbox()
         try:
-            process = await start_process(script, shell.cwd, shell.environment(), sandboxed)
+            process = await start_process(script, start_dir, shell.environment(), sandboxed)
         except SandboxUnavailableError as error:
             shell.disable_sandbox(str(error))
-            process = await start_process(script, shell.cwd, shell.environment())
+            process = await start_process(script, start_dir, shell.environment())
         entry = BackgroundProcess(args.name, command, process, port)
         entry.reader = asyncio.create_task(_collect(entry))
         manager.processes[args.name] = entry
@@ -116,7 +128,11 @@ class StartBackground(Tool):
             )
         where = f" on http://127.0.0.1:{port}" if port else ""
         status = "ready" if ready else f"started but not confirmed ready after {args.timeout_s}s"
-        return ToolResult(ok=ready, content=f"'{args.name}' {status}{where}.\n{recent}", meta={"port": port})
+        # Name the folder: a process that silently started in the wrong one served the wrong app (D-248).
+        folder = f" [cwd: {shell.display(start_dir)}]"
+        return ToolResult(
+            ok=ready, content=f"'{args.name}' {status}{where}{folder}.\n{recent}", meta={"port": port}
+        )
 
 
 class ReadBackground(Tool):
