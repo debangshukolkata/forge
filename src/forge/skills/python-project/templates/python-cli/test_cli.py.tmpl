@@ -1,0 +1,19 @@
+import pytest
+
+from {{package}}.cli import main
+
+
+def test_greets_by_name(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["Asha"]) == 0
+    assert capsys.readouterr().out == "Hello, Asha!\n"
+
+
+def test_shout_flag(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["--shout"]) == 0
+    assert capsys.readouterr().out == "HELLO, WORLD!\n"
+
+
+def test_bad_option_exits_with_2() -> None:
+    with pytest.raises(SystemExit) as stop:
+        main(["--nope"])
+    assert stop.value.code == 2

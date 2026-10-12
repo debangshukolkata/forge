@@ -1,0 +1,17 @@
+# {{package}}
+
+{{description}}
+
+## Develop
+```
+python -m venv .venv
+.venv\Scripts\python -m pip install -e ".[dev]"      # macOS/Linux: .venv/bin/python
+python -m pytest
+python -m ruff check . && python -m ruff format --check .
+python -m mypy
+```
+
+## Run
+```
+python -m {{package}} --help
+```

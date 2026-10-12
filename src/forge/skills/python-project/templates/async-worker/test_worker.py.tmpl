@@ -1,0 +1,33 @@
+import asyncio
+
+import pytest
+
+from {{package}}.worker import WorkerPool
+
+
+def test_runs_every_job_and_isolates_failures() -> None:
+    done: list[int] = []
+
+    async def good(n: int) -> None:
+        await asyncio.sleep(0)
+        done.append(n)
+
+    async def bad() -> None:
+        raise RuntimeError("boom")
+
+    async def scenario() -> int:
+        pool = WorkerPool(workers=2)
+        await pool.start()
+        for n in range(5):
+            await pool.submit(lambda n=n: good(n))
+        await pool.submit(bad)
+        await pool.stop()
+        return pool.failed
+
+    assert asyncio.run(scenario()) == 1
+    assert sorted(done) == [0, 1, 2, 3, 4]
+
+
+def test_needs_at_least_one_worker() -> None:
+    with pytest.raises(ValueError):
+        WorkerPool(workers=0)

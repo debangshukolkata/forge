@@ -1,0 +1,26 @@
+"""Command line entry point of {{package}}."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from collections.abc import Sequence
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="{{package}}", description="{{description}}")
+    parser.add_argument("name", nargs="?", default="world", help="who to greet")
+    parser.add_argument("--shout", action="store_true", help="print in capitals")
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run the tool and return the exit code (0 success, 2 bad usage); tests call this directly."""
+    args = build_parser().parse_args(argv)
+    message = f"Hello, {args.name}!"
+    print(message.upper() if args.shout else message)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

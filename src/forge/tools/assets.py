@@ -4,6 +4,7 @@ memory; adding goes through the write jail like any file write and records the l
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from pydantic import Field
@@ -77,9 +78,13 @@ class AddAsset(Tool):
         id: str = Field(description="the asset id from find_asset, e.g. fx-count-up")
         project_dir: str = Field(
             default="",
-            description="folder of the front-end project relative to the repository root (empty for the root)",
+            description="folder of the project relative to the repository root (empty for the root)",
         )
         overwrite: bool = Field(default=False, description="replace files that already exist and differ")
+        variables: dict[str, str] = Field(
+            default_factory=dict,
+            description='values for {{placeholders}} in the asset files and paths, e.g. {"package": "inventory"}',
+        )
 
     def summary(self, args: AddAsset.Args) -> str:
         return f"add asset {args.id}"
@@ -90,16 +95,23 @@ class AddAsset(Tool):
             return ToolResult(ok=False, content=f"No asset {args.id!r}. Search with find_asset.")
         skill, asset = entry
         base = args.project_dir.strip().strip("/\\")
+        missing = sorted(_placeholders(skill.folder, asset) - set(args.variables))
+        if missing:
+            return ToolResult(
+                ok=False,
+                content=f"Asset {asset.id} needs values for: {', '.join(missing)}. Pass them in `variables`.",
+            )
         written: list[str] = []
         skipped: list[str] = []
         for item in asset.files:
-            relative = f"{base}/{item['to']}" if base else item["to"]
+            target_path = _fill(item["to"], args.variables)
+            relative = f"{base}/{target_path}" if base else target_path
             source = _inside(skill.folder, item["from"])
             if source is None:
                 return ToolResult(
                     ok=False, content=f"Asset {asset.id} points outside its skill folder; not copied."
                 )
-            text = source.read_text(encoding="utf-8")
+            text = _fill(source.read_text(encoding="utf-8"), args.variables)
             target = context.workspace.path_of(relative)
             if target.is_file():
                 current = target.read_text(encoding="utf-8", errors="replace")
@@ -128,6 +140,24 @@ class AddAsset(Tool):
             )
         parts.append("Usage note:\n" + note)
         return ToolResult(ok=True, content="\n".join(parts), meta={"ui_files": ui_files})
+
+
+PLACEHOLDER = re.compile(r"\{\{\s*([a-z][a-z0-9_]*)\s*\}\}")
+
+
+def _fill(text: str, variables: dict[str, str]) -> str:
+    return PLACEHOLDER.sub(lambda match: variables.get(match.group(1), match.group(0)), text)
+
+
+def _placeholders(folder: Path, asset: Asset) -> set[str]:
+    """Names of the {{placeholders}} in the asset's file paths and contents, so a missing value is reported early."""
+    found: set[str] = set()
+    for item in asset.files:
+        found.update(PLACEHOLDER.findall(item["to"]))
+        source = _inside(folder, item["from"])
+        if source is not None:
+            found.update(PLACEHOLDER.findall(source.read_text(encoding="utf-8")))
+    return found
 
 
 def _inside(folder: Path, relative: str) -> Path | None:

@@ -82,6 +82,19 @@ def test_the_real_catalogue_is_valid_and_up_to_date() -> None:
     assert all(a.licence and a.source and a.tested for a in result.assets)
 
 
+def test_every_skill_catalogue_is_valid_and_up_to_date() -> None:
+    folders = [p.parent.parent for p in (SKILL.parent).glob("*/assets/catalogue.json")]
+    assert {p.name for p in folders} >= {"ui-design-quality", "python-project"}
+    for folder in folders:
+        result = build_catalogue(folder)
+        assert result.errors == [], folder.name
+        for name, text in catalogue_files(result).items():
+            committed = (folder / "assets" / name).read_text(encoding="utf-8").replace("\r\n", "\n")
+            assert committed == text, (
+                f"{folder.name}/{name} is out of date: run scripts/build_asset_catalogue.py"
+            )
+
+
 def test_every_style_direction_heading_has_an_asset() -> None:
     import re
 
@@ -101,6 +114,10 @@ def test_search_finds_the_expected_assets() -> None:
     assert search(catalogue, "kids play food")[0].id in {"dir-playful-friendly", "dir-claymorphism"}
     assert search(catalogue, "zzzzqqq") == []
     assert {a.type for a in search(catalogue, "dashboard", "direction")} == {"direction"}
+
+
+def _all_assets() -> list:  # type: ignore[type-arg]
+    return [a for p in SKILL.parent.glob("*/assets/catalogue.json") for a in load_catalogue(p.parent.parent)]
 
 
 def _context(tmp_path: Path, original_repo: Path) -> ToolContext:
@@ -185,11 +202,15 @@ RETRIEVAL_PROMPTS = [
     ("sortable searchable table", "cmp-data-table"),
     ("empty state when a list has no items", "cmp-empty-state"),
     ("keyboard accessible tabs for settings", "cmp-tabs"),
+    ("new python command line tool", "skel-python-cli"),
+    ("rest api service backend", "skel-fastapi-service"),
+    ("background job queue worker", "skel-async-worker"),
+    ("python library package", "skel-python-package"),
 ]
 
 
 def test_retrieval_finds_the_expected_asset_for_at_least_90_percent_of_prompts() -> None:
-    catalogue = load_catalogue(SKILL)
+    catalogue = _all_assets()
     missed = [
         (prompt, expected, [a.id for a in search(catalogue, prompt, limit=3)])
         for prompt, expected in RETRIEVAL_PROMPTS

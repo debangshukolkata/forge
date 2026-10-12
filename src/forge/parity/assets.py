@@ -42,6 +42,8 @@ ASSET_TYPES = (
     "recipe",
     "skeleton",
 )
+# Visual assets get a preview image; code skeletons and recipes do not need one.
+PREVIEW_TYPES = ("direction", "effect", "component", "template", "section", "font-pairing", "palette")
 DENSITIES = ("airy", "balanced", "dense", "any")
 FRONT = re.compile(r"^---\s*\n(.*?)\n---\s*\n?", re.S)
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
@@ -169,9 +171,9 @@ def validate_asset(asset: Asset, skill_folder: Path) -> tuple[list[str], list[st
             errors.append(f"{where}: file {item['from']} does not exist")
         elif ".." in Path(item["to"]).parts or Path(item["to"]).is_absolute():
             errors.append(f"{where}: target {item['to']} must be a relative path inside the project")
-    if asset.preview is None:
+    if asset.preview is None and asset.type in PREVIEW_TYPES:
         warnings.append(f"{where}: no preview image yet")
-    elif not (skill_folder / asset.preview).is_file():
+    elif asset.preview is not None and not (skill_folder / asset.preview).is_file():
         errors.append(f"{where}: preview {asset.preview} does not exist")
     return errors, warnings
 

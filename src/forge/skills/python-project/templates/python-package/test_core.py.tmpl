@@ -1,0 +1,13 @@
+import pytest
+
+from {{package}}.core import clamp
+
+
+@pytest.mark.parametrize(("value", "expected"), [(5, 5), (-1, 0), (11, 10)])
+def test_clamp_limits_the_value(value: float, expected: float) -> None:
+    assert clamp(value, 0, 10) == expected
+
+
+def test_clamp_rejects_an_empty_range() -> None:
+    with pytest.raises(ValueError):
+        clamp(1, 10, 0)
