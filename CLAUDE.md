@@ -104,6 +104,9 @@ The rules below still describe what goes into briefs and summaries.
 2. **Building Forge with Claude Code (these sessions):** here we do save tokens: read one MODULE.md instead of
    the whole spec, run only the tests that matter, keep summaries short.
 
+## Apps DebCraft builds: the UI-quality pipeline (D-245..D-254)
+Before changing how DebCraft designs or checks the pages it builds, read `src/forge/skills/ui-design-quality/SKILL.md` and its `recipes/` folder, `src/forge/tools/ui_audit.py` and the `design-critic` (`src/forge/subagents/critic.py`). The pipeline is: DESIGN.md first, recipes to copy from, `browser_screenshot` with the style audit, the independent critic, and the `task_update` gates in `workflow/orchestrator.py`. The build order for what comes next is in TODO.md section 0; the model is weaker than Claude, so quality comes from assets and process, measured on the benchmarks (TODO C1, S2).
+
 ## Revamp direction (D-151..D-156, 2026-10-02) — Forge behaves like Claude Code
 The runtime copies Claude Code: a flat loop; the model improvises failure recovery (no stuck detector or
 escalation ladder, D-155); verification is whatever checks the model runs through the shell; memory is FORGE.md
