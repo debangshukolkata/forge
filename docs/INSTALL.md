@@ -12,7 +12,7 @@ folder's `Start-DebCraft.cmd` (the first run in a new folder installs again). Ne
 projects in `%USERPROFILE%\.forge` are not touched. If DebCraft from that folder is still running, close it first.
 It is a `.cmd` rather than an `.exe` because unsigned downloaded programs are often blocked on managed laptops (D-230).
 
-> Optional extras `Start-DebCraft.cmd` installs: `audit` (pip-audit, a second vulnerability source in the Deps tab) and `slides` (python-pptx, for making PowerPoint decks; pictures of the slides need PowerPoint itself).
+> Optional extras `Start-DebCraft.cmd` installs: `audit` (pip-audit, a second vulnerability source in the Deps tab), `gemini` (google-genai, for Gemini on Vertex AI) and `slides` (python-pptx, for making PowerPoint decks; pictures of the slides need PowerPoint itself).
 
 ## What you need
 

@@ -71,7 +71,7 @@ if (Test-Path $venvForge) {
 }
 
 # The first install lists every package as it is fetched (it takes minutes); later starts stay quiet.
-$pipVerbosity = if ($firstRun) { @("--progress-bar", "off") } else { @("--quiet") }
+[string[]]$pipVerbosity = if ($firstRun) { @("--progress-bar", "off") } else { @("--quiet") }  # typed: a lone string would be splatted letter by letter
 $spec = if ($Extras) { ".[$Extras]" } else { "." }
 if ($Wheelhouse) {
     # Matches install_forge.ps1's offline path: a wheelhouse folder bundled alongside the unzipped source
