@@ -109,3 +109,31 @@ def test_a_correct_tailwind_setup_and_a_project_without_tailwind_are_fine(tmp_pa
         tmp_path, "^4.1.0", plugin, '@import "tailwindcss";\n', "import tailwindcss from '@tailwindcss/vite'"
     )
     assert tailwind_setup_problem(tmp_path) is None
+
+
+async def test_show_app_finds_a_server_that_listens_on_ipv6_only() -> None:
+    """Vite on Windows listens on localhost = ::1 only; 127.0.0.1 refuses (D-247)."""
+    import socket
+
+    from forge.tools.show_app import wait_for_answer
+
+    probe = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+    try:
+        probe.bind(("::1", 0))
+    except OSError:
+        probe.close()
+        pytest.skip("IPv6 loopback is not available here")
+    probe.close()
+
+    class IPv6Server(http.server.ThreadingHTTPServer):
+        address_family = socket.AF_INET6
+
+    server = IPv6Server(("::1", 0), http.server.SimpleHTTPRequestHandler)
+    port = server.server_address[1]
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        url, detail = await wait_for_answer(port, "/")
+        assert url is not None, detail
+        assert "127.0.0.1" not in url
+    finally:
+        server.shutdown()

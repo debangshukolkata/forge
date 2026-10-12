@@ -84,20 +84,27 @@ def choose_port(entry: BackgroundProcess, wanted: int | None) -> tuple[int | Non
     return None, "the app is not listening on any port yet"
 
 
-async def wait_for_answer(url: str) -> tuple[bool, str]:
+LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "[::1]")
+
+
+async def wait_for_answer(port: int, path: str) -> tuple[str | None, str]:
+    """The first loopback address that answers, and what it said. A dev server (Vite on Node 17+) often listens
+    on `localhost`, which on Windows is IPv6 only: 127.0.0.1 then refuses while the user's browser works (D-247)."""
     deadline = asyncio.get_running_loop().time() + ANSWER_TIMEOUT_S
     reason = "no answer"
     async with httpx.AsyncClient(timeout=5, follow_redirects=True) as client:
         while True:
-            try:
-                response = await client.get(url)
-                if response.status_code < 500:
-                    return True, f"HTTP {response.status_code}"
-                reason = f"the page answers with HTTP {response.status_code}"
-            except httpx.HTTPError as error:
-                reason = f"no answer ({type(error).__name__})"
+            for host in LOOPBACK_HOSTS:
+                url = f"http://{host}:{port}/{path.lstrip('/')}"
+                try:
+                    response = await client.get(url)
+                    if response.status_code < 500:
+                        return url, f"HTTP {response.status_code}"
+                    reason = f"the page answers with HTTP {response.status_code}"
+                except httpx.HTTPError as error:
+                    reason = f"no answer ({type(error).__name__})"
             if asyncio.get_running_loop().time() >= deadline:
-                return False, reason
+                return None, reason
             await asyncio.sleep(ANSWER_RETRY_S)
 
 
@@ -130,10 +137,11 @@ class ShowApp(Tool):
         if port is None:
             recent = "\n".join(list(entry.lines)[-10:])
             return ToolResult(ok=False, content=f"Not opened: {problem}\n{recent}")
-        url = f"http://127.0.0.1:{port}/{args.path.lstrip('/')}"
-        answered, detail = await wait_for_answer(url)
-        if not answered:
-            return ToolResult(ok=False, content=f"Not opened: {url} gave {detail}.")
+        url, detail = await wait_for_answer(port, args.path)
+        if url is None:
+            return ToolResult(
+                ok=False, content=f"Not opened: port {port} gave {detail} on 127.0.0.1, localhost and [::1]."
+            )
         opened: Any = await asyncio.to_thread(webbrowser.open, url)
         if not opened:
             return ToolResult(

@@ -74,3 +74,17 @@ no amount of class tweaking helps. Fix the setup first, then design.
 
 When the user says the result looks bad: do not patch single classes. Re-read sections 0-2, redo the design
 decisions, and rebuild the screen's structure and styles together.
+
+## 6. Several variants of one page (three designs, A/B, "options")
+Variants that look the same are a failed task, however polished each one is.
+- Write a one-line design brief per variant first (palette, fonts, layout idea, mood) and make them differ on all of
+  them: for example light and warm with a serif heading, dark and loud with huge type, clean product style with
+  cards. Different colours on the same layout do not count.
+- Build each variant in its OWN folder, from scratch (do not copy one project over another), with its own port and its
+  own `<title>` (for example "Eureka - Design A").
+- Prove each port serves its own folder: read the title and heading from `browser_open` for every port, and compare the
+  screenshots (each `view_image` prints a sha256; identical hashes mean identical pages) or hash the source files
+  (`Get-FileHash designs\*\src\App.tsx`). If two match, fix it before you report.
+- Start servers with `start_background` and the folder as the working directory, then `show_app` per server. If
+  `show_app` fails, read its message and fix the cause (it tries 127.0.0.1, localhost and [::1]); do not hand the
+  user commands to run instead of running them yourself.

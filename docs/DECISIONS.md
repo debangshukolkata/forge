@@ -3353,3 +3353,9 @@ Limits: the audit measures, it does not judge taste; the model still has to crit
 Context: after a "restyle like Stripe" request DebCraft asked which style (the user answered after ~20 minutes), then the chat showed only the word "retry", status Idle, and no change was made. The web chat prints a notice's `text`, and the retry/fallback notices had none, so the failure reason was hidden.
 Done: retry and fallback notices now carry a readable `text` (model, reason, delay, attempt); both system prompts say not to ask the user to pick a design direction (choose, state it in one line, offer alternatives afterwards).
 Open: the actual reason for the failed call on the office laptop is unknown until the user reads the new retry text.
+
+### D-247 — show_app tries every loopback address; rules for design variants (user report 2026-10-12, three-designs run)
+Context: asked for three design variants opened in the browser, DebCraft never opened them (show_app "ConnectError") and handed over commands; the user opened ports 5171-5173 by hand and all three showed the same dark "design-c" page (tab titles all "design-c"), although the model called them distinct and polished.
+Cause 1: show_app connected to 127.0.0.1 only. Vite on Node 17+/Windows listens on `localhost` = ::1, so 127.0.0.1 refused while the user's browser worked. Fix: try 127.0.0.1, localhost, [::1], open the first that answers; message names all three.
+Cause 2 (not proven, project files not seen): variants were copies of one project or all three ports served design-c. Added section 6 to the ui-design-quality skill: separate folder and own title per variant, different on palette/type/layout, prove each port serves its own folder (titles, sha256 of screenshots, file hashes), run servers itself and never hand commands over.
+Open: no code-level check yet that variants differ (a screenshot-hash comparison tool would be the next step).
