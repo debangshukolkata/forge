@@ -3412,3 +3412,7 @@ Decisions:
 4. Before any development derived from Superpowers or mattpocock/skills, the two repositories are studied in detail and what to take is decided in `docs/SKILLS_STUDY.md` (TODO C18); the dependent items are blocked until then. The user chose not to add further items from awesome-claude-code ("too much").
 5. The model cannot be upgraded, so quality comes from process and assets: an asset catalogue with search and copy tools is the foundation for every library (TODO L0), the coding benchmark and speed benchmark come before tuning (C1, S2), and nothing that trades quality for speed or cost is accepted (D-161).
 Not built yet: everything in TODO.md sections 1 to 6; the user's rerun of the three-design task on the office laptop is the next input.
+
+### D-256 — design-critic runs in parallel; screenshot names are unique (TODO X1, overnight run 2026-10-13)
+Context: only explore and reviewer could overlap. Each subagent has its own tool context and browser session, so two critics do not share a page; the only collision was the screenshot file name (stamp to the second).
+Decision: `design-critic` joins `PARALLEL_SUBAGENT_TYPES`; `unique_stamp()` in tools/browser.py adds nanoseconds and a random suffix. Verifier and debugger stay serial. Tests: tests/test_parallel_critic.py.

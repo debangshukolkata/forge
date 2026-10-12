@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import secrets
 import time
 from typing import Any, Literal
 from urllib.parse import urlparse
@@ -88,6 +89,11 @@ class BrowserSession:
         if self._playwright is not None:
             await self._playwright.stop()
         self._browser = self._playwright = self.page = None
+
+
+def unique_stamp() -> str:
+    """Sub-second stamp plus a random suffix: two critics shooting in the same second must not overwrite each other."""
+    return f"{time.strftime('%Y%m%d-%H%M%S')}-{time.time_ns() % 1_000_000_000:09d}-{secrets.token_hex(2)}"
 
 
 def _session(context: ToolContext) -> BrowserSession:
@@ -257,7 +263,7 @@ class BrowserScreenshot(Tool):
             await session.page.set_viewport_size({"width": args.width, "height": args.height or 800})
         folder = context.workspace.jail.check(context.workspace.forge_dir / "screenshots")
         folder.mkdir(parents=True, exist_ok=True)
-        path = context.workspace.jail.check(folder / f"shot-{time.strftime('%Y%m%d-%H%M%S')}.png")
+        path = context.workspace.jail.check(folder / f"shot-{unique_stamp()}.png")
         if args.full_page:
             await _scroll_through(
                 session.page

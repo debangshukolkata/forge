@@ -109,7 +109,9 @@ def is_test_path(path: str) -> bool:
     )
 
 
-PARALLEL_SUBAGENT_TYPES = frozenset({"explore", "reviewer"})  # read-only agents; may run side by side
+PARALLEL_SUBAGENT_TYPES = frozenset(
+    {"explore", "reviewer", "design-critic"}
+)  # only look, read or screenshot (unique file names); may run side by side
 MAX_PARALLEL_SUBAGENTS = 4
 
 
