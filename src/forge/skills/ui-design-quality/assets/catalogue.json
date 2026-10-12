@@ -580,6 +580,40 @@
    "size": 7869
   },
   {
+   "id": "fx-avatar-stack",
+   "type": "effect",
+   "title": "Avatar stack",
+   "summary": "Overlapping round pictures with a ring and an optional +N count.",
+   "moods": [
+    "friendly",
+    "social"
+   ],
+   "products": [
+    "social proof",
+    "teams",
+    "landing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "showpiece"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-fancy.css",
+     "to": "src/motion-fancy.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
+   "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
+   "preview": null,
+   "path": "assets/effect/fx-avatar-stack.md",
+   "size": 6898
+  },
+  {
    "id": "fx-bg-dots",
    "type": "effect",
    "title": "Dot grid background",
@@ -856,6 +890,40 @@
    "size": 12889
   },
   {
+   "id": "fx-dock",
+   "type": "effect",
+   "title": "Dock magnification",
+   "summary": "Icons grow under the pointer and their neighbours grow a little, like a macOS dock.",
+   "moods": [
+    "playful",
+    "polished"
+   ],
+   "products": [
+    "toolbars",
+    "navigation",
+    "portfolio"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "showpiece"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-fancy.css",
+     "to": "src/motion-fancy.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
+   "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
+   "preview": null,
+   "path": "assets/effect/fx-dock.md",
+   "size": 6896
+  },
+  {
    "id": "fx-drift-shapes",
    "type": "effect",
    "title": "Drifting shapes",
@@ -887,6 +955,41 @@
    "preview": null,
    "path": "assets/effect/fx-drift-shapes.md",
    "size": 12313
+  },
+  {
+   "id": "fx-flickering-grid",
+   "type": "effect",
+   "title": "Flickering grid",
+   "summary": "A grid of small squares that twinkle at different speeds, like a data display.",
+   "moods": [
+    "techy",
+    "dark",
+    "modern"
+   ],
+   "products": [
+    "ai",
+    "saas",
+    "hero background"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "showpiece"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-fancy.css",
+     "to": "src/motion-fancy.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
+   "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
+   "preview": null,
+   "path": "assets/effect/fx-flickering-grid.md",
+   "size": 6936
   },
   {
    "id": "fx-flip-card",
@@ -1603,6 +1706,41 @@
    "size": 12298
   },
   {
+   "id": "fx-orbiting-circles",
+   "type": "effect",
+   "title": "Orbiting circles",
+   "summary": "Small circles travel around a centre point on a dashed ring; good for integrations or a tech-stack graphic.",
+   "moods": [
+    "modern",
+    "techy",
+    "playful"
+   ],
+   "products": [
+    "saas",
+    "integrations",
+    "hero visual"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "showpiece"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-fancy.css",
+     "to": "src/motion-fancy.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
+   "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
+   "preview": null,
+   "path": "assets/effect/fx-orbiting-circles.md",
+   "size": 6999
+  },
+  {
    "id": "fx-page-entrance",
    "type": "effect",
    "title": "Page entrance",
@@ -1804,6 +1942,41 @@
    "size": 12307
   },
   {
+   "id": "fx-rainbow-border-button",
+   "type": "effect",
+   "title": "Rainbow border button",
+   "summary": "A pill button whose border is a rotating rainbow gradient.",
+   "moods": [
+    "playful",
+    "bold",
+    "energetic"
+   ],
+   "products": [
+    "cta",
+    "landing",
+    "ai"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "showpiece"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-fancy.css",
+     "to": "src/motion-fancy.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
+   "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
+   "preview": null,
+   "path": "assets/effect/fx-rainbow-border-button.md",
+   "size": 6921
+  },
+  {
    "id": "fx-scroll-progress",
    "type": "effect",
    "title": "Scroll progress bar",
@@ -1942,6 +2115,40 @@
    "size": 7887
   },
   {
+   "id": "fx-shiny-button",
+   "type": "effect",
+   "title": "Shiny button",
+   "summary": "A dark button with a soft highlight that keeps sweeping across.",
+   "moods": [
+    "premium",
+    "modern"
+   ],
+   "products": [
+    "cta",
+    "saas",
+    "pricing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "showpiece"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-fancy.css",
+     "to": "src/motion-fancy.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
+   "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
+   "preview": null,
+   "path": "assets/effect/fx-shiny-button.md",
+   "size": 6841
+  },
+  {
    "id": "fx-skeleton",
    "type": "effect",
    "title": "Skeleton loader",
@@ -1973,6 +2180,41 @@
    "preview": null,
    "path": "assets/effect/fx-skeleton.md",
    "size": 7836
+  },
+  {
+   "id": "fx-sparkles",
+   "type": "effect",
+   "title": "Sparkles",
+   "summary": "Small stars that twinkle at positions you choose.",
+   "moods": [
+    "magical",
+    "playful",
+    "premium"
+   ],
+   "products": [
+    "hero",
+    "ai",
+    "badges"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "showpiece"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-fancy.css",
+     "to": "src/motion-fancy.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
+   "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
+   "preview": null,
+   "path": "assets/effect/fx-sparkles.md",
+   "size": 6888
   },
   {
    "id": "fx-spinner",
@@ -2250,6 +2492,41 @@
    "preview": null,
    "path": "assets/effect/fx-type-writer.md",
    "size": 12404
+  },
+  {
+   "id": "fx-warp-background",
+   "type": "effect",
+   "title": "Warp background",
+   "summary": "Grid lines rush toward the viewer on a tilted plane.",
+   "moods": [
+    "techy",
+    "dark",
+    "bold"
+   ],
+   "products": [
+    "hero",
+    "ai",
+    "games"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "showpiece"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-fancy.css",
+     "to": "src/motion-fancy.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
+   "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
+   "preview": null,
+   "path": "assets/effect/fx-warp-background.md",
+   "size": 6867
   },
   {
    "id": "fx-words-rise",

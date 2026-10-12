@@ -1,0 +1,73 @@
+/* Motion kit, part 3: showpiece effects in the spirit of popular UI-effect catalogues, written from scratch in pure CSS
+   (no library, no JavaScript). Import after motion.css (`import "./motion-fancy.css"`). Use one of these per page as the
+   signature moment, never several in one viewport. Everything stops under prefers-reduced-motion (last block).
+   Theme variables with fallbacks: --color-brand-500, --color-brand-200. */
+
+/* ---- Orbiting circles: children of .orbit travel around its centre. Give each child --a (start angle) and the container --r. ---- */
+@keyframes orbit { to { transform: rotate(calc(var(--a, 0deg) + 360deg)) translateX(var(--r, 90px)) rotate(calc((var(--a, 0deg) + 360deg) * -1)); } }
+.orbit { position: relative; width: calc(var(--r, 90px) * 2 + 3rem); aspect-ratio: 1; display: grid; place-items: center; }
+.orbit::before { content: ""; position: absolute; inset: 1.5rem; border-radius: 50%; border: 1px dashed color-mix(in srgb, currentColor 22%, transparent); }
+.orbit > .dot { position: absolute; top: 50%; left: 50%; width: 2rem; height: 2rem; margin: -1rem 0 0 -1rem; border-radius: 50%;
+  display: grid; place-items: center; background: var(--color-brand-500, #6366f1); color: #fff; font-size: 0.8rem;
+  transform: rotate(var(--a, 0deg)) translateX(var(--r, 90px)) rotate(calc(var(--a, 0deg) * -1)); animation: orbit var(--duration, 14s) linear infinite; }
+
+/* ---- Rainbow border button: a gradient travels around the border (needs @property, supported in current Edge, Chrome, Safari, Firefox). ---- */
+@property --rb-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes rb-spin { to { --rb-angle: 360deg; } }
+.btn-rainbow { position: relative; display: inline-flex; align-items: center; padding: 0.75rem 1.5rem; border-radius: 999px; border: 2px solid transparent;
+  color: inherit; text-decoration: none; background: linear-gradient(var(--rb-fill, #fff), var(--rb-fill, #fff)) padding-box,
+  conic-gradient(from var(--rb-angle), #f43f5e, #f59e0b, #22c55e, #06b6d4, #6366f1, #f43f5e) border-box; animation: rb-spin 3s linear infinite; }
+.btn-rainbow:hover { filter: saturate(1.3); }
+
+/* ---- Shiny text button: a soft highlight keeps passing across a dark button. ---- */
+@keyframes shine-pass { 0% { background-position: 150% 0; } 100% { background-position: -50% 0; } }
+.btn-shiny { display: inline-flex; padding: 0.75rem 1.5rem; border-radius: 0.75rem; color: #fff; font-weight: 600; text-decoration: none;
+  background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / 0.35) 50%, transparent 65%) 150% 0 / 250% 100% no-repeat, var(--color-ink-900, #111827);
+  animation: shine-pass 3.2s ease-in-out infinite; }
+
+/* ---- Flickering grid: a grid of small squares that twinkle at different speeds. Children are <i> cells (any number). ---- */
+@keyframes flicker { 0%, 100% { opacity: 0.08; } 50% { opacity: 0.9; } }
+.flicker-grid { display: grid; grid-template-columns: repeat(var(--cols, 16), 1fr); gap: 4px; }
+.flicker-grid > i { aspect-ratio: 1; border-radius: 2px; background: var(--color-brand-500, #6366f1); opacity: 0.08; animation: flicker 3s ease-in-out infinite; }
+.flicker-grid > i:nth-child(3n) { animation-duration: 4.1s; animation-delay: -1.3s; }
+.flicker-grid > i:nth-child(5n + 1) { animation-duration: 2.3s; animation-delay: -0.7s; }
+.flicker-grid > i:nth-child(7n + 2) { animation-duration: 5.2s; animation-delay: -2.6s; }
+.flicker-grid > i:nth-child(11n + 4) { animation: none; opacity: 0.02; }
+
+/* ---- Sparkles: small stars twinkle at positions you set with --x and --y (percent) and a delay with --d. ---- */
+@keyframes twinkle { 0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; } 50% { transform: scale(1) rotate(90deg); opacity: 1; } }
+.sparkles { position: relative; }
+.sparkles > i { position: absolute; left: var(--x, 50%); top: var(--y, 50%); width: 14px; height: 14px; pointer-events: none;
+  background: var(--color-brand-200, #a5b4fc); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: twinkle 2.6s ease-in-out infinite; animation-delay: var(--d, 0s); }
+
+/* ---- Warp background: lines rush toward the viewer on a tilted plane. ---- */
+@keyframes warp-run { to { background-position: 0 80px; } }
+.warp { position: relative; overflow: hidden; perspective: 400px; }
+.warp::before { content: ""; position: absolute; left: -50%; right: -50%; bottom: -10%; height: 140%; transform: rotateX(62deg); transform-origin: bottom;
+  background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--color-brand-500, #6366f1) 45%, transparent) 0 2px, transparent 2px 40px),
+  repeating-linear-gradient(90deg, color-mix(in srgb, var(--color-brand-500, #6366f1) 45%, transparent) 0 2px, transparent 2px 60px);
+  mask-image: linear-gradient(to top, #000, transparent 85%); animation: warp-run 1.6s linear infinite; pointer-events: none; }
+
+/* ---- Dock: icons grow under the pointer and their neighbours grow a little (needs :has, supported in current browsers). ---- */
+.dock { display: inline-flex; align-items: flex-end; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 1.25rem; background: rgb(255 255 255 / 0.6);
+  backdrop-filter: blur(12px); border: 1px solid rgb(15 23 42 / 0.08); }
+.dock > * { width: 3rem; height: 3rem; border-radius: 0.8rem; display: grid; place-items: center; transform-origin: bottom; transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
+.dock > *:hover, .dock > *:focus-visible { transform: scale(1.5); }
+.dock > *:hover + *, .dock > *:has(+ *:hover), .dock > *:focus-visible + *, .dock > *:has(+ *:focus-visible) { transform: scale(1.22); }
+
+/* ---- Avatar stack: overlapping round pictures with a ring; the last child can be a "+12" count. ---- */
+.avatar-stack { display: inline-flex; }
+.avatar-stack > * { width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 2px solid var(--ring, #fff); margin-left: -0.7rem; object-fit: cover;
+  display: grid; place-items: center; background: var(--color-brand-200, #a5b4fc); font-size: 0.75rem; font-weight: 600; }
+.avatar-stack > *:first-child { margin-left: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit > .dot { animation: none; }
+  .btn-rainbow { animation: none; }
+  .btn-shiny { animation: none; background-position: 150% 0, 0 0; }
+  .flicker-grid > i { animation: none; opacity: 0.3; }
+  .sparkles > i { animation: none; transform: scale(0.7); opacity: 0.8; }
+  .warp::before { animation: none; }
+  .dock > * { transition: none; }
+}

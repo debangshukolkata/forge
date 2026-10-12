@@ -22,6 +22,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `dir-retro-terminal` | original | authored for DebCraft (style-directions.md, D-251) |
 | `dir-soft-editorial` | original | authored for DebCraft (style-directions.md, D-251) |
 | `fx-aurora` | original | authored for DebCraft (motion kit, D-251) |
+| `fx-avatar-stack` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-bg-dots` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-bg-fade-edges` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-bg-grid` | original | authored for DebCraft (motion kit part 2, D-269) |
@@ -30,7 +31,9 @@ Generated from the assets' front-matter; do not edit by hand.
 | `fx-button-shine` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-check-draw` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-count-up` | original | authored for DebCraft (motion kit, D-251) |
+| `fx-dock` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-drift-shapes` | original | authored for DebCraft (motion kit part 2, D-269) |
+| `fx-flickering-grid` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-flip-card` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-float` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-glass-surface` | original | authored for DebCraft (motion kit, D-251) |
@@ -52,17 +55,21 @@ Generated from the assets' front-matter; do not edit by hand.
 | `fx-marquee-vertical` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-marquee` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-nudge-arrow` | original | authored for DebCraft (motion kit part 2, D-269) |
+| `fx-orbiting-circles` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-page-entrance` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-parallax` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-pop` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-press` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-progress-ring` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-pulse-ring` | original | authored for DebCraft (motion kit part 2, D-269) |
+| `fx-rainbow-border-button` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-scroll-progress` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-scroll-reveal` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-shake` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-shimmer-text` | original | authored for DebCraft (motion kit, D-251) |
+| `fx-shiny-button` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-skeleton` | original | authored for DebCraft (motion kit, D-251) |
+| `fx-sparkles` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-spinner` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-spotlight-card` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-stack-3d` | original | authored for DebCraft (motion kit part 2, D-269) |
@@ -71,6 +78,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `fx-tilt-card` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-toast-in` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-type-writer` | original | authored for DebCraft (motion kit part 2, D-269) |
+| `fx-warp-background` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-words-rise` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `font-archivo` | OFL-1.1 | Fontsource @fontsource-variable/archivo 5.3.0 (copyright holders in the OFL text) |
 | `font-dm-sans` | OFL-1.1 | Fontsource @fontsource-variable/dm-sans 5.3.0 (copyright holders in the OFL text) |

@@ -42,6 +42,8 @@ This skill's folder holds worked examples that build, pass the audit and look pr
 - `recipes/motion.css` + `recipes/motion.tsx`: an animation kit that is tested and needs no library: scroll reveal with
   stagger, entrance, count-up numbers, marquee, shimmer text, skeletons, spotlight and tilt cards, rotating border
   beam, aurora background, glass, grain, button shine, float; all reduced-motion safe. Import `motion.css` in main.tsx.
+- `recipes/motion-fancy.css`: eight showpiece effects (orbiting circles, rainbow border button, shiny button, flickering grid,
+  sparkles, warp background, dock magnification, avatar stack), pure CSS, catalogue type `effect`.
 - `recipes/motion-more.css`: 36 more pure-CSS effects by purpose: entrances (fade, slide, scale, blur, wipe, flip), text
   (typewriter, light sweep, marker, words rise, gradient), hover and focus (lift, glow, zoom, sliding underline, arrow nudge,
   press, dim siblings), ambient backgrounds (grid, dots, mesh, fade edges, pulse rings, drifting shapes, vertical marquee),
@@ -212,3 +214,7 @@ Never ask the user which style to use: pick, say why in one line, build.
   (the kit guarantees it).
 - After adding motion, check `browser_console` for errors, take the screenshots again, and confirm the page is still
   readable at 375 px and that nothing shifts layout while animating.
+- Showpiece effects (`motion-fancy.css`, or a library such as Magic UI): start with one core component and at most one
+  supporting effect per viewport; customise through props, classes and theme variables, never by editing a library's
+  internals; check semantic HTML and keyboard access (a dock or flip card must work with the keyboard), and check the page at
+  375 px for horizontal overflow after adding any decorative layer.

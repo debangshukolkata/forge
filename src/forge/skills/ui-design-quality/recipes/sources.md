@@ -47,3 +47,17 @@ component that is explicitly meant to be copied, and keep its licence notice whe
 - Need a fast marketing page: take the structure from landing-reference.tsx, a section idea from HyperUI/Magic UI.
 - Need 3D, maps, rich charts: install the specific library; budget the bundle size.
 - Offline or locked-down network: everything in this folder works with no network except npm installs.
+
+## Using the real Magic UI (when the network allows; not verified from the build machine)
+- Install a component with the shadcn CLI: `npx shadcn@latest add "@magicui/<name>"` (or the `https://magicui.design/r/<name>`
+  form in the table above). It copies the component source into `src/components/ui/`; it needs the project's `@/` path alias
+  and the shadcn `components.json` (`npx shadcn@latest init` first).
+- Its components are written for Next.js and React with Tailwind. In a Vite project check the alias in `vite.config` and
+  `tsconfig`, and add the keyframes a component needs to the Tailwind v4 `@theme` block: a missing keyframe is the most
+  common reason a copied component does nothing.
+- Many components import `motion` (framer-motion) at runtime; the globe pulls in a 3D library. Check `package.json` size.
+- Not all of its components honour `prefers-reduced-motion`; wrap the app in `<MotionConfig reducedMotion="user">` or turn the
+  effect off with a media query.
+- If the registry is unreachable (company network), use the offline effects in `motion.css`, `motion-more.css` and
+  `motion-fancy.css` instead; they cover the same ideas without a dependency.
+- Optional: the user can install Magic UI's own skill with `forge skill add https://github.com/magicuidesign/magicui`.
