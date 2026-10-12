@@ -12,6 +12,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from forge.tools.token_lint import token_lint_problems
+
 # Runs in the page. Returns {"findings": [...], "stats": {...}}; kept dependency-free and read-only.
 AUDIT_SCRIPT = r"""
 () => {
@@ -237,6 +239,7 @@ async def audit_page(page: Any, root: Path | None = None) -> str:
     findings: list[str] = list(result.get("findings", []))
     if root is not None:
         findings.extend(source_taste_problems(root))
+        findings.extend(token_lint_problems(root))
     stats = result.get("stats", {})
     header = f"Style audit ({stats.get('viewport', '?')}, {stats.get('elements', 0)} elements)"
     if not findings:
