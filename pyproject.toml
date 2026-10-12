@@ -62,7 +62,8 @@ forge = ["py.typed", "data/tiktoken/*", "defaults/*.yaml", "agent/prompts/*.md",
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # The fixture repo has its own tests, run by its own interpreter (tests/test_fixture_repo.py).
-norecursedirs = ["fixtures", ".venv", "venv"]
+# benchmarks/tasks hold the hidden tests of the coding benchmark; tests/test_benchmark_fixtures.py runs them on purpose.
+norecursedirs = ["fixtures", "benchmarks", ".venv", "venv"]
 addopts = "-ra --strict-markers -m \"not live\""
 asyncio_mode = "auto"
 # Live runs take many minutes; keep their tmp dirs even if other pytest sessions run meanwhile.
@@ -77,7 +78,7 @@ markers = [
 [tool.ruff]
 line-length = 110
 target-version = "py311"
-extend-exclude = ["tests/fixtures", ".venv314", "test-artifacts", "scripts/campaign"]
+extend-exclude = ["tests/fixtures", ".venv314", "test-artifacts", "scripts/campaign", "tests/benchmarks/tasks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
