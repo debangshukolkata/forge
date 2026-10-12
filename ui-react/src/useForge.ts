@@ -135,7 +135,11 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
     }
     case "notice":
       if (p.kind === "usage") return state; // shown as cost/usage, not as a chat line
-      return { ...state, items: [...items, { key, kind: "notice", noticeKind: p.kind || "", text: p.text || p.kind || "" }] };
+      // image_sent / screenshot carry the workspace-relative path of the picture the model looks at (D-253).
+      return {
+        ...state,
+        items: [...items, { key, kind: "notice", noticeKind: p.kind || "", text: p.text || p.kind || "", image: p.kind === "image_sent" || p.kind === "screenshot" ? p.path || undefined : undefined }],
+      };
     case "error":
       return { ...state, items: [...items, { key, kind: "error", text: p.message || "Error" }] };
     default:

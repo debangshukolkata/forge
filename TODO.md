@@ -5,11 +5,11 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task 
 ## Contents (open items per group)
 - 1. Waiting on you (your actions and decisions): **9 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **16 open**
-- 3. Parallel work: **7 open**
+- 3. Parallel work and speed: **15 open**
 - 4. Presentations (match Claude's PowerPoint abilities): **35 open**
 - 5. Platform, runtime and build quality (older open items): **10 open**
 - 6. Parked (not started; your choice when): **4 open**
-- **Total open: 81**
+- **Total open: 89**
 
 ## 1. Waiting on you (your actions and decisions)
 Things only you can do or decide. Everything else below can be built without you.
@@ -48,9 +48,10 @@ Goal: world-class UI/UX from a model that is not as strong as Claude, by giving 
 - [ ] **More model effort where it counts.** A separate design role with the highest reasoning effort; best-of-N candidates ranked by audit score plus critic; use the gpt-4o fallback as the critic so a different model reviews the builder's work (check the role config supports it).
 - [ ] **Claude authors offline.** Schedule sessions where Claude writes and tests the templates, sections, effects and font packs here and they ship in the repo; track licence notes per asset in `recipes/LICENSES.md`.
 
-## 3. Parallel work
+## 3. Parallel work and speed
 Today: consecutive read-only tool calls and `explore`/`reviewer` subagents (max 4) run in parallel (D-175); everything else is sequential. Measure first on your rerun: where does the wall time go?
 
+### 3a. Parallel work
 - [ ] **Allow `design-critic` in `PARALLEL_SUBAGENT_TYPES`** (it only looks and screenshots). First make screenshot file names unique (timestamp to the second can collide when two critics shoot in the same second).
 - [ ] **Parallel builder subagents** for independent folders or screens (for example the three design variants): a `builder` agent type with `write_only_under=<its folder>`, its own port, a shared-nothing rule, and a short report back; the parent verifies each result (audit, critic, tests) before it counts. Watch: concurrent `npm install` and approval prompts (queue approvals, one prompt at a time), Azure rate limits (429 retry exists; add a concurrency cap tied to the limit), shared files (package.json at the root, lock files), CPU.
 - [ ] **`run_parallel` tool**: run several independent commands at once (lint, mypy, tests, frontend build) and return each output; refuses commands that write the same paths; each still goes through the permission gate and the sandbox.
@@ -58,6 +59,18 @@ Today: consecutive read-only tool calls and `explore`/`reviewer` subagents (max 
 - [ ] **Start installs and scaffolding in the background** (`start_background` / `monitor`) while the model writes DESIGN.md or plans; add the hint to the prompt and the skill.
 - [ ] **Two screenshots at once** (375 and 1280, several pages) with separate browser pages; small gain, low priority.
 - [ ] **Automatic parallel planning.** From the user's request Forge decides what can run in parallel and runs it: (1) a planning step turns the request into a task graph: tasks, dependencies, what each task writes (folders or files), shared resources it needs (ports, database schema, npm cache, a package.json); (2) a scheduler marks tasks independent only when their write scopes are disjoint and they share no exclusive resource, and starts them as workers (subagents with a write jail) up to a concurrency cap, with approvals queued and one-at-a-time; (3) dependent tasks wait; (4) an integration step merges and verifies the whole (tests, build, audit, critic); (5) the Run map shows the parallel branches, cost and time per worker; (6) a safe fallback: any overlap, failure or rate-limit pressure serialises the rest and says why. Start conservative: only clear independent parts of one request (several variants, screens, services, documents, research questions), never edits to the same file. Record decisions and measured speed-ups; keep an off switch in `config.yaml`.
+
+
+### 3b. Make DebCraft develop faster (agreed 2026-10-12)
+Start by measuring: guess nothing. Related items elsewhere (not repeated here): the template, section, animation and font libraries in 2b make the model write less; "write each screen as complete files" in 2a cuts round trips; "Unattended runs" in section 5 removes waits for approvals.
+- [ ] **Timing breakdown per run (do this first).** Record, per step and per agent, the time spent in model calls (time to first token and total), in tools (by tool name) and waiting for the user (questions, approvals); show it in the Run map next to the cost and as a short "where did the time go" summary at the end of a run. Add it to the events so reopened projects show it too.
+- [ ] **Speed benchmark.** A few fixed tasks (the three-design task, a small CRUD app, a redesign of a bad page, a dependency install) timed before and after every speed change; results in `docs/SPEED_BENCHMARK.md`. A speed change that costs quality is rejected (D-161).
+- [ ] **Prompt-cache check.** DebCraft already records cached input tokens and keeps the changing block at the end of the prompt; measure the real hit rate on a long run, and check whether trimming old tool outputs or compaction in the middle of the history breaks the cached prefix too often (batch such changes, or trim from the oldest end only).
+- [ ] **Keep the context lean.** Compact earlier where the timing data says long contexts slow the calls; cap tool output sizes; keep noisy work (search, logs, test output) in subagents; check what fills the window at 60% (one run showed 110 trimmed tool outputs).
+- [ ] **Fewer model round trips.** Tell the model (prompt and skills) to put several independent tool calls in one turn, write whole files, and run related checks together; measure the number of model calls per task before and after.
+- [ ] **Faster tools.** `npm install` with `--prefer-offline` and a shared cache folder (check the sandbox cache variables, D-223); downscale images before `view_image` (one call took 17 s); audit only the screens that changed; run only the affected tests while iterating and the full suite once at the end; start dev servers once and reuse them; measure the sandbox start-up cost per command.
+- [ ] **Faster model for read-only subagents (needs your OK).** Use a smaller, faster deployment for explore and similar read-only agents. D-161 forbids trading quality for cost; this would be a speed trade only, so it needs your decision and a quality check on the benchmark.
+- [ ] **Adaptive reasoning effort (needs your OK).** Lower effort for mechanical steps (file moves, installs, formatting) and the highest for planning and design; adopt only if the benchmark shows no quality loss (D-161: no low effort for convenience).
 
 ## 4. Presentations (match Claude's PowerPoint abilities)
 Goal (2026-10-09): presentations the way Claude makes them, equivalent capability and quality (not identical files; we cannot copy Anthropic's skill, its licence forbids it). Background, the done list (D-240..D-242), the licence note and the suggested order are in `docs/PPT_PARITY.md`. Suggested order: P0 (measure) -> P1.1-P1.8 -> P2.1-P2.6 and P2.18 -> P2.10-P2.12 -> decide engine and rendering from the benchmark -> P3 and the rest of P2. Rough effort: P1 2-3 days, P2 3-4 weeks, P3 2-3 weeks. The web-design approach applies here too: a themed slide template library, a slide critic that scores the contact sheet, an audit, curated fonts and palettes, reference decks.

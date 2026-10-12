@@ -153,7 +153,7 @@ export type ChatItem =
       retried?: boolean;
     }
   | { key: string; kind: "thinking"; text: string } // the model's reasoning summary between calls (dim)
-  | { key: string; kind: "notice"; noticeKind: string; text: string }
+  | { key: string; kind: "notice"; noticeKind: string; text: string; image?: string }
   | { key: string; kind: "error"; text: string }
   | { key: string; kind: "approval"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
   | { key: string; kind: "question"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any

@@ -264,7 +264,12 @@ class BrowserScreenshot(Tool):
             )  # reveal-on-scroll content must be on screen to be photographed
         await session.page.screenshot(path=str(path), full_page=args.full_page)
         await context.emit(
-            "notice", {"kind": "screenshot", "text": f"Screenshot saved: {path.name}", "path": str(path)}
+            "notice",
+            {
+                "kind": "screenshot",
+                "text": f"Screenshot saved: {path.name}",
+                "path": path.resolve().relative_to(context.workspace.root.resolve()).as_posix(),
+            },
         )
         audit = await audit_page(session.page, context.workspace.root)
         digest = hashlib.sha256(path.read_bytes()).hexdigest()

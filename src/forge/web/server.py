@@ -30,6 +30,7 @@ from forge.web.auth_routes import add_auth_routes, add_no_login_route, needs_log
 from forge.web.contracts_routes import add_contracts_routes
 from forge.web.deps_routes import add_deps_routes
 from forge.web.environment_routes import add_environment_routes
+from forge.web.image_routes import add_image_routes
 from forge.web.manager import WebSessionManager
 from forge.web.project_list import describe_projects
 from forge.web.tool_output_routes import add_tool_output_routes
@@ -84,6 +85,7 @@ def create_app(
     add_environment_routes(app, manager)
     add_contracts_routes(app, manager)
     add_tool_output_routes(app, manager)
+    add_image_routes(app, manager)
     add_deps_routes(app, manager)
     if accounts:
         add_auth_routes(app, accounts, security)

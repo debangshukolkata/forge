@@ -56,6 +56,14 @@ def _relative(context: ToolContext, path: Path) -> str:
     return path.resolve().relative_to(context.workspace.root.resolve()).as_posix()
 
 
+def _shown_path(context: ToolContext, path: Path) -> str | None:
+    """The workspace-relative path the web chat may fetch, or None when the image lies outside the workspace."""
+    try:
+        return _relative(context, path)
+    except ValueError:
+        return None
+
+
 class ViewImage(Tool):
     name = "view_image"
     read_only = True
@@ -91,6 +99,7 @@ class ViewImage(Tool):
                 "kind": "image_sent",
                 "text": f"Image sent to the vision model: {args.path} "
                 f"(sha256 {meta['sha256']}, {meta['sent_size'][0]}x{meta['sent_size'][1]})",
+                "path": _shown_path(context, path),  # the chat shows the picture the model looks at (D-253)
             },
         )
         scale = f"The image was sent at {meta['sent_size']} (original {meta['original_size']})."

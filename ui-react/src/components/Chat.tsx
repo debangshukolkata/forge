@@ -195,7 +195,7 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
     case "thinking":
       return <ThinkingLine text={item.text} />;
     case "notice":
-      return <Notice kind={item.noticeKind} text={item.text} />;
+      return <Notice kind={item.noticeKind} text={item.text} image={item.image} />;
     case "error":
       return (
         <div role="alert" className="flex gap-2 rounded-lg border border-danger/40 bg-danger-soft px-3 py-2 text-[13px] text-danger">
@@ -212,14 +212,55 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
   }
 }
 
-function Notice({ kind, text }: { kind: string; text: string }) {
+function Notice({ kind, text, image }: { kind: string; text: string; image?: string }) {
   if (kind === "command_output") return <Code text={text} />;
   const tone = kind === "stuck" || kind === "injection" ? "warn" : "info";
   return (
-    <div className={cx("flex gap-2 rounded-md px-3 py-1.5 text-[12.5px]", tone === "warn" ? "bg-warn-soft text-warn" : "text-fg-muted")}>
-      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-      <span className="whitespace-pre-wrap break-words">{text}</span>
+    <div className="space-y-2">
+      <div className={cx("flex gap-2 rounded-md px-3 py-1.5 text-[12.5px]", tone === "warn" ? "bg-warn-soft text-warn" : "text-fg-muted")}>
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+        <span className="whitespace-pre-wrap break-words">{text}</span>
+      </div>
+      {image && <ImageThumb path={image} />}
     </div>
+  );
+}
+
+// The picture DebCraft is looking at, shown in the chat so the user sees the work too; click to enlarge, Esc to close.
+function ImageThumb({ path }: { path: string }) {
+  const [open, setOpen] = useState(false);
+  const [broken, setBroken] = useState(false);
+  const url = `/api/image?path=${encodeURIComponent(path)}`;
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+  if (broken) return null;
+  return (
+    <>
+      <button
+        type="button"
+        data-testid="chat-image"
+        onClick={() => setOpen(true)}
+        title="Click to enlarge"
+        className="block w-full max-w-sm overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition hover:shadow-md"
+      >
+        <img src={url} alt="What DebCraft is looking at" onError={() => setBroken(true)} className="max-h-72 w-full object-cover object-top" />
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Enlarged picture"
+          data-testid="chat-image-large"
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-6"
+        >
+          <img src={url} alt="What DebCraft is looking at, enlarged" className="max-h-full max-w-full rounded-lg bg-white object-contain shadow-2xl" />
+        </div>
+      )}
+    </>
   );
 }
 
