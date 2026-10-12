@@ -63,9 +63,11 @@ def score(
         ignore=shutil.ignore_patterns(*SKIPPED, "test_*.py", "*_test.py", "conftest.py"),
     )  # the model's own tests are left out so they cannot shadow or break the hidden ones
     shutil.copytree(task / "hidden", scratch / "hidden_tests")
+    temp = scratch.parent / f"{scratch.name}_tmp"  # an own temp folder: the parent shell's may be unusable
+    temp.mkdir(exist_ok=True)
     run = subprocess.run(
         [
-            str(python or workspace / ".venv" / "Scripts" / "python.exe"),
+            str(python or PYTHON),
             "-m",
             "pytest",
             "-q",
@@ -79,7 +81,14 @@ def score(
         encoding="utf-8",
         errors="replace",
         timeout=HIDDEN_LIMIT_S,
-        env={**os.environ, "PYTHONPATH": str(scratch), "PYTHONIOENCODING": "utf-8"},
+        env={
+            **os.environ,
+            # The repo's own interpreter has pytest; packages the model installed are added from its environment.
+            "PYTHONPATH": os.pathsep.join([str(scratch), str(workspace / ".venv" / "Lib" / "site-packages")]),
+            "PYTHONIOENCODING": "utf-8",
+            "TMP": str(temp),
+            "TEMP": str(temp),
+        },
     )
     passed = int((re.search(r"(\d+) passed", run.stdout) or [0, 0])[1])
     failed = int((re.search(r"(\d+) failed", run.stdout) or [0, 0])[1]) + int(
@@ -90,7 +99,7 @@ def score(
         "hidden_passed": passed,
         "hidden_failed": failed,
         "hidden_total": passed + failed,
-        "tail": run.stdout.strip().splitlines()[-3:],
+        "tail": (run.stdout.strip().splitlines()[-3:] or run.stderr.strip().splitlines()[-3:]),
     }
 
 

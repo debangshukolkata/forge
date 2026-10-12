@@ -1,8 +1,8 @@
 # Coding benchmark (TODO C1)
 
 Measures how good the code DebCraft writes is, on the real model, so every change in TODO section 5b can be judged by numbers.
-Status 2026-10-13: ten tasks and the runner are built and validated offline. **No live run has been made yet** (it spends Azure
-tokens; run it when you are ready, see below).
+Status 2026-10-13: ten tasks and the runner are built and validated offline. Only a one-task smoke run has been made live (t01, below); the full baseline spends Azure
+tokens, so run it when you are ready (see below).
 
 ## Tasks (`tests/benchmarks/tasks/<id>/`)
 | Id | Tier | What it asks for |
@@ -42,4 +42,12 @@ Read the delivered code and score 1 to 5: correctness, edge cases, error handlin
 readability. An automatic judge (a different model) comes after the first manual scores show whether it agrees with you.
 
 ## Results
-(none yet)
+Smoke run 2026-10-13 (runner check, one task, current main at commit 1385806 plus runner fixes):
+
+| Task | Tier | Hidden tests | Wall | Model calls | Tool s | Waited s | Tokens in/out | Cost |
+|---|---|---|---|---|---|---|---|---|
+| t01_slugify | single function | 17/17 | 146s | 12 | 10 | 0 | 238206/10093 | $0.192 |
+
+Notes: 132 of the 146 seconds were model time; 12 calls read 238k input tokens for a 40-line module (the system prompt, skills and
+tool schemas are re-sent each call), which is the number to watch under TODO S3/S4. The first scoring attempt failed only because the
+workspace interpreter could not create temp files inside the tool sandbox; scoring now uses the repo's own interpreter.
