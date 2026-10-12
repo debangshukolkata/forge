@@ -109,6 +109,8 @@ def is_test_path(path: str) -> bool:
     )
 
 
+# These tools return only when the person answers, so their whole duration is waiting, not work (S1).
+USER_WAIT_TOOLS = frozenset({"ask_user", "propose_requirements", "propose_plan", "request_user_action"})
 PARALLEL_SUBAGENT_TYPES = frozenset(
     {"explore", "reviewer", "design-critic"}
 )  # only look, read or screenshot (unique file names); may run side by side
@@ -413,16 +415,19 @@ class AgentLoop:
             },
         )
         started = time.perf_counter()
+        waits: list[float] = []  # seconds spent waiting for the user, kept out of the tool's own time (S1)
         if decision.verdict == "deny":
             result = ToolResult(ok=False, content=f"Not allowed: {decision.reason}")
         else:
             result = (
-                await self._approved_run(tool, args, summary, command, decision)
+                await self._approved_run(tool, args, summary, command, decision, waits)
                 if decision.verdict == "ask"
                 else await self._execute(tool, args)
             )
             if result.ok and tool.name in HOOKED_TOOLS and self.router.config.hooks.post_edit:
                 result = await self._post_edit_hooks(args, result)
+        elapsed = time.perf_counter() - started
+        waited = elapsed if tool.name in USER_WAIT_TOOLS else sum(waits)
         preview = _preview(result.content, result.ok)
         full: dict[str, Any] = {}
         if preview != result.content and self.keep_full_output and self.context.workspace is not None:
@@ -437,7 +442,8 @@ class AgentLoop:
                 "ok": result.ok,
                 "summary": summary,
                 "preview": preview,
-                "duration_s": round(time.perf_counter() - started, 2),
+                "duration_s": round(max(elapsed - waited, 0.0), 2),
+                **({"waited_s": round(waited, 2)} if waited >= 0.01 else {}),
                 **full,
             },
         )
@@ -486,8 +492,15 @@ class AgentLoop:
         return ToolResult(ok=result.ok, content=result.content + "\n" + "\n".join(notes), meta=result.meta)
 
     async def _approved_run(
-        self, tool: Tool, args: ToolArgs, summary: str, command: str | None, decision: Decision
+        self,
+        tool: Tool,
+        args: ToolArgs,
+        summary: str,
+        command: str | None,
+        decision: Decision,
+        waits: list[float],
     ) -> ToolResult:
+        asked = time.perf_counter()
         answer = await self.approvals.request(
             {
                 "tool": tool.name,
@@ -498,6 +511,7 @@ class AgentLoop:
                 "always_ask": decision.always_ask,
             }
         )
+        waits.append(time.perf_counter() - asked)
         if not answer.approved:
             note = f" The user said: {answer.instruction}" if answer.instruction else ""
             return ToolResult(ok=False, content=f"The user declined this action.{note}")

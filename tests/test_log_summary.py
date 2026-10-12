@@ -52,3 +52,18 @@ def test_summary_reports_time_tokens_and_repeats() -> None:
 def test_old_log_without_llm_calls_says_so() -> None:
     report = summarize([_event(1, EventType.USER_MESSAGE, 0, {"text": "hi"})])
     assert "predates the run log" in report
+
+
+def test_summary_separates_waiting_for_the_user_from_tool_time() -> None:
+    events = [
+        _event(1, EventType.USER_MESSAGE, 0, {"text": "install it"}),
+        _event(
+            2,
+            EventType.TOOL_CALL_FINISHED,
+            30,
+            {"name": "run_command", "ok": True, "summary": "npm i", "duration_s": 5.0, "waited_s": 25.0},
+        ),
+    ]
+    report = summarize(events)
+    assert "tool calls: 1 (5s" in report
+    assert "waiting for you (approvals, questions): 25s" in report

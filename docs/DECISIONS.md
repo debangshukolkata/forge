@@ -3420,3 +3420,7 @@ Decision: `design-critic` joins `PARALLEL_SUBAGENT_TYPES`; `unique_stamp()` in t
 ### D-257 — Build-process rules in the skill and round-trip hints in the prompts (TODO D1, L7, S5, X5; overnight 2026-10-13)
 Decision: `ui-design-quality` gets section 5b (plan sections and tokens, write each screen whole, one section at a time, rewrite instead of a fifth patch). Both system prompts get one bullet: parallel independent tool calls, whole-file writes, installs in the background. Why: cheap, reversible, no quality cost (D-161). Measuring the effect waits for the timing breakdown (S1) and the rerun.
 Deferred: X3 `run_parallel` is parked because it touches the approval gate (security-relevant); options are recorded in TODO.md.
+
+### D-258 — Timing: waiting for the user is separate from tool time (TODO S1, overnight 2026-10-13)
+Context: `tool_call_finished.duration_s` included the time an approval card or question was open, so a 5-second install behind a 25-second approval looked like a 30-second tool. Model latency and first-token time were already recorded.
+Decision: `duration_s` now excludes the wait; `waited_s` (only when at least 0.01 s) holds approval time, and for ask_user, propose_requirements, propose_plan and request_user_action the whole call counts as waiting. `forge log-summary` prints the total. Older logs simply have no `waited_s`. Run-map display is left open in TODO.
