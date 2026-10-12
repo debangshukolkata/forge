@@ -2,6 +2,349 @@
  "version": 1,
  "assets": [
   {
+   "id": "rcp-async",
+   "type": "recipe",
+   "title": "Async patterns that do not hang",
+   "summary": "gather, semaphores, timeouts, TaskGroup and clean cancellation with asyncio.",
+   "moods": [
+    "robust"
+   ],
+   "products": [
+    "async",
+    "io",
+    "workers",
+    "api clients"
+   ],
+   "tags": [
+    "asyncio",
+    "concurrency",
+    "timeout"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-async.md",
+   "size": 1656
+  },
+  {
+   "id": "rcp-cli-design",
+   "type": "recipe",
+   "title": "A command line tool people can use",
+   "summary": "Arguments, subcommands, exit codes, stdin and stdout, errors to stderr; testable main().",
+   "moods": [
+    "clean",
+    "robust"
+   ],
+   "products": [
+    "cli",
+    "command line",
+    "script"
+   ],
+   "tags": [
+    "argparse",
+    "cli",
+    "exit code",
+    "subcommands"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-cli-design.md",
+   "size": 1718
+  },
+  {
+   "id": "rcp-error-handling",
+   "type": "recipe",
+   "title": "Error handling that helps",
+   "summary": "Specific exception classes, raise from, no swallowed errors, cleanup with context managers.",
+   "moods": [
+    "robust"
+   ],
+   "products": [
+    "any python code"
+   ],
+   "tags": [
+    "errors",
+    "exceptions",
+    "reliability"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-error-handling.md",
+   "size": 1702
+  },
+  {
+   "id": "rcp-logging",
+   "type": "recipe",
+   "title": "Logging, not print",
+   "summary": "One logger per module, configure once at the entry point, structured context, no secrets.",
+   "moods": [
+    "robust"
+   ],
+   "products": [
+    "services",
+    "cli"
+   ],
+   "tags": [
+    "logging",
+    "observability"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-logging.md",
+   "size": 1460
+  },
+  {
+   "id": "rcp-performance",
+   "type": "recipe",
+   "title": "Make it fast, with evidence",
+   "summary": "Measure first, pick the right data structure, generators, caching, and the usual O(n squared) traps.",
+   "moods": [
+    "robust"
+   ],
+   "products": [
+    "performance",
+    "data",
+    "any python code"
+   ],
+   "tags": [
+    "performance",
+    "profiling",
+    "complexity",
+    "cache"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-performance.md",
+   "size": 1996
+  },
+  {
+   "id": "rcp-pytest",
+   "type": "recipe",
+   "title": "Tests that prove something",
+   "summary": "Fixtures, parametrize, tmp_path, monkeypatch, injected clocks, property tests and what to assert.",
+   "moods": [
+    "robust",
+    "clean"
+   ],
+   "products": [
+    "testing",
+    "any python code"
+   ],
+   "tags": [
+    "pytest",
+    "tests",
+    "fixtures",
+    "hypothesis"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-pytest.md",
+   "size": 2049
+  },
+  {
+   "id": "rcp-python-versions",
+   "type": "recipe",
+   "title": "Modern Python idioms (3.11 to 3.14)",
+   "summary": "What to use, and which Python version each feature needs, so code runs on the target.",
+   "moods": [
+    "clean"
+   ],
+   "products": [
+    "any python code"
+   ],
+   "tags": [
+    "python 3.11",
+    "python 3.12",
+    "python 3.13",
+    "python 3.14",
+    "idioms"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-python-versions.md",
+   "size": 2005
+  },
+  {
+   "id": "rcp-refactoring",
+   "type": "recipe",
+   "title": "Refactoring in small safe steps",
+   "summary": "Guard clauses, extract function, table instead of if-chains, remove duplication, keep the tests green.",
+   "moods": [
+    "clean"
+   ],
+   "products": [
+    "refactor",
+    "any python code"
+   ],
+   "tags": [
+    "refactoring",
+    "clean code",
+    "duplication",
+    "readability"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-refactoring.md",
+   "size": 2313
+  },
+  {
+   "id": "rcp-security",
+   "type": "recipe",
+   "title": "Security checklist for Python code",
+   "summary": "Input validation, injection, paths, subprocess, secrets, deserialisation, passwords, requests.",
+   "moods": [
+    "secure"
+   ],
+   "products": [
+    "any python code",
+    "web",
+    "cli"
+   ],
+   "tags": [
+    "security",
+    "injection",
+    "path traversal",
+    "secrets",
+    "owasp"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-security.md",
+   "size": 2024
+  },
+  {
+   "id": "rcp-settings",
+   "type": "recipe",
+   "title": "Settings from the environment",
+   "summary": "Read configuration once, validate it, keep secrets out of code, give tests an override.",
+   "moods": [
+    "robust",
+    "secure"
+   ],
+   "products": [
+    "services",
+    "cli"
+   ],
+   "tags": [
+    "config",
+    "environment",
+    ".env",
+    "secrets"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-settings.md",
+   "size": 1517
+  },
+  {
+   "id": "rcp-sql",
+   "type": "recipe",
+   "title": "SQL from Python safely",
+   "summary": "Parameterised queries, transactions, sqlite for tests, and where migrations live.",
+   "moods": [
+    "secure",
+    "robust"
+   ],
+   "products": [
+    "database",
+    "backend",
+    "data"
+   ],
+   "tags": [
+    "sql",
+    "sqlite",
+    "sqlalchemy",
+    "injection",
+    "transactions"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-sql.md",
+   "size": 1962
+  },
+  {
+   "id": "rcp-typing",
+   "type": "recipe",
+   "title": "Types that catch bugs",
+   "summary": "Dataclasses, Protocol, TypedDict, Literal and Optional handled properly; mypy strict habits.",
+   "moods": [
+    "robust",
+    "clean"
+   ],
+   "products": [
+    "any python code"
+   ],
+   "tags": [
+    "typing",
+    "mypy",
+    "dataclass",
+    "protocol"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-13)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-typing.md",
+   "size": 1612
+  },
+  {
    "id": "skel-async-worker",
    "type": "skeleton",
    "title": "Async worker pool",

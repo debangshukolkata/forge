@@ -9,7 +9,7 @@ def find_duplicates(items: list[Any]) -> list[Any]:
     """Return the values that occur more than once, each once, ordered by their first appearance."""
     duplicates: list[Any] = []
     for index, value in enumerate(items):
-        if value in items[:index] and value not in duplicates:
+        if value not in duplicates and value in items[index + 1 :]:
             duplicates.append(value)
     return duplicates
 

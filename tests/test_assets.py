@@ -206,6 +206,18 @@ RETRIEVAL_PROMPTS = [
     ("rest api service backend", "skel-fastapi-service"),
     ("background job queue worker", "skel-async-worker"),
     ("python library package", "skel-python-package"),
+    ("how to handle errors and exceptions", "rcp-error-handling"),
+    ("logging instead of print", "rcp-logging"),
+    ("read settings from environment variables and .env", "rcp-settings"),
+    ("type hints protocol dataclass mypy", "rcp-typing"),
+    ("asyncio timeout and concurrency limit", "rcp-async"),
+    ("pytest fixtures parametrize tests", "rcp-pytest"),
+    ("sql injection safe queries sqlite", "rcp-sql"),
+    ("security checklist for user input", "rcp-security"),
+    ("code is slow performance profiling", "rcp-performance"),
+    ("refactor duplicated if chains", "rcp-refactoring"),
+    ("new python features 3.12 3.13", "rcp-python-versions"),
+    ("cli exit codes subcommands stdin", "rcp-cli-design"),
 ]
 
 
