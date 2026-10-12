@@ -28,7 +28,7 @@ The rules below still describe what goes into briefs and summaries.
 - New UI features: the user wants the options discussed first (2–3 options, with previews, recommendation);
   fixes to what they report from screenshots go straight in. Design theme changes are deferred to the user.
 - Keep updated: this file, TODO.md, docs/DECISIONS.md, docs/RISKS.md, docs/SPEC_DEVIATIONS.md.
-- **TODO.md is the single list of open work** (sections 1-6; finished work in 7). Add new tasks there, never in another file.
+- **TODO.md is the single list of open work** (section 0 is the build order with phases and dependencies, sections 1-6 the items with stable IDs, 7 the finished work). Add new tasks there, never in another file, and keep to the build order.
 - Be honest about anything unrealistic; propose the best achievable alternative.
 
 ## Platform targets
