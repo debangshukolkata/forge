@@ -1,7 +1,7 @@
 # Parked for later
 
 Things the user asked about and chose NOT to do yet. Nothing here is started. Each item says what it is, how big it is
-and what to decide when it is picked up again. (The build plan itself is in `TODO.md`.)
+and what to decide when it is picked up again. The task itself is listed in `TODO.md` section "6. Parked"; this file keeps the sizing and the plan as background.
 
 ## Rename Forge to "DebCraft" — visible part DONE 2026-10-12 (D-244); the internal rename below is still parked
 
@@ -26,7 +26,7 @@ Decide when picking it up:
 - The zip folder name users download changes from `forge-main` to the new repository name (the start file works from any folder).
 - Decisions in `docs/DECISIONS.md` keep saying "Forge" (history); add one new decision for the rename.
 
-## Presentations: everything still needed to match Claude's PowerPoint abilities (asked 2026-10-09)
+## Presentations (asked 2026-10-09)
 
-The full task list (about 40 items in priorities P0 to P3, each with size and what it needs, the four decisions the user must make, and a suggested order)
-is in [docs/PPT_PARITY.md](PPT_PARITY.md). Nothing in it is started except what its "Done so far" section lists (D-240 to D-242).
+The open tasks are in `TODO.md` section "4. Presentations"; the background, licence note and suggested order are in
+[docs/PPT_PARITY.md](PPT_PARITY.md).

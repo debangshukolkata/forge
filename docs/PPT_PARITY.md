@@ -1,8 +1,7 @@
 # Presentations: the open tasks to match Claude's PowerPoint abilities
 
 Goal (user, 2026-10-09): DebCraft should be able to make presentations the way Claude does: same range of skills, same quality of
-result. This file lists everything still open, in order, with size and how we will know it is done. Nothing below is started
-unless marked. Status: `[ ]` open, `[~]` in progress, `[x]` done.
+result. Open tasks are tracked in [TODO.md](../TODO.md); this file is the background.
 
 ## Read this first: what "exactly" can and cannot mean
 
@@ -39,91 +38,9 @@ unless marked. Status: `[ ]` open, `[~]` in progress, `[x]` done.
 4. **Reference decks.** Collect 5 to 10 decks (made by Claude or anyone) that the user likes. They become design targets and the
    benchmark's reference (P0.1).
 
-## P0 Measure first (so "equivalent" is a number, not a feeling)
+## The task list moved
 
-- [ ] **P0.1 Parity benchmark.** 20 to 30 fixed requests across kinds (status update, pitch, training, data story, technical design
-  review, template fill, edit-an-existing-deck, redesign-a-bad-deck, long deck, deck from a document). Each has a checklist
-  (story, hierarchy, contrast, alignment, no overflow, file opens cleanly, notes present, charts native) scored by the real model
-  as judge looking at the rendered slides, plus the user's own ratings of a sample. Re-run after every change; record scores in
-  `docs/PPT_BENCHMARK.md`. Size M. Needs decision 4.
-- [ ] **P0.2 Verify on the office laptop** (user action): python-pptx installs through pip; PowerPoint picture export works under company
-  policy and Protected View; `Start-DebCraft.cmd` installs the `slides` extra. Size S.
-
-## P1 Quick wins (small, high value)
-
-- [ ] **P1.1 Contact sheet.** One picture of all slides in a grid (like Claude's thumbnail tool) so the model judges flow and
-  consistency in one look instead of N calls. Size S.
-- [ ] **P1.2 Show slides in the web UI.** After a build or edit, show the slide pictures inline in the chat and a slide viewer in the Files tab
-  (download button for the .pptx). The user currently only gets file names. Size M.
-- [ ] **P1.3 Layout helpers for free-form.** Row, column and grid containers (equal widths, gaps, alignment) so the model states intent
-  ("three equal cards, 0.4 gap") instead of computing coordinates; fewer collisions. Size M.
-- [ ] **P1.4 Rich text.** Mixed bold, colour and size inside one paragraph, links, line and letter spacing, vertical text. Size M.
-- [ ] **P1.5 Fix our own template habits that look generic.** Remove the accent bar under titles, stop defaulting to one blue, vary
-  layouts, give every slide a visual element, use dark/light "sandwich" structure; make `make-presentation` say so and the checks
-  warn (same layout repeated, text-only slide, accent line). Size S.
-- [ ] **P1.6 Title lint.** Warn when a title is a topic ("Search") instead of a takeaway ("Search is 4x faster"); count words. Size S.
-- [ ] **P1.7 Safe fonts.** Prefer fonts that exist everywhere (Arial, Calibri, Cambria, Times New Roman, Courier New, Bookman, Century
-  Schoolbook), warn on others, and say which fonts' fit estimates are unreliable. Our default Segoe UI / Georgia need review. Size S.
-- [ ] **P1.8 Package validator.** Check a finished .pptx for faults PowerPoint refuses to open (bad chart XML, wrong element order,
-  broken relationships, duplicate ids) and name the fix. Write our own validator from the OOXML spec; run it after every build and
-  edit. Size M. This is what makes "opens cleanly" a guarantee.
-
-## P2 Capability gaps (medium)
-
-Create / design
-- [ ] **P2.1 Colour and type system.** 15+ curated palettes chosen from the topic (not blue by default), dominance rule (one main colour,
-  one accent), font pairings, user brand kits (logo, colours, fonts) saved with the project. Size M.
-- [ ] **P2.2 Gradients, shadows, transparency, background images** in free-form, plus rounded image frames, circles, masks. Size M.
-- [ ] **P2.3 Icons.** An icon set turned into pictures or native shapes, placed in coloured circles, sized and recoloured. Needs decision 3. Size M.
-- [ ] **P2.4 Charts to full strength.** Stacked, area, scatter, donut, combo with a second axis, data-label formats, axis titles, per-point
-  colours, legends, number formats, quiet styling by default; charts straight from CSV/Excel data. Size M.
-- [ ] **P2.5 Tables to full strength.** Merged cells, widths, borders, per-cell fill/bold/alignment, heat-map colouring, long-table splitting. Size M.
-- [ ] **P2.6 Diagram toolkit.** Connectors that stay attached to shapes (straight and elbow), grouping, align and distribute operations,
-  ready recipes (process, cycle, hierarchy, 2x2 matrix, timeline, funnel, roadmap). Size M.
-- [ ] **P2.7 Real masters and theme.** Generate proper slide masters, layouts, placeholders, footer and slide-number fields and theme
-  fonts/colours, so a DebCraft deck re-themes correctly in PowerPoint and new slides added by hand look right. Size L.
-- [ ] **P2.8 Slide features.** Sections, hidden slides, transitions, basic entrance animations, slide numbers, comments (read and add). Size M to L.
-- [ ] **P2.9 Accessibility pass.** Reading order, alt text everywhere, document language and title, colour-blind-safe palettes. Size S.
-
-Existing decks and templates
-- [ ] **P2.10 Template-aware build.** `build_presentation` with a `template`: map our layouts onto the template's masters and
-  placeholders, so a new deck takes the company look automatically. Today only `edit_presentation` can use a template. Size L.
-- [ ] **P2.11 Template analysis.** Render each of a template's layouts to a picture, list placeholders, theme colours and fonts, and
-  propose which layout fits which content; delete unused sample items cleanly (a slot with no data removes its whole group). Size M.
-- [ ] **P2.12 Edit operations to full strength.** Replace a picture keeping crop and position; per-run formatting edits; global font and
-  colour changes through the theme; table rows and columns add/remove; chart type change and formatting; headers and footers;
-  bulk speaker-notes edits; find shapes by what they say. Size M.
-- [ ] **P2.13 Copy slides that hold charts or embedded objects** by cloning the chart parts (today refused). Size M.
-- [ ] **P2.14 Merge and import.** Bring slides from another deck keeping their design; combine decks; split a deck. Size L.
-- [ ] **P2.15 Raw-file escape hatch.** Unpack a deck to its XML files, edit, validate against the format, repack, with the validator from
-  P1.8. For anything python-pptx cannot do (comments, animations, SmartArt, odd masters). Needs a security review (zip bombs, external
-  links). Size L.
-- [ ] **P2.16 Read and analyse to full strength.** Text as Markdown, comments, notes, hidden slides, alt text, links, animations summary,
-  extract embedded pictures, per-slide contact sheet; `.ppt` to `.pptx` and deck to PDF through PowerPoint when present. Size M.
-- [ ] **P2.17 Review mode.** Critique a deck (story, density, consistency, contrast, font count, alignment, repeated layouts) and list fixes,
-  or fix them. Size M.
-
-Looking at the result
-- [ ] **P2.18 Reliable overflow detection.** With PowerPoint present, measure each text box's real text height through PowerPoint
-  instead of our estimate; without it keep the estimate. Size M.
-
-Input and workflow
-- [ ] **P2.19 Build from documents.** Read Word, Excel/CSV and PDF sources (DebCraft has PDF page rendering only) and turn them into a deck:
-  summarise, pick charts, cite sources in notes. Size M.
-- [ ] **P2.20 Storyline guides.** Short guides in the skill for common decks (board update, pitch, QBR, design review, training, project
-  status), including slide counts, timing and speaker-note style. Size S.
-
-## P3 Large or platform work
-
-- [ ] **P3.1 HTML/CSS design path** (decision 1b): `build_presentation` accepts slides written as HTML/CSS and converts the measured result
-  to native .pptx shapes (text boxes, shapes, images, charts as native objects where possible). Gives full design freedom with flexbox/grid
-  layout, fonts, gradients and shadows. Uses the headless browser already in `forge[browser]`. Size L.
-- [ ] **P3.2 Render without PowerPoint** (decision 2): optional LibreOffice rendering; or our own renderer from P3.1. Includes a font-substitution
-  warning so fit checks are trusted only for fonts that render true-to-width. Size L.
-- [ ] **P3.3 Performance and size.** Large decks (100+ slides), image downscaling and compression, file-size limits, time limits on preview. Size M.
-- [ ] **P3.4 Security review of the presentation tools.** Untrusted decks (zip and XML bombs, external relationships/links, embedded
-  objects), PowerPoint COM launch, files outside the workspace, Mode B (host-identifying terms in slide text). Size M.
-- [ ] **P3.5 Documentation.** A user guide ("how to ask DebCraft for a deck"), examples gallery generated from the benchmark. Size S.
+The P0 to P3 tasks (with sizes and what each needs) are now in [TODO.md](../TODO.md) section "4. Presentations", and the four decisions and the laptop check are in section "1. Waiting on you". This file keeps the background, the licence note, what is done and the suggested order. Task IDs (P0.1 ... P3.5) are unchanged.
 
 ## Sibling skills (not in this list, same method if wanted)
 

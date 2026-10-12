@@ -1,17 +1,172 @@
-# TODO — Forge build
+# TODO — DebCraft (the single list of open work)
 
-Status: `[ ]` not started · `[~]` in progress · `[x]` done (acceptance passed + user sign-off)
+Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task lives in this file and nowhere else** (consolidated 2026-10-12 from this file, `docs/PPT_PARITY.md` and `docs/TODO_LATER.md`). Add new tasks here, in the group they belong to. The other two files keep only background, decisions and sizing, and point back here. Finished work is in the history at the end.
 
-Things asked about and deliberately postponed (for example the internal part of the DebCraft rename) are in [docs/TODO_LATER.md](docs/TODO_LATER.md). The open presentation tasks are in [docs/PPT_PARITY.md](docs/PPT_PARITY.md).
+## Contents (open items per group)
+- 1. Waiting on you (your actions and decisions): **9 open**
+- 2. Design upgrades for apps DebCraft builds (D-245..D-252): **16 open**
+- 3. Parallel work: **7 open**
+- 4. Presentations (match Claude's PowerPoint abilities): **35 open**
+- 5. Platform, runtime and build quality (older open items): **10 open**
+- 6. Parked (not started; your choice when): **4 open**
+- **Total open: 81**
 
-## Step 1 — Pre-build review
+## 1. Waiting on you (your actions and decisions)
+Things only you can do or decide. Everything else below can be built without you.
+
+- [ ] **Run `scripts/dev/import_orchestrix_azure.py`** to fill the Azure values in `.env` (D-019)
+- [ ] **Gemini live check on the office laptop** (D-150, D-205): run `scripts/dev/gemini_smoke.py` and the drawer's Gemini test (never called live from the build machine); `view_video` waits for the video probe. Code and unit tests are done and pushed.
+- [ ] Re-run the three-design task (`designs/design-a..c`, ports 5171-5173) on the office laptop and score the result with the seven-line rubric; tune the critic's SHIP bar from real runs (too lenient / too harsh)
+- [ ] Check that `raw.githubusercontent.com` is reachable from the office laptop (brand DESIGN.md fetch); if blocked, bundle five or six starter DESIGN.md files in our own words
+- [ ] Optional: user installs taste-skill with `forge skill add https://github.com/Leonxlnx/taste-skill` if they want its full rule set (conflicts: it bans Inter, serifs, Lucide)
+- [ ] **Presentations, decision 1: design engine.** Keep improving the free-form element list (cheaper, built) or add the HTML/CSS design path (P3.1; more freedom, large). Recommendation: P1 helpers first, decide after the benchmark.
+- [ ] **Presentations, decision 2: rendering without PowerPoint.** Optional LibreOffice (often needs admin rights), or our own renderer from the HTML path. Recommendation: optional LibreOffice plus PowerPoint as now.
+- [ ] **Presentations, decision 3: icons and images.** A licensed icon set (Lucide ISC, Material Symbols Apache-2.0) and whether an image model exists on the Azure side; without one DebCraft can only use supplied pictures, shapes and charts.
+- [ ] **Presentations, decision 4: reference decks.** Collect 5 to 10 decks you like (made by Claude or anyone); they become design targets and the benchmark reference (P0.1).
+
+## 2. Design upgrades for apps DebCraft builds (D-245..D-252)
+Goal: world-class UI/UX from a model that is not as strong as Claude, by giving it less to invent and more to adapt: Claude authors design assets offline and ships them in the skill folder. Build the libraries after your rerun shows what the model still gets wrong.
+
+
+### 2a. Verify, tune and small additions
+- [ ] Write each screen as complete files in one pass, patch only afterwards (many tiny edits make pages drift). Add the rule to the `ui-design-quality` skill and, if the rerun shows uneven pages, to the prompt; consider a check that flags a UI file edited more than N times
+- [ ] Measure cost and time per UI task now that the critic can run several times; limit to one round for small edits if it is too slow
+- [ ] Code-level check that design variants differ (compare screenshots / DESIGN.md directions automatically), beyond the pixel-identical guard
+- [ ] A "design concept" step in the engine before the first UI edit (design read, dials, direction written down) enforced like the other gates, if the model skips it
+- [ ] Real imagery: a way to get licensed photos or generated illustrations when SVG drawings are not enough (needs a source and a licence decision)
+- [ ] Visual regression check: keep the approved screenshots per screen and flag unplanned visual changes after later edits
+- [ ] Try an automatic second look: when the critic returns REVISE, give the builder the screenshot and the fixes together in one message
+
+### 2b. Libraries and workarounds for a weaker model
+- [ ] **Template and section library, many choices.** Not 6-8 pages: 20+ complete tested page templates across 10+ visual directions (landing, dashboard, form flow, pricing, portfolio, docs, e-commerce, admin, event/campaign, onboarding, settings), built from a composable **section library** so choices multiply: 10+ hero variants, 8+ feature layouts, stats/steps/timeline/bento variants, 6+ form patterns, nav and footer variants, testimonial, FAQ, pricing, CTA bands. The model picks a direction and sections, supplies tokens and content, and adapts. Each template and section is built with Vite + Tailwind v4, passes the audit at 1280 and 375, and is looked at before it ships. Keep an index (`recipes/INDEX.md`) so the model can choose by mood, product type and density.
+- [ ] **Bigger animation library.** Grow `motion.css` / `motion.tsx` from ~15 to 40+ effects, grouped by purpose: entrances (fade, slide, scale, blur-in, clip-reveal, split-text word/letter stagger), scroll (progress bar, parallax layers, sticky stack, horizontal pan, pinned steps, number tickers), hover (magnetic button, glow follow, image zoom-pan, underline variants, icon nudges), ambient (aurora, gradient mesh, floating shapes, particles-lite, grid pulse, marquee variants), feedback (toast, success check draw, error shake, skeleton, progress ring), page (view transitions, shared-element morph, route fade), 3D-lite (tilt, card flip, cube hero, perspective stack), text (typewriter, gradient sweep, scramble, highlight marker). All pure CSS or tiny hooks, reduced-motion safe, one demo page per group verified in Edge (no console errors, audit clean). Document an effect budget per MOTION_INTENSITY level.
+- [ ] **Many fonts, offline.** A curated catalogue of 40+ font families with licence OFL/Apache only (display, serif, sans, rounded, mono, handwriting, condensed, slab; Latin plus Devanagari/Bengali options for Indian-language pages such as Noto Sans Bengali, Hind, Baloo), each with ready-made pairings by mood, size and weight guidance. Ship the woff2 files for the most used 12-15 inside the package (so a laptop with no internet still looks designed; check licences and size) and give the install command (`npm i @fontsource-variable/<name>`) for the rest; a `fonts.md` index plus a tested `@font-face`/Fontsource snippet per family. Audit check: warn when a page still renders in a fallback font.
+- [ ] **Section-by-section build process.** Plan, then tokens (DESIGN.md), then one section at a time written whole, each with audit and screenshot, then assemble; stops the many-small-patches drift.
+- [ ] **Token lint.** Static check that flags hard-coded colours, font families and off-scale spacing not defined in DESIGN.md/the theme; shown in the screenshot audit.
+- [ ] **Auto-fixers.** Contrast fixer (adjusts a colour until AA), overflow fixer, missing-alt fixer; the model reviews the diff instead of finding the problem itself.
+- [ ] **Reference screenshots.** A screenshot per direction and per template so the model can match an image (it has vision); also let the user supply a screenshot of a site they like and extract palette, type and spacing from it.
+- [ ] **More model effort where it counts.** A separate design role with the highest reasoning effort; best-of-N candidates ranked by audit score plus critic; use the gpt-4o fallback as the critic so a different model reviews the builder's work (check the role config supports it).
+- [ ] **Claude authors offline.** Schedule sessions where Claude writes and tests the templates, sections, effects and font packs here and they ship in the repo; track licence notes per asset in `recipes/LICENSES.md`.
+
+## 3. Parallel work
+Today: consecutive read-only tool calls and `explore`/`reviewer` subagents (max 4) run in parallel (D-175); everything else is sequential. Measure first on your rerun: where does the wall time go?
+
+- [ ] **Allow `design-critic` in `PARALLEL_SUBAGENT_TYPES`** (it only looks and screenshots). First make screenshot file names unique (timestamp to the second can collide when two critics shoot in the same second).
+- [ ] **Parallel builder subagents** for independent folders or screens (for example the three design variants): a `builder` agent type with `write_only_under=<its folder>`, its own port, a shared-nothing rule, and a short report back; the parent verifies each result (audit, critic, tests) before it counts. Watch: concurrent `npm install` and approval prompts (queue approvals, one prompt at a time), Azure rate limits (429 retry exists; add a concurrency cap tied to the limit), shared files (package.json at the root, lock files), CPU.
+- [ ] **`run_parallel` tool**: run several independent commands at once (lint, mypy, tests, frontend build) and return each output; refuses commands that write the same paths; each still goes through the permission gate and the sandbox.
+- [ ] **Verifier and design critic together** on the same finished app (different ports or the same read-only app; the verifier may start it, so start it once first and pass the URL to both).
+- [ ] **Start installs and scaffolding in the background** (`start_background` / `monitor`) while the model writes DESIGN.md or plans; add the hint to the prompt and the skill.
+- [ ] **Two screenshots at once** (375 and 1280, several pages) with separate browser pages; small gain, low priority.
+- [ ] **Automatic parallel planning.** From the user's request Forge decides what can run in parallel and runs it: (1) a planning step turns the request into a task graph: tasks, dependencies, what each task writes (folders or files), shared resources it needs (ports, database schema, npm cache, a package.json); (2) a scheduler marks tasks independent only when their write scopes are disjoint and they share no exclusive resource, and starts them as workers (subagents with a write jail) up to a concurrency cap, with approvals queued and one-at-a-time; (3) dependent tasks wait; (4) an integration step merges and verifies the whole (tests, build, audit, critic); (5) the Run map shows the parallel branches, cost and time per worker; (6) a safe fallback: any overlap, failure or rate-limit pressure serialises the rest and says why. Start conservative: only clear independent parts of one request (several variants, screens, services, documents, research questions), never edits to the same file. Record decisions and measured speed-ups; keep an off switch in `config.yaml`.
+
+## 4. Presentations (match Claude's PowerPoint abilities)
+Goal (2026-10-09): presentations the way Claude makes them, equivalent capability and quality (not identical files; we cannot copy Anthropic's skill, its licence forbids it). Background, the done list (D-240..D-242), the licence note and the suggested order are in `docs/PPT_PARITY.md`. Suggested order: P0 (measure) -> P1.1-P1.8 -> P2.1-P2.6 and P2.18 -> P2.10-P2.12 -> decide engine and rendering from the benchmark -> P3 and the rest of P2. Rough effort: P1 2-3 days, P2 3-4 weeks, P3 2-3 weeks. The web-design approach applies here too: a themed slide template library, a slide critic that scores the contact sheet, an audit, curated fonts and palettes, reference decks.
+
+### P0 Measure first
+- [ ] **P0.1 Parity benchmark.** 20 to 30 fixed requests across kinds (status update, pitch, training, data story, technical design
+  review, template fill, edit-an-existing-deck, redesign-a-bad-deck, long deck, deck from a document). Each has a checklist
+  (story, hierarchy, contrast, alignment, no overflow, file opens cleanly, notes present, charts native) scored by the real model
+  as judge looking at the rendered slides, plus the user's own ratings of a sample. Re-run after every change; record scores in
+  `docs/PPT_BENCHMARK.md`. Size M. Needs decision 4.
+- [ ] **P0.2 Verify on the office laptop** (user action): python-pptx installs through pip; PowerPoint picture export works under company
+  policy and Protected View; `Start-DebCraft.cmd` installs the `slides` extra. Size S.
+
+### P1 Quick wins
+- [ ] **P1.1 Contact sheet.** One picture of all slides in a grid (like Claude's thumbnail tool) so the model judges flow and
+  consistency in one look instead of N calls. Size S.
+- [ ] **P1.2 Show slides in the web UI.** After a build or edit, show the slide pictures inline in the chat and a slide viewer in the Files tab
+  (download button for the .pptx). The user currently only gets file names. Size M.
+- [ ] **P1.3 Layout helpers for free-form.** Row, column and grid containers (equal widths, gaps, alignment) so the model states intent
+  ("three equal cards, 0.4 gap") instead of computing coordinates; fewer collisions. Size M.
+- [ ] **P1.4 Rich text.** Mixed bold, colour and size inside one paragraph, links, line and letter spacing, vertical text. Size M.
+- [ ] **P1.5 Fix our own template habits that look generic.** Remove the accent bar under titles, stop defaulting to one blue, vary
+  layouts, give every slide a visual element, use dark/light "sandwich" structure; make `make-presentation` say so and the checks
+  warn (same layout repeated, text-only slide, accent line). Size S.
+- [ ] **P1.6 Title lint.** Warn when a title is a topic ("Search") instead of a takeaway ("Search is 4x faster"); count words. Size S.
+- [ ] **P1.7 Safe fonts.** Prefer fonts that exist everywhere (Arial, Calibri, Cambria, Times New Roman, Courier New, Bookman, Century
+  Schoolbook), warn on others, and say which fonts' fit estimates are unreliable. Our default Segoe UI / Georgia need review. Size S.
+- [ ] **P1.8 Package validator.** Check a finished .pptx for faults PowerPoint refuses to open (bad chart XML, wrong element order,
+  broken relationships, duplicate ids) and name the fix. Write our own validator from the OOXML spec; run it after every build and
+  edit. Size M. This is what makes "opens cleanly" a guarantee.
+
+### P2 Capability gaps
+- [ ] **P2.1 Colour and type system.** 15+ curated palettes chosen from the topic (not blue by default), dominance rule (one main colour,
+  one accent), font pairings, user brand kits (logo, colours, fonts) saved with the project. Size M.
+- [ ] **P2.2 Gradients, shadows, transparency, background images** in free-form, plus rounded image frames, circles, masks. Size M.
+- [ ] **P2.3 Icons.** An icon set turned into pictures or native shapes, placed in coloured circles, sized and recoloured. Needs decision 3. Size M.
+- [ ] **P2.4 Charts to full strength.** Stacked, area, scatter, donut, combo with a second axis, data-label formats, axis titles, per-point
+  colours, legends, number formats, quiet styling by default; charts straight from CSV/Excel data. Size M.
+- [ ] **P2.5 Tables to full strength.** Merged cells, widths, borders, per-cell fill/bold/alignment, heat-map colouring, long-table splitting. Size M.
+- [ ] **P2.6 Diagram toolkit.** Connectors that stay attached to shapes (straight and elbow), grouping, align and distribute operations,
+  ready recipes (process, cycle, hierarchy, 2x2 matrix, timeline, funnel, roadmap). Size M.
+- [ ] **P2.7 Real masters and theme.** Generate proper slide masters, layouts, placeholders, footer and slide-number fields and theme
+  fonts/colours, so a DebCraft deck re-themes correctly in PowerPoint and new slides added by hand look right. Size L.
+- [ ] **P2.8 Slide features.** Sections, hidden slides, transitions, basic entrance animations, slide numbers, comments (read and add). Size M to L.
+- [ ] **P2.9 Accessibility pass.** Reading order, alt text everywhere, document language and title, colour-blind-safe palettes. Size S.
+- [ ] **P2.10 Template-aware build.** `build_presentation` with a `template`: map our layouts onto the template's masters and
+  placeholders, so a new deck takes the company look automatically. Today only `edit_presentation` can use a template. Size L.
+- [ ] **P2.11 Template analysis.** Render each of a template's layouts to a picture, list placeholders, theme colours and fonts, and
+  propose which layout fits which content; delete unused sample items cleanly (a slot with no data removes its whole group). Size M.
+- [ ] **P2.12 Edit operations to full strength.** Replace a picture keeping crop and position; per-run formatting edits; global font and
+  colour changes through the theme; table rows and columns add/remove; chart type change and formatting; headers and footers;
+  bulk speaker-notes edits; find shapes by what they say. Size M.
+- [ ] **P2.13 Copy slides that hold charts or embedded objects** by cloning the chart parts (today refused). Size M.
+- [ ] **P2.14 Merge and import.** Bring slides from another deck keeping their design; combine decks; split a deck. Size L.
+- [ ] **P2.15 Raw-file escape hatch.** Unpack a deck to its XML files, edit, validate against the format, repack, with the validator from
+  P1.8. For anything python-pptx cannot do (comments, animations, SmartArt, odd masters). Needs a security review (zip bombs, external
+  links). Size L.
+- [ ] **P2.16 Read and analyse to full strength.** Text as Markdown, comments, notes, hidden slides, alt text, links, animations summary,
+  extract embedded pictures, per-slide contact sheet; `.ppt` to `.pptx` and deck to PDF through PowerPoint when present. Size M.
+- [ ] **P2.17 Review mode.** Critique a deck (story, density, consistency, contrast, font count, alignment, repeated layouts) and list fixes,
+  or fix them. Size M.
+- [ ] **P2.18 Reliable overflow detection.** With PowerPoint present, measure each text box's real text height through PowerPoint
+  instead of our estimate; without it keep the estimate. Size M.
+- [ ] **P2.19 Build from documents.** Read Word, Excel/CSV and PDF sources (DebCraft has PDF page rendering only) and turn them into a deck:
+  summarise, pick charts, cite sources in notes. Size M.
+- [ ] **P2.20 Storyline guides.** Short guides in the skill for common decks (board update, pitch, QBR, design review, training, project
+  status), including slide counts, timing and speaker-note style. Size S.
+
+### P3 Large or platform work
+- [ ] **P3.1 HTML/CSS design path** (decision 1b): `build_presentation` accepts slides written as HTML/CSS and converts the measured result
+  to native .pptx shapes (text boxes, shapes, images, charts as native objects where possible). Gives full design freedom with flexbox/grid
+  layout, fonts, gradients and shadows. Uses the headless browser already in `forge[browser]`. Size L.
+- [ ] **P3.2 Render without PowerPoint** (decision 2): optional LibreOffice rendering; or our own renderer from P3.1. Includes a font-substitution
+  warning so fit checks are trusted only for fonts that render true-to-width. Size L.
+- [ ] **P3.3 Performance and size.** Large decks (100+ slides), image downscaling and compression, file-size limits, time limits on preview. Size M.
+- [ ] **P3.4 Security review of the presentation tools.** Untrusted decks (zip and XML bombs, external relationships/links, embedded
+  objects), PowerPoint COM launch, files outside the workspace, Mode B (host-identifying terms in slide text). Size M.
+- [ ] **P3.5 Documentation.** A user guide ("how to ask DebCraft for a deck"), examples gallery generated from the benchmark. Size S.
+
+## 5. Platform, runtime and build quality (older open items)
+- [ ] MCP review and security design (Mode B) before extending; LSP design
+- [ ] Full test run after the revamp code steps; commit in logical parts
+- [ ] Next campaign ideas: a project with a database and a REST API (verifier on an API), a CLI tool, a Mode A repo; watch whether the verifier is called on larger features
+- [ ] Unattended runs: decide how a headless run may install dependencies (today always-ask)
+- [ ] G3 Compaction robustness (summariser-failure fallback, image budget) — only if real runs need it
+- [ ] G5 Task breakdown — decide only if the campaign shows lost steps (no build under D-155)
+- [ ] Parallel pytest in built apps: Forge runs `python -m pytest` sequentially (no xdist, no `-n`). Add a prompt line to use pytest-xdist only for large suites (needs a pip install approval; beware shared ports and SQLite files) once a real project shows slow test runs.
+- [ ] Campaign case: Forge builds a small MCP-using tool and tests it with a dummy stdio MCP server it writes itself (needs the `mcp` package via an approved pip install; the server is not wired into Forge's own `config.yaml`). Not yet run live.
+- [ ] The full test suite takes ~6 min (browser tests); consider splitting browser tests into a marker run if it gets slower
+- [ ] `write_secret_values` in config.py is no longer used by the web app; remove it
+
+## 6. Parked (not started; your choice when)
+- [ ] PARKED (user, 2026-10-04): one-click install from the GitHub zip (starter script -> venv + pip install -> .env template -> `forge doctor` -> open UI -> shortcut).
+  Waiting on the user's probe of what the office laptop allows (script run, pip reach, Python 3.13) and a choice: `.cmd` starter vs signed `.exe`, bundled embeddable Python or not.
+- [ ] Optional: Azure AI Vision / Document Intelligence for handwriting OCR (user has no key yet; would need a yes in the drawer)
+- [ ] **Internal rename `forge` -> `debcraft`** (package, `.forge` folders, `FORGE.md`, `FORGE_*` settings). The visible rename is done (D-244); this part needs a migration or a read-the-old-name fallback. Sizing and the recommended plan are in `docs/TODO_LATER.md`.
+- [ ] **Sibling document skills** (Word, Excel, PDF like Claude's): same method as presentations, each a clean build under its own licence; not planned, ask if wanted.
+
+
+## 7. Completed work (history)
+Kept for reference. Open items were moved up into sections 1-6.
+
+### Step 1 — Pre-build review
 - [x] Understanding, risks, ambiguities, order proposal
 - [x] User answers recorded (DECISIONS D-001…D-015), spec amended (§0.2), docs created
 - [x] Local Postgres `forge_dev` (D-018), Python 3.13 (D-006), D-008, D-013, D-016, D-017 settled
-- [ ] User runs `scripts/dev/import_orchestrix_azure.py` to fill Azure values in `.env` (D-019)
 - [x] User approves M0 + M1 brief
 
-## Milestones (order per D-002)
+### Milestones (order per D-002)
 - [x] **M0** Scaffolding — pyproject, src layout, tooling, vendored tiktoken, fixture repo, docs
 - [x] **M1** Foundations — config + per-role models, Azure adapter (Responses/Chat), event bus, tokens, retries, streaming, cost, REPL, doctor
 - [x] **M2** Workspace — copy, baseline, write jail, redaction core, checkpoints, output generator
@@ -34,7 +189,7 @@ Things asked about and deliberately postponed (for example the internal part of 
   Run map (task graph + timeline, failures drawer, waiting bars), stepper with cost/time per step, collapsible
   side panel — done 2026-09-28 (D-113..D-124)
 
-## Open items
+### Open items
 - **M6 rework — flat loop, cadence, judgment-based verification, Contracts store (D-128, D-129, D-130,
   D-131, D-132) — done 2026-09-29:**
   - `agent/orchestrator.py`/`state.py` rewritten: no `Phase` enum, no mandatory CLARIFY/PLAN/REVIEW gates.
@@ -224,8 +379,7 @@ Things asked about and deliberately postponed (for example the internal part of 
     run a two-path probe on the office laptop; the rest of this milestone doesn't depend on the answer and
     proceeds in parallel.
 
-
-## Revamp (2026-10-02) — Forge replicates Claude Code (D-151..D-156)
+### Revamp (2026-10-02) — Forge replicates Claude Code (D-151..D-156)
 - [x] D-151 run log: `llm_call` events + `forge log-summary`
 - [x] D-152/D-154 modules: tiers, MODULE.md per module, boundary test; agent split into agent/subagents/workflow
 - [x] D-153 a chat message answers open approval cards; build id in `forge --version` / `forge doctor`
@@ -236,30 +390,21 @@ Things asked about and deliberately postponed (for example the internal part of 
 - [x] D-156 code step 3 (D-160, 2026-10-03): `kb` retired; credential-table detection kept in `db`; `/init` now has the model explore and write FORGE.md
 - [x] Timeline UI (D-189, D-190, D-192): narration, folded Read/Grep runs, Bash/Edit with output, inline diffs, nested subagents, failures open. The rail was dropped (superseded by the Conversation look).
 - [x] Run map (D-193): the D-133 redesign was already built; its two skipped tests are rewritten (`test_web_runmap_e2e.py`) and per-agent cost added
-- [ ] MCP review and security design (Mode B) before extending; LSP design
 - [x] **DROPPED (D-161)**: role-specific toolsets, lazy tool schemas, prompt fragments. Forge does not optimise token cost at runtime; accuracy and speed first
-- [ ] Full test run after the revamp code steps; commit in logical parts
-- [ ] D-150 Gemini provider: code + unit tests done (uncommitted); run `scripts/dev/gemini_smoke.py` on the office laptop to verify live
 
 - [x] First Mode B end-to-end campaign (2026-10-03): attendance, bakery, invoice projects; D-162..D-170; report in docs/E2E_CAMPAIGN_2026-10-03.md
-- [ ] Next campaign ideas: a project with a database and a REST API (verifier on an API), a CLI tool, a Mode A repo; watch whether the verifier is called on larger features
-- [ ] Unattended runs: decide how a headless run may install dependencies (today always-ask)
 
-## Codex comparison gaps (2026-10-03) — spec in docs/SPEC_CODEX_GAPS.md
+### Codex comparison gaps (2026-10-03) — spec in docs/SPEC_CODEX_GAPS.md
 - [x] G1 Parallel subagents: first test whether concurrent `spawn_subagent` calls already run in parallel; parallel only for read-only agents; cap; subagent id in events
 - [x] G2 `pre_compact` / `post_compact` hooks in `HooksConfig`
 - [x] G4 Per-agent settings in custom agent files (max_steps, role, write folder)
 - [x] G6 `todo_write` tool: lightweight model-kept todo list (no approval), event + UI, survives compaction
 - [x] G7 `monitor` tool: wait on a background process for a pattern, exit or timeout (replaces poll loops)
-- [ ] G3 Compaction robustness (summariser-failure fallback, image budget) — only if real runs need it
-- [ ] G5 Task breakdown — decide only if the campaign shows lost steps (no build under D-155)
 
-## Later, only if real runs need it
-- [ ] Parallel pytest in built apps: Forge runs `python -m pytest` sequentially (no xdist, no `-n`). Add a prompt line to use pytest-xdist only for large suites (needs a pip install approval; beware shared ports and SQLite files) once a real project shows slow test runs.
-- [ ] Campaign case: Forge builds a small MCP-using tool and tests it with a dummy stdio MCP server it writes itself (needs the `mcp` package via an approved pip install; the server is not wired into Forge's own `config.yaml`). Not yet run live.
+### Later, only if real runs need it
 - [x] (done 2026-10-03, D-189) UI: Claude Code layout for tool calls in the web chat (user chose option A, 2026-10-03): each call a card in order with the tool name, an IN block (command/path/arguments) and an OUT block, long output collapsed behind "show more" (about 15 lines), edits shown as diffs, failures open, reasoning summaries dim, subagent calls nested and collapsed (D-181). Redaction applies. Check with headless Edge screenshots.
 
-## UI redesign (D-184..D-204, 2026-10-03 / 2026-10-04) — done
+### UI redesign (D-184..D-204, 2026-10-03 / 2026-10-04) — done
 - [x] Login, home, project list with memory summary, account screen (change password), Apple-style design on the whole app (D-184..D-197)
 - [x] Setup: first-run guide for the `.env` file (path, template, what is filled in), keys never typed into the app (D-204); Environment drawer with a test per
   connection incl. the Forge database and the read-only Development database; model plan to confirm; Tesseract/Gemini asked first (D-186, D-201)
@@ -270,19 +415,13 @@ Things asked about and deliberately postponed (for example the internal part of 
 - [x] Gemini provider built and pushed (D-150, D-205): adapter, router dispatch, drawer real call + (i) steps; project/location optional
 - [x] Mode B project folder may be non-empty (D-211)
 - [x] Tavily through the company platform (D-210); direct Tavily key code removed; untested against the real platform (needs the user's token)
-- [ ] PARKED (user, 2026-10-04): one-click install from the GitHub zip (starter script -> venv + pip install -> .env template -> `forge doctor` -> open UI -> shortcut).
-  Waiting on the user's probe of what the office laptop allows (script run, pip reach, Python 3.13) and a choice: `.cmd` starter vs signed `.exe`, bundled embeddable Python or not.
 - [x] Web research chain (D-209): guard, PDF + Markdown extraction, headless-browser fallback, archive/snippet fallbacks, `researcher` subagent, `web-research` skill, SearXNG provider
 - [x] Read grants (D-208): `/allow-read`, `/revoke-read`, typed paths, installed skills readable in both modes; no skill copies
 - [x] `forge skill add/list/remove` (D-207): third-party skills like Claude Code; `load_skill` reads a skill's own files
-- [ ] Gemini: run `scripts/dev/gemini_smoke.py` / the drawer test on the office laptop (never called live here); `view_video` waits for the video probe
 - [x] gpt-4o on a second Azure resource as the optional fallback model (D-206), pushed 2026-10-04
-- [ ] Optional: Azure AI Vision / Document Intelligence for handwriting OCR (user has no key yet; would need a yes in the drawer)
 - [x] Pushed 2026-10-04: the redesign (953e2c5 .. 38c6912, 24 commits) is on origin/main
-- [ ] The full test suite takes ~6 min (browser tests); consider splitting browser tests into a marker run if it gets slower
-- [ ] `write_secret_values` in config.py is no longer used by the web app; remove it
 
-## Design upgrades for apps DebCraft builds (D-245..D-251, 2026-10-12) — goal: world-class UI/UX without a stronger model
+### Design upgrades for apps DebCraft builds (D-245..D-251, 2026-10-12) — goal: world-class UI/UX without a stronger model
 Done and pushed:
 - [x] Style audit on every screenshot, Tailwind setup check, look-before-done gate (D-245)
 - [x] Retry/fallback reason shown in the chat; no design-style questions (D-246)
@@ -290,15 +429,3 @@ Done and pushed:
 - [x] Reference recipes, independent `design-critic` with a SHIP/REVISE gate, stricter audit, identical-screenshot guard (D-249)
 - [x] DESIGN.md workflow, taste checks, redesign protocol, on-demand brand references (D-250)
 - [x] Tested library: style directions, modern CSS, motion kit, native components, vetted sources (D-251)
-
-Open (from the "how Claude designs" discussion, 2026-10-12):
-- [ ] Write each screen as complete files in one pass, patch only afterwards (many tiny edits make pages drift). Add the rule to the `ui-design-quality` skill and, if the rerun shows uneven pages, to the prompt; consider a check that flags a UI file edited more than N times
-- [ ] Re-run the three-design task (`designs/design-a..c`, ports 5171-5173) on the office laptop and score the result with the seven-line rubric; tune the critic's SHIP bar from real runs (too lenient / too harsh)
-- [ ] Measure cost and time per UI task now that the critic can run several times; limit to one round for small edits if it is too slow
-- [ ] Check that `raw.githubusercontent.com` is reachable from the office laptop (brand DESIGN.md fetch); if blocked, bundle five or six starter DESIGN.md files in our own words
-- [ ] Optional: user installs taste-skill with `forge skill add https://github.com/Leonxlnx/taste-skill` if they want its full rule set (conflicts: it bans Inter, serifs, Lucide)
-- [ ] Code-level check that design variants differ (compare screenshots / DESIGN.md directions automatically), beyond the pixel-identical guard
-- [ ] A "design concept" step in the engine before the first UI edit (design read, dials, direction written down) enforced like the other gates, if the model skips it
-- [ ] Real imagery: a way to get licensed photos or generated illustrations when SVG drawings are not enough (needs a source and a licence decision)
-- [ ] Visual regression check: keep the approved screenshots per screen and flag unplanned visual changes after later edits
-- [ ] Try an automatic second look: when the critic returns REVISE, give the builder the screenshot and the fixes together in one message
