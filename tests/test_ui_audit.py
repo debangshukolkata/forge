@@ -256,3 +256,39 @@ async def test_a_full_page_screenshot_first_plays_reveal_on_scroll_content(
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
         server.shutdown()
+
+
+BROKEN = """<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;font:16px Arial;background:#0b1020;color:#e5e7eb}
+header{position:sticky;top:0;height:64px;background:transparent;display:flex;align-items:center;padding:0 24px}
+main{padding:24px}h1{font-size:44px;margin:0 0 16px}
+.card{width:200px;overflow:hidden;white-space:nowrap;border:1px solid #334}
+input{display:block;margin-top:16px;padding:10px;border:1px solid #0e1426;background:#0b1020;color:#e5e7eb}
+</style></head><body><header><b>Brand</b></header><main><h1>Give blood</h1>
+<div class="card">One unit, three lives, register now please</div>
+<label>Name<input aria-label="Name"></label></main></body></html>"""
+
+
+@pytest.mark.e2e
+async def test_the_audit_flags_see_through_headers_invisible_fields_and_clipped_text(
+    tmp_path: Path, original_repo: Path
+) -> None:
+    pytest.importorskip("playwright.async_api")
+    root = tmp_path / "broken"
+    root.mkdir()
+    (root / "index.html").write_text(BROKEN, encoding="utf-8")
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    try:
+        await BrowserOpen().run(
+            BrowserOpen.Args(url=f"http://127.0.0.1:{server.server_address[1]}/"), context
+        )
+        text = (await BrowserScreenshot().run(BrowserScreenshot.Args(), context)).content
+        assert "see-through background" in text
+        assert "nearly invisible" in text
+        assert "cut off by its container" in text
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)
+        server.shutdown()

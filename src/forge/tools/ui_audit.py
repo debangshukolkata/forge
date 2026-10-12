@@ -158,6 +158,28 @@ AUDIT_SCRIPT = r"""
   const wide = paragraphs.filter((el) => { const w = el.getBoundingClientRect().width, f = parseFloat(getComputedStyle(el).fontSize); return (el.innerText || '').length > 120 && w / f > 52; });
   if (wide.length) findings.push('Text lines are too long (more than about 80 characters): ' + sample(wide) + '. Limit with max-w-prose or max-w-2xl.');
 
+  // 12. Things that look broken in screenshots: see-through sticky bars, invisible form fields, clipped text.
+  const ratioOf = (a, b) => { const l1 = lum(a), l2 = lum(b); return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05); };
+  const over = (fg, bg) => { const a = fg.length > 3 ? fg[3] : 1; return [0, 1, 2].map((i) => fg[i] * a + bg[i] * (1 - a)); };
+  const seeThrough = all.filter((el) => {
+    const s = getComputedStyle(el), box = el.getBoundingClientRect();
+    if (!visible(el) || !['sticky', 'fixed'].includes(s.position) || box.width < window.innerWidth * 0.5 || box.height > 140 || box.top > 1) return false;
+    const bg = parse(s.backgroundColor);
+    return (bg.length > 3 ? bg[3] : 1) < 0.6 && !/blur/.test(s.backdropFilter || '') && s.backgroundImage === 'none';
+  });
+  if (seeThrough.length) findings.push('The sticky/fixed bar ' + sample(seeThrough) + ' has a see-through background: page text scrolls underneath and collides with it. Give it a solid background or backdrop-blur with a tinted fill and a bottom border.');
+  const faintFields = all.filter((el) => {
+    if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) || !visible(el) || ['checkbox', 'radio', 'hidden', 'submit', 'button', 'range', 'color', 'file'].includes(el.type)) return false;
+    const s = getComputedStyle(el), around = backdrop(el.parentElement || el);
+    const edge = parseFloat(s.borderTopWidth) > 0 ? ratioOf(over(parse(s.borderTopColor), around), around) : 1;
+    const fill = ratioOf(over(parse(s.backgroundColor), around), around);
+    return Math.max(edge, fill) < 1.4;
+  });
+  if (faintFields.length) findings.push(faintFields.length + ' form field(s) are nearly invisible (border and fill barely differ from the background): ' + sample(faintFields) + '. Use a clear 1px border (about ink-300 on light, white/20% on dark) and a visible focus ring.');
+  const clippedText = all.filter((el) => visible(el) && /(hidden|clip)/.test(getComputedStyle(el).overflowX) && el.clientWidth > 8 && el.scrollWidth > el.clientWidth + 2
+    && (el.innerText || '').trim() && !getComputedStyle(el).textOverflow.includes('ellipsis') && !el.closest('.marquee, svg'));
+  if (clippedText.length) findings.push('Text is cut off by its container (overflow hidden): ' + sample(clippedText) + '. Let it wrap (min-w-0, break-words) or enlarge the box.');
+
   // 11. Taste checks (distilled from common "generic AI page" tells).
   const firstAction = all.find((el) => (el.tagName === 'A' || el.tagName === 'BUTTON') && visible(el) && !el.closest('header, nav')
     && getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)');
