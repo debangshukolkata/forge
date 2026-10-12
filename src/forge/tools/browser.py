@@ -16,6 +16,7 @@ import httpx
 from pydantic import Field
 
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.ui_audit import DESIGN_REMINDER, audit_page
 
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "[::1]", "::1"}
 CHANNELS = ("msedge", "chrome", None)  # None = Playwright's bundled Chromium
@@ -210,15 +211,25 @@ class BrowserFill(Tool):
 
 class BrowserScreenshot(Tool):
     name = "browser_screenshot"
-    description = "Save a screenshot of the current page to .forge/screenshots (the user can view it)."
+    description = (
+        "Save a screenshot of the current page to .forge/screenshots (the user can view it) and run a style "
+        "audit on the rendered page: unstyled CSS framework, overflow, contrast, cramped or jammed boxes, "
+        "default links and buttons. Then look at the file with view_image."
+    )
 
     class Args(ToolArgs):
         full_page: bool = False
+        width: int | None = Field(
+            default=None, ge=240, le=3840, description="Viewport width, e.g. 375 for a phone"
+        )
+        height: int | None = Field(default=None, ge=240, le=4000)
 
     async def run(self, args: BrowserScreenshot.Args, context: ToolContext) -> ToolResult:
         session = _session(context)
         if session.page is None:
             return ToolResult(ok=False, content="No page is open: use browser_open first.")
+        if args.width:
+            await session.page.set_viewport_size({"width": args.width, "height": args.height or 800})
         folder = context.workspace.jail.check(context.workspace.forge_dir / "screenshots")
         folder.mkdir(parents=True, exist_ok=True)
         path = context.workspace.jail.check(folder / f"shot-{time.strftime('%Y%m%d-%H%M%S')}.png")
@@ -226,7 +237,11 @@ class BrowserScreenshot(Tool):
         await context.emit(
             "notice", {"kind": "screenshot", "text": f"Screenshot saved: {path.name}", "path": str(path)}
         )
-        return ToolResult(ok=True, content=f"Saved {path.relative_to(context.workspace.root).as_posix()}")
+        audit = await audit_page(session.page)
+        context.last_screenshot_step = context.step
+        context.ui_audit_blocked = "BLOCKER" in audit
+        saved = path.relative_to(context.workspace.root).as_posix()
+        return ToolResult(ok=True, content="\n".join([f"Saved {saved}", audit, DESIGN_REMINDER]))
 
 
 class BrowserConsole(Tool):

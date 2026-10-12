@@ -469,6 +469,13 @@ async def test_a_task_that_changed_the_ui_needs_a_browser_check_before_done(host
     refused = await orch.task_update("T1", "done", "", "pytest: 9 passed", "", context)
     assert not refused.ok and "browser" in refused.content and "web-ui-verification" in refused.content
     context.step, context.last_browser_step = 9, 9  # the app was then opened and clicked through
+    unseen = await orch.task_update("T1", "done", "", "browser: clicked through", "", context)
+    assert not unseen.ok and "browser_screenshot" in unseen.content  # but nobody looked at the design (D-245)
+    context.step = context.last_screenshot_step = 10
+    context.ui_audit_blocked = True  # the audit said the CSS framework produces nothing
+    unstyled = await orch.task_update("T1", "done", "", "browser: clicked through", "", context)
+    assert not unstyled.ok and "BLOCKER" in unstyled.content
+    context.ui_audit_blocked = False
     accepted = await orch.task_update(
         "T1", "done", "Cart works.", "browser: added two items, saw Cart (2)", "", context
     )
@@ -505,7 +512,7 @@ async def test_a_ui_change_that_was_checked_in_a_browser_is_not_questioned(
     orch = orchestrator(host)
     context = host.agent.context  # type: ignore[union-attr]
     context.last_edit_step = context.last_ui_edit_step = 5
-    context.last_browser_step = 8
+    context.last_browser_step = context.last_screenshot_step = 8
     await orch.handle_message("Make the calendar fit on a phone.")
     assert len(calls) == 1
 

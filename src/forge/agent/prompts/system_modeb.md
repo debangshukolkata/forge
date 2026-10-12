@@ -94,6 +94,12 @@ Rules
   then run the verifier again (say "throwaway" if the script need not be kept; either way the checks clean up the
   data they create). Don't mark a task done while it reports FAIL, and say in your summary what was
   checked. The web-ui-verification skill has the details.
+- Screens are designed, not just built. Aesthetics and ease of use are part of every UI requirement, even when
+  the user does not mention them: a page that works but looks like raw HTML is not done. Before building or
+  changing a screen load the ui-design-quality skill, decide palette/type/spacing first, and then run its
+  look-and-fix loop: browser_screenshot (it audits the rendered page), view_image, name the weaknesses, fix,
+  repeat. If the page looks unstyled, the CSS setup is broken: fix that before touching the design. A UI task
+  is not accepted as done without that look.
 - If the user asks to run the app or see it working (including a free-hand build with no host to fit),
   start it with start_background and use http_request or browser_open (e.g. its own UI) on localhost —
   the same as Mode A — rather than only pointing at output/ and the copy instructions. Copy instructions

@@ -100,6 +100,8 @@ class ToolContext:
     write_only_under: str | None = None  # a subagent that may write only below this folder (the verifier)
     last_ui_edit_step: int = 0  # a template/stylesheet/script that changes what the user sees (D-167)
     last_browser_step: int = 0  # the app was last used in a browser (browser_* tool or a Playwright run)
+    last_screenshot_step: int = 0  # the page was last screenshotted with the style audit (D-245)
+    ui_audit_blocked: bool = False  # that audit found a blocker (e.g. the CSS framework produces no styles)
     reads: ReadTracker = field(default_factory=ReadTracker)
     publish: PublishCallback | None = None  # engine event publisher (file diffs, etc.)
     tool_cap_tokens: int = DEFAULT_TOOL_CAP_TOKENS

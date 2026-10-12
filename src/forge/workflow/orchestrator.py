@@ -36,6 +36,7 @@ from forge.tools.interaction import (
     UpdatePlan,
 )
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
+from forge.tools.ui_audit import tailwind_setup_problem
 from forge.workflow.reports import closing_message, final_report
 from forge.workflow.state import Cadence, StateStore, Task
 from forge.workspace.output import build_output
@@ -55,7 +56,21 @@ UI_EVIDENCE_NOTE = (
     "through the feature and its error case, compare what you see with the requirement word by word; for "
     "anything beyond a trivial flow call spawn_subagent with agent 'verifier', giving it the requirement, "
     "what you changed and how to start the app). Fix what you find, then give your final summary and say "
-    "what you saw."
+    "what you saw. Also screenshot the page (browser_screenshot, it runs a style audit), look at the image with "
+    "view_image and judge the design: hierarchy, spacing, colour, readability. Improve it if it is not good "
+    "enough; the ui-design-quality skill has the checklist."
+)
+UI_LOOK_NOTE = (
+    "Not accepted: you changed what the page shows but have not looked at it since. Aesthetics and ease of use "
+    "are part of done. Run browser_screenshot (it measures the rendered page and lists problems), open the "
+    "file with view_image, and judge it as a designer would: visual hierarchy, spacing, colour, type, empty "
+    "states, a phone-width view if it should work on a phone. Fix what is weak, screenshot again, then call "
+    "task_update again and say what you saw. The ui-design-quality skill has the checklist."
+)
+UI_AUDIT_BLOCKED_NOTE = (
+    "Not accepted: the last style audit reported a BLOCKER (for example the CSS framework produces no styles, "
+    "so the page is unstyled). Fix the cause, restart or rebuild the app, take a new browser_screenshot, make "
+    "sure the audit no longer reports a blocker, then call task_update again."
 )
 FREE_HAND_PHRASES = (
     "don't ask me",
@@ -217,8 +232,9 @@ class Orchestrator:
 
     def _ui_changed_without_a_browser_check(self) -> bool:
         ctx = self.context
+        looked = min(ctx.last_browser_step, ctx.last_screenshot_step)  # used in a browser AND looked at it
         return (
-            ctx.last_ui_edit_step > max(self._export_step, ctx.last_browser_step)
+            ctx.last_ui_edit_step > max(self._export_step, looked)
             and ctx.last_ui_edit_step > self._ui_nudge_step
         )
 
@@ -463,6 +479,18 @@ class Orchestrator:
                     "you an independent check; a passing Playwright script you run counts too."
                 ),
             )
+        setup_problem = (
+            tailwind_setup_problem(self.workspace.root) if status == "done" and ui_edited else None
+        )
+        if setup_problem:
+            return ToolResult(
+                ok=False,
+                content=f"Not accepted: the styling setup is broken, so the page cannot look right. {setup_problem}",
+            )
+        if status == "done" and ui_edited and context.last_screenshot_step <= context.last_ui_edit_step:
+            return ToolResult(ok=False, content=UI_LOOK_NOTE)
+        if status == "done" and ui_edited and context.ui_audit_blocked:
+            return ToolResult(ok=False, content=UI_AUDIT_BLOCKED_NOTE)
         task.status = "done" if status == "done" else "blocked"
         task.handoff_note, task.verification, task.blocked_reason = handoff_note, verification, blocked_reason
         if task.status == "done":  # local history (spec §13B): one commit per completed task

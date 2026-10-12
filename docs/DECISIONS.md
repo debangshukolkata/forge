@@ -3342,3 +3342,9 @@ Chosen: B. Everything people read says DebCraft (web UI and window title, prompt
 `forge`, `%USERPROFILE%\.forge` and project `.forge` folders, `FORGE.md`, `FORGE_*` settings, the `Forge` TypeScript type,
 history in DECISIONS/CHANGELOG, and the repo path/URLs. Side effect: the name is 3 characters longer, so `E501` is ignored in
 ruff (the formatter still wraps code). C stays a separate, later decision (it needs read-the-old-name fallbacks).
+
+### D-245 — Aesthetics are part of done: style audit on every screenshot, a look before a UI task closes (user request 2026-10-12)
+Context: a Vite + React + Tailwind demo came out unstyled (Tailwind produced no CSS) and DebCraft could not improve it, even with a design skill and the screenshot given: it tuned classes that generated nothing.
+Options: (a) only a stronger prompt; (b) prompt + skill + measurable checks + a gate; (c) a separate design-reviewer subagent. Chose (b); (c) can follow.
+Built: `tools/ui_audit.py` — `browser_screenshot` now audits the rendered page (utility classes with no effect = BLOCKER, default look, overflow, default links/buttons, unpadded or touching boxes, contrast, tiny text, broken images, no type hierarchy) and takes `width`/`height` for a phone view; `tailwind_setup_problem` reads package.json/vite.config/CSS (v3 vs v4 mix-ups). `task_update(done)` after UI edits now also needs a screenshot after the last edit, no BLOCKER, and a sound Tailwind setup; the end-of-turn nudge asks for the same. New built-in skill `ui-design-quality` (setup fixes, design decisions, layout, components, UX, look-and-fix loop) and a line in both system prompts.
+Limits: the audit measures, it does not judge taste; the model still has to critique the image. Not yet run against a real Forge session on the office laptop.
