@@ -156,6 +156,13 @@ def test_the_skill_ships_its_reference_files() -> None:
     skill = discover()["ui-design-quality"]
     listed = skill_files_note(skill)
     for name in (
+        "recipes/style-directions.md",
+        "recipes/css-techniques.md",
+        "recipes/motion.css",
+        "recipes/motion.tsx",
+        "recipes/components-native.tsx",
+        "recipes/sources.md",
+        "recipes/component-libraries.md",
         "recipes/design-md-template.md",
         "recipes/index.css",
         "recipes/landing-reference.tsx",
@@ -289,6 +296,38 @@ async def test_the_audit_flags_see_through_headers_invisible_fields_and_clipped_
         assert "see-through background" in text
         assert "nearly invisible" in text
         assert "cut off by its container" in text
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)
+        server.shutdown()
+
+
+MODERN_COLOURS = """<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;font:18px Arial;background:oklch(98% 0.01 80)}
+main{padding:24px;max-width:600px}h1{font-size:44px;margin:0 0 12px;color:oklch(25% 0.02 60)}
+.faint{color:oklch(86% 0.01 80)}.ok{color:color-mix(in oklab, oklch(30% 0.02 60) 90%, white)}
+</style></head><body><main><h1>Give blood</h1><p class="ok">Readable paragraph in a mixed colour.</p>
+<p class="faint">This sentence is far too pale to read.</p></main></body></html>"""
+
+
+@pytest.mark.e2e
+async def test_the_audit_reads_oklch_and_color_mix_colours(tmp_path: Path, original_repo: Path) -> None:
+    pytest.importorskip("playwright.async_api")
+    root = tmp_path / "modern"
+    root.mkdir()
+    (root / "index.html").write_text(MODERN_COLOURS, encoding="utf-8")
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    try:
+        await BrowserOpen().run(
+            BrowserOpen.Args(url=f"http://127.0.0.1:{server.server_address[1]}/"), context
+        )
+        text = (await BrowserScreenshot().run(BrowserScreenshot.Args(), context)).content
+        assert "Low text contrast" in text and "too pale" in text  # the pale oklch paragraph is caught
+        assert (
+            "Readable paragraph" not in text.split("Low text contrast")[1].split("\n")[0]
+        )  # the good one is not
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
         server.shutdown()

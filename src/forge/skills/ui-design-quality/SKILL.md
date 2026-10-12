@@ -40,6 +40,9 @@ This skill's folder holds worked examples that build, pass the audit and look pr
   beam, aurora background, glass, grain, button shine, float; all reduced-motion safe. Import `motion.css` in main.tsx.
 - `recipes/components-native.tsx`: accessible dialog, tabs, toasts, empty state, skeleton, sortable searchable table with
   no extra dependency.
+- `recipes/component-libraries.md`: the decision (custom design versus daisyUI, shadcn/ui, MUI or Tabler) and tested
+  quickstarts: daisyUI v5 with a brand theme, MUI with a hard re-theme, shadcn/ui and Tabler notes. A library is a
+  starting point: always re-theme it and never ship its default look.
 - `recipes/sources.md`: vetted external libraries and sources with their licences, how to install them (shadcn/ui, Motion,
   Magic UI, daisyUI, Open Props, icon sets, fonts, charts), and the ones to avoid copying (GSAP, React Bits, Hover.css).
 - `recipes/palettes-and-fonts.md`: palettes by mood, font pairings, type and spacing scales, layout ideas that make

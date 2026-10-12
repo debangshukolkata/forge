@@ -101,7 +101,11 @@ AUDIT_SCRIPT = r"""
   if (jammed.length) findings.push('Boxed elements touching side by side (no gap): ' + sample(jammed) + '.');
 
   // 6. Contrast of text against its background (WCAG AA, 4.5:1; 3:1 for large text).
-  const parse = (c) => { const m = c.match(/[\d.]+/g); return m ? m.map(Number) : [0, 0, 0, 0]; };
+  // Any CSS colour (rgb, hex, oklch, color-mix, color(display-p3)...) to [r, g, b, alpha] in sRGB, via a 1x1 canvas.
+  const swatch = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  swatch.canvas.width = swatch.canvas.height = 1;
+  const parse = (c) => { swatch.clearRect(0, 0, 1, 1); swatch.fillStyle = '#000'; swatch.fillStyle = c; swatch.fillRect(0, 0, 1, 1);
+    const d = swatch.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
   const lum = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
     return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
   const backdrop = (el) => { for (let n = el; n; n = n.parentElement) {
@@ -170,10 +174,22 @@ AUDIT_SCRIPT = r"""
   if (seeThrough.length) findings.push('The sticky/fixed bar ' + sample(seeThrough) + ' has a see-through background: page text scrolls underneath and collides with it. Give it a solid background or backdrop-blur with a tinted fill and a bottom border.');
   const faintFields = all.filter((el) => {
     if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) || !visible(el) || ['checkbox', 'radio', 'hidden', 'submit', 'button', 'range', 'color', 'file'].includes(el.type)) return false;
-    const s = getComputedStyle(el), around = backdrop(el.parentElement || el);
-    const edge = parseFloat(s.borderTopWidth) > 0 ? ratioOf(over(parse(s.borderTopColor), around), around) : 1;
-    const fill = ratioOf(over(parse(s.backgroundColor), around), around);
-    return Math.max(edge, fill) < 1.4;
+    // The visible outline may be on the input itself (border or fill), on a sibling fieldset (MUI), or on a wrapper
+    // that hugs the input (border only: a page or card background is not a field outline).
+    const edgeOf = (box) => {
+      const style = getComputedStyle(box), around = backdrop(box.parentElement || box);
+      return parseFloat(style.borderTopWidth) > 0 ? ratioOf(over(parse(style.borderTopColor), around), around) : 1;
+    };
+    const own = getComputedStyle(el), ownAround = backdrop(el.parentElement || el);
+    let best = Math.max(edgeOf(el), ratioOf(over(parse(own.backgroundColor), ownAround), ownAround));
+    const fieldBox = el.getBoundingClientRect();
+    const outline = el.parentElement && el.parentElement.querySelector(':scope > fieldset');
+    if (outline) best = Math.max(best, edgeOf(outline));
+    for (let up = el.parentElement, i = 0; up && i < 3; up = up.parentElement, i++) {
+      const box = up.getBoundingClientRect();
+      if (box.height <= fieldBox.height + 16 && box.width <= fieldBox.width + 40) best = Math.max(best, edgeOf(up));
+    }
+    return best < 1.4;
   });
   if (faintFields.length) findings.push(faintFields.length + ' form field(s) are nearly invisible (border and fill barely differ from the background): ' + sample(faintFields) + '. Use a clear 1px border (about ink-300 on light, white/20% on dark) and a visible focus ring.');
   const clippedText = all.filter((el) => visible(el) && /(hidden|clip)/.test(getComputedStyle(el).overflowX) && el.clientWidth > 8 && el.scrollWidth > el.clientWidth + 2
