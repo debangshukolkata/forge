@@ -102,7 +102,13 @@ class LLMRouter:
                 raise
             await self._notice(
                 "fallback",
-                {"role": role, "from_model": model_key, "to_model": fallback, "reason": str(error)[:300]},
+                {
+                    "role": role,
+                    "from_model": model_key,
+                    "to_model": fallback,
+                    "reason": str(error)[:300],
+                    "text": f"{model_key} failed ({str(error)[:200]}); switching to {fallback}",
+                },
             )
             model_key = fallback
             response = await self._call_with_retries(role, model_key, request, on_text_delta)
@@ -135,6 +141,9 @@ class LLMRouter:
                     "attempt": attempt,
                     "delay_s": round(delay_s, 2),
                     "reason": str(error)[:300],
+                    # The web chat shows `text`; without it the user sees only the word "retry" (D-246).
+                    "text": f"Model call to {model_key} failed ({str(error)[:200]}); retrying in "
+                    f"{round(delay_s)}s (attempt {attempt})",
                 },
             )
 
