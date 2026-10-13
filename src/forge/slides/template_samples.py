@@ -13,6 +13,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from forge.slides.backgrounds import background_luminance, is_dark
 from forge.slides.edit_find import walk
 from forge.slides.edit_text import set_frame_text
 
@@ -81,6 +82,7 @@ class Sample:
         default_factory=list
     )  # column, bar, line, pie, donut ... of each chart on the slide
     table_sizes: list[tuple[int, int]] = field(default_factory=list)  # rows and columns of each table
+    dark: bool | None = None  # a dark or a light slide (None: in between, or not readable from the file)
 
     def slot(self, role: str) -> Slot | None:
         return next((s for s in self.slots if s.role == role and not s.fixed and not self._in_items(s)), None)
@@ -396,9 +398,20 @@ def analyze_samples(prs: Any) -> list[Sample]:
             role, [s for s in slots if not s.fixed], items, pictures, charts, tables, number == len(slides)
         )
         families, sizes = _object_facts(slide)
+        dark = is_dark(background_luminance(slide))
         samples.append(
             Sample(
-                number, slide.slide_layout.name, kind, slots, items, pictures, charts, tables, families, sizes
+                number,
+                slide.slide_layout.name,
+                kind,
+                slots,
+                items,
+                pictures,
+                charts,
+                tables,
+                families,
+                sizes,
+                dark,
             )
         )
     return samples
@@ -460,10 +473,39 @@ def _shape_by_id(slide: Any, shape_id: int) -> Any | None:
     return next((s for s in walk(slide.shapes) if s.shape_id == shape_id), None)
 
 
-def _set(slide: Any, slot: Slot, value: Any) -> None:
+MIN_SHRINK = 0.6  # text is never made smaller than this share of the sample's size
+FLOOR_PT = 9.0
+
+
+def _set(slide: Any, slot: Slot, value: Any, notes: list[str] | None = None) -> None:
+    """Puts the text into the slot's shape. Text longer than the sample's words is made smaller so it still fits the box (down to 60 percent
+    of the sample's size, at least 9 pt); when it does not fit even then, `notes` gets a warning saying which slot to shorten."""
     shape = _shape_by_id(slide, slot.id)
-    if shape is not None:
-        set_frame_text(shape.text_frame, _lines(value))
+    if shape is None:
+        return
+    lines = _lines(value)
+    set_frame_text(shape.text_frame, lines)
+    size = slot.size_pt
+    if not size or slot.w <= 0 or slot.h <= 0:
+        return
+    from pptx.util import Pt
+
+    from forge.slides import fit
+
+    words = " ".join(lines)
+    if len(words) <= len(slot.text) * 1.05:
+        return  # no longer than the sample's own wording: it fitted there
+    bold = bool(shape.text_frame.paragraphs[0].runs and shape.text_frame.paragraphs[0].runs[0].font.bold)
+    floor = max(FLOOR_PT, size * MIN_SHRINK)
+    chosen, fits = fit.fit_size([(line, 1.0, bold) for line in lines], slot.w, slot.h, size, floor)
+    if chosen < size:
+        for paragraph in shape.text_frame.paragraphs:
+            for run in paragraph.runs:
+                run.font.size = Pt(chosen)
+    if not fits and notes is not None:
+        notes.append(
+            f"the text for slot {slot.id} ({slot.role}) is too long for its box even at {chosen:g} pt: shorten it"
+        )
 
 
 KEY_ALIASES = {
@@ -544,7 +586,9 @@ def _centre_kept(slide: Any, items: list[Item], kept: int) -> None:
                 moved.add(shape.shape_id)
 
 
-def fill_sample(slide: Any, sample: Sample, fills: dict[str, Any]) -> list[str]:
+def fill_sample(
+    slide: Any, sample: Sample, fills: dict[str, Any], notes: list[str] | None = None
+) -> list[str]:
     """Put the content into a copy of the sample slide; returns problems (slots asked for that the sample does not have).
     Anything of the sample's own text that is not replaced is removed, so no placeholder wording is left behind."""
     problems: list[str] = []
@@ -567,7 +611,7 @@ def fill_sample(slide: Any, sample: Sample, fills: dict[str, Any]) -> list[str]:
                 values, lost = _item_values(content, item)
                 for part, slot in item.parts.items():
                     if part in values:
-                        _set(slide, slot, values[part])
+                        _set(slide, slot, values[part], notes)
                         used.add(slot.id)
                 for name in lost:
                     problems.append(
@@ -597,7 +641,7 @@ def fill_sample(slide: Any, sample: Sample, fills: dict[str, Any]) -> list[str]:
                 f"this sample has no {key!r} (it has: {', '.join(sorted({s.role for s in sample.slots if not s.fixed}))})"
             )
             continue
-        _set(slide, target, value)
+        _set(slide, target, value, notes)
         used.add(target.id)
     for slot in sample.slots:  # sample words that nothing replaced must not stay
         if slot.id not in used and not slot.fixed:

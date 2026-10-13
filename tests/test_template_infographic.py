@@ -38,12 +38,17 @@ def test_samples_are_recognised_by_what_they_hold() -> None:
     samples = analyze_samples(Presentation(io.BytesIO(make_infographic_template())))
     kinds = {s.number: s.kind for s in samples}
     assert kinds[1] == "title" and kinds[2] == "section" and kinds[4] == "chart" and kinds[5] == "chart"
-    assert kinds[6] == "table" and kinds[8] == "thanks"
+    assert kinds[6] == "table" and kinds[10] == "thanks"
     assert (
         samples[3].chart_families == ["donut"]
         and samples[4].chart_families == ["column"]
         and samples[5].table_sizes == [(4, 3)]
     )
+
+
+def test_the_dark_or_light_side_of_the_template_is_read_from_the_file() -> None:
+    samples = analyze_samples(Presentation(io.BytesIO(make_infographic_template())))
+    assert [s.dark for s in samples] == [True, True, True, False, True, False, False, True, False, True]
 
 
 def test_a_deck_built_on_it_uses_the_samples_charts_and_table_and_leaves_no_sticky_note() -> None:
@@ -88,7 +93,7 @@ def test_a_deck_built_on_it_uses_the_samples_charts_and_table_and_leaves_no_stic
     )
     assert prs.slide_width == (10 * 914400) and len(prs.slides) == 6
     labels = [r.layout for r in reports]
-    assert any("template sample 4" in label for label in labels) and any(
+    assert any("template sample 8" in label for label in labels) and any(
         "template sample 5" in label for label in labels
     )
     assert any("template sample 6" in label for label in labels)
@@ -155,3 +160,91 @@ def test_a_table_with_too_many_rows_falls_back_to_the_quiet_native_table() -> No
         }
     )
     assert not any("table (template sample" in r.layout for r in reports)
+
+
+def _chart_label_numbers(reports: list) -> list[str]:  # type: ignore[type-arg]
+    return [r.layout for r in reports if "chart (template sample" in r.layout]
+
+
+def test_the_deck_stays_on_the_side_the_first_slide_chose() -> None:
+    """The first slide is the dark cover, so the column chart comes from the dark sample (5) and the donut from the dark twin (8)."""
+    outline = {
+        "slides": [
+            {"layout": "title", "title": "T"},
+            {
+                "layout": "chart",
+                "title": "Donut",
+                "kind": "donut",
+                "categories": ["a", "b"],
+                "series": [{"name": "s", "values": [1, 2]}],
+            },
+            {
+                "layout": "chart",
+                "title": "Columns",
+                "kind": "column",
+                "categories": ["a", "b"],
+                "series": [{"name": "s", "values": [1, 2]}],
+            },
+        ]
+    }
+    _, reports = _build(outline)
+    assert any("template sample 8" in label for label in _chart_label_numbers(reports))
+    assert any("template sample 5" in label for label in _chart_label_numbers(reports))
+
+
+def test_the_mood_can_be_asked_for() -> None:
+    outline = {
+        "mood": "light",
+        "slides": [
+            {"layout": "title", "title": "T"},
+            {
+                "layout": "chart",
+                "title": "Donut",
+                "kind": "donut",
+                "categories": ["a", "b"],
+                "series": [{"name": "s", "values": [1, 2]}],
+            },
+            {
+                "layout": "chart",
+                "title": "Columns",
+                "kind": "column",
+                "categories": ["a", "b"],
+                "series": [{"name": "s", "values": [1, 2]}],
+            },
+        ],
+    }
+    _, reports = _build(outline)
+    assert any("template sample 4" in label for label in _chart_label_numbers(reports))
+    assert any("template sample 9" in label for label in _chart_label_numbers(reports))
+
+
+def test_text_longer_than_the_samples_is_made_smaller_to_fit_and_a_huge_text_is_reported() -> None:
+    """Probe on the real template: the long-text slides overflowed the sample's boxes (D-332)."""
+    samples = analyze_samples(Presentation(io.BytesIO(make_infographic_template())))
+    caption = next(s for s in samples[2].slots if s.role == "text" and len(s.text) > 30)
+    long = (
+        "A caption that says a good deal more than the sample's own few words do, in order to need a smaller size. "
+        * 2
+    )
+    huge = "word " * 400
+    for text, warned in ((long, False), (huge, True)):
+        prs, reports = _build(
+            {
+                "slides": [
+                    {"layout": "title", "title": "T"},
+                    {
+                        "layout": "template_slide",
+                        "source": 3,
+                        "fill": {"title": "Facts", f"slot:{caption.id}": text},
+                    },
+                ]
+            }
+        )
+        shape = next(
+            s
+            for s in walk(prs.slides[1].shapes)
+            if getattr(s, "has_text_frame", False) and s.text_frame.text.startswith(text[:20])
+        )
+        size = shape.text_frame.paragraphs[0].runs[0].font.size.pt
+        assert size < 14 and size >= 8.4
+        assert any("too long for its box" in w for w in reports[1].warnings) is warned

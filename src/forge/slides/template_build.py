@@ -112,6 +112,9 @@ class TemplateBuilder(_Builder):
         )
         self.decor: list[Any] = []
         self.used_samples: dict[str, int] = {}
+        self.mood: bool | None = {"dark": True, "light": False}.get(
+            deck.mood
+        )  # True: stay on the dark samples
         self.read_image = read_image
         super().__init__(deck, read_image)
 
@@ -269,12 +272,19 @@ class TemplateBuilder(_Builder):
 
     def match(self, kind: str) -> Sample | None:
         """The next sample of this kind (round robin, so a deck with several bullet slides does not repeat one sample)."""
-        options = [s for s in self.samples if s.kind == kind and not s.charts and not s.tables]
+        options = self._prefer([s for s in self.samples if s.kind == kind and not s.charts and not s.tables])
         if not options:
             return None
         count = self.used_samples.get(kind, 0)
         self.used_samples[kind] = count + 1
         return options[count % len(options)]
+
+    def _prefer(self, options: list[Sample]) -> list[Sample]:
+        """The samples on the deck's side (dark or light) when there are any; else all of them."""
+        if self.mood is None:
+            return options
+        same = [s for s in options if s.dark == self.mood]
+        return same or options
 
     def _object_sample(self, kind: str, family: str = "") -> Sample | None:
         """The next sample slide that holds exactly one chart (of this family) or one table, round robin."""
@@ -282,6 +292,7 @@ class TemplateBuilder(_Builder):
             options = [s for s in self.samples if s.chart_families == [family]]
         else:
             options = [s for s in self.samples if len(s.table_sizes) == 1 and not s.charts]
+        options = self._prefer(options)
         if not options:
             return None
         key = f"{kind}:{family}"
@@ -349,8 +360,13 @@ class TemplateBuilder(_Builder):
         self.reports.append(self.report)
         if notes:
             slide.notes_slide.notes_text_frame.text = notes
+        if self.mood is None and sample.dark is not None and self.deck.mood == "auto":
+            self.mood = sample.dark  # the first slide decides which side of the template the deck stays on
         picture = fills.pop("picture", None)
-        problems = fill_sample(slide, sample, fills)
+        overflow: list[str] = []
+        problems = fill_sample(slide, sample, fills, overflow)
+        for note in overflow:
+            self.warn(note)
         if problems and strict:  # content the model gave would silently be lost: make it fix the outline
             raise BuildError(
                 f"slide {self.report.number}: the content does not fit sample slide {sample.number} [{sample.kind}]: "
@@ -518,10 +534,10 @@ class TemplateBuilder(_Builder):
         self, kind: str, label: str, title: str, notes: str, entries: list[dict[str, str]]
     ) -> bool:
         """Cards and steps use the template's own sample of that kind when it has room for all the items."""
-        sample = next(
-            (s for s in self.samples if s.kind == kind and len(s.items) >= len(entries) and not s.charts),
-            None,
-        )
+        fitting = [
+            s for s in self.samples if s.kind == kind and len(s.items) >= len(entries) and not s.charts
+        ]
+        sample = next(iter(self._prefer(fitting)), None)
         if sample is None:
             return False
         parts = sample.items[0].parts

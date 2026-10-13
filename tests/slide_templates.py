@@ -230,10 +230,28 @@ def make_infographic_template() -> bytes:
     for line in ("Consectetur adipiscing elit", "Quisque faucibus ex sapien"):
         s.placeholders[1].text_frame.add_paragraph().text = line
     chrome(s, 7)
-    s = prs.slides.add_slide(cover_layout)  # 8: thank you
+    s = prs.slides.add_slide(title_only)  # 8: the dark twin of the donut sample (4)
+    background(s, "0A0A0A")
+    s.shapes.title.text_frame.text = "Slide title here"
+    data = CategoryChartData()
+    data.categories = ["Lorem", "Ipsum", "Dolor"]
+    data.add_series("Share", (50, 30, 20))
+    s.shapes.add_chart(XL_CHART_TYPE.DOUGHNUT, Inches(1.5), Inches(1.4), Inches(4.5), Inches(3.5), data)
+    chrome(s, 8)
+    s = prs.slides.add_slide(title_only)  # 9: the light twin of the column sample (5)
+    background(s, "F4F4F4")
+    s.shapes.title.text_frame.text = "Slide title here"
+    data = CategoryChartData()
+    data.categories = ["A", "B", "C", "D"]
+    data.add_series("One", (1, 2, 3, 4))
+    s.shapes.add_chart(
+        XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(0.8), Inches(1.4), Inches(8.4), Inches(3.6), data
+    )
+    chrome(s, 9)
+    s = prs.slides.add_slide(cover_layout)  # 10: thank you
     background(s, "0A0A0A")
     s.shapes.title.text_frame.text = "Thank you"
-    chrome(s, 8)
+    chrome(s, 10)
     out = io.BytesIO()
     prs.save(out)
     return out.getvalue()

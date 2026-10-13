@@ -500,6 +500,9 @@ class Deck(_Model):
     template: str | None = (
         None  # a .potx or .pptx company template in the workspace: the deck is built on its layouts
     )
+    mood: Literal["auto", "dark", "light"] = (
+        "auto"  # with a template that has dark and light twins: which side to stay on (auto: the first slide decides)
+    )
 
     @field_validator("theme")
     @classmethod
