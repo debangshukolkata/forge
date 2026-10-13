@@ -138,3 +138,17 @@ Delivered: 20/20; mean judge score: 4.43.
   on template slides. d10 (workshop): the judge says facilitator notes are missing though asked for.
 - PowerPoint measured overflow: d03 12 boxes, d17 7, d18 3, d04 1: the model did not fix all of them (it should preview and fix).
 Next: look at those overflows (are they cards/steps text that does not shrink?), notes on template slides, d07.
+
+## baseline-4 and baseline-5 (2026-10-13, after D-299 and D-300; only the affected requests were re-run)
+
+baseline-4 (training, edit, workshop, corporate template, marketing plan, case study), mean 4.11: PowerPoint overflow 0 on five of six
+(d03 12 -> 0, d17 7 -> 0, d18 3 -> 0), speaker notes 100 % on all six. d13 (corporate template) fell to 3.7, fit 1: the model filled
+the stats sample with `value`/`label` and the bullets sample with `bullets`, ignored the build warnings and shipped a deck that had lost
+the numbers and the asks. D-300 fixed that (synonyms for slots and parts; content that would be lost fails the build).
+
+baseline-5 (d07, d13 only, after D-300): d13 **4.7** (fit 5, overflow 0, notes 100 %), d07 4.2. The earlier d07 complaint (new slide after
+"Thank you") was the request's own wording, "add a final slide": the request now says "just before the thank-you slide".
+
+Where it stands (judge means, one run each): baseline-1 4.25 (12 requests) -> baseline-3 4.43 (20) -> the re-runs above. Open: dense
+bullet lists are still the most frequent complaint (the judge wants more visual structure), and the judge is a model: the user's own
+ratings of a few decks are still needed.
