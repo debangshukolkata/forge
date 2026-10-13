@@ -155,6 +155,15 @@ is `kind: "column"` with some series set to `"kind": "line"` and, when the scale
 categories and every other numeric column a series; do not retype numbers you have in a file. Keep pies to 6 slices or fewer, use
 one colour for one idea, label the unit on an axis, and let the slide title state what the chart shows.
 
+**Tables (the `table` layout and freeform `table` elements take the same options).** Cells are plain values or objects:
+`{"text": "Total", "bold": true, "fill": "surface", "align": "right", "colspan": 2, "rowspan": 2, "color": "accent", "size": 18}`; a merged
+cell counts as several columns in its row. Table options: `col_widths` (relative, one per column), `align` (per column; default
+numbers right and text left), `formats` (one number format per column: `#,##0`, `0.0%`, `$#,##0.00`), `style` (`striped`, `plain`,
+`lines` for horizontal rules, `grid`), `header_fill`, `first_column_bold`, `size`, and `heatmap` (`{"columns": ["Revenue"], "low":
+"background", "high": "accent"}` shades each numeric column by its own range; text colour follows the shade). A long table on the
+`table` layout takes `split_rows: 8` to continue on further slides with the header repeated; the first slide keeps the notes. Keep
+tables to what the audience must read exactly; if the point is a trend, use a chart.
+
 **Icons.** `find_icon("growth chart")` lists icon names (Lucide outline icons and Material filled icons, bundled, offline). In a freeform
 slide: `{"type": "icon", "name": "lucide:trending-up", "x": 1, "y": 2, "w": 0.8, "h": 0.8, "color": "accent"}`; the box must be square.
 Put an icon in a coloured circle with `"badge": "accent"` and a white icon (`"color": "#FFFFFF"`, `"badge_shape": "rounded"` for a

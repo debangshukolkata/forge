@@ -447,7 +447,7 @@ class _Freeform:
         self.placed.append(Placed(index, self.name(index, el), el.x, el.y, el.w, el.h))
 
     def table(self, slide: Any, index: int, el: TableElement) -> None:
-        self.b.add_table(slide, el.columns, el.rows, (el.x, el.y, el.w, el.h), el.alt or "table", el.size)
+        self.b.add_table(slide, el, (el.x, el.y, el.w, el.h), el.alt or "table")
         self.placed.append(Placed(index, self.name(index, el), el.x, el.y, el.w, el.h))
 
     # --- the checks a designer does by eye ---

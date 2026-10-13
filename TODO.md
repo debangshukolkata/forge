@@ -168,7 +168,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 - [x] **P2.3 Icons.** An icon set turned into pictures or native shapes, placed in coloured circles, sized and recoloured. Needs decision 3. Size M. **(done 2026-10-13, D-283: Lucide (all 1,877) and 164 Material Symbols as native shapes, `find_icon` tool, badges; looked at in real PowerPoint renders)**
 - [x] **P2.4 Charts to full strength.** Stacked, area, scatter, donut, combo with a second axis, data-label formats, axis titles, per-point **(done 2026-10-13, D-284; looked at in PowerPoint renders)**
   colours, legends, number formats, quiet styling by default; charts straight from CSV/Excel data. Size M.
-- [ ] **P2.5 Tables to full strength.** Merged cells, widths, borders, per-cell fill/bold/alignment, heat-map colouring, long-table splitting. Size M.
+- [x] **P2.5 Tables to full strength.** Merged cells, widths, borders, per-cell fill/bold/alignment, heat-map colouring, long-table splitting. Size M. **(done 2026-10-13, D-285; looked at in PowerPoint renders)**
 - [ ] **P2.6 Diagram toolkit.** Connectors that stay attached to shapes (straight and elbow), grouping, align and distribute operations,
   ready recipes (process, cycle, hierarchy, 2x2 matrix, timeline, funnel, roadmap). Size M.
 - [ ] **P2.7 Real masters and theme.** Generate proper slide masters, layouts, placeholders, footer and slide-number fields and theme

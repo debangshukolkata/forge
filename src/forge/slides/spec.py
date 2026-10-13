@@ -47,6 +47,7 @@ Color = Annotated[
         pattern=r"^(#[0-9A-Fa-f]{6}|text|muted|accent|accent_text|surface|background|series[1-6])$"
     ),
 ]  # a theme colour by name, or "#RRGGBB"
+Align = Literal["left", "center", "right"]
 
 
 class Series(_Model):
@@ -101,12 +102,54 @@ class ImageSlide(_Slide):
     alt: str = ""  # what the picture shows, for screen readers
 
 
-class TableSlide(_Slide):
+class CellSpec(_Model):
+    """A table cell with its own look; a plain value in a row is the same as {"text": value}."""
+
+    text: str | int | float = ""
+    bold: bool = False
+    italic: bool = False
+    color: Color | None = None
+    fill: Color | None = None
+    align: Align | None = None
+    size: float | None = Field(default=None, ge=8, le=60)
+    colspan: int = Field(default=1, ge=1, le=12)
+    rowspan: int = Field(default=1, ge=1, le=20)
+
+
+class Heatmap(_Model):
+    """Shade numeric cells between two colours by their value (low to high)."""
+
+    columns: list[int | str] = Field(
+        default_factory=list
+    )  # column positions (from 0) or names; empty: every numeric column
+    low: Color = "background"
+    high: Color = "accent"
+
+
+class TableBase(_Model):
+    columns: list[str]
+    rows: list[list[str | int | float | CellSpec]]
+    col_widths: list[float] = Field(
+        default_factory=list
+    )  # relative widths, one per column; default: by text length
+    align: list[Align] = Field(default_factory=list)  # one per column; default: numbers right, text left
+    formats: list[str] = Field(
+        default_factory=list
+    )  # one number format per column: #,##0  0.0  0%  $#,##0.00
+    style: Literal["striped", "plain", "lines", "grid"] = "striped"  # fills and borders
+    header_fill: Color | None = None
+    first_column_bold: bool = False
+    heatmap: Heatmap | None = None
+    size: float | None = Field(default=None, ge=8, le=60)
+
+
+class TableSlide(_Slide, TableBase):
     layout: Literal["table"]
     title: str
-    columns: list[str]
-    rows: list[list[str | int | float]]
     caption: str = ""
+    split_rows: int | None = Field(
+        default=None, ge=2, le=20
+    )  # more rows than this continue on following slides
 
 
 ChartKind = Literal[
@@ -185,7 +228,6 @@ class ClosingSlide(_Slide):
 
 # --- free-form slides (D-242): the model places every element itself, in inches on a 13.333 x 7.5 canvas ---
 
-Align = Literal["left", "center", "right"]
 VAlign = Literal["top", "middle", "bottom"]
 FontKind = Literal["title", "body", "mono"]
 
@@ -288,11 +330,8 @@ class ChartElement(_Placed, ChartBase):
     alt: str = ""
 
 
-class TableElement(_Placed):
+class TableElement(_Placed, TableBase):
     type: Literal["table"]
-    columns: list[str]
-    rows: list[list[str | int | float]]
-    size: float | None = None
     alt: str = ""
 
 

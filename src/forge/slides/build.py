@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from forge.errors import ForgeError
-from forge.slides import charts, fit, lint
+from forge.slides import charts, fit, lint, tables
 from forge.slides.errors import BuildError
 from forge.slides.freeform import build_freeform
 from forge.slides.spec import (
@@ -388,74 +388,36 @@ class _Builder:
             frame = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
             self.paragraph(frame, True, slide_spec.caption, 14, self.theme.muted, italic=True, align="center")
 
-    def add_table(
-        self,
-        slide: Any,
-        columns: list[str],
-        rows: list[list[str | int | float]],
-        box: tuple[float, float, float, float],
-        descr: str,
-        size: float | None = None,
-    ) -> None:
-        """A native table in `box` (x, y, width, maximum height). Row text is sized by the number of rows."""
-        x, y, width, area_h = box
-        if any(len(row) != len(columns) for row in rows):
-            raise BuildError(
-                f"slide {self.report.number}: every table row needs {len(columns)} cells (one per column)"
-            )
-        if len(rows) > MAX_TABLE_ROWS:
-            self.warn(f"{len(rows)} table rows: more than {MAX_TABLE_ROWS} is hard to read, split the table")
-        size = size or (24 if len(rows) <= 4 else 20 if len(rows) <= 6 else 16 if len(rows) <= 8 else 14)
-        every_row: list[list[str | int | float]] = [list(columns), *rows]
-        grid = [[str(cell) for cell in cells] for cells in every_row]
-        weights = [max(len(row[i]) for row in grid) + 4 for i in range(len(columns))]
-        widths = [width * wt / sum(weights) for wt in weights]
-        needed = 0.0
-        for row_number, cells in enumerate(grid):
-            lines = max(
-                fit.lines_needed(cell, widths[i] - 0.3, size, row_number == 0) for i, cell in enumerate(cells)
-            )
-            needed += lines * size * 1.2 / 72 + 0.22
-        if needed > area_h:
-            self.warn("the table is too tall for the slide: remove rows or shorten the cell text")
-        frame = slide.shapes.add_table(
-            len(rows) + 1,
-            len(columns),
-            *(self.m["inches"](v) for v in (x, y, width, min(needed, area_h))),
-        )
-        frame._element.nvGraphicFramePr.cNvPr.set("descr", descr)
-        table = frame.table
-        for index, column_width in enumerate(widths):
-            table.columns[index].width = self.m["inches"](column_width)
-        for row_index, cells in enumerate(grid):
-            for column_index, value in enumerate(cells):
-                cell = table.cell(row_index, column_index)
-                header = row_index == 0
-                cell.fill.solid()
-                cell.fill.fore_color.rgb = self.colour(
-                    self.theme.accent
-                    if header
-                    else self.theme.surface
-                    if row_index % 2 == 0
-                    else self.theme.background
-                )
-                cell.margin_left = cell.margin_right = self.m["inches"](0.12)
-                cell.vertical_anchor = self.m["anchor"].MIDDLE
-                paragraph = cell.text_frame.paragraphs[0]
-                run = paragraph.add_run()
-                run.text = value
-                self.style(run, size, self.theme.accent_text if header else self.theme.text, bold=header)
+    def add_table(self, slide: Any, options: Any, box: tuple[float, float, float, float], descr: str) -> None:
+        """A native table in `box` (x, y, width, maximum height): see tables.py for everything it can do."""
+        tables.add_table(self, slide, options, box, descr)
 
     def table_slide(self, slide_spec: TableSlide) -> None:
-        slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
-        caption_height = 0.5 if slide_spec.caption else 0.0
-        box = (MARGIN, BODY_TOP, CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height)
-        self.add_table(
-            slide, slide_spec.columns, slide_spec.rows, box, slide_spec.caption or slide_spec.title
+        limit = slide_spec.split_rows
+        rows = slide_spec.rows
+        chunks = (
+            [rows[i : i + limit] for i in range(0, len(rows), limit)]
+            if limit and len(rows) > limit
+            else [rows]
         )
-        if slide_spec.caption:
-            note = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
-            self.paragraph(note, True, slide_spec.caption, 14, self.theme.muted, italic=True)
+        for number, chunk in enumerate(chunks, start=1):
+            title = (
+                slide_spec.title
+                if number == 1
+                else f"{slide_spec.title} (continued, {number} of {len(chunks)})"
+            )
+            slide = self.content_slide(slide_spec.layout, title, slide_spec.notes if number == 1 else "")
+            caption_height = 0.5 if slide_spec.caption else 0.0
+            box = (MARGIN, BODY_TOP, CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height)
+            self.add_table(
+                slide,
+                slide_spec.model_copy(update={"rows": chunk}),
+                box,
+                slide_spec.caption or slide_spec.title,
+            )
+            if slide_spec.caption:
+                note = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
+                self.paragraph(note, True, slide_spec.caption, 14, self.theme.muted, italic=True)
 
     def add_chart(
         self,
