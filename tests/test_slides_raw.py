@@ -163,3 +163,48 @@ async def test_the_tools_unpack_edit_and_pack(original_repo: Path, tmp_path: Pat
         PackPresentation.Args(folder="docs", output="docs/x.pptx"), context
     )
     assert not refused.ok and "not made by unpack_presentation" in refused.content
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["ppt/a.xml:stream", "ppt/CON.xml", "ppt/nul", "ppt/x.xml.", "ppt/a<b>.xml", "ppt/with\x01ctrl.xml"],
+)
+def test_names_that_windows_treats_specially_are_refused(name: str) -> None:
+    with pytest.raises(DeckError, match="unsafe entry name"):
+        rawpackage.check_archive(_zip({name: b"x"}))
+
+
+def test_the_normal_part_names_of_a_deck_pass_the_name_check() -> None:
+    rawpackage.check_package(_deck_bytes())
+
+
+def test_every_deck_the_tools_open_is_checked_first(tmp_path: Path) -> None:
+    """P3.4 (D-323): open_deck refuses bombs, unsafe names and DOCTYPE XML before python-pptx reads a byte."""
+    from forge.slides.open_deck import open_deck
+
+    bad = _replace_part(
+        _deck_bytes(),
+        "docProps/app.xml",
+        lambda _: b'<?xml version="1.0"?><!DOCTYPE x [<!ENTITY a "b">]><x/>',
+    )
+    for name, data, message in (
+        ("doctype.pptx", bad, "DOCTYPE"),
+        ("slip.pptx", _zip({"../evil.xml": b"x"}), "unsafe entry name"),
+        ("bomb.pptx", _zip({"ppt/a.xml": b"x" * 150_000_000}), "zip bomb"),
+    ):
+        path = tmp_path / name
+        path.write_bytes(data)
+        with pytest.raises(DeckError, match=message):
+            open_deck(path)
+    good = tmp_path / "good.pptx"
+    good.write_bytes(_deck_bytes())
+    assert len(open_deck(good).slides) == 2
+
+
+def test_powerpoint_is_started_with_macros_force_disabled_and_the_setting_restored() -> None:
+    from forge.slides import convert, measure, preview
+
+    for module in (convert, measure, preview):
+        script = module.SCRIPT
+        assert "$app.AutomationSecurity = 3" in script and "$app.AutomationSecurity = $oldSecurity" in script
+        assert script.index("AutomationSecurity = 3") < script.index("Presentations.Open")

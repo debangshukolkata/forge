@@ -44,6 +44,26 @@ class Unpacked:
     external: list[str] = field(default_factory=list)  # external relationship targets found
 
 
+RESERVED_NAMES = re.compile(r"^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$", re.I)
+BAD_CHARACTERS = re.compile(r'[\x00-\x1f<>:"|?*\\]')
+
+
+def _unsafe_name(name: str) -> bool:
+    """Absolute paths, parent folders, characters Windows treats specially (`:` makes an NTFS data stream), device names (CON, NUL, ...)
+    and names ending in a dot or space are refused: unpacking writes these names to disk."""
+    if name.startswith("/") or ".." in name.split("/") or BAD_CHARACTERS.search(name):
+        return True
+    return any(RESERVED_NAMES.match(part) or part != part.rstrip(". ") for part in name.split("/") if part)
+
+
+def check_package(data: bytes) -> None:
+    """The checks every deck gets before python-pptx reads it: the archive (bombs, names) and the XML (no DOCTYPE or entities)."""
+    archive = check_archive(data)
+    for info in archive.infolist():
+        if info.filename.endswith(XML_SUFFIXES) and not info.is_dir():
+            check_xml(info.filename, archive.read(info.filename))
+
+
 def check_archive(data: bytes) -> zipfile.ZipFile:
     """Opens the zip after checking it against bombs and unsafe names; raises DeckError saying why."""
     try:
@@ -56,12 +76,7 @@ def check_archive(data: bytes) -> zipfile.ZipFile:
     total = 0
     for info in entries:
         name = info.filename
-        if (
-            name.startswith(("/", "\\"))
-            or "\\" in name
-            or re.match(r"^[A-Za-z]:", name)
-            or ".." in name.split("/")
-        ):
+        if _unsafe_name(name):
             raise DeckError(f"the package has an unsafe entry name {name!r}: it is refused")
         if info.flag_bits & 0x1:
             raise DeckError(

@@ -33,6 +33,9 @@ def open_deck(path: Path) -> Any:
     if path.stat().st_size > MAX_BYTES:
         raise DeckError(f"{path.name} is larger than {MAX_BYTES // (1024 * 1024)} MB.")
     data = path.read_bytes()
+    from forge.slides.rawpackage import check_package  # imported here: it needs DeckError from this module
+
+    check_package(data)
     try:
         if suffix == ".potx":  # python-pptx only knows the content type of a presentation
             data = _as_presentation(data)

@@ -21,12 +21,14 @@ SCRIPT = r"""
 $ErrorActionPreference = 'Stop'
 $wasRunning = [bool](Get-Process POWERPNT -ErrorAction SilentlyContinue)
 $app = New-Object -ComObject PowerPoint.Application
+$oldSecurity = $app.AutomationSecurity
+$app.AutomationSecurity = 3  # force-disable macros: an untrusted deck never runs code
 try {
     $presentation = $app.Presentations.Open($env:DECK_FILE, -1, 0, 0)
     try { $presentation.Export($env:DECK_OUT, 'PNG', [int]$env:DECK_W, [int]$env:DECK_H) }
     finally { $presentation.Close() }
 } finally {
-    if (-not $wasRunning) { $app.Quit() }
+    if (-not $wasRunning) { $app.Quit() } else { $app.AutomationSecurity = $oldSecurity }
 }
 """
 

@@ -3651,3 +3651,6 @@ Tools `unpack_presentation` / `pack_presentation` (`tools/presentation_raw.py`, 
 
 ### D-322 - Storyline guides (TODO P2.20, 2026-10-13)
 `skills/make-presentation/storylines.md` (read with `load_skill file="storylines.md"`, linked from section 1): eight guides (board update, pitch, QBR, design review, training, project status, proposal, all-hands) with slide order using our layouts, counts per length, speaker-note style and what to avoid, plus a pre-build checklist. Kept out of SKILL.md so the skill stays short for decks that need no guide. A test keeps the layout names in the guides valid.
+
+### D-323 - Security review of the presentation tools (TODO P3.4, 2026-10-13)
+Reviewed every deck tool against hostile files; written up in docs/PRESENTATION_SECURITY.md. Changes: `rawpackage.check_package` (archive limits, unsafe names including NTFS streams and device names, DOCTYPE/ENTITY refusal) now runs in `open_deck` for every tool; PowerPoint automation starts with macros force-disabled and the previous setting restored; skill gotcha that deck text is data. Options for external links: (a) strip all on open (changes the user's file on a round trip), (b) never follow, report new ones on pack (chosen), (c) ask on each. Risk R56 recorded.

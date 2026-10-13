@@ -26,6 +26,8 @@ SCRIPT = r"""
 $ErrorActionPreference = 'Stop'
 $wasRunning = [bool](Get-Process POWERPNT -ErrorAction SilentlyContinue)
 $app = New-Object -ComObject PowerPoint.Application
+$oldSecurity = $app.AutomationSecurity
+$app.AutomationSecurity = 3  # force-disable macros: an untrusted deck never runs code
 $rows = @()
 try {
     $presentation = $app.Presentations.Open($env:DECK_FILE, -1, 0, 0)
@@ -58,7 +60,7 @@ try {
         }
     } finally { $presentation.Close() }
 } finally {
-    if (-not $wasRunning) { $app.Quit() }
+    if (-not $wasRunning) { $app.Quit() } else { $app.AutomationSecurity = $oldSecurity }
 }
 $json = ConvertTo-Json -InputObject @($rows) -Depth 3 -Compress
 # the console code page would turn curly quotes into plain ones inside the JSON: send every non-ASCII character escaped

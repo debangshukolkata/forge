@@ -207,7 +207,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 - [ ] **P3.2 Render without PowerPoint** (decision 2): optional LibreOffice rendering; or our own renderer from P3.1. Includes a font-substitution
   warning so fit checks are trusted only for fonts that render true-to-width. Size L.
 - [ ] **P3.3 Performance and size.** Large decks (100+ slides), image downscaling and compression, file-size limits, time limits on preview. Size M.
-- [ ] **P3.4 Security review of the presentation tools.** Untrusted decks (zip and XML bombs, external relationships/links, embedded
+- [x] **P3.4 Security review of the presentation tools.** (done 2026-10-13, D-323, docs/PRESENTATION_SECURITY.md) Untrusted decks (zip and XML bombs, external relationships/links, embedded
   objects), PowerPoint COM launch, files outside the workspace, Mode B (host-identifying terms in slide text). Size M.
 - [ ] **P3.5 Documentation.** A user guide ("how to ask DebCraft for a deck"), examples gallery generated from the benchmark. Size S.
 
