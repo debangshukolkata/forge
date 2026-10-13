@@ -20,6 +20,7 @@ from forge.tools.skill_install_tool import InstallSkill
 from forge.tools.test_quality import MutationCheck
 from forge.tools.todo import TodoWrite
 from forge.tools.vision import vision_tools
+from forge.tools.visual_diff import CompareDesigns, VisualBaseline, VisualCheck
 from forge.tools.web import WebFetch, WebSearch
 
 
@@ -36,6 +37,9 @@ def default_tools() -> list[Tool]:
         Grep(),
         RunCommand(),
         MutationCheck(),
+        CompareDesigns(),
+        VisualBaseline(),
+        VisualCheck(),
         PythonRun(),
         StartBackground(),
         ReadBackground(),

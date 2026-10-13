@@ -35,7 +35,9 @@ def _check(result: dict[str, object]) -> None:
 async def test_template_builds_and_passes_the_audit(
     template: str, tmp_path: Path, original_repo: Path
 ) -> None:
-    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    context = ToolContext(
+        workspace=create_workspace(original_repo, tmp_path / "ws", "backend"), design_first=False
+    )
     added = await AddAsset().run(AddAsset.Args(id=template, project_dir="web"), context)
     assert added.ok, added.content
     web = context.workspace.repo_dir / "web"

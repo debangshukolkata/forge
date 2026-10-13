@@ -100,6 +100,10 @@ class ToolContext:
     write_only_under: str | None = (
         None  # a subagent that may write only below this folder (the verifier, a builder)
     )
+    design_first: bool = (
+        True  # D4: the first page or style file of a project waits for a DESIGN.md (the design concept)
+    )
+    design_gate_rounds: int = 0  # how many times that was asked for in this session
     write_only_is_builder: bool = (
         False  # selects the wording of the refusal (builders build, verifiers only verify)
     )

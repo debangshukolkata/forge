@@ -289,6 +289,50 @@ def _load_for_edit(context: ToolContext, relative: str) -> str | ToolResult:
     return text
 
 
+UI_SUFFIXES = (
+    ".html",
+    ".css",
+    ".scss",
+    ".jsx",
+    ".tsx",
+    ".vue",
+    ".svelte",
+)  # files that decide how a page looks
+DESIGN_GATE_ROUNDS = 2  # asked at most twice per session: a wrong refusal can never trap the model
+DESIGN_NOTE = (
+    "Before the first page or style file of a project: write its DESIGN.md (the design concept). Put in it, compactly: the product and who "
+    "it is for in a sentence; 4 to 6 named colours with hex values; the type roles with family, size and weight; the layout of each screen "
+    "as a small ASCII wireframe; one alignment and spacing rule; three design principles. Check it against the brief and replace every "
+    "generic choice (a default blue, a default font, a row of three cards) with one that comes from the product. The ui-design-quality skill "
+    "(sections 0c and 0d) has the details. Then write this file again."
+)
+
+
+def design_md_exists(workspace: object, relative: str) -> bool:
+    """A DESIGN.md in the file's folder or any folder above it up to the repository root (or docs/DESIGN.md at the root)."""
+    repo = workspace.repo_dir.resolve()  # type: ignore[attr-defined]
+    folder = workspace.path_of(relative).resolve().parent  # type: ignore[attr-defined]
+    while True:
+        if any((folder / name).is_file() for name in ("DESIGN.md", "design.md")):
+            return True
+        if folder == repo or repo not in folder.parents:
+            break
+        folder = folder.parent
+    return any((repo / "docs" / name).is_file() for name in ("DESIGN.md", "design.md"))
+
+
+def design_gate(context: ToolContext, relative: str) -> str:
+    """D4 (D-312): the model skipped DESIGN.md in all three page-redesign speed runs although the skill asks for it first, so the first UI
+    file of a project without one is refused with what to write. Twice at most; DESIGN.md itself and non-UI files pass."""
+    clean = relative.replace("\\", "/")
+    if not clean.lower().endswith(UI_SUFFIXES) or context.design_gate_rounds >= DESIGN_GATE_ROUNDS:
+        return ""
+    if design_md_exists(context.workspace, relative):
+        return ""
+    context.design_gate_rounds += 1
+    return DESIGN_NOTE
+
+
 async def _save(context: ToolContext, relative: str, text: str, reason: str, op: str) -> ToolResult:
     workspace = context.workspace
     if context.write_only_under is not None and not relative.replace("\\", "/").lstrip("./").startswith(
@@ -304,6 +348,10 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
                 "changing the app). If the app is wrong, report it; the main agent fixes it."
             ),
         )
+    if context.design_first and context.write_only_under is None:
+        asked = design_gate(context, relative)
+        if asked:
+            return ToolResult(ok=False, content=asked)
     path = workspace.path_of(relative)
     before = workspace.read_text(relative)[0] if path.is_file() else ""
     if text.count("[REDACTED:") > before.count("[REDACTED:"):
