@@ -73,3 +73,14 @@ workspace interpreter could not create temp files inside the tool sandbox; scori
 Tasks fully passed: 10/10; hidden tests passed: 135/135 (after the t07 test fix below).
 
 Notes on the baseline: total cost about $1.62 and about 21 minutes for 10 tasks; every task had 0 seconds waiting for approvals. The single failure in the first scoring (t07, one test) was a flaw in my hidden test, not in DebCraft's code: the test replaced stdin with a plain text stream, but the model correctly read bytes from `sys.stdin.buffer`. The test now uses a stream that has both, and the delivered code passes 11/11. Lesson for new tasks: tests must not fix how input is read. Consequence for the benchmark's usefulness: all ten tasks pass, so these tasks are too easy to tell changes apart; the next step is harder tasks (multi-file features, a Mode A repo, a REST service, ambiguous requirements) before tuning anything against it. Input tokens are 150k to 430k per task for 40 to 200 line outputs, so context size, not output, drives cost.
+
+### Run `code-hard-1` (2026-10-13, the four harder tasks t11-t14)
+
+| Task | Tier | Hidden tests | Wall | Model calls | Cost |
+|---|---|---|---|---|---|
+| t11_rate_limiter | precise spec, concurrency | 25/25 | 156s | 8 | $0.205 |
+| t12_expr_calc | parser with error positions | 69/69 | 216s | 10 | $0.293 |
+| t13_todo_undo | multi-file feature with a persisted format | 15/16 | 224s | 15 | $0.342 |
+| t14_cron_next | calendar logic, many edge cases | 65/65 | 235s | 11 | $0.330 |
+
+Fully passed 3/4; hidden tests 174/175; total $1.17. The one miss: t13 did not trim a history longer than 20 steps when it is read from a file (the limit was only applied when saving). A small spec corner, not a design flaw. Conclusion: even this harder tier is mostly solved, so the coding side is strong; the next separators are bigger multi-file tasks and ambiguous requirements, not more algorithm puzzles.
