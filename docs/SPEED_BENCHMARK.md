@@ -76,3 +76,10 @@ Switch under test: `FORGE_ADAPTIVE_EFFORT=low` (a step that follows only read-on
 
 The only difference in quality: t01 (slugify) lost two hidden tests, `max_length` cutting at word boundaries (`one two three four` at 7 and 13 characters): an edge case the control got right. Per task the times are noisy in both directions (t10 took 28 calls instead of 4 with low effort, t11 9 instead of 19), so the speed gain is real on the sum but one run is not proof.
 Verdict under D-161 (a speed change that lowers the quality score is rejected): **not adopted as the default**; the switch stays an environment experiment. Next step would be three runs per arm on the tasks where an edge case matters before reconsidering; S7 (a smaller model for read-only subagents) is still waiting for a deployment name.
+
+### speed-4 (2026-10-14, after the DESIGN.md gate and the visual-diff merge; s03 only)
+| Task | speed-1 | speed-3 | speed-4 |
+|---|---|---|---|
+| s03 page redesign | 1487 s, $1.51, 6/7 | 865 s, $1.06, 6/7 | 509 s, $0.62, 6/7 |
+
+Wall time fell 41 % from speed-3 at the same quality score (6/7). Tool time 288 s, of which three design-critic subagent reviews took 253 s (100 + 80 + 73); `start_background` 6 s, `view_image` 15 s. One run only: noise is large. The remaining cost is the critic rounds, which are the quality mechanism (D-161: not trimmed).
