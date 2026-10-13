@@ -21,6 +21,12 @@ from forge.slides.convert import OLD_FORMATS, convert_deck
 from forge.slides.design_reader import describe_design, read_design
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
 from forge.slides.extract import deck_markdown
+from forge.slides.image_reader import (
+    analyze_reference_image,
+    compare_to_reference,
+    describe_comparison,
+    describe_reference,
+)
 from forge.slides.importer import merge_decks, split_deck
 from forge.slides.measure import measure_deck, overflow_problems
 from forge.slides.open_deck import DeckError, open_deck, save_deck
@@ -425,6 +431,61 @@ class DescribeDesign(Tool):
         return ToolResult(ok=True, content=text + "\n" + advice)
 
 
+class AnalyzeReferenceImage(Tool):
+    name = "analyze_reference_image"
+    read_only = True
+    description = (
+        "Measure a picture of a slide (a screenshot or a photo of a deck the user wants matched): the dominant colours with their shares, the "
+        "background and text colours, the accents, where the content sits (regions in inches on a 13.33 x 7.5 slide), the marks in the "
+        "corners (logos) and a brand kit for the outline. These are measured from pixels, not guessed. Fonts and photographs cannot be read: "
+        "look at the picture with view_image for those. Then build the slide (freeform), preview it, and call compare_to_reference with the "
+        "preview picture and this reference, fix the cells that differ most, and repeat up to three times."
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(
+            description="The reference picture (png, jpg), relative to the repository root or a file the user opened"
+        )
+
+    def summary(self, args: AnalyzeReferenceImage.Args) -> str:
+        return f"analyze reference image {args.path}"
+
+    async def run(self, args: AnalyzeReferenceImage.Args, context: ToolContext) -> ToolResult:
+        try:
+            data = image_path(context, args.path).read_bytes()
+            design = await asyncio.to_thread(analyze_reference_image, data)
+        except (ForgeError, OSError, ValueError) as error:
+            return ToolResult(ok=False, content=f"The picture could not be read: {error}")
+        return ToolResult(ok=True, content=describe_reference(design, Path(args.path).name))
+
+
+class CompareToReference(Tool):
+    name = "compare_to_reference"
+    read_only = True
+    description = (
+        "Score how close a rendered slide picture is to a reference picture (colour and layout, on an 8 x 5 grid; 100 = the same) and name "
+        "the cells that differ most. Use it after preview_presentation when matching a design shown as a picture; aim for 80 or more."
+    )
+
+    class Args(ToolArgs):
+        rendered: str = Field(
+            description="The picture of your slide, e.g. from preview_presentation (.forge/reports/slides/...)"
+        )
+        reference: str = Field(description="The reference picture the user gave")
+
+    def summary(self, args: CompareToReference.Args) -> str:
+        return f"compare {args.rendered} to {args.reference}"
+
+    async def run(self, args: CompareToReference.Args, context: ToolContext) -> ToolResult:
+        try:
+            first = image_path(context, args.rendered).read_bytes()
+            second = image_path(context, args.reference).read_bytes()
+            result = await asyncio.to_thread(compare_to_reference, first, second)
+        except (ForgeError, OSError, ValueError) as error:
+            return ToolResult(ok=False, content=f"The pictures could not be compared: {error}")
+        return ToolResult(ok=True, content=describe_comparison(result))
+
+
 class AnalyzeTemplate(Tool):
     name = "analyze_template"
     read_only = False  # with pictures it writes them under .forge/reports
@@ -669,6 +730,8 @@ def presentation_tools() -> list[Tool]:
         CheckAccessibility(),
         ReviewPresentation(),
         DescribeDesign(),
+        AnalyzeReferenceImage(),
+        CompareToReference(),
         EditPresentation(),
         PreviewPresentation(),
         FindIcon(),

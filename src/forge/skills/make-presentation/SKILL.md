@@ -212,6 +212,12 @@ deck (colours, fonts, dark or light, where the titles sit, the margins, the logo
 `analyze_reference_image(path)` for a picture of a slide; say in one or two lines what you understood, then build as below. A 16:9 deck can
 itself be the template. Anything else: the brand kit plus the same title position, margins and frame shapes in `freeform` slides.
 
+**Matching a design that is only a picture** (a screenshot or a photo of a slide): (1) `analyze_reference_image` measures colours, background,
+accents, content regions and corner logos; `view_image` the picture too, for the fonts (choose a safe look-alike: Calibri, Arial, Georgia),
+photographs and the feel; (2) build one `freeform` slide with that brand kit and the measured regions; (3) `preview_presentation`, then
+`compare_to_reference(rendered, reference)`: fix the cells it names and repeat, at most three rounds; (4) say plainly what is not exact
+(fonts, photographs, logos: ask for the logo file). Colours and positions are matched closely; the typeface and artwork are not.
+
 **Use a company template** (a `.potx`, or any 16:9 `.pptx` with the right masters). The goal: a deck in the corporate format,
 made of the template's own slides. Steps:
 1. `analyze_template(path, pictures=true)`: size, theme colours, fonts, the layouts, and the template's SAMPLE SLIDES, each with its
