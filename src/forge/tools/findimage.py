@@ -1,0 +1,279 @@
+"""find_image and fetch_image (TODO D5, D-328): free, licensed icons, cliparts and photos from open sources.
+
+`find_image` searches the sources that can be reached (see image_sources.py) at the same time and lists candidates with their licence and
+the credit line they need; a source that cannot be reached is named with the reason, so a blocked company network shows up at once.
+`fetch_image` downloads one candidate into the project (public addresses only, size-capped, image content only, SVG without scripts),
+records it in NOTICES.md and returns the credit line to put near it. Nothing is hot-linked."""
+
+from __future__ import annotations
+
+import asyncio
+import contextlib
+import re
+from typing import Any, Literal
+from urllib.parse import urlparse
+
+import httpx
+from pydantic import Field
+
+from forge.net import connection_hint, root_cause
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools import image_sources as sources
+from forge.tools.image_sources import PROVIDERS, Candidate, SourceError
+from forge.tools.web_guard import WebPolicy, check_resolving
+
+NOTICES = "NOTICES.md"
+MAX_BYTES = 25 * 1024 * 1024
+SEARCH_TIMEOUT_S = 20.0
+EXTENSIONS = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+    "image/svg+xml": ".svg",
+}
+UNSAFE_SVG = re.compile(
+    r"<\s*script|<\s*foreignObject|\son\w+\s*=|javascript:|<!\s*ENTITY|(?:xlink:)?href\s*=\s*[\"']\s*https?:",
+    re.I,
+)
+KIND_SOURCES = {
+    "icon": ("iconify",),
+    "photo": ("openverse", "wikimedia", "nasa", "pexels", "unsplash", "pixabay"),
+    "illustration": ("iconify", "openverse", "wikimedia", "pixabay"),
+    "any": tuple(PROVIDERS),
+}
+
+
+def available_sources(secrets: Any, kind: str, wanted: list[str]) -> tuple[list[str], list[str]]:
+    """(sources to ask, sources skipped because their key is not in the .env file)."""
+    chosen, skipped = [], []
+    for name in wanted or KIND_SOURCES[kind]:
+        if name not in PROVIDERS:
+            continue
+        key_name = sources.KEY_NAMES.get(name)
+        if key_name and not (secrets.get(key_name) if secrets is not None else None):
+            skipped.append(f"{name} (add {key_name} to the .env file to use it)")
+        else:
+            chosen.append(name)
+    return chosen, skipped
+
+
+async def _search_one(
+    client: httpx.AsyncClient, name: str, query: str, limit: int, secrets: Any
+) -> tuple[str, list[Candidate] | str]:
+    key = secrets.get(sources.KEY_NAMES[name]) if secrets is not None and name in sources.KEY_NAMES else ""
+    try:
+        found = await asyncio.wait_for(PROVIDERS[name](client, query, limit, key or ""), SEARCH_TIMEOUT_S)
+        return name, found
+    except SourceError as error:
+        return name, str(error)
+    except TimeoutError:
+        return (
+            name,
+            f"{name} did not answer in {SEARCH_TIMEOUT_S:.0f} s: a proxy is probably required (HTTPS_PROXY) or the site is blocked",
+        )
+    except httpx.HTTPError as error:
+        detail = root_cause(error)
+        return name, f"{name} could not be reached ({detail[:120]}): {connection_hint(detail)}"
+
+
+def _interleave(groups: list[list[Candidate]], limit: int) -> list[Candidate]:
+    merged: list[Candidate] = []
+    for position in range(max((len(g) for g in groups), default=0)):
+        for group in groups:
+            if position < len(group):
+                merged.append(group[position])
+    return merged[:limit]
+
+
+class FindImage(Tool):
+    name = "find_image"
+    read_only = True
+    description = (
+        "Search free, licensed pictures: icons and vector clip art (Iconify: Lucide, Tabler, Material and others), photos and drawings "
+        "(Openverse, Wikimedia Commons, NASA, and Pexels, Unsplash or Pixabay when their key is in the .env file). Only licences that "
+        "allow commercial use and changes are listed (CC0, public domain, CC BY, MIT, ISC, Apache-2.0 and the photo sites' licences), "
+        "each with the credit line it needs. Search in English, with the subject (and a style word for clip art). Then call "
+        "fetch_image with the id of the one you want. A source that cannot be reached is reported with the reason; when none can, say so "
+        "and use find_asset, draw an SVG, or generate_image."
+    )
+
+    class Args(ToolArgs):
+        query: str = Field(min_length=2, max_length=200, description="What the picture shows, in English")
+        kind: Literal["any", "icon", "photo", "illustration"] = "any"
+        limit: int = Field(default=8, ge=1, le=15)
+        sources: list[str] = Field(
+            default_factory=list, description="Only these sources (default: all that fit the kind)"
+        )
+
+    def summary(self, args: FindImage.Args) -> str:
+        return f"find image: {args.query}"
+
+    async def run(self, args: FindImage.Args, context: ToolContext) -> ToolResult:
+        if any(re.search(re.escape(t), args.query, re.IGNORECASE) for t in context.sensitive_terms):
+            return ToolResult(ok=False, content="Not searched: the query contains a host-identifying term.")
+        names, skipped = available_sources(context.secrets, args.kind, args.sources)
+        if not names:
+            return ToolResult(
+                ok=False, content="No source fits: " + "; ".join(skipped or ["unknown source names"])
+            )
+        async with sources.make_client() as client:
+            results = await asyncio.gather(
+                *(_search_one(client, n, args.query, args.limit, context.secrets) for n in names)
+            )
+        groups = [r for _, r in results if isinstance(r, list)]
+        problems = [r for _, r in results if isinstance(r, str)]
+        chosen = _interleave(groups, args.limit)
+        for candidate in chosen:
+            context.image_candidates[candidate.id] = candidate
+        lines = [f"{i}. {c.describe()}" for i, c in enumerate(chosen, start=1)]
+        out = (
+            [f"{len(chosen)} licensed picture(s) for '{args.query}':", *lines]
+            if chosen
+            else [f"Nothing found for '{args.query}' in the sources that answered."]
+        )
+        if problems:
+            out += ["", "Not reached:", *[f"- {p}" for p in problems]]
+        if skipped:
+            out += ["", "Not used: " + "; ".join(skipped)]
+        if chosen:
+            out += [
+                "",
+                "Use fetch_image with an id and a path in the project. Look at the picture afterwards (view_image) and keep the credit line.",
+            ]
+        return ToolResult(ok=True, content="\n".join(out))
+
+
+class FetchImage(Tool):
+    name = "fetch_image"
+    read_only = False
+    description = (
+        "Download a picture found with find_image into the project and record its source and licence in NOTICES.md. Give the id and a "
+        "path (the extension is corrected to match the file). Returns the credit line to put near the picture when its licence needs one "
+        "(and suggested alt text). SVG icons can be recoloured by editing the file's colour values."
+    )
+
+    class Args(ToolArgs):
+        id: str = Field(description="An id from find_image, e.g. iconify:lucide:house or openverse:...")
+        path: str = Field(description="Where to save it in the project, e.g. assets/house.svg")
+
+    def summary(self, args: FetchImage.Args) -> str:
+        return f"fetch image {args.id} to {args.path}"
+
+    async def run(self, args: FetchImage.Args, context: ToolContext) -> ToolResult:
+        candidate = context.image_candidates.get(args.id)
+        if candidate is None:
+            return ToolResult(
+                ok=False,
+                content=f"{args.id} was not found in this session's results: search with find_image first.",
+            )
+        policy = context.web_policy or WebPolicy()
+        try:
+            async with sources.make_client() as client:
+                url = await _download_url(client, candidate)
+                reason = await check_resolving(url, policy)
+                if reason:
+                    return ToolResult(ok=False, content=f"Not downloaded: {reason}.")
+                data, content_type = await _download(client, url, policy)
+                if candidate.extra.get("track"):  # Unsplash asks for a ping when a photo is used
+                    await _ping(client, candidate)
+        except SourceError as error:
+            return ToolResult(ok=False, content=str(error))
+        except httpx.HTTPError as error:
+            detail = root_cause(error)
+            return ToolResult(
+                ok=False,
+                content=f"The file could not be downloaded ({detail[:120]}): {connection_hint(detail)}",
+            )
+        extension = EXTENSIONS.get(content_type)
+        if extension is None:
+            return ToolResult(
+                ok=False,
+                content=f"The address did not give a picture (it gave {content_type or 'something else'}).",
+            )
+        if extension == ".svg" and UNSAFE_SVG.search(data.decode("utf-8", "replace")):
+            return ToolResult(
+                ok=False,
+                content="The SVG holds a script or an outside link, so it was not saved. Pick another picture.",
+            )
+        path = re.sub(r"\.[A-Za-z0-9]{2,5}$", "", args.path) + extension
+        context.workspace.write_bytes(path, data, f"picture from {candidate.source}: {candidate.title}")
+        _record_notice(context, path, candidate)
+        credit = candidate.attribution
+        lines = [
+            f"Saved {path} ({len(data) // 1024} KB; {candidate.licence}; source {candidate.page_url or candidate.source})."
+        ]
+        lines.append(f"Credit line to show with it: {credit}" if credit else "No credit line is required.")
+        lines.append(f"Suggested alt text: {candidate.title[:120]}. Record in NOTICES.md: done.")
+        return ToolResult(ok=True, content="\n".join(lines))
+
+
+async def _download_url(client: httpx.AsyncClient, candidate: Candidate) -> str:
+    asset_url = candidate.extra.get("asset_url")
+    if not asset_url:
+        return candidate.download_url
+    response = await client.get(asset_url)  # NASA lists every size of an image
+    if response.status_code >= 400:
+        raise SourceError(f"nasa answered {response.status_code} for the file list")
+    hrefs = [item.get("href", "") for item in response.json().get("collection", {}).get("items", [])]
+    for marker in ("~large.jpg", "~medium.jpg", "~orig.jpg", ".jpg"):
+        found = next((h for h in hrefs if h.lower().endswith(marker)), None)
+        if found:
+            return str(found).replace("http://", "https://")
+    return candidate.download_url
+
+
+async def _download(client: httpx.AsyncClient, url: str, policy: WebPolicy) -> tuple[bytes, str]:
+    """The bytes and content type; every redirect hop is checked against the same address policy and the size is capped."""
+    current = url
+    for _ in range(5):
+        async with client.stream("GET", current, follow_redirects=False) as response:
+            if response.is_redirect:
+                current = str(response.url.join(response.headers.get("location", "")))
+                reason = await check_resolving(current, policy)
+                if reason:
+                    raise SourceError(
+                        f"a redirect led to {urlparse(current).hostname}, which is not allowed: {reason}"
+                    )
+                continue
+            if response.status_code >= 400:
+                raise SourceError(f"{urlparse(current).hostname} answered {response.status_code}")
+            content_type = response.headers.get("content-type", "").split(";")[0].strip().lower()
+            data = bytearray()
+            async for chunk in response.aiter_bytes():
+                data += chunk
+                if len(data) > MAX_BYTES:
+                    raise SourceError(f"the file is larger than {MAX_BYTES // (1024 * 1024)} MB")
+            return bytes(data), content_type
+    raise SourceError("too many redirects")
+
+
+async def _ping(client: httpx.AsyncClient, candidate: Candidate) -> None:
+    """Unsplash asks for a request to the photo's download address when it is used; a courtesy, so failures are ignored."""
+    with contextlib.suppress(httpx.HTTPError):
+        await client.get(
+            candidate.extra["track"], headers={"Authorization": f"Client-ID {candidate.extra.get('key', '')}"}
+        )
+
+
+def _record_notice(context: ToolContext, path: str, candidate: Candidate) -> None:
+    try:
+        existing, _ = context.workspace.read_text(NOTICES)
+    except (OSError, ValueError, KeyError):
+        existing = "# Notices\n\nThird-party pictures used in this project.\n"
+    line = (
+        f"- `{path}`: {candidate.title}"
+        + (f" by {candidate.author}" if candidate.author else "")
+        + f", {candidate.licence}, from {candidate.source}"
+        + (f" ({candidate.page_url})" if candidate.page_url else "")
+        + (f". Credit: {candidate.attribution}" if candidate.attribution else "")
+        + "\n"
+    )
+    if f"`{path}`" not in existing:
+        context.workspace.write_text(
+            NOTICES, existing.rstrip("\n") + "\n" + line, "picture recorded in NOTICES.md"
+        )
+
+
+def findimage_tools() -> list[Tool]:
+    return [FindImage(), FetchImage()]

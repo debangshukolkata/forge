@@ -151,6 +151,7 @@ Per-slide outline fields: `hidden: true` (backup slides, skipped in the show), `
 speaker reads from the slide line by line unless asked.
 
 ## 5. Existing decks and company templates
+Free licensed pictures, icons and clip art: `find_image` (Iconify, Openverse, Wikimedia, NASA, and Pexels, Unsplash or Pixabay with a key), then `fetch_image` to save one (the licence goes into NOTICES.md; put the credit line it returns on the slide or in the notes). Try it before `generate_image`; it names the sources it could not reach.
 Pictures that are not diagrams (a hero photo, an illustration for a section slide): `generate_image` makes one with the company's image model when it
 is set up (it says so when not). Ask for no text in the picture, view it with `view_image`, write real alt text, and tell the user the
 picture is AI-generated. Charts, diagrams, icons and logos are drawn, never generated.
