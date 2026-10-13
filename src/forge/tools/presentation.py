@@ -18,6 +18,7 @@ from forge.slides.accessibility import check_deck
 from forge.slides.build import SlidesUnavailable, build_deck
 from forge.slides.contact_sheet import ContactSheetUnavailable, make_contact_sheets
 from forge.slides.convert import OLD_FORMATS, convert_deck
+from forge.slides.design_reader import describe_design, read_design
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
 from forge.slides.extract import deck_markdown
 from forge.slides.importer import merge_decks, split_deck
@@ -382,6 +383,48 @@ class SplitPresentation(Tool):
         return ToolResult(ok=True, content="Saved:\n" + "\n".join(f"- {line}" for line in written))
 
 
+class DescribeDesign(Tool):
+    name = "describe_design"
+    read_only = True
+    description = (
+        "Read the DESIGN of any .pptx (not its content): slide size, theme colours and fonts, how many slides are dark or light, where the "
+        "titles sit, the text margins, the shapes that repeat on most slides (logo, bars, footer), the layouts, fonts, sizes and fill "
+        "colours really used, and a brand kit to paste into an outline. Use it first when the user says 'make new slides in this format' or "
+        "gives a deck as the style to follow; then build on the deck itself as a template (build_presentation with template) when it is "
+        "16:9, or with the brand kit and the same title position and frame shapes in freeform slides."
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(
+            description="The .pptx or .potx, relative to the repository root (or a file the user opened)"
+        )
+
+    def summary(self, args: DescribeDesign.Args) -> str:
+        return f"describe design {args.path}"
+
+    async def run(self, args: DescribeDesign.Args, context: ToolContext) -> ToolResult:
+        file = context.workspace.path_of(args.path)
+        if not file.is_file():
+            return ToolResult(ok=False, content=f"No file at {args.path}.")
+        try:
+            deck = await asyncio.to_thread(_open_any, file)
+            design = await asyncio.to_thread(read_design, deck)
+        except SlidesUnavailable as error:
+            return ToolResult(ok=False, content=f"{error} Tell the user.")
+        except (ForgeError, OSError, preview.PreviewUnavailable) as error:
+            return ToolResult(ok=False, content=str(error))
+        text = describe_design(design, Path(args.path).name)
+        widescreen = abs(design.width / design.height - 16 / 9) < 0.03
+        advice = (
+            "Next: the deck is 16:9, so build on it as a template (analyze_template, then build_presentation with `template`): its own sample slides "
+            "are copied and filled."
+            if widescreen and design.slides
+            else "Next: the deck is not 16:9, so it cannot be a template; use the brand kit above and keep the title position, margins and the "
+            "repeated frame shapes in freeform slides."
+        )
+        return ToolResult(ok=True, content=text + "\n" + advice)
+
+
 class AnalyzeTemplate(Tool):
     name = "analyze_template"
     read_only = False  # with pictures it writes them under .forge/reports
@@ -625,6 +668,7 @@ def presentation_tools() -> list[Tool]:
         AnalyzeTemplate(),
         CheckAccessibility(),
         ReviewPresentation(),
+        DescribeDesign(),
         EditPresentation(),
         PreviewPresentation(),
         FindIcon(),
