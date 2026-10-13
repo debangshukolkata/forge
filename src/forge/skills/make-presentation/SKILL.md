@@ -151,6 +151,10 @@ Per-slide outline fields: `hidden: true` (backup slides, skipped in the show), `
 speaker reads from the slide line by line unless asked.
 
 ## 5. Existing decks and company templates
+Pictures that are not diagrams (a hero photo, an illustration for a section slide): `generate_image` makes one with the company's image model when it
+is set up (it says so when not). Ask for no text in the picture, view it with `view_image`, write real alt text, and tell the user the
+picture is AI-generated. Charts, diagrams, icons and logos are drawn, never generated.
+
 Big decks and big pictures: pictures are made slide-sized at build (upright from the camera's rotation flag, at most 2560 px on the long
 side, compressed), so a folder of phone photos does not make a 60 MB file; the build warns above 20 MB (mail limits). A deck of 100+
 slides builds in seconds; `preview_presentation` lists the first 30 pictures and the contact sheets show all, so judge a long deck from

@@ -86,7 +86,7 @@ Goal: world-class UI/UX from a model that is not as strong as Claude, by giving 
 - [ ] `D2` Measure cost and time per UI task now that the critic can run several times; limit to one round for small edits if it is too slow
 - [ ] `D3` Code-level check that design variants differ (compare screenshots / DESIGN.md directions automatically), beyond the pixel-identical guard
 - [ ] `D4` A "design concept" step in the engine before the first UI edit (design read, dials, direction written down) enforced like the other gates, if the model skips it
-- [ ] `D5` (image model known: Azure deployment `aicloud-dall-e-3`, 2026-10-13; endpoint, key and API version still to confirm) Real imagery: a way to get licensed photos or generated illustrations when SVG drawings are not enough (needs a source and a licence decision)
+- [ ] `D5` (tool `generate_image` built, D-326; BLOCKED on the user: `aicloud-dall-e-3` answers 410 ModelDeprecated, needs a deployment of a current image model, then a live check and the gpt-image-1 size mapping) Real imagery: a way to get licensed photos or generated illustrations when SVG drawings are not enough (needs a source and a licence decision)
 - [ ] `D6` Visual regression check: keep the approved screenshots per screen and flag unplanned visual changes after later edits
 - [ ] `D7` Try an automatic second look: when the critic returns REVISE, give the builder the screenshot and the fixes together in one message **When the critic returns REVISE the builder checks each suggestion against the page before applying it** (screenshot and audit), instead of applying everything blindly; the critic's concrete fixes stay the default. **Do not start before `C18` (the detailed study of both repositories) is done.**
 

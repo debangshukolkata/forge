@@ -10,6 +10,7 @@ from forge.tools.assets import AddAsset, FindAsset
 from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
+from forge.tools.imagegen import imagegen_tools
 from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
@@ -61,6 +62,7 @@ def default_tools() -> list[Tool]:
         *vision_tools(),
         *presentation_tools(),
         *raw_tools(),
+        *imagegen_tools(),
     ]
 
 

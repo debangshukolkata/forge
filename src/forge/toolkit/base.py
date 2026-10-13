@@ -65,6 +65,7 @@ class ToolContext:
     shell: ShellSession | None = None
     background: BackgroundManager | None = None
     db: Any = None  # forge.db.session.DbSession, when a database is configured
+    images_generated: int = 0  # pictures made by generate_image in this session (a cap stops a runaway loop)
     secrets: Any = None  # forge.config.Secrets: optional service keys (e.g. SERPAPI_API_KEY); never shown
     summarise: Callable[[str, str], Awaitable[str]] | None = None  # (text, instruction) -> summary
     browser: Any = None  # forge.tools.browser.BrowserSession, started on first use
