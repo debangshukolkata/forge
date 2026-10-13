@@ -594,7 +594,7 @@ class FindIcon(Tool):
     description = (
         "Search the bundled icons (Lucide outline icons and Material Symbols filled icons, offline) for slides. Give a few "
         "words ('growth chart', 'security', 'team'); returns icon names such as lucide:trending-up to use in a freeform "
-        "slide's icon element ({type: icon, name: ..., x, y, w, h, color, badge})."
+        "slide's icon element ({type: icon, name: ..., x, y, w, h, color, badge}). For an SVG file (web pages, documents) use find_image and fetch_image: they list the same bundled icons first and can save them as SVG in any colour; they also search online sets (Iconify) when none of these fits."
     )
 
     class Args(ToolArgs):
@@ -606,7 +606,7 @@ class FindIcon(Tool):
         if not found:
             return ToolResult(
                 ok=True,
-                content=f"No icon matched {args.query!r}. Try one or two other words (a noun: 'chart', 'lock', 'people').",
+                content=f"No icon matched {args.query!r}. Try one or two other words (a noun: 'chart', 'lock', 'people'), or search online sets with find_image (kind icon).",
             )
         return ToolResult(
             ok=True,

@@ -127,6 +127,9 @@ The audit now checks several of these (fold, headline length, placeholders, em d
 - Forms: visible labels, helper text, inline error messages next to the field, a success message, large tap
   targets (at least 44px), inputs with border, focus ring and sensible `type`/`autocomplete`.
 - Icons: use an icon set (lucide-react or inline SVG), not emoji, at a consistent size and stroke width.
+  No network or package needed: `find_image` (kind icon) lists the bundled Lucide and Material icons first, and `fetch_image` saves one as an
+  SVG in your colour (`color`, `size`); photos and clip art come from the same two tools (free licences, credit line returned, recorded in
+  NOTICES.md), then `generate_image` when nothing fits. Never hot-link a picture.
 - Pills/badges: `inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm`, spaced with `flex flex-wrap gap-3`.
 - Motion: short (150-250ms) transitions on hover/focus and gentle entrance fades; respect `prefers-reduced-motion`.
 

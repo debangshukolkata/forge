@@ -68,6 +68,9 @@ class ToolContext:
     image_candidates: dict[str, Any] = field(
         default_factory=dict
     )  # find_image results of this session, by id (for fetch_image)
+    last_image_query: str = (
+        ""  # the last find_image query: its words tag the picture fetch_image keeps in the library
+    )
     images_generated: int = 0  # pictures made by generate_image in this session (a cap stops a runaway loop)
     secrets: Any = None  # forge.config.Secrets: optional service keys (e.g. SERPAPI_API_KEY); never shown
     summarise: Callable[[str, str], Awaitable[str]] | None = None  # (text, instruction) -> summary

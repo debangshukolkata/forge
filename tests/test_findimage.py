@@ -314,8 +314,10 @@ async def test_when_nothing_answers_the_tool_says_so(
     _use(monkeypatch, down)
     result = await FindImage().run(FindImage.Args(query="vineyard"), _context(original_repo, tmp_path))
     assert (
-        result.ok and "Nothing found" in result.content and result.content.count("could not be reached") == 4
-    )
+        result.ok
+        and "bundled:lucide:" in result.content
+        and result.content.count("could not be reached") == 4
+    )  # the bundled icons answer offline
 
 
 async def test_fetch_saves_the_file_records_the_licence_and_returns_the_credit(
@@ -420,3 +422,65 @@ async def test_unknown_ids_and_host_terms_are_refused(
     context.sensitive_terms = ["AcmeBank"]
     blocked = await FindImage().run(FindImage.Args(query="AcmeBank logo"), context)
     assert not blocked.ok and "host-identifying" in blocked.content
+
+
+async def test_the_bundled_icons_are_offered_first_and_saved_as_svg_in_any_colour(
+    original_repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def down(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("getaddrinfo failed")
+
+    _use(monkeypatch, down)
+    context = _context(original_repo, tmp_path)
+    result = await FindImage().run(FindImage.Args(query="rocket", kind="icon"), context)
+    assert "bundled:lucide:rocket" in result.content.splitlines()[1]
+    saved = await FetchImage().run(
+        FetchImage.Args(id="bundled:lucide:rocket", path="assets/rocket.png", color="#0F766E", size=48),
+        context,
+    )
+    assert saved.ok and "no network used" in saved.content
+    svg = context.workspace.path_of("assets/rocket.svg").read_text(encoding="utf-8")
+    assert svg.startswith("<svg") and 'stroke="#0F766E"' in svg and 'width="48"' in svg and "<path" in svg
+    await FindImage().run(FindImage.Args(query="check", kind="icon"), context)
+    material = await FetchImage().run(
+        FetchImage.Args(id="bundled:material:check", path="assets/check", color="currentColor"), context
+    )
+    assert material.ok and 'fill="currentColor"' in context.workspace.path_of("assets/check.svg").read_text(
+        encoding="utf-8"
+    )
+    notices, _ = context.workspace.read_text("NOTICES.md")
+    assert "assets/rocket.svg" in notices and "ISC" in notices
+
+
+async def test_a_fetched_picture_joins_the_library_and_is_found_again_without_a_network(
+    original_repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _use(monkeypatch)
+    first = _context(original_repo, tmp_path / "one")
+    await FindImage().run(FindImage.Args(query="vineyard hills", sources=["openverse"]), first)
+    assert (await FetchImage().run(FetchImage.Args(id="openverse:abc-1", path="assets/v.jpg"), first)).ok
+
+    def down(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("getaddrinfo failed")
+
+    _use(monkeypatch, down)
+    second = _context(original_repo, tmp_path / "two")
+    found = await FindImage().run(FindImage.Args(query="vineyard", kind="photo"), second)
+    assert "library:openverse:abc-1" in found.content and "credit:" in found.content
+    copy = await FetchImage().run(
+        FetchImage.Args(id="library:openverse:abc-1", path="assets/again.jpg"), second
+    )
+    assert (
+        copy.ok
+        and "no network used" in copy.content
+        and second.workspace.path_of("assets/again.png").exists()
+    )
+
+
+def test_icon_svg_rejects_bad_colours_and_unknown_names() -> None:
+    from forge.slides.icons import IconError, icon_svg
+
+    with pytest.raises(IconError, match="colour"):
+        icon_svg("lucide:rocket", color='red" onload="x')
+    with pytest.raises(IconError, match="no icon named"):
+        icon_svg("lucide:not-a-real-icon")

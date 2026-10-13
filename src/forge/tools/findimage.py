@@ -17,8 +17,10 @@ import httpx
 from pydantic import Field
 
 from forge.net import connection_hint, root_cause
+from forge.slides.icons import IconError, icon_svg, search_icons
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools import image_sources as sources
+from forge.tools import picture_library
 from forge.tools.image_sources import PROVIDERS, Candidate, SourceError
 from forge.tools.web_guard import WebPolicy, check_resolving
 
@@ -77,6 +79,44 @@ async def _search_one(
         return name, f"{name} could not be reached ({detail[:120]}): {connection_hint(detail)}"
 
 
+BUNDLED_LICENCES = {"lucide": ("ISC", "Lucide Contributors"), "material": ("Apache-2.0", "Google")}
+
+
+def local_candidates(query: str, kind: str, limit: int) -> list[Candidate]:
+    """Pictures that need no network: the bundled icons (Lucide, Material) and what earlier fetches left in the library."""
+    found: list[Candidate] = []
+    if kind in ("icon", "illustration", "any"):
+        for name in search_icons(query, limit):
+            library, _, bare = name.partition(":")
+            licence, author = BUNDLED_LICENCES[library]
+            found.append(
+                Candidate(
+                    id=f"bundled:{name}",
+                    source="bundled",
+                    kind="icon",
+                    title=f"{bare} ({library})",
+                    licence=licence,
+                    author=author,
+                    attribution=f"{library.capitalize()} icons by {author} ({licence})",
+                )
+            )
+    for record in picture_library.search(query, limit):
+        found.append(
+            Candidate(
+                id=f"library:{record['id']}",
+                source="library",
+                kind=record.get("kind", "photo"),
+                title=record["title"],
+                licence=record["licence"],
+                author=record.get("author", ""),
+                page_url=record.get("page", ""),
+                attribution=record.get("credit", ""),
+                extra={"file": record["file"]},
+            )
+        )
+    return found
+
+
 def _interleave(groups: list[list[Candidate]], limit: int) -> list[Candidate]:
     merged: list[Candidate] = []
     for position in range(max((len(g) for g in groups), default=0)):
@@ -93,7 +133,9 @@ class FindImage(Tool):
         "Search free, licensed pictures: icons and vector clip art (Iconify: Lucide, Tabler, Material and others), photos and drawings "
         "(Openverse, Wikimedia Commons, NASA, and Pexels, Unsplash or Pixabay when their key is in the .env file). Only licences that "
         "allow commercial use and changes are listed (CC0, public domain, CC BY, MIT, ISC, Apache-2.0 and the photo sites' licences), "
-        "each with the credit line it needs. Search in English, with the subject (and a style word for clip art). Then call "
+        "each with the credit line it needs. Pictures that need no network come first: the bundled Lucide and Material icons (ids "
+        "bundled:...) and the library of earlier downloads (ids library:...), so use those when they fit. "
+        "Search in English, with the subject (and a style word for clip art). Then call "
         "fetch_image with the id of the one you want. A source that cannot be reached is reported with the reason; when none can, say so "
         "and use find_asset, draw an SVG, or generate_image."
     )
@@ -112,8 +154,10 @@ class FindImage(Tool):
     async def run(self, args: FindImage.Args, context: ToolContext) -> ToolResult:
         if any(re.search(re.escape(t), args.query, re.IGNORECASE) for t in context.sensitive_terms):
             return ToolResult(ok=False, content="Not searched: the query contains a host-identifying term.")
+        context.last_image_query = args.query
         names, skipped = available_sources(context.secrets, args.kind, args.sources)
-        if not names:
+        local = [] if args.sources else local_candidates(args.query, args.kind, 4)
+        if not names and not local:
             return ToolResult(
                 ok=False, content="No source fits: " + "; ".join(skipped or ["unknown source names"])
             )
@@ -123,7 +167,7 @@ class FindImage(Tool):
             )
         groups = [r for _, r in results if isinstance(r, list)]
         problems = [r for _, r in results if isinstance(r, str)]
-        chosen = _interleave(groups, args.limit)
+        chosen = [*local, *_interleave(groups, args.limit)]
         for candidate in chosen:
             context.image_candidates[candidate.id] = candidate
         lines = [f"{i}. {c.describe()}" for i, c in enumerate(chosen, start=1)]
@@ -156,6 +200,12 @@ class FetchImage(Tool):
     class Args(ToolArgs):
         id: str = Field(description="An id from find_image, e.g. iconify:lucide:house or openverse:...")
         path: str = Field(description="Where to save it in the project, e.g. assets/house.svg")
+        color: str = Field(
+            default="#111827", description="For a bundled icon: its colour (hex or currentColor)"
+        )
+        size: int = Field(
+            default=24, ge=8, le=1024, description="For a bundled icon: width and height in pixels"
+        )
 
     def summary(self, args: FetchImage.Args) -> str:
         return f"fetch image {args.id} to {args.path}"
@@ -167,6 +217,8 @@ class FetchImage(Tool):
                 ok=False,
                 content=f"{args.id} was not found in this session's results: search with find_image first.",
             )
+        if candidate.source in ("bundled", "library"):
+            return _save_local(context, candidate, args)
         policy = context.web_policy or WebPolicy()
         try:
             async with sources.make_client() as client:
@@ -199,6 +251,10 @@ class FetchImage(Tool):
         path = re.sub(r"\.[A-Za-z0-9]{2,5}$", "", args.path) + extension
         context.workspace.write_bytes(path, data, f"picture from {candidate.source}: {candidate.title}")
         _record_notice(context, path, candidate)
+        with contextlib.suppress(
+            OSError
+        ):  # the library is a convenience; a full disk must not fail the download
+            picture_library.remember(_library_record(candidate), data, extension, context.last_image_query)
         credit = candidate.attribution
         lines = [
             f"Saved {path} ({len(data) // 1024} KB; {candidate.licence}; source {candidate.page_url or candidate.source})."
@@ -254,6 +310,46 @@ async def _ping(client: httpx.AsyncClient, candidate: Candidate) -> None:
         await client.get(
             candidate.extra["track"], headers={"Authorization": f"Client-ID {candidate.extra.get('key', '')}"}
         )
+
+
+def _library_record(candidate: Candidate) -> dict[str, str]:
+    return {
+        "id": candidate.id,
+        "title": candidate.title,
+        "source": candidate.source,
+        "kind": candidate.kind,
+        "licence": candidate.licence,
+        "author": candidate.author,
+        "credit": candidate.attribution,
+        "page": candidate.page_url,
+    }
+
+
+def _save_local(context: ToolContext, candidate: Candidate, args: Any) -> ToolResult:
+    """A bundled icon written as an SVG, or a picture from the library copied into the project (no network)."""
+    if candidate.source == "bundled":
+        try:
+            data = icon_svg(candidate.id.removeprefix("bundled:"), args.color, args.size).encode("utf-8")
+        except IconError as error:
+            return ToolResult(ok=False, content=str(error))
+        extension = ".svg"
+    else:
+        file = picture_library.folder() / candidate.extra["file"]
+        if not file.is_file():
+            return ToolResult(ok=False, content="The library file is gone: search again.")
+        data, extension = file.read_bytes(), file.suffix
+    path = re.sub(r"\.[A-Za-z0-9]{2,5}$", "", args.path) + extension
+    context.workspace.write_bytes(path, data, f"picture from {candidate.source}: {candidate.title}")
+    _record_notice(context, path, candidate)
+    credit = (
+        f"Credit line to show with it: {candidate.attribution}"
+        if candidate.attribution
+        else "No credit line is required."
+    )
+    return ToolResult(
+        ok=True,
+        content=f"Saved {path} ({candidate.licence}; from the {candidate.source}, no network used).\n{credit}",
+    )
 
 
 def _record_notice(context: ToolContext, path: str, candidate: Candidate) -> None:

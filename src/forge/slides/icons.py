@@ -361,3 +361,39 @@ def load_icon(name: str) -> IconShape:
     raise IconError(
         f"no icon named '{name}'" + (f"; similar: {similar}" if similar else "; use find_icon to search")
     )
+
+
+def icon_svg(name: str, color: str = "#111827", size: int = 24, stroke_width: float | None = None) -> str:
+    """The bundled icon as a standalone SVG file's text (for web pages and documents, not only slides). Raises IconError."""
+    from html import escape
+
+    library, _, bare = name.partition(":")
+    if not bare:
+        library, bare = "", name
+    if not re.fullmatch(r"#?[0-9A-Fa-f]{3,8}|currentColor", color):
+        raise IconError("the colour must be a hex value like #1F2937, or currentColor")
+    colour = color if color == "currentColor" or color.startswith("#") else "#" + color
+    for lib in [library] if library else ["lucide", "material"]:
+        if lib not in ("lucide", "material"):
+            raise IconError(f"unknown icon library '{lib}': use lucide or material")
+        data = _set(lib)
+        key = next(
+            (k for k in (bare, bare.replace("-", "_"), bare.replace("_", "-")) if k in data["icons"]), None
+        )
+        if key is None:
+            continue
+        entry = data["icons"][key]
+        box = " ".join(f"{v:g}" for v in data["viewBox"])
+        head = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{box}" width="{size}" height="{size}"'
+        if lib == "material":
+            return f'{head} fill="{colour}"><path d="{escape(entry)}"/></svg>\n'
+        width = stroke_width if stroke_width is not None else data.get("strokeWidth", 2)
+        body = "".join(
+            "<" + tag + "".join(f' {k}="{escape(str(v))}"' for k, v in attrs.items()) + "/>"
+            for tag, attrs in entry["n"]
+        )
+        return f'{head} fill="none" stroke="{colour}" stroke-width="{width:g}" stroke-linecap="round" stroke-linejoin="round">{body}</svg>\n'
+    similar = ", ".join(search_icons(bare.replace("_", " ").replace("-", " "), 5))
+    raise IconError(
+        f"no icon named '{name}'" + (f"; similar: {similar}" if similar else "; use find_icon to search")
+    )
