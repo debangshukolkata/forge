@@ -130,6 +130,14 @@ colours are hard to read or a font is not on every computer. If the project has 
 If `build_presentation` says python-pptx is not installed, tell the user the one command that fixes it
 (`pip install python-pptx`) instead of trying to work around it.
 
+## 4b. Accessibility (built in, check the rest)
+Every deck the builder makes gets: the document title, the text language (`"language": "de-DE"` in the outline; default en-US), the title
+first and the footer last in the reading order (only where moving them cannot change what is seen), a header row marked on tables, alt
+text on charts and tables taken from the slide title. **You supply alt text for pictures** (`alt`), and you keep chart colours apart for
+colour-blind viewers: the builder picks them for you from the theme (a combination that stays distinguishable for two or three series;
+with more series add data labels). `check_accessibility(path)` lists what is missing in any deck (made elsewhere, or after edits):
+fix every error; a warning is worth fixing when it is cheap.
+
 ## 5. Existing decks and company templates
 
 **Summarise or review a deck:** `read_presentation(path)` lists every slide (layout, title, text, tables, chart

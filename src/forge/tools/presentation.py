@@ -14,6 +14,7 @@ from pydantic import Field
 
 from forge.errors import ForgeError
 from forge.slides import icons, preview
+from forge.slides.accessibility import check_deck
 from forge.slides.build import SlidesUnavailable, build_deck
 from forge.slides.contact_sheet import ContactSheetUnavailable, make_contact_sheets
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
@@ -128,6 +129,42 @@ class ReadPresentation(Tool):
             return ToolResult(ok=False, content=f"{error} Tell the user.")
         except (ForgeError, OSError) as error:
             return ToolResult(ok=False, content=str(error))
+
+
+class CheckAccessibility(Tool):
+    name = "check_accessibility"
+    read_only = True
+    description = (
+        "Check a .pptx for accessibility: document title, slide titles, alt text on pictures, charts and tables, table header rows, "
+        "reading order (title first, footer last), link texts, the text language, and chart colours a colour-blind viewer cannot tell "
+        "apart. Decks built by build_presentation are already repaired where that needs no guessing; use this on decks made elsewhere "
+        "or after edits, and fix what it lists (edit_presentation can set alt text)."
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(description="The .pptx, relative to the repository root")
+
+    def summary(self, args: CheckAccessibility.Args) -> str:
+        return f"check accessibility {args.path}"
+
+    async def run(self, args: CheckAccessibility.Args, context: ToolContext) -> ToolResult:
+        file = context.workspace.path_of(args.path)
+        if not file.is_file():
+            return ToolResult(ok=False, content=f"No file at {args.path}.")
+        try:
+            deck = await asyncio.to_thread(open_deck, file)
+            problems = check_deck(deck)
+        except SlidesUnavailable as error:
+            return ToolResult(ok=False, content=f"{error} Tell the user.")
+        except (ForgeError, OSError) as error:
+            return ToolResult(ok=False, content=str(error))
+        if not problems:
+            return ToolResult(ok=True, content="No accessibility problems found.")
+        errors = sum(1 for p in problems if p.level == "error")
+        lines = [p.render() for p in problems[:40]]
+        more = f"\n... and {len(problems) - 40} more" if len(problems) > 40 else ""
+        header = f"{errors} error(s), {len(problems) - errors} warning(s):"
+        return ToolResult(ok=True, content=header + "\n" + "\n".join(lines) + more)
 
 
 class AnalyzeTemplate(Tool):
@@ -361,6 +398,7 @@ def presentation_tools() -> list[Tool]:
         BuildPresentation(),
         ReadPresentation(),
         AnalyzeTemplate(),
+        CheckAccessibility(),
         EditPresentation(),
         PreviewPresentation(),
         FindIcon(),

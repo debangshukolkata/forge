@@ -588,6 +588,11 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
             builder.stats_slide(slide_spec)
         del index
     builder.finish()
+    from forge.slides.accessibility import (
+        improve_deck,
+    )  # imported here: it reads decks through modules that build on this one
+
+    improve_deck(builder.prs, deck.language, deck.title)
     properties = builder.prs.core_properties
     properties.title, properties.author = deck.title, deck.author or ""
     output = io.BytesIO()

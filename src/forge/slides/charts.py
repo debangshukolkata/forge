@@ -12,6 +12,7 @@ import importlib
 import io
 from typing import Any
 
+from forge.slides.colorvision import accessible_palette
 from forge.slides.errors import BuildError
 
 MAX_PIE_SLICES = 6
@@ -254,7 +255,11 @@ def add_chart(
             "top": XL_LEGEND_POSITION.TOP,
         }[legend]
         chart.legend.include_in_layout = False
-    colours = [_colour(b, c) for c in options.colors] or [b.colour(c) for c in b.theme.palette]
+    needed = len(categories) if kind in ONE_SERIES else len(series)
+    colours = [_colour(b, c) for c in options.colors] or [
+        b.colour(c.lstrip("#"))
+        for c in accessible_palette(b.theme.palette, min(needed, len(b.theme.palette)), b.theme.background)
+    ]
     palette = [colours[i % len(colours)] for i in range(max(len(series), len(categories), 1))]
     labels = options.data_labels if options.data_labels is not None else (kind in ONE_SERIES or not many)
     number_format = options.number_format

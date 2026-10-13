@@ -67,12 +67,8 @@ def test_numbered_cards_get_badges() -> None:
 def test_steps_are_numbered_in_order() -> None:
     built, prs = _build([STEPS])
     texts = _texts(prs.slides[0])
-    assert [t for t in texts if t in "1234"][-4:] == [
-        "1",
-        "2",
-        "3",
-        "4",
-    ]  # the first "1" is the footer slide number
+    body = texts[:-2]  # the footer and the slide number are last in the reading order (P2.9)
+    assert [t for t in body if t in "1234"] == ["1", "2", "3", "4"]
     assert "Pilot" in texts and "Ten users" in texts
     assert not validate_package(built.data)
 

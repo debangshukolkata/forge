@@ -483,6 +483,9 @@ class Deck(_Model):
     title: str
     subtitle: str = ""
     author: str = ""
+    language: str = Field(
+        default="en-US", pattern=r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$"
+    )  # the language of the text (en-US, de-DE, ...): screen readers and spell-check use it
     theme: str = "clean"  # one of THEMES (see themes.py / the skill); chosen by audience and topic
     brand: BrandKit | None = None  # a brand kit: colours and fonts that override the theme
     minutes: int | None = Field(
