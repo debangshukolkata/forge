@@ -16,6 +16,7 @@ from forge.errors import ForgeError
 from forge.slides import charts, fit, lint, tables
 from forge.slides.errors import BuildError
 from forge.slides.freeform import build_freeform
+from forge.slides.masters import LAYOUT_TITLE_ONLY, add_footer_placeholders, install_master, layout_named
 from forge.slides.spec import (
     BulletGroup,
     BulletsSlide,
@@ -153,6 +154,9 @@ class _Builder:
     def make_presentation(self) -> Any:
         prs = self.m["pptx"].Presentation()
         prs.slide_width, prs.slide_height = self.m["inches"](WIDTH), self.m["inches"](HEIGHT)
+        install_master(
+            prs, self.theme, WIDTH, MARGIN, TITLE_TOP, TITLE_HEIGHT
+        )  # P2.7: a deck that re-themes in PowerPoint
         return prs
 
     # --- small helpers ---
@@ -288,7 +292,7 @@ class _Builder:
     def new_slide(
         self, layout: str, title: str, notes: str, background: str | None = None, role: str = "title_only"
     ) -> Any:
-        slide = self.prs.slides.add_slide(self.prs.slide_layouts[5])  # "Title Only"
+        slide = self.prs.slides.add_slide(layout_named(self.prs, LAYOUT_TITLE_ONLY))
         slide.background.fill.solid()
         slide.background.fill.fore_color.rgb = self.colour(background or self.theme.background)
         if notes:
@@ -304,11 +308,9 @@ class _Builder:
         return slide
 
     def add_footer(self, slide: Any) -> None:
-        footer = self.deck.footer or self.deck.title
-        small = self.textbox(slide, self.margin, 7.0, 8, 0.3)
-        self.paragraph(small, True, footer, 11, self.theme.muted)
-        number = self.textbox(slide, WIDTH - self.margin - 1, 7.0, 1, 0.3)
-        self.paragraph(number, True, str(len(self.prs.slides)), 11, self.theme.muted, align="right")
+        add_footer_placeholders(
+            slide, self.deck.footer or self.deck.title, len(self.prs.slides), self.deck.language
+        )
 
     # --- bullets shared by the bullets and two-column layouts ---
 

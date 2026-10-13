@@ -171,7 +171,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 - [x] **P2.5 Tables to full strength.** Merged cells, widths, borders, per-cell fill/bold/alignment, heat-map colouring, long-table splitting. Size M. **(done 2026-10-13, D-285; looked at in PowerPoint renders)**
 - [x] **P2.6 Diagram toolkit.** Connectors that stay attached to shapes (straight and elbow), grouping, align and distribute operations, **(done 2026-10-13, D-286; looked at in PowerPoint renders)**
   ready recipes (process, cycle, hierarchy, 2x2 matrix, timeline, funnel, roadmap). Size M.
-- [ ] **P2.7 Real masters and theme.** Generate proper slide masters, layouts, placeholders, footer and slide-number fields and theme
+- [x] **P2.7 Real masters and theme.** (done 2026-10-13, D-315) Generate proper slide masters, layouts, placeholders, footer and slide-number fields and theme
   fonts/colours, so a DebCraft deck re-themes correctly in PowerPoint and new slides added by hand look right. Size L.
 - [ ] **P2.8 Slide features.** Sections, hidden slides, transitions, basic entrance animations, slide numbers, comments (read and add). Size M to L.
 - [x] **P2.9 Accessibility pass.** (done 2026-10-13, D-314) Reading order, alt text everywhere, document language and title, colour-blind-safe palettes. Size S.
