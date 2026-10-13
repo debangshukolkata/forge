@@ -77,6 +77,10 @@ class Sample:
     pictures: int = 0
     charts: int = 0
     tables: int = 0
+    chart_families: list[str] = field(
+        default_factory=list
+    )  # column, bar, line, pie, donut ... of each chart on the slide
+    table_sizes: list[tuple[int, int]] = field(default_factory=list)  # rows and columns of each table
 
     def slot(self, role: str) -> Slot | None:
         return next((s for s in self.slots if s.role == role and not s.fixed and not self._in_items(s)), None)
@@ -349,6 +353,22 @@ def _kind(
     return "other"
 
 
+def _object_facts(slide: Any) -> tuple[list[str], list[tuple[int, int]]]:
+    from forge.slides.sample_objects import chart_family
+
+    families: list[str] = []
+    sizes: list[tuple[int, int]] = []
+    for shape in walk(slide.shapes):
+        if getattr(shape, "has_chart", False) and shape.has_chart:
+            try:
+                families.append(chart_family(shape.chart.chart_type.name))
+            except (ValueError, KeyError, AttributeError):
+                families.append("other")
+        if getattr(shape, "has_table", False) and shape.has_table:
+            sizes.append((len(shape.table.rows), len(shape.table.columns)))
+    return families, sizes
+
+
 def analyze_samples(prs: Any) -> list[Sample]:
     """Every slide of the template as a Sample (an empty list when the template has no slides)."""
     from forge.slides.template import classify_layout
@@ -375,7 +395,12 @@ def analyze_samples(prs: Any) -> list[Sample]:
         kind = _kind(
             role, [s for s in slots if not s.fixed], items, pictures, charts, tables, number == len(slides)
         )
-        samples.append(Sample(number, slide.slide_layout.name, kind, slots, items, pictures, charts, tables))
+        families, sizes = _object_facts(slide)
+        samples.append(
+            Sample(
+                number, slide.slide_layout.name, kind, slots, items, pictures, charts, tables, families, sizes
+            )
+        )
     return samples
 
 

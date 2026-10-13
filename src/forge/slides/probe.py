@@ -139,7 +139,7 @@ def _issues(prs: Any, info: Any, samples: list[Sample]) -> list[str]:
             )
         if sample.charts or sample.tables:
             found.append(
-                f"Sample slide {sample.number} holds a chart or table: it cannot be copied; those slides are built on a layout instead."
+                f"Sample slide {sample.number} holds a chart or table: build_presentation uses it for chart and table slides of the same kind; template_slide changes its text only."
             )
     if samples and not any(s.fixed for sample in samples for s in sample.slots):
         found.append(

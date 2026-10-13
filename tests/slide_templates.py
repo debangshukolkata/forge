@@ -126,3 +126,114 @@ def make_corporate_template() -> bytes:
     out = io.BytesIO()
     prs.save(out)
     return out.getvalue()
+
+
+def make_infographic_template() -> bytes:
+    """A template like the company one seen on the office laptop (D-332): 10 x 5.625 in, covers whose layout name is misspelt, a
+    separator slide, shape-drawn infographics on 'Title Only', a donut chart, a column chart, a styled table, dark and light samples,
+    corner logos, a footer line, a sticky 'Delete before using' note with tilted paper, and a thank-you slide."""
+    from pptx.chart.data import CategoryChartData
+    from pptx.dml.color import RGBColor
+    from pptx.enum.chart import XL_CHART_TYPE
+    from pptx.enum.shapes import MSO_SHAPE
+    from pptx.util import Inches, Pt
+
+    prs = Presentation(io.BytesIO(make_template(width_in=10, height_in=5.625, sample_slide=False)))
+    layouts = {layout.name: layout for layout in prs.slide_layouts}
+    layouts["Title Slide"].name = "Ttile Slide_Black with full wave_Option 1"
+    cover_layout = next(layout for layout in prs.slide_layouts if layout.name.startswith("Ttile"))
+    title_only = layouts["Title Only"]
+
+    def background(slide: object, colour: str) -> None:
+        slide.background.fill.solid()  # type: ignore[attr-defined]
+        slide.background.fill.fore_color.rgb = RGBColor.from_string(colour)  # type: ignore[attr-defined]
+
+    def chrome(slide: object, number: int) -> None:
+        logo = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.3), Inches(5.2), Inches(1.2), Inches(0.3))  # type: ignore[attr-defined]
+        logo.name = "Company logo"
+        foot = slide.shapes.add_textbox(Inches(4), Inches(5.2), Inches(2.5), Inches(0.3))  # type: ignore[attr-defined]
+        foot.text_frame.text = "Acme confidential"
+
+    def sticky(slide: object) -> None:
+        paper = slide.shapes.add_shape(
+            MSO_SHAPE.RECTANGLE, Inches(7.0), Inches(0.3), Inches(2.4), Inches(1.6)
+        )  # type: ignore[attr-defined]
+        paper.rotation = -4
+        paper.name = "Picture 12"
+        heading = slide.shapes.add_textbox(Inches(7.1), Inches(0.4), Inches(2.0), Inches(0.4))  # type: ignore[attr-defined]
+        heading.text_frame.text = "Delete before using"
+        heading.rotation = -4
+        body = slide.shapes.add_textbox(Inches(7.1), Inches(0.8), Inches(2.0), Inches(0.9))  # type: ignore[attr-defined]
+        body.text_frame.text = "Changing image: right-click the picture and choose Change picture"
+        body.rotation = -4
+
+    def text(
+        slide: object, value: str, x: float, y: float, w: float, h: float, size: int, bold: bool = False
+    ) -> None:
+        box = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))  # type: ignore[attr-defined]
+        box.text_frame.word_wrap = True
+        box.text_frame.text = value
+        run = box.text_frame.paragraphs[0].runs[0]
+        run.font.size, run.font.bold = Pt(size), bold
+
+    s = prs.slides.add_slide(cover_layout)  # 1: dark cover with a sticky note
+    background(s, "0A0A0A")
+    s.shapes.title.text_frame.text = "Add title here"
+    s.placeholders[1].text_frame.text = "Lorem ipsum lorem ipsum."
+    sticky(s)
+    chrome(s, 1)
+    s = prs.slides.add_slide(title_only)  # 2: separator
+    background(s, "0A0A0A")
+    s.shapes.title.text_frame.text = "Add separator title here"
+    chrome(s, 2)
+    s = prs.slides.add_slide(title_only)  # 3: dark infographic, three circles with a caption each
+    background(s, "0A0A0A")
+    s.shapes.title.text_frame.text = "Slide title here"
+    for index, x in enumerate((0.8, 3.7, 6.6)):
+        circle = s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x + 0.6), Inches(1.5), Inches(1.0), Inches(1.0))
+        circle.name = f"Circle {index + 1}"
+        text(s, f"{(index + 1) * 20}%", x + 0.6, 1.7, 1.0, 0.6, 24, True)
+        text(s, "Lorem ipsum dolor sit amet consectetur adipiscing elit.", x, 2.8, 2.4, 1.2, 14)
+    chrome(s, 3)
+    s = prs.slides.add_slide(title_only)  # 4: light donut chart
+    background(s, "F4F4F4")
+    s.shapes.title.text_frame.text = "Slide title here"
+    data = CategoryChartData()
+    data.categories = ["Lorem", "Ipsum", "Dolor"]
+    data.add_series("Share", (50, 30, 20))
+    s.shapes.add_chart(XL_CHART_TYPE.DOUGHNUT, Inches(1.5), Inches(1.4), Inches(4.5), Inches(3.5), data)
+    text(s, "Lorem ipsum dolor sit amet consectetur.", 6.3, 2.0, 3.0, 1.5, 14)
+    chrome(s, 4)
+    s = prs.slides.add_slide(title_only)  # 5: dark column chart
+    background(s, "0A0A0A")
+    s.shapes.title.text_frame.text = "Slide title here"
+    data = CategoryChartData()
+    data.categories = ["A", "B", "C", "D"]
+    data.add_series("One", (1, 2, 3, 4))
+    data.add_series("Two", (2, 3, 4, 5))
+    s.shapes.add_chart(
+        XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(0.8), Inches(1.4), Inches(8.4), Inches(3.6), data
+    )
+    chrome(s, 5)
+    s = prs.slides.add_slide(title_only)  # 6: light table
+    background(s, "F4F4F4")
+    s.shapes.title.text_frame.text = "Slide title here"
+    table = s.shapes.add_table(4, 3, Inches(0.8), Inches(1.5), Inches(8.4), Inches(2.4))
+    for r in range(4):
+        for c in range(3):
+            table.table.cell(r, c).text = "Header" if r == 0 else "Lorem"
+    chrome(s, 6)
+    s = prs.slides.add_slide(layouts["Title and Content"])  # 7: bullets
+    background(s, "F4F4F4")
+    s.shapes.title.text_frame.text = "Slide title here"
+    s.placeholders[1].text_frame.text = "Lorem ipsum dolor sit amet"
+    for line in ("Consectetur adipiscing elit", "Quisque faucibus ex sapien"):
+        s.placeholders[1].text_frame.add_paragraph().text = line
+    chrome(s, 7)
+    s = prs.slides.add_slide(cover_layout)  # 8: thank you
+    background(s, "0A0A0A")
+    s.shapes.title.text_frame.text = "Thank you"
+    chrome(s, 8)
+    out = io.BytesIO()
+    prs.save(out)
+    return out.getvalue()

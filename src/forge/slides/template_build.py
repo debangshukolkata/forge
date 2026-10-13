@@ -29,9 +29,11 @@ from forge.slides.edit import _duplicate
 from forge.slides.edit_find import walk
 from forge.slides.errors import BuildError
 from forge.slides.open_deck import DeckError
+from forge.slides.sample_objects import fill_chart, fill_table, requested_family
 from forge.slides.spec import (
     BulletsSlide,
     CardsSlide,
+    ChartSlide,
     ClosingSlide,
     Column,
     Deck,
@@ -39,6 +41,7 @@ from forge.slides.spec import (
     SectionSlide,
     StatsSlide,
     StepsSlide,
+    TableSlide,
     TemplateSlide,
     TitleSlide,
     TwoColumnSlide,
@@ -49,6 +52,7 @@ from forge.slides.themes import Brand, Theme, apply_brand
 
 BODY_KINDS = ("OBJECT", "BODY")
 TITLE_KINDS = ("TITLE", "CENTER_TITLE")
+MAX_SAMPLE_TABLE_ROWS = 12  # more rows than this do not fit a sample's table; the quiet native table is used
 FALLBACK_ROLES = ("title_only", "content", "blank")
 
 
@@ -271,6 +275,67 @@ class TemplateBuilder(_Builder):
         count = self.used_samples.get(kind, 0)
         self.used_samples[kind] = count + 1
         return options[count % len(options)]
+
+    def _object_sample(self, kind: str, family: str = "") -> Sample | None:
+        """The next sample slide that holds exactly one chart (of this family) or one table, round robin."""
+        if kind == "chart":
+            options = [s for s in self.samples if s.chart_families == [family]]
+        else:
+            options = [s for s in self.samples if len(s.table_sizes) == 1 and not s.charts]
+        if not options:
+            return None
+        key = f"{kind}:{family}"
+        count = self.used_samples.get(key, 0)
+        self.used_samples[key] = count + 1
+        return options[count % len(options)]
+
+    def chart_slide(self, slide_spec: ChartSlide) -> None:
+        """A chart on the template's own chart slide of the same kind (its colours, labels and frame) when it has one."""
+        sample = (
+            None
+            if slide_spec.data_file or not slide_spec.series
+            else self._object_sample("chart", requested_family(slide_spec.kind))
+        )
+        if sample is None:
+            super().chart_slide(slide_spec)
+            return
+        fills: dict[str, Any] = {"title": slide_spec.title}
+        text = next(
+            (s for s in sample.slots if s.role == "text" and not s.fixed and not sample._in_items(s)), None
+        )
+        if slide_spec.caption and text is not None:
+            fills[f"slot:{text.id}"] = slide_spec.caption
+        slide = self._from_sample(
+            sample, f"chart (template sample {sample.number})", slide_spec.title, slide_spec.notes, fills
+        )
+        shape = next(s for s in walk(slide.shapes) if getattr(s, "has_chart", False) and s.has_chart)
+        try:
+            fill_chart(
+                shape, list(slide_spec.categories), [(s.name, list(s.values)) for s in slide_spec.series]
+            )
+        except DeckError as error:
+            raise BuildError(f"slide {self.report.number}: {error}") from error
+
+    def table_slide(self, slide_spec: TableSlide) -> None:
+        """A table in the template's own table slide (header colours, stripes) when it has one and the rows fit."""
+        sample = (
+            None
+            if len(slide_spec.rows) > MAX_SAMPLE_TABLE_ROWS or slide_spec.split_rows
+            else self._object_sample("table")
+        )
+        if sample is None:
+            super().table_slide(slide_spec)
+            return
+        fills: dict[str, Any] = {"title": slide_spec.title}
+        slide = self._from_sample(
+            sample, f"table (template sample {sample.number})", slide_spec.title, slide_spec.notes, fills
+        )
+        shape = next(s for s in walk(slide.shapes) if getattr(s, "has_table", False) and s.has_table)
+        rows = [[getattr(cell, "text", cell) for cell in row] for row in slide_spec.rows]
+        try:
+            fill_table(shape, list(slide_spec.columns), rows)
+        except DeckError as error:
+            raise BuildError(f"slide {self.report.number}: {error}") from error
 
     def _from_sample(
         self, sample: Sample, label: str, title: str, notes: str, fills: dict[str, Any], strict: bool = False
