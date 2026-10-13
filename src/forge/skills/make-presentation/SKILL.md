@@ -132,9 +132,11 @@ If `build_presentation` says python-pptx is not installed, tell the user the one
 numbers, picture alt text, speaker notes). Base what you say on that, slide by slide; say when a slide has
 nothing to read (a picture without alt text, for instance). Never guess what a slide says.
 
-**Where new slides go in an edited deck:** before the closing slide ("Thank you", "Questions"), never after it, and make them with
-`add_slide` from the deck's own layouts so they look like the rest. `replace_text` also changes chart titles, axis titles, category and
-series names and picture alt text, so "replace every X" really means every one.
+**New slides in an edited deck:** `add_slide` with only `title` and `body` copies the look of the deck's own last text slide (same
+layout, boxes, fonts and positions) and puts the slide before a closing slide ("Thank you", "Questions"), so it looks like the rest.
+Use `like: N` to copy a particular slide, `at` to choose the position, or `layout` for a layout name when the deck is built on a
+template's layouts. `replace_text` also changes chart titles, axis titles, category and series names and picture alt text, so
+"replace every X" really means every one.
 
 **Change a deck:** read it first, then `edit_presentation(path, operations=[...], output=...)`. It keeps the deck's
 own formatting, so prefer it over rebuilding whenever someone else made the deck or a template is involved.

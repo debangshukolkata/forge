@@ -242,3 +242,75 @@ def test_replace_text_reaches_chart_titles_series_names_and_alt_text(tmp_path: P
     assert picture._element.xpath("(.//p:cNvPr)[1]/@descr")[0] == "FY25 dashboard"
     assert "2 occurrence" in done[0]
     _valid(deck)
+
+
+# --- add_slide: before the closing slide, and in the look of the deck's own slides (baseline-1/2 finding on d07) ---
+
+
+def _deck_with_closing(tmp_path: Path) -> Any:
+    import json
+
+    from forge.slides.build import build_deck
+    from forge.slides.open_deck import open_deck
+    from forge.slides.spec import parse_deck
+
+    outline = {
+        "title": "Board",
+        "slides": [
+            {"layout": "title", "title": "Board update"},
+            {
+                "layout": "bullets",
+                "title": "FY24 in numbers",
+                "bullets": ["Revenue up", "Margin steady", "Hiring on plan"],
+            },
+            {"layout": "bullets", "title": "Priorities delivered", "bullets": ["Warehouse", "ERP"]},
+            {"layout": "closing", "title": "Thank you"},
+        ],
+    }
+    path = tmp_path / "board.pptx"
+    path.write_bytes(build_deck(parse_deck(json.dumps(outline)), lambda name: b"").data)
+    return open_deck(path)
+
+
+def _titles(deck: Any) -> list[str]:
+    return [
+        next((s.text_frame.text for s in slide.shapes if s.has_text_frame and s.text_frame.text.strip()), "")
+        for slide in deck.slides
+    ]
+
+
+def test_a_new_slide_goes_before_the_closing_slide_in_the_decks_own_look(tmp_path: Path) -> None:
+    deck = _deck_with_closing(tmp_path)
+    _run(
+        deck,
+        [{"op": "add_slide", "title": "Decisions needed", "body": ["Approve hiring plan", "Approve budget"]}],
+    )
+    titles = _titles(deck)
+    assert titles[-2:] == ["Decisions needed", "Thank you"] and len(titles) == 5
+    new = deck.slides[3]
+    old = deck.slides[2]
+    # same look: same layout, same text boxes at the same places and sizes
+    assert new.slide_layout.name == old.slide_layout.name
+    assert [(s.left, s.top, s.width) for s in new.shapes if s.has_text_frame] == [
+        (s.left, s.top, s.width) for s in old.shapes if s.has_text_frame
+    ]
+    body = " ".join(s.text_frame.text for s in new.shapes if s.has_text_frame)
+    assert "Approve budget" in body and "Priorities delivered" not in body and "Warehouse" not in body
+    _valid(deck)
+
+
+def test_add_slide_with_a_layout_name_also_lands_before_the_closing_slide(tmp_path: Path) -> None:
+    deck = _deck_with_closing(tmp_path)
+    _run(
+        deck, [{"op": "add_slide", "layout": "Title and Content", "title": "Next steps", "body": ["Ship it"]}]
+    )
+    assert _titles(deck)[-1] == "Thank you"
+    assert _titles(deck)[-2] == "Next steps"
+
+
+def test_an_explicit_position_and_a_chosen_model_slide_are_respected(tmp_path: Path) -> None:
+    deck = _deck_with_closing(tmp_path)
+    _run(deck, [{"op": "add_slide", "like": 2, "title": "Appendix", "body": ["Detail"], "at": 2}])
+    assert _titles(deck)[1] == "Appendix"
+    with pytest.raises(DeckError, match="no slide 9"):
+        _run(deck, [{"op": "add_slide", "like": 9, "title": "x", "body": ["y"]}])

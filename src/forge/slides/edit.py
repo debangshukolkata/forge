@@ -67,7 +67,10 @@ class DuplicateSlide(_Op):
 
 class AddSlide(_Op):
     op: Literal["add_slide"]
-    layout: str  # a layout name listed by read_presentation
+    layout: str = ""  # a layout name listed by read_presentation; empty = look like the deck's own text slides (see `like`)
+    like: int | None = (
+        None  # copy this slide's look (it must hold text only); default the deck's last text slide
+    )
     title: str = ""
     body: list[str] = Field(
         default_factory=list
@@ -76,7 +79,9 @@ class AddSlide(_Op):
         default_factory=dict
     )  # other placeholders by number, e.g. {"2": "..."}
     notes: str = ""
-    at: int | None = None  # position; default the end
+    at: int | None = (
+        None  # position; default just before a closing slide (Thank you, Questions), else the end
+    )
 
 
 class UpdateChart(_Op):
@@ -254,7 +259,90 @@ def _layout(deck: Any, name: str) -> Any:
     return chosen[0]
 
 
+CLOSING_WORDS = ("thank", "questions", "q&a", "contact us", "the end", "discussion")
+
+
+def _text_shapes(slide: Any) -> list[Any]:
+    return [
+        s
+        for s in walk(slide.shapes)
+        if getattr(s, "has_text_frame", False) and s.has_text_frame and s.text_frame.text.strip()
+    ]
+
+
+def _is_closing(slide: Any, number: int, total: int) -> bool:
+    """The last slide when it is only a few words and says thank you, questions or the like."""
+    if number != total or total < 3:
+        return False
+    words = " ".join(s.text_frame.text for s in _text_shapes(slide)).lower()
+    return len(words.split()) <= 20 and any(w in words for w in CLOSING_WORDS)
+
+
+def _default_position(deck: Any) -> int:
+    total = len(deck.slides)
+    return total if total and _is_closing(deck.slides[total - 1], total, total) else total + 1
+
+
+def _default_position_after_add(deck: Any) -> int:
+    """Where the slide just added at the end belongs: before a closing slide, else where it already is."""
+    total = len(deck.slides)
+    return total - 1 if total >= 3 and _is_closing(deck.slides[total - 2], total - 1, total - 1) else total
+
+
+def _text_only(slide: Any) -> bool:
+    return not any(
+        s.shape_type == 13 or getattr(s, "has_chart", False) or getattr(s, "has_table", False)
+        for s in walk(slide.shapes)
+    )
+
+
+def _auto_like(deck: Any) -> int:
+    """The deck's own body slide to copy: the last slide that is not the first or the closing one, holds only text and has a list."""
+    total = len(deck.slides)
+    for number in range(total, 1, -1):
+        slide = deck.slides[number - 1]
+        if _is_closing(slide, number, total) or not _text_only(slide):
+            continue
+        if any(len(s.text_frame.paragraphs) >= 2 for s in _text_shapes(slide)):
+            return number
+    raise DeckError(
+        "the deck has no text slide to copy the look of: give `layout` (a name from read_presentation)"
+    )
+
+
+def _add_like(deck: Any, operation: AddSlide) -> None:
+    """A new slide that looks like one of the deck's own: copy it, then put the new title and lines into its two main texts."""
+    source = operation.like or _auto_like(deck)
+    if not _text_only(slide_at(deck, source)):
+        raise DeckError(f"slide {source} holds a picture, chart or table: pick a text slide for `like`")
+    at = operation.at if operation.at is not None else _default_position(deck)
+    _duplicate(deck, source, at if at <= len(deck.slides) else len(deck.slides) + 1)
+    slide = deck.slides[min(at, len(deck.slides)) - 1]
+    texts = sorted(_text_shapes(slide), key=lambda s: (s.top or 0, s.left or 0))
+    footer_zone = (deck.slide_height or 0) * 0.9
+    texts = [s for s in texts if (s.top or 0) < footer_zone] or texts
+    if not texts:
+        raise DeckError(f"slide {source} has no text to put the new content in")
+    title_shape = slide.shapes.title or texts[0]
+    body_candidates = [s for s in texts if s is not title_shape]
+    body_shape = max(body_candidates, key=lambda s: len(s.text_frame.paragraphs), default=None)
+    if operation.title:
+        set_frame_text(title_shape.text_frame, [operation.title])
+    if operation.body:
+        if body_shape is None:
+            raise DeckError(f"slide {source} has no body text to fill: pick another slide for `like`")
+        set_frame_text(body_shape.text_frame, operation.body)
+    elif body_shape is not None:
+        body_shape._element.getparent().remove(body_shape._element)  # the copied sample wording must not stay
+    for key in operation.placeholders:
+        raise DeckError(f"placeholder {key} cannot be used when copying a slide's look: use `layout` instead")
+    slide.notes_slide.notes_text_frame.text = operation.notes or ""
+
+
 def _add(deck: Any, operation: AddSlide) -> None:
+    if operation.like is not None or not operation.layout:
+        _add_like(deck, operation)
+        return
     slide = deck.slides.add_slide(_layout(deck, operation.layout))
     title = slide.shapes.title
     others = [
@@ -287,8 +375,11 @@ def _add(deck: Any, operation: AddSlide) -> None:
             holder._element.getparent().remove(holder._element)
     if operation.notes:
         slide.notes_slide.notes_text_frame.text = operation.notes
-    if operation.at is not None:
-        _move(deck, len(deck.slides), operation.at)
+    _move(
+        deck,
+        len(deck.slides),
+        operation.at if operation.at is not None else _default_position_after_add(deck),
+    )
 
 
 def _update_chart(deck: Any, operation: UpdateChart) -> None:

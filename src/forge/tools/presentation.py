@@ -197,8 +197,8 @@ class EditPresentation(Tool):
     description = (
         "Change an existing PowerPoint without rebuilding it, keeping its formatting. Operations (a "
         "list, run in order; if one fails nothing is saved): " + OPERATIONS + ". Slides are numbered "
-        "from 1 as in read_presentation; shapes are named by their id or exact name. add_slide uses the "
-        "deck's own layouts, which is how a company template is used: open the template with output set "
+        "from 1 as in read_presentation; shapes are named by their id or exact name. add_slide without a layout copies the look of "
+        "the deck's own last text slide and lands before a closing slide; with a layout name it uses the deck's own layouts, which is how a company template is used: open the template with output set "
         "to a new .pptx, add the slides, and delete its sample slides. Read the deck first, and preview "
         "the result afterwards."
     )
