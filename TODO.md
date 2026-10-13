@@ -157,7 +157,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 - [x] **P1.6 Title lint.** Warn when a title is a topic ("Search") instead of a takeaway ("Search is 4x faster"); count words. Size S. **(done 2026-10-13, D-276)**
 - [x] **P1.7 Safe fonts.** Prefer fonts that exist everywhere (Arial, Calibri, Cambria, Times New Roman, Courier New, Bookman, Century **(done 2026-10-13, D-276: themes use Calibri and Georgia, mono is Courier New, `font_warning` lists the safe set)**
   Schoolbook), warn on others, and say which fonts' fit estimates are unreliable. Our default Segoe UI / Georgia need review. Size S.
-- [ ] **P1.8 Package validator.** Check a finished .pptx for faults PowerPoint refuses to open (bad chart XML, wrong element order,
+- [x] **P1.8 Package validator.** Check a finished .pptx for faults PowerPoint refuses to open (bad chart XML, wrong element order, **(done 2026-10-13, D-277: `slides/validate.py`, run after every build and edit; the file is still written but the tool answers with a failure that lists the faults)**
   broken relationships, duplicate ids) and name the fix. Write our own validator from the OOXML spec; run it after every build and
   edit. Size M. This is what makes "opens cleanly" a guarantee.
 

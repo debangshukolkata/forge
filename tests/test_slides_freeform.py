@@ -117,7 +117,9 @@ def test_a_designed_slide_builds_with_every_kind_of_element_and_no_warnings() ->
     assert built.slides[0].warnings == []
     deck = Presentation(io.BytesIO(built.data))
     slide = deck.slides[0]
-    assert slide.shapes.title.text_frame.text == "A free slide can carry one idea"  # a real title, even on a free slide
+    assert (
+        slide.shapes.title.text_frame.text == "A free slide can carry one idea"
+    )  # a real title, even on a free slide
     assert slide.notes_slide.notes_text_frame.text == "Say it slowly."
     kinds = {shape.shape_type for shape in slide.shapes}
     assert any(shape.has_chart for shape in slide.shapes if hasattr(shape, "has_chart"))

@@ -214,3 +214,20 @@ def test_powerpoint_makes_a_picture_of_every_slide(context: ToolContext) -> None
     assert len(pictures) == 10
     with Image.open(pictures[0]) as first:
         assert first.size == (preview.WIDTH, preview.HEIGHT)
+
+
+def test_a_package_with_faults_is_reported_as_a_failure(
+    context: ToolContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context.workspace.write_text(
+        "docs/deck.json", json.dumps({"title": "T", "slides": [{"layout": "title", "title": "T"}]})
+    )
+    monkeypatch.setattr(
+        "forge.tools.presentation.validate_package", lambda data: ["ppt/slides/slide1.xml: broken"]
+    )
+    result = asyncio.run(
+        BuildPresentation().run(
+            BuildPresentation.Args(outline="docs/deck.json", output="docs/deck.pptx"), context
+        )
+    )
+    assert not result.ok and "structural faults" in result.content and "slide1.xml: broken" in result.content

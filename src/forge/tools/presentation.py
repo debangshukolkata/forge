@@ -19,10 +19,21 @@ from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
 from forge.slides.open_deck import open_deck, save_deck
 from forge.slides.read import describe_deck
 from forge.slides.spec import parse_deck
+from forge.slides.validate import validate_package
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.vision import image_path
 
 PREVIEW_FOLDER = ".forge/reports/slides"
+
+
+def _fault_message(path: str, faults: list[str]) -> str:
+    """The file was written, but PowerPoint may refuse it or offer to repair it: say so and list why (P1.8)."""
+    listed = "\n".join(f"- {fault}" for fault in faults)
+    return (
+        f"{path} was written but its package has structural faults, so PowerPoint may offer to repair it:\n{listed}\n"
+        "This is a DebCraft bug or a bad edit; undo the last operation or rebuild from the outline, and tell the "
+        "user if it repeats."
+    )
 
 
 class BuildPresentation(Tool):
@@ -68,6 +79,9 @@ class BuildPresentation(Tool):
         except (ForgeError, OSError, ValueError) as error:
             return ToolResult(ok=False, content=str(error))
         context.last_edit_step = context.step
+        faults = validate_package(built.data)
+        if faults:
+            return ToolResult(ok=False, content=_fault_message(args.output, faults))
         warnings = [f"slide {s.number} ({s.layout}): {w}" for s in built.slides for w in s.warnings]
         warnings += [f"deck: {w}" for w in built.deck_warnings]
         lines = [f"Built {args.output}: {len(built.slides)} slides, {len(built.data) // 1024} KB."]
@@ -152,12 +166,16 @@ class EditPresentation(Tool):
         try:
             deck = await asyncio.to_thread(open_deck, source)
             done = apply_operations(deck, parse_operations(args.operations))
-            context.workspace.write_bytes(target, save_deck(deck), args.reason or "presentation edited")
+            data = save_deck(deck)
+            context.workspace.write_bytes(target, data, args.reason or "presentation edited")
         except SlidesUnavailable as error:
             return ToolResult(ok=False, content=f"{error} Tell the user.")
         except (ForgeError, OSError, ValueError) as error:
             return ToolResult(ok=False, content=str(error))
         context.last_edit_step = context.step
+        faults = validate_package(data)
+        if faults:
+            return ToolResult(ok=False, content=_fault_message(target, faults))
         lines = [f"Saved {target} ({len(deck.slides)} slides). Done:", *[f"- {line}" for line in done]]
         lines.append("Next: preview_presentation and look at the slides you changed.")
         return ToolResult(ok=True, content="\n".join(lines))
