@@ -67,6 +67,12 @@ class Stat(_Model):
 
 class _Slide(_Model):
     notes: str = ""  # speaker notes
+    hidden: bool = False  # skipped in the slide show, still in the file (backup slides)
+    transition: Literal["fade", "push", "wipe", "split", "cover", "none"] | None = None  # default: the deck's
+    section: str = ""  # starts a named section (shown in PowerPoint's slide sorter) at this slide
+    animate: Literal["appear", "fade", "wipe"] | None = (
+        None  # the slide's content (not its title or footer) comes in together on one click
+    )
 
 
 class TitleSlide(_Slide):
@@ -502,6 +508,7 @@ class Deck(_Model):
             raise ValueError(f"unknown theme '{value}'; themes are: {', '.join(THEMES)}")
         return value
 
+    transition: Literal["fade", "push", "wipe", "split", "cover", "none"] | None = None  # for every slide
     footer: str = ""  # small text at the bottom of content slides; defaults to the deck title
     slides: list[Slide] = Field(min_length=1)
 

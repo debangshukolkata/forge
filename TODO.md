@@ -173,7 +173,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   ready recipes (process, cycle, hierarchy, 2x2 matrix, timeline, funnel, roadmap). Size M.
 - [x] **P2.7 Real masters and theme.** (done 2026-10-13, D-315) Generate proper slide masters, layouts, placeholders, footer and slide-number fields and theme
   fonts/colours, so a DebCraft deck re-themes correctly in PowerPoint and new slides added by hand look right. Size L.
-- [ ] **P2.8 Slide features.** Sections, hidden slides, transitions, basic entrance animations, slide numbers, comments (read and add). Size M to L.
+- [x] **P2.8 Slide features.** (done 2026-10-13, D-316) Sections, hidden slides, transitions, basic entrance animations, slide numbers, comments (read and add). Size M to L.
 - [x] **P2.9 Accessibility pass.** (done 2026-10-13, D-314) Reading order, alt text everywhere, document language and title, colour-blind-safe palettes. Size S.
 - [x] **P2.10 Template-aware build.** (done 2026-10-13, D-288) `build_presentation` with a `template`: map our layouts onto the template's masters and
   placeholders, so a new deck takes the company look automatically. Today only `edit_presentation` can use a template. Size L.

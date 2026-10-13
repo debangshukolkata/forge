@@ -138,6 +138,15 @@ colour-blind viewers: the builder picks them for you from the theme (a combinati
 with more series add data labels). `check_accessibility(path)` lists what is missing in any deck (made elsewhere, or after edits):
 fix every error; a warning is worth fixing when it is cheap.
 
+## 4c. Slide features (only when the user asks for them)
+Per-slide outline fields: `hidden: true` (backup slides, skipped in the show), `section: "Name"` (starts a section in the slide sorter),
+`transition: "fade"|"push"|"wipe"|"split"|"cover"|"none"` (or `transition` on the deck for every slide), `animate: "appear"|"fade"|"wipe"`
+(the slide's content, not its title, comes in together on one click). For anything finer use `edit_presentation` operations:
+`hide_slide`, `set_transition` (speed, `advance_after` seconds), `animate` (one shape: effect and `on_click`/`with_previous`/
+`after_previous`), `clear_animations`, `set_sections`, `add_comment` (a note to the reader, shown in the Comments pane).
+`read_presentation` lists all of these. Default to none: motion that nobody asked for makes a deck look dated. Never animate text a
+speaker reads from the slide line by line unless asked.
+
 ## 5. Existing decks and company templates
 
 **Summarise or review a deck:** `read_presentation(path)` lists every slide (layout, title, text, tables, chart

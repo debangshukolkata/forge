@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from forge.slides.features import animations_of, is_hidden, read_comments, read_sections, transition_of
+
 EMU_PER_INCH = 914400
 MAX_TEXT = 1500  # characters shown per shape
 
@@ -72,13 +74,31 @@ def _shape_lines(shape: Any, indent: str) -> list[str]:
     return lines
 
 
+def _feature_lines(slide: Any, number: int, sections: dict[int, str], comments: list[Any]) -> list[str]:
+    """Hidden, section start, transition, animations and comments of a slide, one short line each (only what is there)."""
+    lines = []
+    if number in sections:
+        lines.append(f'  section starts: "{sections[number]}"')
+    if is_hidden(slide):
+        lines.append("  hidden: skipped in the slide show")
+    if transition_of(slide):
+        lines.append(f"  transition: {transition_of(slide)}")
+    for shape, effect, start in animations_of(slide):
+        lines.append(f'  animation: "{shape}" {effect} ({start})')
+    lines.extend(f"  comment by {c.author}: {c.text}" for c in comments if c.slide == number)
+    return lines
+
+
 def describe_deck(deck: Any) -> str:
     out = [
         f"Slide size {_inches(deck.slide_width)} x {_inches(deck.slide_height)} in; {len(deck.slides)} slides."
     ]
+    sections = {section.first_slide: section.name for section in read_sections(deck)}
+    comments = read_comments(deck)
     for number, slide in enumerate(deck.slides, start=1):
         title = slide.shapes.title.text_frame.text if slide.shapes.title is not None else "(no title)"
         out.append(f'\nSlide {number} - layout "{slide.slide_layout.name}" - title: {title or "(empty)"}')
+        out.extend(_feature_lines(slide, number, sections, comments))
         for shape in slide.shapes:
             out.extend(_shape_lines(shape, "  "))
         if slide.has_notes_slide and slide.notes_slide.notes_text_frame.text.strip():

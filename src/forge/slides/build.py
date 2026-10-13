@@ -559,6 +559,13 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
         builder: _Builder = TemplateBuilder(deck, read_image, read_image(deck.template))
     else:
         builder = _Builder(deck, read_image)
+    from forge.slides.features import (  # imported here: it reads decks through modules that build on this one
+        Section,
+        apply_slide_features,
+        set_sections,
+    )
+
+    sections: list[Section] = []
     for index, slide_spec in enumerate(deck.slides, start=1):
         if isinstance(slide_spec, TitleSlide):
             builder.title_slide(slide_spec, closing=False)
@@ -588,8 +595,13 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
             build_freeform(builder, slide_spec)
         else:
             builder.stats_slide(slide_spec)
+        apply_slide_features(builder.prs, builder.prs.slides[-1], slide_spec, deck.transition, sections)
         del index
     builder.finish()
+    if sections:
+        if sections[0].first_slide != 1:  # PowerPoint wants every slide in a section
+            sections.insert(0, Section("Start", 1))
+        set_sections(builder.prs, sections)
     from forge.slides.accessibility import (
         improve_deck,
     )  # imported here: it reads decks through modules that build on this one

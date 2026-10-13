@@ -14,6 +14,7 @@ from pydantic import Field
 from forge.slides.edit_base import HEX
 from forge.slides.edit_base import Op as _Op
 from forge.slides.edit_base import rgb as _rgb
+from forge.slides.edit_features import FEATURE_OPERATIONS, FEATURE_TYPES, FeatureOperation, apply_feature
 from forge.slides.edit_find import find_shape, slide_at, walk
 from forge.slides.edit_objects import (
     ChartFormat,
@@ -110,10 +111,12 @@ MoreOperation = (
     | SetNotesBulk
     | DeleteShape
     | RemoveEmptyPlaceholders
+    | FeatureOperation
 )
 MORE_OPERATIONS = (
     "replace_picture, format_text, set_theme, add_table_row, delete_table_row, add_table_column, delete_table_column, "
-    "change_chart_type, format_chart, set_footer, set_notes_bulk, delete_shape, remove_empty_placeholders"
+    "change_chart_type, format_chart, set_footer, set_notes_bulk, delete_shape, remove_empty_placeholders, "
+    + FEATURE_OPERATIONS
 )
 MORE_TYPES = (
     ReplacePicture,
@@ -360,6 +363,8 @@ def _remove_empty(deck: Any, op: RemoveEmptyPlaceholders) -> str:
 
 
 def apply_more(deck: Any, operation: Any, read_image: Callable[[str], bytes] | None) -> str:
+    if isinstance(operation, FEATURE_TYPES):
+        return apply_feature(deck, operation)
     if isinstance(operation, ReplacePicture):
         return _replace_picture(deck, operation, read_image)
     if isinstance(operation, FormatText):

@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from forge.slides.edit_find import find_shape, slide_at, walk
 from forge.slides.edit_more import MORE_OPERATIONS, MoreOperation, apply_more
 from forge.slides.edit_text import set_frame_text
+from forge.slides.features import copy_features, keep_sections_valid
 from forge.slides.open_deck import DeckError
 from forge.slides.spec import Series
 
@@ -200,6 +201,7 @@ def _delete(deck: Any, number: int) -> None:
     entry = list(entries)[number - 1]
     deck.part.drop_rel(entry.rId)
     entries.remove(entry)
+    keep_sections_valid(deck)
 
 
 def _move(deck: Any, number: int, to: int) -> None:
@@ -209,6 +211,7 @@ def _move(deck: Any, number: int, to: int) -> None:
     entry = list(entries)[number - 1]
     entries.remove(entry)
     entries.insert(to - 1, entry)
+    keep_sections_valid(deck)
 
 
 def _duplicate(deck: Any, number: int, at: int | None) -> None:
@@ -246,6 +249,7 @@ def _duplicate(deck: Any, number: int, at: int | None) -> None:
         copy._element.cSld.insert(0, deepcopy(background))
     if source.has_notes_slide:
         copy.notes_slide.notes_text_frame.text = source.notes_slide.notes_text_frame.text
+    copy_features(source, copy)
     _move(deck, len(deck.slides), at if at is not None else number + 1)
 
 
