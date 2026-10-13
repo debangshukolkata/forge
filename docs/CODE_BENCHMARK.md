@@ -16,6 +16,10 @@ Status 2026-10-13: ten tasks and the runner are built and validated offline; the
 | t08_dedupe_perf | performance fix | two O(n^2) functions must handle 300,000 items |
 | t09_async_jobs | async worker | bounded concurrency, retries with growing delay, ordered results, cancellation |
 | t10_sales_pipeline | data pipeline | CSV report with validation, skipped-row log, per-region and per-month totals |
+| t11_rate_limiter | precise spec, concurrency | token bucket and sliding window with an injected clock, exact boundaries, thread safety, no key leaks |
+| t12_expr_calc | parser with error positions | expression evaluator without eval: precedence, right-associative power, unary minus rules, exact error positions |
+| t13_todo_undo | multi-file feature, persisted format | undo/redo in an existing store + CLI, history in the JSON file, old files still load, history limit |
+| t14_cron_next | calendar logic, many edge cases | next fire time of a cron expression: ranges, steps, names, the day-of-month/day-of-week rule, leap years, never-firing expressions |
 
 Each task folder holds `task.md` (the prompt DebCraft gets), `task.json` (id, tier, entry module), `seed/` (files the "user" already
 has, put in the workspace's `project/` folder), `hidden/` (tests DebCraft never sees) and `reference/` (a solution that proves the task
