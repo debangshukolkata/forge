@@ -209,6 +209,18 @@ class ImageElement(_Placed):
     shadow: Literal["none", "soft", "lifted", "hard"] = "none"
 
 
+class IconElement(_Placed):
+    type: Literal["icon"]
+    name: str  # "lucide:rocket", "material:rocket_launch" or a bare name (Lucide first); find names with find_icon
+    color: Color = "accent"
+    badge: Color | None = (
+        None  # a filled circle or rounded square behind the icon (icon in a coloured circle)
+    )
+    badge_shape: Literal["circle", "rounded"] = "circle"
+    weight: float = Field(default=1.0, ge=0.5, le=2.5)  # line thickness multiplier for outline (Lucide) icons
+    alt: str = ""
+
+
 class ChartElement(_Placed):
     type: Literal["chart"]
     kind: Literal["bar", "column", "line", "pie"] = "column"
@@ -226,7 +238,7 @@ class TableElement(_Placed):
 
 
 Element = Annotated[
-    TextElement | ShapeElement | LineElement | ImageElement | ChartElement | TableElement,
+    TextElement | ShapeElement | LineElement | ImageElement | IconElement | ChartElement | TableElement,
     Field(discriminator="type"),
 ]
 

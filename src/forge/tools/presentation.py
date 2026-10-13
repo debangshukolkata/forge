@@ -13,7 +13,7 @@ from typing import Any
 from pydantic import Field
 
 from forge.errors import ForgeError
-from forge.slides import preview
+from forge.slides import icons, preview
 from forge.slides.build import SlidesUnavailable, build_deck
 from forge.slides.contact_sheet import ContactSheetUnavailable, make_contact_sheets
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
@@ -234,5 +234,32 @@ class PreviewPresentation(Tool):
         return path.resolve().relative_to(context.workspace.root.resolve()).as_posix()
 
 
+class FindIcon(Tool):
+    name = "find_icon"
+    read_only = True
+    description = (
+        "Search the bundled icons (Lucide outline icons and Material Symbols filled icons, offline) for slides. Give a few "
+        "words ('growth chart', 'security', 'team'); returns icon names such as lucide:trending-up to use in a freeform "
+        "slide's icon element ({type: icon, name: ..., x, y, w, h, color, badge})."
+    )
+
+    class Args(ToolArgs):
+        query: str = Field(description="what the icon should show, in a few words")
+        limit: int = Field(default=8, ge=1, le=20)
+
+    async def run(self, args: FindIcon.Args, context: ToolContext) -> ToolResult:
+        found = icons.search_icons(args.query, args.limit)
+        if not found:
+            return ToolResult(
+                ok=True,
+                content=f"No icon matched {args.query!r}. Try one or two other words (a noun: 'chart', 'lock', 'people').",
+            )
+        return ToolResult(
+            ok=True,
+            content="Icons (lucide: = outline, material: = filled):\n"
+            + "\n".join(f"- {name}" for name in found),
+        )
+
+
 def presentation_tools() -> list[Tool]:
-    return [BuildPresentation(), ReadPresentation(), EditPresentation(), PreviewPresentation()]
+    return [BuildPresentation(), ReadPresentation(), EditPresentation(), PreviewPresentation(), FindIcon()]

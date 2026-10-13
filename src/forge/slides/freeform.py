@@ -12,10 +12,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from forge.slides import effects, fit
+from forge.slides.icons import IconError, load_icon
 from forge.slides.richtext import parse_runs, plain_text
 from forge.slides.spec import (
     ChartElement,
     FreeformSlide,
+    IconElement,
     ImageElement,
     LineElement,
     ShapeElement,
@@ -377,6 +379,69 @@ class _Freeform:
             b.warn(f"{label}: the picture has no alt text: say what it shows")
         self.placed.append(Placed(index, label, x, y, w, h))
 
+    def icon(self, slide: Any, index: int, el: IconElement) -> None:
+        """An icon as one freeform shape (all its contours), optionally on a badge; recolourable like any shape."""
+        b, theme = self.b, self.theme
+        label = self.name(index, el)
+        try:
+            icon = load_icon(el.name)
+        except IconError as error:
+            b.warn(f"{label}: {error}")
+            return
+        side = min(el.w, el.h)
+        if abs(el.w - el.h) > 0.05:
+            b.warn(
+                f"{label}: an icon needs a square box (this one is {el.w:.1f} x {el.h:.1f} in); using the smaller side"
+            )
+        cx, cy = el.x + el.w / 2, el.y + el.h / 2
+        if el.badge:
+            kind = b.m["shape"].OVAL if el.badge_shape == "circle" else b.m["shape"].ROUNDED_RECTANGLE
+            badge = slide.shapes.add_shape(
+                kind, *(b.m["inches"](v) for v in (cx - side / 2, cy - side / 2, side, side))
+            )
+            badge.fill.solid()
+            badge.fill.fore_color.rgb = b.colour(resolve(theme, el.badge))
+            badge.line.fill.background()
+            badge.shadow.inherit = False
+            if el.badge_shape == "rounded":
+                badge.adjustments[0] = 0.22
+            badge._element.nvSpPr.cNvPr.set("descr", "")  # decorative
+            drawn = side * 0.56
+        else:
+            drawn = side
+        unit = 1000  # local units per icon side; the freeform builder wants whole numbers
+        emu_per_unit = b.m["inches"](drawn) / unit
+        left, top = cx - drawn / 2, cy - drawn / 2
+        builder = None
+        for contour in icon.contours:
+            points = [(round(x * unit), round(y * unit)) for x, y in contour.points]
+            if builder is None:
+                builder = slide.shapes.build_freeform(points[0][0], points[0][1], scale=emu_per_unit)
+            else:
+                builder.move_to(points[0][0], points[0][1])
+            builder.add_line_segments(points[1:], close=contour.closed)
+        if builder is None:
+            return
+        shape = builder.convert_to_shape(b.m["inches"](left), b.m["inches"](top))
+        colour = b.colour(resolve(theme, el.color))
+        shape.shadow.inherit = False
+        if icon.stroke:
+            shape.fill.background()
+            shape.line.color.rgb = colour
+            shape.line.width = b.m["pt"](max(1.0, drawn * 72 * icon.stroke_fraction * el.weight))
+            outline = shape.line._get_or_add_ln()
+            outline.set("cap", "rnd")
+            outline.append(outline.makeelement(b.m["qn"]("a:round"), {}))
+        else:
+            shape.fill.solid()
+            shape.fill.fore_color.rgb = colour
+            shape.line.fill.background()
+        shape._element.nvSpPr.cNvPr.set(
+            "descr", el.alt or f"{icon.name.split(':')[1].replace('-', ' ').replace('_', ' ')} icon"
+        )
+        shape.name = f"Icon {icon.name}"
+        self.placed.append(Placed(index, label, cx - side / 2, cy - side / 2, side, side))
+
     def chart(self, slide: Any, index: int, el: ChartElement) -> None:
         self.b.add_chart(
             slide,
@@ -480,6 +545,8 @@ def build_freeform(builder: Any, spec: FreeformSlide) -> None:
             form.line(slide, index, element)
         elif isinstance(element, ImageElement):
             form.image(slide, index, element)
+        elif isinstance(element, IconElement):
+            form.icon(slide, index, element)
         elif isinstance(element, ChartElement):
             form.chart(slide, index, element)
         else:

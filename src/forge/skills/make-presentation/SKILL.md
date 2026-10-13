@@ -145,6 +145,12 @@ process diagram, a timeline, a comparison, a picture-led slide), use `freeform`:
 You are the designer, so design on purpose, and let `build_presentation`'s warnings and `preview_presentation` be
 your critic.
 
+**Icons.** `find_icon("growth chart")` lists icon names (Lucide outline icons and Material filled icons, bundled, offline). In a freeform
+slide: `{"type": "icon", "name": "lucide:trending-up", "x": 1, "y": 2, "w": 0.8, "h": 0.8, "color": "accent"}`; the box must be square.
+Put an icon in a coloured circle with `"badge": "accent"` and a white icon (`"color": "#FFFFFF"`, `"badge_shape": "rounded"` for a
+square). They are real shapes: recolour them in PowerPoint like any shape. `weight` (0.5 to 2.5) thins or thickens outline icons;
+use about 0.6 to 0.8 above 1.5 in so they do not look heavy. One icon style per deck; icons beside text, not as decoration.
+
 **Depth and polish.** Text and shape elements take `fill_to` (a second colour: a linear gradient; `gradient_angle` 0 is left to right,
 90 top to bottom), `opacity` (0 to 1) and `shadow` (`soft`, `lifted`, `hard`). Pictures take `frame` (`rounded` or `circle`; a circle
 needs a square box) and `shadow`. A slide takes `background_to` (gradient background), or `background_image` with `scrim` (0.4 to
