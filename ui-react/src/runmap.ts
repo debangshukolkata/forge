@@ -62,6 +62,15 @@ export interface TaskStats {
   firstSeq: number | null;
 }
 
+/** Where the wall time went (S1, D-304): model calls, tools, waiting for the user, and the rest (engine work and overlap). */
+export interface TimeBreakdown {
+  modelS: number;
+  toolS: number;
+  waitedS: number;
+  otherS: number;
+  wallS: number;
+}
+
 export interface RunModel {
   tasks: Task[];
   currentTask: string | null;
@@ -72,6 +81,7 @@ export interface RunModel {
   waitingSince: number | null; // seq of the request DebCraft is still waiting on, if any
   start: number | null;
   end: number | null;
+  time: TimeBreakdown;
 }
 
 function time(event: ForgeEvent): number {
@@ -100,6 +110,9 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
   const successes: { seq: number; task: string | null; tool: string }[] = [];
   let start: number | null = null;
   let end: number | null = null;
+  let modelS = 0;
+  let toolS = 0;
+  let waitedS = 0;
 
   // DebCraft blocks on a request: whatever event comes next means you answered, so the wait ends there.
   let waitingSeq: number | null = null;
@@ -125,7 +138,12 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
         toolNames.set(p.id, p.summary || p.name);
         toolStarts.set(p.id, event.seq);
         break;
+      case "llm_call":
+        modelS += Number(p.latency_s) || 0;
+        break;
       case "tool_call_finished":
+        toolS += Number(p.duration_s) || 0;
+        waitedS += Number(p.waited_s) || 0;
         if (p.ok !== false) successes.push({ seq: event.seq, task, tool: p.name });
         if (p.ok === false) {
           const output = String(p.preview ?? "");
@@ -176,7 +194,9 @@ export function buildRunModel(events: ForgeEvent[], fallbackTasks: Task[] = [], 
   }
 
   if (live !== null && end !== null) end = Math.max(end, live);
-  return { tasks, currentTask, stats, agents, failures, exported, start, end, waitingSince: waitingSeq };
+  const wallS = start !== null && end !== null ? Math.max(0, (end - start) / 1000) : 0;
+  const spent: TimeBreakdown = { modelS, toolS, waitedS, wallS, otherS: Math.max(0, wallS - modelS - toolS - waitedS) };
+  return { tasks, currentTask, stats, agents, failures, exported, start, end, waitingSince: waitingSeq, time: spent };
 }
 
 export interface GraphNodeData {

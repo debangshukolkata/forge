@@ -345,3 +345,50 @@ def test_a_new_request_that_reuses_an_old_id_can_still_be_answered(
         done.click()
         page.wait_for_selector("[data-card=action] [data-testid=answered-badge]")
         browser.close()
+
+
+def test_the_run_map_shows_where_the_time_went(
+    live_server: LiveServer,  # noqa: F811
+    workspace: Workspace,  # noqa: F811
+) -> None:
+    """S1 (D-304): model calls, tool time and the time spent waiting for the user are summed from the events."""
+    publish = live_server.publish
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        browser, page = open_in_edge(p, live_server, workspace)
+        assert live_server.manager.host is not None and live_server.manager.host.orchestrator is not None
+        state = live_server.manager.host.orchestrator.state
+        state.tasks = [Task(id="T1", title="Build the page", status="in_progress")]
+        publish(
+            EventType.TASK_LIST_UPDATED,
+            {
+                "current_task": "T1",
+                "tasks": [{"id": "T1", "title": "Build the page", "status": "in_progress"}],
+            },
+        )
+        publish(EventType.LLM_CALL, {"role": "coder", "latency_s": 120.0, "usage": {"input_tokens": 1000}})
+        publish(EventType.LLM_CALL, {"role": "coder", "latency_s": 60.0, "usage": {"input_tokens": 1000}})
+        publish(
+            EventType.TOOL_CALL_FINISHED,
+            {"id": "a", "name": "run_command", "ok": True, "summary": "pip install", "duration_s": 45.0},
+        )
+        publish(
+            EventType.TOOL_CALL_FINISHED,
+            {
+                "id": "b",
+                "name": "ask_user",
+                "ok": True,
+                "summary": "question",
+                "duration_s": 0.0,
+                "waited_s": 30.0,
+            },
+        )
+        page.click("button:has-text('Run map')")
+        page.wait_for_selector("[data-testid=time-breakdown]")
+        text = page.inner_text("[data-testid=time-breakdown]")
+        assert "model 3m" in text and "tools 45s" in text and "you 30s" in text
+        assert page.locator("[data-testid=time-breakdown] [data-part=model]").count() == 1
+        page.screenshot(path=str(shots / "run-map-time.png"))
+        assert page.problems == []  # type: ignore[attr-defined]
+        browser.close()  # type: ignore[attr-defined]

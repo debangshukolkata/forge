@@ -21,7 +21,7 @@ import "@xyflow/react/dist/style.css";
 import { AlertTriangle, Bot, ChevronRight, CheckCircle2, CircleDashed, Crosshair, Flag, Hand, ListChecks, Repeat, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { cx, money } from "../lib";
-import { buildGraph, buildRunModel, type GraphNodeData, type RunModel } from "../runmap";
+import { buildGraph, buildRunModel, duration, type GraphNodeData, type RunModel, type TimeBreakdown } from "../runmap";
 import type { CostLimits, UsageBucket } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
@@ -147,6 +147,38 @@ function Summary({
         <Bot className="h-3.5 w-3.5" aria-hidden /> {model.agents.length} agent{model.agents.length === 1 ? "" : "s"}
         {running ? ` · ${running} running` : ""}
       </Badge>
+      <TimeBar time={model.time} />
+    </div>
+  );
+}
+
+/** Where did the time go (S1): a bar split into the model's thinking, tools, waiting for you, and everything else. */
+function TimeBar({ time }: { time: TimeBreakdown }) {
+  const parts = [
+    { key: "model", label: "model", seconds: time.modelS, tone: "bg-accent" },
+    { key: "tools", label: "tools", seconds: time.toolS, tone: "bg-info" },
+    { key: "waited", label: "you", seconds: time.waitedS, tone: "bg-warn" },
+    { key: "other", label: "other", seconds: time.otherS, tone: "bg-border-strong" },
+  ];
+  const total = Math.max(time.wallS, parts.reduce((sum, p) => sum + p.seconds, 0));
+  if (total < 5) return null; // a run of a few seconds has nothing worth showing
+  return (
+    <div data-testid="time-breakdown" className="ml-auto flex min-w-[220px] max-w-md flex-1 flex-col gap-1" title="Where the time went">
+      <div className="flex h-2 overflow-hidden rounded-full bg-raised" role="img" aria-label="Where the time went">
+        {parts.map((part) => (
+          <div key={part.key} className={part.tone} style={{ width: `${(100 * part.seconds) / total}%` }} />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-x-3 text-[11.5px] text-fg-muted">
+        <span className="font-medium text-fg">{duration(time.wallS * 1000)}</span>
+        {parts
+          .filter((part) => part.seconds >= 1)
+          .map((part) => (
+            <span key={part.key} data-part={part.key}>
+              {part.label} {duration(part.seconds * 1000)} ({Math.round((100 * part.seconds) / total)}%)
+            </span>
+          ))}
+      </div>
     </div>
   );
 }
