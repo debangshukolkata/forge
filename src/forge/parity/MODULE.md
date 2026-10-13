@@ -8,3 +8,4 @@ Claude Code parity features: skills (incl. `skill_install.py`: `forge skill add`
 - **Decisions:** docs/DECISIONS.md (search the module's feature names); layering is enforced by tests/test_module_boundaries.py.
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
+- **Path-scoped rules (D-297):** `path_rules.py`: `rules/*.md` files with a `paths:` list load only when a matching file is read or edited (home `rules/`, the repository-level folder's `rules/`, `<workspace>/.forge/rules/`); delivered once per session with the tool result. Tests: test_path_rules.py.

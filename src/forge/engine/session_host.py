@@ -40,6 +40,7 @@ from forge.parity.instructions import append_line as append_instruction
 from forge.parity.instructions import render as render_instructions
 from forge.parity.mcp_client import McpHub
 from forge.parity.mentions import expand as expand_mentions
+from forge.parity.path_rules import PathRules
 from forge.parity.skills import discover
 from forge.parity.skills import index_text as skills_index
 from forge.protocol.approvals import ApprovalBroker, QuestionBroker
@@ -291,6 +292,7 @@ class SessionHost:
             self.context_manager,
         )
         loop.on_thinking = self.stream_thinking
+        loop.path_rules = PathRules(self.rule_folders(workspace))
         context.pin = self.context_manager.pinned.set
         self._restore_todos(context)
         self.context_manager.run_hook = lambda command: self._run_hook(loop, command)
@@ -470,7 +472,18 @@ class SessionHost:
             forge_home(), self.repo_level_dir(), self.workspace.root if self.workspace else None
         )
 
+    def rule_folders(self, workspace: Workspace) -> list[Path]:
+        """Where path-scoped rules live: everywhere, this repository or host profile, this requirement (D-297)."""
+        level = self.repo_level_dir()
+        return [
+            forge_home() / "rules",
+            *([level / "rules"] if level is not None else []),
+            workspace.forge_dir / "rules",
+        ]
+
     def refresh_instructions(self) -> None:
+        if self.agent is not None and self.agent.path_rules is not None:
+            self.agent.path_rules.reload()
         self.context_manager.pinned.set(
             "instructions", render_instructions(self.instruction_files(), getattr(self, "style", None))
         )

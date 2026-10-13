@@ -21,6 +21,7 @@ from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthErro
 from forge.llm.base import ChatRequest, LLMResponse, Message, TextDeltaCallback, ToolCall
 from forge.llm.router import LLMRouter
 from forge.llm.tool_args import parse_error_result
+from forge.parity.path_rules import PathRules
 from forge.protocol.approvals import ApprovalBroker
 from forge.protocol.events import EventBus, EventType
 from forge.safety.injection import flag
@@ -93,6 +94,12 @@ ASK_WITH_OPTIONS_NOTE = (
     "best judgment instead."
 )
 HOOKED_TOOLS = {"write_file", "edit_file", "multi_edit"}
+RULE_TOOLS = {
+    "read_file",
+    "write_file",
+    "edit_file",
+    "multi_edit",
+}  # touching a file can bring its path-scoped rules (C12 b)
 HOOK_TIMEOUT_S = 120
 
 
@@ -147,6 +154,9 @@ class AgentLoop:
         self.keep_full_output = True
         self.effort: str | None = None  # /effort: overrides the model's configured reasoning effort
         self.turn_effort: str | None = None  # "think hard:" raises it for one turn
+        self.path_rules: PathRules | None = (
+            None  # set by the session host: rules shown when a matching file is touched (D-297)
+        )
 
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
@@ -463,6 +473,11 @@ class AgentLoop:
             )
             if result.ok and tool.name in HOOKED_TOOLS and self.router.config.hooks.post_edit:
                 result = await self._post_edit_hooks(args, result)
+            if result.ok and self.path_rules is not None and tool.name in RULE_TOOLS:
+                touched = getattr(args, "path", None)
+                note = self.path_rules.note_for(touched) if isinstance(touched, str) else ""
+                if note:
+                    result = result.model_copy(update={"content": result.content + note})
         elapsed = time.perf_counter() - started
         waited = elapsed if tool.name in USER_WAIT_TOOLS else sum(waits)
         preview = _preview(result.content, result.ok)
