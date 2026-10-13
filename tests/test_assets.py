@@ -107,7 +107,6 @@ def test_every_style_direction_heading_has_an_asset() -> None:
 
 def test_search_finds_the_expected_assets() -> None:
     catalogue = load_catalogue(SKILL)
-    assert "dir-soft-editorial" in [a.id for a in search(catalogue, "warm charity landing page", limit=3)]
     assert search(catalogue, "warm charity landing page", "direction")[0].id == "dir-soft-editorial"
     assert search(catalogue, "numbers that count up when visible")[0].id == "fx-count-up"
     assert search(catalogue, "modal dialog", "component")[0].id == "cmp-dialog"
@@ -228,6 +227,12 @@ RETRIEVAL_PROMPTS = [
     ("card that flips over to show the back", "fx-flip-card"),
     ("dot pattern background for a hero", "fx-bg-dots"),
     ("progress ring percentage", "fx-progress-ring"),
+    ("landing page for a charity blood drive", "tpl-landing-charity"),
+    ("saas product landing page with pricing", "tpl-landing-saas"),
+    ("architect portfolio website", "tpl-landing-portfolio"),
+    ("pricing section with three plans", "sec-pricing-tiers"),
+    ("faq accordion section", "sec-faq-list"),
+    ("sign up form with validation and success message", "sec-contact-form"),
 ]
 
 

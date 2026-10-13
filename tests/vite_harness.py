@@ -51,7 +51,7 @@ def _run(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, cwd=cwd, capture_output=True, text=True, encoding="utf-8", timeout=300)
 
 
-def build(name: str, files: dict[str, str], title: str = "Asset test") -> Path:
+def build(name: str, files: dict[str, str | bytes], title: str = "Asset test") -> Path:
     """Writes the files (paths relative to the project root, e.g. `src/App.tsx`), type-checks and builds; returns dist/."""
     project = WORK / name
     shutil.rmtree(project, ignore_errors=True)
@@ -66,7 +66,10 @@ def build(name: str, files: dict[str, str], title: str = "Asset test") -> Path:
     for relative, text in files.items():
         target = project / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(text, encoding="utf-8")
+        if isinstance(text, bytes):
+            target.write_bytes(text)
+        else:
+            target.write_text(text, encoding="utf-8")
     typed = _run([NODE or "node", str(TSC), "-p", "tsconfig.json"], project)
     assert typed.returncode == 0, f"type errors:\n{typed.stdout[-3000:]}{typed.stderr[-500:]}"
     built = _run([NODE or "node", str(VITE), "build"], project)

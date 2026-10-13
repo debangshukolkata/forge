@@ -3887,6 +3887,813 @@
    "preview": null,
    "path": "assets/font-pairing/pair-warm-editorial.md",
    "size": 90948
+  },
+  {
+   "id": "sec-contact-form",
+   "type": "section",
+   "title": "Contact or sign-up form",
+   "summary": "Labelled fields, inline validation messages, a sending state and a success message.",
+   "moods": [
+    "clean",
+    "friendly"
+   ],
+   "products": [
+    "sign-up",
+    "contact",
+    "booking"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "form"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/ContactForm.tsx",
+     "to": "src/sections/ContactForm.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-contact-form.md",
+   "size": 4345
+  },
+  {
+   "id": "sec-cta-band",
+   "type": "section",
+   "title": "Closing call-to-action band",
+   "summary": "A dark full-width band with one sentence and one action.",
+   "moods": [
+    "bold",
+    "clean"
+   ],
+   "products": [
+    "any site"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "cta"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/CtaBand.tsx",
+     "to": "src/sections/CtaBand.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-cta-band.md",
+   "size": 1618
+  },
+  {
+   "id": "sec-faq-list",
+   "type": "section",
+   "title": "FAQ accordion",
+   "summary": "Questions in native details elements, keyboard accessible, no JavaScript.",
+   "moods": [
+    "clean",
+    "calm"
+   ],
+   "products": [
+    "any site"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "faq"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-faq-list.md",
+   "size": 2685
+  },
+  {
+   "id": "sec-features-alternating",
+   "type": "section",
+   "title": "Features: alternating rows",
+   "summary": "Three feature rows, text and visual swapping sides, with bullet points.",
+   "moods": [
+    "warm",
+    "editorial",
+    "friendly"
+   ],
+   "products": [
+    "landing",
+    "portfolio",
+    "services"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "features"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FeaturesAlternating.tsx",
+     "to": "src/sections/FeaturesAlternating.tsx"
+    },
+    {
+     "from": "recipes/sections/ArtTile.tsx",
+     "to": "src/sections/ArtTile.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-features-alternating.md",
+   "size": 5689
+  },
+  {
+   "id": "sec-features-bento",
+   "type": "section",
+   "title": "Features: bento grid",
+   "summary": "Unequal tiles, each with one idea; one tall, wide and dark tile for rhythm.",
+   "moods": [
+    "modern",
+    "organised"
+   ],
+   "products": [
+    "saas",
+    "apps",
+    "overview"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "features"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FeaturesBento.tsx",
+     "to": "src/sections/FeaturesBento.tsx"
+    },
+    {
+     "from": "recipes/sections/ArtTile.tsx",
+     "to": "src/sections/ArtTile.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-features-bento.md",
+   "size": 5513
+  },
+  {
+   "id": "sec-footer-columns",
+   "type": "section",
+   "title": "Footer with link columns",
+   "summary": "Brand and blurb, two link columns and a legal line.",
+   "moods": [
+    "clean",
+    "calm"
+   ],
+   "products": [
+    "any site"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "footer"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-footer-columns.md",
+   "size": 2581
+  },
+  {
+   "id": "sec-hero-centered",
+   "type": "section",
+   "title": "Hero: centred headline",
+   "summary": "A chip, a large centred headline, one sentence, two actions and an optional wide visual.",
+   "moods": [
+    "modern",
+    "clean",
+    "bold"
+   ],
+   "products": [
+    "saas",
+    "startups",
+    "apps"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "hero"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/HeroCentered.tsx",
+     "to": "src/sections/HeroCentered.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-hero-centered.md",
+   "size": 2524
+  },
+  {
+   "id": "sec-hero-split",
+   "type": "section",
+   "title": "Hero: message and visual side by side",
+   "summary": "Eyebrow, headline, text, two actions and key facts on the left; a visual on the right (below on a phone).",
+   "moods": [
+    "warm",
+    "friendly",
+    "editorial"
+   ],
+   "products": [
+    "charity",
+    "events",
+    "portfolio",
+    "landing"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "hero"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/HeroSplit.tsx",
+     "to": "src/sections/HeroSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/ArtTile.tsx",
+     "to": "src/sections/ArtTile.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-hero-split.md",
+   "size": 4837
+  },
+  {
+   "id": "sec-logo-strip",
+   "type": "section",
+   "title": "Trusted-by strip",
+   "summary": "A row of customer names (or logos) under a short label.",
+   "moods": [
+    "clean",
+    "trustworthy"
+   ],
+   "products": [
+    "saas",
+    "b2b",
+    "agencies"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "social proof"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/LogoStrip.tsx",
+     "to": "src/sections/LogoStrip.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-logo-strip.md",
+   "size": 1472
+  },
+  {
+   "id": "sec-nav-bar",
+   "type": "section",
+   "title": "Navigation bar",
+   "summary": "Sticky top bar with brand, links, one call to action and a no-JavaScript phone menu.",
+   "moods": [
+    "clean",
+    "polished"
+   ],
+   "products": [
+    "any site"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "navigation"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-nav-bar.md",
+   "size": 2781
+  },
+  {
+   "id": "sec-pricing-tiers",
+   "type": "section",
+   "title": "Pricing tiers",
+   "summary": "Three plans, the recommended one lifted, with feature lists.",
+   "moods": [
+    "clean",
+    "modern"
+   ],
+   "products": [
+    "saas",
+    "subscriptions"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "pricing"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/PricingTiers.tsx",
+     "to": "src/sections/PricingTiers.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-pricing-tiers.md",
+   "size": 3449
+  },
+  {
+   "id": "sec-stats-row",
+   "type": "section",
+   "title": "Stats row",
+   "summary": "Four big numbers with labels and dividers.",
+   "moods": [
+    "bold",
+    "trustworthy"
+   ],
+   "products": [
+    "charity",
+    "saas",
+    "reports"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "numbers"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/StatsRow.tsx",
+     "to": "src/sections/StatsRow.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-stats-row.md",
+   "size": 1754
+  },
+  {
+   "id": "sec-steps-timeline",
+   "type": "section",
+   "title": "Steps timeline",
+   "summary": "Numbered steps joined by a vertical line next to a heading.",
+   "moods": [
+    "calm",
+    "clear"
+   ],
+   "products": [
+    "how it works",
+    "onboarding",
+    "charity"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "process"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/StepsTimeline.tsx",
+     "to": "src/sections/StepsTimeline.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-steps-timeline.md",
+   "size": 2645
+  },
+  {
+   "id": "sec-testimonial-feature",
+   "type": "section",
+   "title": "Testimonial: one big quote",
+   "summary": "A large quote on a tinted band with name and role.",
+   "moods": [
+    "warm",
+    "editorial",
+    "trustworthy"
+   ],
+   "products": [
+    "charity",
+    "portfolio",
+    "services"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "social proof"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/TestimonialFeature.tsx",
+     "to": "src/sections/TestimonialFeature.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-273)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/section/sec-testimonial-feature.md",
+   "size": 2044
+  },
+  {
+   "id": "tpl-landing-charity",
+   "type": "template",
+   "title": "Landing page: charity or community drive",
+   "summary": "Warm editorial one-page site: hero, stats, steps, testimonial, FAQ, sign-up form, closing band, footer.",
+   "moods": [
+    "warm",
+    "editorial",
+    "trustworthy"
+   ],
+   "products": [
+    "charity",
+    "health",
+    "community",
+    "events",
+    "education"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/charity/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/charity/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroSplit.tsx",
+     "to": "src/sections/HeroSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/ArtTile.tsx",
+     "to": "src/sections/ArtTile.tsx"
+    },
+    {
+     "from": "recipes/sections/StatsRow.tsx",
+     "to": "src/sections/StatsRow.tsx"
+    },
+    {
+     "from": "recipes/sections/StepsTimeline.tsx",
+     "to": "src/sections/StepsTimeline.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialFeature.tsx",
+     "to": "src/sections/TestimonialFeature.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/ContactForm.tsx",
+     "to": "src/sections/ContactForm.tsx"
+    },
+    {
+     "from": "recipes/sections/CtaBand.tsx",
+     "to": "src/sections/CtaBand.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    },
+    {
+     "from": "fonts/fraunces/fraunces-latin-wght-normal.woff2",
+     "to": "public/fonts/fraunces-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/fraunces/fraunces.css",
+     "to": "src/fonts/fraunces.css"
+    },
+    {
+     "from": "fonts/fraunces/fraunces-OFL.txt",
+     "to": "public/fonts/fraunces-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/template/tpl-landing-charity.md",
+   "size": 113767
+  },
+  {
+   "id": "tpl-landing-portfolio",
+   "type": "template",
+   "title": "Landing page: portfolio",
+   "summary": "Minimal monochrome portfolio: split hero, three selected projects, one quote, a contact form, footer.",
+   "moods": [
+    "minimal",
+    "elegant",
+    "quiet"
+   ],
+   "products": [
+    "portfolio",
+    "architecture",
+    "design",
+    "photography",
+    "studio"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/portfolio/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/portfolio/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroSplit.tsx",
+     "to": "src/sections/HeroSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/ArtTile.tsx",
+     "to": "src/sections/ArtTile.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesAlternating.tsx",
+     "to": "src/sections/FeaturesAlternating.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialFeature.tsx",
+     "to": "src/sections/TestimonialFeature.tsx"
+    },
+    {
+     "from": "recipes/sections/ContactForm.tsx",
+     "to": "src/sections/ContactForm.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display-latin-wght-normal.woff2",
+     "to": "public/fonts/playfair-display-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display.css",
+     "to": "src/fonts/playfair-display.css"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display-OFL.txt",
+     "to": "public/fonts/playfair-display-OFL.txt"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/dm-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans.css",
+     "to": "src/fonts/dm-sans.css"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-OFL.txt",
+     "to": "public/fonts/dm-sans-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/template/tpl-landing-portfolio.md",
+   "size": 103915
+  },
+  {
+   "id": "tpl-landing-saas",
+   "type": "template",
+   "title": "Landing page: software product",
+   "summary": "Clean light product site: centred hero with a visual, logo strip, bento features, stats, pricing, FAQ, closing band, footer.",
+   "moods": [
+    "clean",
+    "modern",
+    "polished"
+   ],
+   "products": [
+    "saas",
+    "startups",
+    "apps",
+    "b2b",
+    "fintech"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/saas/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/saas/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroCentered.tsx",
+     "to": "src/sections/HeroCentered.tsx"
+    },
+    {
+     "from": "recipes/sections/ArtTile.tsx",
+     "to": "src/sections/ArtTile.tsx"
+    },
+    {
+     "from": "recipes/sections/LogoStrip.tsx",
+     "to": "src/sections/LogoStrip.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesBento.tsx",
+     "to": "src/sections/FeaturesBento.tsx"
+    },
+    {
+     "from": "recipes/sections/StatsRow.tsx",
+     "to": "src/sections/StatsRow.tsx"
+    },
+    {
+     "from": "recipes/sections/PricingTiers.tsx",
+     "to": "src/sections/PricingTiers.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/CtaBand.tsx",
+     "to": "src/sections/CtaBand.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/plus-jakarta-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans.css",
+     "to": "src/fonts/plus-jakarta-sans.css"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-OFL.txt",
+     "to": "public/fonts/plus-jakarta-sans-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
+   "preview": null,
+   "path": "assets/template/tpl-landing-saas.md",
+   "size": 105960
   }
  ]
 }

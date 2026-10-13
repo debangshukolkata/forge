@@ -59,6 +59,13 @@ This skill's folder holds worked examples that build, pass the audit and look pr
 - `recipes/palettes-and-fonts.md`: palettes by mood, font pairings, type and spacing scales, layout ideas that make
   variants genuinely different, asset ideas without photos, patterns for dashboards, forms, settings, empty states.
 
+**Start from a template or sections.** `find_asset` with type `template` ("landing page for a charity", "saas product",
+portfolio) copies a complete, audited one-page site (App.tsx, tokens in index.css, sections, offline fonts); type `section`
+finds single sections (hero, features, stats, steps, testimonial, pricing, FAQ, form, call-to-action band, footer) that use
+only the theme tokens. Then replace every example text and number, set the palette from DESIGN.md (keep the token names),
+drop what the product does not need, and run the screenshot audit at 1280 and 375 px. A page built from these still has to
+be made yours: never ship the example copy, and give variants different templates and directions.
+
 **Fonts work offline.** Fourteen font families (Inter, Plus Jakarta Sans, DM Sans, Manrope, Space Grotesk, Outfit, Archivo,
 Fraunces, Playfair Display, Lora, Nunito, JetBrains Mono, Noto Sans Bengali, Noto Sans Devanagari) and twelve ready pairings
 ship in this skill. `find_asset` with type `font-pairing` (for example "warm editorial charity") then `add_asset` copies the

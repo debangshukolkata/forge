@@ -34,6 +34,11 @@ def skill_roots(context: ToolContext) -> list[Any]:
 MAX_SKILL_FILE_BYTES = 200_000
 
 
+# Folders that hold many files of one kind: listed as one line each (the catalogue tools find the assets inside).
+BULK_FOLDERS = ("assets/", "fonts/", "templates/", "recipes/sections/", "recipes/templates/")
+KEPT_FROM_BULK = {"assets/INDEX.md", "assets/README.md"}
+
+
 def skill_files_note(skill: Skill) -> str:
     """Tells the model what else the skill folder holds and how to reach it."""
     others = sorted(
@@ -43,7 +48,20 @@ def skill_files_note(skill: Skill) -> str:
     )
     if not others:
         return ""
-    listed = "\n".join(f"- {name}" for name in others[:60]) + ("\n- ..." if len(others) > 60 else "")
+    shown: list[str] = []
+    bulk: dict[str, int] = {}
+    for name in others:
+        folder = next((f for f in BULK_FOLDERS if name.startswith(f)), None)
+        if folder is None or name in KEPT_FROM_BULK:
+            shown.append(f"- {name}")
+        else:
+            bulk[folder] = bulk.get(folder, 0) + 1
+    shown = shown[:60] + (["- ..."] if len(shown) > 60 else [])
+    shown += [
+        f"- {folder} ({count} files; search the catalogue with find_asset instead of listing)"
+        for folder, count in bulk.items()
+    ]
+    listed = "\n".join(shown)
     return (
         f"\n\n---\nThis skill's folder is {skill.folder} (you may read it, read only). Read its files with "
         "read_file or load_skill(name, file=...). A program in it runs through the shell with its full path, "

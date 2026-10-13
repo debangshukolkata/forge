@@ -106,3 +106,20 @@ Generated from the assets' front-matter; do not edit by hand.
 | `pair-journal` | OFL-1.1 | bundled fonts Lora and Plus Jakarta Sans (Fontsource, 5.3.0) |
 | `pair-playful-rounded` | OFL-1.1 | bundled fonts Nunito and DM Sans (Fontsource, 5.3.0) |
 | `pair-warm-editorial` | OFL-1.1 | bundled fonts Fraunces and Inter (Fontsource, 5.3.0) |
+| `sec-contact-form` | original | authored for DebCraft (section library, D-273) |
+| `sec-cta-band` | original | authored for DebCraft (section library, D-273) |
+| `sec-faq-list` | original | authored for DebCraft (section library, D-273) |
+| `sec-features-alternating` | original | authored for DebCraft (section library, D-273) |
+| `sec-features-bento` | original | authored for DebCraft (section library, D-273) |
+| `sec-footer-columns` | original | authored for DebCraft (section library, D-273) |
+| `sec-hero-centered` | original | authored for DebCraft (section library, D-273) |
+| `sec-hero-split` | original | authored for DebCraft (section library, D-273) |
+| `sec-logo-strip` | original | authored for DebCraft (section library, D-273) |
+| `sec-nav-bar` | original | authored for DebCraft (section library, D-273) |
+| `sec-pricing-tiers` | original | authored for DebCraft (section library, D-273) |
+| `sec-stats-row` | original | authored for DebCraft (section library, D-273) |
+| `sec-steps-timeline` | original | authored for DebCraft (section library, D-273) |
+| `sec-testimonial-feature` | original | authored for DebCraft (section library, D-273) |
+| `tpl-landing-charity` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-portfolio` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-saas` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
