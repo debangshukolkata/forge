@@ -22,9 +22,11 @@ from forge.modeb.output import build_modeb_output
 from forge.parity.history import History
 from forge.parity.mentions import grant_from_message
 from forge.protocol.events import EventType
+from forge.subagents.builder import result_text
 from forge.subagents.critic import CRITIC_ROUND_LIMIT
-from forge.subagents.spawn_tool import SpawnSubagent
+from forge.subagents.spawn_tool import SpawnSubagent, run_builder
 from forge.toolkit.base import Tool, ToolContext, ToolResult
+from forge.toolkit.folders import clean_folder
 from forge.toolkit.powershell import ps_quote
 from forge.toolkit.private_env import without_private
 from forge.toolkit.pytest_report import parse_pytest
@@ -36,6 +38,7 @@ from forge.tools.interaction import (
     ProposePlan,
     ProposeRequirements,
     RequestUserAction,
+    RunReadyTasks,
     TaskSpec,
     TaskUpdate,
     UpdatePlan,
@@ -44,6 +47,7 @@ from forge.tools.quality_gates import gate_findings, gate_note, load_config
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
 from forge.tools.ui_audit import tailwind_setup_problem
 from forge.workflow.reports import closing_message, final_report
+from forge.workflow.scheduler import explain, plan_batch
 from forge.workflow.state import Cadence, StateStore, Task
 from forge.workspace.output import build_output
 
@@ -90,6 +94,18 @@ UI_AUDIT_BLOCKED_NOTE = (
     "so the page is unstyled). Fix the cause, restart or rebuild the app, take a new browser_screenshot, make "
     "sure the audit no longer reports a blocker, then call task_update again."
 )
+
+UI_SUFFIXES = (
+    ".html",
+    ".css",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".vue",
+    ".svelte",
+    ".scss",
+)  # files that change what the user sees
 
 
 def critic_cleared(context: ToolContext) -> bool:
@@ -311,6 +327,7 @@ class Orchestrator:
                 ProposeRequirements(),
                 ProposePlan(),
                 UpdatePlan(),
+                RunReadyTasks(),
                 TaskUpdate(),
                 RequestUserAction(),
             ]
@@ -444,6 +461,66 @@ class Orchestrator:
         # before the model's next reply, the same way a successful task_update already does.
         self.context.end_turn = True
         return ToolResult(ok=True, content=f"Saved PLAN.md with {len(tasks)} task(s). Work on them now.")
+
+    async def run_ready_tasks(self, task_ids: list[str], notes: dict[str, str]) -> ToolResult:
+        """X7: starts the planned tasks that are provably independent as parallel builders, waits for all of them, records each
+        one's status on its task and sets the verification gates, so the main agent still has to prove the result."""
+        limit = self.host.router.config.limits.max_parallel_builders
+        only = set(task_ids) or None
+        batch = plan_batch(self.state.tasks, limit, only)
+        if limit < 2 or not batch.parallel:
+            return ToolResult(ok=True, content=explain(self.state.tasks, batch, limit))
+        requirement = self._requirement_text()[:1500]
+        for task in batch.run:
+            task.status = "in_progress"
+            task.attempts += 1
+        self._save()
+        await self._notice(
+            "task", "Building in parallel: " + ", ".join(f"{t.id} in {t.folder}" for t in batch.run)
+        )
+
+        async def build(task: Task) -> tuple[Task, str, str, str]:
+            brief = (
+                f"Overall request (context only, do not build outside your task):\n{requirement}\n\n"
+                f"Your task {task.id}: {task.title}\n{task.description}\n"
+                + (f"Acceptance: {task.acceptance}\n" if task.acceptance else "")
+                + (f"Facts from the main agent: {notes[task.id]}\n" if task.id in notes else "")
+            )
+            status, report, saved = await run_builder(
+                self.context, folder=clean_folder(task.folder), name=task.id.lower(), task=brief
+            )
+            return task, status, report, saved
+
+        results = await asyncio.gather(*(build(t) for t in batch.run))
+        parts: list[str] = []
+        for task, status, report, saved in results:
+            lines = [line for line in report.splitlines() if line.strip()]
+            task.handoff_note = (lines[-2] if len(lines) > 1 else report)[:300]
+            if status in ("NEEDS_CONTEXT", "BLOCKED"):
+                task.status = "blocked"
+                task.blocked_reason = f"builder {status}: {task.handoff_note}"
+            parts.append(result_text(task.id.lower(), clean_folder(task.folder), status, report, saved))
+        # Whatever the builders wrote counts as an edit the main agent has not verified yet: task_update(done) asks for a passing
+        # test run and, for pages, a look in a browser, exactly as for its own edits.
+        self.context.last_edit_step = self.context.step
+        if any(self._wrote_ui_files(t.folder) for t, *_ in results):
+            self.context.last_ui_edit_step = self.context.step
+        self._save()
+        held = "".join(f"\n- {t.id}: {reason}" for t, reason in batch.held)
+        tail = "\n\nNot started (ready, but not independent):" + held if held else ""
+        return ToolResult(
+            ok=True,
+            content="\n\n".join(parts)
+            + tail
+            + "\n\nNext: verify each piece (run the tests, look at pages), fix or re-brief what failed, then task_update(done) per task.",
+        )
+
+    def _wrote_ui_files(self, folder: str) -> bool:
+        root = clean_folder(folder) + "/"
+        return any(
+            change.path.replace("\\", "/").startswith(root) and change.path.lower().endswith(UI_SUFFIXES)
+            for change in self.workspace.changes()
+        )
 
     async def update_plan(self, markdown: str, tasks: list[TaskSpec], reason: str) -> ToolResult:
         status = {t.id: t for t in self.state.tasks}

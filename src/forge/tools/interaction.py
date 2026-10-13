@@ -28,6 +28,16 @@ class TaskSpec(ToolArgs):
         default="", description="The check that proves it is done (e.g. which tests pass)."
     )
     depends_on: list[str] = Field(default_factory=list)
+    folder: str = Field(
+        default="",
+        description="Where this task writes, relative to the repository root (e.g. designs/design-a). Give it to tasks that can "
+        "run at the same time as others: independent tasks with separate folders are built in parallel (run_ready_tasks).",
+    )
+    resources: list[str] = Field(
+        default_factory=list,
+        description="Exclusive things the task needs (a fixed port, the database schema, a root package.json): two tasks naming "
+        "the same one never run together.",
+    )
 
 
 class Interaction(Protocol):
@@ -38,6 +48,8 @@ class Interaction(Protocol):
     async def propose_requirements(self, markdown: str) -> ToolResult: ...
 
     async def propose_plan(self, markdown: str, tasks: list[TaskSpec]) -> ToolResult: ...
+
+    async def run_ready_tasks(self, task_ids: list[str], notes: dict[str, str]) -> ToolResult: ...
 
     async def update_plan(self, markdown: str, tasks: list[TaskSpec], reason: str) -> ToolResult: ...
 
@@ -155,6 +167,31 @@ class UpdatePlan(Tool):
             if interaction
             else NOT_AVAILABLE
         )
+
+
+class RunReadyTasks(Tool):
+    name = "run_ready_tasks"
+    read_only = True
+    description = (
+        "Build the planned tasks that can run at the same time: the pending tasks whose dependencies are done, that name a "
+        "`folder` of their own and share no folder or resource with each other, each by its own builder in parallel (at most "
+        "limits.max_parallel_builders). You get every builder's report and status back; then verify the results yourself "
+        "(tests, a look at the page) before task_update(done). If nothing can run in parallel it says why: then work on the "
+        "next task yourself. Load the parallel-builders skill first."
+    )
+
+    class Args(ToolArgs):
+        task_ids: list[str] = Field(
+            default_factory=list, description="Only these tasks; empty = every task that can run now."
+        )
+        notes: dict[str, str] = Field(
+            default_factory=dict,
+            description="Extra facts for a builder by task id (names, numbers, interfaces to follow).",
+        )
+
+    async def run(self, args: RunReadyTasks.Args, context: ToolContext) -> ToolResult:
+        interaction = _interaction(context)
+        return await interaction.run_ready_tasks(args.task_ids, args.notes) if interaction else NOT_AVAILABLE
 
 
 class TaskUpdate(Tool):

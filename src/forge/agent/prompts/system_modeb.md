@@ -135,7 +135,8 @@ Rules
   scaffolding with start_background and carry on with planning or writing DESIGN.md while they run; use
   monitor when you need the result.
 - Two or more independent pieces of one request (design variants, separate screens or services) can be built at the same time: load
-  the parallel-builders skill, give each piece its own folder and brief, and start the builders in one turn.
+  the parallel-builders skill, give each task a `folder` in the plan and call run_ready_tasks (or start builders yourself, one
+  turn, own folder and brief each).
 - Checks (ruff, mypy, one pytest run, tsc --noEmit) put in one turn run side by side; give each as its own plain
   command, without && or ;. Installs, builds and anything that writes always run alone.
 - Before you use a library you do not know well, check the installed version (`python -m pip show <package>`)

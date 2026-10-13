@@ -20,6 +20,16 @@ you have not decided yet: decide that first, alone.
 3. Start the builders **in one turn**: several `spawn_subagent` calls with `agent: "builder"`, each with its own `folder` and a short `name`.
    At most three run at once (`limits.max_parallel_builders`; set to 1 to switch it off); more wait their turn.
 
+## Let the plan do the scheduling (run_ready_tasks)
+When you plan with `propose_plan`, give every task that could run alongside others a `folder` (where it writes) and, when it needs
+something exclusive, `resources` (a fixed port, the database schema, a root `package.json`). Then call **`run_ready_tasks`**: it takes the
+pending tasks whose dependencies are done, keeps only those that are provably independent (separate, non-overlapping folders, no shared
+resource, at most `limits.max_parallel_builders`), builds each with its own builder at the same time and returns every report. A task
+without a folder, or one that overlaps another, is never run in parallel; the answer names the reason, and you work on it yourself. Pass
+facts a builder needs in `notes` (task id to text). Dependent tasks wait: call `run_ready_tasks` again after you have verified the
+first group. The scheduler marks a BLOCKED or NEEDS_CONTEXT piece as blocked; the others stay in progress until **you** verify them
+and call `task_update(done)`, which asks for a passing test run (and a look in a browser for pages) as for your own edits.
+
 ## What a builder does
 It writes only below its folder, works in its own shell session, takes its own free port, runs its own checks, stops what it started and
 ends with one status. The report is saved to `.forge/builders/<name>-report.md` and a line goes to `.forge/builders/ledger.md` (it survives

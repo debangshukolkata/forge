@@ -29,6 +29,10 @@ class Task(BaseModel):
     description: str = ""
     acceptance: str = ""  # how to verify it
     depends_on: list[str] = Field(default_factory=list)
+    folder: str = ""  # where the task writes (X7): needed to run it in parallel with others
+    resources: list[str] = Field(
+        default_factory=list
+    )  # exclusive things it uses: a port, the db schema, a root package.json
     status: TaskStatus = "pending"
     attempts: int = 0
     handoff_note: str = ""  # <= ~200 tokens, carried into the next task (spec §10.6)

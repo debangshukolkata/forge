@@ -11,3 +11,4 @@ final reports and the frontend smoke check.
 - **Decisions:** docs/DECISIONS.md (D-128..D-133 workflow, D-153 approvals); layering is enforced by tests/test_module_boundaries.py.
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
+- **Parallel scheduling (X7, D-306):** `scheduler.py` (pure: frontier, disjoint folders, shared resources, limit, reasons) and `Orchestrator.run_ready_tasks` (the `run_ready_tasks` tool): starts provably independent planned tasks as parallel builders and sets the verification gates. Tests: test_scheduler.py.

@@ -40,6 +40,43 @@ from forge.tools.parity import BUILT_IN_TYPES
 from forge.tools.registry import ToolRegistry, default_tools
 
 
+async def run_builder(context: ToolContext, *, folder: str, name: str, task: str) -> tuple[str, str, str]:
+    """Runs one builder to the end and returns (status, report, saved report path). Shared by `spawn_subagent` and the scheduler (X7)."""
+    router = context.router
+    assert router is not None
+    workspace = context.workspace
+    workspace.path_of(folder).mkdir(parents=True, exist_ok=True)
+    # Its own shell session: the working directory belongs to the session, and two builders must not move each other's.
+    shell = ShellSession(workspace)
+    shell.cwd = workspace.path_of(folder)
+    tools = ToolRegistry([t for t in default_tools() if t.name not in ("ask_user",)])
+    brief = (
+        f"Your folder: {folder}/ (you can write only there; your commands start there).\n"
+        f"Your name: {name}.\n\nBRIEF:\n{task}"
+    )
+    report = await _run_subagent(
+        router,
+        context,
+        tools,
+        BUILDER_PROMPT,
+        brief,
+        BUILDER_ITERATIONS,
+        "coder",
+        write_only_under=folder + "/",
+        needs_user_approvals=True,
+        shell=shell,
+        builder=True,
+    )
+    status = parse_status(report)
+    saved = report_path(name)
+    target = workspace.root / saved
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(report, encoding="utf-8")
+    lines = [line for line in report.splitlines() if line.strip()]
+    append_ledger(workspace.forge_dir, name, folder, status, lines[-2] if len(lines) > 1 else report)
+    return status, report, saved
+
+
 class SpawnSubagent(Tool):
     name = "spawn_subagent"
     read_only = True  # the subagent's own tools are restricted; only its report comes back
@@ -71,8 +108,6 @@ class SpawnSubagent(Tool):
     async def _run_builder(
         self, args: SpawnSubagent.Args, context: ToolContext, read_only: list[Tool]
     ) -> ToolResult:
-        router = context.router
-        assert router is not None
         folder = clean_folder(args.folder)
         if not folder:
             return ToolResult(
@@ -81,41 +116,7 @@ class SpawnSubagent(Tool):
                 "'designs/design-a'). Give each parallel builder its own folder.",
             )
         name = safe_name(args.name, folder)
-        workspace = context.workspace
-        workspace.path_of(folder).mkdir(parents=True, exist_ok=True)
-        # Its own shell session: the working directory belongs to the session, and two builders must not move each other's.
-        shell = ShellSession(workspace)
-        shell.cwd = workspace.path_of(folder)
-        tools = ToolRegistry([t for t in default_tools() if t.name not in ("ask_user",)])
-        brief = (
-            f"Your folder: {folder}/ (you can write only there; your commands start there).\n"
-            f"Your name: {name}.\n\nBRIEF:\n{args.task}"
-        )
-        report = await _run_subagent(
-            router,
-            context,
-            tools,
-            BUILDER_PROMPT,
-            brief,
-            BUILDER_ITERATIONS,
-            "coder",
-            write_only_under=folder + "/",
-            needs_user_approvals=True,
-            shell=shell,
-            builder=True,
-        )
-        status = parse_status(report)
-        saved = report_path(name)
-        target = workspace.root / saved
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(report, encoding="utf-8")
-        append_ledger(
-            workspace.forge_dir,
-            name,
-            folder,
-            status,
-            report.splitlines()[-2] if report.count("\n") else report,
-        )
+        status, report, saved = await run_builder(context, folder=folder, name=name, task=args.task)
         return ToolResult(ok=True, content=result_text(name, folder, status, report, saved))
 
     async def run(self, args: SpawnSubagent.Args, context: ToolContext) -> ToolResult:
