@@ -57,14 +57,14 @@ export default function ContactForm({
             <div>
               <label htmlFor="cf-name" className="mb-1.5 block text-sm font-medium text-ink-900">Full name</label>
               <input id="cf-name" name="name" autoComplete="name" className="field" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "cf-name-error" : undefined} />
-              {errors.name && <p id="cf-name-error" className="mt-1.5 text-sm text-red-700">{errors.name}</p>}
+              {errors.name && <p id="cf-name-error" className="mt-1.5 text-sm text-danger">{errors.name}</p>}
             </div>
             <div>
               <label htmlFor="cf-email" className="mb-1.5 block text-sm font-medium text-ink-900">Email</label>
               <input id="cf-email" name="email" type="email" autoComplete="email" className="field" aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? "cf-email-error" : undefined} />
-              {errors.email && <p id="cf-email-error" className="mt-1.5 text-sm text-red-700">{errors.email}</p>}
+              {errors.email && <p id="cf-email-error" className="mt-1.5 text-sm text-danger">{errors.email}</p>}
             </div>
-            {errors.form && <p role="alert" className="text-sm text-red-700">{errors.form}</p>}
+            {errors.form && <p role="alert" className="text-sm text-danger">{errors.form}</p>}
             <button type="submit" disabled={state === "sending"} className="btn-primary w-full">
               {state === "sending" ? "Sending…" : submitLabel}
             </button>

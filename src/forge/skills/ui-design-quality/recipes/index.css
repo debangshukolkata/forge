@@ -26,6 +26,7 @@
 
   --color-ok: #15803d;
   --color-warn: #b45309;
+  --color-danger: #b91c1c;
 
   --radius-card: 1.25rem;
   --shadow-soft: 0 1px 2px rgb(29 26 23 / 0.06), 0 12px 32px -12px rgb(29 26 23 / 0.18);

@@ -12,6 +12,7 @@
   --color-ink-50: #f8fafc; --color-ink-100: #f1f5f9; --color-ink-200: #e2e8f0; --color-ink-300: #cbd5e1;
   --color-ink-500: #5b6b82; --color-ink-700: #334155; --color-ink-900: #0f172a;
   --color-ok: #15803d; --color-warn: #b45309;
+  --color-danger: #b91c1c;
   --radius-card: 0.9rem;
   --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.05), 0 8px 24px -12px rgb(15 23 42 / 0.15);
   --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.06), 0 18px 36px -14px rgb(79 70 229 / 0.35);

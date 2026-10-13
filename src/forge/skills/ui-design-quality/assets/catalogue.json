@@ -3921,7 +3921,7 @@
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
    "preview": null,
    "path": "assets/section/sec-contact-form.md",
-   "size": 4345
+   "size": 4342
   },
   {
    "id": "sec-cta-band",
@@ -4491,7 +4491,7 @@
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
    "preview": null,
    "path": "assets/template/tpl-landing-charity.md",
-   "size": 113767
+   "size": 113791
   },
   {
    "id": "tpl-landing-portfolio",
@@ -4586,7 +4586,7 @@
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
    "preview": null,
    "path": "assets/template/tpl-landing-portfolio.md",
-   "size": 103915
+   "size": 103939
   },
   {
    "id": "tpl-landing-saas",
@@ -4693,7 +4693,7 @@
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
    "preview": null,
    "path": "assets/template/tpl-landing-saas.md",
-   "size": 105960
+   "size": 105987
   }
  ]
 }

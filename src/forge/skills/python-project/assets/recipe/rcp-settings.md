@@ -46,7 +46,8 @@ class Settings:
         return f"Settings(port={self.port}, debug={self.debug}, database_url=<hidden>)"
 
 
-settings = Settings.from_env({"DATABASE_URL": "postgresql://u:secret@h/db", "DEBUG": "true"})
+fake_url = "postgresql://u:secret@h/db"  # check_secrets: fake
+settings = Settings.from_env({"DATABASE_URL": fake_url, "DEBUG": "true"})
 assert settings.port == 8000 and settings.debug is True
 assert "secret" not in repr(settings)
 ```

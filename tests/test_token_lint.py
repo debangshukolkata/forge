@@ -63,11 +63,24 @@ def test_project_without_tokens_is_left_alone(tmp_path: Path) -> None:
     assert token_lint_problems(tmp_path) == []
 
 
-def test_our_own_reference_recipes_pass_the_lint() -> None:
+def test_our_own_reference_recipes_pass_the_lint(tmp_path: Path) -> None:
+    import shutil
+
     recipes = (
         Path(__file__).resolve().parents[1] / "src" / "forge" / "skills" / "ui-design-quality" / "recipes"
     )
-    assert token_lint_problems(recipes) == []
+    # the reference page and its tokens, and the section library with a template's tokens; the showpiece stylesheets
+    # (a rainbow border, a flickering grid) contain literal colours on purpose and are not linted
+    reference = tmp_path / "reference"
+    reference.mkdir()
+    for name in ("index.css", "landing-reference.tsx", "motion.css", "motion.tsx", "components-native.tsx"):
+        shutil.copy2(recipes / name, reference / name)
+    assert token_lint_problems(reference) == []
+    library = tmp_path / "library"
+    shutil.copytree(recipes / "sections", library / "sections")
+    shutil.copy2(recipes / "templates" / "charity" / "index.css", library / "index.css")
+    shutil.copy2(recipes / "templates" / "charity" / "App.tsx", library / "App.tsx")
+    assert token_lint_problems(library) == []
 
 
 def test_black_white_and_grey_overlays_are_not_counted(tmp_path: Path) -> None:
