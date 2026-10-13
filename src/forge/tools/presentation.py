@@ -200,7 +200,11 @@ class EditPresentation(Tool):
             )
         try:
             deck = await asyncio.to_thread(open_deck, source)
-            done = apply_operations(deck, parse_operations(args.operations))
+            done = apply_operations(
+                deck,
+                parse_operations(args.operations),
+                lambda name: image_path(context, name).read_bytes(),
+            )
             data = save_deck(deck)
             context.workspace.write_bytes(target, data, args.reason or "presentation edited")
         except SlidesUnavailable as error:

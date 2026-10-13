@@ -7,11 +7,15 @@ works or stops the whole edit with a message naming the operation, so a half-edi
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from copy import deepcopy
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
+from forge.slides.edit_find import find_shape, slide_at, walk
+from forge.slides.edit_more import MORE_OPERATIONS, MoreOperation, apply_more
+from forge.slides.edit_text import set_frame_text
 from forge.slides.open_deck import DeckError
 from forge.slides.spec import Series
 
@@ -99,12 +103,13 @@ Operation = Annotated[
     | DuplicateSlide
     | AddSlide
     | UpdateChart
-    | UpdateTable,
+    | UpdateTable
+    | MoreOperation,
     Field(discriminator="op"),
 ]
 OPERATIONS = (
     "replace_text, set_text, set_notes, delete_slide, move_slide, duplicate_slide, add_slide, "
-    "update_chart, update_table"
+    "update_chart, update_table, " + MORE_OPERATIONS
 )
 
 
@@ -124,61 +129,7 @@ def parse_operations(raw: list[dict[str, Any]]) -> list[Operation]:
 # --- finding things ---
 
 
-def _slide(deck: Any, number: int) -> Any:
-    if not 1 <= number <= len(deck.slides):
-        raise DeckError(f"there is no slide {number} (the deck has {len(deck.slides)})")
-    return deck.slides[number - 1]
-
-
-def _walk(shapes: Any) -> Any:
-    for shape in shapes:
-        yield shape
-        if shape.shape_type == 6:  # a group
-            yield from _walk(shape.shapes)
-
-
-def _shape(slide: Any, ref: int | str) -> Any:
-    wanted_id = int(ref) if isinstance(ref, int) or str(ref).isdigit() else None
-    matches = [
-        s for s in _walk(slide.shapes) if (wanted_id is not None and s.shape_id == wanted_id) or s.name == ref
-    ]
-    if not matches:
-        shown = ", ".join(f'{s.shape_id} "{s.name}"' for s in _walk(slide.shapes))
-        raise DeckError(f"no shape {ref!r} on that slide (shapes: {shown})")
-    if len(matches) > 1:
-        raise DeckError(
-            f"{len(matches)} shapes are called {ref!r}: use the id ("
-            + ", ".join(str(s.shape_id) for s in matches)
-            + ")"
-        )
-    return matches[0]
-
-
 # --- text that keeps its look ---
-
-
-def _set_frame_text(frame: Any, lines: list[str]) -> None:
-    first = frame.paragraphs[0]
-    paragraph_properties = first._p.pPr
-    run_properties = first.runs[0]._r.rPr if first.runs else None
-    for extra in frame.paragraphs[1:]:
-        extra._p.getparent().remove(extra._p)
-    for child in list(first._p):
-        if not child.tag.endswith(("}pPr", "}endParaRPr")):
-            first._p.remove(child)
-    for index, line in enumerate(lines or [""]):
-        paragraph = first if index == 0 else frame.add_paragraph()
-        if index > 0 and paragraph_properties is not None:
-            paragraph._p.insert(0, deepcopy(paragraph_properties))
-        body = line.lstrip(" ")
-        run = paragraph.add_run()
-        run.text = body
-        if run_properties is not None:
-            existing = run._r.rPr
-            if existing is not None:
-                run._r.remove(existing)
-            run._r.insert(0, deepcopy(run_properties))
-        paragraph.level = min((len(line) - len(body)) // 2, 8)
 
 
 def _replace_in_paragraph(paragraph: Any, find: str, replace: str) -> int:
@@ -198,7 +149,7 @@ def _replace_in_paragraph(paragraph: Any, find: str, replace: str) -> int:
 
 
 def _frames(slide: Any, include_notes: bool) -> Any:
-    for shape in _walk(slide.shapes):
+    for shape in walk(slide.shapes):
         if getattr(shape, "has_text_frame", False) and shape.has_text_frame:
             yield shape.text_frame
         if getattr(shape, "has_table", False) and shape.has_table:
@@ -217,7 +168,7 @@ def _slide_list(deck: Any) -> Any:
 
 
 def _delete(deck: Any, number: int) -> None:
-    _slide(deck, number)
+    slide_at(deck, number)
     entries = _slide_list(deck)
     entry = list(entries)[number - 1]
     deck.part.drop_rel(entry.rId)
@@ -225,8 +176,8 @@ def _delete(deck: Any, number: int) -> None:
 
 
 def _move(deck: Any, number: int, to: int) -> None:
-    _slide(deck, number)
-    _slide(deck, to)
+    slide_at(deck, number)
+    slide_at(deck, to)
     entries = _slide_list(deck)
     entry = list(entries)[number - 1]
     entries.remove(entry)
@@ -234,7 +185,7 @@ def _move(deck: Any, number: int, to: int) -> None:
 
 
 def _duplicate(deck: Any, number: int, at: int | None) -> None:
-    source = _slide(deck, number)
+    source = slide_at(deck, number)
     copy = deck.slides.add_slide(source.slide_layout)
     for shape in list(copy.shapes):
         shape._element.getparent().remove(shape._element)
@@ -297,13 +248,13 @@ def _add(deck: Any, operation: AddSlide) -> None:
     if operation.title:
         if title is None:
             raise DeckError(f'the layout "{operation.layout}" has no title placeholder')
-        _set_frame_text(title.text_frame, [operation.title])
+        set_frame_text(title.text_frame, [operation.title])
     if operation.body:
         if not others:
             raise DeckError(
                 f'the layout "{operation.layout}" has no text placeholder for the body: pick another layout'
             )
-        _set_frame_text(others[0].text_frame, operation.body)
+        set_frame_text(others[0].text_frame, operation.body)
     by_number = {p.placeholder_format.idx: p for p in others}
     for key, text in operation.placeholders.items():
         holder = by_number.get(int(key)) if key.isdigit() else None
@@ -311,7 +262,7 @@ def _add(deck: Any, operation: AddSlide) -> None:
             raise DeckError(
                 f"the layout has no placeholder {key}: it has " + ", ".join(str(i) for i in by_number)
             )
-        _set_frame_text(holder.text_frame, [text])
+        set_frame_text(holder.text_frame, [text])
     for holder in list(slide.placeholders):  # an untouched placeholder would show "Click to add text"
         if getattr(holder, "has_text_frame", False) and holder.has_text_frame and not holder.text_frame.text:
             holder._element.getparent().remove(holder._element)
@@ -324,7 +275,7 @@ def _add(deck: Any, operation: AddSlide) -> None:
 def _update_chart(deck: Any, operation: UpdateChart) -> None:
     from pptx.chart.data import CategoryChartData
 
-    shape = _shape(_slide(deck, operation.slide), operation.shape)
+    shape = find_shape(slide_at(deck, operation.slide), operation.shape)
     if not getattr(shape, "has_chart", False) or not shape.has_chart:
         raise DeckError(f'"{shape.name}" is not a chart')
     for series in operation.series:
@@ -342,7 +293,7 @@ def _update_chart(deck: Any, operation: UpdateChart) -> None:
 
 
 def _update_table(deck: Any, operation: UpdateTable) -> None:
-    shape = _shape(_slide(deck, operation.slide), operation.shape)
+    shape = find_shape(slide_at(deck, operation.slide), operation.shape)
     if not getattr(shape, "has_table", False) or not shape.has_table:
         raise DeckError(f'"{shape.name}" is not a table')
     table = shape.table
@@ -351,15 +302,17 @@ def _update_table(deck: Any, operation: UpdateTable) -> None:
         raise DeckError(f"the table has {rows} rows and {columns} columns: give exactly that many cells")
     for row_index, values in enumerate(operation.rows):
         for column_index, value in enumerate(values):
-            _set_frame_text(table.cell(row_index, column_index).text_frame, [value])
+            set_frame_text(table.cell(row_index, column_index).text_frame, [value])
 
 
-def apply_operations(deck: Any, operations: list[Operation]) -> list[str]:
+def apply_operations(
+    deck: Any, operations: list[Operation], read_image: Callable[[str], bytes] | None = None
+) -> list[str]:
     """Runs the operations in order. Returns what was done; raises DeckError naming the failing operation."""
     done: list[str] = []
     for number, operation in enumerate(operations, start=1):
         try:
-            done.append(_apply(deck, operation))
+            done.append(_apply(deck, operation, read_image))
         except DeckError as error:
             raise DeckError(
                 f"operation {number} ({operation.op}) failed: {error}. Nothing was saved."
@@ -367,9 +320,9 @@ def apply_operations(deck: Any, operations: list[Operation]) -> list[str]:
     return done
 
 
-def _apply(deck: Any, operation: Operation) -> str:
+def _apply(deck: Any, operation: Operation, read_image: Callable[[str], bytes] | None) -> str:
     if isinstance(operation, ReplaceText):
-        slides = [_slide(deck, operation.slide)] if operation.slide else list(deck.slides)
+        slides = [slide_at(deck, operation.slide)] if operation.slide else list(deck.slides)
         count = sum(
             _replace_in_paragraph(paragraph, operation.find, operation.replace)
             for slide in slides
@@ -380,13 +333,13 @@ def _apply(deck: Any, operation: Operation) -> str:
             raise DeckError(f"{operation.find!r} was not found")
         return f"replaced {count} occurrence(s) of {operation.find!r}"
     if isinstance(operation, SetText):
-        shape = _shape(_slide(deck, operation.slide), operation.shape)
+        shape = find_shape(slide_at(deck, operation.slide), operation.shape)
         if not getattr(shape, "has_text_frame", False) or not shape.has_text_frame:
             raise DeckError(f'"{shape.name}" has no text (it is a {shape.shape_type})')
-        _set_frame_text(shape.text_frame, operation.text.split("\n"))
+        set_frame_text(shape.text_frame, operation.text.split("\n"))
         return f'set the text of "{shape.name}" on slide {operation.slide}'
     if isinstance(operation, SetNotes):
-        _slide(deck, operation.slide).notes_slide.notes_text_frame.text = operation.text
+        slide_at(deck, operation.slide).notes_slide.notes_text_frame.text = operation.text
         return f"set the notes of slide {operation.slide}"
     if isinstance(operation, DeleteSlide):
         _delete(deck, operation.slide)
@@ -403,5 +356,7 @@ def _apply(deck: Any, operation: Operation) -> str:
     if isinstance(operation, UpdateChart):
         _update_chart(deck, operation)
         return f"updated the chart on slide {operation.slide}"
-    _update_table(deck, operation)
-    return f"updated the table on slide {operation.slide}"
+    if isinstance(operation, UpdateTable):
+        _update_table(deck, operation)
+        return f"updated the table on slide {operation.slide}"
+    return apply_more(deck, operation, read_image)

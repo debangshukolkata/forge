@@ -179,7 +179,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   placeholders, so a new deck takes the company look automatically. Today only `edit_presentation` can use a template. Size L.
 - [x] **P2.11 Template analysis.** (done 2026-10-13, D-288: `analyze_template` tool gives layout roles, placeholders, colours, fonts; layout pictures not done) Render each of a template's layouts to a picture, list placeholders, theme colours and fonts, and
   propose which layout fits which content; delete unused sample items cleanly (a slot with no data removes its whole group). Size M.
-- [ ] **P2.12 Edit operations to full strength.** Replace a picture keeping crop and position; per-run formatting edits; global font and
+- [x] **P2.12 Edit operations to full strength.** (done 2026-10-13, D-289; not done: chart axis formatting, merged-cell table edits, per-point chart colours beyond pies) Replace a picture keeping crop and position; per-run formatting edits; global font and
   colour changes through the theme; table rows and columns add/remove; chart type change and formatting; headers and footers;
   bulk speaker-notes edits; find shapes by what they say. Size M.
 - [ ] **P2.13 Copy slides that hold charts or embedded objects** by cloning the chart parts (today refused). Size M.

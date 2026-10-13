@@ -126,7 +126,7 @@ nothing to read (a picture without alt text, for instance). Never guess what a s
 **Change a deck:** read it first, then `edit_presentation(path, operations=[...], output=...)`. It keeps the deck's
 own formatting, so prefer it over rebuilding whenever someone else made the deck or a template is involved.
 Operations: `replace_text`, `set_text`, `set_notes`, `delete_slide`, `move_slide`, `duplicate_slide`,
-`add_slide`, `update_chart`, `update_table`. Give `output` (a new file name) unless the user asked to change the
+`add_slide`, `update_chart`, `update_table`, and (D-289) `replace_picture` (keeps crop and place), `format_text` (bold, italic, size, colour, font on a phrase, a shape or every slide), `set_theme` (heading/body font, theme colours), `add_table_row`/`delete_table_row`/`add_table_column`/`delete_table_column`, `change_chart_type`, `format_chart` (title, legend, labels, number format, colours), `set_footer` (footer text, slide numbers), `set_notes_bulk`, `delete_shape`, `remove_empty_placeholders`. A shape can be named `"text:some words"` to find it by what it says. Decks DebCraft built draw their own footer and numbers, so `set_footer` there would double them: change the outline and rebuild instead. Give `output` (a new file name) unless the user asked to change the
 file itself; in place is allowed and can be undone. If one operation fails, nothing is saved and the message
 says which: fix that one and send the list again. Afterwards `preview_presentation` and look at the changed
 slides (a longer sentence in a fixed box can overflow; PowerPoint will not warn you).
