@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 from forge.slides.powerpoint_lock import powerpoint_turn
@@ -55,13 +56,51 @@ class PreviewUnavailable(Exception):
     """PowerPoint cannot be used here; the message says why."""
 
 
-def available() -> bool:
+POWERPOINT_FILES = ("Office16", "Office15", "Office14", "root/Office16")
+REGISTRY_CHECKS = (
+    ("HKEY_CLASSES_ROOT", r"PowerPoint.Application\CLSID"),
+    ("HKEY_LOCAL_MACHINE", r"SOFTWARE\Classes\PowerPoint.Application\CLSID"),
+    ("HKEY_CURRENT_USER", r"SOFTWARE\Classes\PowerPoint.Application\CLSID"),
+    ("HKEY_LOCAL_MACHINE", r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\POWERPNT.EXE"),
+)
+PROGID_CHECK = "if ([type]::GetTypeFromProgID('PowerPoint.Application')) { exit 0 } else { exit 1 }"
+
+
+@lru_cache(maxsize=1)
+def status() -> tuple[bool, str]:
+    """(PowerPoint can be driven from here, why or why not). Asks the registry directly (no `reg.exe`, which company policy may block),
+    then Windows' own ProgID lookup, which also sees Office installed as a store or streamed package; finally looks for the program file."""
     if sys.platform != "win32":
-        return False
-    done = subprocess.run(
-        ["reg", "query", r"HKCR\PowerPoint.Application"], capture_output=True, text=True, check=False
-    )
-    return done.returncode == 0
+        return False, "this is not Windows"
+    import winreg
+
+    for hive, path in REGISTRY_CHECKS:
+        try:
+            with winreg.OpenKey(getattr(winreg, hive), path):
+                return True, rf"registered in {hive}\{path.split(chr(92))[0]}"
+        except OSError:
+            continue
+    try:
+        done = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", PROGID_CHECK],
+            capture_output=True,
+            timeout=30,
+            check=False,
+            env=without_private(os.environ),
+        )
+        if done.returncode == 0:
+            return True, "found by Windows' ProgID lookup"
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    for root in (os.environ.get("PROGRAMFILES", ""), os.environ.get("PROGRAMFILES(X86)", "")):
+        for office in POWERPOINT_FILES:
+            if root and (Path(root) / "Microsoft Office" / office / "POWERPNT.EXE").is_file():
+                return False, "POWERPNT.EXE exists but PowerPoint is not registered for automation (COM)"
+    return False, "no PowerPoint registration or program file was found"
+
+
+def available() -> bool:
+    return status()[0]
 
 
 def export_slides(deck: Path, folder: Path) -> list[Path]:

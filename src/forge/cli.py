@@ -82,6 +82,12 @@ def build_parser() -> argparse.ArgumentParser:
     probe.add_argument(
         "--hide-text", action="store_true", help="leave the words of the template's slides out of the report"
     )
+    probe.add_argument(
+        "--max-samples",
+        type=int,
+        default=20,
+        help="try at most this many of the template's sample slides, spread evenly (default 20; 0 = all)",
+    )
     profile = subcommands.add_parser("profile", help="Mode B host profiles")
     profile.add_argument("action", choices=["list", "new", "show", "import", "export-script"])
     profile.add_argument("name", nargs="?", help="the profile name (new/show/import)")
@@ -155,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "run-report":
         return _run_report(args.report_workspace, args.out)
     if args.command == "template-probe":
-        return _template_probe(args.template, args.out, args.hide_text)
+        return _template_probe(args.template, args.out, args.hide_text, args.max_samples)
     if args.command == "skill":
         return _skill(args)
     if args.command == "ui":
@@ -371,7 +377,7 @@ def _cleanup(workspace_path: Path, yes: bool) -> int:
     return status
 
 
-def _template_probe(template: Path, out: Path | None, hide_text: bool) -> int:
+def _template_probe(template: Path, out: Path | None, hide_text: bool, max_samples: int = 20) -> int:
     from forge.slides.build import SlidesUnavailable
     from forge.slides.probe import run_probe
 
@@ -380,7 +386,7 @@ def _template_probe(template: Path, out: Path | None, hide_text: bool) -> int:
         return 2
     folder = out or template.with_name(template.stem + "-probe")
     try:
-        result = run_probe(template, folder, hide_text)
+        result = run_probe(template, folder, hide_text, max_samples)
     except SlidesUnavailable as error:
         print(f"{error} Install the slides extra: pip install python-pptx")
         return 2

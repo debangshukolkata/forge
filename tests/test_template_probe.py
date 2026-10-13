@@ -65,3 +65,13 @@ def test_the_command_prints_where_the_files_are(tmp_path: Path, capsys: pytest.C
     out = capsys.readouterr().out
     assert "probe-deck.pptx" in out and "report.txt" in out
     assert cli.main(["template-probe", str(tmp_path / "missing.pptx")]) == 2
+
+
+def test_a_template_with_many_samples_is_probed_on_an_even_spread(tmp_path: Path) -> None:
+    template = tmp_path / "acme.pptx"
+    template.write_bytes(make_corporate_template())
+    thin = run_probe(template, tmp_path / "thin", max_samples=2)
+    full = run_probe(template, tmp_path / "full", max_samples=0)
+    assert thin.slides_built < full.slides_built
+    assert any("only 2 of the template's 5 sample slides were tried" in issue for issue in thin.issues)
+    assert not any("sample slides were tried" in issue for issue in full.issues)

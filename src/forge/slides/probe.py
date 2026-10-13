@@ -159,7 +159,9 @@ def _try_slide(slide: dict[str, Any], template: bytes, label: str) -> tuple[bool
     return not problems, f"{label}: " + ("; ".join(problems + warnings) or "ok")
 
 
-def run_probe(template_path: Path, folder: Path, hide_text: bool = False) -> ProbeResult:
+def run_probe(
+    template_path: Path, folder: Path, hide_text: bool = False, max_samples: int = 20
+) -> ProbeResult:
     result = ProbeResult(folder)
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
@@ -171,7 +173,17 @@ def run_probe(template_path: Path, folder: Path, hide_text: bool = False) -> Pro
     result.issues += _issues(prs, info, samples)
 
     slides: list[tuple[str, dict[str, Any]]] = [(f"ordinary {s['layout']}", dict(s)) for s in ORDINARY]
-    for sample in samples:
+    tried = samples
+    if (
+        max_samples and len(samples) > max_samples
+    ):  # a template with 76 samples: try an even spread, not every one twice
+        step = -(-len(samples) // max_samples)
+        tried = samples[::step]
+        result.issues.append(
+            f"only {len(tried)} of the template's {len(samples)} sample slides were tried (every {step}th): "
+            "run with --max-samples 0 to try all"
+        )
+    for sample in tried:
         if sample.charts or sample.tables:
             continue
         for long in (False, True):

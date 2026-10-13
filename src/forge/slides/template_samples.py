@@ -19,6 +19,12 @@ from forge.slides.edit_text import set_frame_text
 EMU = 914400
 FOOTER_KINDS = {"DATE", "FOOTER", "SLIDE_NUMBER"}
 THANKS = re.compile(r"thank|questions|contact|discussion", re.I)
+# Notes the template author left on the sample slide for the person who copies it ("Delete before using ...", seen on a real company template):
+# never content, never offered as a slot, always removed from the copy.
+INSTRUCTION = re.compile(
+    r"^\W*(delete\s+(this\s+)?before\s+(using|you\s+use)|delete\s+this|remove\s+before\s+(using|use)|instructions?\s*:|note\s+to\s+(author|designer)s?)",
+    re.I,
+)
 NUMBERISH = re.compile(r"^[\d.,+\-–%$€£kKmMbB x/]{1,12}$")  # noqa: RUF001  (the en dash is meant)
 STEP_NUMBER = re.compile(r"^(0?\d|[ivx]+)[.)]?$", re.I)
 QUOTE_MARKS = ("“", '"', "«")
@@ -107,10 +113,37 @@ def _role(shape: Any, text: str, size: float | None, top_rank: int) -> str:
     return "text"
 
 
+def is_instruction(shape: Any) -> bool:
+    """A shape (or a group holding one) whose text is an instruction to the template's user."""
+    if (
+        getattr(shape, "has_text_frame", False)
+        and shape.has_text_frame
+        and INSTRUCTION.match(shape.text_frame.text.strip())
+    ):
+        return True
+    if shape.shape_type == 6:
+        return any(is_instruction(child) for child in shape.shapes)
+    return False
+
+
+def remove_instructions(slide: Any) -> int:
+    """Removes the instruction notes from a copy of a sample slide; returns how many."""
+    doomed = [s for s in slide.shapes if is_instruction(s)]
+    for shape in doomed:
+        _remove(shape)
+    return len(doomed)
+
+
 def _slots_of(slide: Any) -> tuple[list[Slot], int, int, int]:
     pictures = charts = tables = 0
     found: list[tuple[Any, str]] = []
+    notes = [
+        e for s in slide.shapes if is_instruction(s) for e in s._element.iter()
+    ]  # the note and everything inside it
+    hidden = {id(e) for e in notes}  # `notes` keeps the elements alive, so no id is reused
     for shape in walk(slide.shapes):
+        if id(shape._element) in hidden:
+            continue
         if shape.shape_type == 13 or _placeholder_kind(shape) == "PICTURE":
             pictures += 1
         if getattr(shape, "has_chart", False) and shape.has_chart:
@@ -414,6 +447,7 @@ def fill_sample(slide: Any, sample: Sample, fills: dict[str, Any]) -> list[str]:
     Anything of the sample's own text that is not replaced is removed, so no placeholder wording is left behind."""
     problems: list[str] = []
     used: set[int] = set()
+    remove_instructions(slide)
     for key, value in {
         KEY_ALIASES.get(k, k) if not k.startswith("slot:") else k: v for k, v in fills.items()
     }.items():

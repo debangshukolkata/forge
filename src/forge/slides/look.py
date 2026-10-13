@@ -26,7 +26,7 @@ from typing import Any
 from forge.slides.contact_sheet import make_contact_sheets
 from forge.slides.installed_fonts import missing_fonts
 from forge.slides.open_deck import open_deck
-from forge.slides.preview import PreviewUnavailable, available, export_slides
+from forge.slides.preview import PreviewUnavailable, available, export_slides, status
 
 MAX_LAYOUTS = 40
 MAX_SAMPLES = 40
@@ -242,14 +242,29 @@ def _palettes_picture(masters: list[MasterInfo], target: Path) -> None:
     image.save(target)
 
 
-def _sheets(deck: Path, folder: Path, prefix: str, look: Look) -> None:
+def _brightness(picture: Path) -> float:
+    """Mean luminance of a rendered slide, 0 (black) to 255 (white)."""
+    from PIL import Image, ImageStat
+
+    with Image.open(picture) as image:
+        return float(ImageStat.Stat(image.convert("L").resize((64, 36))).mean[0])
+
+
+def _looks(value: float) -> str:
+    return "dark" if value < 90 else "light" if value > 170 else "mid"
+
+
+def _sheets(deck: Path, folder: Path, prefix: str, look: Look) -> list[float]:
+    """Contact sheets of the deck's pictures; returns each slide's brightness (so the summary can say which layouts are dark)."""
     pictures = export_slides(deck, folder / f"_{prefix}")
     pictures.sort(key=lambda p: int(re.search(r"(\d+)", p.stem).group(1)))  # type: ignore[union-attr]
+    brightness = [_brightness(p) for p in pictures]
     for sheet in make_contact_sheets(
         pictures, folder, columns=SHEET_COLUMNS, per_sheet=SHEET_SIZE, prefix=prefix
     ):
         look.files.append(sheet.name)
     shutil.rmtree(folder / f"_{prefix}", ignore_errors=True)
+    return brightness
 
 
 def run_look(template: Path, folder: Path) -> Look:
@@ -278,13 +293,23 @@ def run_look(template: Path, folder: Path) -> Look:
         look.notes.append("Pillow is missing: no palettes picture")
     if available() and order:
         try:
-            _sheets(scratch / "layouts.pptx", folder, "layouts", look)
+            brightness = _sheets(scratch / "layouts.pptx", folder, "layouts", look)
+            counts = Counter(_looks(v) for v in brightness)
+            look.summary += (
+                "\nlayout backgrounds as rendered: "
+                + ", ".join(f"{n} {k}" for k, n in counts.most_common())
+                + "; by number: "
+                + " ".join(f"{i}={_looks(v)}" for i, v in enumerate(brightness, start=1))
+            )
+            (folder / "summary.txt").write_text(look.summary + "\n", encoding="utf-8")
             if sample_count:
                 _sheets(scratch / "samples.pptx", folder, "samples", look)
         except (PreviewUnavailable, OSError) as error:
             look.notes.append(f"PowerPoint pictures were not made: {str(error)[:120]}")
     elif not available():
-        look.notes.append("PowerPoint is not available here: no layout or sample pictures")
+        look.notes.append(
+            "PowerPoint cannot be driven from here (" + status()[1] + "): no layout or sample pictures"
+        )
     shutil.rmtree(scratch, ignore_errors=True)
     archive = folder / "template-look.zip"
     with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:

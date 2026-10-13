@@ -30,6 +30,7 @@ sys.path.insert(0, str(REPO / "src"))
 
 from forge.config import load_secrets  # noqa: E402
 from forge.net import connection_hint, root_cause, use_system_certificates  # noqa: E402
+from forge.slides.preview import status as powerpoint_status  # noqa: E402
 from forge.tools import image_sources  # noqa: E402
 from forge.tools.findimage import download_candidate  # noqa: E402
 from forge.tools.web_guard import WebPolicy  # noqa: E402
@@ -319,8 +320,10 @@ def environment_lines(secrets: object) -> list[str]:
         if use_system_certificates()
         else "Windows certificate store: NOT used (truststore missing or FORGE_SYSTEM_CERTS=0)"
     )
+    powerpoint_ok, powerpoint_why = powerpoint_status()
     return [
         f"Python {platform.python_version()} on {platform.platform()}",
+        f"PowerPoint: {'can be driven' if powerpoint_ok else 'CANNOT be driven'} ({powerpoint_why})",
         f"{store}; proxy variables: {', '.join(proxies) if proxies else 'none set'}",
     ]
 

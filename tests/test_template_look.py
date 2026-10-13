@@ -43,7 +43,7 @@ def test_the_summary_palettes_and_zip_are_written_without_powerpoint(
     assert "accent1=0B6E4F" in summary and "accent1=C0392B" in summary and "Cambria" in summary
     assert "layout pictures (layouts-N.png)" in summary and "sample slide(s)" in summary
     assert (tmp_path / "out" / "palettes.png").is_file() and "palettes.png" in result.files
-    assert any("PowerPoint is not available" in n for n in result.notes)
+    assert any("PowerPoint cannot be driven" in n for n in result.notes)
     with zipfile.ZipFile(tmp_path / "out" / "template-look.zip") as bundle:
         assert set(bundle.namelist()) == {"summary.txt", "palettes.png"}
     assert not (tmp_path / "out" / "_work").exists()
@@ -75,3 +75,17 @@ def test_with_powerpoint_the_contact_sheets_are_made(tmp_path: Path) -> None:
     names = set(result.files)
     assert "layouts-1.png" in names and "samples-1.png" in names and "template-look.zip" in names
     assert (tmp_path / "out" / "layouts-1.png").stat().st_size > 10_000
+
+
+def test_dark_and_light_layouts_are_told_apart() -> None:
+    from forge.slides.look import _looks
+
+    assert [_looks(v) for v in (5, 80, 120, 200, 250)] == ["dark", "dark", "mid", "light", "light"]
+
+
+def test_powerpoint_status_says_why(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The office laptop has PowerPoint but the old check (`reg query`) said it had not: the new one asks the registry itself."""
+    monkeypatch.setattr(preview.sys, "platform", "linux")
+    preview.status.cache_clear()
+    assert preview.status() == (False, "this is not Windows")
+    preview.status.cache_clear()

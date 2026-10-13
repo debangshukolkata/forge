@@ -262,3 +262,25 @@ CARDS_OK = {
     "title": "Three reasons customers choose us",
     "items": [{"heading": "Speed", "text": "Fast"}, {"heading": "Care", "text": "Named"}],
 }
+
+
+def test_delete_before_using_notes_are_never_content_and_never_stay() -> None:
+    """Seen on the real company template: sticky notes on the samples say 'Delete before using ...' (D-332)."""
+    from pptx.util import Inches
+
+    from forge.slides.template_samples import INSTRUCTION, is_instruction, remove_instructions
+
+    prs = Presentation(io.BytesIO(make_corporate_template()))
+    slide = prs.slides[1]
+    note = slide.shapes.add_textbox(Inches(8), Inches(0.2), Inches(2), Inches(1))
+    note.text_frame.text = "Delete before using\nReplace the box with the customer logo."
+    group = slide.shapes.add_group_shape()
+    inner = group.shapes.add_textbox(Inches(1), Inches(1), Inches(2), Inches(1))
+    inner.text_frame.text = "Delete before using: right-click the triangle"
+    samples = analyze_samples(prs)
+    assert all(not INSTRUCTION.match(slot.text) for sample in samples for slot in sample.slots)
+    assert is_instruction(note) and is_instruction(group) and not is_instruction(slide.shapes.title)
+    assert remove_instructions(slide) == 2
+    assert all("Delete before using" not in text for text in _texts(slide))
+    for real in ("Delete the old rows", "Nothing to delete before using the product?"[:0] + "Deleted items"):
+        assert not INSTRUCTION.match(real)  # ordinary sentences that start with the same word are content
