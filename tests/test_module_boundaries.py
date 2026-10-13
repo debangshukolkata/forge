@@ -19,7 +19,7 @@ TIERS: list[set[str]] = [
     {"config", "protocol", "workspace"},
     {"llm", "memory"},
     {"context", "toolkit"},
-    {"db", "deps", "parity", "slides", "vision"},
+    {"db", "deps", "parity", "sheets", "slides", "vision"},
     {"doctor"},
     {"modeb", "environment"},
     {"tools"},

@@ -27,6 +27,7 @@ from forge.tools.todo import TodoWrite
 from forge.tools.vision import vision_tools
 from forge.tools.visual_diff import CompareDesigns, VisualBaseline, VisualCheck
 from forge.tools.web import WebFetch, WebSearch
+from forge.tools.workbook import workbook_tools
 
 
 def default_tools() -> list[Tool]:
@@ -70,6 +71,7 @@ def default_tools() -> list[Tool]:
         *presentation_tools(),
         *raw_tools(),
         *source_tools(),
+        *workbook_tools(),
         *imagegen_tools(),
         *findimage_tools(),
         *font_tools(),
