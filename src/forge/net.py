@@ -30,7 +30,7 @@ def use_system_certificates() -> bool:
     return True
 
 
-def connection_hint(detail: str) -> str:
+def connection_hint(detail: str, target: str = "AZURE_OPENAI_ENDPOINT") -> str:
     """A one-line next step for the usual causes of 'could not reach the endpoint' on a company laptop."""
     lowered = detail.lower()
     if "certificate" in lowered or "ssl" in lowered:
@@ -39,12 +39,12 @@ def connection_hint(detail: str) -> str:
             "then uses the Windows certificate store) and make sure the 'truststore' package is installed"
         )
     if "getaddrinfo" in lowered or "name or service not known" in lowered or "nodename" in lowered:
-        return "the endpoint's host name can't be resolved: check AZURE_OPENAI_ENDPOINT, VPN or DNS"
+        return f"the host name can't be resolved: check {target}, VPN or DNS"
     if "407" in lowered or "proxy" in lowered:
         return "the proxy refused the request: check HTTPS_PROXY (and proxy credentials)"
     if "timed out" in lowered or "timeout" in lowered:
         return "no answer in time: a proxy is probably required — set HTTPS_PROXY for your user"
-    return "check AZURE_OPENAI_ENDPOINT, the network/VPN, and whether a proxy is required (HTTPS_PROXY)"
+    return f"check {target}, the network/VPN, and whether a proxy is required (HTTPS_PROXY)"
 
 
 def root_cause(error: BaseException) -> str:

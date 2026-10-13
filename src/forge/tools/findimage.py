@@ -25,6 +25,7 @@ from forge.tools.image_sources import PROVIDERS, Candidate, SourceError
 from forge.tools.web_guard import WebPolicy, check_resolving
 
 NOTICES = "NOTICES.md"
+SITE = "the site's address"  # what a connection hint tells the user to check
 MAX_BYTES = 25 * 1024 * 1024
 SEARCH_TIMEOUT_S = 20.0
 EXTENSIONS = {
@@ -76,7 +77,10 @@ async def _search_one(
         )
     except httpx.HTTPError as error:
         detail = root_cause(error)
-        return name, f"{name} could not be reached ({detail[:120]}): {connection_hint(detail)}"
+        return (
+            name,
+            f"{name} could not be reached ({detail[:120]}): {connection_hint(detail, SITE)}",
+        )
 
 
 BUNDLED_LICENCES = {"lucide": ("ISC", "Lucide Contributors"), "material": ("Apache-2.0", "Google")}
@@ -235,7 +239,7 @@ class FetchImage(Tool):
             detail = root_cause(error)
             return ToolResult(
                 ok=False,
-                content=f"The file could not be downloaded ({detail[:120]}): {connection_hint(detail)}",
+                content=f"The file could not be downloaded ({detail[:120]}): {connection_hint(detail, SITE)}",
             )
         extension = EXTENSIONS.get(content_type)
         if extension is None:
@@ -279,7 +283,9 @@ async def _download_url(client: httpx.AsyncClient, candidate: Candidate) -> str:
     return candidate.download_url
 
 
-async def _download(client: httpx.AsyncClient, url: str, policy: WebPolicy) -> tuple[bytes, str]:
+async def _download(
+    client: httpx.AsyncClient, url: str, policy: WebPolicy, limit: int = MAX_BYTES
+) -> tuple[bytes, str]:
     """The bytes and content type; every redirect hop is checked against the same address policy and the size is capped."""
     current = url
     for _ in range(5):
@@ -298,8 +304,8 @@ async def _download(client: httpx.AsyncClient, url: str, policy: WebPolicy) -> t
             data = bytearray()
             async for chunk in response.aiter_bytes():
                 data += chunk
-                if len(data) > MAX_BYTES:
-                    raise SourceError(f"the file is larger than {MAX_BYTES // (1024 * 1024)} MB")
+                if len(data) > limit:
+                    raise SourceError(f"the file is larger than {limit // (1024 * 1024)} MB")
             return bytes(data), content_type
     raise SourceError("too many redirects")
 

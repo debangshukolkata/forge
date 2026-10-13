@@ -627,6 +627,15 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
             for name in (deck.brand.title_font, deck.brand.body_font)
             if name and (w := lint.font_warning(name))
         ]
+    from forge.slides.installed_fonts import (
+        missing_fonts,
+    )  # imported here: reads the registry, only on Windows
+
+    for name in missing_fonts([builder.theme.title_font, builder.theme.body_font]):
+        notes.append(
+            f"the font '{name}' is not installed on this computer, so the PowerPoint preview and the fit check draw a substitute. "
+            "Get it with fetch_font (formats ttf) and ask the user to run its install-fonts.ps1, or use Calibri or Arial"
+        )
     size = len(output.getvalue())
     if size > MAIL_LIMIT_BYTES:
         notes.append(

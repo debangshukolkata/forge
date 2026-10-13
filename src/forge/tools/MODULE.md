@@ -12,3 +12,4 @@ The tool implementations the agent can call (files, search, shell wrappers, KB, 
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
 - **Pictures (D-326..D-328):** `imagegen.py` (`generate_image`, Gemini/Imagen on Vertex AI), `findimage.py` (`find_image`, `fetch_image`), `image_sources.py` (Iconify, Openverse, Wikimedia, NASA, Pexels, Unsplash, Pixabay with licence filter), `picture_library.py` (pictures kept for offline reuse); `scripts/dev/reach_smoke.py` checks what the machine can reach.
+- **Fonts (D-330):** `fonts.py` (`find_font`, `fetch_font`), `font_sources.py` (Fontsource catalogue, licence filter, @font-face CSS); `slides/installed_fonts.py` tells which fonts this Windows computer has.

@@ -57,7 +57,8 @@ def font_warning(name: str) -> str | None:
         return None
     return (
         f"the font '{name}' is not on every computer, so it may be replaced and the text may no longer fit; "
-        "use Arial, Calibri, Cambria, Georgia, Times New Roman, Courier New, Bookman Old Style or Century Schoolbook"
+        "use Arial, Calibri, Cambria, Georgia, Times New Roman, Courier New, Bookman Old Style or Century Schoolbook, or keep this font and "
+        "give the user its files (fetch_font with formats ttf makes install-fonts.ps1) or a PDF"
     )
 
 

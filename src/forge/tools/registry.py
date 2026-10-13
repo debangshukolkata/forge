@@ -11,6 +11,7 @@ from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
 from forge.tools.findimage import findimage_tools
+from forge.tools.fonts import font_tools
 from forge.tools.imagegen import imagegen_tools
 from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
@@ -65,6 +66,7 @@ def default_tools() -> list[Tool]:
         *raw_tools(),
         *imagegen_tools(),
         *findimage_tools(),
+        *font_tools(),
     ]
 
 

@@ -71,6 +71,10 @@ Fraunces, Playfair Display, Lora, Nunito, JetBrains Mono, Noto Sans Bengali, Not
 ship in this skill. `find_asset` with type `font-pairing` (for example "warm editorial charity") then `add_asset` copies the
 font files into `public/fonts/`, the CSS into `src/fonts/` and the licence text; nothing is fetched from the internet. Prefer
 a bundled pairing over an unbundled font from a CDN.
+**Any other open font, on request:** `find_font` searches about 2,100 families (name, look, script such as Hindi or Bengali); `fetch_font` downloads the
+weights asked for into `fonts/` with a ready `@font-face` CSS file (`font-display: swap`) and records the licence in NOTICES.md; fetched fonts are
+kept in DebCraft's library, so the next project needs no network. If the user names a font that is not open (a company font), ask for the file or
+an address and use `fetch_font` with `url` (a .ttf, .otf, .woff2 or a zip); say its licence was not checked. Never link a font from a CDN.
 
 ## 0c. Write the project's DESIGN.md first
 Before building any screen, write `DESIGN.md` in the project root from `recipes/design-md-template.md`: a one-line design

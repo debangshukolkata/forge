@@ -113,6 +113,10 @@ colours are hard to read or a font is not on every computer. If the project has 
 - **Takeaway titles:** a sentence that says the point and at most 12 words. A bare topic word is flagged.
 - **Fonts that exist everywhere:** Calibri and Georgia are used by the themes. In freeform text prefer Arial, Calibri, Cambria,
   Georgia, Times New Roman, Courier New. Other fonts may be replaced on the reader's computer and then text no longer fits.
+  When the user asks for another font (or a brand font), use it: `find_font` and `fetch_font` (formats `ttf`) put the files and an
+  `install-fonts.ps1` (per user, no admin) in the project; tell the user to run it, and that anyone opening the deck needs the font too, so
+  also deliver a PDF (`convert_presentation`). The build says when the font is not installed on this computer: then the preview and the fit
+  check use a substitute, so install it first (the user runs the script) and preview again.
 
 ## 4. Build, look, fix
 

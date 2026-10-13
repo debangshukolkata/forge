@@ -100,6 +100,18 @@ PROBES = [
     ),
     Probe(
         "fonts",
+        "Fontsource catalogue (find_font)",
+        "https://api.fontsource.org/v1/fonts/inter",
+        expect="json",
+    ),
+    Probe(
+        "fonts",
+        "Fontsource font file (fetch_font)",
+        "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff2",
+        expect="any",
+    ),
+    Probe(
+        "fonts",
         "Fontsource CDN",
         "https://cdn.jsdelivr.net/npm/@fontsource/inter/package.json",
         expect="json",
