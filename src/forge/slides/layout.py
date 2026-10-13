@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from forge.slides.diagrams import DiagramError, expand_diagram
+
 CONTAINERS = ("row", "column", "grid")
 DEFAULT_GAP = 0.3
 EPSILON = 1e-6
@@ -151,16 +153,75 @@ def _expand_container(node: dict[str, Any], depth: int, where: str) -> list[dict
 
 
 def expand_elements(elements: list[Any], slide_number: int) -> list[Any]:
-    """The elements with every container replaced by the placed children it describes (drawing order is kept)."""
+    """The elements with every container and diagram replaced by the placed elements it describes (drawing order is kept),
+    and the `align` and `distribute` instructions applied to the elements they name."""
     out: list[Any] = []
+    arrangements: list[tuple[int, dict[str, Any]]] = []
     for number, element in enumerate(elements, start=1):
+        where = f"slide {slide_number}, element {number}"
         if isinstance(element, dict) and element.get("type") in CONTAINERS:
-            out.extend(
-                _expand_container(element, 1, f"slide {slide_number}, element {number} ({element['type']})")
-            )
+            out.extend(_expand_container(element, 1, f"{where} ({element['type']})"))
+        elif isinstance(element, dict) and element.get("type") == "diagram":
+            try:
+                out.extend(expand_diagram(element, f"{where} (diagram)", number))
+            except DiagramError as error:
+                raise LayoutError(str(error)) from error
+        elif isinstance(element, dict) and element.get("type") in ("align", "distribute"):
+            arrangements.append((number, element))
         else:
             out.append(element)
+    for number, instruction in arrangements:
+        _arrange(out, instruction, f"slide {slide_number}, element {number} ({instruction['type']})")
     return out
+
+
+def _arrange(elements: list[Any], instruction: dict[str, Any], where: str) -> None:
+    """Moves the elements named in `ids` so they line up (`align` to) or are evenly spaced (`distribute` axis)."""
+    ids = instruction.get("ids")
+    if not isinstance(ids, list) or len(ids) < 2:
+        raise LayoutError(f"{where}: needs `ids`, a list of at least two element ids")
+    by_id = {e.get("id"): e for e in elements if isinstance(e, dict) and e.get("id")}
+    members = []
+    for identifier in ids:
+        found = by_id.get(identifier)
+        if found is None or not all(isinstance(found.get(k), int | float) for k in ("x", "y", "w", "h")):
+            raise LayoutError(
+                f"{where}: no placed element with id {identifier!r} on this slide (give it an `id` and a position)"
+            )
+        members.append(found)
+    if instruction["type"] == "align":
+        mode = instruction.get("to")
+        if mode not in ("left", "center", "right", "top", "middle", "bottom"):
+            raise LayoutError(f"{where}: `to` must be left, center, right, top, middle or bottom")
+        left, top = min(m["x"] for m in members), min(m["y"] for m in members)
+        right, bottom = max(m["x"] + m["w"] for m in members), max(m["y"] + m["h"] for m in members)
+        for m in members:
+            if mode == "left":
+                m["x"] = left
+            elif mode == "right":
+                m["x"] = round(right - m["w"], 3)
+            elif mode == "center":
+                m["x"] = round((left + right) / 2 - m["w"] / 2, 3)
+            elif mode == "top":
+                m["y"] = top
+            elif mode == "bottom":
+                m["y"] = round(bottom - m["h"], 3)
+            else:
+                m["y"] = round((top + bottom) / 2 - m["h"] / 2, 3)
+        return
+    if len(members) < 3:
+        raise LayoutError(f"{where}: distribute needs at least three elements")
+    axis = instruction.get("axis")
+    if axis not in ("horizontal", "vertical"):
+        raise LayoutError(f"{where}: `axis` must be horizontal or vertical")
+    start_key, size_key = ("x", "w") if axis == "horizontal" else ("y", "h")
+    members.sort(key=lambda m: m[start_key])
+    span = members[-1][start_key] + members[-1][size_key] - members[0][start_key]
+    gap = (span - sum(m[size_key] for m in members)) / (len(members) - 1)
+    cursor = members[0][start_key]
+    for m in members:
+        m[start_key] = round(cursor, 3)
+        cursor += m[size_key] + gap
 
 
 def expand_layouts(deck: dict[str, Any]) -> dict[str, Any]:

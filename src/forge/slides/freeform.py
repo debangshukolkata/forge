@@ -12,11 +12,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from forge.slides import effects, fit
+from forge.slides.errors import BuildError
 from forge.slides.icons import IconError, load_icon
 from forge.slides.richtext import parse_runs, plain_text
 from forge.slides.spec import (
     ChartElement,
     FreeformSlide,
+    GroupElement,
     IconElement,
     ImageElement,
     LineElement,
@@ -74,6 +76,18 @@ class Placed:
         return max(width, 0) * max(height, 0)
 
 
+def _connection_site(spec: Any, side: str) -> int | None:
+    """The connection-site number of a shape's side for gluing a connector (rectangles: top 0, left 1, bottom 2, right 3;
+    ovals: top 0, left 2, bottom 4, right 6), or None for shapes without a known layout (the line is still drawn there)."""
+    kind = getattr(spec, "type", "")
+    shape = getattr(spec, "shape", "rect")
+    if kind in ("text", "image") or (kind == "shape" and shape in ("rect", "rounded")):
+        return {"top": 0, "left": 1, "bottom": 2, "right": 3}[side]
+    if kind == "shape" and shape == "oval":
+        return {"top": 0, "left": 2, "bottom": 4, "right": 6}[side]
+    return None
+
+
 def resolve(theme: Theme, token: str) -> str:
     """The hex colour (no '#') for a theme colour name or a '#RRGGBB' value."""
     if token.startswith("#"):
@@ -103,6 +117,9 @@ class _Freeform:
         self.placed: list[Placed] = []
         self.background = resolve(self.theme, spec.background) if spec.background else self.theme.background
         self.backgrounds = [self.background]  # every colour text may sit on directly (a gradient has two)
+        self.by_id: dict[
+            str, tuple[Any, Any]
+        ] = {}  # element id -> (the drawn shape, its spec), for connectors and groups
 
     def layer_background(self, slide: Any) -> None:
         """A gradient and/or a full-bleed picture behind everything, with an optional scrim over the picture."""
@@ -325,10 +342,44 @@ class _Freeform:
         )
 
     def line(self, slide: Any, index: int, el: LineElement) -> None:
+        """A straight or elbow line; with `start` and `end` anchors it is glued to those shapes' sides and follows them."""
         b = self.b
-        connector = slide.shapes.add_connector(
-            b.m["connector"].STRAIGHT, *(b.m["inches"](v) for v in (el.x1, el.y1, el.x2, el.y2))
-        )
+        label = self.name(index, el)
+        begin, end = (el.x1, el.y1), (el.x2, el.y2)
+        glued: list[tuple[str, Any, int] | None] = [None, None]
+        for slot, anchor in enumerate((el.start, el.end)):
+            if anchor is None:
+                continue
+            found = self.by_id.get(anchor.id)
+            if found is None:
+                raise BuildError(
+                    f"{label}: no element with id '{anchor.id}' was drawn before this line (give it an `id`, and draw the line after it)"
+                )
+            shape, spec = found
+            x, y, w, h = (
+                shape.left / 914400,
+                shape.top / 914400,
+                shape.width / 914400,
+                shape.height / 914400,
+            )
+            point = {
+                "top": (x + w / 2, y),
+                "right": (x + w, y + h / 2),
+                "bottom": (x + w / 2, y + h),
+                "left": (x, y + h / 2),
+            }[anchor.side]
+            if slot == 0:
+                begin = point
+            else:
+                end = point
+            site = _connection_site(spec, anchor.side)
+            if site is not None:
+                glued[slot] = (anchor.id, shape, site)
+        kind = b.m["connector"].ELBOW if el.kind == "elbow" else b.m["connector"].STRAIGHT
+        connector = slide.shapes.add_connector(kind, *(b.m["inches"](v) for v in (*begin, *end)))
+        for slot, link in enumerate(glued):
+            if link is not None:
+                (connector._connect_begin_to if slot == 0 else connector._connect_end_to)(link[1], link[2])
         connector.line.color.rgb = b.colour(resolve(self.theme, el.color))
         connector.line.width = b.m["pt"](el.width)
         if el.dash:
@@ -339,14 +390,27 @@ class _Freeform:
         self.placed.append(
             Placed(
                 index,
-                self.name(index, el),
-                min(el.x1, el.x2),
-                min(el.y1, el.y2),
-                abs(el.x2 - el.x1),
-                abs(el.y2 - el.y1),
+                label,
+                min(begin[0], end[0]),
+                min(begin[1], end[1]),
+                abs(end[0] - begin[0]),
+                abs(end[1] - begin[1]),
                 is_line=True,
             )
         )
+
+    def group(self, slide: Any, index: int, el: GroupElement) -> None:
+        """Groups shapes drawn earlier (by id) so they move together in PowerPoint."""
+        members = []
+        for identifier in el.ids:
+            found = self.by_id.get(identifier)
+            if found is None:
+                raise BuildError(
+                    f"{self.name(index, el)}: no element with id '{identifier}' was drawn before this group"
+                )
+            members.append(found[0])
+        group = slide.shapes.add_group_shape(shapes=members)
+        group.name = el.name or f"Group {index}"
 
     def image(self, slide: Any, index: int, el: ImageElement) -> None:
         from PIL import Image
@@ -529,6 +593,7 @@ def build_freeform(builder: Any, spec: FreeformSlide) -> None:
     else:  # the title stays for navigation and screen readers, parked above the slide
         builder.title(slide, spec.title, 24, title_colour, x=0.8, y=-1.5, w=11.7, h=1.0)
     for index, element in enumerate(spec.elements, start=1):
+        count = len(slide.shapes)
         if isinstance(element, TextElement):
             form.text(slide, index, element)
         elif isinstance(element, ShapeElement):
@@ -539,10 +604,20 @@ def build_freeform(builder: Any, spec: FreeformSlide) -> None:
             form.image(slide, index, element)
         elif isinstance(element, IconElement):
             form.icon(slide, index, element)
+        elif isinstance(element, GroupElement):
+            form.group(slide, index, element)
         elif isinstance(element, ChartElement):
             form.chart(slide, index, element)
         else:
             form.table(slide, index, element)
+        identifier = getattr(element, "id", None)
+        if identifier:
+            if identifier in form.by_id:
+                raise BuildError(
+                    f"slide {builder.report.number}: the element id '{identifier}' is used twice"
+                )
+            if len(slide.shapes) > count:
+                form.by_id[identifier] = (slide.shapes[-1], element)
     if spec.footer:
         builder.add_footer(slide)
     form.check()

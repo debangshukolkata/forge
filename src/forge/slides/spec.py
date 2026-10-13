@@ -232,7 +232,13 @@ VAlign = Literal["top", "middle", "bottom"]
 FontKind = Literal["title", "body", "mono"]
 
 
+Identifier = Annotated[str, StringConstraints(pattern=r"^[A-Za-z][A-Za-z0-9_-]*$")]
+
+
 class _Placed(_Model):
+    id: Identifier | None = (
+        None  # a name other elements can refer to: connectors, groups, align and distribute
+    )
     x: float
     y: float
     w: float = Field(gt=0)
@@ -290,16 +296,41 @@ class ShapeElement(_Placed):
     rotate: float = 0
 
 
+class Anchor(_Model):
+    """A side of a shape a connector is glued to, so it follows the shape when the shape is moved in PowerPoint."""
+
+    id: Identifier
+    side: Literal["top", "right", "bottom", "left"] = "right"
+
+
 class LineElement(_Model):
     type: Literal["line"]
-    x1: float
-    y1: float
-    x2: float
-    y2: float
+    x1: float = 0.0
+    y1: float = 0.0
+    x2: float = 0.0
+    y2: float = 0.0
+    start: Anchor | None = None  # glue the start to a shape drawn earlier (instead of x1, y1)
+    end: Anchor | None = None  # glue the end to a shape drawn earlier (instead of x2, y2)
+    kind: Literal["straight", "elbow"] = "straight"
     color: Color = "muted"
     width: float = 2.0
-    arrow: bool = False  # an arrow head at (x2, y2)
+    arrow: bool = False  # an arrow head at the end
     dash: bool = False
+
+    @model_validator(mode="after")
+    def _has_ends(self) -> LineElement:
+        explicit = {"x1", "y1", "x2", "y2"} <= self.model_fields_set
+        if not explicit and not (self.start and self.end):
+            raise ValueError("a line needs x1, y1, x2, y2, or `start` and `end` anchors")
+        return self
+
+
+class GroupElement(_Model):
+    """Groups elements drawn earlier so they move and resize together in PowerPoint."""
+
+    type: Literal["group"]
+    ids: list[Identifier] = Field(min_length=2)
+    name: str = ""
 
 
 class ImageElement(_Placed):
@@ -336,7 +367,14 @@ class TableElement(_Placed, TableBase):
 
 
 Element = Annotated[
-    TextElement | ShapeElement | LineElement | ImageElement | IconElement | ChartElement | TableElement,
+    TextElement
+    | ShapeElement
+    | LineElement
+    | GroupElement
+    | ImageElement
+    | IconElement
+    | ChartElement
+    | TableElement,
     Field(discriminator="type"),
 ]
 
@@ -365,7 +403,7 @@ class FreeformSlide(_Slide):
         default=0.0, ge=0.0, le=0.95
     )  # a layer of the background colour over the picture, for legible text
     footer: bool = False  # the small deck title and slide number at the bottom
-    elements: list[Element] = Field(min_length=1, max_length=40)  # in drawing order: first is at the back
+    elements: list[Element] = Field(min_length=1, max_length=80)  # in drawing order: first is at the back
 
 
 Slide = Annotated[

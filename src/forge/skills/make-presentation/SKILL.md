@@ -155,6 +155,17 @@ is `kind: "column"` with some series set to `"kind": "line"` and, when the scale
 categories and every other numeric column a series; do not retype numbers you have in a file. Keep pies to 6 slices or fewer, use
 one colour for one idea, label the unit on an axis, and let the slide title state what the chart shows.
 
+**Diagrams from a recipe.** Instead of placing boxes yourself: `{"type": "diagram", "recipe": "process", "x": 0.8, "y": 2.2, "w": 11.7,
+"h": 3.2, "items": ["Plan", "Build", "Ship"]}`. Recipes: `process` (2 to 6 steps with arrows), `cycle` (3 to 8, optional `center` label),
+`hierarchy` (one root with nested `children`), `matrix` (exactly 4 items: top left, top right, bottom left, bottom right; `x_label`,
+`y_label`, `highlight` 1 to 4), `timeline` (items with `date`, `title`, `text`), `funnel` (2 to 6 stages), `roadmap` (phases with
+`items` lists). Items are strings or `{"title": ..., "text": ...}`; `color` sets the emphasis colour; `id` sets the prefix of the
+generated ids. The result is ordinary editable elements. **Connectors that stay attached:** give shapes an `id`, then
+`{"type": "line", "start": {"id": "a", "side": "right"}, "end": {"id": "b", "side": "left"}, "arrow": true}` (add `"kind": "elbow"` for a
+stepped line, best between left and right sides); draw the line after both shapes. **Group** shapes so they move together:
+`{"type": "group", "ids": ["a", "b"]}`. **Align and distribute** by id: `{"type": "align", "ids": [...], "to": "top"}`
+(left, center, right, top, middle, bottom) and `{"type": "distribute", "ids": [...], "axis": "horizontal"}` (three or more, equal gaps).
+
 **Tables (the `table` layout and freeform `table` elements take the same options).** Cells are plain values or objects:
 `{"text": "Total", "bold": true, "fill": "surface", "align": "right", "colspan": 2, "rowspan": 2, "color": "accent", "size": 18}`; a merged
 cell counts as several columns in its row. Table options: `col_widths` (relative, one per column), `align` (per column; default
