@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 import os
 import platform
 import sys
@@ -144,15 +145,15 @@ def classify(error: BaseException) -> tuple[str, str]:
             "a proxy is probably required: set HTTPS_PROXY for your user, or the site is blocked",
         )
     if "certificate" in lowered or "ssl" in lowered:
-        return "HTTPS certificate not trusted", connection_hint(detail)
+        return "HTTPS certificate not trusted", connection_hint(detail, "the site's address")
     if "getaddrinfo" in lowered or "name or service" in lowered or "nodename" in lowered:
         return (
             "name does not resolve",
             "the company DNS does not know this host (blocked) or there is no network",
         )
     if "407" in lowered or "proxy" in lowered:
-        return "proxy refused", connection_hint(detail)
-    return detail[:100], connection_hint(detail)
+        return "proxy refused", connection_hint(detail, "the site's address")
+    return detail[:100], connection_hint(detail, "the site's address")
 
 
 def judge(response: httpx.Response, expect: str) -> tuple[bool, str, str]:
@@ -309,38 +310,41 @@ def settings_probes(secrets: object) -> list[Probe]:
 
 
 def environment_lines(secrets: object) -> list[str]:
-    get = getattr(secrets, "get")  # noqa: B009
-    proxies = {
-        k: ("set" if os.environ.get(k) else "not set")
-        for k in ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "ALL_PROXY")
-    }
-    keys = {
-        name: ("set" if get(name) else "not set")
-        for name in (*image_sources.KEY_NAMES.values(), "GEMINI_IMAGE_MODEL", "GOOGLE_CLOUD_PROJECT")
-    }
+    proxies = [k for k in ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "ALL_PROXY") if os.environ.get(k)]
+    store = (
+        "Windows certificate store: used"
+        if use_system_certificates()
+        else "Windows certificate store: NOT used (truststore missing or FORGE_SYSTEM_CERTS=0)"
+    )
     return [
         f"Python {platform.python_version()} on {platform.platform()}",
-        f"Windows certificate store used for HTTPS: {'yes' if use_system_certificates() else 'no (truststore missing or FORGE_SYSTEM_CERTS=0)'}",
-        "Proxy variables: " + ", ".join(f"{k} {v}" for k, v in proxies.items()),
-        "Keys and settings in the .env file: " + ", ".join(f"{k} {v}" for k, v in keys.items()),
+        f"{store}; proxy variables: {', '.join(proxies) if proxies else 'none set'}",
     ]
 
 
 def render(results: list[Result], environment: list[str]) -> str:
+    """The full report written to the file: every resource that was tried."""
     lines = ["# Reachability report", "", *[f"- {line}" for line in environment], ""]
-    tried = [r for r in results if not r.skipped]
-    passed = sum(r.ok for r in tried)
-    lines += [
-        f"**{passed} of {len(tried)} resources reached** ({len(results) - len(tried)} optional ones skipped).",
-        "",
-    ]
+    passed = sum(r.ok for r in results)
+    lines += [f"**{passed} of {len(results)} resources reached.**", ""]
     for group in dict.fromkeys(r.group for r in results):
         lines += [f"## {group}", "", "| Resource | Result | Detail | ms |", "|---|---|---|---|"]
         for r in (x for x in results if x.group == group):
             lines.append(
-                f"| {r.name} | {'SKIP' if r.skipped else 'OK' if r.ok else 'FAIL'} | {r.detail}{' -> ' + r.why if r.why and not r.ok else ''} | {r.ms} |"
+                f"| {r.name} | {'OK' if r.ok else 'FAIL'} | {r.detail}{' -> ' + r.why if r.why and not r.ok else ''} | {r.ms} |"
             )
         lines.append("")
+    return "\n".join(lines)
+
+
+def render_short(results: list[Result], environment: list[str]) -> str:
+    """What is printed: the environment in two lines, the count, and one line per failure (nothing for what worked)."""
+    failed = [r for r in results if not r.ok]
+    lines = [*environment, f"{len(results) - len(failed)} of {len(results)} resources reached."]
+    if not failed:
+        lines.append("Nothing failed.")
+    for r in failed:
+        lines.append(f"FAIL [{r.group}] {r.name}: {r.detail[:70]}" + (f" -> {r.why[:80]}" if r.why else ""))
     return "\n".join(lines)
 
 
@@ -351,10 +355,13 @@ async def main(argv: list[str]) -> int:
     parser.add_argument("--timeout", type=float, default=15.0)
     parser.add_argument("--only", choices=["images", "libraries", "fonts", "services"])
     parser.add_argument("--out", default=".")
+    parser.add_argument("--full", action="store_true", help="print every resource, not only the failures")
     args = parser.parse_args(argv)
+    logging.getLogger("dotenv").setLevel(
+        logging.ERROR
+    )  # lines of the .env file that cannot be read are not this script's news
     secrets = load_secrets()
     environment = environment_lines(secrets)
-    print("\n".join(environment), "\n")
     gate = asyncio.Semaphore(8)
     async with httpx.AsyncClient(
         timeout=args.timeout, headers={"User-Agent": image_sources.USER_AGENT}, follow_redirects=True
@@ -365,7 +372,7 @@ async def main(argv: list[str]) -> int:
                 key_name = image_sources.KEY_NAMES.get(name)
                 key = secrets.get(key_name) if key_name else ""
                 if key_name and not key:
-                    continue  # reported below as skipped
+                    continue  # an optional source without its key is left out of the report
                 tasks.append(run_image_source(client, name, key or "", gate))
         probes = [p for p in [*PROBES, *settings_probes(secrets)] if args.only in (None, p.group)]
         tasks += [run_probe(client, probe, gate) for probe in probes]
@@ -373,25 +380,10 @@ async def main(argv: list[str]) -> int:
     results: list[Result] = []
     for item in gathered:
         results += item if isinstance(item, list) else [item]
-    if args.only in (None, "images"):
-        for name, key_name in image_sources.KEY_NAMES.items():
-            if not secrets.get(key_name):
-                results.append(
-                    Result(
-                        "images",
-                        f"{name}: search",
-                        "(skipped)",
-                        False,
-                        f"not tried: {key_name} is not in the .env file",
-                        0,
-                        "optional: get a free key from the site and add it to the .env file",
-                        skipped=True,
-                    )
-                )
     order = {"images": 0, "libraries": 1, "fonts": 2, "services": 3}
     results.sort(key=lambda r: (order.get(r.group, 9), r.name))
     report = render(results, environment)
-    print(report)
+    print(report if args.full else render_short(results, environment))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "reach-report.md").write_text(report, encoding="utf-8")
@@ -399,8 +391,8 @@ async def main(argv: list[str]) -> int:
         json.dumps({"environment": environment, "results": [asdict(r) for r in results]}, indent=1),
         encoding="utf-8",
     )
-    print(f"\nWrote {out / 'reach-report.md'} and {out / 'reach-report.json'}")
-    return 0 if all(r.ok or r.skipped for r in results) else 1
+    print(f"Full report: {out / 'reach-report.md'} (and .json)")
+    return 0 if all(r.ok for r in results) else 1
 
 
 if __name__ == "__main__":
