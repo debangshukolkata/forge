@@ -9,6 +9,7 @@ from forge.toolkit.shell import PythonRun, RunCommand
 from forge.tools.assets import AddAsset, FindAsset
 from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
+from forge.tools.document import document_tools
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
 from forge.tools.findimage import findimage_tools
 from forge.tools.fonts import font_tools
@@ -72,6 +73,7 @@ def default_tools() -> list[Tool]:
         *raw_tools(),
         *source_tools(),
         *workbook_tools(),
+        *document_tools(),
         *imagegen_tools(),
         *findimage_tools(),
         *font_tools(),

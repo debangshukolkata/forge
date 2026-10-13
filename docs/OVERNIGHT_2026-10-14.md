@@ -12,6 +12,7 @@ Nothing was pushed. All work is in local commits on `main` (last pushed: `a69f1f
 | P2.19 | `read_source_document`: Word, Excel, CSV, PDF into a digest for a deck (D-338) |
 | W0 | `docs/DOCUMENTS_CLEAN_ROOM.md` |
 | W2 | Excel: `build_workbook`, `read_workbook`, `edit_workbook`, `check_workbook`, skill `make-spreadsheet`; Excel recalculation checked live on this machine (D-339) |
+| W1 | Word: `build_document`, `read_document`, `edit_document`, `check_document`, skill `make-document`; opens in Word, fields update (D-342) |
 | S6 (part) | npm uses its cache, no audit/fund calls (D-340) |
 | C17 | "Run report" download button in the Files panel (D-341) |
 
@@ -22,6 +23,6 @@ Nothing was pushed. All work is in local commits on `main` (last pushed: `a69f1f
 4. Still owed from before: S7 deployment name, the three-design web task rerun, the `npx shadcn` test, optional Pexels/Unsplash/Pixabay keys.
 
 ## Not done / open
-- Word (W1), PDF (W3), shared pieces (W4), document benchmark (W5); Excel: messy-CSV cleaning and modelling-convention checks.
+- Word extras (preview pictures, footnotes, tracked changes), PDF (W3), shared pieces (W4), document benchmark (W5); Excel: messy-CSV cleaning and modelling-convention checks.
 - S6: audit only changed pages; sandbox start-up measure.
 - Nothing has been verified on your real company template yet: only on the test template.
