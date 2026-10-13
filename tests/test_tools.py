@@ -292,3 +292,52 @@ async def test_start_background_starts_in_the_folder_it_is_given(tmp_path: Path,
         assert not missing.ok and "No such folder" in missing.content
     finally:
         await call(StopBackground(), context, name="a")
+
+
+@pytest.mark.parametrize(
+    "command,port",
+    [
+        ("python -m http.server 8000", 8000),
+        ("python -m http.server --bind 127.0.0.1 8123", None),
+        ("npm run dev -- --port 5174", 5174),
+        ("flask run -p 5001", 5001),
+        ("uvicorn app:app --host 0.0.0.0 --port=8001", 8001),
+        ("node server.js 0.0.0.0:3000", 3000),
+        ("python -m pytest -p no:cacheprovider", None),
+        ("python build.py", None),
+        ("serve --port 80", None),  # privileged ports are not guessed
+    ],
+)
+def test_the_port_a_command_serves_on_is_detected(command: str, port: int | None) -> None:
+    from forge.toolkit.background import detect_port
+
+    assert detect_port(command) == port
+
+
+async def test_a_server_whose_expected_line_never_appears_is_still_ready_when_its_port_answers(
+    tmp_path: Path, original_repo: Path
+) -> None:
+    """The page-redesign speed run lost 245 s: Python buffers a server's output when piped, so the 'Serving HTTP' line the model waited
+    for arrived late or never, and every start took the whole 60 s timeout."""
+    import time
+
+    from forge.toolkit.background import free_port
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace, shell=ShellSession(workspace), background=BackgroundManager())
+    port = free_port(5400)
+    started_at = time.perf_counter()
+    started = await call(
+        StartBackground(),
+        context,
+        name="static",
+        command=f"python -m http.server {port}",
+        ready_pattern="a line this server never prints",
+        timeout_s=60,
+    )
+    elapsed = time.perf_counter() - started_at
+    try:
+        assert started.ok and "not confirmed ready" not in started.content, started.content
+        assert elapsed < 20 and port_open(port)
+    finally:
+        await call(StopBackground(), context, name="static")

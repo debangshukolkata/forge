@@ -21,6 +21,19 @@ FAILURE_SIGNS = re.compile(
 )
 KEPT_LINES = 2000
 PORT_PLACEHOLDER = "{port}"
+PORT_IN_COMMAND = re.compile(
+    r"(?:--port[= ]|-p[= ]|--listen[= ]|http\.server\s+|\bserve\b.*?\s-l\s+|:)(\d{2,5})\b", re.IGNORECASE
+)
+
+
+def detect_port(command: str) -> int | None:
+    """The port a command says it serves on (`--port 8000`, `-p 3000`, `http.server 8000`, `0.0.0.0:5000`), so readiness can be
+    confirmed by connecting even when the output never prints the expected line (S6, D-302)."""
+    found = PORT_IN_COMMAND.search(command)
+    if found is None:
+        return None
+    port = int(found.group(1))
+    return port if 1024 <= port <= 65535 else None
 
 
 @dataclass
@@ -107,7 +120,7 @@ class StartBackground(Tool):
                 content=f"No such folder: {args.cwd!r} (cwd is relative to the repository root; in Mode B that "
                 f"is project/ itself). Leave cwd out to start in {shell.display(shell.cwd)}.",
             )
-        port = free_port() if PORT_PLACEHOLDER in args.command else None
+        port = free_port() if PORT_PLACEHOLDER in args.command else detect_port(args.command)
         command = args.command.replace(PORT_PLACEHOLDER, str(port)) if port else args.command
         script = build_script(command, start_dir, None)
         sandboxed = shell.prepare_sandbox()
@@ -257,8 +270,8 @@ async def _wait_until_ready(entry: BackgroundProcess, pattern: str | None, timeo
     while asyncio.get_running_loop().time() < deadline and entry.running:
         if regex is not None and any(regex.search(line) for line in entry.lines):
             return True
-        if regex is None and entry.port is not None and port_open(entry.port):
-            return True
+        if entry.port is not None and port_open(entry.port):
+            return True  # the port answers: ready, whether or not the expected line was printed (buffered output, other wording)
         if regex is None and entry.port is None:
             return True  # nothing to wait for
         await asyncio.sleep(0.3)

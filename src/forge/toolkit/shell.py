@@ -113,6 +113,9 @@ class ShellSession:
         variables = without_private(env.command_env() if env else dict(os.environ))  # D-202
         variables.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         variables.setdefault("PYTHONUTF8", "1")
+        variables.setdefault(
+            "PYTHONUNBUFFERED", "1"
+        )  # a server's "Serving on ..." line must reach DebCraft at once, not when a buffer fills (S6)
         if self.sandbox_active:
             # Sandboxed processes can't write to the user's %TEMP% or pip cache; give them their own.
             variables["TEMP"] = variables["TMP"] = str(self.scratch_dir)
