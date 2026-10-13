@@ -59,6 +59,7 @@ def test_a_varied_deck_with_visuals_has_no_deck_warnings() -> None:
                 "categories": ["Jan", "Feb"],
                 "series": [{"name": "Users", "values": [1, 2]}],
             },
+            {"layout": "quote", "quote": "Simple is hard, and worth it."},
             _bullets("Two risks need a decision"),
         ]
     )
@@ -75,3 +76,30 @@ def test_the_builder_no_longer_draws_an_accent_bar_and_reports_lint() -> None:
     built = build_deck(_deck([_bullets("Search"), _bullets("x"), _bullets("y")]), lambda n: b"")  # type: ignore[arg-type]
     assert any("topic" in w for w in built.slides[0].warnings)
     assert any("layout 3 or more times" in w for w in built.deck_warnings)
+
+
+def test_three_plain_bullet_slides_in_a_row_are_flagged() -> None:
+    deck = _deck(
+        [
+            _bullets("First point made here"),
+            _bullets("Second point made here"),
+            _bullets("Third point made here"),
+        ]
+    )
+    assert "plain bullet lists" in " | ".join(deck_warnings(deck))  # type: ignore[arg-type]
+
+
+def test_a_deck_with_too_many_slides_for_its_minutes_is_flagged() -> None:
+    slides = [
+        {
+            "layout": "stats",
+            "title": f"Number {i} tells the story",
+            "items": [{"value": str(i), "label": "x"}],
+        }
+        for i in range(12)
+    ]
+    long = _deck(slides)
+    long.minutes = 20  # type: ignore[attr-defined]
+    assert "too many for 20 minutes" in " | ".join(deck_warnings(long))  # type: ignore[arg-type]
+    long.minutes = 45  # type: ignore[attr-defined]
+    assert not [w for w in deck_warnings(long) if "minutes" in w]  # type: ignore[arg-type]

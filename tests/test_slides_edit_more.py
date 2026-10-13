@@ -228,3 +228,17 @@ def test_bulk_notes_delete_shape_and_empty_placeholders(tmp_path: Path) -> None:
     done = _run(deck, [{"op": "remove_empty_placeholders", "slide": len(deck.slides)}])
     assert "removed 1" in done[0] or "removed 2" in done[0]
     _valid(deck)
+
+
+def test_replace_text_reaches_chart_titles_series_names_and_alt_text(tmp_path: Path) -> None:
+    deck = _deck(tmp_path)
+    chart = _shape(deck.slides[2], "has_chart")
+    chart.chart.has_title = True
+    chart.chart.chart_title.text_frame.text = "FY24 users"
+    picture = next(s for s in deck.slides[4].shapes if s.shape_type == 13)
+    picture._element.xpath("(.//p:cNvPr)[1]")[0].set("descr", "FY24 dashboard")
+    done = _run(deck, [{"op": "replace_text", "find": "FY24", "replace": "FY25"}])
+    assert "FY25 users" == _shape(deck.slides[2], "has_chart").chart.chart_title.text_frame.text
+    assert picture._element.xpath("(.//p:cNvPr)[1]/@descr")[0] == "FY25 dashboard"
+    assert "2 occurrence" in done[0]
+    _valid(deck)

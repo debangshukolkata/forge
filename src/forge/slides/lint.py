@@ -39,7 +39,9 @@ SAFE_FONTS = frozenset(
 MAX_TITLE_WORDS = 12
 MIN_TAKEAWAY_WORDS = 4
 SAME_LAYOUT_RUN = 3
-TEXT_ONLY_SHARE = 0.6
+TEXT_ONLY_SHARE = 0.45
+MINUTES_PER_SLIDE = 2.0  # a talk covers about one content slide per two minutes
+BULLET_RUN = 2  # plain bullet slides allowed in a row
 ACCENT_BAR_MAX_HEIGHT = 0.12  # inches
 TITLE_ZONE_BOTTOM = 2.0
 CONTENT_LAYOUTS_WITHOUT_TAKEAWAY = (TitleSlide, ClosingSlide, SectionSlide, QuoteSlide)
@@ -121,6 +123,21 @@ def deck_warnings(deck: Deck) -> list[str]:
             out.append(
                 f"{len(text_only)} of {len(content)} content slides are text only: give most slides a visual "
                 "(chart, numbers, table, picture or a drawn diagram) so the deck is not a wall of bullets"
+            )
+    run = 0
+    for number, slide in enumerate(deck.slides, start=1):
+        run = run + 1 if isinstance(slide, BulletsSlide) else 0
+        if run == BULLET_RUN + 1:
+            out.append(
+                f"slides {number - BULLET_RUN} to {number} are all plain bullet lists: turn one into cards (a freeform slide "
+                "with a row layout), numbers (stats), a diagram, a comparison or a chart"
+            )
+    if deck.minutes:
+        allowed = max(5, round(deck.minutes / MINUTES_PER_SLIDE))
+        if len(content) > allowed:
+            out.append(
+                f"{len(content)} content slides is too many for {deck.minutes} minutes (about {allowed}): cut or merge slides; "
+                "move detail to the speaker notes or an appendix"
             )
     bars = [n for n, s in enumerate(deck.slides, start=1) if isinstance(s, FreeformSlide) and _accent_bars(s)]
     if bars:

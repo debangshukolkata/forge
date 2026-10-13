@@ -160,6 +160,25 @@ def _frames(slide: Any, include_notes: bool) -> Any:
         yield slide.notes_slide.notes_text_frame
 
 
+def _replace_in_objects(slide: Any, find: str, replace: str) -> int:
+    """Text that is not in a text frame: chart titles, axis titles, category and series names, and alt text of shapes."""
+    count = 0
+    for shape in walk(slide.shapes):
+        description = shape._element.xpath("(.//p:cNvPr)[1]/@descr")
+        if description and find in description[0]:
+            shape._element.xpath("(.//p:cNvPr)[1]")[0].set("descr", description[0].replace(find, replace))
+            count += 1
+        if getattr(shape, "has_chart", False) and shape.has_chart:
+            space = shape.chart._chartSpace
+            for node in space.xpath(
+                ".//a:t | .//c:v"
+            ):  # a:t = titles, c:v = the cached names the chart shows
+                if node.text and find in node.text:
+                    node.text = node.text.replace(find, replace)
+                    count += 1
+    return count
+
+
 # --- slide structure ---
 
 
@@ -329,6 +348,7 @@ def _apply(deck: Any, operation: Operation, read_image: Callable[[str], bytes] |
             for frame in _frames(slide, operation.notes)
             for paragraph in frame.paragraphs
         )
+        count += sum(_replace_in_objects(slide, operation.find, operation.replace) for slide in slides)
         if not count:
             raise DeckError(f"{operation.find!r} was not found")
         return f"replaced {count} occurrence(s) of {operation.find!r}"

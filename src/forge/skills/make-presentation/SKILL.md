@@ -11,7 +11,10 @@ Do not describe slides in chat instead, and do not make a deck out of pictures o
 ## 1. Plan the story before any slide
 
 Ask yourself (and the user, if it changes the deck and you cannot tell): who is the audience, what should they
-think or do afterwards, how long is the talk (about one slide per minute, fewer for a decision meeting).
+think or do afterwards, how long is the talk. **One content slide per two or three minutes** (a 20 minute talk: 7 to 10 slides; a 45 minute
+training or workshop: 12 to 18, because exercises and discussion take time that slides do not; a 15 minute briefing: 5 to 8).
+Put the length in the outline as `"minutes": 20`: the build warns when the deck is too long for it. Detail that does not fit goes
+in the speaker notes or an appendix, not on more slides.
 If the user gave a document, data or notes, read them first; the deck says what they say, never invented facts or
 numbers. When a number or claim is missing, leave it out or mark it "to confirm" in the speaker notes.
 
@@ -90,6 +93,12 @@ colours are hard to read or a font is not on every computer. If the project has 
 - **No decoration under titles.** No accent bar or line under a title; the title and white space are enough.
 - **Do not default to one blue.** Pick the theme and accent for the audience and topic; use one accent plus neutrals.
 - **Vary the layout.** Never three of the same layout in a row; mix chart, stats, two-column, picture and freeform slides.
+- **Match the content to a layout, do not default to bullets.** Choose by what the content IS:
+  a few parallel points (3 to 4 pillars, benefits, options) -> a row of cards (`freeform` with a `row` of `text` cards);
+  steps, a process, a rollout -> a `process` or `timeline` diagram; a before/after, good/bad or A/B -> `two_column` or two cards;
+  headline figures -> `stats`; a trend or share -> `chart`; a decision, ask or quote -> a big-type slide (one sentence, large) or
+  `quote`; a system or flow -> a diagram recipe; exact values -> `table`. Plain `bullets` is for the one slide in four that is
+  really a list. No more than two bullet slides in a row; at most about 40 percent of content slides.
 - **Every content slide has a visual:** a chart, big numbers, a table, a picture or a drawn diagram. A deck that is mostly
   bullets is a document, not a presentation.
 - **Dark and light sandwich:** dark title and closing slides with light content slides in between (or dark throughout), not a
@@ -122,6 +131,10 @@ If `build_presentation` says python-pptx is not installed, tell the user the one
 **Summarise or review a deck:** `read_presentation(path)` lists every slide (layout, title, text, tables, chart
 numbers, picture alt text, speaker notes). Base what you say on that, slide by slide; say when a slide has
 nothing to read (a picture without alt text, for instance). Never guess what a slide says.
+
+**Where new slides go in an edited deck:** before the closing slide ("Thank you", "Questions"), never after it, and make them with
+`add_slide` from the deck's own layouts so they look like the rest. `replace_text` also changes chart titles, axis titles, category and
+series names and picture alt text, so "replace every X" really means every one.
 
 **Change a deck:** read it first, then `edit_presentation(path, operations=[...], output=...)`. It keeps the deck's
 own formatting, so prefer it over rebuilding whenever someone else made the deck or a template is involved.
