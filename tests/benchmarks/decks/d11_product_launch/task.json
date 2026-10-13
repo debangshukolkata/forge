@@ -1,0 +1,7 @@
+{
+ "id": "d11_product_launch",
+ "kind": "product launch",
+ "min_slides": 7,
+ "max_slides": 12,
+ "min_charts": 1
+}

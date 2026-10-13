@@ -1,0 +1,7 @@
+{
+ "id": "d10_workshop",
+ "kind": "workshop",
+ "min_slides": 8,
+ "max_slides": 14,
+ "min_charts": 0
+}

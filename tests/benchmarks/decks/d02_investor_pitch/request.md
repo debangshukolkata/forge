@@ -1,0 +1,4 @@
+Make a pitch deck for a seed round for "Fernwood", a startup that sells soil-moisture sensors and a mobile app to small vineyards.
+Facts: 3 founders (CEO ex-viticulturist, CTO ex-Bosch, COO ex-logistics). Problem: vineyards lose 15-20% of yield to over or under watering. Product: a 49 USD sensor, 5-year battery, LoRa radio, app tells you when and how much to irrigate. Traction: 38 vineyards, 2,100 sensors deployed, 190k USD annual recurring revenue, growing 14% month over month for the last 8 months, churn 2%. Market: 6 million hectares of vineyards worldwide, 4.2 billion USD addressable. Business model: sensor at cost plus 6 USD per sensor per month subscription. Raising 2.5 million USD to hire 4 engineers and open the US market. Make it persuasive, with at least one chart of the growth.
+
+Save the finished presentation as deck.pptx.

@@ -1,0 +1,7 @@
+{
+ "id": "d09_long_deck",
+ "kind": "long deck",
+ "min_slides": 18,
+ "max_slides": 28,
+ "min_charts": 2
+}

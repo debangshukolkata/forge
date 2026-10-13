@@ -58,7 +58,9 @@ try {
 } finally {
     if (-not $wasRunning) { $app.Quit() }
 }
-ConvertTo-Json -InputObject @($rows) -Depth 3 -Compress
+$json = ConvertTo-Json -InputObject @($rows) -Depth 3 -Compress
+# the console code page would turn curly quotes into plain ones inside the JSON: send every non-ASCII character escaped
+[regex]::Replace($json, '[^\x00-\x7F]', { param($m) '\u{0:x4}' -f [int]$m.Value[0] })
 """
 
 

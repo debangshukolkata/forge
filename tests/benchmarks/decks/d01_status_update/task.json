@@ -1,0 +1,7 @@
+{
+ "id": "d01_status_update",
+ "kind": "status update",
+ "min_slides": 6,
+ "max_slides": 10,
+ "min_charts": 1
+}

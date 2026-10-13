@@ -1,0 +1,4 @@
+Make a technical design review deck for a new "Notification Service" that will replace the email-sending code in 6 microservices.
+Design: services publish events to Kafka topic notifications.requested; the Notification Service consumes, deduplicates by event id in Redis (24h), renders templates (Handlebars), sends through SES for email and Twilio for SMS, writes delivery status to Postgres, and exposes a status API. Goals: at-least-once delivery, p99 under 5 seconds, 2,000 messages per second peak. Alternatives considered: (a) library shared by all services (rejected: 6 deploys per change), (b) buying a vendor product (rejected: 4x cost at our volume). Risks: duplicate sends on Redis outage, SES rate limits, template injection. Rollout: shadow mode, 10%, 50%, 100% over 6 weeks. Ask: approval to build, 2 engineers for one quarter. Include an architecture diagram.
+
+Save the finished presentation as deck.pptx.

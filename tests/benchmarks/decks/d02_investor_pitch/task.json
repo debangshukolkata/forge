@@ -1,0 +1,7 @@
+{
+ "id": "d02_investor_pitch",
+ "kind": "pitch",
+ "min_slides": 9,
+ "max_slides": 14,
+ "min_charts": 1
+}

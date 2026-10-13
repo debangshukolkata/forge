@@ -1,0 +1,7 @@
+{
+ "id": "d06_template_fill",
+ "kind": "template fill",
+ "min_slides": 5,
+ "max_slides": 10,
+ "min_charts": 0
+}

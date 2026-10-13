@@ -1,0 +1,7 @@
+{
+ "id": "d03_training",
+ "kind": "training",
+ "min_slides": 10,
+ "max_slides": 16,
+ "min_charts": 1
+}

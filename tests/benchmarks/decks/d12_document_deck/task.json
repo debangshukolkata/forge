@@ -1,0 +1,7 @@
+{
+ "id": "d12_document_deck",
+ "kind": "deck from a document",
+ "min_slides": 6,
+ "max_slides": 12,
+ "min_charts": 0
+}

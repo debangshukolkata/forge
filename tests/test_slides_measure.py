@@ -177,3 +177,15 @@ def test_the_preview_tool_reports_what_powerpoint_measured(
     )
     quiet = asyncio.run(PreviewPresentation().run(PreviewPresentation.Args(path="docs/deck.pptx"), context))
     assert "measured" not in quiet.content
+
+
+@needs_powerpoint
+def test_curly_quotes_and_other_non_ascii_text_do_not_break_the_measure(tmp_path: Path) -> None:
+    deck = {
+        "title": "Deck",
+        "slides": [{"layout": "quote", "quote": "Simple is hard, — and worth it.", "by": "Zoë"}],
+    }
+    path = tmp_path / "q.pptx"
+    path.write_bytes(build_deck(parse_deck(json.dumps(deck)), lambda n: b"").data)
+    measures = measure_deck(path)
+    assert any("Zoë" in m.text for m in measures)

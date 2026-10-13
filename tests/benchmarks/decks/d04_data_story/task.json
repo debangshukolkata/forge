@@ -1,0 +1,7 @@
+{
+ "id": "d04_data_story",
+ "kind": "data story",
+ "min_slides": 6,
+ "max_slides": 12,
+ "min_charts": 2
+}

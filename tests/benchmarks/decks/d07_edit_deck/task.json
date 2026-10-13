@@ -1,0 +1,7 @@
+{
+ "id": "d07_edit_deck",
+ "kind": "edit an existing deck",
+ "min_slides": 5,
+ "max_slides": 8,
+ "min_charts": 0
+}
