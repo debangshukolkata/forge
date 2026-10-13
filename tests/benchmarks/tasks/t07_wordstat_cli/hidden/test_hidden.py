@@ -77,7 +77,7 @@ def test_bad_numbers_exit_2() -> None:
 def test_main_function_returns_codes(capsys, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     import io
 
-    monkeypatch.setattr("sys.stdin", io.StringIO("hi hi"))
+    monkeypatch.setattr("sys.stdin", io.TextIOWrapper(io.BytesIO(b"hi hi"), encoding="utf-8"))  # has .buffer too
     assert wordstat.main(["--top", "1"]) == 0
     assert capsys.readouterr().out.strip() == "hi 2"
     assert wordstat.main(["nope-nope.txt"]) == 2
