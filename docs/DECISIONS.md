@@ -3498,3 +3498,6 @@ Also fixed while doing this (L0 item e): `load_skill` listed at most 60 files, s
 2. Rendering: PowerPoint only. No LibreOffice and no own renderer; previews need PowerPoint on the machine and DebCraft states plainly when it is missing. This removes the HTML-render dependency of P3.
 3. Icons and images: bundle Lucide (ISC) and Material Symbols (Apache-2.0) offline, with their licence texts, through the asset catalogue. An image model exists on the Azure side; the deployment name and the .env variable names are still needed from the user before any image-generation tool is built (API keys stay in .env only, D-204).
 4. Reference decks: Claude-made sample decks as stand-ins, plus the company Office template(s) which the user can only provide from the office laptop; template-driven items wait for that file.
+
+### D-275 — Answers to the open questions (user, 2026-10-13)
+Documents: Excel first, then Word, then PDF; the optional `docs` extra (python-docx, openpyxl, pypdf, reportlab) may be installed through pip; sample documents still to come. `write_secret_values` and its five tests removed (the web app never writes keys; D-204). S7 and S8 (faster model for read-only agents, adaptive effort) not now, to be revisited after the speed benchmark. C18 (study of the Superpowers and mattpocock repositories) later; the items that depend on it stay blocked.
