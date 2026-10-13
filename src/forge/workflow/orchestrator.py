@@ -39,6 +39,7 @@ from forge.tools.interaction import (
     TaskUpdate,
     UpdatePlan,
 )
+from forge.tools.quality_gates import gate_findings, gate_note, load_config
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
 from forge.tools.ui_audit import tailwind_setup_problem
 from forge.workflow.reports import closing_message, final_report
@@ -52,6 +53,7 @@ if TYPE_CHECKING:
 PYTEST_ARGS = "-rfE --tb=short --no-header -p no:cacheprovider"
 FULL_SUITE_TIMEOUT_S = 900
 CRITIC_ROUND_LIMIT = 3
+GATE_ROUNDS = 2  # C2: how many times the quality gates may send a task back before it may close
 RESUMED_NOTE = (
     "\n\nResumed after an interruption: first check what is already done (files modified are pinned)."
 )
@@ -150,6 +152,7 @@ class Orchestrator:
         self._publishing: set[asyncio.Task[Any]] = set()
         self._background_tasks: set[asyncio.Task[Any]] = set()
         self._task_start_step = 0
+        self._gate_rounds: dict[str, int] = {}
         self._export_step = 0  # tool step of the last delivery; later edits mean output/ is stale
         self._ui_nudge_step = -1  # when the model was last sent back to check the UI in a browser
         self._restructure_baseline: tuple[bool, str] | None = None
@@ -494,6 +497,12 @@ class Orchestrator:
             unresolved = await asyncio.to_thread(self._unresolved_imports)
             if unresolved:
                 return ToolResult(ok=False, content=import_note(unresolved))
+            findings = await asyncio.to_thread(self._gate_findings)
+            if findings:  # C2: lint, types and security findings go back to the model; two rounds, then the task may close
+                round_number = self._gate_rounds.get(task_id, 0) + 1
+                self._gate_rounds[task_id] = round_number
+                if round_number <= GATE_ROUNDS:
+                    return ToolResult(ok=False, content=gate_note(findings, round_number, GATE_ROUNDS))
         ui_edited = context.last_ui_edit_step > self._task_start_step
         if status == "done" and ui_edited and context.last_browser_step <= context.last_ui_edit_step:
             return ToolResult(
@@ -539,6 +548,22 @@ class Orchestrator:
             "task", f"{task.id} {task.status}: {task.title}" + (f" — {verification}" if verification else "")
         )
         return ToolResult(ok=True, content=f"Task {task.id} recorded as {task.status}.")
+
+    def _gate_findings(self) -> list[str]:
+        """C2: ruff, mypy (when configured) and bandit (when installed) on the Python files DebCraft wrote."""
+        env = self.workspace.info.python_env
+        if env is None or not env.python:
+            return []
+        root = Path(env.app_dir) if env.app_dir else self.workspace.root
+        written = {
+            (self.workspace.repo_dir / change.path).resolve()
+            for change in self.workspace.changes()
+            if change.op in ("write", "move") and change.path.endswith(".py")
+        }
+        config = load_config(self.workspace.forge_dir)
+        return gate_findings(
+            written, root, env.python, env.command_env(without_private(dict(os.environ))), config
+        )
 
     def _unresolved_imports(self) -> list[str]:
         """C8: imports in the project's Python files that do not resolve in the app's own environment."""

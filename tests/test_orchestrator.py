@@ -211,7 +211,7 @@ async def test_an_invented_import_in_a_file_the_model_wrote_blocks_done(host: Se
     context.step += 1
 
     refused = await orch.task_update("T1", "done", "", "pytest passed", "", context)
-    orch.workspace.write_text(relative, "import json\n")
+    orch.workspace.write_text(relative, "import json\n\nprint(json)\n")
     accepted = await orch.task_update("T1", "done", "Helper added.", "pytest passed", "", context)
 
     assert not refused.ok and "magic_forms_toolkit" in refused.content
@@ -593,3 +593,55 @@ async def test_after_three_critic_rounds_the_model_may_finish_with_open_points(h
         "T1", "done", "", "critic still asks for a better hero; left open", "", context
     )
     assert done.ok
+
+
+async def test_quality_gate_findings_send_a_task_back_twice_then_it_may_close(host: SessionHost) -> None:
+    pytest.importorskip("ruff")
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="Add helper")]
+    orch._start_task(orch.state.tasks[0])
+    context = orch.context
+    app_dir = orch.workspace.app_dir
+    orch.workspace.info.python_env = PythonEnvironment(
+        python=sys.executable, venv="", app_dir=str(app_dir), top_packages=[]
+    )
+    relative = app_dir.relative_to(orch.workspace.repo_dir).as_posix() + "/gate_helper.py"
+    orch.workspace.write_text(
+        relative, "def add(item, items=[]):\n    items.append(item)\n    return items\n"
+    )
+    context.step += 1
+    context.last_edit_step = context.step
+    context.last_verified_step = context.step + 1
+    context.step += 1
+
+    first = await orch.task_update("T1", "done", "", "pytest passed", "", context)
+    second = await orch.task_update("T1", "done", "", "pytest passed", "", context)
+    third = await orch.task_update("T1", "done", "Helper added.", "pytest passed", "", context)
+
+    assert not first.ok and "quality gates" in first.content and "B006" in first.content
+    assert not second.ok and "accepted either way" in second.content
+    assert third.ok and orch.state.tasks[0].status == "done"
+
+
+async def test_gates_can_be_switched_off_per_project(host: SessionHost) -> None:
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="Add helper")]
+    orch._start_task(orch.state.tasks[0])
+    context = orch.context
+    app_dir = orch.workspace.app_dir
+    orch.workspace.info.python_env = PythonEnvironment(
+        python=sys.executable, venv="", app_dir=str(app_dir), top_packages=[]
+    )
+    relative = app_dir.relative_to(orch.workspace.repo_dir).as_posix() + "/gate_helper.py"
+    orch.workspace.write_text(
+        relative, "def add(item, items=[]):\n    items.append(item)\n    return items\n"
+    )
+    (orch.workspace.forge_dir / "gates.json").write_text('{"enabled": false}', encoding="utf-8")
+    context.step += 1
+    context.last_edit_step = context.step
+    context.last_verified_step = context.step + 1
+    context.step += 1
+
+    accepted = await orch.task_update("T1", "done", "Helper added.", "pytest passed", "", context)
+
+    assert accepted.ok
