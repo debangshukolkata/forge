@@ -17,6 +17,7 @@ from forge.slides import icons, preview
 from forge.slides.build import SlidesUnavailable, build_deck
 from forge.slides.contact_sheet import ContactSheetUnavailable, make_contact_sheets
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
+from forge.slides.measure import measure_deck, overflow_problems
 from forge.slides.open_deck import open_deck, save_deck
 from forge.slides.read import describe_deck
 from forge.slides.spec import parse_deck
@@ -227,7 +228,19 @@ class PreviewPresentation(Tool):
             )
         else:
             text = "Pictures of the slides (look at each with view_image and fix what is wrong):\n"
-        return ToolResult(ok=True, content=text + "\n".join(f"- {name}" for name in names))
+        text += "\n".join(f"- {name}" for name in names)
+        try:  # PowerPoint is open anyway: ask it for the real text sizes instead of trusting the estimate (P2.18)
+            spilled: list[str] | None = overflow_problems(await asyncio.to_thread(measure_deck, deck))
+        except (preview.PreviewUnavailable, OSError, ValueError, KeyError):
+            spilled = None
+        if spilled:
+            listed = "\n".join(f"- {line}" for line in spilled)
+            text += (
+                f"\n\nPowerPoint measured text that does not fit (fix these, then preview again):\n{listed}"
+            )
+        elif spilled is not None:
+            text += "\n\nPowerPoint measured every text box and table: all fit their space."
+        return ToolResult(ok=True, content=text)
 
     @staticmethod
     def relative(context: ToolContext, path: Path) -> str:

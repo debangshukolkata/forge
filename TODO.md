@@ -191,7 +191,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   extract embedded pictures, per-slide contact sheet; `.ppt` to `.pptx` and deck to PDF through PowerPoint when present. Size M.
 - [ ] **P2.17 Review mode.** Critique a deck (story, density, consistency, contrast, font count, alignment, repeated layouts) and list fixes,
   or fix them. Size M.
-- [ ] **P2.18 Reliable overflow detection.** With PowerPoint present, measure each text box's real text height through PowerPoint
+- [x] **P2.18 Reliable overflow detection.** With PowerPoint present, measure each text box's real text height through PowerPoint **(done 2026-10-13, D-287)**
   instead of our estimate; without it keep the estimate. Size M.
 - [ ] **P2.19 Build from documents.** Read Word, Excel/CSV and PDF sources (DebCraft has PDF page rendering only) and turn them into a deck:
   summarise, pick charts, cite sources in notes. Size M.

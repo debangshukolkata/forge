@@ -106,6 +106,9 @@ colours are hard to read or a font is not on every computer. If the project has 
    picture): look at the contact sheet first to judge flow, rhythm and whether it looks like one deck. Then look at **every** slide with
    `view_image` and ask: is the text cut off or crowded, is anything unbalanced or empty, is the chart readable,
    does the title say the point? Fix and rebuild. Do this at least once; repeat until nothing is wrong.
+   With PowerPoint present the preview also lists, from PowerPoint's own measurements, every text box whose text is taller than its
+   box (with the sizes in inches) and every table that grew past the slide: fix each one (enlarge the box, shorten the text, split the
+   table), then preview again until it says all text fits.
 3. If preview says PowerPoint is not available, say so plainly to the user ("I could not look at the slides, only
    check them by rule") and still go by the warnings.
 4. Finish by telling the user where the file is, how many slides, the story in two lines, and anything you were
