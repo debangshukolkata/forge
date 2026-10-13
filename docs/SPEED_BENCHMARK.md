@@ -65,3 +65,14 @@ clear, the exact figures are not. Accepted (quality did not drop). What is left 
 - s01 and s02 look slower but those are one run each with a different model path (22 -> 34 and 7 -> 16 model calls). One real cause found in the s01
   events: the new quality gate (C2) sent the task back for `B008` on FastAPI's `db = Depends(get_db)`, a false positive for the idiom: B008 is
   removed from the gate's default rules. Run-to-run noise on short tasks is large; a fair comparison needs three runs each (not done yet).
+
+### S8 experiment: lower reasoning effort after read-only steps (2026-10-13, D-307)
+Switch under test: `FORGE_ADAPTIVE_EFFORT=low` (a step that follows only read-only tool results, such as reading, listing or searching, runs at low effort instead of the configured medium). The coding benchmark t01-t14, three tasks at a time, one run per arm.
+
+| | hidden tests | tasks fully passed | wall (sum of tasks) | model time | model calls | cost |
+|---|---|---|---|---|---|---|
+| control | 309 / 310 | 13 / 14 | 3136 s | 2859 s | 182 | $3.68 |
+| low effort | 307 / 310 | 12 / 14 | 2570 s (-18 %) | 2272 s (-21 %) | 185 | $3.10 (-16 %) |
+
+The only difference in quality: t01 (slugify) lost two hidden tests, `max_length` cutting at word boundaries (`one two three four` at 7 and 13 characters): an edge case the control got right. Per task the times are noisy in both directions (t10 took 28 calls instead of 4 with low effort, t11 9 instead of 19), so the speed gain is real on the sum but one run is not proof.
+Verdict under D-161 (a speed change that lowers the quality score is rejected): **not adopted as the default**; the switch stays an environment experiment. Next step would be three runs per arm on the tasks where an edge case matters before reconsidering; S7 (a smaller model for read-only subagents) is still waiting for a deployment name.
