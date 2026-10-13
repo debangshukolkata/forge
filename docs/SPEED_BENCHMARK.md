@@ -53,3 +53,15 @@ Page redesign only: wall **1487 -> 975 s (-34 %)**, cost **$1.51 -> $0.73 (-52 %
 twice instead of six times (68 s and 66 s) and the page no longer grew a contact form nobody asked for. One run each: the direction is
 clear, the exact figures are not. Accepted (quality did not drop). What is left in the 975 s: model 486 s, tools 487 s of which
 `start_background` 125 s (two starts of a plain static server of 63 s each, see S6), `monitor` 120 s, `browser_open` 49 s, `view_image` 46 s.
+
+### speed-3 (2026-10-13, after D-302: servers ready when the port answers; unbuffered output; C2 quality gates also merged by then)
+| Task | speed-1 | speed-2 | speed-3 |
+|---|---|---|---|
+| s01 crud api | 236 s, $0.29, 10/10 | - | 269 s, $0.33, 10/10 |
+| s02 install and test | 81 s, $0.07, 2/2 | - | 134 s, $0.15, 2/2 |
+| s03 page redesign | 1487 s, $1.51, 6/7 | 975 s, $0.73, 7/7 | 865 s, $1.06, 6/7 |
+
+- `start_background` in the page redesign fell from 125 s to 6 s: D-302 works. The critic ran fewer rounds than in speed-1 (the verifier took 292 s this time).
+- s01 and s02 look slower but those are one run each with a different model path (22 -> 34 and 7 -> 16 model calls). One real cause found in the s01
+  events: the new quality gate (C2) sent the task back for `B008` on FastAPI's `db = Depends(get_db)`, a false positive for the idiom: B008 is
+  removed from the gate's default rules. Run-to-run noise on short tasks is large; a fair comparison needs three runs each (not done yet).

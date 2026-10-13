@@ -119,3 +119,11 @@ def test_the_note_lists_findings_and_the_last_round_says_the_next_call_is_accept
     last = gate_note(findings, 2, 2)
     assert "a.py:0" in first and "and 4 more" in first and "accepted either way" not in first
     assert "accepted either way" in last
+
+
+@pytest.mark.skipif(not HAS_RUFF, reason="ruff is not installed here")
+def test_fastapi_style_calls_in_defaults_are_not_flagged(tmp_path: Path) -> None:
+    """speed-3: the gate sent a FastAPI app back for `db = Depends(get_db)` (B008), a false positive for the idiom."""
+    code = "from fastapi import Depends, FastAPI\n\napp = FastAPI()\n\n\ndef get_db() -> int:\n    return 1\n\n\n@app.get('/')\ndef read(db: int = Depends(get_db)) -> int:\n    return db\n"
+    file = _write(tmp_path, "api.py", code)
+    assert gate_findings({file}, tmp_path, PY, None, GateConfig(mypy=False, bandit=False)) == []
