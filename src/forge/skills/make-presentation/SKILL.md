@@ -116,6 +116,14 @@ process diagram, a timeline, a comparison, a picture-led slide), use `freeform`:
 You are the designer, so design on purpose, and let `build_presentation`'s warnings and `preview_presentation` be
 your critic.
 
+**Containers instead of arithmetic.** Put elements in a `row`, `column` or `grid` and let the builder compute the
+coordinates: `{"type": "row", "x": 0.8, "y": 2.2, "w": 11.7, "h": 3.2, "gap": 0.4, "children": [card, card, card]}` gives
+three equal cards. Children are ordinary elements without x, y, w and h. Optional on a child: `weight` (share of the free
+space, default 1), `length` (fixed inches along the direction), `cross` (fixed inches across it; the container's `align`
+start, center or end places it), `colspan` (grid only). A grid has `cols`; children fill it row by row. Containers nest
+(a row of a text column and a picture). Use them for cards, timelines, comparisons and stat rows; fewer collisions, easier to
+change.
+
 **The canvas** is 13.333 x 7.5 inches; positions and sizes are in inches, origin top-left. Elements are drawn in
 list order (first = back). Keep 0.8 in side margins and 0.5 in top/bottom for text; only full-bleed shapes and
 pictures go to the edge. Every slide still has a `title` (for navigation and screen readers). It is shown at

@@ -11,6 +11,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
 from forge.errors import ForgeError
+from forge.slides.layout import LayoutError, expand_layouts
 
 
 class SpecError(ForgeError):
@@ -267,6 +268,10 @@ def parse_deck(text: str, as_yaml: bool = False) -> Deck:
         raise SpecError(f"The outline is not valid {'YAML' if as_yaml else 'JSON'}: {error}") from error
     if not isinstance(data, dict):
         raise SpecError("The outline must be an object with 'title' and 'slides'.")
+    try:
+        expand_layouts(data)
+    except LayoutError as error:
+        raise SpecError(f"The outline has a layout problem: {error}") from error
     try:
         return Deck.model_validate(data)
     except ValidationError as error:

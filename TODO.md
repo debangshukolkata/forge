@@ -148,7 +148,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   consistency in one look instead of N calls. Size S.
 - [ ] **P1.2 Show slides in the web UI.** After a build or edit, show the slide pictures inline in the chat and a slide viewer in the Files tab
   (download button for the .pptx). The user currently only gets file names. Size M.
-- [ ] **P1.3 Layout helpers for free-form.** Row, column and grid containers (equal widths, gaps, alignment) so the model states intent
+- [x] **P1.3 Layout helpers for free-form.** Row, column and grid containers (equal widths, gaps, alignment) so the model states intent **(done 2026-10-13, D-279: row, column and grid containers expanded before validation)**
   ("three equal cards, 0.4 gap") instead of computing coordinates; fewer collisions. Size M.
 - [ ] **P1.4 Rich text.** Mixed bold, colour and size inside one paragraph, links, line and letter spacing, vertical text. Size M.
 - [x] **P1.5 Fix our own template habits that look generic.** Remove the accent bar under titles, stop defaulting to one blue, vary **(done 2026-10-13, D-276: accent bars removed, lint for repeated layouts, text-only decks and freeform accent bars, skill rules; the default single-blue and one-colour-per-theme point is left to the model through the skill)**
