@@ -32,7 +32,7 @@ from forge.slides.spec import (
     TitleSlide,
     TwoColumnSlide,
 )
-from forge.slides.themes import THEMES, Theme
+from forge.slides.themes import THEMES, Brand, Theme, apply_brand
 
 WIDTH, HEIGHT = 13.333, 7.5  # inches, 16:9
 MARGIN = 0.8
@@ -110,6 +110,13 @@ class _Builder:
         self.m = _modules()
         self.deck, self.read_image = deck, read_image
         self.theme: Theme = THEMES[deck.theme]
+        self.brand_problems: list[str] = []
+        if deck.brand is not None:
+            kit = {
+                key: value.lstrip("#").upper() if key not in ("title_font", "body_font") else value
+                for key, value in deck.brand.model_dump(exclude_none=True).items()
+            }
+            self.theme, self.brand_problems = apply_brand(self.theme, Brand(**kit))
         self.prs = self.m["pptx"].Presentation()
         self.prs.slide_width, self.prs.slide_height = self.m["inches"](WIDTH), self.m["inches"](HEIGHT)
         self.reports: list[SlideReport] = []
@@ -600,4 +607,11 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
     builder.prs.save(output)
     for number, message in lint.slide_title_warnings(deck).items():
         builder.reports[number - 1].warnings.append(message)
-    return BuiltDeck(output.getvalue(), builder.reports, lint.deck_warnings(deck))
+    notes = [f"brand colours: {problem}" for problem in builder.brand_problems]
+    if deck.brand is not None:
+        notes += [
+            w
+            for name in (deck.brand.title_font, deck.brand.body_font)
+            if name and (w := lint.font_warning(name))
+        ]
+    return BuiltDeck(output.getvalue(), builder.reports, [*notes, *lint.deck_warnings(deck)])

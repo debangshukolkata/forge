@@ -8,10 +8,11 @@ import json
 from typing import Annotated, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError, field_validator
 
 from forge.errors import ForgeError
 from forge.slides.layout import LayoutError, expand_layouts
+from forge.slides.themes import THEMES
 
 
 class SpecError(ForgeError):
@@ -257,11 +258,36 @@ Slide = Annotated[
 LAYOUTS = "title, section, bullets, two_column, image, table, chart, quote, stats, closing, freeform"
 
 
+HexColour = Annotated[str, StringConstraints(pattern=r"^#?[0-9A-Fa-f]{6}$")]
+
+
+class BrandKit(_Model):
+    """Colours and fonts of the user's brand. Give what you know; the rest is derived so text stays readable."""
+
+    accent: HexColour | None = None
+    background: HexColour | None = None
+    text: HexColour | None = None
+    muted: HexColour | None = None
+    surface: HexColour | None = None
+    accent_text: HexColour | None = None
+    title_font: str | None = None
+    body_font: str | None = None
+
+
 class Deck(_Model):
     title: str
     subtitle: str = ""
     author: str = ""
-    theme: Literal["clean", "dark", "warm"] = "clean"
+    theme: str = "clean"  # one of THEMES (see themes.py / the skill); chosen by audience and topic
+    brand: BrandKit | None = None  # a brand kit: colours and fonts that override the theme
+
+    @field_validator("theme")
+    @classmethod
+    def _known_theme(cls, value: str) -> str:
+        if value not in THEMES:
+            raise ValueError(f"unknown theme '{value}'; themes are: {', '.join(THEMES)}")
+        return value
+
     footer: str = ""  # small text at the bottom of content slides; defaults to the deck title
     slides: list[Slide] = Field(min_length=1)
 

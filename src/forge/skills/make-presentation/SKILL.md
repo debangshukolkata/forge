@@ -22,7 +22,7 @@ optionally a closing slide. A section slide only when the deck has distinct part
 ## 2. Write the outline file
 
 Write `docs/<name>-outline.json` (or `.yaml`) with `write_file`. Fields: `title`, optional `subtitle`, `author`,
-`theme` (`clean`, `dark` or `warm`) and `footer`, then `slides`, each with a `layout` and optional `notes`
+`theme` (one of the 19 below) and `footer`, then `slides`, each with a `layout` and optional `notes`
 (speaker notes: what to say, sources, caveats).
 
 Layouts and their fields:
@@ -56,6 +56,35 @@ Layouts and their fields:
   Do not fight it by cramming.
 - **Images** need `alt` text saying what they show. Use pictures that carry meaning, not decoration.
 - **Speaker notes** on every content slide: the sentence you would say, and the source of any number.
+
+### Choose the theme from the topic (19 themes, all checked for readable contrast)
+Pick by audience and subject, not by habit; do not use `clean` just because it is first. One main colour plus one accent.
+
+| theme | mood | fits |
+|---|---|---|
+| `clean` | neutral, crisp, business | business, report, update, general |
+| `dark` | dark, focused, technical | keynote, product, launch, demo |
+| `warm` | warm, human, editorial | story, people, community, culture |
+| `forest` | natural, calm, grounded | sustainability, nature, agriculture, environment |
+| `ocean` | fresh, clear, open | travel, water, marine, shipping |
+| `sunset` | energetic, creative, friendly | marketing, creative, events, consumer |
+| `slate` | formal, sober, trustworthy | finance, legal, consulting, government |
+| `midnight` | premium, serious, confident | premium, luxury, investor, finance |
+| `paper` | editorial, scholarly, calm | education, research, humanities, books |
+| `mint` | healthy, light, caring | health, wellness, hospital, nutrition |
+| `plum` | expressive, cultural, refined | arts, culture, fashion, beauty |
+| `terracotta` | earthy, crafted, welcoming | architecture, craft, food, hospitality |
+| `mono` | minimal, stark, modern | minimal, architecture, design, portfolio |
+| `sky` | open, friendly, technical | technology, education, saas, startup |
+| `coral` | playful, bright, approachable | kids, children, food, retail |
+| `graphite` | technical, sharp, modern | developer, engineering, data, ai |
+| `ruby` | urgent, human, committed | charity, health, donation, emergency |
+| `olive` | grounded, heritage, quiet | heritage, outdoors, farming, craft |
+| `indigo` | bold, imaginative, night | ai, creative, events, gaming |
+
+**A brand kit** overrides the theme when the user has brand colours or fonts: `"brand": {"accent": "#E4002B", "background": "#FFF4E5",
+"title_font": "Georgia", "body_font": "Calibri"}` (any subset; the rest is derived so text stays readable). The build warns when brand
+colours are hard to read or a font is not on every computer. If the project has a brand file, copy its values here.
 
 ### Avoid the generated look (the build warns about most of these)
 - **No decoration under titles.** No accent bar or line under a title; the title and white space are enough.

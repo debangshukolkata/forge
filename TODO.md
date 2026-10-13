@@ -162,7 +162,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   edit. Size M. This is what makes "opens cleanly" a guarantee.
 
 ### P2 Capability gaps
-- [ ] **P2.1 Colour and type system.** 15+ curated palettes chosen from the topic (not blue by default), dominance rule (one main colour,
+- [~] **P2.1 Colour and type system.** 15+ curated palettes chosen from the topic (not blue by default), dominance rule (one main colour, **(built 2026-10-13, D-281: 19 contrast-checked themes chosen by topic, brand kit overrides with derived colours. Open: logo in the brand kit, saving the kit with the project, more font pairings beyond Calibri and Georgia)**
   one accent), font pairings, user brand kits (logo, colours, fonts) saved with the project. Size M.
 - [ ] **P2.2 Gradients, shadows, transparency, background images** in free-form, plus rounded image frames, circles, masks. Size M.
 - [ ] **P2.3 Icons.** An icon set turned into pictures or native shapes, placed in coloured circles, sized and recoloured. Needs decision 3. Size M.
