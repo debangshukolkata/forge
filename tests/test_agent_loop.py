@@ -177,10 +177,23 @@ async def test_read_only_agents_run_side_by_side_but_verifiers_are_serialised(
     two_explores = await _elapsed_for(host, [("spawn_subagent", {"agent": "explore"})] * 2)
     two_verifiers = await _elapsed_for(host, [("spawn_subagent", {"agent": "verifier"})] * 2)
     six_explores = await _elapsed_for(host, [("spawn_subagent", {"agent": "explore"})] * 6)
+    verifier_and_critic = await _elapsed_for(
+        host, [("spawn_subagent", {"agent": "verifier"}), ("spawn_subagent", {"agent": "design-critic"})]
+    )
+    critic_then_verifier = await _elapsed_for(
+        host, [("spawn_subagent", {"agent": "design-critic"}), ("spawn_subagent", {"agent": "verifier"})]
+    )
+    debugger_and_verifier = await _elapsed_for(
+        host, [("spawn_subagent", {"agent": "debugger"}), ("spawn_subagent", {"agent": "verifier"})]
+    )
 
     assert two_reads < 0.5 and two_explores < 0.5  # about the time of one
     assert two_verifiers >= 0.55  # one after the other: they write files and start the app
     assert 0.55 <= six_explores < 0.95  # capped at 4 at once: 4 together, then 2
+    assert (
+        verifier_and_critic < 0.5 and critic_then_verifier < 0.5
+    )  # X4: the critic only looks, in either order
+    assert debugger_and_verifier >= 0.55  # a debugger runs commands, so it never overlaps a verifier
 
 
 async def test_a_running_subagent_reports_its_steps_to_the_session(

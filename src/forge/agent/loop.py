@@ -373,13 +373,28 @@ class AgentLoop:
         """Consecutive parallel-safe calls run together; anything else runs alone, in order."""
         batch: list[ToolCall] = []
         for call in calls:
-            if self._runs_in_parallel(call) or self._command_fits_batch(call, batch):
+            if (
+                self._runs_in_parallel(call)
+                or self._command_fits_batch(call, batch)
+                or self._verifier_fits_batch(call, batch)
+            ):
                 batch.append(call)
                 continue
             await self._run_batch(batch, results)
             batch = []
             results[call.id] = await self._run_one(call)
         await self._run_batch(batch, results)
+
+    def _verifier_fits_batch(self, call: ToolCall, batch: list[ToolCall]) -> bool:
+        """The verifier may run beside the design critic and other read-only agents (X4): the critic only looks, the
+        verifier writes under tests/e2e/. Two verifiers never overlap, and nothing but read-only calls joins one."""
+        if call.name != "spawn_subagent" or call.parse_error is not None:
+            return False
+        if str((call.arguments or {}).get("agent", "")) != "verifier":
+            return False
+        return all(self._runs_in_parallel(c) for c in batch) and not any(
+            c.name == "spawn_subagent" and (c.arguments or {}).get("agent") == "verifier" for c in batch
+        )
 
     def _command_fits_batch(self, call: ToolCall, batch: list[ToolCall]) -> bool:
         """Checks and reads share a batch up to MAX_PARALLEL_COMMANDS, with at most one test run (tests may share ports,
