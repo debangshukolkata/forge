@@ -34,6 +34,7 @@ from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.vision import image_path
 
 PREVIEW_FOLDER = ".forge/reports/slides"
+MAX_LISTED_PICTURES = 30  # a long deck is read from its contact sheets; single pictures are for a closer look
 
 
 def _fault_message(path: str, faults: list[str]) -> str:
@@ -562,7 +563,13 @@ class PreviewPresentation(Tool):
             )
         else:
             text = "Pictures of the slides (look at each with view_image and fix what is wrong):\n"
-        text += "\n".join(f"- {name}" for name in names)
+        shown = names[:MAX_LISTED_PICTURES]
+        text += "\n".join(f"- {name}" for name in shown)
+        if len(names) > len(shown):
+            text += (
+                f"\n(... and {len(names) - len(shown)} more in {PREVIEW_FOLDER}/{deck.stem}/ as slide-N.png; "
+                "the contact sheets show all)"
+            )
         try:  # PowerPoint is open anyway: ask it for the real text sizes instead of trusting the estimate (P2.18)
             spilled: list[str] | None = overflow_problems(await asyncio.to_thread(measure_deck, deck))
         except (preview.PreviewUnavailable, OSError, ValueError, KeyError):

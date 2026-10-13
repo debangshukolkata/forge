@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 from forge.slides.powerpoint_lock import powerpoint_turn
-from forge.slides.preview import PreviewUnavailable, available
+from forge.slides.preview import PreviewUnavailable, available, timeout_for
 from forge.toolkit.private_env import without_private
 
 TIMEOUT_S = 240
@@ -53,12 +53,14 @@ def convert_deck(source: Path, kind: str) -> bytes:
                     ["powershell", "-NoProfile", "-NonInteractive", "-Command", SCRIPT],
                     capture_output=True,
                     text=True,
-                    timeout=TIMEOUT_S,
+                    timeout=timeout_for(source, TIMEOUT_S),
                     env=environment,
                     check=False,
                 )
         except subprocess.TimeoutExpired as error:
-            raise PreviewUnavailable(f"PowerPoint did not answer within {TIMEOUT_S} seconds.") from error
+            raise PreviewUnavailable(
+                f"PowerPoint did not answer within {timeout_for(source, TIMEOUT_S)} seconds."
+            ) from error
         if done.returncode != 0 or not target.is_file():
             reason = (done.stderr or done.stdout).strip().splitlines()[:2]
             raise PreviewUnavailable("PowerPoint could not convert the file: " + " ".join(reason)[:300])

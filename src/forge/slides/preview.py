@@ -6,6 +6,7 @@ as environment variables so no file name can become part of a command."""
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -31,6 +32,23 @@ try {
     if (-not $wasRunning) { $app.Quit() } else { $app.AutomationSecurity = $oldSecurity }
 }
 """
+
+
+SECONDS_PER_SLIDE = (
+    2  # PowerPoint needs about a second a slide for an export; the allowance grows with the deck
+)
+
+
+def timeout_for(deck: Path, base: int) -> int:
+    """`base` seconds plus a little for every slide of the deck, so a 150-slide deck is not cut off by the limit made for 20."""
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(deck) as archive:
+            slides = sum(1 for name in archive.namelist() if re.fullmatch(r"ppt/slides/slide\d+\.xml", name))
+    except (OSError, zipfile.BadZipFile):
+        slides = 0
+    return base + SECONDS_PER_SLIDE * slides
 
 
 class PreviewUnavailable(Exception):
@@ -68,14 +86,16 @@ def export_slides(deck: Path, folder: Path) -> list[Path]:
                 ["powershell", "-NoProfile", "-NonInteractive", "-Command", SCRIPT],
                 capture_output=True,
                 text=True,
-                timeout=TIMEOUT_S,
+                timeout=timeout_for(deck, TIMEOUT_S),
                 env=environment,
                 check=False,
             )
     except TimeoutError as error:
         raise PreviewUnavailable(str(error)) from error
     except subprocess.TimeoutExpired as error:
-        raise PreviewUnavailable(f"PowerPoint did not answer within {TIMEOUT_S} seconds.") from error
+        raise PreviewUnavailable(
+            f"PowerPoint did not answer within {timeout_for(deck, TIMEOUT_S)} seconds."
+        ) from error
     pictures = [p for p in folder.iterdir() if p.suffix.lower() == ".png"]
     if done.returncode != 0 or not pictures:
         reason = (done.stderr or done.stdout).strip().splitlines()[:2]

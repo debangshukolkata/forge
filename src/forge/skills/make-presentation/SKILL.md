@@ -151,6 +151,11 @@ Per-slide outline fields: `hidden: true` (backup slides, skipped in the show), `
 speaker reads from the slide line by line unless asked.
 
 ## 5. Existing decks and company templates
+Big decks and big pictures: pictures are made slide-sized at build (upright from the camera's rotation flag, at most 2560 px on the long
+side, compressed), so a folder of phone photos does not make a 60 MB file; the build warns above 20 MB (mail limits). A deck of 100+
+slides builds in seconds; `preview_presentation` lists the first 30 pictures and the contact sheets show all, so judge a long deck from
+the contact sheets and open single slides only where something looks wrong.
+
 Last resort, the XML: when `edit_presentation` cannot do it (an odd master, SmartArt text, a custom animation), `unpack_presentation`
 writes the XML parts to a folder, you edit them with the file tools (as little as possible, keep every `r:id` in use), and
 `pack_presentation` checks the package and saves the deck, refusing anything that would make PowerPoint offer a repair. Pictures stay in

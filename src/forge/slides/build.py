@@ -43,6 +43,7 @@ MARGIN = 0.8
 CONTENT_WIDTH = WIDTH - 2 * MARGIN
 TITLE_TOP, TITLE_HEIGHT = 0.5, 1.15
 BODY_TOP, BODY_BOTTOM = 1.95, 6.75
+MAIL_LIMIT_BYTES = 20 * 1024 * 1024
 MIN_BODY_PT = 16  # smaller text is not readable from the back of a room
 MAX_BULLETS, MAX_BULLET_WORDS, MAX_TABLE_ROWS = 6, 18, 10
 BULLET, SUB_BULLET = chr(0x2022), chr(0x2013)
@@ -286,6 +287,12 @@ class _Builder:
         )
         return placeholder
 
+    def picture_bytes(self, name: str) -> bytes:
+        """A workspace picture made ready for a slide: upright, at most 2560 px on the long side, compressed (images.py)."""
+        from forge.slides.images import prepare_image
+
+        return prepare_image(self.read_image(name))
+
     def warn(self, message: str) -> None:
         self.report.warnings.append(message)
 
@@ -433,7 +440,7 @@ class _Builder:
         from PIL import Image
 
         slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
-        data = self.read_image(slide_spec.image)
+        data = self.picture_bytes(slide_spec.image)
         with Image.open(io.BytesIO(data)) as picture:
             ratio = picture.width / picture.height
         caption_height = 0.5 if slide_spec.caption else 0.0
@@ -620,4 +627,10 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
             for name in (deck.brand.title_font, deck.brand.body_font)
             if name and (w := lint.font_warning(name))
         ]
+    size = len(output.getvalue())
+    if size > MAIL_LIMIT_BYTES:
+        notes.append(
+            f"the file is {size // (1024 * 1024)} MB: mail systems often refuse attachments above 20 to 25 MB. "
+            "Use fewer or smaller pictures, or share a link"
+        )
     return BuiltDeck(output.getvalue(), builder.reports, [*notes, *lint.deck_warnings(deck)])

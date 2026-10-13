@@ -15,6 +15,7 @@ from typing import Any
 
 from forge.slides.colorvision import palette_conflicts
 from forge.slides.edit_find import walk
+from forge.slides.geometry import Geometry
 
 DEFAULT_LANGUAGE = "en-US"
 VAGUE_LINKS = {"click here", "here", "link", "this link", "read more", "more", "this"}
@@ -60,11 +61,12 @@ def _description(shape: Any) -> str:
     return str(nodes[0]).strip() if nodes else ""
 
 
-def _is_footer_like(shape: Any, slide_height: int) -> bool:
-    if shape.top is None or not getattr(shape, "has_text_frame", False) or not shape.has_text_frame:
+def _is_footer_like(shape: Any, slide_height: int, geo: Geometry) -> bool:
+    top = geo.box(shape)[1]
+    if top is None or not getattr(shape, "has_text_frame", False) or not shape.has_text_frame:
         return False
     text = shape.text_frame.text.strip()
-    return shape.top > slide_height * 0.9 and len(text) < 120
+    return top > slide_height * 0.9 and len(text) < 120
 
 
 def _chart_colours(chart: Any) -> list[str]:
@@ -81,6 +83,7 @@ def _chart_colours(chart: Any) -> list[str]:
 
 def check_deck(prs: Any) -> list[Problem]:
     problems: list[Problem] = []
+    geo = Geometry()
     if not (prs.core_properties.title or "").strip():
         problems.append(
             Problem(
@@ -122,7 +125,7 @@ def check_deck(prs: Any) -> list[Problem]:
                     "the title is read after other text: move it first in the reading order",
                 )
             )
-        footers = [i for i, s in enumerate(tree) if _is_footer_like(s, prs.slide_height)]
+        footers = [i for i, s in enumerate(tree) if _is_footer_like(s, prs.slide_height, geo)]
         content_after = [
             i
             for i in range(len(tree))
@@ -197,6 +200,7 @@ def _has_text(shape: Any) -> bool:
 def improve_deck(prs: Any, language: str = DEFAULT_LANGUAGE, title: str = "") -> list[str]:
     """Repairs what needs no guessing; returns what was done."""
     done: list[str] = []
+    geo = Geometry()
     if title and not (prs.core_properties.title or "").strip():
         prs.core_properties.title = title
         done.append("set the document title")
@@ -211,7 +215,7 @@ def improve_deck(prs: Any, language: str = DEFAULT_LANGUAGE, title: str = "") ->
         done.append(f"set the language ({language}) on {set_lang} text runs")
     reordered = 0
     for slide in prs.slides:
-        reordered += _fix_reading_order(slide, prs.slide_height)
+        reordered += _fix_reading_order(slide, prs.slide_height, geo)
         slide_title = slide.shapes.title.text_frame.text.strip() if slide.shapes.title is not None else ""
         for shape in walk(slide.shapes):
             if getattr(shape, "has_chart", False) and shape.has_chart and not _description(shape):
@@ -232,27 +236,16 @@ def _set_description(shape: Any, text: str) -> None:
         nodes[0].set("descr", text)
 
 
-def _overlaps(first: Any, second: Any) -> bool:
-    if None in (
-        first.left,
-        first.top,
-        first.width,
-        first.height,
-        second.left,
-        second.top,
-        second.width,
-        second.height,
-    ):
+def _overlaps(first: Any, second: Any, geo: Geometry) -> bool:
+    a, b = geo.box(first), geo.box(second)
+    if None in a or None in b:
         return False
     return not (
-        first.left + first.width <= second.left
-        or second.left + second.width <= first.left
-        or first.top + first.height <= second.top
-        or second.top + second.height <= first.top
+        a[0] + a[2] <= b[0] or b[0] + b[2] <= a[0] or a[1] + a[3] <= b[1] or b[1] + b[3] <= a[1]  # type: ignore[operator]
     )
 
 
-def _fix_reading_order(slide: Any, slide_height: int) -> int:
+def _fix_reading_order(slide: Any, slide_height: int, geo: Geometry) -> int:
     """The title first and footer-like text last in the reading order. The list is also the drawing order (a later shape is drawn on
     top), so a shape only moves when that cannot change what is seen: the title does not go behind a shape it overlaps, a footer
     does not go on top of a later shape it overlaps."""
@@ -264,15 +257,15 @@ def _fix_reading_order(slide: Any, slide_height: int) -> int:
     order = list(shapes)
     moved = False
     position = next(i for i, s in enumerate(order) if s._element is title._element)
-    if position > 0 and not any(_overlaps(s, title) for s in order[:position]):
+    if position > 0 and not any(_overlaps(s, title, geo) for s in order[:position]):
         order.insert(0, order.pop(position))
         moved = True
     for shape in [
-        s for s in list(order) if s._element is not title._element and _is_footer_like(s, slide_height)
+        s for s in list(order) if s._element is not title._element and _is_footer_like(s, slide_height, geo)
     ]:
         index = next(i for i, s in enumerate(order) if s._element is shape._element)
         later = order[index + 1 :]
-        if later and not any(_overlaps(shape, s) for s in later):
+        if later and not any(_overlaps(shape, s, geo) for s in later):
             order.append(order.pop(index))
             moved = True
     if not moved:

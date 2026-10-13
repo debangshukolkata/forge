@@ -304,7 +304,7 @@ class TemplateBuilder(_Builder):
             self.warn("this sample has no picture to replace")
             return
         try:
-            data = self.read_image(name)
+            data = self.picture_bytes(name)
         except (OSError, ValueError, KeyError) as error:
             raise BuildError(f"the picture {name!r} could not be read: {error}") from error
         _, relation = slide.part.get_or_add_image_part(io.BytesIO(data))

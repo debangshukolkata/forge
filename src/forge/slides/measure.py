@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from forge.slides.powerpoint_lock import powerpoint_turn
-from forge.slides.preview import PreviewUnavailable, available
+from forge.slides.preview import PreviewUnavailable, available, timeout_for
 from forge.toolkit.private_env import without_private
 
 TIMEOUT_S = 180
@@ -97,14 +97,16 @@ def measure_deck(deck: Path) -> list[Measure]:
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
-                timeout=TIMEOUT_S,
+                timeout=timeout_for(deck, TIMEOUT_S),
                 env=environment,
                 check=False,
             )
     except TimeoutError as error:
         raise PreviewUnavailable(str(error)) from error
     except subprocess.TimeoutExpired as error:
-        raise PreviewUnavailable(f"PowerPoint did not answer within {TIMEOUT_S} seconds.") from error
+        raise PreviewUnavailable(
+            f"PowerPoint did not answer within {timeout_for(deck, TIMEOUT_S)} seconds."
+        ) from error
     if done.returncode != 0 or not done.stdout.strip():
         reason = (done.stderr or done.stdout).strip().splitlines()[:2]
         raise PreviewUnavailable("PowerPoint could not measure the deck: " + " ".join(reason)[:300])

@@ -14,6 +14,7 @@ from typing import Any
 
 from forge.slides.accessibility import check_deck
 from forge.slides.edit_find import walk
+from forge.slides.geometry import Geometry
 from forge.slides.themes import contrast
 
 MAX_WORDS_ON_SLIDE = 90
@@ -94,7 +95,7 @@ def _solid(fill: Any) -> str | None:
         return None
 
 
-def _behind(slide: Any, shape: Any) -> str | None:
+def _behind(slide: Any, shape: Any, geo: Geometry) -> str | None:
     """The solid fill of the shape the text sits in, or of the last filled shape under it, else the slide background."""
     try:
         own = _solid(shape.fill)
@@ -103,16 +104,20 @@ def _behind(slide: Any, shape: Any) -> str | None:
     if own:
         return own
     colour = _solid(slide.background.fill)
+    inner = geo.full(shape)
     for other in slide.shapes:
         if other._element is shape._element:
             break
+        outer = geo.full(other)
+        if inner is None or outer is None:
+            continue
+        covers = (
+            outer[0] <= inner[0]
+            and outer[1] <= inner[1]
+            and outer[0] + outer[2] >= inner[0] + inner[2]
+            and outer[1] + outer[3] >= inner[1] + inner[3]
+        )
         try:
-            covers = (
-                other.left <= shape.left
-                and other.top <= shape.top
-                and other.left + other.width >= shape.left + shape.width
-                and other.top + other.height >= shape.top + shape.height
-            )
             if covers and not (getattr(other, "has_text_frame", False) and other.text_frame.text.strip()):
                 colour = _solid(other.fill) or colour
         except (AttributeError, ValueError, TypeError, KeyError):
@@ -122,6 +127,7 @@ def _behind(slide: Any, shape: Any) -> str | None:
 
 def review_deck(prs: Any, minutes: int | None = None) -> list[Finding]:
     findings: list[Finding] = []
+    geo = Geometry()
     slides = list(prs.slides)
     titles: list[tuple[int, str]] = []
     for number, slide in enumerate(slides, start=1):
@@ -193,8 +199,8 @@ def review_deck(prs: Any, minutes: int | None = None) -> list[Finding]:
                         "cut it to one short line",
                     )
                 )
-        findings.extend(_slide_geometry(prs, slide, number))
-        findings.extend(_slide_contrast(slide, number))
+        findings.extend(_slide_geometry(prs, slide, number, geo))
+        findings.extend(_slide_contrast(slide, number, geo))
         for shape in slide.shapes:
             if (
                 shape.is_placeholder
@@ -231,7 +237,7 @@ def review_deck(prs: Any, minutes: int | None = None) -> list[Finding]:
                     "give each slide its own message",
                 )
             )
-    findings.extend(_deck_consistency(slides))
+    findings.extend(_deck_consistency(slides, geo))
     findings.extend(_deck_rhythm(slides))
     content = max(len(slides) - 2, 1)
     if minutes and content > minutes:
@@ -257,20 +263,16 @@ def review_deck(prs: Any, minutes: int | None = None) -> list[Finding]:
     return findings
 
 
-def _slide_geometry(prs: Any, slide: Any, number: int) -> list[Finding]:
+def _slide_geometry(prs: Any, slide: Any, number: int, geo: Geometry) -> list[Finding]:
     found: list[Finding] = []
     width, height = prs.slide_width, prs.slide_height
     slack = EMU // 20
-    boxes = [s for s in _text_frames(slide) if None not in (s.left, s.top, s.width, s.height)]
+    boxes = [(s, box) for s in _text_frames(slide) if (box := geo.full(s)) is not None]
     for shape in slide.shapes:
-        if None in (shape.left, shape.top, shape.width, shape.height) or _is_chrome(shape):
+        left, top, w, h = geo.box(shape)
+        if left is None or top is None or w is None or h is None or _is_chrome(shape):
             continue
-        if (
-            shape.left < -slack
-            or shape.top < -slack
-            or shape.left + shape.width > width + slack
-            or shape.top + shape.height > height + slack
-        ):
+        if left < -slack or top < -slack or left + w > width + slack or top + h > height + slack:
             found.append(
                 Finding(
                     "layout",
@@ -280,15 +282,13 @@ def _slide_geometry(prs: Any, slide: Any, number: int) -> list[Finding]:
                     "move or resize it inside the slide",
                 )
             )
-    for index, first in enumerate(boxes):
-        for second in boxes[index + 1 :]:
-            overlap_w = min(first.left + first.width, second.left + second.width) - max(
-                first.left, second.left
-            )
-            overlap_h = min(first.top + first.height, second.top + second.height) - max(first.top, second.top)
+    for index, (first, a) in enumerate(boxes):
+        for second, b in boxes[index + 1 :]:
+            overlap_w = min(a[0] + a[2], b[0] + b[2]) - max(a[0], b[0])
+            overlap_h = min(a[1] + a[3], b[1] + b[3]) - max(a[1], b[1])
             if overlap_w <= EMU * 0.1 or overlap_h <= EMU * 0.1:
                 continue
-            share = overlap_w * overlap_h / min(first.width * first.height, second.width * second.height)
+            share = overlap_w * overlap_h / min(a[2] * a[3], b[2] * b[3])
             if share > 0.25:
                 found.append(
                     Finding(
@@ -302,9 +302,9 @@ def _slide_geometry(prs: Any, slide: Any, number: int) -> list[Finding]:
     return found
 
 
-def _slide_contrast(slide: Any, number: int) -> list[Finding]:
+def _slide_contrast(slide: Any, number: int, geo: Geometry) -> list[Finding]:
     for shape in _text_frames(slide):
-        background = _behind(slide, shape)
+        background = _behind(slide, shape, geo)
         if not background:
             continue
         for paragraph in shape.text_frame.paragraphs:
@@ -328,7 +328,7 @@ def _slide_contrast(slide: Any, number: int) -> list[Finding]:
     return []
 
 
-def _deck_consistency(slides: list[Any]) -> list[Finding]:
+def _deck_consistency(slides: list[Any], geo: Geometry) -> list[Finding]:
     found: list[Finding] = []
     families: Counter[str] = Counter()
     sizes: Counter[float] = Counter()
@@ -372,11 +372,12 @@ def _deck_consistency(slides: list[Any]) -> list[Finding]:
             )
         )
     spots = [
-        (number, slide.shapes.title.left, slide.shapes.title.top)
+        (number, box[0], box[1])
         for number, slide in enumerate(slides, start=1)
         if number not in (1, len(slides))
         and slide.shapes.title is not None
-        and slide.shapes.title.left is not None
+        and (box := geo.box(slide.shapes.title))[0] is not None
+        and box[1] is not None
     ]
     if spots:
         usual_left = Counter(left for _, left, _ in spots).most_common(1)[0][0]

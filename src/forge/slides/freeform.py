@@ -134,7 +134,7 @@ class _Freeform:
             return
         from PIL import Image, ImageStat
 
-        data = b.read_image(spec.background_image)
+        data = b.picture_bytes(spec.background_image)
         with Image.open(io.BytesIO(data)) as picture:
             ratio = picture.width / picture.height
             average = "".join(f"{round(v):02X}" for v in ImageStat.Stat(picture.convert("RGB")).mean)
@@ -417,7 +417,7 @@ class _Freeform:
         from PIL import Image
 
         b = self.b
-        data = b.read_image(el.path)
+        data = b.picture_bytes(el.path)
         with Image.open(io.BytesIO(data)) as picture:
             ratio = picture.width / picture.height
         box_ratio = el.w / el.h
