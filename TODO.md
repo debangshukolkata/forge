@@ -212,7 +212,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   or fix them. Size M.
 - [x] **P2.18 Reliable overflow detection.** With PowerPoint present, measure each text box's real text height through PowerPoint **(done 2026-10-13, D-287)**
   instead of our estimate; without it keep the estimate. Size M.
-- [ ] **P2.19 Build from documents.** Read Word, Excel/CSV and PDF sources (DebCraft has PDF page rendering only) and turn them into a deck:
+- [x] **P2.19 Build from documents.** (done 2026-10-14, D-338: `read_source_document` and a skill section; the user's sample documents are still wanted to tune it) Read Word, Excel/CSV and PDF sources (DebCraft has PDF page rendering only) and turn them into a deck:
   summarise, pick charts, cite sources in notes. Size M.
 - [x] **P2.20 Storyline guides.** (done 2026-10-13, D-322) Short guides in the skill for common decks (board update, pitch, QBR, design review, training, project
   status), including slide counts, timing and speaker-note style. Size S.

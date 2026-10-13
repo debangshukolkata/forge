@@ -25,6 +25,17 @@ A good deck has one thread: situation, the point, the evidence, what to do next.
 answer or main message up front, 3-6 content slides each making one point, a "next steps" or decision slide,
 optionally a closing slide. A section slide only when the deck has distinct parts (more than about 8 slides).
 
+## 1b. When the deck comes from documents
+`read_source_document(path)` turns a Word, Excel, CSV or PDF file into a digest: Word as headings with text, bullets and tables; Excel and CSV as
+columns, sample rows, min, max, total and last of each numeric column, and chart-ready series with the cell range; PDF as text per page. Then:
+1. Decide the story first (section 1), then take from the digest only what the story needs: the headings are the candidate slides, the numbers
+   are the evidence. Never state a number the digest does not hold; a missing one is left out or marked "to confirm" in the notes.
+2. A chart-ready series goes into a `chart` slide as given (`categories` and `series` with the digest's values); a Word table goes into a
+   `table` slide (cut to the rows that matter); long paragraphs become one claim in the title and two or three supporting lines.
+3. Cite in the speaker notes of each slide: `Source: sales.xlsx, sheet Sales C2:C13` or `Source: report.docx, section Results`.
+4. A scanned PDF has no text: render its pages with `pdf_render` and read them with `ocr_image`, and say that the text was read by OCR.
+5. Several documents: read each, write the story across them, and say which document each slide rests on in the notes.
+
 ## 2. Write the outline file
 
 Write `docs/<name>-outline.json` (or `.yaml`) with `write_file`. Fields: `title`, optional `subtitle`, `author`,
