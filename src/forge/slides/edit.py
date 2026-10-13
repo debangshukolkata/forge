@@ -8,28 +8,17 @@ works or stops the whole edit with a message naming the operation, so a half-edi
 from __future__ import annotations
 
 from collections.abc import Callable
-from copy import deepcopy
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
-from forge.slides.clone import clone_part
+from forge.slides.clone import copy_slide
 from forge.slides.edit_find import find_shape, slide_at, walk
 from forge.slides.edit_more import MORE_OPERATIONS, MoreOperation, apply_more
 from forge.slides.edit_text import set_frame_text
 from forge.slides.features import copy_features, keep_sections_valid
 from forge.slides.open_deck import DeckError
 from forge.slides.spec import Series
-
-NS_R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-UNSUPPORTED_COPY = (
-    "oleObject",
-    "package",
-    "video",
-    "audio",
-    "media",
-    "diagramData",
-)  # a chart is cloned (clone.py)
 
 
 class _Op(BaseModel):
@@ -224,46 +213,10 @@ def _move(deck: Any, number: int, to: int) -> None:
 
 def _duplicate(deck: Any, number: int, at: int | None) -> None:
     source = slide_at(deck, number)
-    copy = deck.slides.add_slide(source.slide_layout)
-    for shape in list(copy.shapes):
-        shape._element.getparent().remove(shape._element)
-    tree = copy.shapes._spTree
-    for element in source.shapes._spTree:
-        if not element.tag.endswith(("}nvGrpSpPr", "}grpSpPr", "}extLst")):
-            tree.append(deepcopy(element))
-    for node in tree.iter():
-        for attribute in ("embed", "link", "id", "pict"):
-            old = node.get(f"{{{NS_R}}}{attribute}")
-            if old is None:
-                continue
-            relation = source.part.rels[old]
-            kind = relation.reltype.rsplit("/", 1)[-1]
-            if kind in UNSUPPORTED_COPY:
-                raise DeckError(
-                    f"slide {number} holds a {kind}, which cannot be copied safely: "
-                    "add a new slide and build it again"
-                )
-            if relation.is_external:
-                node.set(
-                    f"{{{NS_R}}}{attribute}",
-                    copy.part.relate_to(relation.target_ref, relation.reltype, is_external=True),
-                )
-            elif kind == "chart":
-                node.set(
-                    f"{{{NS_R}}}{attribute}",
-                    copy.part.relate_to(
-                        clone_part(relation.target_part, deck.part.package), relation.reltype
-                    ),
-                )
-            else:
-                node.set(
-                    f"{{{NS_R}}}{attribute}", copy.part.relate_to(relation.target_part, relation.reltype)
-                )
-    background = source._element.cSld.find("{http://schemas.openxmlformats.org/presentationml/2006/main}bg")
-    if background is not None:
-        copy._element.cSld.insert(0, deepcopy(background))
-    if source.has_notes_slide:
-        copy.notes_slide.notes_text_frame.text = source.notes_slide.notes_text_frame.text
+    try:
+        copy = copy_slide(source, deck, source.slide_layout)
+    except DeckError as error:
+        raise DeckError(f"slide {number}: {error}") from error
     copy_features(source, copy)
     _move(deck, len(deck.slides), at if at is not None else number + 1)
 
@@ -464,13 +417,16 @@ def _update_table(deck: Any, operation: UpdateTable) -> None:
 
 
 def apply_operations(
-    deck: Any, operations: list[Operation], read_image: Callable[[str], bytes] | None = None
+    deck: Any,
+    operations: list[Operation],
+    read_image: Callable[[str], bytes] | None = None,
+    open_source: Callable[[str], Any] | None = None,
 ) -> list[str]:
     """Runs the operations in order. Returns what was done; raises DeckError naming the failing operation."""
     done: list[str] = []
     for number, operation in enumerate(operations, start=1):
         try:
-            done.append(_apply(deck, operation, read_image))
+            done.append(_apply(deck, operation, read_image, open_source))
         except DeckError as error:
             raise DeckError(
                 f"operation {number} ({operation.op}) failed: {error}. Nothing was saved."
@@ -478,7 +434,12 @@ def apply_operations(
     return done
 
 
-def _apply(deck: Any, operation: Operation, read_image: Callable[[str], bytes] | None) -> str:
+def _apply(
+    deck: Any,
+    operation: Operation,
+    read_image: Callable[[str], bytes] | None,
+    open_source: Callable[[str], Any] | None = None,
+) -> str:
     if isinstance(operation, ReplaceText):
         slides = [slide_at(deck, operation.slide)] if operation.slide else list(deck.slides)
         count = sum(
@@ -521,4 +482,4 @@ def _apply(deck: Any, operation: Operation, read_image: Callable[[str], bytes] |
     if isinstance(operation, UpdateTable):
         _update_table(deck, operation)
         return f"updated the table on slide {operation.slide}"
-    return apply_more(deck, operation, read_image)
+    return apply_more(deck, operation, read_image, open_source)

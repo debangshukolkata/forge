@@ -148,6 +148,12 @@ Per-slide outline fields: `hidden: true` (backup slides, skipped in the show), `
 speaker reads from the slide line by line unless asked.
 
 ## 5. Existing decks and company templates
+Combining decks: `edit_presentation` with `{"op": "import_slides", "source": "other.pptx", "slides": [2, 5], "at": 3, "design": "keep"}`
+brings slides from another deck (design `keep`: they keep their own master, fonts and colours; `match`: they take this deck's layouts and
+are scaled; sizes that differ force `match`). `merge_presentations` joins whole decks into a new file with a section per deck, and
+`split_presentation` writes chosen slides to new files. After a merge, preview the joins: two looks in one deck usually want one of them
+changed (`set_theme`) or `match` instead. Slides with video, audio, OLE objects or SmartArt are refused with the reason.
+
 Reviewing a deck (the user's or yours): `review_presentation` lists measurable problems (label titles, wall-of-text slides, mixed
 fonts, tiny text, jumping titles, low contrast, off-slide or overlapping shapes, same-layout runs, missing notes, accessibility) each
 with the fix to make. Do the problems first, weigh the suggestions, then `preview_presentation` and look: the review cannot judge the

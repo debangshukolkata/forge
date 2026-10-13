@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -9,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from forge.slides import features
 from forge.slides.edit_base import Op as _Op
 from forge.slides.edit_find import find_shape, slide_at
+from forge.slides.open_deck import DeckError
 
 
 class HideSlide(_Op):
@@ -58,12 +60,43 @@ class AddComment(_Op):
     author: str = "DebCraft"
 
 
-FeatureOperation = HideSlide | SetTransition | AnimateShape | ClearAnimations | SetSections | AddComment
-FEATURE_OPERATIONS = "hide_slide, set_transition, animate, clear_animations, set_sections, add_comment"
-FEATURE_TYPES = (HideSlide, SetTransition, AnimateShape, ClearAnimations, SetSections, AddComment)
+class ImportSlides(_Op):
+    op: Literal["import_slides"]
+    source: str  # another .pptx in the project
+    slides: list[int] = Field(default_factory=list)  # which of its slides (1-based); empty = all
+    at: int | None = None  # position in this deck; default the end
+    design: Literal["keep", "match"] = "keep"  # keep the source's own master and layouts, or use this deck's
 
 
-def apply_feature(deck: Any, operation: Any) -> str:
+FeatureOperation = (
+    HideSlide | SetTransition | AnimateShape | ClearAnimations | SetSections | AddComment | ImportSlides
+)
+FEATURE_OPERATIONS = (
+    "hide_slide, set_transition, animate, clear_animations, set_sections, add_comment, import_slides"
+)
+FEATURE_TYPES = (
+    HideSlide,
+    SetTransition,
+    AnimateShape,
+    ClearAnimations,
+    SetSections,
+    AddComment,
+    ImportSlides,
+)
+
+
+def apply_feature(deck: Any, operation: Any, open_source: Callable[[str], Any] | None = None) -> str:
+    if isinstance(operation, ImportSlides):
+        if open_source is None:
+            raise DeckError("importing slides needs access to the other deck, which is not available here")
+        from forge.slides.importer import import_slides
+
+        before = len(deck.slides)
+        notes = import_slides(
+            deck, open_source(operation.source), operation.slides or None, operation.at, operation.design
+        )
+        text = f"imported {len(deck.slides) - before} slide(s) from {operation.source} (design {operation.design})"
+        return text + ("; " + "; ".join(notes) if notes else "")
     if isinstance(operation, HideSlide):
         features.set_hidden(slide_at(deck, operation.slide), operation.hidden)
         return f"{'hid' if operation.hidden else 'showed'} slide {operation.slide}"

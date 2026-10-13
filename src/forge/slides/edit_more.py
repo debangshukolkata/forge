@@ -362,9 +362,14 @@ def _remove_empty(deck: Any, op: RemoveEmptyPlaceholders) -> str:
     return f"removed {count} empty placeholder(s)"
 
 
-def apply_more(deck: Any, operation: Any, read_image: Callable[[str], bytes] | None) -> str:
+def apply_more(
+    deck: Any,
+    operation: Any,
+    read_image: Callable[[str], bytes] | None,
+    open_source: Callable[[str], Any] | None = None,
+) -> str:
     if isinstance(operation, FEATURE_TYPES):
-        return apply_feature(deck, operation)
+        return apply_feature(deck, operation, open_source)
     if isinstance(operation, ReplacePicture):
         return _replace_picture(deck, operation, read_image)
     if isinstance(operation, FormatText):

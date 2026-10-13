@@ -20,6 +20,7 @@ from forge.slides.contact_sheet import ContactSheetUnavailable, make_contact_she
 from forge.slides.convert import OLD_FORMATS, convert_deck
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
 from forge.slides.extract import deck_markdown
+from forge.slides.importer import merge_decks, split_deck
 from forge.slides.measure import measure_deck, overflow_problems
 from forge.slides.open_deck import DeckError, open_deck, save_deck
 from forge.slides.read import describe_deck, slide_notes
@@ -291,6 +292,95 @@ class ReviewPresentation(Tool):
         return ToolResult(ok=True, content=summarize(findings))
 
 
+class SplitPart(ToolArgs):
+    output: str
+    slides: list[int] = Field(min_length=1, description="Slide numbers (1-based) this part keeps")
+
+
+class MergePresentations(Tool):
+    name = "merge_presentations"
+    read_only = False
+    description = (
+        "Combine decks into one new .pptx: the first deck, then every slide of the others, each keeping its own look (design 'keep') or "
+        "taking the first deck's (design 'match'). One section per source deck. To bring only some slides into a deck you are editing, use "
+        "edit_presentation with an import_slides operation instead."
+    )
+
+    class Args(ToolArgs):
+        paths: list[str] = Field(
+            min_length=2, description="The decks in order, relative to the repository root"
+        )
+        output: str = Field(description="Where to save the merged deck (a .pptx)")
+        design: Literal["keep", "match"] = "keep"
+
+    def summary(self, args: MergePresentations.Args) -> str:
+        return f"merge {len(args.paths)} decks into {args.output}"
+
+    async def run(self, args: MergePresentations.Args, context: ToolContext) -> ToolResult:
+        if not args.output.lower().endswith(".pptx"):
+            return ToolResult(ok=False, content="Save the result as a .pptx.")
+        try:
+            decks = []
+            for path in args.paths:
+                file = context.workspace.path_of(path)
+                if not file.is_file():
+                    return ToolResult(ok=False, content=f"No file at {path}.")
+                decks.append((Path(path).stem, await asyncio.to_thread(open_deck, file)))
+            merged, notes = await asyncio.to_thread(merge_decks, decks, args.design)
+            data = save_deck(merged)
+            context.workspace.write_bytes(args.output, data, "decks merged")
+        except SlidesUnavailable as error:
+            return ToolResult(ok=False, content=f"{error} Tell the user.")
+        except (ForgeError, OSError, ValueError) as error:
+            return ToolResult(ok=False, content=str(error))
+        faults = validate_package(data)
+        if faults:
+            return ToolResult(ok=False, content=_fault_message(args.output, faults))
+        lines = [f"Saved {args.output} ({len(merged.slides)} slides from {len(args.paths)} decks).", *notes]
+        lines.append("Next: preview_presentation and look at the joins between the decks.")
+        return ToolResult(ok=True, content="\n".join(lines))
+
+
+class SplitPresentation(Tool):
+    name = "split_presentation"
+    read_only = False
+    description = (
+        "Split a deck into several new .pptx files, each with the slides you choose (the original is not changed). For example a short "
+        "version of a long deck, or one file per section."
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(description="The deck, relative to the repository root")
+        parts: list[SplitPart] = Field(
+            min_length=1, description="Each part: where to save it and which slides it keeps"
+        )
+
+    def summary(self, args: SplitPresentation.Args) -> str:
+        return f"split {args.path} into {len(args.parts)} file(s)"
+
+    async def run(self, args: SplitPresentation.Args, context: ToolContext) -> ToolResult:
+        source = context.workspace.path_of(args.path)
+        if not source.is_file():
+            return ToolResult(ok=False, content=f"No file at {args.path}.")
+        written = []
+        try:
+            for part in args.parts:
+                if not part.output.lower().endswith(".pptx"):
+                    return ToolResult(ok=False, content=f"{part.output}: save each part as a .pptx.")
+                deck = await asyncio.to_thread(open_deck, source)  # a fresh copy for each part
+                data = save_deck(split_deck(deck, part.slides))
+                faults = validate_package(data)
+                if faults:
+                    return ToolResult(ok=False, content=_fault_message(part.output, faults))
+                context.workspace.write_bytes(part.output, data, f"split from {args.path}")
+                written.append(f"{part.output} ({len(part.slides)} slides)")
+        except SlidesUnavailable as error:
+            return ToolResult(ok=False, content=f"{error} Tell the user.")
+        except (ForgeError, OSError, ValueError) as error:
+            return ToolResult(ok=False, content=str(error))
+        return ToolResult(ok=True, content="Saved:\n" + "\n".join(f"- {line}" for line in written))
+
+
 class AnalyzeTemplate(Tool):
     name = "analyze_template"
     read_only = False  # with pictures it writes them under .forge/reports
@@ -396,6 +486,7 @@ class EditPresentation(Tool):
                 deck,
                 parse_operations(args.operations),
                 lambda name: image_path(context, name).read_bytes(),
+                lambda name: open_deck(context.workspace.path_of(name)),
             )
             data = save_deck(deck)
             context.workspace.write_bytes(target, data, args.reason or "presentation edited")
@@ -522,6 +613,8 @@ def presentation_tools() -> list[Tool]:
         BuildPresentation(),
         ReadPresentation(),
         ConvertPresentation(),
+        MergePresentations(),
+        SplitPresentation(),
         AnalyzeTemplate(),
         CheckAccessibility(),
         ReviewPresentation(),
