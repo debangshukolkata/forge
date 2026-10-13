@@ -229,6 +229,12 @@ photographs and the feel; (2) build one `freeform` slide with that brand kit and
 `compare_to_reference(rendered, reference)`: fix the cells it names and repeat, at most three rounds; (4) say plainly what is not exact
 (fonts, photographs, logos: ask for the logo file). Colours and positions are matched closely; the typeface and artwork are not.
 
+**An exact copy is not the goal; the essence is.** Some designs cannot be reproduced from a picture with shapes and text (illustrations, special
+effects, artwork). After the last comparison round, judge it yourself: does the slide carry what made the reference recognisable (palette, mood, layout
+idea, hierarchy) and does it say what the user asked? If a faithful copy is out of reach, make a clean slide of your own that keeps the essence and
+looks good, rather than a poor imitation, and say in one or two lines which parts you kept and which you changed and why. Never present a weak match
+as a match.
+
 **Use a company template** (a `.potx`, or any 16:9 `.pptx` with the right masters). The goal: a deck in the corporate format,
 made of the template's own slides. Steps:
 1. `analyze_template(path, pictures=true)`: size, theme colours, fonts, the layouts, and the template's SAMPLE SLIDES, each with its

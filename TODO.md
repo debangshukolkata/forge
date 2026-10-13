@@ -560,3 +560,5 @@ Done and pushed:
 - [x] Reference recipes, independent `design-critic` with a SHIP/REVISE gate, stricter audit, identical-screenshot guard (D-249)
 - [x] DESIGN.md workflow, taste checks, redesign protocol, on-demand brand references (D-250)
 - [x] Tested library: style directions, modern CSS, motion kit, native components, vetted sources (D-251)
+
+- Guidance from the user 2026-10-14 (applies to P2.24/P2.25 and the template work): an exact replica is not required; where the design cannot be reproduced, Forge judges for itself, makes a different but good-looking slide that keeps the essence, and judges whether the result answers the ask. Written into the make-presentation skill; the benchmark for P2.25 should grade essence and judgement, not pixel match.
