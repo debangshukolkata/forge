@@ -18,7 +18,13 @@ class ContactSheetUnavailable(Exception):
     """Pillow is missing."""
 
 
-def make_contact_sheets(pictures: list[Path], folder: Path, columns: int = COLUMNS) -> list[Path]:
+def make_contact_sheets(
+    pictures: list[Path],
+    folder: Path,
+    columns: int = COLUMNS,
+    per_sheet: int = PER_SHEET,
+    prefix: str = "contact-sheet",
+) -> list[Path]:
     """Writes `contact-sheet-1.png`, `contact-sheet-2.png`, ... into `folder` from the slide pictures (in order) and
     returns their paths. The slide numbers are drawn on each tile."""
     try:
@@ -26,10 +32,10 @@ def make_contact_sheets(pictures: list[Path], folder: Path, columns: int = COLUM
     except ImportError as error:
         raise ContactSheetUnavailable("Pillow is not installed; look at the slides one by one.") from error
     sheets: list[Path] = []
-    for old in folder.glob("contact-sheet-*.png"):
+    for old in folder.glob(f"{prefix}-*.png"):
         old.unlink()
-    for sheet_number, start in enumerate(range(0, len(pictures), PER_SHEET), start=1):
-        group = pictures[start : start + PER_SHEET]
+    for sheet_number, start in enumerate(range(0, len(pictures), per_sheet), start=1):
+        group = pictures[start : start + per_sheet]
         tiles = []
         for offset, path in enumerate(group):
             with Image.open(path) as source:
@@ -50,7 +56,7 @@ def make_contact_sheets(pictures: list[Path], folder: Path, columns: int = COLUM
             canvas.paste(tile, (x, y))
             draw.rectangle((x, y, x + 46, y + 30), fill=BADGE)
             draw.text((x + 8, y + 8), str(number), fill=(255, 255, 255))
-        target = folder / f"contact-sheet-{sheet_number}.png"
+        target = folder / f"{prefix}-{sheet_number}.png"
         canvas.save(target)
         sheets.append(target)
     return sheets

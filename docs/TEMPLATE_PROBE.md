@@ -21,3 +21,15 @@ What it writes (in the folder it prints):
 
 What to send back: `report.txt` and the contact sheets (`*-contact-sheet-*.png`). The pictures show the template, so check them before
 sending; with `--hide-text` the report has no template wording, but the pictures still do. Nothing is sent anywhere by the command.
+
+## The quick look for a very large template (`template_look.py`, D-331)
+
+If the full probe is too much, this makes only a handful of files (PowerPoint needed for the pictures):
+
+```
+.venv\Scripts\python scripts\dev\template_look.py "C:\path\to\company-template.potx"
+```
+It prints a short summary (size, slide size, masters, layouts, sample slides, every master's twelve theme colours and its fonts, which fonts
+this computer lacks) and writes, next to the template, a folder `<template name>-look` with `summary.txt`, `palettes.png` (all palettes),
+`layouts-N.png` (one slide per layout, every master shown, at most 40) and `samples-N.png` (the template's own slides, at most 40), and
+`template-look.zip` with all of them. Send the zip, or photograph the printed summary and the first pictures. Nothing is sent by the script.
