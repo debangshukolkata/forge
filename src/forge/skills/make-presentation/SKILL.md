@@ -57,6 +57,18 @@ Layouts and their fields:
 - **Images** need `alt` text saying what they show. Use pictures that carry meaning, not decoration.
 - **Speaker notes** on every content slide: the sentence you would say, and the source of any number.
 
+### Avoid the generated look (the build warns about most of these)
+- **No decoration under titles.** No accent bar or line under a title; the title and white space are enough.
+- **Do not default to one blue.** Pick the theme and accent for the audience and topic; use one accent plus neutrals.
+- **Vary the layout.** Never three of the same layout in a row; mix chart, stats, two-column, picture and freeform slides.
+- **Every content slide has a visual:** a chart, big numbers, a table, a picture or a drawn diagram. A deck that is mostly
+  bullets is a document, not a presentation.
+- **Dark and light sandwich:** dark title and closing slides with light content slides in between (or dark throughout), not a
+  random mix.
+- **Takeaway titles:** a sentence that says the point and at most 12 words. A bare topic word is flagged.
+- **Fonts that exist everywhere:** Calibri and Georgia are used by the themes. In freeform text prefer Arial, Calibri, Cambria,
+  Georgia, Times New Roman, Courier New. Other fonts may be replaced on the reader's computer and then text no longer fits.
+
 ## 4. Build, look, fix
 
 1. `build_presentation(outline=..., output="docs/<name>.pptx")`. Read the warnings; fix each in the outline and

@@ -1,5 +1,5 @@
-"""The looks a deck can have (D-240). Fonts are ones every Windows and Mac Office install has, so the deck
-looks the same on the reader's computer. Colours were picked for contrast (text on its background)."""
+"""The looks a deck can have (D-240). Fonts are ones every Windows and Mac Office install has (Calibri, Georgia), so
+the deck looks the same on the reader's computer. Colours were picked for contrast (text on its background)."""
 
 from __future__ import annotations
 
@@ -16,8 +16,8 @@ class Theme:
     accent: str
     accent_text: str  # text drawn on the accent colour
     palette: tuple[str, ...]  # chart series colours, in order
-    title_font: str = "Segoe UI Semibold"
-    body_font: str = "Segoe UI"
+    title_font: str = "Calibri"  # on every Windows and Mac Office install (P1.7); bold is applied to titles
+    body_font: str = "Calibri"
 
 
 THEMES: dict[str, Theme] = {

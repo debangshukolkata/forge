@@ -155,7 +155,7 @@ class _Freeform:
                 bold=el.bold,
                 italic=el.italic,
                 heading=el.font == "title",
-                font="Consolas" if el.font == "mono" else None,
+                font="Courier New" if el.font == "mono" else None,
                 align=el.align,
                 bullet=el.bullets,
                 after=size * gap,
@@ -216,7 +216,7 @@ class _Freeform:
                     colour,
                     bold=el.bold,
                     heading=el.font == "title",
-                    font="Consolas" if el.font == "mono" else None,
+                    font="Courier New" if el.font == "mono" else None,
                     align=el.align,
                 )
         else:

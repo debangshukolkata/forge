@@ -1,6 +1,6 @@
 """Estimates whether text fits its box (D-240), so a slide shrinks its text or says it is too full before
 anyone opens PowerPoint. The estimate is deliberately a little pessimistic: it assumes an average character
-is about half an em wide, which holds for Segoe UI, Calibri and Georgia."""
+is about half an em wide, which holds for Calibri (a little narrower, so the estimate stays pessimistic), Arial and Georgia."""
 
 from __future__ import annotations
 

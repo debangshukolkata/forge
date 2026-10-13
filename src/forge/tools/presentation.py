@@ -69,6 +69,7 @@ class BuildPresentation(Tool):
             return ToolResult(ok=False, content=str(error))
         context.last_edit_step = context.step
         warnings = [f"slide {s.number} ({s.layout}): {w}" for s in built.slides for w in s.warnings]
+        warnings += [f"deck: {w}" for w in built.deck_warnings]
         lines = [f"Built {args.output}: {len(built.slides)} slides, {len(built.data) // 1024} KB."]
         lines += (
             ["Fix these in the outline and build again:", *[f"- {w}" for w in warnings]]

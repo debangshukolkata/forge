@@ -151,11 +151,11 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 - [ ] **P1.3 Layout helpers for free-form.** Row, column and grid containers (equal widths, gaps, alignment) so the model states intent
   ("three equal cards, 0.4 gap") instead of computing coordinates; fewer collisions. Size M.
 - [ ] **P1.4 Rich text.** Mixed bold, colour and size inside one paragraph, links, line and letter spacing, vertical text. Size M.
-- [ ] **P1.5 Fix our own template habits that look generic.** Remove the accent bar under titles, stop defaulting to one blue, vary
+- [x] **P1.5 Fix our own template habits that look generic.** Remove the accent bar under titles, stop defaulting to one blue, vary **(done 2026-10-13, D-276: accent bars removed, lint for repeated layouts, text-only decks and freeform accent bars, skill rules; the default single-blue and one-colour-per-theme point is left to the model through the skill)**
   layouts, give every slide a visual element, use dark/light "sandwich" structure; make `make-presentation` say so and the checks
   warn (same layout repeated, text-only slide, accent line). Size S.
-- [ ] **P1.6 Title lint.** Warn when a title is a topic ("Search") instead of a takeaway ("Search is 4x faster"); count words. Size S.
-- [ ] **P1.7 Safe fonts.** Prefer fonts that exist everywhere (Arial, Calibri, Cambria, Times New Roman, Courier New, Bookman, Century
+- [x] **P1.6 Title lint.** Warn when a title is a topic ("Search") instead of a takeaway ("Search is 4x faster"); count words. Size S. **(done 2026-10-13, D-276)**
+- [x] **P1.7 Safe fonts.** Prefer fonts that exist everywhere (Arial, Calibri, Cambria, Times New Roman, Courier New, Bookman, Century **(done 2026-10-13, D-276: themes use Calibri and Georgia, mono is Courier New, `font_warning` lists the safe set)**
   Schoolbook), warn on others, and say which fonts' fit estimates are unreliable. Our default Segoe UI / Georgia need review. Size S.
 - [ ] **P1.8 Package validator.** Check a finished .pptx for faults PowerPoint refuses to open (bad chart XML, wrong element order,
   broken relationships, duplicate ids) and name the fix. Write our own validator from the OOXML spec; run it after every build and

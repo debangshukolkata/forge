@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from forge.errors import ForgeError
-from forge.slides import fit
+from forge.slides import fit, lint
 from forge.slides.freeform import build_freeform
 from forge.slides.spec import (
     BulletGroup,
@@ -64,6 +64,9 @@ class SlideReport:
 class BuiltDeck:
     data: bytes
     slides: list[SlideReport]
+    deck_warnings: list[str] = field(
+        default_factory=list
+    )  # about the deck as a whole (rhythm, text-only, ...)
 
 
 ReadImage = Callable[[str], bytes]
@@ -239,7 +242,6 @@ class _Builder:
     def content_slide(self, layout: str, title: str, notes: str) -> Any:
         slide = self.new_slide(layout, title, notes)
         self.title(slide, title)
-        self.rectangle(slide, MARGIN, TITLE_TOP + TITLE_HEIGHT + 0.12, 0.9, 0.06, self.theme.accent)
         self.add_footer(slide)
         return slide
 
@@ -299,7 +301,6 @@ class _Builder:
 
     def title_slide(self, slide_spec: TitleSlide | ClosingSlide, closing: bool) -> None:
         slide = self.new_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
-        self.rectangle(slide, MARGIN, 2.2, 1.2, 0.09, self.theme.accent)
         self.title(slide, slide_spec.title, 46, x=MARGIN, y=2.45, w=CONTENT_WIDTH * 0.8, h=1.7, middle=False)
         subtitle = slide_spec.subtitle or (self.deck.subtitle if not closing else "")
         if subtitle:
@@ -581,4 +582,6 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
     properties.title, properties.author = deck.title, deck.author or ""
     output = io.BytesIO()
     builder.prs.save(output)
-    return BuiltDeck(output.getvalue(), builder.reports)
+    for number, message in lint.slide_title_warnings(deck).items():
+        builder.reports[number - 1].warnings.append(message)
+    return BuiltDeck(output.getvalue(), builder.reports, lint.deck_warnings(deck))
