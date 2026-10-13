@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import re
 import socket
+import threading
+import time
 from collections import deque
 from dataclasses import dataclass, field
 
@@ -69,11 +71,26 @@ class BackgroundManager:
             await self.stop(name)
 
 
+_RESERVED: dict[
+    int, float
+] = {}  # port -> when it was handed out: two callers at once (parallel builders) never get the same one
+RESERVE_FOR_S = 180.0
+_RESERVE_LOCK = threading.Lock()
+
+
 def free_port(start: int = 5055) -> int:
-    for port in range(start, start + 200):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
-            if probe.connect_ex(("127.0.0.1", port)) != 0:
-                return port
+    now = time.monotonic()
+    with _RESERVE_LOCK:
+        for port, handed_out in list(_RESERVED.items()):
+            if now - handed_out > RESERVE_FOR_S:
+                del _RESERVED[port]
+        for port in range(start, start + 200):
+            if port in _RESERVED:
+                continue
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+                if probe.connect_ex(("127.0.0.1", port)) != 0:
+                    _RESERVED[port] = now
+                    return port
     raise RuntimeError("no free port found")
 
 

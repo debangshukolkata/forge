@@ -129,6 +129,9 @@ class LLMConfig(_Strict):
 class LimitsConfig(_Strict):
     session_budget_usd: float = 20.0
     max_iterations_per_task: int = 40
+    max_parallel_builders: int = Field(
+        default=3, ge=0, le=6
+    )  # X2: builders with their own folders run side by side; 0 or 1 = one at a time
     max_fix_attempts: int = 5  # unused since D-155 (no escalation ladder); kept so existing config.yaml loads
 
 

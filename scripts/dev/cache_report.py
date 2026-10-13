@@ -1,4 +1,4 @@
-"""Prompt-cache report (TODO S3): how much of the input was served from the cache in each run, and where the cache broke.
+r"""Prompt-cache report (TODO S3): how much of the input was served from the cache in each run, and where the cache broke.
 
     python scripts/dev/cache_report.py C:\Work\ForgeRuns\speedbench\speed-3 [more run folders ...]
 

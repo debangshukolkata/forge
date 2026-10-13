@@ -97,7 +97,12 @@ class ToolContext:
     last_verified_step: int = 0
     todos: list[dict[str, str]] = field(default_factory=list)  # the model's own todo list (D-177)
     pin: Callable[[str, str | None], None] | None = None  # sets a pinned-context slot (set by the host)
-    write_only_under: str | None = None  # a subagent that may write only below this folder (the verifier)
+    write_only_under: str | None = (
+        None  # a subagent that may write only below this folder (the verifier, a builder)
+    )
+    write_only_is_builder: bool = (
+        False  # selects the wording of the refusal (builders build, verifiers only verify)
+    )
     last_ui_edit_step: int = 0  # a template/stylesheet/script that changes what the user sees (D-167)
     last_browser_step: int = 0  # the app was last used in a browser (browser_* tool or a Playwright run)
     last_screenshot_step: int = 0  # the page was last screenshotted with the style audit (D-245)

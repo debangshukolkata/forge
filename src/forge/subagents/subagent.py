@@ -19,7 +19,7 @@ from forge.protocol.events import EventBus, EventType
 from forge.safety.permissions import PermissionGate
 from forge.safety.redact import default_redactor
 from forge.toolkit.base import ToolContext
-from forge.toolkit.shell import RunCommand
+from forge.toolkit.shell import RunCommand, ShellSession
 from forge.tools.files import ReadFile
 from forge.tools.registry import ToolRegistry, default_tools
 
@@ -327,15 +327,18 @@ async def _run_subagent(
     *,
     write_only_under: str | None = None,
     needs_user_approvals: bool = False,
+    shell: ShellSession | None = None,
+    builder: bool = False,
 ) -> str:
     bus = EventBus(redactor=default_redactor)
     sub_context = ToolContext(
         workspace=context.workspace,
-        shell=context.shell,
+        shell=shell or context.shell,
         db=context.db,
         tool_cap_tokens=context.tool_cap_tokens,
         shell_cap_tokens=context.shell_cap_tokens,
         write_only_under=write_only_under,
+        write_only_is_builder=builder,
     )
     inherit_web_settings(context, sub_context)
     gate_mode = "default"

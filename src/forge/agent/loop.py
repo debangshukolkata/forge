@@ -28,6 +28,7 @@ from forge.protocol.events import EventBus, EventType
 from forge.safety.injection import flag
 from forge.safety.permissions import Decision, PermissionGate
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.folders import clean_folder, folders_disjoint
 from forge.toolkit.powershell import ps_quote
 from forge.toolkit.shell import execute
 from forge.tools.registry import ToolRegistry
@@ -124,6 +125,15 @@ PARALLEL_SUBAGENT_TYPES = frozenset(
     {"explore", "reviewer", "design-critic"}
 )  # only look, read or screenshot (unique file names); may run side by side
 MAX_PARALLEL_SUBAGENTS = 4
+
+
+def _is_builder(call: ToolCall) -> bool:
+    return (
+        call.name == "spawn_subagent"
+        and call.parse_error is None
+        and str((call.arguments or {}).get("agent", "")) == "builder"
+        and bool(clean_folder(str((call.arguments or {}).get("folder", ""))))
+    )
 
 
 class AgentLoop:
@@ -394,6 +404,7 @@ class AgentLoop:
                 self._runs_in_parallel(call)
                 or self._command_fits_batch(call, batch)
                 or self._verifier_fits_batch(call, batch)
+                or self._builder_fits_batch(call, batch)
             ):
                 batch.append(call)
                 continue
@@ -401,6 +412,17 @@ class AgentLoop:
             batch = []
             results[call.id] = await self._run_one(call)
         await self._run_batch(batch, results)
+
+    def _builder_fits_batch(self, call: ToolCall, batch: list[ToolCall]) -> bool:
+        """Builders (X2, D-305) run side by side when each has its own folder: none inside another, at most
+        `limits.max_parallel_builders` at once, and a batch of builders takes nothing else."""
+        if not _is_builder(call):
+            return False
+        limit = self.router.config.limits.max_parallel_builders
+        if limit < 2 or len(batch) >= limit or not all(_is_builder(c) for c in batch):
+            return False
+        folder = str((call.arguments or {}).get("folder", ""))
+        return all(folders_disjoint(folder, str((c.arguments or {}).get("folder", ""))) for c in batch)
 
     def _verifier_fits_batch(self, call: ToolCall, batch: list[ToolCall]) -> bool:
         """The verifier may run beside the design critic and other read-only agents (X4): the critic only looks, the

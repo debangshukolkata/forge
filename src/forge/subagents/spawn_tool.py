@@ -7,6 +7,15 @@ from __future__ import annotations
 from forge.config import forge_home
 from forge.errors import LLMError
 from forge.parity.agents import load_agents
+from forge.subagents.builder import (
+    BUILDER_ITERATIONS,
+    BUILDER_PROMPT,
+    append_ledger,
+    parse_status,
+    report_path,
+    result_text,
+    safe_name,
+)
 from forge.subagents.critic import (
     CRITIC_ITERATIONS,
     CRITIC_PROMPT,
@@ -25,7 +34,8 @@ from forge.subagents.subagent import (
     _run_subagent,
 )
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.toolkit.shell import RunCommand
+from forge.toolkit.folders import clean_folder
+from forge.toolkit.shell import RunCommand, ShellSession
 from forge.tools.parity import BUILT_IN_TYPES
 from forge.tools.registry import ToolRegistry, default_tools
 
@@ -42,16 +52,71 @@ class SpawnSubagent(Tool):
         "Playwright or test scripts against the running app and reports PASS/FAIL), 'design-critic' "
         "(an independent designer who looks at the running page at desktop and phone width and scores "
         "its look and feel, with concrete fixes and a SHIP/REVISE verdict), or a custom agent "
-        "defined by the user. "
+        "defined by the user, or 'builder' (builds one self-contained piece of work in its own `folder`, writes only "
+        "there, runs its own checks and ends with a STATUS line; several builders with different folders given in "
+        "the same turn run in parallel: use it for independent variants, screens or services, see the parallel-builders "
+        "skill). "
         "Give it everything it needs in `task`; you get its report back."
     )
 
     class Args(ToolArgs):
         agent: str
         task: str
+        folder: str = ""  # builder only: the folder it may write below, relative to the repository root
+        name: str = ""  # builder only: a short name for its report and the ledger
 
     def summary(self, args: SpawnSubagent.Args) -> str:
         return f"subagent {args.agent}: {args.task[:80]}"
+
+    async def _run_builder(
+        self, args: SpawnSubagent.Args, context: ToolContext, read_only: list[Tool]
+    ) -> ToolResult:
+        router = context.router
+        assert router is not None
+        folder = clean_folder(args.folder)
+        if not folder:
+            return ToolResult(
+                ok=False,
+                content="A builder needs `folder`: the folder below the repository root it may write in (for example "
+                "'designs/design-a'). Give each parallel builder its own folder.",
+            )
+        name = safe_name(args.name, folder)
+        workspace = context.workspace
+        workspace.path_of(folder).mkdir(parents=True, exist_ok=True)
+        # Its own shell session: the working directory belongs to the session, and two builders must not move each other's.
+        shell = ShellSession(workspace)
+        shell.cwd = workspace.path_of(folder)
+        tools = ToolRegistry([t for t in default_tools() if t.name not in ("ask_user",)])
+        brief = (
+            f"Your folder: {folder}/ (you can write only there; your commands start there).\n"
+            f"Your name: {name}.\n\nBRIEF:\n{args.task}"
+        )
+        report = await _run_subagent(
+            router,
+            context,
+            tools,
+            BUILDER_PROMPT,
+            brief,
+            BUILDER_ITERATIONS,
+            "coder",
+            write_only_under=folder + "/",
+            needs_user_approvals=True,
+            shell=shell,
+            builder=True,
+        )
+        status = parse_status(report)
+        saved = report_path(name)
+        target = workspace.root / saved
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(report, encoding="utf-8")
+        append_ledger(
+            workspace.forge_dir,
+            name,
+            folder,
+            status,
+            report.splitlines()[-2] if report.count("\n") else report,
+        )
+        return ToolResult(ok=True, content=result_text(name, folder, status, report, saved))
 
     async def run(self, args: SpawnSubagent.Args, context: ToolContext) -> ToolResult:
         router = context.router
@@ -83,6 +148,8 @@ class SpawnSubagent(Tool):
         elif args.agent == "debugger":
             tools = ToolRegistry([*read_only, RunCommand()])
             report = await _run_subagent(router, context, tools, DEBUGGER_PROMPT, args.task, 20, "reviewer")
+        elif args.agent == "builder":
+            return await self._run_builder(args, context, read_only)
         elif args.agent == "verifier":
             everything = {t.name: t for t in default_tools()}
             wanted = [

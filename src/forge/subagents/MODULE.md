@@ -11,3 +11,4 @@ AgentLoop with a restricted toolset and returns one report. Also the `spawn_suba
 - **Decisions:** docs/DECISIONS.md (subagents, reviewer); layering is enforced by tests/test_module_boundaries.py.
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
+- **Builders (X2, D-305):** `builder.py` (protocol: statuses, folders, ledger) and the `builder` agent type in `spawn_tool.py`: writes only below its folder (the write jail also covers move/delete), own shell session, own port, report saved to `.forge/builders/`; the agent loop runs builders with disjoint folders side by side (`limits.max_parallel_builders`, default 3). Tests: test_builders.py. Skill: `parallel-builders`.

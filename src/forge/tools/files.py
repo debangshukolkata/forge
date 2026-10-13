@@ -207,6 +207,11 @@ class MoveFile(Tool):
         return f"move {args.source} -> {args.destination}"
 
     async def run(self, args: MoveFile.Args, context: ToolContext) -> ToolResult:
+        under = context.write_only_under
+        if under is not None:
+            for path in (args.source, args.destination):
+                if not path.replace("\\", "/").lstrip("./").startswith(under):
+                    return ToolResult(ok=False, content=f"You may only move files below {under}.")
         context.workspace.move(args.source, args.destination, reason=args.reason)
         context.last_edit_step = context.step
         await context.emit(
@@ -291,8 +296,13 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
     ):
         return ToolResult(
             ok=False,
-            content=f"You may only write below {context.write_only_under} (you are verifying, not "
-            "changing the app). If the app is wrong, report it; the main agent fixes it.",
+            content=(
+                f"You may only write below {context.write_only_under}: that folder is your piece of the work. "
+                "A change outside it belongs to the main agent or another builder: say so in your report."
+                if context.write_only_is_builder
+                else f"You may only write below {context.write_only_under} (you are verifying, not "
+                "changing the app). If the app is wrong, report it; the main agent fixes it."
+            ),
         )
     path = workspace.path_of(relative)
     before = workspace.read_text(relative)[0] if path.is_file() else ""
