@@ -145,6 +145,13 @@ process diagram, a timeline, a comparison, a picture-led slide), use `freeform`:
 You are the designer, so design on purpose, and let `build_presentation`'s warnings and `preview_presentation` be
 your critic.
 
+**Depth and polish.** Text and shape elements take `fill_to` (a second colour: a linear gradient; `gradient_angle` 0 is left to right,
+90 top to bottom), `opacity` (0 to 1) and `shadow` (`soft`, `lifted`, `hard`). Pictures take `frame` (`rounded` or `circle`; a circle
+needs a square box) and `shadow`. A slide takes `background_to` (gradient background), or `background_image` with `scrim` (0.4 to
+0.7 lays the background colour over the picture so text stays readable). Use them sparingly: one gradient or shadow idea per
+deck, consistent everywhere. The build judges text contrast against the worst end of a gradient and against a transparent fill
+as it really looks, and warns about text over a picture with no scrim.
+
 **Rich text in one line.** Set `"rich": true` on a text element to mix styles inside a line: `**bold**`, `*italic*`,
 `[link text](https://...)` and `{accent}coloured words{/}` (theme colour names accent, text, muted, surface, or `#RRGGBB`).
 Use it to emphasise a figure inside a sentence ("Revenue grew **42%** in Q3"), not to decorate. Also available on text

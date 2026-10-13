@@ -11,7 +11,7 @@ import io
 from dataclasses import dataclass
 from typing import Any
 
-from forge.slides import fit
+from forge.slides import effects, fit
 from forge.slides.richtext import parse_runs, plain_text
 from forge.slides.spec import (
     ChartElement,
@@ -22,7 +22,7 @@ from forge.slides.spec import (
     TableElement,
     TextElement,
 )
-from forge.slides.themes import Theme
+from forge.slides.themes import Theme, mix
 
 WIDTH, HEIGHT = 13.333, 7.5
 EDGE_TOLERANCE = 0.05  # an element may sit this far outside the slide before it is called out
@@ -100,6 +100,64 @@ class _Freeform:
         self.b, self.spec, self.theme = builder, spec, builder.theme
         self.placed: list[Placed] = []
         self.background = resolve(self.theme, spec.background) if spec.background else self.theme.background
+        self.backgrounds = [self.background]  # every colour text may sit on directly (a gradient has two)
+
+    def layer_background(self, slide: Any) -> None:
+        """A gradient and/or a full-bleed picture behind everything, with an optional scrim over the picture."""
+        spec, b = self.spec, self.b
+        if spec.background_to:
+            last = resolve(self.theme, spec.background_to)
+            layer = b.rectangle(slide, 0, 0, WIDTH, HEIGHT, self.background)
+            effects.set_gradient(layer, self.background, last, spec.background_angle)
+            effects.send_to_back(slide, layer)
+            self.backgrounds = [self.background, last]
+        if not spec.background_image:
+            return
+        from PIL import Image, ImageStat
+
+        data = b.read_image(spec.background_image)
+        with Image.open(io.BytesIO(data)) as picture:
+            ratio = picture.width / picture.height
+            average = "".join(f"{round(v):02X}" for v in ImageStat.Stat(picture.convert("RGB")).mean)
+        cover = b.add_picture(slide, data, 0, 0, WIDTH, HEIGHT, "")
+        box_ratio = WIDTH / HEIGHT
+        if ratio > box_ratio:
+            cover.crop_left = cover.crop_right = (1 - box_ratio / ratio) / 2
+        else:
+            cover.crop_top = cover.crop_bottom = (1 - ratio / box_ratio) / 2
+        if spec.scrim > 0:
+            veil = b.rectangle(slide, 0, 0, WIDTH, HEIGHT, self.background)
+            effects.set_solid(veil, self.background, spec.scrim)
+            effects.send_to_back(slide, veil)
+        effects.send_to_back(slide, cover)
+        self.backgrounds = [mix(average, self.background, spec.scrim)]  # about what the text sits on
+
+    def apply_fill(
+        self, shape: Any, fill: str | None, fill_to: str | None, angle: float, opacity: float, shadow: str
+    ) -> list[str]:
+        """Gradient, transparency and shadow on a shape; returns the colours text on it may sit over, as they look on the
+        slide (a transparent fill is mixed with the background), so the contrast check stays honest."""
+        if shadow != "none":
+            effects.set_shadow(shape, shadow)
+        if not fill:
+            return []
+        first = resolve(self.theme, fill)
+        if fill_to:
+            last = resolve(self.theme, fill_to)
+            effects.set_gradient(shape, first, last, angle, opacity)
+            colours = [first, last]
+        else:
+            if opacity < 1:
+                effects.set_solid(shape, first, opacity)
+            colours = [first]
+        if opacity < 1:
+            colours = [mix(c, self.background, 1 - opacity) for c in colours]
+        return colours
+
+    @staticmethod
+    def worst_behind(text_colour: str, candidates: list[str]) -> str | None:
+        """Of the colours behind some text, the one it reads worst against (None when there is no fill)."""
+        return min(candidates, key=lambda c: contrast(text_colour, c)) if candidates else None
 
     def name(self, index: int, element: Any) -> str:
         detail = getattr(element, "text", "") or getattr(element, "path", "") or getattr(element, "shape", "")
@@ -111,6 +169,7 @@ class _Freeform:
         b, theme = self.b, self.theme
         pad = el.pad if el.pad is not None else (0.15 if (el.fill or el.line) else 0.0)
         label = self.name(index, el)
+        candidates: list[str] = []
         if el.fill or el.line:
             shape = b.rectangle(
                 slide, el.x, el.y, el.w, el.h, resolve(theme, el.fill or "background"), el.rounded
@@ -120,6 +179,7 @@ class _Freeform:
             if el.line:
                 shape.line.color.rgb = b.colour(resolve(theme, el.line))
                 shape.line.width = b.m["pt"](1.5)
+            candidates = self.apply_fill(shape, el.fill, el.fill_to, el.gradient_angle, el.opacity, el.shadow)
             frame = shape.text_frame
             frame.word_wrap = True
         else:
@@ -192,7 +252,7 @@ class _Freeform:
                 el.y,
                 el.w,
                 el.h,
-                fill=resolve(theme, el.fill) if el.fill else None,
+                fill=self.worst_behind(colour, candidates),
                 text_colour=colour,
                 text_size=size,
                 bold=el.bold,
@@ -217,6 +277,7 @@ class _Freeform:
             shape.line.fill.background()
         if el.rotate:
             shape.rotation = el.rotate
+        candidates = self.apply_fill(shape, el.fill, el.fill_to, el.gradient_angle, el.opacity, el.shadow)
         label = self.name(index, el)
         colour = resolve(theme, el.color)
         if el.text:
@@ -253,7 +314,7 @@ class _Freeform:
                 el.y,
                 el.w,
                 el.h,
-                fill=resolve(theme, el.fill) if el.fill else None,
+                fill=self.worst_behind(colour, candidates),
                 text_colour=colour if el.text else None,
                 text_size=size,
                 bold=el.bold,
@@ -298,6 +359,14 @@ class _Freeform:
             w, h = (el.w, el.w / ratio) if ratio <= 0 or el.w / ratio <= el.h else (el.h * ratio, el.h)
             x, y = el.x + (el.w - w) / 2, el.y + (el.h - h) / 2
         shape = b.add_picture(slide, data, x, y, w, h, el.alt or "")
+        if el.frame != "rect":
+            effects.set_picture_frame(shape, el.frame)
+            if el.frame == "circle" and abs(w - h) > 0.05:
+                b.warn(
+                    f"{self.name(index, el)}: a circle frame needs a square box (this one is {w:.1f} x {h:.1f} in)"
+                )
+        if el.shadow != "none":
+            effects.set_shadow(shape, el.shadow)
         if el.fit == "cover":  # fill the box and crop what spills over, evenly
             if ratio > box_ratio:
                 shape.crop_left = shape.crop_right = (1 - box_ratio / ratio) / 2
@@ -339,6 +408,14 @@ class _Freeform:
                         f"{item.label}: text sits only {max(near, 0):.1f} in from the slide edge: "
                         f"keep {TEXT_EDGE_MARGIN} in clear"
                     )
+        if (
+            self.spec.background_image
+            and self.spec.scrim < 0.3
+            and any(p.has_text and p.fill is None for p in self.placed)
+        ):
+            warn(
+                "text sits over a background picture without a scrim: raise `scrim` (0.4 to 0.7) so it stays readable"
+            )
         solid = [p for p in self.placed if not p.is_line]
         for first_index, first in enumerate(solid):
             for second in solid[first_index + 1 :]:
@@ -351,7 +428,7 @@ class _Freeform:
                 continue
             behind = item.fill or next(
                 (p.fill for p in reversed(self.placed[:number]) if p.fill and p.contains(item)),
-                self.background,
+                self.worst_behind(item.text_colour, self.backgrounds) or self.background,
             )
             ratio = contrast(item.text_colour, behind)
             large = item.text_size >= 24 or (item.bold and item.text_size >= 18.66)
@@ -362,6 +439,7 @@ class _Freeform:
 def build_freeform(builder: Any, spec: FreeformSlide) -> None:
     form = _Freeform(builder, spec)
     slide = builder.new_slide("freeform", spec.title, spec.notes, form.background)
+    form.layer_background(slide)
     box = spec.title_box
     title_colour = resolve(form.theme, box.color)
     if spec.title_visible:

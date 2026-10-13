@@ -146,6 +146,10 @@ class TextElement(_Placed):
     valign: VAlign = "top"
     font: FontKind = "body"
     fill: Color | None = None  # a filled box (a card, a callout, a label)
+    fill_to: Color | None = None  # a second colour makes a linear gradient from `fill` to `fill_to`
+    gradient_angle: float = 90  # degrees clockwise: 0 left to right, 90 top to bottom
+    opacity: float = Field(default=1.0, ge=0.0, le=1.0)  # fill transparency: 1 solid, 0 invisible
+    shadow: Literal["none", "soft", "lifted", "hard"] = "none"
     line: Color | None = None
     rounded: bool = False
     bullets: bool = False
@@ -166,6 +170,10 @@ class ShapeElement(_Placed):
         "rect", "rounded", "oval", "triangle", "diamond", "chevron", "pentagon", "arrow_right", "plus"
     ] = "rect"
     fill: Color | None = "accent"
+    fill_to: Color | None = None  # a second colour makes a linear gradient from `fill` to `fill_to`
+    gradient_angle: float = 90  # degrees clockwise: 0 left to right, 90 top to bottom
+    opacity: float = Field(default=1.0, ge=0.0, le=1.0)  # fill transparency: 1 solid, 0 invisible
+    shadow: Literal["none", "soft", "lifted", "hard"] = "none"
     line: Color | None = None
     line_width: float = 1.5
     text: str = ""  # a label inside the shape
@@ -195,6 +203,10 @@ class ImageElement(_Placed):
     path: str  # a picture in the workspace
     alt: str = ""
     fit: Literal["contain", "cover"] = "contain"  # cover fills the box and crops the overflow
+    frame: Literal["rect", "rounded", "circle"] = (
+        "rect"  # the shape the picture is cut to (circle: use a square box)
+    )
+    shadow: Literal["none", "soft", "lifted", "hard"] = "none"
 
 
 class ChartElement(_Placed):
@@ -236,6 +248,12 @@ class FreeformSlide(_Slide):
     title_box: TitleBox = Field(default_factory=TitleBox)
     title_visible: bool = True
     background: Color | None = None
+    background_to: Color | None = None  # a second colour makes the background a gradient
+    background_angle: float = 90
+    background_image: str | None = None  # a full-bleed picture behind everything (a workspace path)
+    scrim: float = Field(
+        default=0.0, ge=0.0, le=0.95
+    )  # a layer of the background colour over the picture, for legible text
     footer: bool = False  # the small deck title and slide number at the bottom
     elements: list[Element] = Field(min_length=1, max_length=40)  # in drawing order: first is at the back
 
