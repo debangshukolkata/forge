@@ -148,6 +148,12 @@ Per-slide outline fields: `hidden: true` (backup slides, skipped in the show), `
 speaker reads from the slide line by line unless asked.
 
 ## 5. Existing decks and company templates
+Last resort, the XML: when `edit_presentation` cannot do it (an odd master, SmartArt text, a custom animation), `unpack_presentation`
+writes the XML parts to a folder, you edit them with the file tools (as little as possible, keep every `r:id` in use), and
+`pack_presentation` checks the package and saves the deck, refusing anything that would make PowerPoint offer a repair. Pictures stay in
+the original file. Macro projects, executables and XML with entity declarations are refused; new external links are reported to tell the
+user. Try the normal tools first: raw XML edits are easy to get subtly wrong.
+
 Combining decks: `edit_presentation` with `{"op": "import_slides", "source": "other.pptx", "slides": [2, 5], "at": 3, "design": "keep"}`
 brings slides from another deck (design `keep`: they keep their own master, fonts and colours; `match`: they take this deck's layouts and
 are scaled; sizes that differ force `match`). `merge_presentations` joins whole decks into a new file with a section per deck, and

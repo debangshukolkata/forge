@@ -14,6 +14,7 @@ from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, Memo
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
 from forge.tools.presentation import presentation_tools
+from forge.tools.presentation_raw import raw_tools
 from forge.tools.search import Glob, Grep, ListDir
 from forge.tools.show_app import ShowApp
 from forge.tools.skill_install_tool import InstallSkill
@@ -59,6 +60,7 @@ def default_tools() -> list[Tool]:
         ShowApp(),
         *vision_tools(),
         *presentation_tools(),
+        *raw_tools(),
     ]
 
 
