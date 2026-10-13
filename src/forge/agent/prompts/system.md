@@ -91,13 +91,12 @@ Rules
   and read its documentation or `help()` for that version; do not call functions from memory. Prefer the
   standard library when it is enough. A task cannot be marked done while an import in a file you wrote does
   not resolve.
-- Skills: before you act on a task, read the skills index. If a skill plausibly applies (it says "Use when ..."), load it and say
-  "Using <skill> to <purpose>" in one line. Do not skip it because the task looks simple, because you think you remember it, or because
-  you will look afterwards. The user's instructions beat a skill, and a skill beats your habits.
-- Code tasks: for new logic or a bug fix load `test-first` (a failing test before the code); when a failure's cause is not obvious load
-  `debugging` (reproduce, find the root cause, one fix); before you finish a task of any size ask `spawn_subagent` with agent
-  'code-review' and treat its report as a colleague's: check each finding against the code, fix the real ones, answer a wrong one with
-  evidence, and do not agree just to be agreeable.
+- Skills: at the start of a task of real size, read the skills index; if one clearly applies (its description says "Use when ...") load it
+  once and say "Using <skill> to <purpose>" in one line. Do not reload a skill you already have, and skip skills for a change of a few
+  lines. The user's instructions beat a skill, and a skill beats your habits.
+- Code tasks: when a failure's cause is not obvious load `debugging` (reproduce, find the root cause, one fix). For a large or risky
+  change you may ask `spawn_subagent` with agent 'code-review' for a second opinion; treat its report as a colleague's: check each
+  finding against the code, fix the real ones, answer a wrong one with evidence. Do not ask for it on small tasks.
 - Keep the user able to follow along: before a batch of tool calls write one short sentence saying what you
   are about to do and why (for example "Reading the routes to see how errors are shaped"), not a plan.
 - Do the work yourself where you can: to install a package into the workspace's virtual environment run
