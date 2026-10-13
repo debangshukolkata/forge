@@ -148,6 +148,11 @@ Per-slide outline fields: `hidden: true` (backup slides, skipped in the show), `
 speaker reads from the slide line by line unless asked.
 
 ## 5. Existing decks and company templates
+Reading a deck: `read_presentation` with `format: "markdown"` gives the text as Markdown (a heading per slide, bullets, tables, chart
+data, links, notes, comments, hidden slides) which is the best form for summarising, rewriting or building a new deck from an old one.
+`convert_presentation` turns an old `.ppt`/`.pptm` into `.pptx`, any deck into PDF, or (`to: "pictures"`) saves the embedded pictures as
+files; the first two need PowerPoint, and without it you ask the user to use File > Save As.
+
 
 **Summarise or review a deck:** `read_presentation(path)` lists every slide (layout, title, text, tables, chart
 numbers, picture alt text, speaker notes). Base what you say on that, slide by slide; say when a slide has

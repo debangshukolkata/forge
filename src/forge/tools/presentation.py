@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -17,9 +17,11 @@ from forge.slides import icons, preview
 from forge.slides.accessibility import check_deck
 from forge.slides.build import SlidesUnavailable, build_deck
 from forge.slides.contact_sheet import ContactSheetUnavailable, make_contact_sheets
+from forge.slides.convert import OLD_FORMATS, convert_deck
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
+from forge.slides.extract import deck_markdown
 from forge.slides.measure import measure_deck, overflow_problems
-from forge.slides.open_deck import open_deck, save_deck
+from forge.slides.open_deck import DeckError, open_deck, save_deck
 from forge.slides.read import describe_deck, slide_notes
 from forge.slides.spec import parse_deck
 from forge.slides.template import analyze_template, describe_template
@@ -104,16 +106,19 @@ class ReadPresentation(Tool):
     name = "read_presentation"
     read_only = True
     description = (
-        "Read an existing PowerPoint (.pptx, or a .potx template): every slide with its layout, title, "
-        "shapes (with the id to refer to each by), tables, chart data, picture alt text and speaker notes, "
-        "plus the layouts the deck can add slides from. Use it to summarise a deck, before editing one, or "
-        "to see what a template offers. Nothing in the file is run."
+        "Read an existing PowerPoint (.pptx, or a .potx template; an old .ppt/.pps/.pptm is converted first when PowerPoint is "
+        "installed). format 'outline' (default): every slide with its layout, title, shapes (with the id to refer to each by), tables, "
+        "chart data, picture alt text, speaker notes, hidden slides, sections, transitions, animations and comments, plus the layouts "
+        "the deck can add slides from. format 'markdown': the deck's text as Markdown (one heading per slide, bullets, tables, chart "
+        "data, links, notes, comments), best for summarising or rewriting. The Markdown refers to pictures in the folder 'pictures' (save "
+        "them there with convert_presentation to='pictures'). Nothing in the file is run."
     )
 
     class Args(ToolArgs):
         path: str = Field(
             description="The .pptx or .potx, relative to the repository root (or a file the user opened)"
         )
+        format: Literal["outline", "markdown"] = "outline"
 
     def summary(self, args: ReadPresentation.Args) -> str:
         return f"read presentation {args.path}"
@@ -123,12 +128,96 @@ class ReadPresentation(Tool):
         if not file.is_file():
             return ToolResult(ok=False, content=f"No file at {args.path}.")
         try:
-            deck = await asyncio.to_thread(open_deck, file)
-            return ToolResult(ok=True, content=describe_deck(deck))
+            deck = await asyncio.to_thread(_open_any, file)
+            text = deck_markdown(deck) if args.format == "markdown" else describe_deck(deck)
+            return ToolResult(ok=True, content=text)
         except SlidesUnavailable as error:
             return ToolResult(ok=False, content=f"{error} Tell the user.")
-        except (ForgeError, OSError) as error:
+        except (ForgeError, OSError, preview.PreviewUnavailable) as error:
             return ToolResult(ok=False, content=str(error))
+
+
+def _open_any(file: Path) -> Any:
+    """A .pptx or .potx directly; an old format through PowerPoint (a temporary .pptx that is read and dropped)."""
+    if file.suffix.lower() in OLD_FORMATS - {".potx"}:
+        import tempfile
+
+        try:
+            data = convert_deck(file, "pptx")
+        except preview.PreviewUnavailable as error:
+            raise DeckError(
+                f"{file.name} is an old format and PowerPoint cannot convert it here ({error}). Ask the user to save it as .pptx first."
+            ) from error
+        with tempfile.TemporaryDirectory(prefix="forge-read-") as folder:
+            converted = Path(folder) / "converted.pptx"
+            converted.write_bytes(data)
+            return open_deck(converted)
+    return open_deck(file)
+
+
+async def _save_pictures(deck: Any, context: ToolContext, folder: str) -> str:
+    from forge.slides.edit_find import walk
+    from forge.slides.extract import _image_name
+
+    saved = []
+    for number, slide in enumerate(deck.slides, start=1):
+        for shape in walk(slide.shapes):
+            if shape.shape_type == 13:
+                relative = f"{folder}/{_image_name(number, shape)}"
+                context.workspace.write_bytes(relative, shape.image.blob, "picture extracted from a deck")
+                saved.append(relative)
+    if not saved:
+        return "The deck has no pictures to extract."
+    return f"Saved {len(saved)} picture(s):" + "".join(f"\n- {name}" for name in saved)
+
+
+class ConvertPresentation(Tool):
+    name = "convert_presentation"
+    read_only = False
+    description = (
+        "Convert a deck with PowerPoint itself (Windows with PowerPoint installed): an old .ppt/.pps/.pptm to .pptx so it can be read "
+        "and edited, or any deck to PDF to hand to someone, or save the deck's embedded pictures as files (to 'pictures', no PowerPoint "
+        "needed). The result is written to 'output' (default: next to the source)."
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(description="The deck, relative to the repository root")
+        to: Literal["pptx", "pdf", "pictures"] = "pdf"
+        output: str = Field(
+            default="",
+            description="Where to write the result (for pictures: a folder); default: same name with the new extension, or the folder 'pictures'",
+        )
+
+    def summary(self, args: ConvertPresentation.Args) -> str:
+        return f"convert {args.path} to {args.to}"
+
+    async def run(self, args: ConvertPresentation.Args, context: ToolContext) -> ToolResult:
+        source = context.workspace.path_of(args.path)
+        if not source.is_file():
+            return ToolResult(ok=False, content=f"No file at {args.path}.")
+        if args.to == "pictures":
+            try:
+                deck = await asyncio.to_thread(_open_any, source)
+                return ToolResult(
+                    ok=True,
+                    content=(
+                        await _save_pictures(deck, context, args.output.strip().strip("/") or "pictures")
+                    ).strip(),
+                )
+            except SlidesUnavailable as error:
+                return ToolResult(ok=False, content=f"{error} Tell the user.")
+            except (ForgeError, OSError, preview.PreviewUnavailable) as error:
+                return ToolResult(ok=False, content=str(error))
+        target = args.output.strip() or str(Path(args.path).with_suffix("." + args.to).as_posix())
+        try:
+            data = await asyncio.to_thread(convert_deck, source, args.to)
+        except preview.PreviewUnavailable as error:
+            return ToolResult(
+                ok=False,
+                content=f"Could not convert: {error} Tell the user what to do by hand (File > Save As in PowerPoint).",
+            )
+        context.workspace.write_bytes(target, data, f"converted from {args.path}")
+        return ToolResult(ok=True, content=f"Wrote {target} ({len(data) // 1024} KB).")
 
 
 class CheckAccessibility(Tool):
@@ -397,6 +486,7 @@ def presentation_tools() -> list[Tool]:
     return [
         BuildPresentation(),
         ReadPresentation(),
+        ConvertPresentation(),
         AnalyzeTemplate(),
         CheckAccessibility(),
         EditPresentation(),

@@ -302,7 +302,12 @@ def test_the_tools_read_and_edit_through_the_workspace(context: ToolContext, tmp
     assert "Q4 Review" in describe_deck(open_deck(workspace.path_of("docs/deck.pptx")))  # untouched
 
 
-def test_a_template_is_never_overwritten_and_other_files_are_refused(context: ToolContext) -> None:
+def test_a_template_is_never_overwritten_and_other_files_are_refused(
+    context: ToolContext, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "forge.slides.convert.available", lambda: False
+    )  # no PowerPoint: an old format cannot be converted
     workspace = context.workspace
     workspace.write_bytes("company.potx", b"PK")
     refused = asyncio.run(

@@ -189,7 +189,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 - [ ] **P2.15 Raw-file escape hatch.** Unpack a deck to its XML files, edit, validate against the format, repack, with the validator from
   P1.8. For anything python-pptx cannot do (comments, animations, SmartArt, odd masters). Needs a security review (zip bombs, external
   links). Size L.
-- [ ] **P2.16 Read and analyse to full strength.** Text as Markdown, comments, notes, hidden slides, alt text, links, animations summary,
+- [x] **P2.16 Read and analyse to full strength.** (done 2026-10-13, D-317) Text as Markdown, comments, notes, hidden slides, alt text, links, animations summary,
   extract embedded pictures, per-slide contact sheet; `.ppt` to `.pptx` and deck to PDF through PowerPoint when present. Size M.
 - [ ] **P2.17 Review mode.** Critique a deck (story, density, consistency, contrast, font count, alignment, repeated layouts) and list fixes,
   or fix them. Size M.
