@@ -46,7 +46,7 @@ def test_the_summary_palettes_and_zip_are_written_without_powerpoint(
     assert any("PowerPoint cannot be driven" in n for n in result.notes)
     with zipfile.ZipFile(tmp_path / "out" / "template-look.zip") as bundle:
         assert set(bundle.namelist()) == {"summary.txt", "palettes.png"}
-    assert not (tmp_path / "out" / "_work").exists()
+    assert sorted(p.name for p in (tmp_path / "out").iterdir()) == ["palettes.png", "summary.txt", "template-look.zip"]  # no scratch folders left behind
 
 
 def test_layouts_are_taken_round_robin_so_every_master_shows(tmp_path: Path) -> None:

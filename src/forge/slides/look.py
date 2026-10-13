@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import tempfile
 import zipfile
 from collections import Counter
 from dataclasses import dataclass, field
@@ -256,14 +257,17 @@ def _looks(value: float) -> str:
 
 def _sheets(deck: Path, folder: Path, prefix: str, look: Look) -> list[float]:
     """Contact sheets of the deck's pictures; returns each slide's brightness (so the summary can say which layouts are dark)."""
-    pictures = export_slides(deck, folder / f"_{prefix}")
+    work = (
+        deck.parent / f"{prefix}-pictures"
+    )  # next to the working deck in the temporary folder, not in the (often OneDrive-synced) output folder
+    pictures = export_slides(deck, work)
     pictures.sort(key=lambda p: int(re.search(r"(\d+)", p.stem).group(1)))  # type: ignore[union-attr]
     brightness = [_brightness(p) for p in pictures]
     for sheet in make_contact_sheets(
         pictures, folder, columns=SHEET_COLUMNS, per_sheet=SHEET_SIZE, prefix=prefix
     ):
         look.files.append(sheet.name)
-    shutil.rmtree(folder / f"_{prefix}", ignore_errors=True)
+    shutil.rmtree(work, ignore_errors=True)
     return brightness
 
 
@@ -273,8 +277,7 @@ def run_look(template: Path, folder: Path) -> Look:
     prs = open_deck(template)
     masters = read_masters(prs)
     order: list[tuple[int, str]] = []
-    scratch = folder / "_work"
-    scratch.mkdir(exist_ok=True)
+    scratch = Path(tempfile.mkdtemp(prefix="forge-look-"))
     try:
         order = _layout_deck(template, scratch / "layouts.pptx")
         sample_count = _sample_deck(template, scratch / "samples.pptx")
