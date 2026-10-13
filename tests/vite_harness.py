@@ -60,7 +60,9 @@ def build(name: str, files: dict[str, str], title: str = "Asset test") -> Path:
     (project / "tsconfig.json").write_text(TSCONFIG, encoding="utf-8")
     (project / "index.html").write_text(INDEX_HTML.format(title=title), encoding="utf-8")
     (project / "src" / "main.tsx").write_text(MAIN_TSX, encoding="utf-8")
-    (project / "src" / "vite-env.d.ts").write_text('/// <reference types="vite/client" />\n', encoding="utf-8")
+    (project / "src" / "vite-env.d.ts").write_text(
+        '/// <reference types="vite/client" />\n', encoding="utf-8"
+    )
     for relative, text in files.items():
         target = project / relative
         target.parent.mkdir(parents=True, exist_ok=True)

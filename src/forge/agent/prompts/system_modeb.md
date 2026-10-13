@@ -134,6 +134,8 @@ Rules
   put them in one turn. Write a whole file in one call rather than many small edits. Start installs and
   scaffolding with start_background and carry on with planning or writing DESIGN.md while they run; use
   monitor when you need the result.
+- Checks (ruff, mypy, one pytest run, tsc --noEmit) put in one turn run side by side; give each as its own plain
+  command, without && or ;. Installs, builds and anything that writes always run alone.
 - Before you use a library you do not know well, check the installed version (`python -m pip show <package>`)
   and read its documentation or `help()` for that version; do not call functions from memory. Prefer the
   standard library when it is enough. A task cannot be marked done while an import in a file you wrote does

@@ -14,6 +14,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from forge.agent.parallel import MAX_PARALLEL_COMMANDS, is_parallel_safe_command, is_test_command
 from forge.agent.tool_output import save_full_output
 from forge.context.manager import ContextManager
 from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthError
@@ -135,6 +136,7 @@ class AgentLoop:
         self.context = context
         self.gate = gate
         self.approvals = approvals
+        self._approval_lock = asyncio.Lock()
         self.max_iterations = max_iterations
         self.context_manager = context_manager
         self.on_thinking: TextDeltaCallback | None = None  # set by the session host (D-174)
@@ -361,17 +363,37 @@ class AgentLoop:
             return str((call.arguments or {}).get("agent", "")) in PARALLEL_SUBAGENT_TYPES
         return True
 
+    def _command_runs_in_parallel(self, call: ToolCall) -> bool:
+        """A run_command that only checks or reads (linter, type checker, one test run) may overlap others (X3)."""
+        if call.name != "run_command" or call.parse_error is not None:
+            return False
+        return is_parallel_safe_command(str((call.arguments or {}).get("command", "")))
+
     async def _run_calls(self, calls: list[ToolCall], results: dict[str, Message]) -> None:
         """Consecutive parallel-safe calls run together; anything else runs alone, in order."""
         batch: list[ToolCall] = []
         for call in calls:
-            if self._runs_in_parallel(call):
+            if self._runs_in_parallel(call) or self._command_fits_batch(call, batch):
                 batch.append(call)
                 continue
             await self._run_batch(batch, results)
             batch = []
             results[call.id] = await self._run_one(call)
         await self._run_batch(batch, results)
+
+    def _command_fits_batch(self, call: ToolCall, batch: list[ToolCall]) -> bool:
+        """Checks and reads share a batch up to MAX_PARALLEL_COMMANDS, with at most one test run (tests may share ports,
+        databases or caches); a batch never mixes in a call that is not read-only or a parallel-safe command."""
+        if not self._command_runs_in_parallel(call):
+            return False
+        commands = [c for c in batch if c.name == "run_command"]
+        if len(commands) >= MAX_PARALLEL_COMMANDS:
+            return False
+        if is_test_command(str((call.arguments or {}).get("command", ""))) and any(
+            is_test_command(str((c.arguments or {}).get("command", ""))) for c in commands
+        ):
+            return False
+        return all(self._runs_in_parallel(c) or self._command_runs_in_parallel(c) for c in batch)
 
     async def _run_batch(self, batch: list[ToolCall], results: dict[str, Message]) -> None:
         if batch:
@@ -504,16 +526,17 @@ class AgentLoop:
         waits: list[float],
     ) -> ToolResult:
         asked = time.perf_counter()
-        answer = await self.approvals.request(
-            {
-                "tool": tool.name,
-                "summary": summary,
-                "command": command,
-                "reason": decision.reason,
-                "can_remember_prefix": decision.command_prefix,
-                "always_ask": decision.always_ask,
-            }
-        )
+        async with self._approval_lock:  # parallel calls ask one at a time, so the user sees one card at once
+            answer = await self.approvals.request(
+                {
+                    "tool": tool.name,
+                    "summary": summary,
+                    "command": command,
+                    "reason": decision.reason,
+                    "can_remember_prefix": decision.command_prefix,
+                    "always_ask": decision.always_ask,
+                }
+            )
         waits.append(time.perf_counter() - asked)
         if not answer.approved:
             note = f" The user said: {answer.instruction}" if answer.instruction else ""
