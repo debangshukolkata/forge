@@ -7,7 +7,13 @@ from __future__ import annotations
 from forge.config import forge_home
 from forge.errors import LLMError
 from forge.parity.agents import load_agents
-from forge.subagents.critic import CRITIC_ITERATIONS, CRITIC_PROMPT, critic_verdict
+from forge.subagents.critic import (
+    CRITIC_ITERATIONS,
+    CRITIC_PROMPT,
+    CRITIC_ROUND_LIMIT,
+    critic_round_note,
+    critic_verdict,
+)
 from forge.subagents.review import REVIEWER_PROMPT
 from forge.subagents.subagent import (
     DEBUGGER_PROMPT,
@@ -128,10 +134,12 @@ class SpawnSubagent(Tool):
                 "coder",
             )
             context.last_critic_step = context.step
-            if critic_verdict(report) == "SHIP":
+            verdict = critic_verdict(report)
+            if verdict == "SHIP":
                 context.critic_ship, context.critic_rounds = True, 0
             else:
                 context.critic_ship, context.critic_rounds = False, context.critic_rounds + 1
+            report += critic_round_note(verdict, context.critic_rounds, CRITIC_ROUND_LIMIT)
         elif args.agent == "reviewer":
             report = await _run_subagent(
                 router, context, ToolRegistry(read_only), REVIEWER_PROMPT, args.task, 20, "reviewer"

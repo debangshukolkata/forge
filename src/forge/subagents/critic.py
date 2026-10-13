@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 
 CRITIC_ITERATIONS = 40
+CRITIC_ROUND_LIMIT = 3  # reviews that ask for changes before the builder may finish anyway (D-249)
 CRITIC_PROMPT = """You are DebCraft's design critic. You did not build this page. You are a senior product designer
 reviewing it before it ships to a client who has seen the best consumer products. Be specific, honest and
 demanding: a competent but generic template is a 3, never a 4. Praise nothing that is merely adequate.
@@ -35,15 +36,23 @@ You are given the URL(s) of the running app (and what it is for). Do this:
    decorative icons everywhere, empty image boxes, placeholder or machine-sounding copy.
 5. Compare against the quality of Stripe, Linear, Airbnb or a well-designed NGO site. Name the single biggest gap.
 
+Judge the page against ITS BRIEF, not against an imaginary product. A line the brief does not involve (States for a static
+brochure page with no forms or data, Responsive when the brief is a desktop-only dashboard) is scored "n/a" and ignored. Never ask
+for a new feature, page, form or flow the brief did not ask for: that is scope creep, not design. Mark a fix BLOCKING only when it
+breaks the brief or basic quality (content missing, unreadable text, sideways scroll at 375 px, a broken image, an invented fact,
+an accessibility failure); everything else is a suggestion.
+
+FOLLOW-UP REVIEWS: when the task lists the fixes from an earlier review, check only those fixes and anything they newly broke, with
+one screenshot per width, and reply in under 200 words. Do not start a fresh, wider review: new wishes belong to a different task.
+
 Reply in exactly this format, under 500 words:
-SCORES: Hierarchy N, Consistency N, Polish N, Typography N, States N, Responsive N, Distinctiveness N
+SCORES: Hierarchy N, Consistency N, Polish N, Typography N, States N, Responsive N, Distinctiveness N (n/a where the brief does not involve it)
 BIGGEST GAP: one sentence.
-FIXES (most valuable first, at most 7): each as "element or section: what is wrong -> the exact change", with the
+FIXES (most valuable first, at most 7): each as "element or section: what is wrong -> the exact change", prefixed BLOCKING where it is, with the
 concrete value to use (a Tailwind class, hex colour, px size, copy line). Do not write vague advice such as
 "improve spacing".
 WHAT WORKS: at most two lines.
-VERDICT: SHIP (only when every score is 4 or more, the audit has no problems and no fix is needed that a client
-would notice) or VERDICT: REVISE."""
+VERDICT: SHIP (when no BLOCKING fix remains, every relevant score is 4 or more and the audit has no problems) or VERDICT: REVISE."""
 
 VERDICT = re.compile(r"VERDICT:\s*(SHIP|REVISE)", re.IGNORECASE)
 
@@ -52,3 +61,18 @@ def critic_verdict(report: str) -> str | None:
     """'SHIP', 'REVISE', or None when the report has no verdict line (counted as REVISE by the caller)."""
     found = VERDICT.findall(report)
     return found[-1].upper() if found else None
+
+
+def critic_round_note(verdict: str | None, round_number: int, limit: int) -> str:
+    """Appended to the critic's report for the builder: how many reviews are left and what to do next, so it does not chase scores."""
+    if verdict == "SHIP":
+        return ""
+    if round_number < limit:
+        return (
+            f"\n[Review round {round_number} of {limit}. Fix the BLOCKING items and the cheap suggestions, then ask for a follow-up "
+            "review that lists these fixes: it checks only them. Do not add features the brief did not ask for.]"
+        )
+    return (
+        f"\n[Review round {round_number} of {limit}: the last one. Fix only the BLOCKING items now, then finish and say in your "
+        "summary what suggestions were left. Do not ask for another review.]"
+    )

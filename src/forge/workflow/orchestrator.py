@@ -22,6 +22,7 @@ from forge.modeb.output import build_modeb_output
 from forge.parity.history import History
 from forge.parity.mentions import grant_from_message
 from forge.protocol.events import EventType
+from forge.subagents.critic import CRITIC_ROUND_LIMIT
 from forge.subagents.spawn_tool import SpawnSubagent
 from forge.toolkit.base import Tool, ToolContext, ToolResult
 from forge.toolkit.powershell import ps_quote
@@ -52,7 +53,6 @@ if TYPE_CHECKING:
 # No -q: repos often set it in addopts, and -qq hides the summary line the parser reads.
 PYTEST_ARGS = "-rfE --tb=short --no-header -p no:cacheprovider"
 FULL_SUITE_TIMEOUT_S = 900
-CRITIC_ROUND_LIMIT = 3
 GATE_ROUNDS = 2  # C2: how many times the quality gates may send a task back before it may close
 RESUMED_NOTE = (
     "\n\nResumed after an interruption: first check what is already done (files modified are pinned)."
