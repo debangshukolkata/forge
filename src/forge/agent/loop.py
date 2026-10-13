@@ -17,6 +17,7 @@ from pydantic import ValidationError
 from forge.agent.parallel import MAX_PARALLEL_COMMANDS, is_parallel_safe_command, is_test_command
 from forge.agent.tool_output import save_full_output
 from forge.context.manager import ContextManager
+from forge.context.warnings import next_warning
 from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthError
 from forge.llm.base import ChatRequest, LLMResponse, Message, TextDeltaCallback, ToolCall
 from forge.llm.router import LLMRouter
@@ -154,6 +155,7 @@ class AgentLoop:
         self.keep_full_output = True
         self.effort: str | None = None  # /effort: overrides the model's configured reasoning effort
         self.turn_effort: str | None = None  # "think hard:" raises it for one turn
+        self._context_warned = 0  # which context-usage warning was already shown (C12 e, D-298)
         self.path_rules: PathRules | None = (
             None  # set by the session host: rules shown when a matching file is touched (D-297)
         )
@@ -346,6 +348,11 @@ class AgentLoop:
                 "compactions": self.context_manager.compactions,
             },
         )
+        warning, self._context_warned = next_warning(
+            parts.percent, self._context_warned, self.router.config.context
+        )
+        if warning and self.role == "coder":  # a subagent's own small context is not the user's concern
+            await self.bus.publish(EventType.NOTICE, {"kind": "context_warning", "text": warning})
         return response
 
     async def _rephrase(self, request: ChatRequest, on_text_delta: TextDeltaCallback) -> LLMResponse:

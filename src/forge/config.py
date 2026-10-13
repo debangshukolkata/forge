@@ -169,6 +169,8 @@ class ContextConfig(_Strict):
     pinned_cap_fraction: float = Field(default=0.08, gt=0, lt=0.5)
     micro_compact_at: float = Field(default=0.6, gt=0, lt=1)
     auto_compact_at: float = Field(default=0.8, gt=0, lt=1)
+    warn_at: float = Field(default=0.7, gt=0, lt=1)  # tell the user the context is filling up (C12 e)
+    warn_again_at: float = Field(default=0.9, gt=0, lt=1)
     keep_recent_turns: int = Field(default=6, ge=1)
     keep_recent_tool_results: int = Field(default=8, ge=1)
     tool_output_cap: int = Field(default=6000, ge=200)  # tokens
