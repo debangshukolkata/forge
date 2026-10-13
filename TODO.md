@@ -209,7 +209,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 - [x] **P3.3 Performance and size.** (done 2026-10-13, D-324) Large decks (100+ slides), image downscaling and compression, file-size limits, time limits on preview. Size M.
 - [x] **P3.4 Security review of the presentation tools.** (done 2026-10-13, D-323, docs/PRESENTATION_SECURITY.md) Untrusted decks (zip and XML bombs, external relationships/links, embedded
   objects), PowerPoint COM launch, files outside the workspace, Mode B (host-identifying terms in slide text). Size M.
-- [ ] **P3.5 Documentation.** A user guide ("how to ask DebCraft for a deck"), examples gallery generated from the benchmark. Size S.
+- [x] **P3.5 Documentation.** (done 2026-10-13, D-325) A user guide ("how to ask DebCraft for a deck"), examples gallery generated from the benchmark. Size S.
 
 
 ### 4b. Own Word, Excel and PDF skills (agreed 2026-10-12; clean-room builds, replaces the parked "sibling document skills" item)
