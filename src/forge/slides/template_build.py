@@ -31,12 +31,14 @@ from forge.slides.errors import BuildError
 from forge.slides.open_deck import DeckError
 from forge.slides.spec import (
     BulletsSlide,
+    CardsSlide,
     ClosingSlide,
     Column,
     Deck,
     QuoteSlide,
     SectionSlide,
     StatsSlide,
+    StepsSlide,
     TemplateSlide,
     TitleSlide,
     TwoColumnSlide,
@@ -435,6 +437,43 @@ class TemplateBuilder(_Builder):
             )
             return
         super().stats_slide(slide_spec)
+
+    def _items_from_sample(
+        self, kind: str, label: str, title: str, notes: str, entries: list[dict[str, str]]
+    ) -> bool:
+        """Cards and steps use the template's own sample of that kind when it has room for all the items."""
+        sample = next(
+            (s for s in self.samples if s.kind == kind and len(s.items) >= len(entries) and not s.charts),
+            None,
+        )
+        if sample is None:
+            return False
+        parts = sample.items[0].parts
+        items = [{k: v for k, v in entry.items() if k in parts and v} for entry in entries]
+        self._from_sample(
+            sample,
+            f"{label} (template sample {sample.number})",
+            title,
+            notes,
+            {"title": title, "items": items},
+        )
+        return True
+
+    def cards_slide(self, slide_spec: CardsSlide) -> None:
+        entries = [
+            {"heading": c.heading, "text": c.text, **({"number": c.number} if c.number else {})}
+            for c in slide_spec.items
+        ]
+        if not self._items_from_sample("cards", "cards", slide_spec.title, slide_spec.notes, entries):
+            super().cards_slide(slide_spec)
+
+    def steps_slide(self, slide_spec: StepsSlide) -> None:
+        entries = [
+            {"heading": s.heading, "text": s.text, "number": str(i)}
+            for i, s in enumerate(slide_spec.steps, start=1)
+        ]
+        if not self._items_from_sample("steps", "steps", slide_spec.title, slide_spec.notes, entries):
+            super().steps_slide(slide_spec)
 
     def column(self, slide: Any, column: Column, x: float, width: float) -> None:
         super().column(slide, column, x, width)

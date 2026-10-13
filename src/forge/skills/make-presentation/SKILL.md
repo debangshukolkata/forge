@@ -37,6 +37,8 @@ Layouts and their fields:
 | `bullets` | a point with 2-5 supporting lines | `title`, `bullets` (strings, or `{"text", "sub": [...]}`) |
 | `two_column` | compare two things | `title`, `left` / `right`: `{"heading", "bullets"}` |
 | `stats` | 1-4 headline numbers | `title`, `items`: `{"value": "42%", "label": "..."}` |
+| `cards` | 2-4 parallel points (reasons, benefits, options, pillars) instead of a bullet list | `title`, `items`: `{"heading", "text"}`, optional `numbered: true` |
+| `steps` | a process, plan or rollout of 2-5 steps in a row | `title`, `steps`: `{"heading", "text"}` |
 | `chart` | a trend or comparison | `title`, `kind` (see Charts below), `categories`, `series`: `{"name", "values"}`, `caption`, more options below |
 | `table` | exact values, up to ~8 rows | `title`, `columns`, `rows`, `caption` |
 | `image` | a screenshot, diagram or photo | `title`, `image` (workspace path), `alt`, `caption` |
@@ -94,8 +96,8 @@ colours are hard to read or a font is not on every computer. If the project has 
 - **Do not default to one blue.** Pick the theme and accent for the audience and topic; use one accent plus neutrals.
 - **Vary the layout.** Never three of the same layout in a row; mix chart, stats, two-column, picture and freeform slides.
 - **Match the content to a layout, do not default to bullets.** Choose by what the content IS:
-  a few parallel points (3 to 4 pillars, benefits, options) -> a row of cards (`freeform` with a `row` of `text` cards);
-  steps, a process, a rollout -> a `process` or `timeline` diagram; a before/after, good/bad or A/B -> `two_column` or two cards;
+  a few parallel points (3 to 4 pillars, benefits, options) -> `cards`;
+  steps, a process, a rollout -> `steps` (or a `process` or `timeline` diagram for more detail); a before/after, good/bad or A/B -> `two_column` or two cards;
   headline figures -> `stats`; a trend or share -> `chart`; a decision, ask or quote -> a big-type slide (one sentence, large) or
   `quote`; a system or flow -> a diagram recipe; exact values -> `table`. Plain `bullets` is for the one slide in four that is
   really a list. No more than two bullet slides in a row; at most about 40 percent of content slides.

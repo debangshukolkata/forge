@@ -8,6 +8,7 @@ from collections.abc import Iterable, Sequence
 
 from forge.slides.spec import (
     BulletsSlide,
+    CardsSlide,
     ChartSlide,
     ClosingSlide,
     Deck,
@@ -17,6 +18,7 @@ from forge.slides.spec import (
     SectionSlide,
     ShapeElement,
     StatsSlide,
+    StepsSlide,
     TableSlide,
     TitleSlide,
     TwoColumnSlide,
@@ -45,7 +47,7 @@ BULLET_RUN = 2  # plain bullet slides allowed in a row
 ACCENT_BAR_MAX_HEIGHT = 0.12  # inches
 TITLE_ZONE_BOTTOM = 2.0
 CONTENT_LAYOUTS_WITHOUT_TAKEAWAY = (TitleSlide, ClosingSlide, SectionSlide, QuoteSlide)
-VISUAL_LAYOUTS = (ChartSlide, TableSlide, ImageSlide, StatsSlide, FreeformSlide)
+VISUAL_LAYOUTS = (ChartSlide, TableSlide, ImageSlide, StatsSlide, CardsSlide, StepsSlide, FreeformSlide)
 
 
 def font_warning(name: str) -> str | None:

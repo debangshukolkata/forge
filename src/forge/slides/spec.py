@@ -226,6 +226,34 @@ class ClosingSlide(_Slide):
     subtitle: str = ""
 
 
+class Card(_Model):
+    heading: str
+    text: str = ""
+    number: str | None = None  # a badge on the card; default the position when `numbered` is on
+
+
+class CardsSlide(_Slide):
+    """2 to 4 parallel points side by side: a heading and a short text each (use instead of a bullet list of parallel items)."""
+
+    layout: Literal["cards"]
+    title: str
+    items: list[Card]
+    numbered: bool = False
+
+
+class Step(_Model):
+    heading: str
+    text: str = ""
+
+
+class StepsSlide(_Slide):
+    """2 to 5 numbered steps in a row joined by a line: a process, a plan, a rollout."""
+
+    layout: Literal["steps"]
+    title: str
+    steps: list[Step]
+
+
 class TemplateSlide(_Slide):
     """A copy of one of the company template's own sample slides, with the content put into its slots (D-290)."""
 
@@ -425,12 +453,14 @@ Slide = Annotated[
     | QuoteSlide
     | StatsSlide
     | ClosingSlide
+    | CardsSlide
+    | StepsSlide
     | TemplateSlide
     | FreeformSlide,
     Field(discriminator="layout"),
 ]
 
-LAYOUTS = "title, section, bullets, two_column, image, table, chart, quote, stats, closing, freeform, template_slide"
+LAYOUTS = "title, section, bullets, two_column, image, table, chart, quote, stats, closing, cards, steps, freeform, template_slide"
 
 
 HexColour = Annotated[str, StringConstraints(pattern=r"^#?[0-9A-Fa-f]{6}$")]

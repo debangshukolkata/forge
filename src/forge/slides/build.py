@@ -19,6 +19,7 @@ from forge.slides.freeform import build_freeform
 from forge.slides.spec import (
     BulletGroup,
     BulletsSlide,
+    CardsSlide,
     ChartSlide,
     ClosingSlide,
     Column,
@@ -28,6 +29,7 @@ from forge.slides.spec import (
     QuoteSlide,
     SectionSlide,
     StatsSlide,
+    StepsSlide,
     TableSlide,
     TemplateSlide,
     TitleSlide,
@@ -129,6 +131,16 @@ class _Builder:
             }
             theme, self.brand_problems = apply_brand(theme, Brand(**kit))
         return theme
+
+    def cards_slide(self, slide_spec: CardsSlide) -> None:
+        from forge.slides.layouts_more import cards_slide
+
+        cards_slide(self, slide_spec)
+
+    def steps_slide(self, slide_spec: StepsSlide) -> None:
+        from forge.slides.layouts_more import steps_slide
+
+        steps_slide(self, slide_spec)
 
     def template_slide(self, slide_spec: TemplateSlide) -> None:
         raise BuildError(
@@ -562,6 +574,10 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
             builder.chart_slide(slide_spec)
         elif isinstance(slide_spec, QuoteSlide):
             builder.quote_slide(slide_spec)
+        elif isinstance(slide_spec, CardsSlide):
+            builder.cards_slide(slide_spec)
+        elif isinstance(slide_spec, StepsSlide):
+            builder.steps_slide(slide_spec)
         elif isinstance(slide_spec, TemplateSlide):
             builder.template_slide(slide_spec)
         elif isinstance(slide_spec, FreeformSlide):
