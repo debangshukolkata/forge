@@ -72,7 +72,16 @@ class FindAsset(Tool):
                 ok=True,
                 content=f"Nothing matched {args.query!r}. Try fewer or different words, or filter by type ({kinds}).",
             )
-        lines = [describe(asset) for asset in matches]
+        previews = {skill_asset.id: skill for skill, skill_asset in entries}
+        lines = [
+            describe(asset)
+            + (
+                " [reference pictures: add_asset copies them for view_image]"
+                if _previews(previews[asset.id].folder, asset.id)
+                else ""
+            )
+            for asset in matches
+        ]
         return ToolResult(
             ok=True,
             content="Best matches:\n" + "\n".join(lines) + "\nadd_asset(id) copies one into the project.",
@@ -161,8 +170,34 @@ class AddAsset(Tool):
             parts.append(
                 "Install first if missing: " + ", ".join(asset.dependencies) + " (npm install / pip install)."
             )
+        shown = await _copy_previews(context, skill, asset)
+        if shown:
+            parts.append(
+                "Reference pictures (what it looks like; open them with view_image and match the feel, do not copy the texts): "
+                + ", ".join(shown)
+            )
         parts.append("Usage note:\n" + note)
         return ToolResult(ok=True, content="\n".join(parts), meta={"ui_files": ui_files})
+
+
+REFERENCE_FOLDER = ".forge/reference"
+
+
+def _previews(skill_folder: Path, asset_id: str) -> list[Path]:
+    """Reference pictures of an asset (a desktop and a phone picture, made by scripts/dev/build_reference_shots.py), if it has them."""
+    return sorted((skill_folder / "assets" / "preview").glob(f"{asset_id}-*.jpg"))
+
+
+async def _copy_previews(context: ToolContext, skill: Skill, asset: Asset) -> list[str]:
+    """Copies the asset's reference pictures into the workspace's `.forge/reference/` so the model can look at them."""
+    shown: list[str] = []
+    for picture in _previews(skill.folder, asset.id):
+        target = context.workspace.root / REFERENCE_FOLDER / picture.name
+        context.workspace.jail.check(target)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(picture.read_bytes())
+        shown.append(f"{REFERENCE_FOLDER}/{picture.name}")
+    return shown
 
 
 PLACEHOLDER = re.compile(r"\{\{\s*([a-z][a-z0-9_]*)\s*\}\}")
