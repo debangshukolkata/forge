@@ -117,3 +117,82 @@ def fill_table(shape: Any, columns: list[str], rows: list[list[Any]]) -> None:
         for column in range(wanted_columns):
             value = row[column] if column < len(row) else ""
             _set_cell(table.cell(index, column), "" if value is None else str(value))
+
+
+# --- pictures in frames ---
+
+BLIP_FILL = "{http://schemas.openxmlformats.org/drawingml/2006/main}blipFill"
+NS_A = "http://schemas.openxmlformats.org/drawingml/2006/main"
+
+
+def picture_frames(slide: Any) -> list[Any]:
+    """The places a picture goes, in reading order: pictures (also those cropped to a circle or other shape), shapes filled with a
+    picture, and empty picture placeholders. Sorted top to bottom, then left to right."""
+    from forge.slides.edit_find import walk
+
+    frames = []
+    for shape in walk(slide.shapes):
+        if shape.shape_type == 13 or _has_picture_fill(shape) or _empty_picture_placeholder(shape):
+            frames.append(shape)
+    return sorted(frames, key=lambda s: (round((s.top or 0) / 914400, 1), s.left or 0))
+
+
+def _has_picture_fill(shape: Any) -> bool:
+    properties = shape._element.find("{http://schemas.openxmlformats.org/presentationml/2006/main}spPr")
+    return properties is not None and properties.find(BLIP_FILL) is not None
+
+
+def _empty_picture_placeholder(shape: Any) -> bool:
+    return bool(
+        shape.is_placeholder
+        and shape.placeholder_format.type is not None
+        and shape.placeholder_format.type.name == "PICTURE"
+        and not _has_picture_fill(shape)
+        and shape._element.tag.endswith("}sp")
+    )
+
+
+def _cover_crop(
+    image_width: int, image_height: int, frame_width: float, frame_height: float
+) -> tuple[float, float, float, float]:
+    """(left, top, right, bottom) fractions to cut so the picture covers the frame without stretching."""
+    picture, frame = image_width / image_height, frame_width / frame_height
+    if picture > frame:
+        side = (1 - frame / picture) / 2
+        return side, 0.0, side, 0.0
+    band = (1 - picture / frame) / 2
+    return 0.0, band, 0.0, band
+
+
+def put_picture(slide: Any, shape: Any, data: bytes) -> None:
+    """Puts the picture into the frame `shape` (any of `picture_frames`): the frame's place, size and outline stay, the picture is cropped to
+    cover it."""
+    import io
+
+    from PIL import Image
+
+    with Image.open(io.BytesIO(data)) as image:
+        width, height = image.size
+    left, top, right, bottom = _cover_crop(width, height, float(shape.width), float(shape.height))
+    if _empty_picture_placeholder(shape):
+        placed = shape.insert_picture(io.BytesIO(data))
+        placed.crop_left, placed.crop_top, placed.crop_right, placed.crop_bottom = left, top, right, bottom
+        return
+    _, relation = slide.part.get_or_add_image_part(io.BytesIO(data))
+    if shape.shape_type == 13:
+        shape._element.blipFill.blip.rEmbed = relation
+        shape.crop_left, shape.crop_top, shape.crop_right, shape.crop_bottom = left, top, right, bottom
+        return
+    fill = shape._element.find("{http://schemas.openxmlformats.org/presentationml/2006/main}spPr").find(
+        BLIP_FILL
+    )
+    blip = fill.find(f"{{{NS_A}}}blip")
+    blip.set("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}embed", relation)
+    for old in fill.findall(f"{{{NS_A}}}srcRect"):
+        fill.remove(old)
+    from lxml import etree  # type: ignore[import-untyped]
+
+    source = etree.Element(f"{{{NS_A}}}srcRect")
+    for name, value in (("l", left), ("t", top), ("r", right), ("b", bottom)):
+        source.set(name, str(round(value * 100000)))
+    blip.addnext(source)

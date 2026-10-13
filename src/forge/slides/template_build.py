@@ -29,7 +29,7 @@ from forge.slides.edit import _duplicate
 from forge.slides.edit_find import walk
 from forge.slides.errors import BuildError
 from forge.slides.open_deck import DeckError
-from forge.slides.sample_objects import fill_chart, fill_table, requested_family
+from forge.slides.sample_objects import fill_chart, fill_table, picture_frames, put_picture, requested_family
 from forge.slides.spec import (
     BulletsSlide,
     CardsSlide,
@@ -379,17 +379,24 @@ class TemplateBuilder(_Builder):
             self._replace_picture(slide, str(picture))
         return slide
 
-    def _replace_picture(self, slide: Any, name: str) -> None:
-        shape = next((s for s in walk(slide.shapes) if s.shape_type == 13), None)
-        if shape is None:
-            self.warn("this sample has no picture to replace")
+    def _replace_picture(self, slide: Any, names: Any) -> None:
+        """The picture(s) the slide asked for go into the sample's picture frames in reading order (a framed photo, a picture cropped to a
+        circle, a shape filled with a picture, an empty picture placeholder); each picture is cropped to cover its frame, not stretched."""
+        wanted = [str(n) for n in (names if isinstance(names, list) else [names])]
+        frames = picture_frames(slide)
+        if not frames:
+            self.warn("this sample has no picture frame to put the picture in")
             return
-        try:
-            data = self.picture_bytes(name)
-        except (OSError, ValueError, KeyError) as error:
-            raise BuildError(f"the picture {name!r} could not be read: {error}") from error
-        _, relation = slide.part.get_or_add_image_part(io.BytesIO(data))
-        shape._element.blipFill.blip.rEmbed = relation  # the crop and the frame of the sample stay
+        if len(wanted) > len(frames):
+            self.warn(
+                f"this sample has {len(frames)} picture frame(s): the last {len(wanted) - len(frames)} picture(s) were not used"
+            )
+        for frame, name in zip(frames, wanted, strict=False):
+            try:
+                data = self.picture_bytes(name)
+            except (OSError, ValueError, KeyError) as error:
+                raise BuildError(f"the picture {name!r} could not be read: {error}") from error
+            put_picture(slide, frame, data)
 
     def template_slide(self, slide_spec: TemplateSlide) -> None:
         if not 1 <= slide_spec.source <= len(self.samples):

@@ -219,8 +219,16 @@ made of the template's own slides. Steps:
      `{"layout": "template_slide", "source": 4, "fill": {"title": "...", "items": [{"heading": "...", "text": "..."}, ...]}}`.
      `fill` keys: `title`, `subtitle`, `body` (a list of lines; two leading spaces = sub-bullet), `items` (the repeated groups, each
      with the parts the analysis lists: `number`, `heading`, `text`; fewer items than groups removes the spare groups and centres
-     the rest, more is refused: split the slide), `picture` (a workspace picture replacing the sample's), `slot:<id>` for anything else.
-     A slot you leave out is removed, so no sample wording is ever left behind.
+     the rest, more is refused: split the slide), `picture` (a workspace picture, or a list of them for several frames, put into the sample's
+     picture frames in reading order: a framed photo, a picture cut to a circle, a shape filled with a picture; each is cropped to cover its
+     frame), `slot:<id>` for anything else. A slot you leave out is removed, so no sample wording is ever left behind. Text longer than
+     the sample's is made smaller to fit its box (not below 60 percent); a text too long even then is reported: shorten it.
+   - a `chart` slide uses the template's own chart sample of the same kind (column, bar, line, pie, donut) with the new data, and a `table`
+     slide its own table sample (up to 12 rows): the colours and frame stay the template's. No sample of that kind: the quiet native chart
+     or table in the template's colours.
+   - a template with dark and light twins of its slides: the first slide decides which side the deck stays on; set `"mood": "dark"` or
+     `"light"` in the outline to choose. Notes the template author left on the samples ('Delete before using ...', sticky notes with
+     instructions) are removed from every copy by themselves.
    - nothing in the template fits (a chart, a table, a diagram, a one-off design): use `chart`, `table`, `image`, `freeform`; they are
      drawn in the template's free area in its colours and fonts, with the decoration its samples share (company line, bars), so the
      slide still looks like part of the deck. Be creative there, but keep to the template's colours, fonts, margins and tone.
@@ -229,8 +237,8 @@ Never change the template's look to suit the content: change the content to suit
 Templates that are not 16:9 are refused; for those use `edit_presentation` (`add_slide` with the template's layout names, then
 `delete_slide` for its samples). A `brand` kit in the outline still overrides colours and fonts.
 
-Limits to tell the user plainly: copying a slide that holds a chart or an embedded object is not possible (build
-it again with `add_slide` and `update_chart`); animations, comments and slide-master changes are not edited;
+Limits to tell the user plainly: copying a slide that holds an embedded object, a video or SmartArt is not possible (charts and tables
+are copied); animations, comments and slide-master changes are not edited;
 `.ppt`, `.pptm` and password-protected files cannot be opened.
 
 ## 6. Free-form design (`layout: "freeform"`)

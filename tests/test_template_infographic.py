@@ -248,3 +248,45 @@ def test_text_longer_than_the_samples_is_made_smaller_to_fit_and_a_huge_text_is_
         size = shape.text_frame.paragraphs[0].runs[0].font.size.pt
         assert size < 14 and size >= 8.4
         assert any("too long for its box" in w for w in reports[1].warnings) is warned
+
+
+def test_a_picture_goes_into_the_samples_round_frame_covering_it() -> None:
+    """A portrait or photo frame of the real template is a picture cropped to a circle (D-335)."""
+    from PIL import Image
+    from pptx.enum.shapes import MSO_SHAPE
+    from pptx.util import Inches
+
+    prs = Presentation(io.BytesIO(make_infographic_template()))
+    slide = prs.slides.add_slide(next(layout for layout in prs.slide_layouts if layout.name == "Title Only"))
+    slide.shapes.title.text_frame.text = "Meet the speaker"
+    old = io.BytesIO()
+    Image.new("RGB", (40, 40), (200, 0, 0)).save(old, "PNG")
+    frame = slide.shapes.add_picture(old, Inches(1), Inches(1.5), Inches(2.5), Inches(2.5))
+    frame.auto_shape_type = MSO_SHAPE.OVAL
+    out = io.BytesIO()
+    prs.save(out)
+    template = out.getvalue()
+    new = io.BytesIO()
+    Image.new("RGB", (600, 300), (0, 0, 200)).save(new, "PNG")
+    deck = parse_deck(
+        json.dumps(
+            {
+                "title": "T",
+                "template": "t.pptx",
+                "slides": [
+                    {"layout": "title", "title": "T"},
+                    {
+                        "layout": "template_slide",
+                        "source": 11,
+                        "fill": {"title": "Ada", "picture": "ada.png"},
+                    },
+                ],
+            }
+        )
+    )
+    built = build_deck(deck, lambda name: new.getvalue() if name == "ada.png" else template)
+    result = Presentation(io.BytesIO(built.data))
+    picture = next(s for s in walk(result.slides[1].shapes) if s.shape_type == 13)
+    assert picture.auto_shape_type == MSO_SHAPE.OVAL and picture.image.size == (600, 300)
+    assert abs(picture.crop_left - 0.25) < 1e-6 and abs(picture.crop_right - 0.25) < 1e-6
+    assert not validate_package(built.data)
