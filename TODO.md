@@ -144,7 +144,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   policy and Protected View; `Start-DebCraft.cmd` installs the `slides` extra. Size S.
 
 ### P1 Quick wins
-- [ ] **P1.1 Contact sheet.** One picture of all slides in a grid (like Claude's thumbnail tool) so the model judges flow and
+- [x] **P1.1 Contact sheet.** One picture of all slides in a grid (like Claude's thumbnail tool) so the model judges flow and **(done 2026-10-13, D-278)**
   consistency in one look instead of N calls. Size S.
 - [ ] **P1.2 Show slides in the web UI.** After a build or edit, show the slide pictures inline in the chat and a slide viewer in the Files tab
   (download button for the .pptx). The user currently only gets file names. Size M.

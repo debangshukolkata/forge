@@ -73,7 +73,8 @@ Layouts and their fields:
 
 1. `build_presentation(outline=..., output="docs/<name>.pptx")`. Read the warnings; fix each in the outline and
    build again (they are about text too long, too many bullets, a table too tall, ...).
-2. `preview_presentation(path=...)` makes a picture per slide with PowerPoint. Look at **every** slide with
+2. `preview_presentation(path=...)` makes a picture per slide with PowerPoint, plus contact sheets (12 numbered slides per
+   picture): look at the contact sheet first to judge flow, rhythm and whether it looks like one deck. Then look at **every** slide with
    `view_image` and ask: is the text cut off or crowded, is anything unbalanced or empty, is the chart readable,
    does the title say the point? Fix and rebuild. Do this at least once; repeat until nothing is wrong.
 3. If preview says PowerPoint is not available, say so plainly to the user ("I could not look at the slides, only

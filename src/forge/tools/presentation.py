@@ -15,6 +15,7 @@ from pydantic import Field
 from forge.errors import ForgeError
 from forge.slides import preview
 from forge.slides.build import SlidesUnavailable, build_deck
+from forge.slides.contact_sheet import ContactSheetUnavailable, make_contact_sheets
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
 from forge.slides.open_deck import open_deck, save_deck
 from forge.slides.read import describe_deck
@@ -211,11 +212,22 @@ class PreviewPresentation(Tool):
                 "the slides were not looked at.",
             )
         names = [self.relative(context, picture) for picture in pictures]
-        return ToolResult(
-            ok=True,
-            content="Pictures of the slides (look at each with view_image and fix what is wrong):\n"
-            + "\n".join(f"- {name}" for name in names),
-        )
+        sheets: list[str] = []
+        try:
+            made = await asyncio.to_thread(make_contact_sheets, pictures, folder)
+            sheets = [self.relative(context, sheet) for sheet in made]
+        except (ContactSheetUnavailable, OSError):
+            pass  # the single pictures are enough
+        if sheets:
+            text = (
+                "Contact sheet(s) with all slides at a glance: look at these first with view_image to judge flow, "
+                "rhythm and consistency (do the slides look like one deck? any text-only or crowded slide?):\n"
+                + "\n".join(f"- {name}" for name in sheets)
+                + "\n\nThen look at single slides that need a closer look:\n"
+            )
+        else:
+            text = "Pictures of the slides (look at each with view_image and fix what is wrong):\n"
+        return ToolResult(ok=True, content=text + "\n".join(f"- {name}" for name in names))
 
     @staticmethod
     def relative(context: ToolContext, path: Path) -> str:
