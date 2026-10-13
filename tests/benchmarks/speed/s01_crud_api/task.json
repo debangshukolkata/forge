@@ -1,0 +1,1 @@
+{"id": "s01_crud_api", "title": "small CRUD API with pip installs", "mode": "pytest", "entry": "app.py"}

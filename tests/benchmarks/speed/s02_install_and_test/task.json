@@ -1,0 +1,1 @@
+{"id": "s02_install_and_test", "title": "dependency install and test run", "mode": "pytest", "entry": "report.py"}
