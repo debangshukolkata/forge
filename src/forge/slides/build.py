@@ -29,6 +29,7 @@ from forge.slides.spec import (
     SectionSlide,
     StatsSlide,
     TableSlide,
+    TemplateSlide,
     TitleSlide,
     TwoColumnSlide,
 )
@@ -128,6 +129,11 @@ class _Builder:
             }
             theme, self.brand_problems = apply_brand(theme, Brand(**kit))
         return theme
+
+    def template_slide(self, slide_spec: TemplateSlide) -> None:
+        raise BuildError(
+            'the layout "template_slide" copies a sample slide of a company template: set "template" in the outline'
+        )
 
     def finish(self) -> None:
         """Called after the last slide, before saving (a template-aware builder tidies its placeholders here)."""
@@ -556,6 +562,8 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
             builder.chart_slide(slide_spec)
         elif isinstance(slide_spec, QuoteSlide):
             builder.quote_slide(slide_spec)
+        elif isinstance(slide_spec, TemplateSlide):
+            builder.template_slide(slide_spec)
         elif isinstance(slide_spec, FreeformSlide):
             build_freeform(builder, slide_spec)
         else:

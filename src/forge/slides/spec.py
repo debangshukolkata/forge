@@ -5,7 +5,7 @@ can fix."""
 from __future__ import annotations
 
 import json
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 import yaml
 from pydantic import (
@@ -226,6 +226,14 @@ class ClosingSlide(_Slide):
     subtitle: str = ""
 
 
+class TemplateSlide(_Slide):
+    """A copy of one of the company template's own sample slides, with the content put into its slots (D-290)."""
+
+    layout: Literal["template_slide"]
+    source: int = Field(ge=1)  # the sample slide's number in the template (analyze_template lists them)
+    fill: dict[str, Any]  # title, subtitle, body (lines), items (the repeated groups), picture, slot:<id>
+
+
 # --- free-form slides (D-242): the model places every element itself, in inches on a 13.333 x 7.5 canvas ---
 
 VAlign = Literal["top", "middle", "bottom"]
@@ -417,11 +425,12 @@ Slide = Annotated[
     | QuoteSlide
     | StatsSlide
     | ClosingSlide
+    | TemplateSlide
     | FreeformSlide,
     Field(discriminator="layout"),
 ]
 
-LAYOUTS = "title, section, bullets, two_column, image, table, chart, quote, stats, closing, freeform"
+LAYOUTS = "title, section, bullets, two_column, image, table, chart, quote, stats, closing, freeform, template_slide"
 
 
 HexColour = Annotated[str, StringConstraints(pattern=r"^#?[0-9A-Fa-f]{6}$")]

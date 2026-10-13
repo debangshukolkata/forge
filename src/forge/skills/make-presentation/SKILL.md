@@ -131,13 +131,26 @@ file itself; in place is allowed and can be undone. If one operation fails, noth
 says which: fix that one and send the list again. Afterwards `preview_presentation` and look at the changed
 slides (a longer sentence in a fixed box can overflow; PowerPoint will not warn you).
 
-**Use a company template** (a `.potx`, or any 16:9 `.pptx` with the right masters): `analyze_template(path)` lists its size,
-theme colours, fonts and what each layout is for. Then build the deck as usual with `"template": "path/to/template.potx"`
-in the outline: title, closing, section, bullets and two_column slides go into the template's own layouts and placeholders
-(its bullets, fonts and sizes apply); charts, tables, pictures, stats, quotes and freeform slides are drawn in the free area
-of its title-only layout, coloured from its theme (its accent colours become the chart colours). The template's sample slides
-are dropped and empty placeholders removed. A layout the template lacks falls back to its title-only layout. Templates that
-are not 16:9 are refused; for those use `edit_presentation` (`add_slide` with the template's layout names, then
+**Use a company template** (a `.potx`, or any 16:9 `.pptx` with the right masters). The goal: a deck in the corporate format,
+made of the template's own slides. Steps:
+1. `analyze_template(path, pictures=true)`: size, theme colours, fonts, the layouts, and the template's SAMPLE SLIDES, each with its
+   kind (title, section, bullets, two_column, cards, stats, steps, quote, thanks, chart, table, image_text) and its slots. Look at the
+   contact sheet with `view_image` so you know what each sample looks like.
+2. Write the outline with `"template": "path/to/template.potx"`. For each piece of content pick the sample that fits:
+   - ordinary `title`, `section`, `bullets`, `two_column`, `stats` and `closing` slides are matched automatically to the template's
+     own sample of that kind (several samples of a kind are used in turn); no sample of that kind: its layout is used.
+   - for a sample that has no ordinary layout (cards, steps, agenda, image with text, a special design), copy it yourself:
+     `{"layout": "template_slide", "source": 4, "fill": {"title": "...", "items": [{"heading": "...", "text": "..."}, ...]}}`.
+     `fill` keys: `title`, `subtitle`, `body` (a list of lines; two leading spaces = sub-bullet), `items` (the repeated groups, each
+     with the parts the analysis lists: `number`, `heading`, `text`; fewer items than groups removes the spare groups and centres
+     the rest, more is refused: split the slide), `picture` (a workspace picture replacing the sample's), `slot:<id>` for anything else.
+     A slot you leave out is removed, so no sample wording is ever left behind.
+   - nothing in the template fits (a chart, a table, a diagram, a one-off design): use `chart`, `table`, `image`, `freeform`; they are
+     drawn in the template's free area in its colours and fonts, with the decoration its samples share (company line, bars), so the
+     slide still looks like part of the deck. Be creative there, but keep to the template's colours, fonts, margins and tone.
+3. Build, then `preview_presentation` and look: every slide must look like the template's own work.
+Never change the template's look to suit the content: change the content to suit the template (shorter text, split a slide).
+Templates that are not 16:9 are refused; for those use `edit_presentation` (`add_slide` with the template's layout names, then
 `delete_slide` for its samples). A `brand` kit in the outline still overrides colours and fonts.
 
 Limits to tell the user plainly: copying a slide that holds a chart or an embedded object is not possible (build

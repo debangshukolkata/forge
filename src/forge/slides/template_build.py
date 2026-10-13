@@ -14,6 +14,7 @@ DebCraft's 13.33 x 7.5 in canvas; other shapes are refused with a clear message.
 from __future__ import annotations
 
 import io
+from copy import deepcopy
 from typing import Any
 
 from forge.slides import fit
@@ -24,7 +25,10 @@ from forge.slides.build import (
     SlideReport,
     _Builder,
 )
+from forge.slides.edit import _duplicate
+from forge.slides.edit_find import walk
 from forge.slides.errors import BuildError
+from forge.slides.open_deck import DeckError
 from forge.slides.spec import (
     BulletsSlide,
     ClosingSlide,
@@ -32,10 +36,13 @@ from forge.slides.spec import (
     Deck,
     QuoteSlide,
     SectionSlide,
+    StatsSlide,
+    TemplateSlide,
     TitleSlide,
     TwoColumnSlide,
 )
 from forge.slides.template import TemplateInfo, analyze_template, content_box, theme_from_template
+from forge.slides.template_samples import Sample, analyze_samples, fill_sample
 from forge.slides.themes import Brand, Theme, apply_brand
 
 BODY_KINDS = ("OBJECT", "BODY")
@@ -61,10 +68,45 @@ def _open(data: bytes) -> Any:
             ) from error
 
 
+def _relationship_free(element: Any) -> bool:
+    """True when a shape refers to no picture, link or embedded part (so it can be copied between slides as it is)."""
+    return not any("relationships" in key for node in element.iter() for key in node.attrib)
+
+
+def _signature(shape: Any) -> tuple[Any, ...]:
+    return (str(shape.shape_type), shape.name, shape.left, shape.top, shape.width, shape.height)
+
+
+def _common_decor(prs: Any, samples: list[Sample]) -> list[Any]:
+    """Plain shapes (a company line, a coloured bar) that sit in the same place on most sample slides: the template's own
+    decoration, which a slide made from a layout should carry too."""
+    slides = list(prs.slides)
+    if len(slides) < 3:
+        return []
+    counts: dict[tuple[Any, ...], int] = {}
+    first: dict[tuple[Any, ...], Any] = {}
+    for slide in slides:
+        for shape in slide.shapes:
+            if shape.is_placeholder or shape.left is None or not _relationship_free(shape._element):
+                continue
+            key = _signature(shape)
+            counts[key] = counts.get(key, 0) + 1
+            first.setdefault(key, shape._element)
+    wanted = max(2, len(slides) // 2 + 1)
+    return [first[key] for key, count in counts.items() if count >= wanted]
+
+
 class TemplateBuilder(_Builder):
     def __init__(self, deck: Deck, read_image: Any, template: bytes) -> None:
         self.template_bytes = template
         self.info: TemplateInfo | None = None
+        self.samples: list[Sample] = []
+        self.sample_count = (
+            0  # the template's own slides stay at the front while we copy from them; finish() removes them
+        )
+        self.decor: list[Any] = []
+        self.used_samples: dict[str, int] = {}
+        self.read_image = read_image
         super().__init__(deck, read_image)
 
     # --- set-up: the template decides the theme, the size and the free area ---
@@ -101,10 +143,9 @@ class TemplateBuilder(_Builder):
 
     def make_presentation(self) -> Any:
         prs = _open(self.template_bytes)
-        sld_ids = prs.slides._sldIdLst
-        for slide_id in list(sld_ids):  # the template's sample slides are not ours
-            prs.part.drop_rel(slide_id.rId)
-            sld_ids.remove(slide_id)
+        self.samples = analyze_samples(prs)  # kept in the file until finish(): new slides are copies of them
+        self.sample_count = len(prs.slides)
+        self.decor = _common_decor(prs, self.samples)
         return prs
 
     # --- slides on the template's layouts ---
@@ -129,8 +170,9 @@ class TemplateBuilder(_Builder):
         )  # the template's own background and logo come with it
         if notes:
             slide.notes_slide.notes_text_frame.text = notes
-        self.report = SlideReport(len(self.prs.slides), layout, title)
+        self.report = SlideReport(len(self.prs.slides) - self.sample_count, layout, title)
         self.reports.append(self.report)
+        self._add_decor(slide)
         return slide
 
     def title(self, slide: Any, text: str, size: float = 34, colour: str | None = None, **frame: Any) -> Any:
@@ -150,6 +192,11 @@ class TemplateBuilder(_Builder):
         """The template owns its footer; nothing is drawn."""
 
     def finish(self) -> None:
+        sld_ids = self.prs.slides._sldIdLst
+        for slide_id in list(sld_ids)[: self.sample_count]:  # the template's sample slides are not ours
+            self.prs.part.drop_rel(slide_id.rId)
+            sld_ids.remove(slide_id)
+        self.sample_count = 0
         for slide in self.prs.slides:  # an empty placeholder shows as "Click to add text" in PowerPoint
             for shape in list(slide.placeholders):
                 kind = shape.placeholder_format.type
@@ -200,9 +247,105 @@ class TemplateBuilder(_Builder):
                 )
                 break
 
+    # --- the template's own sample slides ---
+
+    def _add_decor(self, slide: Any) -> None:
+        """A slide made from a layout carries the decoration the template's samples share (once)."""
+        present = {_signature(s) for s in slide.shapes if s.left is not None}
+        tree = slide.shapes._spTree
+        for element in self.decor:
+            copy = deepcopy(element)
+            ids = [int(i) for i in tree.xpath("//p:cNvPr/@id")] or [1]
+            copy.xpath(".//p:cNvPr")[0].set("id", str(max(ids) + 1))
+            tree.append(copy)
+            if _signature(slide.shapes[len(slide.shapes) - 1]) in present:
+                tree.remove(copy)
+
+    def match(self, kind: str) -> Sample | None:
+        """The next sample of this kind (round robin, so a deck with several bullet slides does not repeat one sample)."""
+        options = [s for s in self.samples if s.kind == kind and not s.charts and not s.tables]
+        if not options:
+            return None
+        count = self.used_samples.get(kind, 0)
+        self.used_samples[kind] = count + 1
+        return options[count % len(options)]
+
+    def _from_sample(self, sample: Sample, label: str, title: str, notes: str, fills: dict[str, Any]) -> Any:
+        try:
+            _duplicate(self.prs, sample.number, len(self.prs.slides) + 1)
+        except DeckError as error:
+            raise BuildError(f"sample slide {sample.number} cannot be copied: {error}") from error
+        slide = self.prs.slides[len(self.prs.slides) - 1]
+        self.report = SlideReport(len(self.prs.slides) - self.sample_count, label, title)
+        self.reports.append(self.report)
+        if notes:
+            slide.notes_slide.notes_text_frame.text = notes
+        picture = fills.pop("picture", None)
+        for problem in fill_sample(slide, sample, fills):
+            self.warn(problem)
+        if picture:
+            self._replace_picture(slide, str(picture))
+        return slide
+
+    def _replace_picture(self, slide: Any, name: str) -> None:
+        shape = next((s for s in walk(slide.shapes) if s.shape_type == 13), None)
+        if shape is None:
+            self.warn("this sample has no picture to replace")
+            return
+        try:
+            data = self.read_image(name)
+        except (OSError, ValueError, KeyError) as error:
+            raise BuildError(f"the picture {name!r} could not be read: {error}") from error
+        _, relation = slide.part.get_or_add_image_part(io.BytesIO(data))
+        shape._element.blipFill.blip.rEmbed = relation  # the crop and the frame of the sample stay
+
+    def template_slide(self, slide_spec: TemplateSlide) -> None:
+        if not 1 <= slide_spec.source <= len(self.samples):
+            have = (
+                ", ".join(f"{s.number} [{s.kind}]" for s in self.samples)
+                or "none (the template has no sample slides)"
+            )
+            raise BuildError(f"the template has no sample slide {slide_spec.source}; it has: {have}")
+        sample = self.samples[slide_spec.source - 1]
+        fills = dict(slide_spec.fill)
+        title = str(fills.get("title") or f"sample slide {sample.number}")
+        self._from_sample(sample, f"template_slide ({sample.kind})", title, slide_spec.notes, fills)
+
+    def _auto(self, kind: str, label: str, title: str, notes: str, fills: dict[str, Any]) -> bool:
+        """Use the template's own sample of this kind when it has one: only the slots the sample has are filled."""
+        sample = self.match(kind)
+        if sample is None:
+            return False
+        have = {s.role for s in sample.slots if not s.fixed}
+        wanted = {
+            k: v for k, v in fills.items() if k in have or k in ("items", "picture") or k.startswith("slot:")
+        }
+        self._from_sample(sample, f"{label} (template sample {sample.number})", title, notes, wanted)
+        return True
+
+    @staticmethod
+    def _body_slot(sample: Sample) -> str | None:
+        """The slot that holds the bullets: the body, else the text box with the most paragraphs."""
+        if sample.slot("body") is not None:
+            return "body"
+        texts = [s for s in sample.slots if s.role == "text" and not s.fixed and not sample._in_items(s)]
+        return f"slot:{max(texts, key=lambda s: s.paragraphs).id}" if texts else None
+
     # --- the layouts ---
 
     def title_slide(self, slide_spec: TitleSlide | ClosingSlide, closing: bool) -> None:
+        subtitle = slide_spec.subtitle or (self.deck.subtitle if not closing else "")
+        lines = [subtitle] if subtitle else []
+        if self.deck.author and not closing:
+            lines.append(self.deck.author)
+        fills: dict[str, Any] = {"title": slide_spec.title, **({"subtitle": lines} if lines else {})}
+        kind = "thanks" if closing else "title"
+        if self._auto(
+            kind, "closing" if closing else "title", slide_spec.title, slide_spec.notes, dict(fills)
+        ):
+            return
+        if closing and self._auto("title", "closing", slide_spec.title, slide_spec.notes, dict(fills)):
+            return
         if not self.has_role("title"):
             return super().title_slide(slide_spec, closing)
         slide = self.new_slide(slide_spec.layout, slide_spec.title, slide_spec.notes, role="title")
@@ -216,6 +359,11 @@ class TemplateBuilder(_Builder):
             self._fill_paragraphs(holders[0].text_frame, [(line, 0) for line in lines])
 
     def section_slide(self, slide_spec: SectionSlide) -> None:
+        fills: dict[str, Any] = {"title": slide_spec.title}
+        if slide_spec.subtitle:
+            fills["subtitle"] = slide_spec.subtitle
+        if self._auto("section", "section", slide_spec.title, slide_spec.notes, fills):
+            return
         if not self.has_role("section"):
             return super().section_slide(slide_spec)
         slide = self.new_slide(slide_spec.layout, slide_spec.title, slide_spec.notes, role="section")
@@ -225,6 +373,14 @@ class TemplateBuilder(_Builder):
             holders[0].text_frame.text = slide_spec.subtitle
 
     def bullets_slide(self, slide_spec: BulletsSlide) -> None:
+        sample = self.match("bullets")
+        if sample is not None and (target := self._body_slot(sample)) is not None:
+            lines = ["  " * level + text for text, level in self.bullet_items(slide_spec.bullets)]
+            label = f"bullets (template sample {sample.number})"
+            self._from_sample(
+                sample, label, slide_spec.title, slide_spec.notes, {"title": slide_spec.title, target: lines}
+            )
+            return
         if not self.has_role("content"):
             return super().bullets_slide(slide_spec)
         slide = self.new_slide(slide_spec.layout, slide_spec.title, slide_spec.notes, role="content")
@@ -237,6 +393,21 @@ class TemplateBuilder(_Builder):
         self._fill_paragraphs(holders[0].text_frame, items)
 
     def two_column_slide(self, slide_spec: TwoColumnSlide) -> None:
+        sample = self.match("two_column")
+        if sample is not None and len(sample.items) == 2:
+            columns = [
+                {"heading": c.heading, "text": [text for text, _ in self.bullet_items(c.bullets)]}
+                for c in (slide_spec.left, slide_spec.right)
+            ]
+            label = f"two_column (template sample {sample.number})"
+            self._from_sample(
+                sample,
+                label,
+                slide_spec.title,
+                slide_spec.notes,
+                {"title": slide_spec.title, "items": columns},
+            )
+            return
         if not self.has_role("two_content"):
             return super().two_column_slide(slide_spec)
         slide = self.new_slide(slide_spec.layout, slide_spec.title, slide_spec.notes, role="two_content")
@@ -248,6 +419,22 @@ class TemplateBuilder(_Builder):
             if column.heading:
                 items = [(column.heading, 0), *items]
             self._fill_paragraphs(holder.text_frame, items, bold_first=bool(column.heading))
+
+    def stats_slide(self, slide_spec: StatsSlide) -> None:
+        sample = next(
+            (s for s in self.samples if s.kind == "stats" and len(s.items) >= len(slide_spec.items)), None
+        )
+        if sample is not None:
+            has_heading = "heading" in sample.items[0].parts
+            items = [
+                {"number": s.value, ("heading" if has_heading else "text"): s.label} for s in slide_spec.items
+            ]
+            label = f"stats (template sample {sample.number})"
+            self._from_sample(
+                sample, label, slide_spec.title, slide_spec.notes, {"title": slide_spec.title, "items": items}
+            )
+            return
+        super().stats_slide(slide_spec)
 
     def column(self, slide: Any, column: Column, x: float, width: float) -> None:
         super().column(slide, column, x, width)

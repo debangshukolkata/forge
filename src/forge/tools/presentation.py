@@ -23,6 +23,7 @@ from forge.slides.read import describe_deck
 from forge.slides.spec import parse_deck
 from forge.slides.template import analyze_template, describe_template
 from forge.slides.template_build import _open
+from forge.slides.template_samples import analyze_samples, describe_samples
 from forge.slides.validate import validate_package
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.vision import image_path
@@ -131,16 +132,21 @@ class ReadPresentation(Tool):
 
 class AnalyzeTemplate(Tool):
     name = "analyze_template"
-    read_only = True
+    read_only = False  # with pictures it writes them under .forge/reports
     description = (
-        "Study a company PowerPoint template (.potx or .pptx): slide size, theme colours, fonts, and what each of "
-        "its layouts is for (title, section, content, two content, title only, ...). Use it before building a deck "
-        'on the template (set "template" in the outline of build_presentation).'
+        "Study a company PowerPoint template (.potx or .pptx): slide size, theme colours, fonts, what each layout is for, and "
+        "the template's own SAMPLE SLIDES (title, cards, big numbers, bullets, thank you...) with their slots. To build a deck in "
+        'the corporate format, set "template" in the outline of build_presentation: slides then use the samples and '
+        "layouts, or copy a chosen sample with {layout: template_slide, source: N, fill: {...}}. With pictures=true it also "
+        "renders the template with PowerPoint so you can look at each sample with view_image and choose the right one."
     )
 
     class Args(ToolArgs):
         path: str = Field(
             description="The template, relative to the repository root (or a file the user opened)"
+        )
+        pictures: bool = Field(
+            default=False, description="Also make pictures of the template's slides (needs PowerPoint)"
         )
 
     def summary(self, args: AnalyzeTemplate.Args) -> str:
@@ -152,12 +158,37 @@ class AnalyzeTemplate(Tool):
             return ToolResult(ok=False, content=f"No file at {args.path}.")
         try:
             data = await asyncio.to_thread(file.read_bytes)
-            info = analyze_template(_open(data))
+            prs = _open(data)
+            text = (
+                describe_template(analyze_template(prs), args.path)
+                + "\n\n"
+                + describe_samples(analyze_samples(prs))
+            )
         except SlidesUnavailable as error:
             return ToolResult(ok=False, content=f"{error} Tell the user.")
         except (ForgeError, OSError) as error:
             return ToolResult(ok=False, content=str(error))
-        return ToolResult(ok=True, content=describe_template(info, args.path))
+        if args.pictures:
+            text += await self._pictures(file, context)
+        return ToolResult(ok=True, content=text)
+
+    @staticmethod
+    async def _pictures(file: Path, context: ToolContext) -> str:
+        folder = context.workspace.jail.check(context.workspace.root / PREVIEW_FOLDER / file.stem)
+        try:
+            pictures = await asyncio.to_thread(preview.export_slides, file, folder)
+        except preview.PreviewUnavailable as error:
+            return f"\n\nNo pictures could be made: {error}"
+        names = [PreviewPresentation.relative(context, p) for p in pictures]
+        try:
+            sheets = await asyncio.to_thread(make_contact_sheets, pictures, folder)
+            names = [PreviewPresentation.relative(context, s) for s in sheets] + names
+        except (ContactSheetUnavailable, OSError):
+            pass
+        return (
+            "\n\nPictures of the template's slides (look at them with view_image; contact sheets first):\n"
+            + "\n".join(f"- {name}" for name in names)
+        )
 
 
 class EditPresentation(Tool):

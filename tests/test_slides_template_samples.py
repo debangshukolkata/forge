@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import io
+from pathlib import Path
 
 import pytest
 
 pytest.importorskip("pptx")
-from pptx import Presentation  # noqa: E402
+from pptx import Presentation
 
-from forge.slides.edit_find import walk  # noqa: E402
-from forge.slides.template_samples import analyze_samples, describe_samples, fill_sample  # noqa: E402
-from tests.slide_templates import make_corporate_template  # noqa: E402
+from forge.slides.edit_find import walk
+from forge.slides.template_samples import analyze_samples, describe_samples, fill_sample
+from tests.slide_templates import make_corporate_template
 
 
 def _template() -> tuple[Presentation, list]:
@@ -99,3 +100,111 @@ def test_bullets_fill_the_body_with_one_paragraph_per_line() -> None:
     fill_sample(slide, samples[3], {"title": "Plan", "body": ["One", "Two", "Three", "Four"]})
     body = next(s for s in slide.placeholders if s.placeholder_format.idx == 1)
     assert [p.text for p in body.text_frame.paragraphs] == ["One", "Two", "Three", "Four"]
+
+
+# --- building a deck on a template that carries sample slides ---
+
+import json  # noqa: E402
+
+from forge.slides.build import build_deck  # noqa: E402
+from forge.slides.errors import BuildError  # noqa: E402
+from forge.slides.spec import parse_deck  # noqa: E402
+from forge.slides.validate import validate_package  # noqa: E402
+
+
+def _build(slides: list[dict]) -> tuple[object, Presentation]:
+    template = make_corporate_template()
+    deck = parse_deck(
+        json.dumps({"title": "Deck", "subtitle": "Quarterly", "template": "t.pptx", "slides": slides})
+    )
+    built = build_deck(deck, lambda name: template)
+    return built, Presentation(io.BytesIO(built.data))
+
+
+def test_a_deck_is_built_from_the_templates_own_samples_and_none_of_their_words_remain() -> None:
+    built, prs = _build(
+        [
+            {"layout": "title", "title": "Q3 review"},
+            {"layout": "bullets", "title": "What shipped", "bullets": ["Search", "Billing", "Mobile"]},
+            {
+                "layout": "stats",
+                "title": "Results",
+                "items": [{"value": "42%", "label": "growth"}, {"value": "1.2M", "label": "users"}],
+            },
+            {
+                "layout": "template_slide",
+                "source": 2,
+                "fill": {
+                    "title": "Why customers stay",
+                    "items": [
+                        {"heading": "Speed", "text": "Fast answers."},
+                        {"heading": "Care", "text": "A named contact."},
+                    ],
+                },
+                "notes": "Say it slowly.",
+            },
+            {"layout": "closing", "title": "Thank you"},
+        ]
+    )
+    assert not validate_package(built.data)
+    assert len(prs.slides) == 5  # the template's five samples are gone
+    all_text = [t for slide in prs.slides for t in _texts(slide)]
+    assert not [t for t in all_text if "sample" in t.lower() or "Pillar" in t or "Metric label" in t]
+    assert "42%" in all_text and "growth" in all_text and "Speed" in all_text and "Fast answers." in all_text
+    assert all_text.count("Acme Corp. Confidential") == 5  # the company line comes with every sample
+    assert prs.slides[3].notes_slide.notes_text_frame.text == "Say it slowly."
+    assert [s.layout for s in built.slides][3].startswith("template_slide")  # type: ignore[attr-defined]
+
+
+def test_a_slide_the_template_has_no_sample_for_is_made_in_its_theme_with_its_decoration() -> None:
+    built, prs = _build(
+        [{"layout": "image", "title": "A picture", "image": "x.png"}]
+        if False
+        else [
+            {
+                "layout": "chart",
+                "title": "Users doubled",
+                "kind": "column",
+                "categories": ["Jan", "Feb"],
+                "series": [{"name": "Users", "values": [1, 2]}],
+            }
+        ]
+    )
+    slide = prs.slides[0]
+    assert "Acme Corp. Confidential" in _texts(slide)  # the shared company line is carried over
+    chart = next(s for s in slide.shapes if getattr(s, "has_chart", False) and s.has_chart)
+    assert "0B6E4F" in chart.chart._chartSpace.xml  # the template's accent colour
+    assert not validate_package(built.data)
+
+
+def test_template_slide_with_a_bad_source_says_what_the_template_has() -> None:
+    with pytest.raises(BuildError, match=r"no sample slide 9; it has: 1 \[title\]"):
+        _build([{"layout": "template_slide", "source": 9, "fill": {"title": "x"}}])
+
+
+def test_template_slide_without_a_template_is_refused() -> None:
+    deck = parse_deck(
+        json.dumps(
+            {"title": "D", "slides": [{"layout": "template_slide", "source": 1, "fill": {"title": "x"}}]}
+        )
+    )
+    with pytest.raises(BuildError, match='set "template"'):
+        build_deck(deck, lambda name: b"")
+
+
+def test_repeated_bullet_slides_rotate_through_samples_of_the_same_kind() -> None:
+    _, prs = _build([{"layout": "bullets", "title": f"Point {i}", "bullets": ["a", "b"]} for i in range(3)])
+    assert len(prs.slides) == 3
+
+
+def test_the_analyze_template_tool_lists_the_samples(tmp_path: Path, original_repo: Path) -> None:
+    import asyncio
+
+    from forge.toolkit.base import ToolContext
+    from forge.tools.presentation import AnalyzeTemplate
+    from forge.workspace.create import create_workspace
+
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    context.workspace.write_bytes("docs/company.pptx", make_corporate_template(), "template")
+    result = asyncio.run(AnalyzeTemplate().run(AnalyzeTemplate.Args(path="docs/company.pptx"), context))
+    assert result.ok and "Slide 2 [cards]" in result.content and "Free area" in result.content

@@ -19,7 +19,7 @@ from forge.slides.edit_text import set_frame_text
 EMU = 914400
 FOOTER_KINDS = {"DATE", "FOOTER", "SLIDE_NUMBER"}
 THANKS = re.compile(r"thank|questions|contact|discussion", re.I)
-NUMBERISH = re.compile(r"^[\d.,+\-–%$€£kKmMbB x/]{1,12}$")
+NUMBERISH = re.compile(r"^[\d.,+\-–%$€£kKmMbB x/]{1,12}$")  # noqa: RUF001  (the en dash is meant)
 STEP_NUMBER = re.compile(r"^(0?\d|[ivx]+)[.)]?$", re.I)
 QUOTE_MARKS = ("“", '"', "«")
 
@@ -351,15 +351,30 @@ def _shapes_inside(slide: Any, item: Item, margin: float = 0.3) -> list[Any]:
         if shape.left is None or shape.width is None:
             continue
         cx, cy = (shape.left + shape.width / 2) / EMU, (shape.top + shape.height / 2) / EMU
-        if (
+        inside = (
             item.x - margin <= cx <= item.x + item.w + margin
             and item.y - margin <= cy <= item.y + item.h + margin
-        ):
-            if (
-                shape.width / EMU < item.w * 2.5 and shape.height / EMU < item.h * 2.5
-            ):  # not a full-slide panel
-                found.append(shape)
+        )
+        if (
+            inside and shape.width / EMU < item.w * 2.5 and shape.height / EMU < item.h * 2.5
+        ):  # not a full-slide panel
+            found.append(shape)
     return found
+
+
+def _centre_kept(slide: Any, items: list[Item], kept: int) -> None:
+    """Items standing in a row: after the spare ones are removed, move the kept ones so the row is centred as it was."""
+    if kept == 0 or max(i.y for i in items) - min(i.y for i in items) > 0.3:
+        return
+    before = (min(i.x for i in items) + max(i.x + i.w for i in items)) / 2
+    after = (min(i.x for i in items[:kept]) + max(i.x + i.w for i in items[:kept])) / 2
+    shift = int((before - after) * EMU)
+    moved: set[int] = set()
+    for item in items[:kept]:
+        for shape in [*(_shape_by_id(slide, s.id) for s in item.slots), *_shapes_inside(slide, item)]:
+            if shape is not None and shape.shape_id not in moved and shape.left is not None:
+                shape.left += shift
+                moved.add(shape.shape_id)
 
 
 def fill_sample(slide: Any, sample: Sample, fills: dict[str, Any]) -> list[str]:
@@ -398,18 +413,21 @@ def fill_sample(slide: Any, sample: Sample, fills: dict[str, Any]) -> list[str]:
                 for shape in _shapes_inside(slide, item):
                     if not getattr(shape, "has_text_frame", False) or not shape.text_frame.text.strip():
                         _remove(shape)
+            if len(wanted) < len(sample.items):
+                _centre_kept(slide, sample.items, len(wanted))
             continue
+        target: Slot | None
         if key.startswith("slot:"):
-            slot = next((s for s in sample.slots if str(s.id) == key[5:]), None)
+            target = next((s for s in sample.slots if str(s.id) == key[5:]), None)
         else:
-            slot = sample.slot(key)
-        if slot is None:
+            target = sample.slot(key)
+        if target is None:
             problems.append(
                 f"this sample has no {key!r} (it has: {', '.join(sorted({s.role for s in sample.slots if not s.fixed}))})"
             )
             continue
-        _set(slide, slot, value)
-        used.add(slot.id)
+        _set(slide, target, value)
+        used.add(target.id)
     for slot in sample.slots:  # sample words that nothing replaced must not stay
         if slot.id not in used and not slot.fixed:
             shape = _shape_by_id(slide, slot.id)
