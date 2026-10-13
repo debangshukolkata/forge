@@ -47,3 +47,9 @@ the verifier and critic running together) and not faster tools. Tool-side work o
 2. Give the critic a smaller job on later rounds: only re-check the fixes it listed, not a full review.
 3. Start the dev server in the background as soon as the files exist (X5 hint added; verify it does).
 Compare each with `--compare speed-1 <new run>`.
+
+### speed-2 (2026-10-13, after the critic change: judged against the brief, follow-up reviews check only earlier fixes, round notes)
+Page redesign only: wall **1487 -> 975 s (-34 %)**, cost **$1.51 -> $0.73 (-52 %)**, model calls 40 -> 34, quality **6/7 -> 7/7**. The critic ran
+twice instead of six times (68 s and 66 s) and the page no longer grew a contact form nobody asked for. One run each: the direction is
+clear, the exact figures are not. Accepted (quality did not drop). What is left in the 975 s: model 486 s, tools 487 s of which
+`start_background` 125 s (two starts of a plain static server of 63 s each, see S6), `monitor` 120 s, `browser_open` 49 s, `view_image` 46 s.
