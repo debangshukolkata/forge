@@ -19,6 +19,7 @@ from forge.toolkit.private_env import without_private
 TIMEOUT_S = 180
 POINTS_PER_INCH = 72.0
 SLACK_IN = 0.04  # the measure is exact; this absorbs rounding
+WIDTH_SLACK_IN = 0.2  # PowerPoint's bound width of wrapped text can exceed the box by a few points (a trailing space); not visible
 MAX_REPORTED = 12
 
 SCRIPT = r"""
@@ -150,7 +151,7 @@ def overflow_problems(measures: list[Measure]) -> list[str]:
                     f"{label}: the text is {m.text_height / POINTS_PER_INCH:.2f} in tall but its box has "
                     f"{room / POINTS_PER_INCH:.2f} in: enlarge the box, shorten the text or use a smaller size"
                 )
-            elif m.text_width > m.width - m.margins[2] - m.margins[3] + slack:
+            elif m.text_width > m.width - m.margins[2] - m.margins[3] + WIDTH_SLACK_IN * POINTS_PER_INCH:
                 found.append(
                     f"{label}: a word or line is wider than its box: widen the box or shorten the text"
                 )

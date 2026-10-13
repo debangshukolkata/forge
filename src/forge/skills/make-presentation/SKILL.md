@@ -60,7 +60,9 @@ Layouts and their fields:
 - **Readable.** The builder will not go below 16 pt; if text does not fit it says so: split the slide or cut words.
   Do not fight it by cramming.
 - **Images** need `alt` text saying what they show. Use pictures that carry meaning, not decoration.
-- **Speaker notes** on every content slide: the sentence you would say, and the source of any number.
+- **Speaker notes** on every slide that has content, also slides copied from a template sample (`notes` on `template_slide`): what the speaker
+  says, the source of any number, and for a workshop or training what the facilitator does and the timing. The build warns about slides with
+  no real notes.
 
 ### Choose the theme from the topic (19 themes, all checked for readable contrast)
 Pick by audience and subject, not by habit; do not use `clean` just because it is first. One main colour plus one accent.
@@ -135,10 +137,11 @@ numbers, picture alt text, speaker notes). Base what you say on that, slide by s
 nothing to read (a picture without alt text, for instance). Never guess what a slide says.
 
 **New slides in an edited deck:** `add_slide` with only `title` and `body` copies the look of the deck's own last text slide (same
-layout, boxes, fonts and positions) and puts the slide before a closing slide ("Thank you", "Questions"), so it looks like the rest.
-Use `like: N` to copy a particular slide, `at` to choose the position, or `layout` for a layout name when the deck is built on a
-template's layouts. `replace_text` also changes chart titles, axis titles, category and series names and picture alt text, so
-"replace every X" really means every one.
+layout, boxes, fonts and positions) and puts the slide before a closing slide ("Thank you", "Questions"). **Do not add a `move_slide`
+after it: the slide already lands in the right place** (the result says where). A `layout` name on a deck whose slides are not made of
+placeholders (a deck DebCraft built) also copies the deck's look; add `exact_layout: true` to force the layout's own placeholders. Use
+`like: N` to copy a particular slide, `at` for a position, `layout` for a company template's layout names. `replace_text` also changes
+chart titles, axis titles, category and series names and picture alt text, so "replace every X" really means every one.
 
 **Change a deck:** read it first, then `edit_presentation(path, operations=[...], output=...)`. It keeps the deck's
 own formatting, so prefer it over rebuilding whenever someone else made the deck or a template is involved.

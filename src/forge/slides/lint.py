@@ -44,6 +44,7 @@ SAME_LAYOUT_RUN = 3
 TEXT_ONLY_SHARE = 0.45
 MINUTES_PER_SLIDE = 2.0  # a talk covers about one content slide per two minutes
 BULLET_RUN = 2  # plain bullet slides allowed in a row
+MIN_NOTE_WORDS = 6  # shorter notes than this count as none
 ACCENT_BAR_MAX_HEIGHT = 0.12  # inches
 TITLE_ZONE_BOTTOM = 2.0
 CONTENT_LAYOUTS_WITHOUT_TAKEAWAY = (TitleSlide, ClosingSlide, SectionSlide, QuoteSlide)
@@ -126,6 +127,18 @@ def deck_warnings(deck: Deck) -> list[str]:
                 f"{len(text_only)} of {len(content)} content slides are text only: give most slides a visual "
                 "(chart, numbers, table, picture or a drawn diagram) so the deck is not a wall of bullets"
             )
+    thin = [
+        n
+        for n, s in enumerate(deck.slides, start=1)
+        if not isinstance(s, (SectionSlide,))
+        and len((getattr(s, "notes", "") or "").split()) < MIN_NOTE_WORDS
+    ]
+    if thin and len(deck.slides) >= 4:
+        shown = ", ".join(map(str, thin[:8])) + (" ..." if len(thin) > 8 else "")
+        out.append(
+            f"{len(thin)} slide(s) have no real speaker notes (slides {shown}): add what the speaker says, the source of every number "
+            "and, for a workshop or training, what the facilitator does and the timing"
+        )
     run = 0
     for number, slide in enumerate(deck.slides, start=1):
         run = run + 1 if isinstance(slide, BulletsSlide) else 0

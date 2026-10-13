@@ -224,6 +224,7 @@ def test_slides_are_added_from_the_decks_own_layouts_and_a_template_works(tmp_pa
             {
                 "op": "add_slide",
                 "layout": "title and content",
+                "exact_layout": True,
                 "title": "Next steps",
                 "body": ["Ship it", "  by Friday"],
                 "notes": "Be brief",

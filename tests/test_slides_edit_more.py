@@ -314,3 +314,38 @@ def test_an_explicit_position_and_a_chosen_model_slide_are_respected(tmp_path: P
     assert _titles(deck)[1] == "Appendix"
     with pytest.raises(DeckError, match="no slide 9"):
         _run(deck, [{"op": "add_slide", "like": 9, "title": "x", "body": ["y"]}])
+
+
+def test_a_layout_name_on_a_deck_without_placeholder_slides_copies_the_decks_look(tmp_path: Path) -> None:
+    deck = _deck_with_closing(tmp_path)
+    done = _run(
+        deck,
+        [
+            {
+                "op": "add_slide",
+                "layout": "Title and Content",
+                "title": "Decisions needed",
+                "body": ["Approve plan"],
+            }
+        ],
+    )
+    assert "added slide 4 of 5" in done[0] and "no move_slide is needed" in done[0]
+    new, old = deck.slides[3], deck.slides[2]
+    assert [(s.left, s.top, s.width) for s in new.shapes if s.has_text_frame] == [
+        (s.left, s.top, s.width) for s in old.shapes if s.has_text_frame
+    ]
+    _run(
+        deck,
+        [
+            {
+                "op": "add_slide",
+                "layout": "Title and Content",
+                "exact_layout": True,
+                "title": "Real layout",
+                "body": ["x"],
+            }
+        ],
+    )
+    assert any(
+        s.is_placeholder for s in deck.slides[3].shapes
+    )  # exact_layout forces the layout's own placeholders

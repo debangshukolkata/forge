@@ -68,6 +68,9 @@ class DuplicateSlide(_Op):
 class AddSlide(_Op):
     op: Literal["add_slide"]
     layout: str = ""  # a layout name listed by read_presentation; empty = look like the deck's own text slides (see `like`)
+    exact_layout: bool = (
+        False  # use the named layout even when the deck's own slides are not made of placeholders
+    )
     like: int | None = (
         None  # copy this slide's look (it must hold text only); default the deck's last text slide
     )
@@ -310,7 +313,7 @@ def _auto_like(deck: Any) -> int:
     )
 
 
-def _add_like(deck: Any, operation: AddSlide) -> None:
+def _add_like(deck: Any, operation: AddSlide) -> int:
     """A new slide that looks like one of the deck's own: copy it, then put the new title and lines into its two main texts."""
     source = operation.like or _auto_like(deck)
     if not _text_only(slide_at(deck, source)):
@@ -337,12 +340,40 @@ def _add_like(deck: Any, operation: AddSlide) -> None:
     for key in operation.placeholders:
         raise DeckError(f"placeholder {key} cannot be used when copying a slide's look: use `layout` instead")
     slide.notes_slide.notes_text_frame.text = operation.notes or ""
+    return min(at, len(deck.slides))
 
 
-def _add(deck: Any, operation: AddSlide) -> None:
-    if operation.like is not None or not operation.layout:
-        _add_like(deck, operation)
-        return
+def _uses_body_placeholders(deck: Any) -> bool:
+    """True when the deck's own slides keep their text in layout placeholders (a template deck); decks DebCraft built draw text boxes."""
+    for slide in deck.slides:
+        for holder in slide.placeholders:
+            kind = holder.placeholder_format.type
+            if (
+                kind is not None
+                and kind.name in ("BODY", "OBJECT")
+                and holder.has_text_frame
+                and holder.text_frame.text.strip()
+            ):
+                return True
+    return False
+
+
+def _add(deck: Any, operation: AddSlide) -> int:
+    """Adds the slide and returns its final position (1-based)."""
+    like_the_deck = operation.like is not None or not operation.layout
+    if (
+        not like_the_deck
+        and not operation.exact_layout
+        and not operation.placeholders
+        and not _uses_body_placeholders(deck)
+    ):
+        try:  # a layout name was given, but the deck's own slides are not made of placeholders: a layout slide would look different
+            _auto_like(deck)
+            like_the_deck = True
+        except DeckError:
+            pass
+    if like_the_deck:
+        return _add_like(deck, operation)
     slide = deck.slides.add_slide(_layout(deck, operation.layout))
     title = slide.shapes.title
     others = [
@@ -375,11 +406,9 @@ def _add(deck: Any, operation: AddSlide) -> None:
             holder._element.getparent().remove(holder._element)
     if operation.notes:
         slide.notes_slide.notes_text_frame.text = operation.notes
-    _move(
-        deck,
-        len(deck.slides),
-        operation.at if operation.at is not None else _default_position_after_add(deck),
-    )
+    position = operation.at if operation.at is not None else _default_position_after_add(deck)
+    _move(deck, len(deck.slides), position)
+    return position
 
 
 def _update_chart(deck: Any, operation: UpdateChart) -> None:
@@ -462,8 +491,11 @@ def _apply(deck: Any, operation: Operation, read_image: Callable[[str], bytes] |
         _duplicate(deck, operation.slide, operation.at)
         return f"duplicated slide {operation.slide}"
     if isinstance(operation, AddSlide):
-        _add(deck, operation)
-        return f'added a slide from the layout "{operation.layout}"'
+        position = _add(deck, operation)
+        return (
+            f"added slide {position} of {len(deck.slides)} ({operation.title or 'untitled'}); new slides go before a closing slide "
+            "by themselves, so no move_slide is needed"
+        )
     if isinstance(operation, UpdateChart):
         _update_chart(deck, operation)
         return f"updated the chart on slide {operation.slide}"

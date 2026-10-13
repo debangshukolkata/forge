@@ -11,8 +11,12 @@ from forge.slides.errors import BuildError
 from forge.slides.spec import CardsSlide, StepsSlide
 
 GAP = 0.4
-MAX_CARD_HEIGHT = 3.9
+MAX_CARD_HEIGHT = 4.6
 MIN_TEXT_PT = 16
+SAFE_WIDTH = (
+    0.88  # PowerPoint wraps earlier and spaces lines wider than the estimate: fit into less than the box
+)
+SAFE_HEIGHT = 0.85
 
 
 def _circle(builder: Any, slide: Any, x: float, y: float, diameter: float, fill: str) -> Any:
@@ -48,14 +52,18 @@ def _heading_and_text(
 ) -> None:
     """A bold heading above a short text, sized to fit the box; says so when the words do not fit."""
     theme = builder.theme
-    h_size, h_fits = fit.fit_size([(heading, 1.0, True)], width, 1.0, heading_size, 18)
+    h_size, h_fits = fit.fit_size(
+        [(heading, 1.0, True)], width * SAFE_WIDTH, 0.9 * SAFE_HEIGHT, heading_size, 18
+    )
     frame = builder.textbox(slide, x, y, width, 1.0, "top")
     builder.paragraph(frame, True, heading, h_size, theme.text, bold=True, heading=True, align=align)
     if not h_fits:
         builder.warn(f"the heading '{heading[:30]}' is too long for its card: shorten it")
     if text:
         t_height = max(height - 1.0, 0.5)
-        t_size, t_fits = fit.fit_size([(text, 1.0, False)], width, t_height, 22, MIN_TEXT_PT)
+        t_size, t_fits = fit.fit_size(
+            [(text, 1.0, False)], width * SAFE_WIDTH, t_height * SAFE_HEIGHT, 22, MIN_TEXT_PT
+        )
         body = builder.textbox(slide, x, y + 1.0, width, t_height, "top")
         builder.paragraph(
             body,
@@ -100,7 +108,7 @@ def steps_slide(builder: Any, spec: StepsSlide) -> None:
         raise BuildError(f"slide {builder.report.number}: a steps slide shows 2 to 5 steps, not {count}")
     width = builder.content_width / count
     diameter = 0.8
-    block = 3.4  # circle, heading and a short text
+    block = min(4.4, builder.body_bottom - builder.body_top - 0.2)  # circle, heading and a short text
     top = builder.body_top + max((builder.body_bottom - builder.body_top - block) / 2, 0.2)
     line_y = top + diameter / 2 - 0.02
     first_centre = builder.margin + width / 2

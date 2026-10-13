@@ -508,8 +508,10 @@ class _Builder:
 
     def quote_slide(self, slide_spec: QuoteSlide) -> None:
         slide = self.new_slide(slide_spec.layout, slide_spec.quote[:60], slide_spec.notes)
-        mark = self.textbox(slide, self.margin, 1.0, 2, 1.6)
-        self.paragraph(mark, True, "“", 120, self.theme.accent, heading=True)
+        mark = self.textbox(slide, self.margin, 1.0, 2, 1.9)
+        self.paragraph(
+            mark, True, "“", 96, self.theme.accent, heading=True
+        )  # the glyph's line is taller than its size
         self.title(
             slide,
             slide_spec.quote,

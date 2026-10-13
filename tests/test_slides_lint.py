@@ -44,23 +44,26 @@ def test_a_run_of_the_same_layout_and_a_wall_of_bullets_are_reported() -> None:
 
 
 def test_a_varied_deck_with_visuals_has_no_deck_warnings() -> None:
+    notes = "Say what this slide shows and cite the source."
     deck = _deck(
         [
-            {"layout": "title", "title": "Q3 review"},
-            _bullets("We shipped three things"),
+            {"layout": "title", "title": "Q3 review", "notes": notes},
+            {**_bullets("We shipped three things"), "notes": notes},
             {
                 "layout": "stats",
                 "title": "Weekly users grew 42%",
                 "items": [{"value": "42%", "label": "growth"}],
+                "notes": notes,
             },
             {
                 "layout": "chart",
                 "title": "Users doubled since January",
                 "categories": ["Jan", "Feb"],
                 "series": [{"name": "Users", "values": [1, 2]}],
+                "notes": notes,
             },
-            {"layout": "quote", "quote": "Simple is hard, and worth it."},
-            _bullets("Two risks need a decision"),
+            {"layout": "quote", "quote": "Simple is hard, and worth it.", "notes": notes},
+            {**_bullets("Two risks need a decision"), "notes": notes},
         ]
     )
     assert deck_warnings(deck) == []  # type: ignore[arg-type]
@@ -103,3 +106,27 @@ def test_a_deck_with_too_many_slides_for_its_minutes_is_flagged() -> None:
     assert "too many for 20 minutes" in " | ".join(deck_warnings(long))  # type: ignore[arg-type]
     long.minutes = 45  # type: ignore[attr-defined]
     assert not [w for w in deck_warnings(long) if "minutes" in w]  # type: ignore[arg-type]
+
+
+def test_decks_without_real_speaker_notes_are_flagged() -> None:
+    bare = _deck(
+        [
+            {"layout": "title", "title": "Q3 review"},
+            _bullets("We shipped three things"),
+            _bullets("Two risks need a decision"),
+            {"layout": "closing", "title": "Thank you"},
+        ]
+    )
+    assert "no real speaker notes" in " | ".join(deck_warnings(bare))  # type: ignore[arg-type]
+    with_notes = _deck(
+        [
+            {**s, "notes": "Say what this slide shows in a sentence."}
+            for s in [
+                {"layout": "title", "title": "Q3 review"},
+                _bullets("We shipped three things"),
+                _bullets("Two risks need a decision"),
+                {"layout": "closing", "title": "Thank you"},
+            ]
+        ]
+    )
+    assert "speaker notes" not in " | ".join(deck_warnings(with_notes))  # type: ignore[arg-type]

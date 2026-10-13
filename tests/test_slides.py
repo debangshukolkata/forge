@@ -157,6 +157,8 @@ def test_the_build_tool_writes_the_file_through_the_workspace(context: ToolConte
     (workspace.repo_dir / "backend" / "shot.png").write_bytes(_png())
     outline = json.loads(json.dumps(OUTLINE))
     outline["slides"][7]["image"] = "backend/shot.png"
+    for slide in outline["slides"]:
+        slide["notes"] = "Say what this slide shows and where the numbers come from."
     workspace.write_text("docs/deck.json", json.dumps(outline))
     result = asyncio.run(
         BuildPresentation().run(
