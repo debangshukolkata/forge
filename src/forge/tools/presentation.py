@@ -19,7 +19,7 @@ from forge.slides.contact_sheet import ContactSheetUnavailable, make_contact_she
 from forge.slides.edit import OPERATIONS, apply_operations, parse_operations
 from forge.slides.measure import measure_deck, overflow_problems
 from forge.slides.open_deck import open_deck, save_deck
-from forge.slides.read import describe_deck
+from forge.slides.read import describe_deck, slide_notes
 from forge.slides.spec import parse_deck
 from forge.slides.template import analyze_template, describe_template
 from forge.slides.template_build import _open
@@ -281,6 +281,20 @@ class PreviewPresentation(Tool):
                 "the slides were not looked at.",
             )
         names = [self.relative(context, picture) for picture in pictures]
+        try:
+            notes = await asyncio.to_thread(slide_notes, deck)
+        except (ForgeError, OSError, ValueError, KeyError):
+            notes = []
+        await context.emit(  # the chat shows the slides (P1.2); the model's own result below is unchanged
+            "notice",
+            {
+                "kind": "slides_ready",
+                "text": f"Slides of {args.path}",
+                "deck": args.path,
+                "pictures": names,
+                "notes": [n[:1500] for n in notes],
+            },
+        )
         sheets: list[str] = []
         try:
             made = await asyncio.to_thread(make_contact_sheets, pictures, folder)

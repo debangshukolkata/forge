@@ -146,7 +146,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 ### P1 Quick wins
 - [x] **P1.1 Contact sheet.** One picture of all slides in a grid (like Claude's thumbnail tool) so the model judges flow and **(done 2026-10-13, D-278)**
   consistency in one look instead of N calls. Size S.
-- [ ] **P1.2 Show slides in the web UI.** After a build or edit, show the slide pictures inline in the chat and a slide viewer in the Files tab
+- [x] **P1.2 Show slides in the web UI.** (done 2026-10-13, D-291, design chosen by the user: thumbnails in chat + viewer) After a build or edit, show the slide pictures inline in the chat and a slide viewer in the Files tab
   (download button for the .pptx). The user currently only gets file names. Size M.
 - [x] **P1.3 Layout helpers for free-form.** Row, column and grid containers (equal widths, gaps, alignment) so the model states intent **(done 2026-10-13, D-279: row, column and grid containers expanded before validation)**
   ("three equal cards, 0.4 gap") instead of computing coordinates; fewer collisions. Size M.

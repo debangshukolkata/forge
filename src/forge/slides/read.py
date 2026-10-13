@@ -88,3 +88,11 @@ def describe_deck(deck: Any) -> str:
         holders = ", ".join(f"{p.placeholder_format.idx}:{_placeholder_kind(p)}" for p in layout.placeholders)
         out.append(f'  "{layout.name}" - placeholders {holders or "none"}')
     return "\n".join(out)
+
+
+def slide_notes(path: Any) -> list[str]:
+    """The speaker notes of every slide, in order (an empty string for a slide without notes). Reading only."""
+    from forge.slides.open_deck import open_deck
+
+    deck = open_deck(path)
+    return [slide.notes_slide.notes_text_frame.text if slide.has_notes_slide else "" for slide in deck.slides]

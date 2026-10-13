@@ -33,6 +33,7 @@ from forge.web.environment_routes import add_environment_routes
 from forge.web.image_routes import add_image_routes
 from forge.web.manager import WebSessionManager
 from forge.web.project_list import describe_projects
+from forge.web.slides_routes import add_slide_routes
 from forge.web.tool_output_routes import add_tool_output_routes
 from forge.workspace.output import build_output, build_patch, compute_changes
 from forge.workspace.text_format import decode_text, detect_format
@@ -86,6 +87,7 @@ def create_app(
     add_contracts_routes(app, manager)
     add_tool_output_routes(app, manager)
     add_image_routes(app, manager)
+    add_slide_routes(app, manager)
     add_deps_routes(app, manager)
     if accounts:
         add_auth_routes(app, accounts, security)

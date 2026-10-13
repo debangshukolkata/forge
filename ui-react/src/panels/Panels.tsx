@@ -1,3 +1,4 @@
+import { DeckPanel } from "../components/Slides";
 import "diff2html/bundles/css/diff2html.min.css";
 import DOMPurify from "dompurify";
 import { html as diffHtml } from "diff2html";
@@ -184,6 +185,10 @@ interface TreeEntry { name: string; path: string; dir: boolean; status?: string 
 function FilesTab({ forge }: { forge: Forge }) {
   const [viewer, setViewer] = useState<ReactNode>(null);
   const openFile = async (root: string, path: string) => {
+    if (path.toLowerCase().endsWith(".pptx")) {
+      setViewer(<DeckPanel root={root} path={path} />);
+      return;
+    }
     setViewer(<Loading />);
     try {
       const file = await api<{ text: string; binary: boolean; truncated: boolean }>(`/api/file?root=${root}&path=${encodeURIComponent(path)}`);

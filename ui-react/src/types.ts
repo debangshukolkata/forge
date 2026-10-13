@@ -153,7 +153,7 @@ export type ChatItem =
       retried?: boolean;
     }
   | { key: string; kind: "thinking"; text: string } // the model's reasoning summary between calls (dim)
-  | { key: string; kind: "notice"; noticeKind: string; text: string; image?: string }
+  | { key: string; kind: "notice"; noticeKind: string; text: string; image?: string; slides?: SlideSet }
   | { key: string; kind: "error"; text: string }
   | { key: string; kind: "approval"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
   | { key: string; kind: "question"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -281,4 +281,11 @@ export interface DepsResponse {
   last_check: DepsCheck | null;
   pip_audit_installed: boolean;
   standalone: boolean;
+}
+
+/** The pictures PowerPoint made of a deck, with its speaker notes (P1.2). */
+export interface SlideSet {
+  deck: string;
+  pictures: string[];
+  notes: string[];
 }

@@ -138,7 +138,7 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
       // image_sent / screenshot carry the workspace-relative path of the picture the model looks at (D-253).
       return {
         ...state,
-        items: [...items, { key, kind: "notice", noticeKind: p.kind || "", text: p.text || p.kind || "", image: p.kind === "image_sent" || p.kind === "screenshot" ? p.path || undefined : undefined }],
+        items: [...items, { key, kind: "notice", noticeKind: p.kind || "", text: p.text || p.kind || "", image: p.kind === "image_sent" || p.kind === "screenshot" ? p.path || undefined : undefined, slides: p.kind === "slides_ready" ? { deck: p.deck || "", pictures: p.pictures || [], notes: p.notes || [] } : undefined }],
       };
     case "error":
       return { ...state, items: [...items, { key, kind: "error", text: p.message || "Error" }] };

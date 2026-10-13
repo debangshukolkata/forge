@@ -189,3 +189,32 @@ def test_curly_quotes_and_other_non_ascii_text_do_not_break_the_measure(tmp_path
     path.write_bytes(build_deck(parse_deck(json.dumps(deck)), lambda n: b"").data)
     measures = measure_deck(path)
     assert any("Zoë" in m.text for m in measures)
+
+
+def test_the_preview_tool_tells_the_ui_which_slides_were_made(
+    tmp_path: Path, original_repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sent: list[tuple[str, dict[str, object]]] = []
+
+    async def publish(kind: str, payload: dict[str, object]) -> None:
+        sent.append((kind, payload))
+
+    context = ToolContext(
+        workspace=create_workspace(original_repo, tmp_path / "ws", "backend"), publish=publish
+    )
+    deck = {"title": "D", "slides": [{"layout": "title", "title": "Hi", "notes": "Say hello."}]}
+    context.workspace.write_bytes(
+        "docs/deck.pptx", build_deck(parse_deck(json.dumps(deck)), lambda n: b"").data, "d"
+    )
+    shots = context.workspace.root / ".forge" / "reports" / "slides" / "deck"
+    shots.mkdir(parents=True)
+    (shots / "slide-1.png").write_bytes(b"x")
+    monkeypatch.setattr(preview, "export_slides", lambda path, folder: [shots / "slide-1.png"])
+    monkeypatch.setattr("forge.tools.presentation.make_contact_sheets", lambda *a, **k: [])
+    monkeypatch.setattr("forge.tools.presentation.measure_deck", lambda path: [])
+    asyncio.run(PreviewPresentation().run(PreviewPresentation.Args(path="docs/deck.pptx"), context))
+    (kind, payload), *_ = sent
+    assert kind == "notice" and payload["kind"] == "slides_ready"
+    assert payload["pictures"] == [".forge/reports/slides/deck/slide-1.png"] and payload["notes"] == [
+        "Say hello."
+    ]

@@ -3,10 +3,11 @@ import {
 } from "lucide-react";
 import { useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
-import type { ChatItem, EnvironmentOverview, UserInput } from "../types";
+import type { ChatItem, EnvironmentOverview, SlideSet, UserInput } from "../types";
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
 import { Composer, useAttachments } from "./Composer";
+import { SlideStrip } from "./Slides";
 import { QuestionDialog, QuestionForm, QuestionPopup } from "./QuestionDialog";
 import { LookingGroup, ThinkingLine, ToolCard, groupLookingRuns } from "./ToolRows";
 import { Badge, Button, CopyButton, Textarea } from "./ui";
@@ -195,7 +196,7 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
     case "thinking":
       return <ThinkingLine text={item.text} />;
     case "notice":
-      return <Notice kind={item.noticeKind} text={item.text} image={item.image} />;
+      return <Notice kind={item.noticeKind} text={item.text} image={item.image} slides={item.slides} />;
     case "error":
       return (
         <div role="alert" className="flex gap-2 rounded-lg border border-danger/40 bg-danger-soft px-3 py-2 text-[13px] text-danger">
@@ -212,8 +213,9 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
   }
 }
 
-function Notice({ kind, text, image }: { kind: string; text: string; image?: string }) {
+function Notice({ kind, text, image, slides }: { kind: string; text: string; image?: string; slides?: SlideSet }) {
   if (kind === "command_output") return <Code text={text} />;
+  if (kind === "slides_ready" && slides) return <SlideStrip set={slides} />;
   const tone = kind === "stuck" || kind === "injection" ? "warn" : "info";
   return (
     <div className="space-y-2">
