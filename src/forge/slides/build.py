@@ -105,18 +105,37 @@ class _Builder:
     def __init__(self, deck: Deck, read_image: ReadImage) -> None:
         self.m = _modules()
         self.deck, self.read_image = deck, read_image
-        self.theme: Theme = THEMES[deck.theme]
+        self.margin, self.content_width = (
+            MARGIN,
+            CONTENT_WIDTH,
+        )  # the canvas the layouts are drawn on (inches)
+        self.title_top, self.title_height = TITLE_TOP, TITLE_HEIGHT
+        self.body_top, self.body_bottom = BODY_TOP, BODY_BOTTOM
+        self.scale = 1.0  # template inches per canvas inch (a template-aware builder changes it)
         self.brand_problems: list[str] = []
-        if deck.brand is not None:
-            kit = {
-                key: value.lstrip("#").upper() if key not in ("title_font", "body_font") else value
-                for key, value in deck.brand.model_dump(exclude_none=True).items()
-            }
-            self.theme, self.brand_problems = apply_brand(self.theme, Brand(**kit))
-        self.prs = self.m["pptx"].Presentation()
-        self.prs.slide_width, self.prs.slide_height = self.m["inches"](WIDTH), self.m["inches"](HEIGHT)
+        self.theme: Theme = self.choose_theme()
+        self.prs = self.make_presentation()
         self.reports: list[SlideReport] = []
         self.report: SlideReport = SlideReport(0, "", "")
+
+    def choose_theme(self) -> Theme:
+        """The deck's theme with its brand kit applied (a template-aware builder starts from the template's colours)."""
+        theme: Theme = THEMES[self.deck.theme]
+        if self.deck.brand is not None:
+            kit = {
+                key: value.lstrip("#").upper() if key not in ("title_font", "body_font") else value
+                for key, value in self.deck.brand.model_dump(exclude_none=True).items()
+            }
+            theme, self.brand_problems = apply_brand(theme, Brand(**kit))
+        return theme
+
+    def finish(self) -> None:
+        """Called after the last slide, before saving (a template-aware builder tidies its placeholders here)."""
+
+    def make_presentation(self) -> Any:
+        prs = self.m["pptx"].Presentation()
+        prs.slide_width, prs.slide_height = self.m["inches"](WIDTH), self.m["inches"](HEIGHT)
+        return prs
 
     # --- small helpers ---
 
@@ -213,10 +232,10 @@ class _Builder:
     def title(self, slide: Any, text: str, size: float = 34, colour: str | None = None, **frame: Any) -> Any:
         placeholder = slide.shapes.title
         x, y, w, h = (
-            frame.get("x", MARGIN),
-            frame.get("y", TITLE_TOP),
-            frame.get("w", CONTENT_WIDTH),
-            frame.get("h", TITLE_HEIGHT),
+            frame.get("x", self.margin),
+            frame.get("y", self.title_top),
+            frame.get("w", self.content_width),
+            frame.get("h", self.title_height),
         )
         placeholder.left, placeholder.top, placeholder.width, placeholder.height = (
             self.m["inches"](v) for v in (x, y, w, h)
@@ -248,7 +267,9 @@ class _Builder:
     def warn(self, message: str) -> None:
         self.report.warnings.append(message)
 
-    def new_slide(self, layout: str, title: str, notes: str, background: str | None = None) -> Any:
+    def new_slide(
+        self, layout: str, title: str, notes: str, background: str | None = None, role: str = "title_only"
+    ) -> Any:
         slide = self.prs.slides.add_slide(self.prs.slide_layouts[5])  # "Title Only"
         slide.background.fill.solid()
         slide.background.fill.fore_color.rgb = self.colour(background or self.theme.background)
@@ -266,9 +287,9 @@ class _Builder:
 
     def add_footer(self, slide: Any) -> None:
         footer = self.deck.footer or self.deck.title
-        small = self.textbox(slide, MARGIN, 7.0, 8, 0.3)
+        small = self.textbox(slide, self.margin, 7.0, 8, 0.3)
         self.paragraph(small, True, footer, 11, self.theme.muted)
-        number = self.textbox(slide, WIDTH - MARGIN - 1, 7.0, 1, 0.3)
+        number = self.textbox(slide, WIDTH - self.margin - 1, 7.0, 1, 0.3)
         self.paragraph(number, True, str(len(self.prs.slides)), 11, self.theme.muted, align="right")
 
     # --- bullets shared by the bullets and two-column layouts ---
@@ -320,22 +341,38 @@ class _Builder:
 
     def title_slide(self, slide_spec: TitleSlide | ClosingSlide, closing: bool) -> None:
         slide = self.new_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
-        self.title(slide, slide_spec.title, 46, x=MARGIN, y=2.45, w=CONTENT_WIDTH * 0.8, h=1.7, middle=False)
+        self.title(
+            slide,
+            slide_spec.title,
+            46,
+            x=self.margin,
+            y=2.45,
+            w=self.content_width * 0.8,
+            h=1.7,
+            middle=False,
+        )
         subtitle = slide_spec.subtitle or (self.deck.subtitle if not closing else "")
         if subtitle:
-            frame = self.textbox(slide, MARGIN, 4.35, CONTENT_WIDTH * 0.8, 1.0)
+            frame = self.textbox(slide, self.margin, 4.35, self.content_width * 0.8, 1.0)
             self.paragraph(frame, True, subtitle, 22, self.theme.muted)
         if self.deck.author and not closing:
-            frame = self.textbox(slide, MARGIN, 6.3, 8, 0.4)
+            frame = self.textbox(slide, self.margin, 6.3, 8, 0.4)
             self.paragraph(frame, True, self.deck.author, 16, self.theme.muted)
 
     def section_slide(self, slide_spec: SectionSlide) -> None:
         slide = self.new_slide(slide_spec.layout, slide_spec.title, slide_spec.notes, self.theme.accent)
         self.title(
-            slide, slide_spec.title, 44, self.theme.accent_text, x=MARGIN, y=2.6, w=CONTENT_WIDTH * 0.8, h=1.6
+            slide,
+            slide_spec.title,
+            44,
+            self.theme.accent_text,
+            x=self.margin,
+            y=2.6,
+            w=self.content_width * 0.8,
+            h=1.6,
         )
         if slide_spec.subtitle:
-            frame = self.textbox(slide, MARGIN, 4.4, CONTENT_WIDTH * 0.8, 1.0)
+            frame = self.textbox(slide, self.margin, 4.4, self.content_width * 0.8, 1.0)
             self.paragraph(frame, True, slide_spec.subtitle, 22, self.theme.accent_text)
 
     def bullets_slide(self, slide_spec: BulletsSlide) -> None:
@@ -343,27 +380,29 @@ class _Builder:
         self.write_bullets(
             slide,
             self.bullet_items(slide_spec.bullets),
-            MARGIN,
-            BODY_TOP,
-            CONTENT_WIDTH,
-            BODY_BOTTOM - BODY_TOP,
+            self.margin,
+            self.body_top,
+            self.content_width,
+            self.body_bottom - self.body_top,
             28,
         )
 
     def two_column_slide(self, slide_spec: TwoColumnSlide) -> None:
         slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
         gap = 0.6
-        width = (CONTENT_WIDTH - gap) / 2
+        width = (self.content_width - gap) / 2
         for index, column in enumerate((slide_spec.left, slide_spec.right)):
-            self.column(slide, column, MARGIN + index * (width + gap), width)
+            self.column(slide, column, self.margin + index * (width + gap), width)
 
     def column(self, slide: Any, column: Column, x: float, width: float) -> None:
-        top = BODY_TOP
+        top = self.body_top
         if column.heading:
             frame = self.textbox(slide, x, top, width, 0.5)
             self.paragraph(frame, True, column.heading, 22, self.theme.accent, bold=True, heading=True)
             top += 0.65
-        self.write_bullets(slide, self.bullet_items(column.bullets), x, top, width, BODY_BOTTOM - top, 24)
+        self.write_bullets(
+            slide, self.bullet_items(column.bullets), x, top, width, self.body_bottom - top, 24
+        )
 
     def add_picture(self, slide: Any, data: bytes, x: float, y: float, w: float, h: float, alt: str) -> Any:
         shape = slide.shapes.add_picture(io.BytesIO(data), *(self.m["inches"](v) for v in (x, y, w, h)))
@@ -378,14 +417,14 @@ class _Builder:
         with Image.open(io.BytesIO(data)) as picture:
             ratio = picture.width / picture.height
         caption_height = 0.5 if slide_spec.caption else 0.0
-        area_w, area_h = CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height
+        area_w, area_h = self.content_width, self.body_bottom - self.body_top - caption_height
         w, h = (area_w, area_w / ratio) if area_w / ratio <= area_h else (area_h * ratio, area_h)
-        x, y = MARGIN + (area_w - w) / 2, BODY_TOP + (area_h - h) / 2
+        x, y = self.margin + (area_w - w) / 2, self.body_top + (area_h - h) / 2
         self.add_picture(slide, data, x, y, w, h, slide_spec.alt or slide_spec.caption or slide_spec.title)
         if not (slide_spec.alt or slide_spec.caption):
             self.warn("the picture has no alt text or caption: say what it shows")
         if slide_spec.caption:
-            frame = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
+            frame = self.textbox(slide, self.margin, self.body_bottom - 0.35, self.content_width, 0.4)
             self.paragraph(frame, True, slide_spec.caption, 14, self.theme.muted, italic=True, align="center")
 
     def add_table(self, slide: Any, options: Any, box: tuple[float, float, float, float], descr: str) -> None:
@@ -408,7 +447,12 @@ class _Builder:
             )
             slide = self.content_slide(slide_spec.layout, title, slide_spec.notes if number == 1 else "")
             caption_height = 0.5 if slide_spec.caption else 0.0
-            box = (MARGIN, BODY_TOP, CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height)
+            box = (
+                self.margin,
+                self.body_top,
+                self.content_width,
+                self.body_bottom - self.body_top - caption_height,
+            )
             self.add_table(
                 slide,
                 slide_spec.model_copy(update={"rows": chunk}),
@@ -416,7 +460,7 @@ class _Builder:
                 slide_spec.caption or slide_spec.title,
             )
             if slide_spec.caption:
-                note = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
+                note = self.textbox(slide, self.margin, self.body_bottom - 0.35, self.content_width, 0.4)
                 self.paragraph(note, True, slide_spec.caption, 14, self.theme.muted, italic=True)
 
     def add_chart(
@@ -433,21 +477,33 @@ class _Builder:
     def chart_slide(self, slide_spec: ChartSlide) -> None:
         slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
         caption_height = 0.5 if slide_spec.caption else 0.0
-        box = (MARGIN, BODY_TOP, CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height)
+        box = (
+            self.margin,
+            self.body_top,
+            self.content_width,
+            self.body_bottom - self.body_top - caption_height,
+        )
         self.add_chart(slide, slide_spec, box, slide_spec.caption or slide_spec.title)
         if slide_spec.caption:
-            note = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
+            note = self.textbox(slide, self.margin, self.body_bottom - 0.35, self.content_width, 0.4)
             self.paragraph(note, True, slide_spec.caption, 14, self.theme.muted, italic=True)
 
     def quote_slide(self, slide_spec: QuoteSlide) -> None:
         slide = self.new_slide(slide_spec.layout, slide_spec.quote[:60], slide_spec.notes)
-        mark = self.textbox(slide, MARGIN, 1.0, 2, 1.6)
+        mark = self.textbox(slide, self.margin, 1.0, 2, 1.6)
         self.paragraph(mark, True, "“", 120, self.theme.accent, heading=True)
         self.title(
-            slide, slide_spec.quote, 36, x=MARGIN + 0.1, y=2.3, w=CONTENT_WIDTH * 0.85, h=3.0, middle=True
+            slide,
+            slide_spec.quote,
+            36,
+            x=self.margin + 0.1,
+            y=2.3,
+            w=self.content_width * 0.85,
+            h=3.0,
+            middle=True,
         )
         if slide_spec.by:
-            frame = self.textbox(slide, MARGIN + 0.1, 5.6, CONTENT_WIDTH * 0.85, 0.5)
+            frame = self.textbox(slide, self.margin + 0.1, 5.6, self.content_width * 0.85, 0.5)
             self.paragraph(frame, True, f"— {slide_spec.by}", 20, self.theme.muted)
 
     def stats_slide(self, slide_spec: StatsSlide) -> None:
@@ -458,9 +514,9 @@ class _Builder:
                 f"slide {self.report.number}: a stats slide shows 1 to 4 numbers, not {len(items)}"
             )
         gap = 0.4
-        width = (CONTENT_WIDTH - gap * (len(items) - 1)) / len(items)
+        width = (self.content_width - gap * (len(items) - 1)) / len(items)
         for index, stat in enumerate(items):
-            x = MARGIN + index * (width + gap)
+            x = self.margin + index * (width + gap)
             self.rectangle(slide, x, 2.4, width, 3.4, self.theme.surface, rounded=True)
             size, fits = fit.fit_size([(stat.value, 1.0, True)], width - 0.4, 1.3, 60, 32)
             if not fits:
@@ -475,7 +531,12 @@ class _Builder:
 
 def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
     """The finished file and one report per slide. `read_image` returns the bytes of a workspace picture."""
-    builder = _Builder(deck, read_image)
+    if deck.template:
+        from forge.slides.template_build import TemplateBuilder  # imported here: it builds on this module
+
+        builder: _Builder = TemplateBuilder(deck, read_image, read_image(deck.template))
+    else:
+        builder = _Builder(deck, read_image)
     for index, slide_spec in enumerate(deck.slides, start=1):
         if isinstance(slide_spec, TitleSlide):
             builder.title_slide(slide_spec, closing=False)
@@ -500,6 +561,7 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
         else:
             builder.stats_slide(slide_spec)
         del index
+    builder.finish()
     properties = builder.prs.core_properties
     properties.title, properties.author = deck.title, deck.author or ""
     output = io.BytesIO()

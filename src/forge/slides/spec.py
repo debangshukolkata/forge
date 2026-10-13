@@ -446,6 +446,9 @@ class Deck(_Model):
     author: str = ""
     theme: str = "clean"  # one of THEMES (see themes.py / the skill); chosen by audience and topic
     brand: BrandKit | None = None  # a brand kit: colours and fonts that override the theme
+    template: str | None = (
+        None  # a .potx or .pptx company template in the workspace: the deck is built on its layouts
+    )
 
     @field_validator("theme")
     @classmethod

@@ -175,9 +175,9 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   fonts/colours, so a DebCraft deck re-themes correctly in PowerPoint and new slides added by hand look right. Size L.
 - [ ] **P2.8 Slide features.** Sections, hidden slides, transitions, basic entrance animations, slide numbers, comments (read and add). Size M to L.
 - [ ] **P2.9 Accessibility pass.** Reading order, alt text everywhere, document language and title, colour-blind-safe palettes. Size S.
-- [ ] **P2.10 Template-aware build.** `build_presentation` with a `template`: map our layouts onto the template's masters and
+- [x] **P2.10 Template-aware build.** (done 2026-10-13, D-288) `build_presentation` with a `template`: map our layouts onto the template's masters and
   placeholders, so a new deck takes the company look automatically. Today only `edit_presentation` can use a template. Size L.
-- [ ] **P2.11 Template analysis.** Render each of a template's layouts to a picture, list placeholders, theme colours and fonts, and
+- [x] **P2.11 Template analysis.** (done 2026-10-13, D-288: `analyze_template` tool gives layout roles, placeholders, colours, fonts; layout pictures not done) Render each of a template's layouts to a picture, list placeholders, theme colours and fonts, and
   propose which layout fits which content; delete unused sample items cleanly (a slot with no data removes its whole group). Size M.
 - [ ] **P2.12 Edit operations to full strength.** Replace a picture keeping crop and position; per-run formatting edits; global font and
   colour changes through the theme; table rows and columns add/remove; chart type change and formatting; headers and footers;

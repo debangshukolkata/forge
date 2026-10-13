@@ -131,11 +131,14 @@ file itself; in place is allowed and can be undone. If one operation fails, noth
 says which: fix that one and send the list again. Afterwards `preview_presentation` and look at the changed
 slides (a longer sentence in a fixed box can overflow; PowerPoint will not warn you).
 
-**Use a company template** (a `.potx`, or any `.pptx` with the right masters): `read_presentation(template)` shows
-its layout names and placeholders. Then `edit_presentation(template, output="docs/new.pptx", operations=[
-add_slide ... for each slide, then delete_slide for the template's sample slides])`. Use the template's layout
-names (for example "Title and Content") and put text in its placeholders (`title`, `body`, and `placeholders`
-by number for the rest). Do not rebuild a template deck with `build_presentation`: that ignores its look.
+**Use a company template** (a `.potx`, or any 16:9 `.pptx` with the right masters): `analyze_template(path)` lists its size,
+theme colours, fonts and what each layout is for. Then build the deck as usual with `"template": "path/to/template.potx"`
+in the outline: title, closing, section, bullets and two_column slides go into the template's own layouts and placeholders
+(its bullets, fonts and sizes apply); charts, tables, pictures, stats, quotes and freeform slides are drawn in the free area
+of its title-only layout, coloured from its theme (its accent colours become the chart colours). The template's sample slides
+are dropped and empty placeholders removed. A layout the template lacks falls back to its title-only layout. Templates that
+are not 16:9 are refused; for those use `edit_presentation` (`add_slide` with the template's layout names, then
+`delete_slide` for its samples). A `brand` kit in the outline still overrides colours and fonts.
 
 Limits to tell the user plainly: copying a slide that holds a chart or an embedded object is not possible (build
 it again with `add_slide` and `update_chart`); animations, comments and slide-master changes are not edited;

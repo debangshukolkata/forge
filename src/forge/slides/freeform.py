@@ -356,11 +356,12 @@ class _Freeform:
                     f"{label}: no element with id '{anchor.id}' was drawn before this line (give it an `id`, and draw the line after it)"
                 )
             shape, spec = found
+            per_inch = 914400 * b.scale  # canvas inches (the slide may be a scaled template)
             x, y, w, h = (
-                shape.left / 914400,
-                shape.top / 914400,
-                shape.width / 914400,
-                shape.height / 914400,
+                shape.left / per_inch,
+                shape.top / per_inch,
+                shape.width / per_inch,
+                shape.height / per_inch,
             )
             point = {
                 "top": (x + w / 2, y),

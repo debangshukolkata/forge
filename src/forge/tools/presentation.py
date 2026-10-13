@@ -21,6 +21,8 @@ from forge.slides.measure import measure_deck, overflow_problems
 from forge.slides.open_deck import open_deck, save_deck
 from forge.slides.read import describe_deck
 from forge.slides.spec import parse_deck
+from forge.slides.template import analyze_template, describe_template
+from forge.slides.template_build import _open
 from forge.slides.validate import validate_package
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.vision import image_path
@@ -125,6 +127,37 @@ class ReadPresentation(Tool):
             return ToolResult(ok=False, content=f"{error} Tell the user.")
         except (ForgeError, OSError) as error:
             return ToolResult(ok=False, content=str(error))
+
+
+class AnalyzeTemplate(Tool):
+    name = "analyze_template"
+    read_only = True
+    description = (
+        "Study a company PowerPoint template (.potx or .pptx): slide size, theme colours, fonts, and what each of "
+        "its layouts is for (title, section, content, two content, title only, ...). Use it before building a deck "
+        'on the template (set "template" in the outline of build_presentation).'
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(
+            description="The template, relative to the repository root (or a file the user opened)"
+        )
+
+    def summary(self, args: AnalyzeTemplate.Args) -> str:
+        return f"analyze template {args.path}"
+
+    async def run(self, args: AnalyzeTemplate.Args, context: ToolContext) -> ToolResult:
+        file = context.workspace.path_of(args.path)
+        if not file.is_file():
+            return ToolResult(ok=False, content=f"No file at {args.path}.")
+        try:
+            data = await asyncio.to_thread(file.read_bytes)
+            info = analyze_template(_open(data))
+        except SlidesUnavailable as error:
+            return ToolResult(ok=False, content=f"{error} Tell the user.")
+        except (ForgeError, OSError) as error:
+            return ToolResult(ok=False, content=str(error))
+        return ToolResult(ok=True, content=describe_template(info, args.path))
 
 
 class EditPresentation(Tool):
@@ -275,4 +308,11 @@ class FindIcon(Tool):
 
 
 def presentation_tools() -> list[Tool]:
-    return [BuildPresentation(), ReadPresentation(), EditPresentation(), PreviewPresentation(), FindIcon()]
+    return [
+        BuildPresentation(),
+        ReadPresentation(),
+        AnalyzeTemplate(),
+        EditPresentation(),
+        PreviewPresentation(),
+        FindIcon(),
+    ]
