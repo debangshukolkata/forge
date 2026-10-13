@@ -13,6 +13,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
+from forge.slides.clone import clone_part
 from forge.slides.edit_find import find_shape, slide_at, walk
 from forge.slides.edit_more import MORE_OPERATIONS, MoreOperation, apply_more
 from forge.slides.edit_text import set_frame_text
@@ -21,7 +22,14 @@ from forge.slides.open_deck import DeckError
 from forge.slides.spec import Series
 
 NS_R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-UNSUPPORTED_COPY = ("chart", "oleObject", "package", "video", "audio", "media", "diagramData")
+UNSUPPORTED_COPY = (
+    "oleObject",
+    "package",
+    "video",
+    "audio",
+    "media",
+    "diagramData",
+)  # a chart is cloned (clone.py)
 
 
 class _Op(BaseModel):
@@ -239,6 +247,13 @@ def _duplicate(deck: Any, number: int, at: int | None) -> None:
                 node.set(
                     f"{{{NS_R}}}{attribute}",
                     copy.part.relate_to(relation.target_ref, relation.reltype, is_external=True),
+                )
+            elif kind == "chart":
+                node.set(
+                    f"{{{NS_R}}}{attribute}",
+                    copy.part.relate_to(
+                        clone_part(relation.target_part, deck.part.package), relation.reltype
+                    ),
                 )
             else:
                 node.set(

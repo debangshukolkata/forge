@@ -151,7 +151,7 @@ def open_deck_from_bytes(data: bytes) -> Any:
     return Presentation(io.BytesIO(data))
 
 
-def test_duplicating_a_slide_with_a_picture_copies_the_picture_and_a_chart_is_refused(tmp_path: Path) -> None:
+def test_duplicating_a_slide_with_a_picture_copies_the_picture_and_a_chart_is_cloned(tmp_path: Path) -> None:
     deck = _deck(tmp_path)
     _run(deck, [{"op": "duplicate_slide", "slide": 5}])
     pictures = [s for slide in deck.slides for s in slide.shapes if s.shape_type == 13]
@@ -159,8 +159,13 @@ def test_duplicating_a_slide_with_a_picture_copies_the_picture_and_a_chart_is_re
     assert (
         "alt text: The dashboard" in describe_deck(open_deck_from_bytes(save_deck(deck))).split("Slide 6")[1]
     )
-    with pytest.raises(DeckError, match="chart"):
-        _run(deck, [{"op": "duplicate_slide", "slide": 3}])
+    _run(deck, [{"op": "duplicate_slide", "slide": 3}])  # a chart is cloned with its workbook (P2.13)
+    assert (
+        sum(
+            1 for slide in deck.slides for s in slide.shapes if getattr(s, "has_chart", False) and s.has_chart
+        )
+        == 2
+    )
 
 
 def test_charts_and_tables_are_updated(tmp_path: Path) -> None:

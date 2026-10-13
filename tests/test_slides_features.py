@@ -166,3 +166,52 @@ def test_reading_a_deck_shows_the_features() -> None:
     text = describe_deck(prs)
     assert 'section starts: "Part one"' in text and "hidden: skipped" in text
     assert "transition: push" in text and "animation:" in text and "comment by Ada: Look here" in text
+
+
+def test_a_slide_with_a_chart_can_be_duplicated_and_the_copy_is_independent() -> None:
+    """P2.13 (D-319): the chart part and its workbook are cloned, so changing the copy leaves the original alone."""
+    prs = _open(
+        _deck(
+            slides=[
+                {"layout": "title", "title": "Charts"},
+                {
+                    "layout": "chart",
+                    "title": "Users doubled",
+                    "categories": ["Jan", "Feb"],
+                    "series": [{"name": "Users", "values": [1, 2]}],
+                },
+            ]
+        )
+    )
+    apply_operations(prs, parse_operations([{"op": "duplicate_slide", "slide": 2}]))
+    assert len(prs.slides) == 3
+    chart_id = next(
+        s for s in prs.slides[2].shapes if getattr(s, "has_chart", False) and s.has_chart
+    ).shape_id
+    apply_operations(
+        prs,
+        parse_operations(
+            [
+                {
+                    "op": "update_chart",
+                    "slide": 3,
+                    "shape": chart_id,
+                    "categories": ["Jan", "Feb"],
+                    "series": [{"name": "Users", "values": [10, 20]}],
+                }
+            ]
+        ),
+    )
+
+    def values(slide_number: int) -> list[float]:
+        chart = next(
+            s for s in prs.slides[slide_number - 1].shapes if getattr(s, "has_chart", False) and s.has_chart
+        ).chart
+        return list(chart.plots[0].series[0].values)
+
+    assert values(2) == [1, 2] and values(3) == [10, 20]
+    saved = _save(prs)
+    assert not validate_package(saved)
+    names = {p.partname for p in _open(saved).part.package.iter_parts()}
+    assert len([n for n in names if str(n).startswith("/ppt/charts/chart")]) == 2
+    assert len([n for n in names if str(n).startswith("/ppt/embeddings/")]) == 2
