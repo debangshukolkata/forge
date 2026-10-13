@@ -101,8 +101,8 @@ async def test_the_plan_keeps_folders_and_resources(host) -> None:  # type: igno
 
 
 async def test_run_ready_tasks_builds_in_parallel_records_statuses_and_sets_the_verification_gates(
-    host,
-    monkeypatch: pytest.MonkeyPatch,  # noqa: F811
+    host,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:  # type: ignore[no-untyped-def]
     import asyncio
     import time
