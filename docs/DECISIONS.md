@@ -3723,3 +3723,6 @@ Limits: no pivot tables, no sparkline, no formula spill checking beyond Excel's 
 
 ### D-340 - Faster tools, part 1 (TODO S6, 2026-10-14)
 Commands the model runs get `npm_config_prefer_offline=true`, `npm_config_audit=false`, `npm_config_fund=false` (set only if not already set). Packages npm already has come from its cache; new ones still come from the network, so nothing is skipped. `view_image` already downscales to 2048 px; the 17 s seen was the vision model's answer time, and a smaller picture would cost accuracy (D-161), so it is left alone. Not done: auditing only changed pages (needs a record of which pages changed between screenshots).
+
+### D-341 - Run report download button (TODO C17, 2026-10-14)
+`GET /api/run-report.md` writes the scrubbed run report (D-259) for the open project and sends it as a download; the Files panel has a "Run report" button beside "Download output". A project that has not run yet gets a short report instead of an error. Nothing new is scrubbed or exposed: the same builder as `forge run-report`. D6 (visual regression) was already built as `visual_baseline` / `visual_check` (D-312).

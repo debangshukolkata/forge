@@ -404,6 +404,16 @@ def create_app(
         headers = {"Content-Disposition": f'attachment; filename="{workspace.info.name}-output.zip"'}
         return Response(buffer.getvalue(), media_type="application/zip", headers=headers)
 
+    @app.get("/api/run-report.md")
+    async def run_report_download() -> Response:
+        """The scrubbed run report as a download, to send a run for analysis (C17): no source code, no secrets."""
+        from forge.engine.run_report import write_run_report
+
+        workspace = current()
+        target = await asyncio.to_thread(write_run_report, workspace.root)
+        headers = {"Content-Disposition": f'attachment; filename="{workspace.info.name}-run-report.md"'}
+        return Response(target.read_bytes(), media_type="text/markdown; charset=utf-8", headers=headers)
+
     @app.get("/api/checkpoints")
     async def checkpoints() -> list[dict[str, Any]]:
         return [cp.model_dump() for cp in current().checkpoints.all()]

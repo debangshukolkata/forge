@@ -166,6 +166,10 @@ def test_state_diff_and_output_zip(
     assert "backend/claims_app/errors.py" in archive.namelist()
     assert all(".env" not in name for name in archive.namelist())
 
+    report = client.get("/api/run-report.md")
+    assert report.status_code == 200 and "run-report.md" in report.headers["content-disposition"]
+    assert "Scrubbed" in report.text and str(workspace.root) not in report.text
+
 
 # --- WebSocket ---
 

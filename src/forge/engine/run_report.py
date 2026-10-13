@@ -142,7 +142,9 @@ def build_run_report(
 def write_run_report(workspace: Path, destination: Path | None = None) -> Path:
     """Reads the workspace's event log and writes the report next to it (or at `destination`)."""
     log = workspace / ".forge" / "transcripts" / "events.jsonl"
-    events = load_event_log(log)
+    events = (
+        load_event_log(log) if log.is_file() else []
+    )  # a project that has not run yet still gets a (short) report
     target = destination or workspace / ".forge" / "run-report.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(build_run_report(events, workspace), encoding="utf-8")

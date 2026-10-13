@@ -222,6 +222,9 @@ function FilesTab({ forge }: { forge: Forge }) {
           <Button size="sm" icon={<Download className="h-3.5 w-3.5" />}>Download output</Button>
         </a>
         <Button size="sm" variant="ghost" icon={<FileText className="h-3.5 w-3.5" />} onClick={instructions}>Copy instructions</Button>
+        <a href="/api/run-report.md" download className="contents" title="A scrubbed summary of this run (no code, no secrets) that you can send for analysis">
+          <Button size="sm" variant="ghost" icon={<Download className="h-3.5 w-3.5" />}>Run report</Button>
+        </a>
       </div>
       {(["repo", "output"] as const).map((root) => (
         <div key={`${root}-${forge.changeTick}`}>
