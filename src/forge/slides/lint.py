@@ -114,7 +114,7 @@ def deck_warnings(deck: Deck) -> list[str]:
     out: list[str] = []
     layouts = [slide.layout for slide in deck.slides]
     for first, layout in _runs(layouts):
-        if layout not in ("title", "section", "closing"):
+        if layout not in ("title", "section", "closing", "template_slide"):
             out.append(
                 f"slides from {first} use the '{layout}' layout {SAME_LAYOUT_RUN} or more times in a row: "
                 "vary the layout (a chart, a stat, a two-column or a freeform slide) so the deck has rhythm"

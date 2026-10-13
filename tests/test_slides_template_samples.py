@@ -208,3 +208,57 @@ def test_the_analyze_template_tool_lists_the_samples(tmp_path: Path, original_re
     context.workspace.write_bytes("docs/company.pptx", make_corporate_template(), "template")
     result = asyncio.run(AnalyzeTemplate().run(AnalyzeTemplate.Args(path="docs/company.pptx"), context))
     assert result.ok and "Slide 2 [cards]" in result.content and "Free area" in result.content
+
+
+def test_common_synonyms_for_slots_and_parts_are_understood() -> None:
+    prs, samples = _template()
+    slide = prs.slides[2]  # the big-numbers sample: parts number / heading / text
+    problems = fill_sample(
+        slide,
+        samples[2],
+        {
+            "heading": "Numbers that matter",
+            "items": [
+                {"value": "94%", "label": "retention", "description": "up from 90"},
+                {"value": "52", "label": "NPS"},
+            ],
+        },
+    )
+    texts = _texts(slide)
+    assert not problems
+    assert {"Numbers that matter", "94%", "retention", "up from 90", "52", "NPS"} <= set(texts)
+    bullets_slide = prs.slides[3]
+    assert not fill_sample(
+        bullets_slide, samples[3], {"title": "Plan", "bullets": ["One", "Two"]}
+    )  # `bullets` means the body
+
+
+def test_a_name_that_fits_no_part_is_reported_as_lost_content() -> None:
+    prs, samples = _template()
+    problems = fill_sample(
+        prs.slides[1], samples[1], {"items": [{"heading": "Speed", "text": "Fast", "number": "1"}]}
+    )
+    assert any("no place for 'number'" in p for p in problems)  # the cards sample has no number part
+
+
+def test_an_explicit_template_slide_that_would_lose_content_fails_the_build() -> None:
+    with pytest.raises(BuildError, match=r"does not fit sample slide 2 \[cards\].*no place for 'foo'"):
+        _build(
+            [
+                {
+                    "layout": "template_slide",
+                    "source": 2,
+                    "fill": {"title": "x", "items": [{"heading": "a", "foo": "b"}]},
+                }
+            ]
+        )
+    # the same mistake through an automatic match only warns: we built that mapping ourselves
+    built, _ = _build([CARDS_OK])
+    assert not built.slides[0].warnings
+
+
+CARDS_OK = {
+    "layout": "cards",
+    "title": "Three reasons customers choose us",
+    "items": [{"heading": "Speed", "text": "Fast"}, {"heading": "Care", "text": "Named"}],
+}

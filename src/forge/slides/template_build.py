@@ -272,7 +272,9 @@ class TemplateBuilder(_Builder):
         self.used_samples[kind] = count + 1
         return options[count % len(options)]
 
-    def _from_sample(self, sample: Sample, label: str, title: str, notes: str, fills: dict[str, Any]) -> Any:
+    def _from_sample(
+        self, sample: Sample, label: str, title: str, notes: str, fills: dict[str, Any], strict: bool = False
+    ) -> Any:
         try:
             _duplicate(self.prs, sample.number, len(self.prs.slides) + 1)
         except DeckError as error:
@@ -283,7 +285,14 @@ class TemplateBuilder(_Builder):
         if notes:
             slide.notes_slide.notes_text_frame.text = notes
         picture = fills.pop("picture", None)
-        for problem in fill_sample(slide, sample, fills):
+        problems = fill_sample(slide, sample, fills)
+        if problems and strict:  # content the model gave would silently be lost: make it fix the outline
+            raise BuildError(
+                f"slide {self.report.number}: the content does not fit sample slide {sample.number} [{sample.kind}]: "
+                + "; ".join(problems)
+                + ". analyze_template lists each sample's slots"
+            )
+        for problem in problems:
             self.warn(problem)
         if picture:
             self._replace_picture(slide, str(picture))
@@ -311,7 +320,9 @@ class TemplateBuilder(_Builder):
         sample = self.samples[slide_spec.source - 1]
         fills = dict(slide_spec.fill)
         title = str(fills.get("title") or f"sample slide {sample.number}")
-        self._from_sample(sample, f"template_slide ({sample.kind})", title, slide_spec.notes, fills)
+        self._from_sample(
+            sample, f"template_slide ({sample.kind})", title, slide_spec.notes, fills, strict=True
+        )
 
     def _auto(self, kind: str, label: str, title: str, notes: str, fills: dict[str, Any]) -> bool:
         """Use the template's own sample of this kind when it has one: only the slots the sample has are filled."""

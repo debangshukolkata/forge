@@ -331,17 +331,49 @@ def _set(slide: Any, slot: Slot, value: Any) -> None:
         set_frame_text(shape.text_frame, _lines(value))
 
 
-def _item_values(value: Any, item: Item) -> dict[str, str]:
-    if isinstance(value, dict):
-        return {k: str(v) for k, v in value.items() if v not in (None, "")}
-    text = str(value)
-    return {
-        "heading"
-        if "heading" in item.parts
-        else "text"
-        if "text" in item.parts
-        else next(iter(item.parts)): text
-    }
+KEY_ALIASES = {
+    "bullets": "body", "points": "body", "content": "body", "paragraphs": "body", "lines": "body", "list": "body",
+    "heading": "title", "headline": "title", "name": "title",
+    "subheading": "subtitle", "tagline": "subtitle",
+}  # fmt: skip
+PART_ALIASES = {
+    "value": "number", "figure": "number", "stat": "number", "metric": "number", "count": "number", "index": "number",
+    "label": "heading", "title": "heading", "name": "heading", "header": "heading", "headline": "heading",
+    "description": "text", "body": "text", "detail": "text", "details": "text", "caption": "text", "content": "text", "subtitle": "text",
+}  # fmt: skip
+PART_FALLBACK = {"number": ("heading", "text"), "heading": ("text",), "text": ("heading",)}
+
+
+def _part_for(name: str, item: Item) -> str | None:
+    """The part of an item a content name belongs to: the name itself, a common synonym, or the nearest part the sample has."""
+    wanted = name if name in item.parts else PART_ALIASES.get(name, name)
+    if wanted in item.parts:
+        return wanted
+    return next((p for p in PART_FALLBACK.get(wanted, ()) if p in item.parts), None)
+
+
+def _item_values(value: Any, item: Item) -> tuple[dict[str, str], list[str]]:
+    """Content of one item by part, and the names that fitted no part (their content would be lost)."""
+    if not isinstance(value, dict):
+        target = (
+            "heading"
+            if "heading" in item.parts
+            else "text"
+            if "text" in item.parts
+            else next(iter(item.parts))
+        )
+        return {target: str(value)}, []
+    values: dict[str, str] = {}
+    lost: list[str] = []
+    for key, content in value.items():
+        if content in (None, ""):
+            continue
+        part = _part_for(key, item)
+        if part is None or part in values:
+            lost.append(key)
+        else:
+            values[part] = str(content)
+    return values, lost
 
 
 def _shapes_inside(slide: Any, item: Item, margin: float = 0.3) -> list[Any]:
@@ -382,7 +414,9 @@ def fill_sample(slide: Any, sample: Sample, fills: dict[str, Any]) -> list[str]:
     Anything of the sample's own text that is not replaced is removed, so no placeholder wording is left behind."""
     problems: list[str] = []
     used: set[int] = set()
-    for key, value in fills.items():
+    for key, value in {
+        KEY_ALIASES.get(k, k) if not k.startswith("slot:") else k: v for k, v in fills.items()
+    }.items():
         if key == "items":
             wanted = value if isinstance(value, list) else [value]
             if not sample.items:
@@ -394,14 +428,15 @@ def fill_sample(slide: Any, sample: Sample, fills: dict[str, Any]) -> list[str]:
                 )
                 wanted = wanted[: len(sample.items)]
             for item, content in zip(sample.items, wanted, strict=False):
-                values = _item_values(content, item)
+                values, lost = _item_values(content, item)
                 for part, slot in item.parts.items():
                     if part in values:
                         _set(slide, slot, values[part])
                         used.add(slot.id)
-                for part in values:
-                    if part not in item.parts:
-                        problems.append(f"an item has no {part!r} part (parts: {', '.join(item.parts)})")
+                for name in lost:
+                    problems.append(
+                        f"an item has no place for {name!r}: its parts are {', '.join(item.parts)} (the content would be lost)"
+                    )
             for item in sample.items[
                 len(wanted) :
             ]:  # fewer items than groups: the spare groups go, with their backgrounds
