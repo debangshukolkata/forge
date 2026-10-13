@@ -33,7 +33,7 @@ lan api extension widgets category label bookmark sentiment_satisfied emoji_even
 volunteer_activism local_hospital vaccines bloodtype monitor_heart sell receipt_long request_quote balance gavel policy badge
 contact_page assignment task_alt checklist fact_check rule published_with_changes swap_horiz compare_arrows alt_route account_tree
 schema deployed_code smart_toy auto_awesome magic_button lightbulb_circle cycle partner_exchange conversion_path
-""".split()
+""".split()  # noqa: SIM905  (a long readable list, one name per word)
 
 
 def lucide(package: Path) -> dict[str, object]:
