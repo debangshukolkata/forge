@@ -61,3 +61,68 @@ def make_template(
     out = io.BytesIO()
     prs.save(out)
     return out.getvalue()
+
+
+def make_corporate_template() -> bytes:
+    """A template that carries sample slides (title, three cards, big numbers, bullets, thank you), each with the company's
+    confidentiality line, as a corporate template does."""
+    from pptx.dml.color import RGBColor
+    from pptx.enum.shapes import MSO_SHAPE
+    from pptx.util import Inches, Pt
+
+    prs = Presentation(io.BytesIO(make_template(sample_slide=False)))
+    layouts = {layout.name: layout for layout in prs.slide_layouts}
+
+    def confidential(slide: object) -> None:
+        box = slide.shapes.add_textbox(Inches(0.5), Inches(7.0), Inches(5), Inches(0.3))  # type: ignore[attr-defined]
+        box.text_frame.text = "Acme Corp. Confidential"
+        box.text_frame.paragraphs[0].runs[0].font.size = Pt(10)
+
+    def column(slide: object, x: float, heading: str, text: str, number: str | None = None) -> None:
+        card = slide.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(2.0), Inches(3.6), Inches(4.2)
+        )  # type: ignore[attr-defined]
+        card.fill.solid()
+        card.fill.fore_color.rgb = RGBColor(0xEE, 0xF3, 0xF0)
+        top = 2.2
+        if number:
+            n = slide.shapes.add_textbox(Inches(x + 0.2), Inches(top), Inches(3.2), Inches(1.0))  # type: ignore[attr-defined]
+            n.text_frame.text = number
+            n.text_frame.paragraphs[0].runs[0].font.size = Pt(48)
+            top += 1.1
+        h = slide.shapes.add_textbox(Inches(x + 0.2), Inches(top), Inches(3.2), Inches(0.6))  # type: ignore[attr-defined]
+        h.text_frame.text = heading
+        h.text_frame.paragraphs[0].runs[0].font.size = Pt(20)
+        h.text_frame.paragraphs[0].runs[0].font.bold = True
+        t = slide.shapes.add_textbox(Inches(x + 0.2), Inches(top + 0.7), Inches(3.2), Inches(1.6))  # type: ignore[attr-defined]
+        t.text_frame.word_wrap = True
+        t.text_frame.text = text
+        t.text_frame.paragraphs[0].runs[0].font.size = Pt(14)
+
+    s = prs.slides.add_slide(layouts["Title Slide"])
+    s.shapes.title.text_frame.text = "Sample presentation title"
+    s.placeholders[1].text_frame.text = "Sample subtitle goes here"
+    confidential(s)
+    s = prs.slides.add_slide(layouts["Title Only"])
+    s.shapes.title.text_frame.text = "Three pillars of the sample"
+    for i, x in enumerate((0.8, 4.85, 8.9)):
+        column(s, x, f"Pillar {i + 1}", "A sentence that explains this pillar in plain words.")
+    confidential(s)
+    s = prs.slides.add_slide(layouts["Title Only"])
+    s.shapes.title.text_frame.text = "Numbers that matter"
+    for i, x in enumerate((0.8, 4.85, 8.9)):
+        column(s, x, "Metric label", "Context for the metric.", number=f"{i + 1}0%")
+    confidential(s)
+    s = prs.slides.add_slide(layouts["Title and Content"])
+    s.shapes.title.text_frame.text = "Sample bullet slide"
+    s.placeholders[1].text_frame.text = "First sample point"
+    for text in ("Second sample point", "Third sample point"):
+        s.placeholders[1].text_frame.add_paragraph().text = text
+    confidential(s)
+    s = prs.slides.add_slide(layouts["Title Slide"])
+    s.shapes.title.text_frame.text = "Thank you"
+    s.placeholders[1].text_frame.text = "Questions? name@acme.example"
+    confidential(s)
+    out = io.BytesIO()
+    prs.save(out)
+    return out.getvalue()

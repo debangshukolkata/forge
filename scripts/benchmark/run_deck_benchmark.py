@@ -32,7 +32,7 @@ sys.path.insert(0, str(REPO / "scripts" / "benchmark"))
 TASKS = REPO / "tests" / "benchmarks" / "decks"
 RUNS = Path(os.environ.get("FORGE_BENCH_RUNS", r"C:\Work\ForgeRuns")) / "deckbench"
 PYTHON = REPO / ".venv" / "Scripts" / "python.exe"
-MIN_FONT_PT = 12
+MIN_FONT_PT = 10  # the builder footer is 11 pt
 MAX_JUDGED_SLIDES = 30
 
 JUDGE_PROMPT = """You are a demanding presentation design judge. You see PowerPoint's own pictures of every slide of a deck, in order,
@@ -314,7 +314,7 @@ def main() -> int:
         env[key] = value
     os.environ.update({"FORGE_HOME": env["FORGE_HOME"], "FORGE_ENV_FILE": env["FORGE_ENV_FILE"]})
     wanted = {t for t in args.tasks.split(",") if t}
-    folders = [p for p in sorted(TASKS.iterdir()) if p.is_dir() and (not wanted or p.name in wanted)]
+    folders = [p for p in sorted(TASKS.iterdir()) if (p / "task.json").exists() and (not wanted or p.name in wanted)]
     previous = {}
     if args.score_only and (run_dir / "results.json").exists():
         previous = {r["id"]: r for r in json.loads((run_dir / "results.json").read_text(encoding="utf-8"))}

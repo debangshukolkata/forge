@@ -47,7 +47,7 @@ How to take the work up in the best order. Each phase says what it needs and whe
 - `S7` and `S8` only with your OK and a benchmark. Done when: the speed benchmark improves without quality loss.
 
 **Phase F, presentations and documents** (a parallel track; reuses Phase B, the critic and the audit)
-- P0 first (benchmark, laptop check), then P1.1-P1.8, then P2.1-P2.6 and P2.18, then P2.10-P2.12; decide the engine and rendering from the benchmark; P3 and the rest of P2 last.
+- P0 first (benchmark, laptop check), then P1.1-P1.8, then P2.1-P2.6 and P2.18, then P2.10-P2.12 and P2.21 (corporate template mode, user priority); decide the engine and rendering from the benchmark; P3 and the rest of P2 last.
 - Reuse for decks: the asset catalogue and tools (slide templates, palettes, fonts), a slide critic that scores the contact sheet, and the same acceptance bar.
 - Documents (section 4b): `W0` clean-room protocol first (small), then the shared pieces together with the presentation items they share (P1.1 contact sheet, P1.8 validator) as `W4`, then `W2` Excel and `W1` Word, then `W3` PDF, then `W5` benchmark. Do not start `W1` to `W3` before `W0` is written.
 
@@ -135,7 +135,7 @@ Start by measuring: guess nothing. Related items elsewhere (not repeated here): 
 Goal (2026-10-09): presentations the way Claude makes them, equivalent capability and quality (not identical files; we cannot copy Anthropic's skill, its licence forbids it). Background, the done list (D-240..D-242), the licence note and the suggested order are in `docs/PPT_PARITY.md`. Suggested order: P0 (measure) -> P1.1-P1.8 -> P2.1-P2.6 and P2.18 -> P2.10-P2.12 -> decide engine and rendering from the benchmark -> P3 and the rest of P2. Rough effort: P1 2-3 days, P2 3-4 weeks, P3 2-3 weeks. The web-design approach applies here too: a themed slide template library, a slide critic that scores the contact sheet, an audit, curated fonts and palettes, reference decks.
 
 ### P0 Measure first
-- [ ] **P0.1 Parity benchmark.** 20 to 30 fixed requests across kinds (status update, pitch, training, data story, technical design
+- [x] **P0.1 Parity benchmark.** (built and baseline-1 run 2026-10-13, `docs/PPT_BENCHMARK.md`: 12 requests, mean judge 4.25; still to do: grow to 20-30 requests, the user's own ratings of a sample, re-run after each change) 20 to 30 fixed requests across kinds (status update, pitch, training, data story, technical design
   review, template fill, edit-an-existing-deck, redesign-a-bad-deck, long deck, deck from a document). Each has a checklist
   (story, hierarchy, contrast, alignment, no overflow, file opens cleanly, notes present, charts native) scored by the real model
   as judge looking at the rendered slides, plus the user's own ratings of a sample. Re-run after every change; record scores in
@@ -182,6 +182,8 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
 - [x] **P2.12 Edit operations to full strength.** (done 2026-10-13, D-289; not done: chart axis formatting, merged-cell table edits, per-point chart colours beyond pies) Replace a picture keeping crop and position; per-run formatting edits; global font and
   colour changes through the theme; table rows and columns add/remove; chart type change and formatting; headers and footers;
   bulk speaker-notes edits; find shapes by what they say. Size M.
+- [ ] **P2.22 Fix what baseline-1 showed.** (a) models use too many plain bullet slides: steer to cards, big numbers, diagrams, images; (b) too many slides for the time given: rule of thumb in the skill; (c) `replace_text` must also change chart titles and alt text; (d) the skill must say new slides in an edited deck go before the closing slide and use the deck's own layouts. Size M.
+- [ ] **P2.21 Corporate template mode: pick the matching sample slide, fill it, else create in the theme** (user request 2026-10-13, top priority after P0.1 baseline). Given a corporate template, DebCraft (1) reads it: layouts AND the sample slides it contains, each described by its slots (title, subtitle, body, repeated card/step groups, picture, chart, table) with a PowerPoint picture, (2) for each piece of content picks the sample slide that fits (an outline slide `template_slide` with `source` and `fill`, plus automatic matching of title/section/bullets/two-column/stats/quote/agenda/thanks to the template's own sample of that kind), clones it and puts the content into its slots (unused slots and sample text removed, repeated groups grown or trimmed to the content), (3) when nothing fits, creates a new slide in the template's theme (its layout, colours, fonts, spacing; already works for title-only layouts, to be extended with the template's decorations such as logo and bars), (4) never leaves sample text behind and never changes the template's look. Tests on generated templates, then the real company template (user brings it from the office laptop). Size L.
 - [ ] **P2.13 Copy slides that hold charts or embedded objects** by cloning the chart parts (today refused). Size M.
 - [ ] **P2.14 Merge and import.** Bring slides from another deck keeping their design; combine decks; split a deck. Size L.
 - [ ] **P2.15 Raw-file escape hatch.** Unpack a deck to its XML files, edit, validate against the format, repack, with the validator from

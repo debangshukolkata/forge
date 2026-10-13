@@ -3,5 +3,5 @@
  "kind": "status update",
  "min_slides": 6,
  "max_slides": 10,
- "min_charts": 1
+ "min_charts": 0
 }
