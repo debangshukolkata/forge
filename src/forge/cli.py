@@ -71,6 +71,17 @@ def build_parser() -> argparse.ArgumentParser:
     run_report.add_argument(
         "--out", type=Path, help="where to write it (default: <workspace>/.forge/run-report.md)"
     )
+    probe = subcommands.add_parser(
+        "template-probe",
+        help="try a company PowerPoint template: how DebCraft reads it, a test deck on it, pictures and a report to send",
+    )
+    probe.add_argument("template", type=Path, help="the .potx or .pptx template")
+    probe.add_argument(
+        "--out", type=Path, help="output folder (default: <template name>-probe next to the template)"
+    )
+    probe.add_argument(
+        "--hide-text", action="store_true", help="leave the words of the template's slides out of the report"
+    )
     profile = subcommands.add_parser("profile", help="Mode B host profiles")
     profile.add_argument("action", choices=["list", "new", "show", "import", "export-script"])
     profile.add_argument("name", nargs="?", help="the profile name (new/show/import)")
@@ -143,6 +154,8 @@ def main(argv: list[str] | None = None) -> int:
         return _log_summary(args.workspace, args.log)
     if args.command == "run-report":
         return _run_report(args.report_workspace, args.out)
+    if args.command == "template-probe":
+        return _template_probe(args.template, args.out, args.hide_text)
     if args.command == "skill":
         return _skill(args)
     if args.command == "ui":
@@ -356,6 +369,33 @@ def _cleanup(workspace_path: Path, yes: bool) -> int:
             continue
         console.print("Dropped: " + (", ".join(dropped) or "nothing"), markup=False)
     return status
+
+
+def _template_probe(template: Path, out: Path | None, hide_text: bool) -> int:
+    from forge.slides.build import SlidesUnavailable
+    from forge.slides.probe import run_probe
+
+    if not template.is_file():
+        print(f"No such file: {template}")
+        return 2
+    folder = out or template.with_name(template.stem + "-probe")
+    try:
+        result = run_probe(template, folder, hide_text)
+    except SlidesUnavailable as error:
+        print(f"{error} Install the slides extra: pip install python-pptx")
+        return 2
+    except (OSError, ValueError) as error:
+        print(f"The template could not be read: {error}")
+        return 2
+    print(f"Probe written to {folder}")
+    for name in result.files:
+        print(f"  {name}")
+    print(f"Probe slides built: {result.slides_built}, failed: {result.slides_failed}")
+    print("Things to look at:" if result.issues else "Nothing wrong found.")
+    for issue in result.issues[:12]:
+        print(f"  - {issue[:200]}")
+    print("Send the contact sheets and report.txt (check the pictures first: they show the template).")
+    return 0
 
 
 def _run_report(workspace_path: Path, out: Path | None) -> int:

@@ -98,3 +98,43 @@ Delivered: 12/12; mean judge score: 4.10.
 - d08 (redesign) kept a bullet-list look; d04 took 698 s ($0.87), the slowest and dearest, worth a look in the speed work.
 
 Next: baseline-3 on all 20 requests with `--parallel 4`, after the fixes above.
+
+## baseline-3 (2026-10-13, all 20 requests, `--parallel 4`, after D-293 add_slide and D-294 cards/steps)
+
+| Task | Slides | Auto | Overflow | Notes % | Story | Hier. | Contr. | Align. | Polish | Fit | Judge avg | Wall | Cost |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| d01_status_update | 7 | 6/6 | 0 | 100 | 4 | 4 | 5 | 5 | 4 | 4 | 4.3 | 124s | $0.22 |
+| d02_investor_pitch | 11 | 6/6 | 0 | 100 | 4 | 4 | 4 | 5 | 4 | 5 | 4.3 | 132s | $0.23 |
+| d03_training | 16 | 4/6 | 12 | 100 | 4 | 4 | 5 | 5 | 4 | 4 | 4.3 | 202s | $0.41 |
+| d04_data_story | 9 | 5/6 | 1 | 100 | 5 | 5 | 5 | 5 | 5 | 5 | 5.0 | 313s | $0.58 |
+| d05_design_review | 12 | 6/6 | 0 | 83 | 5 | 4 | 5 | 5 | 4 | 4 | 4.5 | 218s | $0.37 |
+| d06_template_fill | 8 | 6/6 | 0 | 100 | 4 | 4 | 5 | 4 | 3 | 4 | 4.0 | 126s | $0.22 |
+| d07_edit_deck | 6 | 6/6 | 0 | 100 | 3 | 4 | 5 | 4 | 3 | 5 | 4.0 | 211s | $0.27 |
+| d08_redesign | 6 | 6/6 | 0 | 100 | 5 | 4 | 4 | 4 | 4 | 5 | 4.3 | 221s | $0.42 |
+| d09_long_deck | 20 | 6/6 | 0 | 100 | 4 | 4 | 4 | 4 | 4 | 4 | 4.0 | 410s | $0.62 |
+| d10_workshop | 22 | 5/6 | 0 | 100 | 4 | 4 | 5 | 5 | 5 | 4 | 4.5 | 282s | $0.37 |
+| d11_product_launch | 10 | 6/6 | 0 | 100 | 5 | 4 | 5 | 5 | 4 | 5 | 4.7 | 173s | $0.19 |
+| d12_document_deck | 8 | 6/6 | 0 | 100 | 4 | 5 | 5 | 5 | 4 | 4 | 4.5 | 159s | $0.19 |
+| d13_corporate_template | 5 | 5/6 | 0 | 0 | 4 | 4 | 5 | 4 | 4 | 5 | 4.3 | 192s | $0.20 |
+| d14_quarterly_review | 10 | 5/6 | 0 | 100 | 4 | 4 | 5 | 5 | 4 | 4 | 4.3 | 168s | $0.25 |
+| d15_incident_postmortem | 8 | 6/6 | 0 | 100 | 5 | 4 | 5 | 5 | 4 | 5 | 4.7 | 116s | $0.13 |
+| d16_product_roadmap | 15 | 5/6 | 0 | 87 | 4 | 4 | 5 | 4 | 4 | 4 | 4.2 | 257s | $0.50 |
+| d17_marketing_plan | 12 | 5/6 | 7 | 92 | 4 | 4 | 5 | 4 | 4 | 5 | 4.3 | 184s | $0.35 |
+| d18_customer_case_study | 8 | 4/6 | 3 | 88 | 4 | 4 | 5 | 5 | 5 | 5 | 4.7 | 110s | $0.21 |
+| d19_research_summary | 8 | 5/6 | 0 | 100 | 5 | 4 | 5 | 5 | 4 | 5 | 4.7 | 164s | $0.32 |
+| d20_onboarding | 11 | 6/6 | 0 | 100 | 5 | 5 | 5 | 5 | 5 | 5 | 5.0 | 134s | $0.18 |
+
+Delivered: 20/20; mean judge score: 4.43.
+
+### baseline-2 to baseline-3
+- Mean judge 4.10 (12 requests) -> 4.37 on the same 12, and 4.43 on all 20; 20 of 20 delivered. The judge is a model and one run each, so
+  read it as a trend; the layout counts below are not noise.
+- **Layouts the model chose (all outlines):** baseline-2 had 28 bullets slides, 0 cards, 0 steps; baseline-3 had 31 bullets, **32 cards and
+  30 steps** over 8 more decks. The new layouts were adopted at once; the complaint "dense bullet lists" is still the most frequent
+  (14 of 20) but the judge now scores polish 4 to 5 on most decks.
+- d07 (edit a deck) still shows the new slide after "Thank you" in the judge's words (the run used the tool before D-293 reached it? no: the
+  fix is in the tool; check the d07 outline: the model may have written the slide as a rebuild instead of add_slide). To check.
+- d13 (corporate template with samples): 4.3, built from the template's own cards sample; speaker notes 0 %: the model left out `notes`
+  on template slides. d10 (workshop): the judge says facilitator notes are missing though asked for.
+- PowerPoint measured overflow: d03 12 boxes, d17 7, d18 3, d04 1: the model did not fix all of them (it should preview and fix).
+Next: look at those overflows (are they cards/steps text that does not shrink?), notes on template slides, d07.
