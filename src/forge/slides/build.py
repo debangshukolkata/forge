@@ -158,17 +158,33 @@ class _Builder:
 
     def paragraph(self, frame: Any, first: bool, text: str, size: float, colour: str, **options: Any) -> Any:
         paragraph = frame.paragraphs[0] if first else frame.add_paragraph()
-        run = paragraph.add_run()
-        run.text = text
-        self.style(
-            run,
-            size,
-            colour,
-            options.get("bold", False),
-            options.get("italic", False),
-            options.get("heading", False),
-            options.get("font"),
+        runs = options.get("runs")  # rich text: a list of richtext.RunSpec instead of one plain run
+        pieces = (
+            [(text, options.get("bold", False), options.get("italic", False), colour, None)]
+            if runs is None
+            else [
+                (
+                    r.text,
+                    options.get("bold", False) or r.bold,
+                    options.get("italic", False) or r.italic,
+                    options["colour_for"](r.colour) if r.colour else colour,
+                    r.link,
+                )
+                for r in runs
+            ]
         )
+        for piece_text, bold, italic, piece_colour, link in pieces:
+            run = paragraph.add_run()
+            run.text = piece_text
+            self.style(
+                run, size, piece_colour, bold, italic, options.get("heading", False), options.get("font")
+            )
+            if options.get("letter_spacing") is not None:
+                run._r.get_or_add_rPr().set("spc", str(round(options["letter_spacing"] * 100)))
+            if link:
+                run.hyperlink.address = link
+        if options.get("line_spacing"):
+            paragraph.line_spacing = options["line_spacing"]
         if options.get("align"):
             paragraph.alignment = {
                 "left": self.m["align"].LEFT,

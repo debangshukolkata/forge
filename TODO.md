@@ -150,7 +150,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   (download button for the .pptx). The user currently only gets file names. Size M.
 - [x] **P1.3 Layout helpers for free-form.** Row, column and grid containers (equal widths, gaps, alignment) so the model states intent **(done 2026-10-13, D-279: row, column and grid containers expanded before validation)**
   ("three equal cards, 0.4 gap") instead of computing coordinates; fewer collisions. Size M.
-- [ ] **P1.4 Rich text.** Mixed bold, colour and size inside one paragraph, links, line and letter spacing, vertical text. Size M.
+- [x] **P1.4 Rich text.** Mixed bold, colour and size inside one paragraph, links, line and letter spacing, vertical text. Size M. **(done 2026-10-13, D-280)**
 - [x] **P1.5 Fix our own template habits that look generic.** Remove the accent bar under titles, stop defaulting to one blue, vary **(done 2026-10-13, D-276: accent bars removed, lint for repeated layouts, text-only decks and freeform accent bars, skill rules; the default single-blue and one-colour-per-theme point is left to the model through the skill)**
   layouts, give every slide a visual element, use dark/light "sandwich" structure; make `make-presentation` say so and the checks
   warn (same layout repeated, text-only slide, accent line). Size S.

@@ -116,6 +116,12 @@ process diagram, a timeline, a comparison, a picture-led slide), use `freeform`:
 You are the designer, so design on purpose, and let `build_presentation`'s warnings and `preview_presentation` be
 your critic.
 
+**Rich text in one line.** Set `"rich": true` on a text element to mix styles inside a line: `**bold**`, `*italic*`,
+`[link text](https://...)` and `{accent}coloured words{/}` (theme colour names accent, text, muted, surface, or `#RRGGBB`).
+Use it to emphasise a figure inside a sentence ("Revenue grew **42%** in Q3"), not to decorate. Also available on text
+elements: `line_spacing` (a multiple, 0.8 to 3), `letter_spacing` (points; a little positive spacing suits small capitals)
+and `vertical` (`up` or `down`) for a turned label.
+
 **Containers instead of arithmetic.** Put elements in a `row`, `column` or `grid` and let the builder compute the
 coordinates: `{"type": "row", "x": 0.8, "y": 2.2, "w": 11.7, "h": 3.2, "gap": 0.4, "children": [card, card, card]}` gives
 three equal cards. Children are ordinary elements without x, y, w and h. Optional on a child: `weight` (share of the free

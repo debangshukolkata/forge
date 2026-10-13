@@ -151,6 +151,12 @@ class TextElement(_Placed):
     pad: float | None = None  # inner margin in inches; default 0.15 for a filled box, else 0
     autofit: bool = True  # shrink the text to fit the box, down to min_size
     min_size: float = 12
+    rich: bool = (
+        False  # inline **bold**, *italic*, [link](https://...) and {accent}colour{/} (see richtext.py)
+    )
+    line_spacing: float | None = Field(default=None, ge=0.8, le=3.0)  # a multiple of the line height
+    letter_spacing: float | None = Field(default=None, ge=-5, le=30)  # points added between letters
+    vertical: Literal["up", "down"] | None = None  # text turned to read bottom-to-top or top-to-bottom
 
 
 class ShapeElement(_Placed):

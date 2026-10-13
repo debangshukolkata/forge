@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from forge.slides import fit
+from forge.slides.richtext import parse_runs, plain_text
 from forge.slides.spec import (
     ChartElement,
     FreeformSlide,
@@ -130,13 +131,24 @@ class _Freeform:
             "bottom": b.m["anchor"].BOTTOM,
         }[el.valign]
         lines = el.text.split("\n")
+        shown = (
+            [plain_text(line) for line in lines] if el.rich else lines
+        )  # what the reader sees, for measuring
+        if el.vertical:
+            frame._txBody.bodyPr.set("vert", "vert270" if el.vertical == "up" else "vert")
         size = el.size
         gap = 0.3 if el.bullets else 0.1  # space between paragraphs, as a share of the text size
         if el.autofit:
-            texts = [(line, 1.0, el.bold) for line in lines]
-            inner_w = el.w - 2 * pad - (0.3 if el.bullets else 0)
+            texts = [(line, 1.0, el.bold) for line in shown]
+            box_w, box_h = (el.h, el.w) if el.vertical else (el.w, el.h)  # turned text wraps along the height
+            inner_w = box_w - 2 * pad - (0.3 if el.bullets else 0)
             size, fits = fit.fit_size(
-                texts, inner_w, el.h - 2 * pad, el.size, el.min_size, gap_pt=el.size * gap
+                texts,
+                inner_w,
+                (box_h - 2 * pad) / (el.line_spacing or 1.0),
+                el.size,
+                el.min_size,
+                gap_pt=el.size * gap,
             )
             if not fits:
                 b.warn(
@@ -145,11 +157,19 @@ class _Freeform:
         if size < 12:
             b.warn(f"{label}: {size:g} pt text is too small to read in a presentation")
         colour = resolve(theme, el.color)
+
+        def colour_for(token: str) -> str:
+            try:
+                return resolve(theme, token)
+            except (AttributeError, ValueError, IndexError):
+                b.warn(f"{label}: '{token}' is not a theme colour or #RRGGBB; the text keeps its own colour")
+                return colour
+
         for number, line in enumerate(lines):
             b.paragraph(
                 frame,
                 number == 0,
-                line,
+                shown[number],
                 size,
                 colour,
                 bold=el.bold,
@@ -159,6 +179,10 @@ class _Freeform:
                 align=el.align,
                 bullet=el.bullets,
                 after=size * gap,
+                runs=parse_runs(line) if el.rich else None,
+                colour_for=colour_for,
+                line_spacing=el.line_spacing,
+                letter_spacing=el.letter_spacing,
             )
         self.placed.append(
             Placed(
