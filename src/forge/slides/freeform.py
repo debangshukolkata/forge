@@ -443,15 +443,7 @@ class _Freeform:
         self.placed.append(Placed(index, label, cx - side / 2, cy - side / 2, side, side))
 
     def chart(self, slide: Any, index: int, el: ChartElement) -> None:
-        self.b.add_chart(
-            slide,
-            el.kind,
-            el.categories,
-            el.series,
-            (el.x, el.y, el.w, el.h),
-            el.alt or f"{el.kind} chart",
-            14,
-        )
+        self.b.add_chart(slide, el, (el.x, el.y, el.w, el.h), el.alt or f"{el.kind} chart", 14)
         self.placed.append(Placed(index, self.name(index, el), el.x, el.y, el.w, el.h))
 
     def table(self, slide: Any, index: int, el: TableElement) -> None:

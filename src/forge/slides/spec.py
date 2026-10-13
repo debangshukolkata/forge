@@ -8,7 +8,15 @@ import json
 from typing import Annotated, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from forge.errors import ForgeError
 from forge.slides.layout import LayoutError, expand_layouts
@@ -33,9 +41,22 @@ class Column(_Model):
     bullets: list[str | BulletGroup] = Field(default_factory=list)
 
 
+Color = Annotated[
+    str,
+    StringConstraints(
+        pattern=r"^(#[0-9A-Fa-f]{6}|text|muted|accent|accent_text|surface|background|series[1-6])$"
+    ),
+]  # a theme colour by name, or "#RRGGBB"
+
+
 class Series(_Model):
     name: str
-    values: list[float]
+    values: list[float] = Field(default_factory=list)
+    points: list[tuple[float, float]] | None = None  # scatter charts: [x, y] pairs instead of values
+    kind: Literal["line"] | None = None  # in a column chart: draw this series as a line (combination chart)
+    axis: Literal["primary", "secondary"] = (
+        "primary"  # a line series may use a second value axis on the right
+    )
 
 
 class Stat(_Model):
@@ -88,12 +109,59 @@ class TableSlide(_Slide):
     caption: str = ""
 
 
-class ChartSlide(_Slide):
+ChartKind = Literal[
+    "column",
+    "bar",
+    "line",
+    "pie",
+    "donut",
+    "area",
+    "stacked_column",
+    "stacked_bar",
+    "stacked_area",
+    "scatter",
+]
+
+
+class ChartBase(_Model):
+    """What a chart can be told (shared by the chart layout and the freeform chart element); everything has a quiet default."""
+
+    kind: ChartKind = "column"
+    categories: list[str] = Field(default_factory=list)
+    series: list[Series] = Field(default_factory=list)
+    data_file: str | None = (
+        None  # a CSV or Excel file in the workspace: first column categories, the other columns series
+    )
+    title: str = ""  # a chart title (usually the slide title says it, so off by default)
+    x_title: str = ""
+    y_title: str = ""
+    number_format: str = ""  # Excel style: 0%, #,##0, $#,##0.0, 0.0"k"
+    data_labels: bool | None = None  # None: on for pie, donut and single-series charts, off otherwise
+    legend: Literal["auto", "none", "bottom", "right", "top"] = "auto"
+    colors: list[Color] = Field(
+        default_factory=list
+    )  # one per series, in order; default: the theme's chart colours
+    point_colors: list[Color] = Field(
+        default_factory=list
+    )  # one per category (single-series column/bar, pie, donut)
+    gridlines: bool = True
+    y2_title: str = ""  # the right-hand axis of a combination chart
+    y2_number_format: str = ""
+    y_min: float | None = None
+    y_max: float | None = None
+    smooth: bool = False  # smooth the lines
+    gap_width: int | None = Field(default=None, ge=0, le=500)  # space between column groups, percent
+
+    @model_validator(mode="after")
+    def _has_data(self) -> ChartBase:
+        if not self.series and not self.data_file:
+            raise ValueError("a chart needs `series` (with `categories`) or a `data_file`")
+        return self
+
+
+class ChartSlide(_Slide, ChartBase):
     layout: Literal["chart"]
     title: str
-    kind: Literal["bar", "column", "line", "pie"] = "column"
-    categories: list[str]
-    series: list[Series]
     caption: str = ""
 
 
@@ -117,12 +185,6 @@ class ClosingSlide(_Slide):
 
 # --- free-form slides (D-242): the model places every element itself, in inches on a 13.333 x 7.5 canvas ---
 
-Color = Annotated[
-    str,
-    StringConstraints(
-        pattern=r"^(#[0-9A-Fa-f]{6}|text|muted|accent|accent_text|surface|background|series[1-6])$"
-    ),
-]  # a theme colour by name, or "#RRGGBB"
 Align = Literal["left", "center", "right"]
 VAlign = Literal["top", "middle", "bottom"]
 FontKind = Literal["title", "body", "mono"]
@@ -221,11 +283,8 @@ class IconElement(_Placed):
     alt: str = ""
 
 
-class ChartElement(_Placed):
+class ChartElement(_Placed, ChartBase):
     type: Literal["chart"]
-    kind: Literal["bar", "column", "line", "pie"] = "column"
-    categories: list[str]
-    series: list[Series]
     alt: str = ""
 
 

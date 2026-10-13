@@ -13,7 +13,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from forge.errors import ForgeError
-from forge.slides import fit, lint
+from forge.slides import charts, fit, lint
+from forge.slides.errors import BuildError
 from forge.slides.freeform import build_freeform
 from forge.slides.spec import (
     BulletGroup,
@@ -26,7 +27,6 @@ from forge.slides.spec import (
     ImageSlide,
     QuoteSlide,
     SectionSlide,
-    Series,
     StatsSlide,
     TableSlide,
     TitleSlide,
@@ -46,10 +46,6 @@ BULLET, SUB_BULLET = chr(0x2022), chr(0x2013)
 
 class SlidesUnavailable(ForgeError):
     """python-pptx is not installed."""
-
-
-class BuildError(ForgeError):
-    """A slide cannot be built; the message names it."""
 
 
 @dataclass
@@ -464,78 +460,19 @@ class _Builder:
     def add_chart(
         self,
         slide: Any,
-        kind: str,
-        categories: list[str],
-        series_list: list[Series],
+        options: Any,
         box: tuple[float, float, float, float],
         descr: str,
         font_size: float = 16,
     ) -> None:
-        """A native chart in `box` (x, y, width, height), coloured from the theme's palette."""
-        for series in series_list:
-            if len(series.values) != len(categories):
-                raise BuildError(
-                    f"slide {self.report.number}: series '{series.name}' has {len(series.values)} values "
-                    f"but there are {len(categories)} categories"
-                )
-        if kind == "pie" and len(series_list) != 1:
-            raise BuildError(f"slide {self.report.number}: a pie chart takes exactly one series")
-        data = self.m["chart_data"]()
-        data.categories = categories
-        for series in series_list:
-            data.add_series(series.name, series.values)
-        kinds = self.m["chart_type"]
-        chart_kind = {
-            "bar": kinds.BAR_CLUSTERED,
-            "column": kinds.COLUMN_CLUSTERED,
-            "line": kinds.LINE_MARKERS,
-            "pie": kinds.PIE,
-        }[kind]
-        frame = slide.shapes.add_chart(chart_kind, *(self.m["inches"](v) for v in box), data)
-        frame._element.nvGraphicFramePr.cNvPr.set("descr", descr)
-        chart = frame.chart
-        chart.font.size, chart.font.name = self.m["pt"](font_size), self.theme.body_font
-        chart.font.color.rgb = self.colour(self.theme.text)
-        chart.has_title = False
-        many = len(series_list) > 1
-        chart.has_legend = many or kind == "pie"
-        if chart.has_legend:
-            chart.legend.position = self.m["legend"].BOTTOM
-            chart.legend.include_in_layout = False
-        plot = chart.plots[0]
-        if kind == "pie":
-            plot.has_data_labels = True
-            plot.data_labels.number_format, plot.data_labels.number_format_is_linked = "0.#", False
-            for index, point in enumerate(plot.series[0].points):
-                point.format.fill.solid()
-                point.format.fill.fore_color.rgb = self.colour(
-                    self.theme.palette[index % len(self.theme.palette)]
-                )
-        else:
-            plot.has_data_labels = not many
-            for index, series in enumerate(plot.series):
-                colour = self.colour(self.theme.palette[index % len(self.theme.palette)])
-                if kind == "line":
-                    series.format.line.color.rgb = colour
-                    series.format.line.width = self.m["pt"](3)
-                else:
-                    series.format.fill.solid()
-                    series.format.fill.fore_color.rgb = colour
-            chart.value_axis.major_gridlines.format.line.color.rgb = self.colour(self.theme.surface)
-            chart.value_axis.format.line.fill.background()
+        """A native chart in `box` (x, y, width, height): see charts.py for everything it can do."""
+        charts.add_chart(self, slide, options, box, descr, font_size)
 
     def chart_slide(self, slide_spec: ChartSlide) -> None:
         slide = self.content_slide(slide_spec.layout, slide_spec.title, slide_spec.notes)
         caption_height = 0.5 if slide_spec.caption else 0.0
         box = (MARGIN, BODY_TOP, CONTENT_WIDTH, BODY_BOTTOM - BODY_TOP - caption_height)
-        self.add_chart(
-            slide,
-            slide_spec.kind,
-            slide_spec.categories,
-            slide_spec.series,
-            box,
-            slide_spec.caption or slide_spec.title,
-        )
+        self.add_chart(slide, slide_spec, box, slide_spec.caption or slide_spec.title)
         if slide_spec.caption:
             note = self.textbox(slide, MARGIN, BODY_BOTTOM - 0.35, CONTENT_WIDTH, 0.4)
             self.paragraph(note, True, slide_spec.caption, 14, self.theme.muted, italic=True)

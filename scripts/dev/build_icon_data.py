@@ -40,7 +40,8 @@ def lucide(package: Path) -> dict[str, object]:
     nodes = json.loads((package / "icon-nodes.json").read_text(encoding="utf-8"))
     tags = json.loads((package / "tags.json").read_text(encoding="utf-8"))
     icons = {
-        name: {"n": [[tag, attrs] for tag, attrs in drawing], "t": tags.get(name, [])} for name, drawing in nodes.items()
+        name: {"n": [[tag, attrs] for tag, attrs in drawing], "t": tags.get(name, [])}
+        for name, drawing in nodes.items()
     }
     return {"viewBox": [0, 0, 24, 24], "style": "stroke", "strokeWidth": 2, "icons": icons}
 
@@ -68,11 +69,15 @@ def main(lucide_folder: str, material_folder: str) -> int:
     write("lucide.json.gz", lucide(lucide_path))
     set_ = material(material_path)
     write("material.json.gz", set_)
-    (OUT / "LICENSE-lucide.txt").write_text((lucide_path / "LICENSE").read_text(encoding="utf-8"), encoding="utf-8")
+    (OUT / "LICENSE-lucide.txt").write_text(
+        (lucide_path / "LICENSE").read_text(encoding="utf-8"), encoding="utf-8"
+    )
     (OUT / "LICENSE-material-symbols.txt").write_text(
         (material_path / "LICENSE").read_text(encoding="utf-8"), encoding="utf-8"
     )
-    print(f"lucide: {len(lucide(lucide_path)['icons'])} icons; material: {len(set_['icons'])} of {len(MATERIAL)} chosen")  # type: ignore[arg-type]
+    print(
+        f"lucide: {len(lucide(lucide_path)['icons'])} icons; material: {len(set_['icons'])} of {len(MATERIAL)} chosen"
+    )  # type: ignore[arg-type]
     return 0
 
 

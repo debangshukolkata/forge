@@ -34,7 +34,7 @@ Layouts and their fields:
 | `bullets` | a point with 2-5 supporting lines | `title`, `bullets` (strings, or `{"text", "sub": [...]}`) |
 | `two_column` | compare two things | `title`, `left` / `right`: `{"heading", "bullets"}` |
 | `stats` | 1-4 headline numbers | `title`, `items`: `{"value": "42%", "label": "..."}` |
-| `chart` | a trend or comparison | `title`, `kind` (`column`, `bar`, `line`, `pie`), `categories`, `series`: `{"name", "values"}`, `caption` |
+| `chart` | a trend or comparison | `title`, `kind` (see Charts below), `categories`, `series`: `{"name", "values"}`, `caption`, more options below |
 | `table` | exact values, up to ~8 rows | `title`, `columns`, `rows`, `caption` |
 | `image` | a screenshot, diagram or photo | `title`, `image` (workspace path), `alt`, `caption` |
 | `quote` | one memorable sentence | `quote`, `by` |
@@ -144,6 +144,16 @@ The ten fixed layouts are fine for plain content. When the user wants a designed
 process diagram, a timeline, a comparison, a picture-led slide), use `freeform`: you place every element yourself.
 You are the designer, so design on purpose, and let `build_presentation`'s warnings and `preview_presentation` be
 your critic.
+
+**Charts (the `chart` layout and freeform `chart` elements take the same options).** `kind`: `column`, `bar`, `line`, `area`, `pie`,
+`donut`, `stacked_column`, `stacked_bar`, `stacked_area`, `scatter` (series with `points` as [x, y] pairs). A **combination chart**
+is `kind: "column"` with some series set to `"kind": "line"` and, when the scales differ, `"axis": "secondary"` (with
+`y2_title` and `y2_number_format`). Options, all optional: `title`, `x_title`, `y_title`, `number_format` (Excel style: `0%`,
+`#,##0`, `$#,##0.0`), `data_labels` (default: on for one series, pie and donut; off otherwise), `legend` (`auto`, `none`,
+`bottom`, `right`, `top`), `colors` (one per series), `point_colors` (one per category, single series), `gridlines`, `y_min`,
+`y_max`, `smooth`, `gap_width`. **Data from a file:** `"data_file": "data/sales.csv"` (or `.xlsx`): the first column is the
+categories and every other numeric column a series; do not retype numbers you have in a file. Keep pies to 6 slices or fewer, use
+one colour for one idea, label the unit on an axis, and let the slide title state what the chart shows.
 
 **Icons.** `find_icon("growth chart")` lists icon names (Lucide outline icons and Material filled icons, bundled, offline). In a freeform
 slide: `{"type": "icon", "name": "lucide:trending-up", "x": 1, "y": 2, "w": 0.8, "h": 0.8, "color": "accent"}`; the box must be square.
