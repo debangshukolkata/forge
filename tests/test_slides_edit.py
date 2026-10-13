@@ -323,4 +323,6 @@ def test_a_template_is_never_overwritten_and_other_files_are_refused(
     old = asyncio.run(ReadPresentation().run(ReadPresentation.Args(path="old.ppt"), context))
     assert not old.ok and ".pptx" in old.content
     broken = asyncio.run(ReadPresentation().run(ReadPresentation.Args(path="company.potx"), context))
-    assert not broken.ok and "could not be opened" in broken.content
+    assert (
+        not broken.ok and "company.potx" in broken.content and "not a valid .pptx package" in broken.content
+    )
