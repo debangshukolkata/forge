@@ -18,6 +18,9 @@ in the speaker notes or an appendix, not on more slides.
 If the user gave a document, data or notes, read them first; the deck says what they say, never invented facts or
 numbers. When a number or claim is missing, leave it out or mark it "to confirm" in the speaker notes.
 
+For a board update, pitch, QBR, design review, training, project status, proposal or announcement, read the matching guide first
+(`load_skill` with `file="storylines.md"`): slide order, counts, timing and note style for each.
+
 A good deck has one thread: situation, the point, the evidence, what to do next. Typical shape: title, the
 answer or main message up front, 3-6 content slides each making one point, a "next steps" or decision slide,
 optionally a closing slide. A section slide only when the deck has distinct parts (more than about 8 slides).

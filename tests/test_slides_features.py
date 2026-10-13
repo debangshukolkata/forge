@@ -215,3 +215,26 @@ def test_a_slide_with_a_chart_can_be_duplicated_and_the_copy_is_independent() ->
     names = {p.partname for p in _open(saved).part.package.iter_parts()}
     assert len([n for n in names if str(n).startswith("/ppt/charts/chart")]) == 2
     assert len([n for n in names if str(n).startswith("/ppt/embeddings/")]) == 2
+
+
+def test_the_storyline_guides_name_only_layouts_that_exist() -> None:
+    """P2.20 (D-322): a guide that recommends a layout the builder does not have would send the model to a build error."""
+    import re
+    from pathlib import Path
+
+    from forge.slides.spec import LAYOUTS
+
+    text = (Path(__file__).parents[1] / "src/forge/skills/make-presentation/storylines.md").read_text(
+        encoding="utf-8"
+    )
+    named = set(
+        re.findall(
+            r"`(stats|bullets|chart|cards|table|steps|image|freeform|section|quote|closing|title|two_column)`",
+            text,
+        )
+    )
+    assert len(re.findall(r"^## ", text, re.M)) >= 9 and named
+    assert named <= {name.strip() for name in LAYOUTS.split(",")}
+    assert "storylines.md" in (
+        Path(__file__).parents[1] / "src/forge/skills/make-presentation/SKILL.md"
+    ).read_text(encoding="utf-8")

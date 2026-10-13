@@ -197,7 +197,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   instead of our estimate; without it keep the estimate. Size M.
 - [ ] **P2.19 Build from documents.** Read Word, Excel/CSV and PDF sources (DebCraft has PDF page rendering only) and turn them into a deck:
   summarise, pick charts, cite sources in notes. Size M.
-- [ ] **P2.20 Storyline guides.** Short guides in the skill for common decks (board update, pitch, QBR, design review, training, project
+- [x] **P2.20 Storyline guides.** (done 2026-10-13, D-322) Short guides in the skill for common decks (board update, pitch, QBR, design review, training, project
   status), including slide counts, timing and speaker-note style. Size S.
 
 ### P3 Large or platform work
