@@ -1,0 +1,3 @@
+Make a marketing plan deck for launching a new line of reusable coffee cups, "Brewmate", for the leadership team. Audience: urban commuters 25-40 who care about the environment. Goals: 50,000 cups sold in the first 6 months, 40% repeat purchase. Channels and budget (total 180k EUR): social media 45%, partnerships with cafes 25%, influencers 20%, email 10%. Timeline: teaser in month 1, launch in month 2, cafe programme months 2-4, review in month 6. KPIs: sales, repeat rate, cost per acquisition under 14 EUR, social engagement. Include the competition (two incumbents, we win on design and a 5-year guarantee) and risks (supply delays, price sensitivity).
+
+Save the finished presentation as deck.pptx.

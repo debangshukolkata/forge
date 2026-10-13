@@ -1,0 +1,7 @@
+{
+ "id": "d20_onboarding",
+ "kind": "onboarding",
+ "min_slides": 7,
+ "max_slides": 12,
+ "min_charts": 0
+}

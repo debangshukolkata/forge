@@ -1,0 +1,3 @@
+Make a product roadmap deck for the executive team for our project management app "Ledgerline" for the next 12 months. Themes: Q1 reliability (offline mode, 99.95% uptime), Q2 collaboration (comments, shared workspaces), Q3 insight (dashboards, forecasting), Q4 platform (public API v2, marketplace). Why now: customer interviews (40) show collaboration is the top request (31 of 40); churn reasons: reliability 38%, missing integrations 27%. Dependencies: a new sync engine (Q1) is required for offline and shared workspaces; hiring two backend engineers by end of Q1. Risks: sync engine slips by a quarter; API v2 breaking changes. Ask: approve the plan and the two hires.
+
+Save the finished presentation as deck.pptx.

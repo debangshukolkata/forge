@@ -1,0 +1,3 @@
+Summarise this study for non-experts in a deck. Study: a 12-week randomised trial of a 4-day work week at a 180-person software firm (90 employees in each group). Results: burnout score fell 22% in the 4-day group versus 3% in the control; output measured by completed tickets was unchanged (+1%); sick days fell from 4.1 to 2.6 per person; 91% of the 4-day group wanted to continue; two teams with customer-facing support rotas had to add cover and saw response times worsen by 8%. Limitations: one company, self-reported burnout, 12 weeks only, possible novelty effect. Conclusion: promising, run a longer multi-company trial. Make it clear and honest about the limits.
+
+Save the finished presentation as deck.pptx.

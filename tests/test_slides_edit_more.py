@@ -238,7 +238,7 @@ def test_replace_text_reaches_chart_titles_series_names_and_alt_text(tmp_path: P
     picture = next(s for s in deck.slides[4].shapes if s.shape_type == 13)
     picture._element.xpath("(.//p:cNvPr)[1]")[0].set("descr", "FY24 dashboard")
     done = _run(deck, [{"op": "replace_text", "find": "FY24", "replace": "FY25"}])
-    assert "FY25 users" == _shape(deck.slides[2], "has_chart").chart.chart_title.text_frame.text
+    assert _shape(deck.slides[2], "has_chart").chart.chart_title.text_frame.text == "FY25 users"
     assert picture._element.xpath("(.//p:cNvPr)[1]/@descr")[0] == "FY25 dashboard"
     assert "2 occurrence" in done[0]
     _valid(deck)

@@ -1,0 +1,7 @@
+{
+ "id": "d14_quarterly_review",
+ "kind": "quarterly business review",
+ "min_slides": 8,
+ "max_slides": 14,
+ "min_charts": 2
+}

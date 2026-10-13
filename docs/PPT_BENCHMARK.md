@@ -1,7 +1,7 @@
 # Presentation parity benchmark (TODO P0.1)
 
 How it works: `scripts/benchmark/run_deck_benchmark.py <run-name>` runs DebCraft on each request in `tests/benchmarks/decks`
-(12 requests so far; the aim is 20 to 30), then scores each delivered deck with automatic checks (opens, package valid,
+(20 requests; the aim is 20 to 30), then scores each delivered deck with automatic checks (opens, package valid,
 PowerPoint-measured overflow, slide count, notes, native charts, titles, smallest font) and a judge: the real model looking at
 PowerPoint's own pictures of every slide, scoring story, hierarchy, contrast, alignment, polish and fit from 1 to 5. The judge
 is a model, so it is generous (a competent generic deck gets 4); use it to compare runs, and the user's own ratings of a few

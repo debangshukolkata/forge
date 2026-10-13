@@ -1,0 +1,3 @@
+Make a first-day onboarding deck for new engineers at a 200-person company called Lumen. Cover: welcome and our values (customer first, ship small, be kind), who is who (the engineering org: platform, product, data; a buddy for every newcomer), your first week (Mon laptop and accounts, Tue codebase tour, Wed first small ticket, Thu pairing session, Fri demo to the team), how we work (two-week sprints, code review within one working day, on-call after 3 months), the tools (Git, Slack, Jira, a wiki), where to get help, and what we expect in 30/60/90 days. Friendly tone.
+
+Save the finished presentation as deck.pptx.

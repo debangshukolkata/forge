@@ -1,0 +1,7 @@
+{
+ "id": "d15_incident_postmortem",
+ "kind": "incident postmortem",
+ "min_slides": 6,
+ "max_slides": 10,
+ "min_charts": 0
+}

@@ -182,6 +182,10 @@ def make_seed(task_id: str, dest: Path) -> None:
         (dest / "policy.md").write_text(POLICY, encoding="utf-8")
     elif task_id.startswith("d06"):
         _template(dest)
+    elif task_id.startswith("d13"):
+        from tests.slide_templates import make_corporate_template
+
+        (dest / "acme-corporate.pptx").write_bytes(make_corporate_template())
     elif task_id.startswith("d07"):
         _board_update(dest)
     elif task_id.startswith("d08"):
