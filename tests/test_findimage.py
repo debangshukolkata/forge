@@ -484,3 +484,28 @@ def test_icon_svg_rejects_bad_colours_and_unknown_names() -> None:
         icon_svg("lucide:rocket", color='red" onload="x')
     with pytest.raises(IconError, match="no icon named"):
         icon_svg("lucide:not-a-real-icon")
+
+
+async def test_when_the_pictures_own_site_refuses_the_sources_own_copy_is_used(
+    original_repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Seen on the office laptop: Openverse's search worked but the origin site answered 403 to the download."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.host == "img.example.org":
+            return httpx.Response(403, text="hot-linking not allowed")
+        if request.url.host == "api.openverse.org" and request.url.path.startswith("/t/"):
+            return httpx.Response(200, content=PNG, headers={"content-type": "image/png"})
+        return _handler(request)
+
+    _use(monkeypatch, handler)
+    context = _context(original_repo, tmp_path)
+    await FindImage().run(FindImage.Args(query="vineyard", sources=["openverse"]), context)
+    result = await FetchImage().run(FetchImage.Args(id="openverse:abc-1", path="assets/v.jpg"), context)
+    assert result.ok, result.content
+    assert (
+        "smaller copy kept by openverse" in result.content
+        and context.workspace.path_of("assets/v.png").read_bytes() == PNG
+    )
+    no_copy = await FetchImage().run(FetchImage.Args(id="openverse:abc-3", path="assets/p.jpg"), context)
+    assert not no_copy.ok and "403" in no_copy.content  # abc-3 has no copy of its own in this fixture

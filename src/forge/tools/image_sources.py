@@ -222,6 +222,7 @@ async def openverse(client: httpx.AsyncClient, query: str, limit: int, key: str 
                 width=int(item.get("width") or 0),
                 height=int(item.get("height") or 0),
                 attribution=unescape(item.get("attribution") or "") if normal in NEEDS_ATTRIBUTION else "",
+                extra={"fallback": item.get("thumbnail") or ""},  # Openverse keeps its own smaller copy
             )
         )
         if len(candidates) >= limit:

@@ -226,11 +226,7 @@ class FetchImage(Tool):
         policy = context.web_policy or WebPolicy()
         try:
             async with sources.make_client() as client:
-                url = await _download_url(client, candidate)
-                reason = await check_resolving(url, policy)
-                if reason:
-                    return ToolResult(ok=False, content=f"Not downloaded: {reason}.")
-                data, content_type = await _download(client, url, policy)
+                data, content_type, note = await download_candidate(client, candidate, policy)
                 if candidate.extra.get("track"):  # Unsplash asks for a ping when a photo is used
                     await _ping(client, candidate)
         except SourceError as error:
@@ -263,9 +259,36 @@ class FetchImage(Tool):
         lines = [
             f"Saved {path} ({len(data) // 1024} KB; {candidate.licence}; source {candidate.page_url or candidate.source})."
         ]
+        if note:
+            lines.append(note)
         lines.append(f"Credit line to show with it: {credit}" if credit else "No credit line is required.")
         lines.append(f"Suggested alt text: {candidate.title[:120]}. Record in NOTICES.md: done.")
         return ToolResult(ok=True, content="\n".join(lines))
+
+
+async def download_candidate(
+    client: httpx.AsyncClient, candidate: Candidate, policy: WebPolicy
+) -> tuple[bytes, str, str]:
+    """(bytes, content type, a note for the user). When the picture's own site refuses (hot-link protection, a company proxy block)
+    and the source keeps its own smaller copy (Openverse does), that copy is used and the note says so."""
+    url = await _download_url(client, candidate)
+    reason = await check_resolving(url, policy)
+    if reason:
+        raise SourceError(f"Not downloaded: {reason}.")
+    try:
+        data, content_type = await _download(client, url, policy)
+        return data, content_type, ""
+    except (SourceError, httpx.HTTPError) as error:
+        fallback = candidate.extra.get("fallback")
+        if not fallback:
+            raise
+        data, content_type = await _download(client, fallback, policy)
+        why = str(error) if isinstance(error, SourceError) else type(error).__name__
+        return (
+            data,
+            content_type,
+            f"The original site refused ({why[:80]}); this is the smaller copy kept by {candidate.source}.",
+        )
 
 
 async def _download_url(client: httpx.AsyncClient, candidate: Candidate) -> str:

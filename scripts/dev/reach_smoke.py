@@ -31,7 +31,8 @@ sys.path.insert(0, str(REPO / "src"))
 from forge.config import load_secrets  # noqa: E402
 from forge.net import connection_hint, root_cause, use_system_certificates  # noqa: E402
 from forge.tools import image_sources  # noqa: E402
-from forge.tools.findimage import _download_url  # noqa: E402
+from forge.tools.findimage import download_candidate  # noqa: E402
+from forge.tools.web_guard import WebPolicy  # noqa: E402
 
 SAMPLE_QUERY = "house"
 
@@ -263,9 +264,11 @@ async def run_image_source(
             return out
         started = time.perf_counter()
         try:
-            url = await _download_url(client, found[0])
-            response = await client.get(url)
-            ok, detail, why = judge(response, "image")
+            data, content_type, note = await download_candidate(client, found[0], WebPolicy())
+            url = found[0].download_url
+            ok = content_type.startswith("image/") and len(data) > 0
+            detail = f"{content_type}, {len(data) // 1024} KB" + (f" ({note})" if note else "")
+            why = "" if ok else "a proxy or login page answered in place of the picture"
             out.append(
                 Result(
                     "images",
