@@ -66,7 +66,7 @@ How to take the work up in the best order. Each phase says what it needs and whe
 Things only you can do or decide. Everything else below can be built without you.
 
 - [ ] **Run `scripts/dev/import_orchestrix_azure.py`** to fill the Azure values in `.env` (D-019)
-- [ ] **Gemini live check on the office laptop** (D-150, D-205): run `scripts/dev/gemini_smoke.py` and the drawer's Gemini test (never called live from the build machine); `view_video` waits for the video probe. Code and unit tests are done and pushed.
+- [x] **Gemini live check on the office laptop** (confirmed working by the user, 2026-10-13) (D-150, D-205): run `scripts/dev/gemini_smoke.py` and the drawer's Gemini test (never called live from the build machine); `view_video` waits for the video probe. Code and unit tests are done and pushed.
 - [ ] Re-run the three-design task (`designs/design-a..c`, ports 5171-5173) on the office laptop and score the result with the seven-line rubric; tune the critic's SHIP bar from real runs (too lenient / too harsh)
 - [ ] Check that `raw.githubusercontent.com` is reachable from the office laptop (brand DESIGN.md fetch); if blocked, bundle five or six starter DESIGN.md files in our own words
 - [ ] **Check that the shadcn CLI and the shadcn/Magic UI registries are reachable from the office laptop**: run `npx shadcn@latest --version`, then `npx shadcn@latest add button` and `npx shadcn@latest add "@magicui/marquee"` in a scratch Vite project; if npm or `ui.shadcn.com` is blocked, say so and DebCraft keeps using `components-native.tsx` and the daisyUI quickstart offline (daisyUI needs only npm).
