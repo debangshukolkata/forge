@@ -69,7 +69,7 @@ def critic_round_note(verdict: str | None, round_number: int, limit: int) -> str
         return ""
     if round_number < limit:
         return (
-            f"\n[Review round {round_number} of {limit}. Fix the BLOCKING items and the cheap suggestions, then ask for a follow-up "
+            f"\n[Review round {round_number} of {limit}. Take a fresh screenshot and check each suggestion against the page before you apply it (a wrong one is skipped, with a word on why); fix the BLOCKING items and the cheap suggestions, then ask for a follow-up "
             "review that lists these fixes: it checks only them. Do not add features the brief did not ask for.]"
         )
     return (

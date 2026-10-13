@@ -56,7 +56,9 @@ def test_retrieval_of_fonts_and_pairings() -> None:
 
 
 async def test_adding_a_pairing_copies_binary_fonts_unchanged(tmp_path: Path, original_repo: Path) -> None:
-    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    context = ToolContext(
+        workspace=create_workspace(original_repo, tmp_path / "ws", "backend"), design_first=False
+    )
     result = await AddAsset().run(AddAsset.Args(id="pair-warm-editorial", project_dir="web"), context)
     assert result.ok, result.content
     web = context.workspace.repo_dir / "web"

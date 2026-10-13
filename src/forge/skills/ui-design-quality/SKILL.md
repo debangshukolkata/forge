@@ -83,6 +83,19 @@ VISUAL_DENSITY, 1-10), exact colours, type, spacing, shape, components, imagery,
 every screen from it and keep the CSS tokens identical to it. If the user or their company supplies a DESIGN.md or a
 brand guide, it is binding: use it as is. Give the path to the design critic; it scores the pages against it.
 
+## 0d. The token plan (write it before the markup, then argue with it)
+In `DESIGN.md` or your plan write, compactly: 4 to 6 named colours (background, surface, text, muted, accent, one signal colour) with
+hex values; the type roles (display, heading, body, small, mono if needed) with family, size and weight; the layout as a small ASCII
+wireframe of each screen (blocks and their order); the alignment rule (one left edge, one spacing unit); and three principles for this
+product. Then read the plan against the brief and replace every generic choice (a default blue, a default font, a three-card row) with
+one that comes from the product. Only then build.
+- **Spend your boldness in one place** (one striking hero, one colour move, one unusual type choice); everything else stays calm.
+- **Visual structure is information**: numbers, borders, dividers and badges only where they encode something real.
+- **Error copy says what happened and what to do next**, in plain words.
+- **Clichés to avoid unless the brief asks for them:** cream-and-terracotta palettes, near-black with acid green, hairline broadsheet
+  layouts, an identical rounded card grid, small eyebrow labels over every heading, middle-dot meta strings, arrows on every link,
+  accenting one word of a headline.
+
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)
 - **Purpose and tone** of the product (a blood donation drive: warm, trustworthy, urgent but calm).
 - **Palette**: one accent colour (a real brand colour, not default blue), a neutral scale for text and surfaces,
@@ -174,6 +187,12 @@ Many tiny edits make a page drift: spacing, radius and colours slowly stop agree
 When the user says the result looks bad: do not patch single classes. Re-read sections 0-2, redo the design
 decisions, and rebuild the screen's structure and styles together.
 
+## 5b. Keep what you approved (visual regression)
+When a screen looks right, approve it: `visual_baseline` with a name like `home-desktop` (it takes your latest screenshot). After later
+edits that could touch it (shared styles, layouts, components, the theme), take a new screenshot of the same screen and run
+`visual_check` with that name: it says how much of the page changed and where, and saves a diff picture (changes in red). A change you
+planned: look at it, then approve it again. A change you did not plan is a regression: find the edit that caused it and fix it.
+
 ## 6. Several variants of one page (three designs, A/B, "options")
 Variants that look the same are a failed task, however polished each one is.
 - Write a one-line design brief per variant first (palette, fonts, layout idea, mood) and make them differ on all of
@@ -184,6 +203,9 @@ Variants that look the same are a failed task, however polished each one is.
 - Prove each port serves its own folder: read the title and heading from `browser_open` for every port, and compare the
   screenshots (each `view_image` prints a sha256; identical hashes mean identical pages) or hash the source files
   (`Get-FileHash designs\*\src\App.tsx`). If two match, fix it before you report.
+- Then run `compare_designs` with one screenshot per variant (and each variant's folder, so the DESIGN.md files are compared too): it
+  reports the layout similarity of every pair. A pair marked TOO SIMILAR, or two DESIGN.md files naming the same first colour or font, is a
+  BLOCKER: change the layout (section order, grid, hero shape) and the typeface of the later variant, not just its colours.
 - Start each server with `start_background` and its own `cwd` (for example `cwd: designs/design-a`; without it the
   process starts wherever an earlier `cd` left the shell and several servers end up serving one app). Check the
   `[cwd: ...]` in the result, then `show_app` per server. If

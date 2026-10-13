@@ -124,7 +124,9 @@ def _all_assets() -> list:  # type: ignore[type-arg]
 
 
 def _context(tmp_path: Path, original_repo: Path) -> ToolContext:
-    return ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    return ToolContext(
+        workspace=create_workspace(original_repo, tmp_path / "ws", "backend"), design_first=False
+    )
 
 
 async def test_find_asset_tool(tmp_path: Path, original_repo: Path) -> None:
