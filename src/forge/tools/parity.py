@@ -14,6 +14,7 @@ from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 BUILT_IN_TYPES = {
     "explore": "Read-only exploration of the codebase for a question; returns relevant files and conventions.",
     "reviewer": "A second opinion on a change (reviewer model); returns findings.",
+    "code-review": "Two independent reviewers at once, one for the project's standards and one for what was asked; returns both reports and a SHIP/REVISE verdict.",
     "debugger": "Fresh-context root-cause analysis of a failure (can run tests); returns a diagnosis and fix.",
     "researcher": "Digs into a question on the web: searches, reads several sources, cross-checks, and "
     "reports findings with source URLs, what disagrees and what could not be read.",

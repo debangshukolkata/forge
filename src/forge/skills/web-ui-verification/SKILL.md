@@ -1,6 +1,6 @@
 ---
 name: web-ui-verification
-description: Verify a web UI feature in a real browser before calling it done: run the app, use it like a user (including the error case), read the result, look at a screenshot, and optionally leave a Playwright script that repeats the check.
+description: Use before you call a web UI feature done: run the app, use it like a user including the error case, look at a screenshot, and optionally leave a Playwright script that repeats the check
 ---
 # Verifying a web UI in a real browser
 
@@ -49,3 +49,7 @@ task that changes what a user sees, do this before task_update(done) or telling 
    For a Node/React app the same applies with an `@playwright/test` spec (`npx playwright test`).
 8. **Stop the server** with `stop_background`, and say in the task_update `verification` what you saw
    (pages opened, clicks made, messages and values read). Never write "verified" for something you did not open.
+
+## Gotchas
+- A server that prints nothing is not a server that is down: check the port (`start_background` does), not the output line (speed-2: four 60-second waits).
+- Python buffers piped output: run servers with `PYTHONUNBUFFERED=1` (DebCraft sets it).

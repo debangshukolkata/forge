@@ -16,6 +16,7 @@ from forge.subagents.builder import (
     result_text,
     safe_name,
 )
+from forge.subagents.code_review import run_code_review
 from forge.subagents.critic import (
     CRITIC_ITERATIONS,
     CRITIC_PROMPT,
@@ -89,7 +90,7 @@ class SpawnSubagent(Tool):
         "Playwright or test scripts against the running app and reports PASS/FAIL), 'design-critic' "
         "(an independent designer who looks at the running page at desktop and phone width and scores "
         "its look and feel, with concrete fixes and a SHIP/REVISE verdict), or a custom agent "
-        "defined by the user, or 'builder' (builds one self-contained piece of work in its own `folder`, writes only "
+        "defined by the user, 'code-review' (two independent reviewers at once, one for the project's standards and one for what was asked, with a SHIP/REVISE verdict; ask for it before you finish a code task of any size), or 'builder' (builds one self-contained piece of work in its own `folder`, writes only "
         "there, runs its own checks and ends with a STATUS line; several builders with different folders given in "
         "the same turn run in parallel: use it for independent variants, screens or services, see the parallel-builders "
         "skill). "
@@ -208,6 +209,14 @@ class SpawnSubagent(Tool):
             else:
                 context.critic_ship, context.critic_rounds = False, context.critic_rounds + 1
             report += critic_round_note(verdict, context.critic_rounds, CRITIC_ROUND_LIMIT)
+        elif args.agent == "code-review":
+            requirement = ""
+            asker = getattr(context.interaction, "requirement_text", None)
+            if callable(asker):
+                requirement = str(asker())
+            report = await run_code_review(router, context, requirement or args.task)
+            context.last_review_step = context.step
+            context.review_ship = "VERDICT: SHIP" in report
         elif args.agent == "reviewer":
             report = await _run_subagent(
                 router, context, ToolRegistry(read_only), REVIEWER_PROMPT, args.task, 20, "reviewer"

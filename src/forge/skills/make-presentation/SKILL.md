@@ -1,6 +1,6 @@
 ---
 name: make-presentation
-description: Make a clear, well-designed PowerPoint (.pptx) deck: plan the story, write an outline, build it with build_presentation, look at every slide with preview_presentation and fix what is wrong
+description: Use when the user asks for slides, a deck, a presentation or a .pptx (new, edited, restyled or built on a company template): plan the story, build it, look at every slide and fix what is wrong
 ---
 
 # Making a presentation
@@ -287,3 +287,8 @@ oval, triangle, diamond, chevron, pentagon, arrow_right, plus; `text` inside; `r
 
 After building, **look**: preview, then check every slide for balance, alignment, crowding and reading order
 before you call it done. Fix by changing the numbers and rebuilding; that is cheap.
+
+## Gotchas
+- Dense bullet lists were the top complaint in every deck benchmark: choose `cards`, `steps`, `stats`, a chart or a diagram first.
+- The build warnings are not optional: fix them and build again (a template deck that ignored them lost its numbers).
+- A new slide in an edited deck lands before the closing slide by itself: do not add `move_slide`.

@@ -256,12 +256,20 @@ class McpConfig(_Strict):
     servers: dict[str, McpServerConfig] = {}
 
 
+class ReviewConfig(_Strict):
+    """C4 (D-308): the two-axis code review is something the model may ask for (`spawn_subagent code-review`); `gate` makes it a rule:
+    a code task cannot be called done until a review that says SHIP ran after the last edit (two rounds, then the task may close)."""
+
+    gate: bool = False
+
+
 class ForgeConfig(BaseModel):
     # Sections for later milestones (postgres, ui, ...) are accepted now and validated when built.
     model_config = ConfigDict(extra="allow")
 
     llm: LLMConfig
     limits: LimitsConfig = LimitsConfig()
+    review: ReviewConfig = ReviewConfig()
     cost: CostConfig = CostConfig()
     shell: ShellConfig = ShellConfig()
     context: ContextConfig = ContextConfig()

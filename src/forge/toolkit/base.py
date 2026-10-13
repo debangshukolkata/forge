@@ -108,6 +108,8 @@ class ToolContext:
     last_screenshot_step: int = 0  # the page was last screenshotted with the style audit (D-245)
     last_critic_step: int = 0  # the design critic last reviewed the page (D-249)
     critic_ship: bool = False  # and its verdict was SHIP
+    last_review_step: int = 0  # the two-axis code review last ran (C4, D-308)
+    review_ship: bool = False  # and its verdict was SHIP
     critic_rounds: int = (
         0  # REVISE verdicts in a row; after three the model may finish with the open points listed
     )

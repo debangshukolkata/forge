@@ -1,6 +1,6 @@
 ---
 name: langgraph-agent
-description: Build or extend a LangGraph graph (typed state, nodes, conditional edges, LLM client from the app's factory, tests with fake LLMs).
+description: Use when you build or extend a LangGraph graph: typed state, nodes, conditional edges, the LLM client from the app's factory, tests with fake LLMs
 ---
 # LangGraph graphs
 

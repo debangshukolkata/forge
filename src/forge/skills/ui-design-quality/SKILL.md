@@ -225,3 +225,6 @@ Never ask the user which style to use: pick, say why in one line, build.
   supporting effect per viewport; customise through props, classes and theme variables, never by editing a library's
   internals; check semantic HTML and keyboard access (a dock or flip card must work with the keyboard), and check the page at
   375 px for horizontal overflow after adding any decorative layer.
+
+## Gotchas
+- The design critic judges against the brief: do not add forms, flows or pages the brief did not ask for (speed-1: six review rounds for a contact form nobody wanted).

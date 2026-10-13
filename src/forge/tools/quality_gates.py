@@ -13,6 +13,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from forge.tools.test_quality import weak_test_findings
+
 TIMEOUT_S = 90
 MAX_SHOWN = 10
 MAX_PER_TOOL = 8
@@ -29,6 +31,7 @@ class GateConfig:
     ruff: bool = True
     mypy: bool = True
     bandit: bool = True
+    tests: bool = True  # tests that cannot fail (no assertion, assert True, only mocks)
     max_complexity: int = MAX_COMPLEXITY
 
 
@@ -44,6 +47,7 @@ def load_config(forge_dir: Path) -> GateConfig:
             ruff=bool(data.get("ruff", defaults.ruff)),
             mypy=bool(data.get("mypy", defaults.mypy)),
             bandit=bool(data.get("bandit", defaults.bandit)),
+            tests=bool(data.get("tests", defaults.tests)),
             max_complexity=int(data.get("max_complexity", defaults.max_complexity)),
         )
     except (OSError, ValueError, TypeError):
@@ -167,6 +171,8 @@ def gate_findings(
         found += _mypy(selected, root, python, env)[:MAX_PER_TOOL]
     if config.bandit:
         found += _bandit(selected, root, python, env)[:MAX_PER_TOOL]
+    if config.tests:
+        found += weak_test_findings([Path(f) for f in selected], root)[:MAX_PER_TOOL]
     return found
 
 

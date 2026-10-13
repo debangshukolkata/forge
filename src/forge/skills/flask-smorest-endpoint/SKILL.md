@@ -1,6 +1,6 @@
 ---
 name: flask-smorest-endpoint
-description: Add a REST endpoint to a Flask + flask-smorest app (blueprint, marshmallow schemas, service, repository, tests, OpenAPI check).
+description: Use when you add a REST endpoint to a Flask + flask-smorest app: blueprint, marshmallow schemas, service, repository, tests and an OpenAPI check
 ---
 # Adding a flask-smorest endpoint
 

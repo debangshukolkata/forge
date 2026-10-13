@@ -1,6 +1,6 @@
 ---
 name: parallel-builders
-description: Build independent pieces of one request at the same time with builder subagents, each in its own folder (design variants, separate screens, services, documents), then verify each result yourself
+description: Use when one request has two or more independent pieces (design variants, screens, services, documents): build them at the same time with builders in separate folders, then verify each yourself
 ---
 
 # Parallel builders
@@ -29,6 +29,13 @@ without a folder, or one that overlaps another, is never run in parallel; the an
 facts a builder needs in `notes` (task id to text). Dependent tasks wait: call `run_ready_tasks` again after you have verified the
 first group. The scheduler marks a BLOCKED or NEEDS_CONTEXT piece as blocked; the others stay in progress until **you** verify them
 and call `task_update(done)`, which asks for a passing test run (and a look in a browser for pages) as for your own edits.
+
+## A hard or ambiguous problem: candidate solutions (tests as the judge)
+When a problem is hard (an algorithm with many edges, a bug you cannot pin down, a design with two plausible shapes) and you can write
+down what a correct answer must satisfy, write that check first (a test file, a script, a list of cases). Then start two or three builders
+in separate folders with the **same brief but different approaches** (for example "iterative with an explicit stack" and "recursive with
+memoisation"), each told to make your check pass and to run it. Keep the candidate that passes the check and the review (`code-review`);
+copy it into place yourself, discard the others, and say which you chose and why. Do not do this for easy work: it costs several runs.
 
 ## What a builder does
 It writes only below its folder, works in its own shell session, takes its own free port, runs its own checks, stops what it started and

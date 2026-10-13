@@ -1,6 +1,6 @@
 ---
 name: web-research
-description: How to research on the web with web_search and web_fetch: cross-check sources, handle failed or partial fetches, cite URLs, and when to hand a deep question to the researcher subagent.
+description: Use when you must find or check facts on the web (a library, a standard, a price, a news item): cross-check sources, handle failed or partial fetches, cite URLs, hand deep questions to the researcher subagent
 ---
 
 # Web research
@@ -35,3 +35,6 @@ standard, a release note, a vendor's documentation.
 ## Report
 - Give the answer first, then the sources as "claim - URL", then what is uncertain or could not be read.
 - Say plainly when you could not confirm something. A missing source is information, not a failure to hide.
+
+## Gotchas
+- A search snippet is not a source: open the page. Two pages that copy each other are one source.

@@ -31,6 +31,7 @@ from forge.toolkit.powershell import ps_quote
 from forge.toolkit.private_env import without_private
 from forge.toolkit.pytest_report import parse_pytest
 from forge.toolkit.shell import execute
+from forge.tools.guided_script import write_script
 from forge.tools.import_check import import_note, import_problems
 from forge.tools.interaction import (
     AskUser,
@@ -57,7 +58,22 @@ if TYPE_CHECKING:
 # No -q: repos often set it in addopts, and -qq hides the summary line the parser reads.
 PYTEST_ARGS = "-rfE --tb=short --no-header -p no:cacheprovider"
 FULL_SUITE_TIMEOUT_S = 900
-GATE_ROUNDS = 2  # C2: how many times the quality gates may send a task back before it may close
+GATE_ROUNDS = 2
+REVIEW_ROUNDS = 2  # C4: how many times the optional review gate may send a task back
+CODE_SUFFIXES = (
+    ".py",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".go",
+    ".java",
+    ".rs",
+    ".cs",
+    ".rb",
+    ".php",
+    ".sql",
+)  # C2: how many times the quality gates may send a task back before it may close
 RESUMED_NOTE = (
     "\n\nResumed after an interruption: first check what is already done (files modified are pinned)."
 )
@@ -169,6 +185,7 @@ class Orchestrator:
         self._background_tasks: set[asyncio.Task[Any]] = set()
         self._task_start_step = 0
         self._gate_rounds: dict[str, int] = {}
+        self._review_rounds: dict[str, int] = {}
         self._export_step = 0  # tool step of the last delivery; later edits mean output/ is stale
         self._ui_nudge_step = -1  # when the model was last sent back to check the UI in a browser
         self._restructure_baseline: tuple[bool, str] | None = None
@@ -574,6 +591,23 @@ class Orchestrator:
             unresolved = await asyncio.to_thread(self._unresolved_imports)
             if unresolved:
                 return ToolResult(ok=False, content=import_note(unresolved))
+            if self.host.router.config.review.gate and self._wrote_code():
+                reviewed = context.last_review_step > context.last_edit_step
+                rounds = self._review_rounds.get(task_id, 0)
+                if (not reviewed or not context.review_ship) and rounds < REVIEW_ROUNDS:
+                    self._review_rounds[task_id] = rounds + 1
+                    return ToolResult(
+                        ok=False,
+                        content=(
+                            "Not accepted: this project requires a code review before a task is done"
+                            + (
+                                ", and the last review said REVISE: fix its blocking findings and review again."
+                                if reviewed
+                                else ": call spawn_subagent with agent 'code-review' now (after your last edit), fix its blocking findings, then call task_update again."
+                            )
+                            + " After two such rounds the next task_update is accepted."
+                        ),
+                    )
             findings = await asyncio.to_thread(self._gate_findings)
             if findings:  # C2: lint, types and security findings go back to the model; two rounds, then the task may close
                 round_number = self._gate_rounds.get(task_id, 0) + 1
@@ -626,6 +660,13 @@ class Orchestrator:
         )
         return ToolResult(ok=True, content=f"Task {task.id} recorded as {task.status}.")
 
+    def _wrote_code(self) -> bool:
+        """The task changed source files (not only notes or data): a review gate has nothing to look at otherwise."""
+        return any(
+            change.op in ("write", "move") and change.path.endswith(CODE_SUFFIXES)
+            for change in self.workspace.changes()
+        )
+
     def _gate_findings(self) -> list[str]:
         """C2: ruff, mypy (when configured) and bandit (when installed) on the Python files DebCraft wrote."""
         env = self.workspace.info.python_env
@@ -661,9 +702,24 @@ class Orchestrator:
     async def request_user_action(
         self, title: str, steps: list[str], verify_command: str | None, context: ToolContext
     ) -> ToolResult:
+        script = write_script(self.workspace.forge_dir, title, steps, verify_command)
+        shown = (
+            [
+                *steps,
+                "Prefer a walk-through? Run in PowerShell (it checks each step and saves the result): "
+                f'powershell -ExecutionPolicy Bypass -File "{self.workspace.root / script}"',
+            ]
+            if script
+            else steps
+        )
         answer = await self.host.questions.ask(
             EventType.USER_ACTION_REQUESTED,
-            {"title": title, "steps": steps, "verify_command": verify_command},
+            {
+                "title": title,
+                "steps": shown,
+                "verify_command": verify_command,
+                **({"script": script} if script else {}),
+            },
         )
         choice = (answer.choice or "").lower()
         if choice == "done" and verify_command:
@@ -741,6 +797,9 @@ class Orchestrator:
             "test_command": "the project's own test command (e.g. python -m pytest) run with run_command",
         }
         return self.instructions[kind].format(**{**defaults, **values})
+
+    def requirement_text(self) -> str:
+        return self._requirement_text()
 
     def _requirement_text(self) -> str:
         approved = self.workspace.forge_dir / "REQUIREMENTS.md"

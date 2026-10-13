@@ -1,6 +1,6 @@
 ---
 name: sql-migration-raw
-description: Write a raw SQL migration script in the repo's SQL folder (naming/numbering, idempotent DDL, rollback section, scratch-schema trial, DB requests).
+description: Use when you add or change a database schema with a raw SQL migration script: naming and numbering, idempotent DDL, rollback section, scratch-schema trial, DB requests
 ---
 # Raw SQL migrations
 

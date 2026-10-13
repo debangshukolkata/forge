@@ -1,6 +1,6 @@
 ---
 name: python-project
-description: Start a Python project (library, command line tool, async worker, REST service) from tested skeletons, and look up short tested recipes for errors, logging, settings, typing, async, tests, SQL, security, performance, refactoring and CLI design. Use when creating a Python project or when writing Python code that handles any of those topics.
+description: Use when you start a Python project (library, command line tool, async worker, REST service) or need a short tested recipe for errors, logging, settings, typing, async, tests, SQL, security or performance
 ---
 # Python projects that start clean, and recipes for the usual problems
 
@@ -32,3 +32,6 @@ code, and when you review your own code run through `rcp-security` for anything 
 - One test per behaviour, with edge cases and the error path; expected values written by hand, not recomputed from the code.
 - Dependencies go in `pyproject.toml` (runtime in `dependencies`, tools in the `dev` extra); do not leave an unused one.
 - Before using a library you do not know well, check the installed version (`python -m pip show <package>`) and read its docs.
+
+## Gotchas
+- `from __future__ import annotations` first, type hints everywhere, errors as specific exception classes.

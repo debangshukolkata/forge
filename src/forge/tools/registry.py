@@ -17,6 +17,7 @@ from forge.tools.presentation import presentation_tools
 from forge.tools.search import Glob, Grep, ListDir
 from forge.tools.show_app import ShowApp
 from forge.tools.skill_install_tool import InstallSkill
+from forge.tools.test_quality import MutationCheck
 from forge.tools.todo import TodoWrite
 from forge.tools.vision import vision_tools
 from forge.tools.web import WebFetch, WebSearch
@@ -34,6 +35,7 @@ def default_tools() -> list[Tool]:
         ListDir(),
         Grep(),
         RunCommand(),
+        MutationCheck(),
         PythonRun(),
         StartBackground(),
         ReadBackground(),
