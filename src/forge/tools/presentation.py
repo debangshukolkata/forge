@@ -23,6 +23,7 @@ from forge.slides.extract import deck_markdown
 from forge.slides.measure import measure_deck, overflow_problems
 from forge.slides.open_deck import DeckError, open_deck, save_deck
 from forge.slides.read import describe_deck, slide_notes
+from forge.slides.review import review_deck, summarize
 from forge.slides.spec import parse_deck
 from forge.slides.template import analyze_template, describe_template
 from forge.slides.template_build import _open
@@ -254,6 +255,40 @@ class CheckAccessibility(Tool):
         more = f"\n... and {len(problems) - 40} more" if len(problems) > 40 else ""
         header = f"{errors} error(s), {len(problems) - errors} warning(s):"
         return ToolResult(ok=True, content=header + "\n" + "\n".join(lines) + more)
+
+
+class ReviewPresentation(Tool):
+    name = "review_presentation"
+    read_only = True
+    description = (
+        "Critique a .pptx (any deck, yours or the user's) with deterministic checks and list what to change: titles that are labels "
+        "instead of messages, too many words or bullets, mixed fonts and sizes, titles that jump around, low contrast, shapes off the "
+        "slide or overlapping, runs of the same layout, text-only decks, empty placeholders, missing speaker notes and the "
+        "accessibility findings. Each finding says how to fix it with edit_presentation. Look at preview pictures too: this checks "
+        "what can be measured, not whether the story is good."
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(description="The .pptx, relative to the repository root")
+        minutes: int | None = Field(
+            default=None, ge=1, le=480, description="Length of the talk, to judge the slide count"
+        )
+
+    def summary(self, args: ReviewPresentation.Args) -> str:
+        return f"review {args.path}"
+
+    async def run(self, args: ReviewPresentation.Args, context: ToolContext) -> ToolResult:
+        file = context.workspace.path_of(args.path)
+        if not file.is_file():
+            return ToolResult(ok=False, content=f"No file at {args.path}.")
+        try:
+            deck = await asyncio.to_thread(_open_any, file)
+            findings = review_deck(deck, args.minutes)
+        except SlidesUnavailable as error:
+            return ToolResult(ok=False, content=f"{error} Tell the user.")
+        except (ForgeError, OSError) as error:
+            return ToolResult(ok=False, content=str(error))
+        return ToolResult(ok=True, content=summarize(findings))
 
 
 class AnalyzeTemplate(Tool):
@@ -489,6 +524,7 @@ def presentation_tools() -> list[Tool]:
         ConvertPresentation(),
         AnalyzeTemplate(),
         CheckAccessibility(),
+        ReviewPresentation(),
         EditPresentation(),
         PreviewPresentation(),
         FindIcon(),

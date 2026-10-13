@@ -191,7 +191,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   links). Size L.
 - [x] **P2.16 Read and analyse to full strength.** (done 2026-10-13, D-317) Text as Markdown, comments, notes, hidden slides, alt text, links, animations summary,
   extract embedded pictures, per-slide contact sheet; `.ppt` to `.pptx` and deck to PDF through PowerPoint when present. Size M.
-- [ ] **P2.17 Review mode.** Critique a deck (story, density, consistency, contrast, font count, alignment, repeated layouts) and list fixes,
+- [x] **P2.17 Review mode.** (done 2026-10-13, D-318) Critique a deck (story, density, consistency, contrast, font count, alignment, repeated layouts) and list fixes,
   or fix them. Size M.
 - [x] **P2.18 Reliable overflow detection.** With PowerPoint present, measure each text box's real text height through PowerPoint **(done 2026-10-13, D-287)**
   instead of our estimate; without it keep the estimate. Size M.

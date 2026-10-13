@@ -114,7 +114,9 @@ async def test_the_tools_read_markdown_and_save_pictures(original_repo: Path, tm
     out = io.BytesIO()
     _deck().save(out)
     workspace.write_bytes("docs/deck.pptx", out.getvalue(), "x")
-    read = await ReadPresentation().run(ReadPresentation.Args(path="docs/deck.pptx", format="markdown"), context)
+    read = await ReadPresentation().run(
+        ReadPresentation.Args(path="docs/deck.pptx", format="markdown"), context
+    )
     assert read.ok and "## Slide 3: Regions" in read.content
     saved = await ConvertPresentation().run(
         ConvertPresentation.Args(path="docs/deck.pptx", to="pictures", output="docs/pics"), context

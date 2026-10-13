@@ -148,6 +148,11 @@ Per-slide outline fields: `hidden: true` (backup slides, skipped in the show), `
 speaker reads from the slide line by line unless asked.
 
 ## 5. Existing decks and company templates
+Reviewing a deck (the user's or yours): `review_presentation` lists measurable problems (label titles, wall-of-text slides, mixed
+fonts, tiny text, jumping titles, low contrast, off-slide or overlapping shapes, same-layout runs, missing notes, accessibility) each
+with the fix to make. Do the problems first, weigh the suggestions, then `preview_presentation` and look: the review cannot judge the
+story. When asked only to review, report the findings by importance and offer to fix; do not change the file unasked.
+
 Reading a deck: `read_presentation` with `format: "markdown"` gives the text as Markdown (a heading per slide, bullets, tables, chart
 data, links, notes, comments, hidden slides) which is the best form for summarising, rewriting or building a new deck from an old one.
 `convert_presentation` turns an old `.ppt`/`.pptm` into `.pptx`, any deck into PDF, or (`to: "pictures"`) saves the embedded pictures as
