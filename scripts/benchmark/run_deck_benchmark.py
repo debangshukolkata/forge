@@ -3,7 +3,7 @@ scores the deck it delivers two ways: automatic checks (the file opens, package 
 count, notes, native charts, titles, smallest font) and a judge: the real model looking at PowerPoint's own pictures of every
 slide against a fixed rubric. This spends Azure tokens, so it is run by hand, never by the test suite.
 
-    python scripts/benchmark/run_deck_benchmark.py <run-name> [--tasks d01_status_update,d07_edit_deck] [--env KEY=VALUE ...]
+    python scripts/benchmark/run_deck_benchmark.py <run-name> [--tasks d01_status_update,d07_edit_deck] [--parallel 4] [--env KEY=VALUE ...]
     python scripts/benchmark/run_deck_benchmark.py <run-name> --score-only      (score what is already in the run folder again)
 
 Everything lives under C:\\Work\\ForgeRuns\\deckbench\\<run-name>. Paste the printed table into docs/PPT_BENCHMARK.md with the date
@@ -21,6 +21,7 @@ import statistics
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
@@ -294,6 +295,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
     parser.add_argument("--tasks", default="", help="comma-separated task ids (default: all)")
+    parser.add_argument(
+        "--parallel",
+        type=int,
+        default=1,
+        help="how many requests to run at the same time (4 is a good start)",
+    )
     parser.add_argument("--env", action="append", default=[], help="KEY=VALUE for the DebCraft process")
     parser.add_argument(
         "--score-only", action="store_true", help="do not run DebCraft; score the decks already there"
@@ -320,15 +327,26 @@ def main() -> int:
     previous = {}
     if args.score_only and (run_dir / "results.json").exists():
         previous = {r["id"]: r for r in json.loads((run_dir / "results.json").read_text(encoding="utf-8"))}
-    rows: list[dict[str, object]] = []
-    for task in folders:
+
+    def one(task: Path) -> dict[str, object]:
         print(f"[{args.name}] {task.name} ...", flush=True)
-        row = previous.get(task.name) if args.score_only else run_task(task, run_dir, env)
+        task_home = home / task.name  # an own DebCraft home per task: parallel runs never share files
+        task_home.mkdir(exist_ok=True)
+        row = (
+            previous.get(task.name)
+            if args.score_only
+            else run_task(task, run_dir, {**env, "FORGE_HOME": str(task_home)})
+        )
         row = score_task(task, run_dir, row or {"id": task.name, "kind": ""})
-        rows.append(row)
-        (run_dir / "results.json").write_text(json.dumps(rows, indent=1, default=str), encoding="utf-8")
         judged = row.get("judge") or {}
         print(f"[{args.name}] {task.name}: delivered={row.get('delivered')} judge={judged}", flush=True)
+        return row
+
+    rows: list[dict[str, object]] = []
+    with ThreadPoolExecutor(max_workers=max(args.parallel, 1)) as pool:
+        for row in pool.map(one, folders):  # results come back in task order
+            rows.append(row)
+            (run_dir / "results.json").write_text(json.dumps(rows, indent=1, default=str), encoding="utf-8")
     report = markdown(args.name, rows)
     (run_dir / "results.md").write_text(report, encoding="utf-8")
     print(report)

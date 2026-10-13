@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from forge.slides.powerpoint_lock import powerpoint_turn
 from forge.toolkit.private_env import without_private
 
 TIMEOUT_S = 180
@@ -60,14 +61,17 @@ def export_slides(deck: Path, folder: Path) -> list[Path]:
         "DECK_H": str(HEIGHT),
     }
     try:
-        done = subprocess.run(
-            ["powershell", "-NoProfile", "-NonInteractive", "-Command", SCRIPT],
-            capture_output=True,
-            text=True,
-            timeout=TIMEOUT_S,
-            env=environment,
-            check=False,
-        )
+        with powerpoint_turn():
+            done = subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", SCRIPT],
+                capture_output=True,
+                text=True,
+                timeout=TIMEOUT_S,
+                env=environment,
+                check=False,
+            )
+    except TimeoutError as error:
+        raise PreviewUnavailable(str(error)) from error
     except subprocess.TimeoutExpired as error:
         raise PreviewUnavailable(f"PowerPoint did not answer within {TIMEOUT_S} seconds.") from error
     pictures = [p for p in folder.iterdir() if p.suffix.lower() == ".png"]

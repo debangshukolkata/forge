@@ -1,7 +1,7 @@
 """Coding benchmark runner (TODO C1). Runs DebCraft on each task in tests/benchmarks/tasks on the real model, then scores
 the result with the hidden tests. This spends Azure tokens, so it is run by hand, never by the test suite.
 
-    python scripts/benchmark/run_code_benchmark.py <run-name> [--tasks t01_slugify,t04_paginate_bug] [--env KEY=VALUE ...]
+    python scripts/benchmark/run_code_benchmark.py <run-name> [--tasks t01_slugify,t04_paginate_bug] [--parallel 4] [--env KEY=VALUE ...]
 
 Everything lives under C:\\Work\\ForgeRuns\\codebench\\<run-name> (one workspace per task, an isolated DebCraft home).
 Results go to results.json and a markdown table is printed; paste the table into docs/CODE_BENCHMARK.md with the
@@ -24,6 +24,7 @@ import shutil
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
@@ -211,6 +212,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
     parser.add_argument("--tasks", default="", help="comma-separated task ids (default: all)")
+    parser.add_argument(
+        "--parallel", type=int, default=1, help="how many tasks to run at the same time (4 is a good start)"
+    )
     parser.add_argument("--env", action="append", default=[], help="KEY=VALUE for the DebCraft process")
     args = parser.parse_args()
     run_dir = RUNS / args.name
@@ -228,15 +232,23 @@ def main() -> int:
         env[key] = value
     wanted = {t for t in args.tasks.split(",") if t}
     folders = [p for p in sorted(TASKS.iterdir()) if p.is_dir() and (not wanted or p.name in wanted)]
-    rows: list[dict[str, object]] = []
-    for task in folders:
+
+    def one(task: Path) -> dict[str, object]:
         print(f"[{args.name}] {task.name} ...", flush=True)
-        rows.append(run_task(task, run_dir, env))
-        (run_dir / "results.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
+        task_home = home / task.name  # an own DebCraft home per task: parallel runs never share files
+        task_home.mkdir(exist_ok=True)
+        row = run_task(task, run_dir, {**env, "FORGE_HOME": str(task_home)})
         print(
-            f"[{args.name}] {task.name}: {rows[-1].get('hidden_passed')}/{rows[-1].get('hidden_total')} in {rows[-1].get('wall_s')}s",
+            f"[{args.name}] {task.name}: {row.get('hidden_passed')}/{row.get('hidden_total')} in {row.get('wall_s')}s",
             flush=True,
         )
+        return row
+
+    rows: list[dict[str, object]] = []
+    with ThreadPoolExecutor(max_workers=max(args.parallel, 1)) as pool:
+        for row in pool.map(one, folders):  # results come back in task order
+            rows.append(row)
+            (run_dir / "results.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
     report = markdown(args.name, rows)
     (run_dir / "results.md").write_text(report, encoding="utf-8")
     print(report)

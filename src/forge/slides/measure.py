@@ -12,6 +12,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
+from forge.slides.powerpoint_lock import powerpoint_turn
 from forge.slides.preview import PreviewUnavailable, available
 from forge.toolkit.private_env import without_private
 
@@ -87,15 +88,18 @@ def measure_deck(deck: Path) -> list[Measure]:
         raise PreviewUnavailable("PowerPoint is not installed on this computer (or this is not Windows).")
     environment = {**without_private(os.environ), "DECK_FILE": str(deck.resolve())}
     try:
-        done = subprocess.run(
-            ["powershell", "-NoProfile", "-NonInteractive", "-Command", SCRIPT],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            timeout=TIMEOUT_S,
-            env=environment,
-            check=False,
-        )
+        with powerpoint_turn():
+            done = subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", SCRIPT],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=TIMEOUT_S,
+                env=environment,
+                check=False,
+            )
+    except TimeoutError as error:
+        raise PreviewUnavailable(str(error)) from error
     except subprocess.TimeoutExpired as error:
         raise PreviewUnavailable(f"PowerPoint did not answer within {TIMEOUT_S} seconds.") from error
     if done.returncode != 0 or not done.stdout.strip():
