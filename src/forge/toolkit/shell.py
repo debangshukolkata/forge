@@ -113,6 +113,11 @@ class ShellSession:
         variables = without_private(env.command_env() if env else dict(os.environ))  # D-202
         variables.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         variables.setdefault("PYTHONUTF8", "1")
+        # npm uses its cache for packages it already has and goes to the network only for new ones; the audit and funding
+        # requests add seconds to every install and nothing the build needs (S6).
+        variables.setdefault("npm_config_prefer_offline", "true")
+        variables.setdefault("npm_config_audit", "false")
+        variables.setdefault("npm_config_fund", "false")
         variables.setdefault(
             "PYTHONUNBUFFERED", "1"
         )  # a server's "Serving on ..." line must reach DebCraft at once, not when a buffer fills (S6)
