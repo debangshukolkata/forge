@@ -284,3 +284,71 @@ def test_delete_before_using_notes_are_never_content_and_never_stay() -> None:
     assert all("Delete before using" not in text for text in _texts(slide))
     for real in ("Delete the old rows", "Nothing to delete before using the product?"[:0] + "Deleted items"):
         assert not INSTRUCTION.match(real)  # ordinary sentences that start with the same word are content
+
+
+def test_the_whole_sticky_note_goes_with_its_paper_but_straight_content_under_it_stays() -> None:
+    """Probe on the real template (D-332): the paper picture and the 'Changing image' text stayed on the photo covers."""
+    from pptx.enum.shapes import MSO_SHAPE
+    from pptx.util import Inches
+
+    from forge.slides.template_samples import instruction_shapes, remove_instructions
+
+    prs = Presentation(io.BytesIO(make_corporate_template()))
+    slide = prs.slides[1]
+    diagram = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.2), Inches(0.5), Inches(1.5), Inches(1.0))
+    diagram.name = "Diagram block"
+    paper = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.0), Inches(0.3), Inches(2.4), Inches(2.2))
+    paper.rotation = -4
+    paper.name = "Picture 12"
+    heading = slide.shapes.add_textbox(Inches(8.1), Inches(0.4), Inches(2.0), Inches(0.4))
+    heading.text_frame.text = "Delete before using"
+    heading.rotation = -4
+    body = slide.shapes.add_textbox(Inches(8.1), Inches(0.9), Inches(2.0), Inches(1.2))
+    body.text_frame.text = "Changing image: right-click the picture and choose Change picture"
+    body.rotation = -4
+    texts_before = [t for t in _texts(slide)]
+    taken = {s.name for s in instruction_shapes(slide)}
+    assert {paper.name, heading.name, body.name} <= taken and diagram.name not in taken
+    assert remove_instructions(slide) == 3
+    assert "Delete before using" not in " ".join(_texts(slide)) and "Changing image" not in " ".join(
+        _texts(slide)
+    )
+    assert (
+        any(s.name == "Diagram block" for s in slide.shapes) and len(_texts(slide)) == len(texts_before) - 3
+    )
+
+
+def test_shapes_named_like_a_sticky_note_are_instructions() -> None:
+    from pptx.enum.shapes import MSO_SHAPE
+    from pptx.util import Inches
+
+    from forge.slides.template_samples import instruction_shapes
+
+    prs = Presentation(io.BytesIO(make_corporate_template()))
+    slide = prs.slides[1]
+    note = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(1), Inches(1), Inches(1), Inches(1))
+    note.name = "Sticky Note 4"
+    assert note.name in {s.name for s in instruction_shapes(slide)}
+
+
+def test_covers_with_a_misspelt_name_and_separator_slides_are_recognised() -> None:
+    """Probe on the real template (D-332): 'Ttile Slide_Black ...' covers and 'Add separator title here' slides were 'other'."""
+    from forge.slides.template import classify_layout, name_is
+    from forge.slides.template_samples import Slot, _kind
+
+    assert name_is("ttile slide_black with full wave_option 1", "title slide")
+    assert name_is("1_ttile slide_white", "title slide")
+    for plain in ("title and content", "title only", "section header", "white with medium wave", "blank"):
+        assert not name_is(plain, "title slide")
+    prs = Presentation(io.BytesIO(make_corporate_template()))
+    layout = next(layout for layout in prs.slide_layouts if layout.name == "Title Only")
+    layout.name = "Ttile Slide_Black with full wave_Option 1"
+    assert classify_layout(layout)[0] == "title"
+
+    def slot(text: str) -> Slot:
+        return Slot(
+            id=1, name="t", role="title", text=text, x=1, y=1, w=5, h=1, size_pt=32, paragraphs=1, fixed=False
+        )
+
+    assert _kind("title_only", [slot("Add separator title here")], [], 0, 0, 0, False) == "section"
+    assert _kind("title_only", [slot("Add title here")], [], 0, 0, 0, False) == "other"

@@ -22,8 +22,18 @@ THANKS = re.compile(r"thank|questions|contact|discussion", re.I)
 # Notes the template author left on the sample slide for the person who copies it ("Delete before using ...", seen on a real company template):
 # never content, never offered as a slot, always removed from the copy.
 INSTRUCTION = re.compile(
-    r"^\W*(delete\s+(this\s+)?before\s+(using|you\s+use)|delete\s+this|remove\s+before\s+(using|use)|instructions?\s*:|note\s+to\s+(author|designer)s?)",
+    r"^\W*(delete\s+(this\s+)?before\s+(using|you\s+use)|delete\s+this|remove\s+before\s+(using|use)|instructions?\s*:|note\s+to\s+(author|designer)s?"
+    r"|(changing|replacing|to\s+change|to\s+replace|how\s+to\s+(change|replace|use))\s+(an?\s+|the\s+|this\s+)?(image|picture|photo|icon|logo|chart|box|shape)"
+    r"|(right[- ]click|select\s+the\s+(image|picture|shape|icon)))",
     re.I,
+)
+SEPARATOR = re.compile(
+    r"separator|section\s+(title|divider|header)|divider", re.I
+)  # 'Add separator title here'
+NOTE_NAME = re.compile(r"sticky|post[- ]?it|instruction|delete[- ]?before|do[- ]?not[- ]?print", re.I)
+NOTE_AREA = 0.25  # a note is smaller than this share of the slide
+TILT_DEGREES = (
+    0.5  # a paper note is drawn slightly tilted, like a real one; the template's own content is straight
 )
 NUMBERISH = re.compile(r"^[\d.,+\-–%$€£kKmMbB x/]{1,12}$")  # noqa: RUF001  (the en dash is meant)
 STEP_NUMBER = re.compile(r"^(0?\d|[ivx]+)[.)]?$", re.I)
@@ -113,22 +123,87 @@ def _role(shape: Any, text: str, size: float | None, top_rank: int) -> str:
     return "text"
 
 
-def is_instruction(shape: Any) -> bool:
-    """A shape (or a group holding one) whose text is an instruction to the template's user."""
+def _text_instruction(shape: Any) -> bool:
     if (
         getattr(shape, "has_text_frame", False)
         and shape.has_text_frame
         and INSTRUCTION.match(shape.text_frame.text.strip())
     ):
         return True
+    if NOTE_NAME.search(getattr(shape, "name", "") or ""):
+        return True
+    alt = shape._element.xpath("(.//p:cNvPr)[1]/@descr")
+    if alt and NOTE_NAME.search(str(alt[0])):
+        return True
     if shape.shape_type == 6:
-        return any(is_instruction(child) for child in shape.shapes)
+        return any(_text_instruction(child) for child in shape.shapes)
     return False
 
 
+def _box(shape: Any) -> tuple[float, float, float, float] | None:
+    if None in (shape.left, shape.top, shape.width, shape.height):
+        return None
+    return (shape.left, shape.top, shape.left + shape.width, shape.top + shape.height)
+
+
+def _tilt(shape: Any) -> float:
+    try:
+        return abs(float(shape.rotation))
+    except (AttributeError, TypeError, ValueError):
+        return 0.0
+
+
+def _slide_area(slide: Any) -> float:
+    """The slide's area in EMU squared (0 when it cannot be known: then the size test is skipped)."""
+    try:
+        presentation = slide.part.package.presentation_part.presentation
+        return float(presentation.slide_width) * float(presentation.slide_height)
+    except (AttributeError, TypeError, ValueError):
+        return 0.0
+
+
+def instruction_shapes(slide: Any, slide_area: float | None = None) -> list[Any]:
+    """The note a template author stuck on a sample slide: the shapes whose text is an instruction ('Delete before using', 'Changing image:
+    right-click ...') and the paper under them, which is a picture or shape drawn tilted and sitting where the note's text is. Shapes that
+    are straight (the template's own content, even when the note overlaps them) are never taken."""
+    seeds = [s for s in slide.shapes if _text_instruction(s)]
+    if not seeds:
+        return []
+    boxes = [b for b in map(_box, seeds) if b]
+    if not boxes:
+        return seeds
+    region = (
+        min(b[0] for b in boxes),
+        min(b[1] for b in boxes),
+        max(b[2] for b in boxes),
+        max(b[3] for b in boxes),
+    )
+    if slide_area is None:
+        slide_area = _slide_area(slide)
+    taken = list(seeds)
+    seen = {id(s._element) for s in seeds}
+    for shape in slide.shapes:
+        if id(shape._element) in seen:
+            continue
+        box = _box(shape)
+        if box is None or _tilt(shape) < TILT_DEGREES:
+            continue
+        centre = ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
+        inside = region[0] <= centre[0] <= region[2] and region[1] <= centre[1] <= region[3]
+        small = slide_area == 0 or (box[2] - box[0]) * (box[3] - box[1]) < NOTE_AREA * slide_area
+        if inside and small:
+            taken.append(shape)
+    return taken
+
+
+def is_instruction(shape: Any) -> bool:
+    """A shape (or a group holding one) whose text is an instruction to the template's user."""
+    return _text_instruction(shape)
+
+
 def remove_instructions(slide: Any) -> int:
-    """Removes the instruction notes from a copy of a sample slide; returns how many."""
-    doomed = [s for s in slide.shapes if is_instruction(s)]
+    """Removes the instruction notes (text and paper) from a copy of a sample slide; returns how many shapes went."""
+    doomed = instruction_shapes(slide)
     for shape in doomed:
         _remove(shape)
     return len(doomed)
@@ -241,7 +316,9 @@ def _kind(
         return "table"
     if layout_role == "title" and not last:
         return "title"
-    if layout_role == "section":
+    if layout_role == "section" or (
+        SEPARATOR.search(texts) and len(texts.split()) <= 10 and not items and not pictures
+    ):
         return "section"
     if pictures and slots:
         return "image_text"

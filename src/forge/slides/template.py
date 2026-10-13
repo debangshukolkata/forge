@@ -73,6 +73,18 @@ def _placeholder(shape: Any) -> PlaceholderInfo:
     )
 
 
+def name_is(name: str, wanted: str, cutoff: float = 0.8) -> bool:
+    """True when the layout name contains the words `wanted`, spelling mistakes allowed ('Ttile Slide_Black with full wave' is a title slide)."""
+    import difflib
+
+    words = re.findall(r"[a-z]+", name.lower())
+    size = len(wanted.split())
+    return any(
+        difflib.SequenceMatcher(None, " ".join(words[i : i + size]), wanted).ratio() >= cutoff
+        for i in range(len(words) - size + 1)
+    )
+
+
 def classify_layout(layout: Any) -> tuple[str, list[PlaceholderInfo]]:
     """The role of one layout from its placeholders and name, and its placeholders (footer kinds left out)."""
     holders = [
@@ -87,6 +99,8 @@ def classify_layout(layout: Any) -> tuple[str, list[PlaceholderInfo]]:
     pictures = kinds.count("PICTURE")
     if "CENTER_TITLE" in kinds and "SUBTITLE" in kinds:
         role = "title"
+    elif name_is(name, "title slide"):
+        role = "title"  # a cover named by its designer (misspellings included), whatever placeholders it has
     elif "vertical" in name or "VERTICAL" in " ".join(kinds):
         role = "other"
     elif pictures:
