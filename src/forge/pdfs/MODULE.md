@@ -2,7 +2,7 @@
 
 PDF toolkit (TODO W3, D-343): `read.py` (pypdf) gives text per page in reading layout, metadata, form fields, images, and says when a file is a scan or
 protected; `edit.py` merges, splits, rotates, crops, deletes or extracts pages, stamps a watermark or page numbers (reportlab overlay), fills form fields,
-encrypts and decrypts; `build.py` creates a PDF from an outline (reportlab platypus: headings, paragraphs, lists, tables, pictures, page breaks) with the title
+encrypts and decrypts; `redact.py` removes text for real (pages become pictures with the matches blacked out, the result is proven to have no text layer; pypdfium2 and Pillow); `build.py` creates a PDF from an outline (reportlab platypus: headings, paragraphs, lists, tables, pictures, page breaks) with the title
 and language set. The tools are in `tools/pdf_toolkit.py`; the skill is `skills/pdf-toolkit/SKILL.md`. Rendering pages and OCR use the existing `pdf_render`
 and `ocr_image`.
 

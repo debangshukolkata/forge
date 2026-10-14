@@ -10,6 +10,7 @@ from forge.errors import ForgeError
 from forge.pdfs.build import build_pdf, parse_pdf_spec
 from forge.pdfs.edit import Operation, apply, extract_images, split_pdf
 from forge.pdfs.read import PdfError, describe_pdf, read_pdf
+from forge.pdfs.redact import PATTERNS, redact
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.brand_file import BRAND_FILE_DESCRIPTION, load_brand_file
 from forge.tools.vision import image_path
@@ -187,5 +188,60 @@ class BuildPdf(Tool):
         )
 
 
+class RedactRegion(ToolArgs):
+    page: int = Field(ge=1, description="page number, from 1")
+    left: float
+    bottom: float
+    right: float
+    top: float
+
+
+class RedactPdf(Tool):
+    name = "redact_pdf"
+    read_only = False
+    description = (
+        "Permanently remove text from a PDF into a NEW file (the original is not touched). Every page becomes a picture with the matches blacked out, "
+        "so the text is really gone (a black box drawn over text leaves it selectable). Give exact `terms` (case-insensitive), named `patterns` "
+        f"({', '.join(PATTERNS)}) and/or `regions` in PDF points. The result has no text layer or metadata; run ocr_pdf on it if it must be searchable. "
+        "A scan has no text to search: give regions for it. Check the result with view_image before it leaves the project."
+    )
+
+    class Args(ToolArgs):
+        path: str
+        output: str = Field(description="Path of the new .pdf")
+        terms: list[str] = Field(default_factory=list)
+        patterns: list[str] = Field(default_factory=list)
+        regions: list[RedactRegion] = Field(default_factory=list)
+        password: str = ""
+        reason: str = Field(default="", description="One line saying why; shown to the user in CHANGES.md.")
+
+    def summary(self, args: RedactPdf.Args) -> str:
+        return f"redact pdf {args.path} -> {args.output}"
+
+    async def run(self, args: RedactPdf.Args, context: ToolContext) -> ToolResult:
+        if not args.output.lower().endswith(".pdf"):
+            return ToolResult(ok=False, content="The output file name must end in .pdf")
+        regions = [(r.page, r.left, r.bottom, r.right, r.top) for r in args.regions]
+        try:
+            data = _read(context, args.path)
+            result, report = await asyncio.to_thread(
+                redact, data, args.terms, args.patterns, regions, 200, args.password
+            )
+            if report.boxes == 0:
+                return ToolResult(
+                    ok=False, content="Nothing matched, so no file was written." + chr(10) + report.summary()
+                )
+            context.workspace.write_bytes(args.output, result, args.reason or "pdf redacted")
+        except (ForgeError, OSError, ValueError) as error:
+            return ToolResult(ok=False, content=str(error))
+        context.last_edit_step = context.step
+        warning = (
+            (chr(10) + "WARNING: the result still has a text layer.")
+            if report.text_left
+            else (chr(10) + "Verified: the result has no text layer.")
+        )
+        return ToolResult(ok=True, content=f"Wrote {args.output}. {report.summary()}{warning}")
+
+
 def pdf_toolkit_tools() -> list[Tool]:
-    return [ReadPdf(), EditPdf(), SplitPdf(), ExtractPdfImages(), BuildPdf()]
+    return [ReadPdf(), EditPdf(), SplitPdf(), ExtractPdfImages(), BuildPdf(), RedactPdf()]
