@@ -96,7 +96,7 @@ Everything below can be finished without the user: no office laptop, no files or
 11. [ ] **AS1 React versions** of the most used app screens (KPI dashboard, data table, wizard, settings, inbox), with tests.
 12. [ ] **Document extras:** PDF redaction, non-Latin fonts in PDFs, document themes (W4), and the open Word and Excel gaps listed in W1/W2.
 13. [ ] **Presentations leftovers that need no input:** P2.1 colour and type refinements and the parts of P2.23 the test template can show.
-14. [ ] **Platform housekeeping:** split the slow browser tests behind a marker, a prompt line for parallel pytest in built apps, a campaign case where DebCraft builds a small MCP tool and tests it with a dummy MCP server.
+14. [x] **Platform housekeeping:** split the slow browser tests behind a marker, a prompt line for parallel pytest in built apps, a campaign case where DebCraft builds a small MCP tool and tests it with a dummy MCP server. (done 2026-10-15, D-371; the MCP case moved into part 4)
 15. [ ] **C8 docs helper:** fetch the docs of the installed library version.
 
 **Part 3, uncertain value (last; report honestly if there is no gain):**

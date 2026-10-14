@@ -78,6 +78,7 @@ The rules below still describe what goes into briefs and summaries.
   (`pytest-xdist`, dev only; `loadfile` keeps each test file on one worker; with `-n 12` the load can make the local-Postgres
   tests time out and skip). One module: `pytest tests/test_<module>*.py`. Browser-test fixtures take a free port from the OS
   (`free_port(0)`); a test that waits on something a page re-does in the background must poll for it, not assert at once.
+  Fast run without the ~145 browser tests (marker `browser`, set by tests/conftest.py): `.venv\Scripts\python -m pytest -q -n 6 --dist loadfile -m "not browser and not live"`.
   Sequential: `.venv\Scripts\python -m pytest -q` (3.13) and `.venv314\Scripts\python -m pytest -q` (3.14);
   `-m live` for live tests. Also `ruff check .`, `ruff format --check .`, `mypy`, `scripts/check_secrets.py`.
 - Gemini cannot be called from the build machine (no Google credentials): test the translator and error mapping offline and hand live checks to the user (`scripts/dev/gemini_smoke.py` on the office laptop; the drawer's Gemini test).

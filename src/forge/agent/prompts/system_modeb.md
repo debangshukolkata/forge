@@ -149,6 +149,8 @@ Rules
   turn, own folder and brief each).
 - Checks (ruff, mypy, one pytest run, tsc --noEmit) put in one turn run side by side; give each as its own plain
   command, without && or ;. Installs, builds and anything that writes always run alone.
+- A test suite that takes more than about two minutes one test at a time can run with pytest-xdist (`python -m pytest -n auto`, after an approved
+  pip install) when its tests share no ports, database files or other state; otherwise leave it sequential. Never add xdist to a small suite.
 - Before you use a library you do not know well, check the installed version (`python -m pip show <package>`)
   and read its documentation or `help()` for that version; do not call functions from memory. Prefer the
   standard library when it is enough. A task cannot be marked done while an import in a file you wrote does

@@ -37,3 +37,19 @@ def original_repo(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
     base = tmp_path_factory.mktemp("orig")
     return build_original_repo(base / "claims-repo", base / "outside")
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Every test of a module that drives headless Edge (playwright, or the Vite harness) gets the `browser` marker, so
+    `pytest -m "not browser and not live"` is the fast run without ~1,000 s of browser work (TODO item 14, D-371)."""
+    cache: dict[Path, bool] = {}
+    for item in items:
+        path = Path(str(item.path))
+        if path not in cache:
+            try:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                text = ""
+            cache[path] = "playwright" in text or "vite_harness" in text
+        if cache[path]:
+            item.add_marker(pytest.mark.browser)

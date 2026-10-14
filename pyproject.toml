@@ -74,6 +74,7 @@ markers = [
     "live: calls the real Azure OpenAI deployment (needs AZURE_OPENAI_* in .env)",
     "pg: needs the local Postgres (LOCAL_PG_URL in .env)",
     "e2e: Playwright end-to-end tests of the web UI in headless Edge",
+    "browser: drives headless Edge (added by tests/conftest.py to every module that uses playwright or the Vite harness); the fast run is -m \"not browser and not live\"",
     "fixture: runs the fixture repo's own test suite (needs its venv)",
 ]
 
