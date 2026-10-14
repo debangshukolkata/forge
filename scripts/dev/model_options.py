@@ -78,15 +78,38 @@ async def azure_chat(
 
 
 async def azure(lines: list[str], extra: list[str]) -> None:
+    """The primary resource, then the fallback resource (AZURE_FALLBACK_*) when the .env names one: a deployment may live on either."""
     secrets = load_secrets()
-    endpoint = secrets.get("AZURE_OPENAI_ENDPOINT") or os.environ.get("AZURE_OPENAI_ENDPOINT", "")
-    key = secrets.get("AZURE_OPENAI_API_KEY") or os.environ.get("AZURE_OPENAI_API_KEY", "")
-    version = secrets.get("AZURE_OPENAI_API_VERSION") or os.environ.get(
-        "AZURE_OPENAI_API_VERSION", "2024-10-21"
+    await azure_resource(
+        lines,
+        extra,
+        "Azure OpenAI",
+        "AZURE_OPENAI_ENDPOINT",
+        "AZURE_OPENAI_API_KEY",
+        "AZURE_OPENAI_API_VERSION",
     )
-    say(lines, "== Azure OpenAI ==")
+    if secrets.get("AZURE_FALLBACK_ENDPOINT"):
+        say(lines, "")
+        await azure_resource(
+            lines,
+            extra,
+            "Azure OpenAI (the fallback resource)",
+            "AZURE_FALLBACK_ENDPOINT",
+            "AZURE_FALLBACK_API_KEY",
+            "AZURE_FALLBACK_API_VERSION",
+        )
+
+
+async def azure_resource(
+    lines: list[str], extra: list[str], title: str, endpoint_name: str, key_name: str, version_name: str
+) -> None:
+    secrets = load_secrets()
+    endpoint = secrets.get(endpoint_name) or os.environ.get(endpoint_name, "")
+    key = secrets.get(key_name) or os.environ.get(key_name, "")
+    version = secrets.get(version_name) or os.environ.get(version_name, "2024-10-21")
+    say(lines, f"== {title} ==")
     if not endpoint or not key:
-        say(lines, "not configured here (AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_API_KEY missing)")
+        say(lines, f"not configured here ({endpoint_name} / {key_name} missing)")
         return
     say(lines, f"resource: {endpoint}   api-version: {version}")
     configured = [
