@@ -1,5 +1,7 @@
 # Remaining tasks (scratchpad)
 
+> **History only (2026-10-15).** This was the working list of the 2026-09-28 overnight run. All open work lives in `TODO.md`; do not add tasks here.
+
 Started 2026-09-28 ~00:50 IST. Worked through top to bottom; each item is ticked when its tests pass.
 Details of every choice go to docs/DECISIONS.md; open issues to TODO.md / RISKS.md / SPEC_DEVIATIONS.md.
 
