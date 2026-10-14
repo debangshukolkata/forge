@@ -26,10 +26,14 @@ class DocumentInfo:
     pictures: int = 0
     pictures_without_alt: int = 0
     has_macros: bool = False
+    package_notes: list[str] = field(default_factory=list)
 
 
 def open_document(data: bytes) -> Any:
+    from forge.ooxml.check import check_package
+
     docx = load_docx()
+    check_package(data)  # refuse a hostile package before python-docx reads it (D-345)
     try:
         return docx.Document(io.BytesIO(data))
     except Exception as error:
@@ -101,6 +105,7 @@ def read_document(data: bytes) -> DocumentInfo:
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         macros = any(n.endswith("vbaProject.bin") for n in archive.namelist())
     from forge.documents.footnotes import footnote_texts
+    from forge.ooxml.check import check_package
 
     return DocumentInfo(
         document.core_properties.title or "",
@@ -113,6 +118,7 @@ def read_document(data: bytes) -> DocumentInfo:
         len(pictures),
         without_alt,
         macros,
+        check_package(data).notes(),
     )
 
 
@@ -120,8 +126,7 @@ def describe_document(info: DocumentInfo, name: str = "document", limit: int = 1
     head = [
         f"{name}: title {info.title!r}, language {info.language or 'not set'}, {info.pictures} picture(s)"
     ]
-    if info.has_macros:
-        head.append("It contains macros (never run by DebCraft).")
+    head += [f"NOTE: {note}" for note in info.package_notes]
     if info.insertions or info.deletions:
         head.append(
             f"Tracked changes: {info.insertions} insertion(s), {info.deletions} deletion(s) (the text below shows them as the final text; "

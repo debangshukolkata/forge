@@ -7,6 +7,7 @@ import asyncio
 from pydantic import Field
 
 from forge.errors import ForgeError
+from forge.ooxml.validate import validate_package
 from forge.sheets import excel
 from forge.sheets.build import build_workbook
 from forge.sheets.check import check_workbook, describe_findings
@@ -17,6 +18,14 @@ from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.vision import image_path
 
 MAX_BYTES = 60 * 1024 * 1024
+
+
+def _package_faults(faults: list[str]) -> str:
+    if not faults:
+        return ""
+    return "\nPackage problems (Excel may offer to repair the file):\n" + "\n".join(
+        f"  - {f}" for f in faults
+    )
 
 
 def _read(context: ToolContext, path: str) -> bytes:
@@ -61,9 +70,11 @@ class BuildWorkbook(Tool):
             return ToolResult(ok=False, content=str(error))
         context.last_edit_step = context.step
         findings = check_workbook(data)
+        faults = validate_package(data)
         return ToolResult(
             ok=True,
-            content=f"Wrote {args.output}: {len(spec.sheets)} sheet(s).\n{describe_findings(findings)}",
+            content=f"Wrote {args.output}: {len(spec.sheets)} sheet(s).\n{describe_findings(findings)}"
+            + _package_faults(faults),
         )
 
 

@@ -49,7 +49,9 @@ formula; to store text that starts with `=`, begin it with an apostrophe-free sp
    viewers that do not calculate, such as previews and some phone apps). Fix every error and check again.
 3. Without Excel the static check still finds missing sheets, circular references, error text in formulas and text results in number-formatted cells.
    Say in your answer that the values were not calculated by Excel.
-4. Changing an existing workbook: `read_workbook` first, then `edit_workbook`. Charts, pictures and macros in an existing file would be lost by
+4. Look at it: `preview_file` prints the workbook with Excel (when installed) and gives page pictures and a contact sheet; check column widths (no `####`),
+   charts, header rows and page breaks. `critique_document` gives an independent review for workbooks that go to other people.
+5. Changing an existing workbook: `read_workbook` first, then `edit_workbook`. Charts, pictures and macros in an existing file would be lost by
    the editing library, so the tool refuses until you have asked the user and set `allow_loss`. Renaming a sheet does not update the formulas in other
    sheets: check them.
 

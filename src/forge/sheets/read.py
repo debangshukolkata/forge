@@ -34,6 +34,7 @@ class WorkbookInfo:
     charts: int
     pictures: int
     has_macros: bool
+    package_notes: list[str]
     calculated: bool  # False when no formula has a stored value (made by a library, never opened in Excel)
 
 
@@ -50,7 +51,10 @@ def package_extras(data: bytes) -> tuple[int, int, bool]:
 
 
 def open_workbook(data: bytes, values: bool = False) -> Any:
+    from forge.ooxml.check import check_package
+
     openpyxl = load_openpyxl()
+    check_package(data)  # refuse a hostile package before openpyxl reads it (D-345)
     try:
         return openpyxl.load_workbook(io.BytesIO(data), data_only=values)
     except Exception as error:
@@ -98,13 +102,16 @@ def read_workbook(data: bytes, max_cells: int = MAX_CELLS_PER_SHEET) -> Workbook
                     info.cells.append(text)
         sheets.append(info)
     names = {name: str(defined.attr_text) for name, defined in formulas_book.defined_names.items()}
-    return WorkbookInfo(sheets, names, charts, pictures, macros, any_value or total_formulas == 0)
+    from forge.ooxml.check import check_package
+
+    return WorkbookInfo(
+        sheets, names, charts, pictures, macros, check_package(data).notes(), any_value or total_formulas == 0
+    )
 
 
 def describe_workbook(info: WorkbookInfo, name: str = "workbook") -> str:
     lines = [f"{name}: {len(info.sheets)} sheet(s), {info.charts} chart(s), {info.pictures} picture(s)"]
-    if info.has_macros:
-        lines.append("It contains macros (never run by DebCraft).")
+    lines += [f"NOTE: {note}" for note in info.package_notes]
     if info.names:
         lines.append("Named ranges: " + ", ".join(f"{k} -> {v}" for k, v in list(info.names.items())[:20]))
     if not info.calculated:

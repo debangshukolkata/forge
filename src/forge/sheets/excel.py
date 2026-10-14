@@ -91,3 +91,41 @@ def recalculate(data: bytes) -> tuple[list[tuple[str, str, str]], bytes | None]:
             if len(parts) == 4 and parts[0] == "ERR":
                 errors.append((parts[1], parts[2], parts[3]))
         return errors, saved.read_bytes() if saved.is_file() else None
+
+
+PDF_SCRIPT = r"""
+$ErrorActionPreference = 'Stop'
+$app = New-Object -ComObject Excel.Application
+$app.Visible = $false
+$app.DisplayAlerts = $false
+$app.AutomationSecurity = 3  # force-disable macros: an untrusted workbook never runs code
+try {
+    $book = $app.Workbooks.Open($env:BOOK_FILE, 0, $true)
+    try { $app.CalculateFull(); $book.ExportAsFixedFormat(0, $env:BOOK_PDF) } finally { $book.Close($false) }
+} finally { $app.Quit() }
+"""
+
+
+def to_pdf(data: bytes) -> bytes:
+    """The workbook as PDF bytes, printed by Excel (every sheet, its own page setup), so the pages can be looked at."""
+    if not available():
+        raise ExcelUnavailable("Excel is not installed on this computer (or this is not Windows).")
+    with tempfile.TemporaryDirectory(prefix="debcraft-xlsx-") as folder:
+        source, target = Path(folder) / "in.xlsx", Path(folder) / "out.pdf"
+        source.write_bytes(data)
+        environment = {**without_private(os.environ), "BOOK_FILE": str(source), "BOOK_PDF": str(target)}
+        try:
+            done = subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", PDF_SCRIPT],
+                capture_output=True,
+                text=True,
+                timeout=TIMEOUT_S,
+                env=environment,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise ExcelUnavailable(f"Excel did not answer within {TIMEOUT_S} seconds.") from error
+        if done.returncode != 0 or not target.is_file():
+            reason = " ".join((done.stderr or done.stdout).strip().splitlines()[:2])[:300]
+            raise ExcelUnavailable(f"Excel could not print the workbook: {reason}")
+        return target.read_bytes()

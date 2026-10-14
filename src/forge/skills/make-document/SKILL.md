@@ -42,9 +42,10 @@ fields: Word fills them when the file is opened (the user may be asked to press 
 2. Changing an existing document: `read_document` first (comments and tracked-change counts are shown; deleted text is not), then `edit_document`.
    `replace_text` works across Word's split runs and in tables, headers and footers; paragraph numbers are those of `read_document`'s non-empty paragraphs.
    Do not accept or reject the user's tracked changes yourself; mention them.
-3. **Look at it.** `preview_document` makes pictures of the pages with Word itself (LibreOffice if Word is missing); `view_image` them: headings not
+3. **Look at it.** `preview_file` makes pictures of the pages with Word itself (LibreOffice if Word is missing) and one contact sheet; `view_image` them: headings not
    stranded at a page bottom, tables not split badly, pictures sized, header and footer right. It can also save the PDF (`pdf_output`). If it says neither
-   is available, say that the layout was not looked at.
+   is available, say that the layout was not looked at. When the document matters (sent to a customer, a board), run `critique_document` too and fix the
+   high and medium issues (at most three rounds).
    Footnotes: `footnote` on a run in the outline, or `add_footnote` on a paragraph of an existing file. Tracked changes: `accept_changes` and
    `reject_changes` settle all of them at once; only do this when the user asked, and tell them how many were settled.
 4. A picture for the document: make it first (chart, `findimage`, `generate_image`), then put it in with alt text.

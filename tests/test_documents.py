@@ -170,11 +170,11 @@ async def test_the_tools(original_repo: Path, tmp_path: Path) -> None:
     assert (await CheckDocument().run(CheckDocument.Args(path="docs/r.docx"), context)).ok
     assert not (await ReadDocument().run(ReadDocument.Args(path="docs/none.docx"), context)).ok
     from forge.documents.preview import libreoffice, word_available
-    from forge.tools.document import PreviewDocument
+    from forge.tools.document_preview import PreviewFile
 
     if word_available() or libreoffice():
-        shown = await PreviewDocument().run(
-            PreviewDocument.Args(path="docs/r.docx", pdf_output="docs/r.pdf"), context
+        shown = await PreviewFile().run(
+            PreviewFile.Args(path="docs/r.docx", pdf_output="docs/r.pdf"), context
         )
         assert shown.ok and "page(s)" in shown.content and workspace.path_of("docs/r.pdf").is_file()
 

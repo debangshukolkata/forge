@@ -19,7 +19,7 @@ Written for DebCraft from the PDF specification, the pypdf and reportlab documen
 
 ## Rules
 1. Pages are 1-based and written like `1-3,5`. A page range outside the file is an error, not a guess.
-2. Always look at the result: `pdf_render` the first and last pages changed and `view_image` them (watermark readable but not blocking the text,
+2. Always look at the result: `preview_file` (pages plus a contact sheet) or `pdf_render` the first and last pages changed, and `view_image` them (watermark readable but not blocking the text,
    page numbers not over content, crop not cutting text).
 3. Forms: `read_pdf` lists the field names and values; `fill_form` with those exact names. Check the filled form by rendering it; some viewers show the
    values only after the form is opened (the file asks the viewer to redraw the fields).
