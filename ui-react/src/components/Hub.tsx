@@ -3,26 +3,25 @@ import { FolderOpen, FolderPlus } from "lucide-react";
 import { Headline, Tagline, Tile } from "./landing";
 import { Button } from "./ui";
 
-// The two tiles keep the same height for the headline (two lines) and the tagline (two lines) on wide screens, so both buttons sit on one line
-// whatever the text wraps to.
+// On wide screens the two tiles share their rows (headline, tagline, button) through a subgrid, so the buttons sit on one line
+// even when the text of one side wraps and the other's does not.
+const TILE =
+  "flex flex-1 flex-col items-center justify-center px-8 py-14 text-center md:row-span-4 md:grid md:grid-rows-subgrid md:justify-items-center md:gap-0 md:pt-[26vh]";
+
 export function Hub({ user, projectCount, onNew, onOpen }: { user: string | null; projectCount: number; onNew: () => void; onOpen: () => void }) {
   return (
-    <div className="flex min-h-full flex-col md:flex-row">
-      <Tile className="flex flex-1 flex-col items-center justify-center px-8 py-14 text-center md:basis-1/2 md:justify-start md:pt-[26vh]">
-        <Headline className="md:flex md:min-h-[106px] md:items-end">Start something new.</Headline>
-        <Tagline className="mt-3 max-w-md md:min-h-[50px]">
-          {user ? `Hello, ${user}. ` : ""}Build a standalone project, or work on a copy of an existing repository.
-        </Tagline>
+    <div className="flex min-h-full flex-col md:grid md:grid-cols-2 md:grid-rows-[auto_auto_auto_1fr]">
+      <Tile className={TILE}>
+        <Headline>Start something new.</Headline>
+        <Tagline className="mt-3 max-w-md">{user ? `Hello, ${user}. ` : ""}Build a project, or work on a repository copy.</Tagline>
         <Button variant="primary" className="mt-6 h-11 px-6 text-[15px]" icon={<FolderPlus className="h-4 w-4" />} onClick={onNew}>
           New project
         </Button>
       </Tile>
-      <Tile dark className="flex flex-1 flex-col items-center justify-center px-8 py-14 text-center md:basis-1/2 md:justify-start md:pt-[26vh]">
-        <Headline className="md:flex md:min-h-[106px] md:items-end">Pick up where you left off.</Headline>
-        <Tagline className="mt-3 max-w-md md:min-h-[50px]">
-          {projectCount === 0
-            ? "Projects you have worked on will appear here, with their memory and history."
-            : `${projectCount} project${projectCount === 1 ? "" : "s"}. DebCraft resumes from what it remembers.`}
+      <Tile dark className={TILE}>
+        <Headline>Continue a project.</Headline>
+        <Tagline className="mt-3 max-w-md">
+          {projectCount === 0 ? "Your projects will appear here." : `${projectCount} project${projectCount === 1 ? "" : "s"}, with their memory.`}
         </Tagline>
         <Button
           variant="primary"

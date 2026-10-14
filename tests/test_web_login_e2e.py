@@ -136,7 +136,7 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
         page.screenshot(path=str(shots / "chat-after-login-light.png"))
 
         page.click("button:has-text('Home')")
-        page.wait_for_selector("text=Pick up where you left off.")
+        page.wait_for_selector("text=Continue a project.")
         page.click("button:has-text('Open a project')")
         page.wait_for_selector("text=Your projects.")
         page.wait_for_selector("button:has-text('Payments Masking')")
