@@ -15,6 +15,9 @@ Work is in local commits (nothing pushed). The list was TODO.md section 0c. This
 | 15 C8 | `library_api`: the installed library's real names, signatures, nearest matches (D-372) |
 | 11 AS1 React | Five app screens as React with an HTML-to-JSX converter (D-377); build and type-check pass |
 | 18 C15 | `with_servers.py` helper for the verifier's browser scripts (D-376) |
+| 1/3 findings | From the log of the first X8 serial run: control characters in file writes refused with the fix (a mangled en dash made a page 'binary'), no test-run gate for tasks that only changed pages, `.forge/candidates` importable by `design_md_import` (D-379) |
+| 10 (part) | Design gallery `docs/DESIGN_GALLERY.md` (every composition, screen, design system, template with pictures) |
+| 17 (part) | shadcn/ui rules and re-theme notes in our own words (L5 b, c, d) |
 | 20 prepared | Eight approach challenges and a time-boxed runner (`scripts/benchmark/run_challenges.py`), seeds checked by tests |
 
 ## Waiting on the benchmark runs (1 to 5 of the list)
@@ -28,6 +31,8 @@ X8 (serial against parallel designs, 3 runs per arm) is running: `C:\Work\ForgeR
 ## Gates added (for your review)
 - D1 note (not a refusal) after 6 edits of one UI file (D-370).
 - The verifier skips the script on a static page (D-368).
+- File writes that would add control characters are refused with the place and the fix (D-379).
+- The test-run gate of `task_update` counts code edits only: pages, stylesheets, notes, pictures and fonts do not trigger it (D-379).
 - (more are listed here as the coding challenges add them)
 
 ## Not done / open
