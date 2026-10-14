@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import importlib
 import io
+import logging
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -19,7 +20,11 @@ class PdfError(ForgeError):
 
 def load_pypdf() -> Any:
     try:
-        return importlib.import_module("pypdf")
+        module = importlib.import_module("pypdf")
+        logging.getLogger("pypdf").setLevel(
+            logging.ERROR
+        )  # its font warnings fill the terminal and tell the user nothing
+        return module
     except ImportError as error:
         raise PdfError("pypdf is not installed: pip install pypdf (the forge[docs] extra)") from error
 

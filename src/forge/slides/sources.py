@@ -63,6 +63,7 @@ class SheetDigest:
     sample: list[list[str]]
     numeric: list[Column] = field(default_factory=list)
     series: dict[str, Any] | None = None  # categories and series ready for a chart, with where they came from
+    notes: list[str] = field(default_factory=list)  # title lines above the table and footnotes below it
 
 
 @dataclass
@@ -137,17 +138,73 @@ def _read_docx(data: bytes, name: str) -> Digest:
 # --- Excel and CSV ---
 
 
+def _filled(row: list[Any]) -> int:
+    return sum(1 for c in row if c not in (None, ""))
+
+
+def _is_year(cell: Any) -> bool:
+    try:
+        return 1900 <= int(float(str(cell))) <= 2100 and float(str(cell)) == int(float(str(cell)))
+    except ValueError:
+        return False
+
+
+def _locate_table(
+    numbered: list[tuple[int, list[Any]]],
+) -> tuple[list[str], list[tuple[int, list[Any]]], list[str]]:
+    """The header, the data rows and the notes of a sheet that may start with title lines, have a header over two rows (a group heading over
+    years, merged cells) and end with footnotes: how real spreadsheets look."""
+    width = max(len(r) for _, r in numbered)
+    enough = max(2, (width + 1) // 2)
+    start = next((i for i, (_, r) in enumerate(numbered) if _filled(r) >= enough), 0)
+    titles = [" ".join(str(c) for c in r if c not in (None, ""))[:160] for _, r in numbered[:start]]
+    header_rows = [numbered[start][1]]
+    follower = start + 1
+    # a second header row: mostly years or text with no big numbers, directly under the first one
+    while follower < len(numbered) and len(header_rows) < 3:
+        cells = [c for c in numbered[follower][1] if c not in (None, "")]
+        if cells and all(_is_year(c) for c in cells) and _filled(numbered[follower][1]) < width:
+            header_rows.append(numbered[follower][1])
+            follower += 1
+        else:
+            break
+    names: list[str] = []
+    carried = [""] * width
+    for index in range(width):
+        parts: list[str] = []
+        for level, row in enumerate(header_rows):
+            cell = row[index] if index < len(row) else None
+            if cell not in (None, ""):
+                carried_text = str(cell).strip()
+                if level == 0:
+                    carried[index] = carried_text
+                parts.append(carried_text)
+            elif level == 0 and index and len(header_rows) > 1:
+                parts.append(carried[index - 1])  # a merged group heading spans the columns to its right
+                carried[index] = carried[index - 1]
+        names.append(" ".join(dict.fromkeys(p for p in parts if p)) or f"column {_column_letter(index)}")
+    body = numbered[follower:]
+    notes: list[str] = []
+    while body and _filled(body[-1][1]) == 1 and len(body) > 3:  # footnotes and sources under the table
+        notes.append(" ".join(str(c) for c in body[-1][1] if c not in (None, ""))[:200])
+        body = body[:-1]
+    return names, body, titles + notes[::-1]
+
+
 def _sheet_digest(name: str, rows: list[list[Any]]) -> SheetDigest:
-    rows = [r for r in rows if any(c not in (None, "") for c in r)]
-    if not rows:
+    numbered = [(i, r) for i, r in enumerate(rows, start=1) if any(c not in (None, "") for c in r)]
+    if not numbered:
         return SheetDigest(name, 0, [], [])
-    header = [
-        str(c).strip() if c not in (None, "") else f"column {_column_letter(i)}"
-        for i, c in enumerate(rows[0])
-    ]
-    body = rows[1:]
+    header, body_numbered, notes = _locate_table(numbered)
+    body = [r for _, r in body_numbered]
+    first_row = body_numbered[0][0] if body_numbered else 2
+    last_row = body_numbered[-1][0] if body_numbered else 2
     digest = SheetDigest(
-        name, len(body), header, [[("" if c is None else str(c)) for c in r] for r in body[:SAMPLE_ROWS]]
+        name,
+        len(body),
+        header,
+        [[("" if c is None else str(c)) for c in r] for r in body[:SAMPLE_ROWS]],
+        notes=notes,
     )
     numeric_columns: list[tuple[int, list[float]]] = []
     for index, column in enumerate(header):
@@ -176,7 +233,7 @@ def _sheet_digest(name: str, rows: list[list[Any]]) -> SheetDigest:
             digest.numeric.append(
                 Column(
                     column,
-                    f"{letter}2:{letter}{len(body) + 1}",
+                    f"{letter}{first_row}:{letter}{last_row}",
                     min(values),
                     max(values),
                     round(sum(values), 4),
@@ -191,7 +248,7 @@ def _sheet_digest(name: str, rows: list[list[Any]]) -> SheetDigest:
             digest.series = {
                 "categories": labels,
                 "series": [{"name": n, "values": v} for n, v in series[:4]],
-                "from": f"sheet '{name}' {header[0]} and {', '.join(header[i] for i, _ in numeric_columns[:4])} (rows 2 to {len(body) + 1})",
+                "from": f"sheet '{name}' {header[0]} and {', '.join(header[i] for i, _ in numeric_columns[:4])} (rows {first_row} to {last_row})",
             }
     return digest
 
@@ -299,6 +356,8 @@ def describe_digest(digest: Digest, limit: int = 9000) -> str:
         lines.append(f"\n[sheet '{sheet.name}'] {sheet.rows} rows; columns: {', '.join(sheet.columns)}")
         for row in sheet.sample[:SAMPLE_ROWS]:
             lines.append("  " + " | ".join(row))
+        if sheet.notes:
+            lines.append("  notes around the table: " + " / ".join(n for n in sheet.notes[:6]))
         for column in sheet.numeric:
             lines.append(
                 f"  {column.name} ({column.cells}): min {column.minimum:g}, max {column.maximum:g}, total {column.total:g}, last {column.last:g}"
