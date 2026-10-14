@@ -42,6 +42,12 @@ task that changes what a user sees, do this before task_update(done) or telling 
    answers, yields its URL and stops it afterwards. The script ships with the project, so it must skip (not error)
    when playwright is not installed or the app cannot start, to keep the normal `pytest` run green.
    Mark the module with `pytest.importorskip("playwright")` so the suite still passes where it isn't installed.
+   **Several servers (a backend and a frontend):** `scripts/with_servers.py` in this skill's folder starts each one on a free port, waits until it answers, runs your
+   command and stops them all, so the script holds only the browser logic: `python <skill folder>/scripts/with_servers.py --server "api@backend::python -m uvicorn app:app --port {port}::/health"
+   --server "web@frontend::npm run dev -- --port {port}::/" -- python tests/e2e/check_app.py`; the script reads `SERVER_API_URL` and `SERVER_WEB_URL`
+   (a non-zero exit is the command's own; 3 means a server never came up and its output is printed).
+   **Look first, then act** in every browser script: wait for the page to settle (`page.wait_for_load_state("networkidle")` on a dynamic page), read the DOM or take a
+   screenshot, choose selectors from what is actually rendered (`get_by_role`, `get_by_label`), and only then click or fill.
 7. **Throwaway or kept, and clean up.** A one-off check can be a throwaway script: write it, run it, then delete it
    (`delete_file`; your own files need no approval) and say so. A check worth keeping goes to `tests/e2e/`. Either
    way the script must leave the app as it found it: use a scratch database file or delete the records, users,
