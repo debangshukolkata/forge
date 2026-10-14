@@ -20,6 +20,9 @@ machine-made look. Calibration: a deliberately dated bakery page scored 2-3, so 
 | design-2 | gate: a model-written DESIGN.md must be compared with candidates | museum | 1544 s | $2.00 | yes | 0/5 | 2 | 0 | 4/5/5/5/5 (lenient judge) |
 | design-3 | tokens required, similar candidates refused, strict judge and typography score, system-font audit, concept and signature move in the skill | museum | 978 s | $1.40 | yes | 0/10 | 3 | 2 | 3/3/4/4/3/4 |
 | design-3 | same | ramen | 1414 s | $1.38 | yes | 0/13 | 3 | 0 | 4/3/4/4/3/4 |
+| design-4 | composition recipes, concept check, imagery audit, system-font blocker; a third brief (dashboard) | museum | 1541 s | $2.17 | yes | 0/15 | 3 | 4 | 4/3/4/4/3/4 |
+| design-4 | same | ramen | 720 s | $1.03 | no (the gate was bypassed: see 6) | 0/9 | 2 | 0 | 4/4/5/5/5/5 |
+| design-4 | same | dashboard | 1958 s | $2.81 | yes | 0/19 | 2 | 0 | 2/3/4/4/4/4 |
 
 ## What the runs showed
 1. **The new tools were not used at all** in design-1: the model never called find_asset, the candidate tool, the linter or any font tool. Advice in a skill is
@@ -37,6 +40,13 @@ machine-made look. Calibration: a deliberately dated bakery page scored 2-3, so 
    page with one text column: the safe candidate won, and nothing in it comes from a neon alley at 3 am. Added: a concept and a signature move for every
    candidate, an audit rule for pages with no imagery. Still open: composition recipes for plain HTML, real imagery by default, and a stronger design-role
    model (TODO DS7 to DS9).
+6. **Fourth run (design-4): fonts now load, the rest is still bypassed.** Real fonts were fetched and used (find_font and fetch_font appear in the log; typography 4 on two
+   pages). But (a) the ramen run skipped the candidate comparison by writing the page again straight after the one-time note: the gate now refuses three times;
+   (b) none of the runs used the composition recipes (no find_asset), so a candidate must now name `composition:` or it is not usable; (c) the museum page ended with no
+   imagery although the audit said so: on a marketing page (three or more sections, no table, few fields) that finding now blocks done, unless the DESIGN.md says
+   imagery is not wanted; (d) the dashboard named a font that was never loaded and the audit let it through: a named font now counts only if it is loaded or installed
+   (measured in the browser), otherwise the page is treated as set in the system stack. The judge's worst problems are now about identity, not craft:
+   "a generic dark-theme digital product aesthetic", "a generic modern museum page, lacking imagery and visual cues about experiments".
 
 ## Limits of this measurement
 Two briefs, one run each, a vision model as judge (the same family as the builder, calibrated only at the bottom of the scale). Do not read small

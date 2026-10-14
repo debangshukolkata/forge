@@ -28,9 +28,12 @@ def _check(result: dict[str, object]) -> None:
     assert result["errors"] == []
     for width in (1280, 375):
         audit = str(result["audit"][width])  # type: ignore[index]
-        # the scaffolds carry placeholders for the product's own pictures: the one finding allowed is the missing imagery
-        assert "no measurable problems" in audit or (
-            "1 problem(s)" in audit and "no imagery at all" in audit
+        # the scaffolds carry placeholders for the product's own pictures and name their fonts without always shipping the files in a
+        # test build: those are the only findings allowed
+        problems = [line for line in audit.splitlines()[1:] if line.strip()]
+        allowed = ("no imagery at all", "system font stack")
+        assert "no measurable problems" in audit or all(
+            any(a in line for a in allowed) for line in problems
         ), audit
         assert result["overflow"][width] == 0, f"horizontal overflow at {width}px"  # type: ignore[index]
 

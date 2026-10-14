@@ -269,13 +269,17 @@ AUDIT_SCRIPT = r"""
     if (all.some((el) => el.matches(':disabled')) && !/:disabled|\[disabled\]|aria-disabled/.test(cssText)) findings.push('Disabled controls look the same as enabled ones: style :disabled (lower contrast, no pointer).');
   }
   const genericFamily = /^(system-ui|-apple-system|blinkmacsystemfont|segoe ui|segoe ui variable|arial|helvetica|helvetica neue|times new roman|times|verdana|tahoma|trebuchet ms|sans-serif|serif|monospace|ui-sans-serif|ui-serif|ui-monospace|sf pro|sf pro text|roboto|noto sans|noto serif|georgia)$/i;
-  const loadedFamilies = new Set([...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family.replace(/["']/g, '').toLowerCase()));
+  const loadedFamilies = new Set([...document.fonts].filter((f) => f.status !== 'error').map((f) => f.family.replace(/["']/g, '').toLowerCase()));
+  const probe = document.createElement('canvas').getContext('2d');
+  const fontAvailable = (name) => { if (!probe) return true;
+    return ['monospace', 'serif', 'sans-serif'].some((base) => { probe.font = '72px ' + base; const plain = probe.measureText('mmmmmmmmmmlli').width;
+      probe.font = '72px "' + name + '", ' + base; return probe.measureText('mmmmmmmmmmlli').width !== plain; }); };
   let designedChars = 0, allChars = 0; const usedFamilies = new Map();
   for (const el of all) { if (!visible(el)) continue;
     const own = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('').length; if (!own) continue;
     const name = getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase();
     allChars += own; usedFamilies.set(name, (usedFamilies.get(name) || 0) + own);
-    if (loadedFamilies.has(name) || !genericFamily.test(name)) designedChars += own; }
+    if (loadedFamilies.has(name) || (!genericFamily.test(name) && fontAvailable(name))) designedChars += own; }
   if (allChars > 200 && designedChars / allChars < 0.1) {
     const names = [...usedFamilies.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map((x) => x[0]).join(', ');
     findings.push('BLOCKER: All the text is set in the system font stack (' + names + '): the page has no designed typography, which is the first thing that makes a page look machine-made. Choose a display font and a text font that suit the product, its mood and its language (find_font, or find_asset type font-pairing; fetch_font saves the files), load them (fetch_font writes a ready @font-face CSS file in fonts/: link it from the page or import it), and use them from the DESIGN.md typography tokens; then screenshot again.');

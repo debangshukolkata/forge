@@ -298,6 +298,7 @@ UI_SUFFIXES = (
     ".vue",
     ".svelte",
 )  # files that decide how a page looks
+CANDIDATES_REFUSALS = 3
 DESIGN_GATE_ROUNDS = 2  # asked at most twice per session: a wrong refusal can never trap the model
 DESIGN_NOTE = (
     "Before the first page or style file of a project: write its DESIGN.md in the TOKEN FORMAT: front matter between --- lines with name, colors "
@@ -358,11 +359,11 @@ def design_gate(context: ToolContext, relative: str) -> str:
     if (
         found is not None
         and context.design_md_written
-        and not context.design_candidates_asked
+        and context.design_candidates_refusals < CANDIDATES_REFUSALS
         and not _design_md_errors(found)
         and not _rounds_file(context).is_file()
     ):
-        context.design_candidates_asked = True  # once, and it does not use up the two rounds below
+        context.design_candidates_refusals += 1  # three times (the model tried to write the page again at once in the fourth benchmark run), then it passes
         return CANDIDATES_NOTE
     if context.design_gate_rounds >= DESIGN_GATE_ROUNDS:
         return ""

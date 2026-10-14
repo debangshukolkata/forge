@@ -134,7 +134,13 @@ async def test_a_design_md_the_model_wrote_must_be_compared_with_candidates_once
     await WriteFile().run(WriteFile.Args(path="DESIGN.md", content=filled_template()), context)
     asked = design_gate(context, "src/App.tsx")
     assert "design_candidates" in asked and "differ" in asked
-    assert design_gate(context, "src/App.tsx") == ""  # once only: a wrong refusal can never trap the model
+    assert "design_candidates" in design_gate(
+        context, "src/App.tsx"
+    )  # still refused when the model just writes the page again
+    assert "design_candidates" in design_gate(context, "src/App.tsx")
+    assert (
+        design_gate(context, "src/App.tsx") == ""
+    )  # three times, then it passes: a wrong refusal can never trap the model
     other = ToolContext(workspace=workspace)
     other.design_md_written = True
     (workspace.root / ".forge").mkdir(exist_ok=True)

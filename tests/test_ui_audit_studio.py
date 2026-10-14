@@ -182,3 +182,10 @@ def test_a_design_md_that_says_imagery_is_not_wanted_lifts_the_imagery_blocker(t
         "## Known Gaps\nNo imagery by design: this is a text-only reading page.\n", encoding="utf-8"
     )
     assert _imagery_not_wanted(tmp_path)
+
+
+async def test_a_font_that_is_named_but_not_loaded_counts_as_the_system_stack() -> None:
+    page = SYSTEM_FONTS_PAGE.replace(
+        "font-family:system-ui,'Segoe UI',sans-serif", "font-family:'Totally Missing Display',sans-serif"
+    )
+    assert "BLOCKER: All the text is set in the system font stack" in await _audit(page)
