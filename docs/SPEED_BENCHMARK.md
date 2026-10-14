@@ -83,3 +83,26 @@ Verdict under D-161 (a speed change that lowers the quality score is rejected): 
 | s03 page redesign | 1487 s, $1.51, 6/7 | 865 s, $1.06, 6/7 | 509 s, $0.62, 6/7 |
 
 Wall time fell 41 % from speed-3 at the same quality score (6/7). Tool time 288 s, of which three design-critic subagent reviews took 253 s (100 + 80 + 73); `start_background` 6 s, `view_image` 15 s. One run only: noise is large. The remaining cost is the critic rounds, which are the quality mechanism (D-161: not trimmed).
+
+### speed-5: the Claude Code style changes (D-360), dashboard brief, run side by side on the same machine (2026-10-15)
+Two worktrees started at the same minute, same brief (`d03_ops_dashboard`, the design benchmark), same model (gpt-5.1): the code before the changes (`7334a7a`) and after (`7da5a95`).
+
+| | before | after | change |
+|---|---|---|---|
+| wall time | 1228 s | 1188 s | -3 % |
+| model calls | 37 | 29 | -22 % |
+| tool calls | 55 | 58 | +5 % (more calls per step) |
+| model time | 987 s | 894 s | -9 % |
+| input tokens | 3.10 M | 2.10 M | -32 % |
+| cost | $2.01 | $1.88 | -7 % |
+| reviews | critic twice, 158 s, no verifier | verifier and critic together, 216 s | one extra check, in parallel |
+| judge (type/dist/hier/harm/fit/polish) | 4/3/4/4/4/4 | 4/4/4/5/5/4 | higher |
+| audit findings left | 0 | 5 | worse (contrast, imagery, small text left unfixed) |
+
+What it shows, honestly:
+- **The earlier 45 minutes (2728 s) was mostly contention**: the same brief alone ran in 20 minutes. Another benchmark and a document run were using the same machine and the same Azure quota at the time. Never read timings from overlapping runs.
+- **Batching works** (22 % fewer model calls, 32 % fewer input tokens, 7 % cheaper) but the wall time barely moved: each call now does more, so the model time fell only 9 %.
+- **Reviews are not faster in parallel**: the verifier (not used before, now asked for together with the critic) took as long as the critic; both ran in parallel and finished together at about 215 s. The run is more thoroughly checked, not faster.
+- **The time is spent writing**: calls over 45 s are the ones that write 7,000 to 9,000 output tokens (a whole CSS and HTML file). More speed needs less to write: start from a composition recipe and a tokenised DESIGN.md (copy, then edit) instead of writing 500 lines of CSS from nothing, and smaller first drafts.
+- **One run each**: differences of a few percent are noise.
+
