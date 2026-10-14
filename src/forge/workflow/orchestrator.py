@@ -584,7 +584,7 @@ class Orchestrator:
                     "run_command (e.g. python -m pytest) and call task_update again when they pass. If "
                     "there are no tests for this code yet, write them now as part of this task (in the "
                     "project's test style): a task without a passing test isn't done, and it isn't "
-                    "blocked either."
+                    "blocked either." + self._also_missing(context, "tests")
                 ),
             )
         if status == "done" and edited:
@@ -628,6 +628,7 @@ class Orchestrator:
                     "task_update again and say what you saw. The web-ui-verification skill has the "
                     "steps. For anything beyond a trivial flow, spawn_subagent with agent 'verifier' gives "
                     "you an independent check; a passing Playwright script you run counts too."
+                    + self._also_missing(context, "browser")
                 ),
             )
         setup_problem = (
@@ -639,11 +640,11 @@ class Orchestrator:
                 content=f"Not accepted: the styling setup is broken, so the page cannot look right. {setup_problem}",
             )
         if status == "done" and ui_edited and context.last_screenshot_step <= context.last_ui_edit_step:
-            return ToolResult(ok=False, content=UI_LOOK_NOTE)
+            return ToolResult(ok=False, content=UI_LOOK_NOTE + self._also_missing(context, "look"))
         if status == "done" and ui_edited and context.ui_audit_blocked:
-            return ToolResult(ok=False, content=UI_AUDIT_BLOCKED_NOTE)
+            return ToolResult(ok=False, content=UI_AUDIT_BLOCKED_NOTE + self._also_missing(context, "audit"))
         if status == "done" and ui_edited and not critic_cleared(context):
-            return ToolResult(ok=False, content=UI_CRITIC_NOTE)
+            return ToolResult(ok=False, content=UI_CRITIC_NOTE + self._also_missing(context, "critic"))
         task.status = "done" if status == "done" else "blocked"
         task.handoff_note, task.verification, task.blocked_reason = handoff_note, verification, blocked_reason
         if task.status == "done":  # local history (spec §13B): one commit per completed task
@@ -659,6 +660,31 @@ class Orchestrator:
             "task", f"{task.id} {task.status}: {task.title}" + (f" — {verification}" if verification else "")
         )
         return ToolResult(ok=True, content=f"Task {task.id} recorded as {task.status}.")
+
+    def _also_missing(self, context: ToolContext, refused_for: str) -> str:
+        """What else a done task still lacks, so one refusal names every check and the model does them in one step instead of
+        meeting the gates one call at a time (D-365: five refusals in one dashboard run)."""
+        edited = context.last_edit_step > self._task_start_step
+        ui_edited = context.last_ui_edit_step > self._task_start_step
+        missing: dict[str, str] = {}
+        if edited and context.last_verified_step <= context.last_edit_step:
+            missing["tests"] = "a passing test run (run_command)"
+        if ui_edited and context.last_browser_step <= context.last_ui_edit_step:
+            missing["browser"] = (
+                "use of the running app in a browser (browser_open and a click-through), or the verifier"
+            )
+        if ui_edited and context.last_screenshot_step <= context.last_ui_edit_step:
+            missing["look"] = "a screenshot you have looked at (browser_screenshot, then view_image)"
+        if ui_edited and context.ui_audit_blocked:
+            missing["audit"] = "a fix for the style audit's BLOCKER"
+        if ui_edited and not critic_cleared(context):
+            missing["critic"] = (
+                "the design-critic review of the running app (spawn_subagent, in the same step as the verifier)"
+            )
+        others = [text for key, text in missing.items() if key != refused_for]
+        if not others:
+            return ""
+        return " Also still missing, so do all of it before the next task_update: " + "; ".join(others) + "."
 
     def _wrote_code(self) -> bool:
         """The task changed source files (not only notes or data): a review gate has nothing to look at otherwise."""

@@ -3814,3 +3814,8 @@ Built: `ShellSession.environment()` sets `NODE_USE_SYSTEM_CA=1` unless FORGE_SYS
 
 ### D-364 - Live progress for helpers too (follow-up of D-361)
 A builder, verifier or critic writing a big file looked silent: the Activity line showed only its step counts. Helpers now pass the same `StreamProgress` through their private loop (`_tracked_run`), the session receives it as `subagent_step` of kind `model_progress`, the agent view keeps the newest one (cleared at its next step) and the Activity line shows "<helper> is working - N calls - Preparing: write file: 4,200 characters so far" with the same quiet warning. Parallel builders each keep their own state by agent id. Still without progress: calls that are not streamed (vision, judges, the summariser) and the Gemini provider.
+
+### D-365 - S5 follow-up: stop writing things that get thrown away (2026-10-14)
+Evidence: per-call output tokens from the event logs (docs/SPEED_BENCHMARK.md, speed-6). Two causes of wasted generation: (1) whole pages written before DESIGN.md and the candidates existed were refused by the gates, twice, then written a third time (about 16,700 tokens); (2) `task_update` refusals named one missing check each, costing a call per check.
+Decision: state the order (DESIGN.md, candidates, page) in both system prompts and at the top of the skill; every `task_update` refusal now lists all other missing checks. Rejected: lowering reasoning effort or dropping the ladder (quality, D-161); stashing refused pages (they would be built before the tokens exist).
+Measured: the early refusals did not recur in one run; wall time is not comparable between single runs (1188 s and 2658 s on the same brief, different route). Three runs per arm stay on TODO S7.

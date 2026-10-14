@@ -106,3 +106,12 @@ What it shows, honestly:
 - **The time is spent writing**: calls over 45 s are the ones that write 7,000 to 9,000 output tokens (a whole CSS and HTML file). More speed needs less to write: start from a composition recipe and a tokenised DESIGN.md (copy, then edit) instead of writing 500 lines of CSS from nothing, and smaller first drafts.
 - **One run each**: differences of a few percent are noise.
 
+
+### speed-6: where the output tokens went, and two fixes (D-365, 2026-10-14)
+Reading the event log of the speed-5 "after" run (`llm_call` events: output tokens and latency per call): 29 calls, 894 s of model time, 61,800 output tokens (19,500 of them reasoning); the ten calls over 30 s hold 44,900 tokens and 550 s. Most of that is whole files written.
+
+**Finding 1, pages written for nothing.** `index.html` (274 lines) and `style.css` (497 lines) were written twice and refused twice by the DESIGN.md and candidates gates before a third write was accepted: about 16,700 output tokens and two minutes, a third of the run's output. The model produced the whole page before the refusal could be known. Fix: the order (DESIGN.md, three candidates and `design_candidates`, then the page) is now stated in both system prompts and at the top of the ui-design-quality skill, with the cost of ignoring it.
+**Finding 2, one gate at a time.** A `task_update` was refused for tests, then for the browser, then for the critic: one model call per refusal (five refusals in the speed-6 run, about 15 s each). Fix: each refusal now also lists every other check still missing.
+
+Run `speed-6` (dashboard brief, machine otherwise idle, after fix 1 only): 2658 s wall, 77 model calls, 95,000 output tokens, $3.24; judge 4/3/4/4/4/4; 1 audit finding (no imagery). **Worse than speed-5 and not comparable**: this run took the plan and task path (`propose_plan`, tasks with gates, a 515 s verifier, a failed image generation, a wrong dev-server port) that the speed-5 run did not. One run per arm cannot separate a change from the model choosing another route (1188 s against 2658 s on the same brief). What the log does show is that finding 1 did not happen: no page file was refused before DESIGN.md existed. Finding 2's fix came after this run and is untested live.
+Not concluded: a wall-time gain. To measure it, three runs per arm (see TODO S7).

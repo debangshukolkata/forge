@@ -494,6 +494,13 @@ async def test_a_task_that_changed_the_ui_needs_a_browser_check_before_done(host
     context.last_ui_edit_step = 7  # templates/cart.html was edited; the unit tests pass
     refused = await orch.task_update("T1", "done", "", "pytest: 9 passed", "", context)
     assert not refused.ok and "browser" in refused.content and "web-ui-verification" in refused.content
+    # The first refusal names every check still missing, so the model does them in one step (D-365).
+    assert (
+        "Also still missing" in refused.content
+        and "browser_screenshot" in refused.content
+        and "design-critic" not in refused.content.split("Also still missing")[0]
+    )
+    assert "design-critic review" in refused.content.split("Also still missing")[1]
     context.step, context.last_browser_step = 9, 9  # the app was then opened and clicked through
     unseen = await orch.task_update("T1", "done", "", "browser: clicked through", "", context)
     assert not unseen.ok and "browser_screenshot" in unseen.content  # but nobody looked at the design (D-245)

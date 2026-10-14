@@ -7,6 +7,8 @@ description: Make every screen look and feel professionally designed, and prove 
 Working code is not a finished screen. A page that works but looks like a raw HTML document is a failed task.
 Aesthetics and ease of use are part of the requirement even when the user did not mention them.
 
+**Order of work for a new page or style file (the gates enforce it): DESIGN.md, then three candidates and `design_candidates`, then the page.** A page or stylesheet written earlier is refused after you have written all of it and has to be written again; in a measured run that wasted 17,000 output tokens and two minutes. Write the DESIGN.md (section 0c) first and the page last.
+
 ## 0. Make sure the styles load before any design work
 If a screenshot shows plain text, default blue links, grey buttons, no spacing, then the styling setup is broken and
 no amount of class tweaking helps. Fix the setup first, then design.

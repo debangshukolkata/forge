@@ -174,3 +174,14 @@ def test_prompts_and_design_skill_tell_the_model_to_build_variants_side_by_side(
         assert "built at the same time, not one after" in text
     skill = (root / "skills/ui-design-quality/SKILL.md").read_text(encoding="utf-8")
     assert "Build the variants at the same time" in skill
+
+
+def test_the_order_design_first_page_last_is_stated_where_the_model_reads_first() -> None:
+    """D-365: pages written before DESIGN.md and the candidates were refused after being fully generated (two pages, ~17k tokens, in a measured run)."""
+    root = Path(__file__).resolve().parents[1] / "src" / "forge"
+    for relative in ("agent/prompts/system.md", "agent/prompts/system_modeb.md"):
+        assert "DESIGN.md, then three candidates and design_candidates, and only then the page" in (
+            root / relative
+        ).read_text(encoding="utf-8")
+    skill = (root / "skills/ui-design-quality/SKILL.md").read_text(encoding="utf-8")
+    assert skill.index("Order of work for a new page") < skill.index("## 0. Make sure the styles load")

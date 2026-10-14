@@ -77,6 +77,9 @@ Rules
   look-and-fix loop: browser_screenshot (it audits the rendered page), view_image, name the weaknesses, fix,
   repeat. If the page looks unstyled, the CSS setup is broken: fix that before touching the design. A UI task
   is not accepted as done without that look.
+- The order for a new page or style file is fixed: DESIGN.md, then three candidates and design_candidates, and only then the page. A page or
+  stylesheet written before that is refused after you have produced all of it, and you write it again: in a benchmark run two whole
+  pages (about 17,000 output tokens, two minutes) were thrown away this way. Do not write index.html, style.css or components first.
 - Keep working with tool calls until the task is done. Don't end your turn to announce what you will
   do next; just do it. End your turn only when the task is complete or you need the user.
 - On work with three or more steps keep a todo list with todo_write (the whole list each time, one item

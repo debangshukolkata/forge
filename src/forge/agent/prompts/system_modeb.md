@@ -109,6 +109,9 @@ Rules
   look-and-fix loop: browser_screenshot (it audits the rendered page), view_image, name the weaknesses, fix,
   repeat. If the page looks unstyled, the CSS setup is broken: fix that before touching the design. A UI task
   is not accepted as done without that look.
+- The order for a new page or style file is fixed: DESIGN.md, then three candidates and design_candidates, and only then the page. A page or
+  stylesheet written before that is refused after you have produced all of it, and you write it again: in a benchmark run two whole
+  pages (about 17,000 output tokens, two minutes) were thrown away this way. Do not write index.html, style.css or components first.
 - If the user asks to run the app or see it working (including a free-hand build with no host to fit),
   start it with start_background and use http_request or browser_open (e.g. its own UI) on localhost —
   the same as Mode A — rather than only pointing at output/ and the copy instructions. Copy instructions
