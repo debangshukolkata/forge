@@ -43,3 +43,8 @@ Written for DebCraft from the PDF specification, the pypdf and reportlab documen
 ## Starting points and the company look
 `find_asset` (type `recipe`, e.g. "handout") copies a tested outline. `brand` in the outline, or `brand_file` on `build_pdf`, sets heading and table
 header colours; fonts map to the closest standard PDF font (Helvetica, Times, Courier).
+
+## A whole scan in one step: `ocr_pdf`
+For a scanned PDF (no text layer) `ocr_pdf` reads every page (up to 200) with Tesseract and saves the text with a section per page; pages that do have a text
+layer are read from it. It is offered only where Tesseract is installed. OCR misreads digits and names: say that the text came from OCR, and check the figures that
+matter against the page with `pdf_render` and `view_image`. Longer files: `split_pdf` first.

@@ -43,3 +43,12 @@ def has_text_layer(path: Path, page: int = 1) -> bool:
         return bool(text.strip())
     finally:
         document.close()
+
+
+def page_texts(path: Path) -> list[str]:
+    """The text layer of every page ('' for a page that has none), read with pypdfium2."""
+    document = pdfium.PdfDocument(str(path))
+    try:
+        return [document[i].get_textpage().get_text_range() for i in range(len(document))]
+    finally:
+        document.close()

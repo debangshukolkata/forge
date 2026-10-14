@@ -63,3 +63,11 @@ formula; to store text that starts with `=`, begin it with an apostrophe-free sp
 ## Starting points and the company look
 `find_asset` (type `recipe`, e.g. "budget", "task tracker") copies a tested outline to adapt. `brand` in the outline, or `brand_file` on `build_workbook`
 (accent, text, body_font), colours the header rows and sets the cell font.
+
+## Messy data in: `clean_table`
+A CSV, TSV or sheet from an export is rarely ready: title lines above the header, a header over two rows, blank rows, numbers stored as text
+("1,234.50", "(300)", "12%", "$1,200"), dates in mixed formats, duplicates, a total line at the bottom. `clean_table` fixes what can be fixed without
+guessing and writes a clean workbook (an Excel table with a frozen header, real numbers and dates, number formats). It REPORTS every change and every doubt:
+pass that report on to the user. A date column that no value settles (01/02/2026) is read day first and reported as a guess; ask the user when it matters.
+Total lines are kept as data and flagged: replace them with a total row of formulas (`total_row`) in a later `build_workbook` from the saved outline
+(`outline_output`). Never clean in place: the original file stays untouched.

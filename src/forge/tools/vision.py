@@ -25,6 +25,8 @@ from forge.vision import images, ocr, pdf
 from forge.vision.evals import JUDGE_RUBRIC, run_eval
 from forge.vision.synthetic import DocumentSpec, generate
 
+MAX_OCR_WHOLE = 200
+MIN_LAYER_CHARS = 40
 FORGE_IMAGE_DIRS = ("inputs", "scratch_images", "reports", "screenshots")
 VISION_PROMPT = (
     "You look at an image for a software engineer who is building or checking a document/image pipeline. "
@@ -364,9 +366,71 @@ class OcrImage(Tool):
         return "\n\n".join(parts)
 
 
+class OcrPdf(Tool):
+    name = "ocr_pdf"
+    read_only = False
+    description = (
+        "Read a whole scanned PDF with Tesseract and save its text as a file (one section per page, up to 200 pages): the one-step way to turn a scan into "
+        "text you can search, quote and summarise. Pages that already have a text layer are read from it, not by OCR. The text may contain recognition "
+        "errors: say so when you quote numbers or names from it, and check the important ones with view_image."
+    )
+
+    class Args(ToolArgs):
+        path: str
+        output: str = Field(description="Where to write the text, e.g. docs/scan.txt")
+        language: str = Field(default="eng", description="Tesseract language code, e.g. eng or eng+deu")
+
+    def summary(self, args: OcrPdf.Args) -> str:
+        return f"ocr whole pdf {args.path}"
+
+    async def run(self, args: OcrPdf.Args, context: ToolContext) -> ToolResult:
+        binary = ocr.find_tesseract(load_secrets().get("TESSERACT_CMD"))
+        if binary is None:
+            return ToolResult(
+                ok=False,
+                content="Tesseract was not found on this computer. Ask the user to check it in the Environment panel.",
+            )
+        try:
+            source = image_path(context, args.path)
+            if source.suffix.lower() != ".pdf" or not source.is_file():
+                return ToolResult(ok=False, content=f"{args.path} is not a PDF file.")
+            text, ocr_pages, total = await asyncio.to_thread(self._read_all, binary, source, args.language)
+            context.workspace.write_text(args.output, text, f"text of {args.path} read with OCR")
+        except (ForgeError, ocr.OcrError, ValueError, OSError) as error:
+            return ToolResult(ok=False, content=str(error))
+        context.last_edit_step = context.step
+        return ToolResult(
+            ok=True,
+            content=f"Wrote {args.output}: {total} page(s), {ocr_pages} read by OCR, {total - ocr_pages} from their text layer. OCR can misread digits and names.",
+        )
+
+    @staticmethod
+    def _read_all(binary: str, source: Path, language: str) -> tuple[str, int, int]:
+        total = pdf.page_count(source)
+        if total > MAX_OCR_WHOLE:
+            raise ValueError(
+                f"{total} pages is more than the {MAX_OCR_WHOLE} that are read at once: split the PDF first (split_pdf)"
+            )
+        parts: list[str] = []
+        by_ocr = 0
+        layers = pdf.page_texts(source)
+        with tempfile.TemporaryDirectory() as folder:
+            for number in range(1, total + 1):
+                layer = layers[number - 1].strip()
+                if len(layer) >= MIN_LAYER_CHARS:
+                    parts.append(f"--- page {number} of {total} ---\n{layer}")
+                    continue
+                rendered = pdf.render(source, Path(folder), [number], OCR_PDF_DPI)[0]
+                parts.append(
+                    f"--- page {number} of {total} (OCR) ---\n{ocr.read_image(binary, images.open_image(rendered), language, 'page')}"
+                )
+                by_ocr += 1
+        return "\n\n".join(parts) + "\n", by_ocr, total
+
+
 def ocr_tools() -> list[Tool]:
     """Only offered once the user said Tesseract is installed and the Environment test passed (D-201, D-203)."""
-    return [OcrImage()]
+    return [OcrImage(), OcrPdf()]
 
 
 def vision_tools() -> list[Tool]:

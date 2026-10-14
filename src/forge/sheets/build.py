@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import io
 import re
+from datetime import date
 from typing import Any
 
 from forge.brand.kit import Resolved
@@ -143,6 +144,13 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
     first_row = 2 if spec.columns else 1  # the header takes row 1 only when there is one
     for row_number, row in enumerate(spec.rows, start=first_row):
         for index, value in enumerate(row, start=1):
+            if (
+                isinstance(value, str)
+                and index <= len(spec.columns)
+                and "yy" in (spec.columns[index - 1].format or "")
+                and re.fullmatch(r"\d{4}-\d{2}-\d{2}", value)
+            ):
+                value = date.fromisoformat(value)  # a date column's ISO text becomes a real date
             cell = sheet.cell(row=row_number, column=index, value=value)
             if brand.body_font:
                 cell.font = Font(name=brand.body_font, color=brand.text)

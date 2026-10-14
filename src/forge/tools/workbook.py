@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import json
+from pathlib import Path
 
 from pydantic import Field
 
@@ -11,9 +13,10 @@ from forge.ooxml.validate import validate_package
 from forge.sheets import excel
 from forge.sheets.build import build_workbook
 from forge.sheets.check import check_workbook, describe_findings
+from forge.sheets.clean import clean_table, read_rows
 from forge.sheets.edit import Operation, edit_workbook
 from forge.sheets.read import describe_workbook, read_workbook
-from forge.sheets.spec import WorkbookError, parse_workbook
+from forge.sheets.spec import WorkbookError, WorkbookSpec, parse_workbook
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.brand_file import BRAND_FILE_DESCRIPTION, load_brand_file
 from forge.tools.vision import image_path
@@ -184,5 +187,54 @@ class CheckWorkbook(Tool):
         return ToolResult(ok=True, content=text)
 
 
+class CleanTable(Tool):
+    name = "clean_table"
+    read_only = False
+    description = (
+        "Turn a messy CSV, TSV or Excel sheet into a clean workbook: title lines above the header and a header over two rows are handled, blank rows and "
+        "columns, duplicates and stray spaces removed, text such as '1,234.50', '(300)', '12%', '$1,200' turned into numbers with a number format, dates "
+        "turned into real dates (day-first or month-first decided from the whole column, and said when it is a guess). Writes a clean .xlsx (an Excel "
+        "table with a frozen header) and optionally the outline, and REPORTS every change and doubt: tell the user the report. Total lines are kept as data "
+        "and flagged."
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(description="The messy .csv, .tsv, .txt or .xlsx file")
+        output: str = Field(description="Path of the clean .xlsx to write")
+        outline_output: str = Field(
+            default="",
+            description="Also save the outline (JSON) so it can be extended and built again with build_workbook",
+        )
+        sheet_name: str = Field(default="Data", max_length=31)
+        reason: str = Field(default="", description="One line saying why; shown to the user in CHANGES.md.")
+
+    def summary(self, args: CleanTable.Args) -> str:
+        return f"clean table {args.path}"
+
+    async def run(self, args: CleanTable.Args, context: ToolContext) -> ToolResult:
+        if not args.output.lower().endswith(".xlsx"):
+            return ToolResult(ok=False, content="The output file name must end in .xlsx")
+        try:
+            rows = await asyncio.to_thread(read_rows, _read(context, args.path), Path(args.path).name)
+            result = await asyncio.to_thread(clean_table, rows)
+            outline = result.outline(args.sheet_name)
+            data = await asyncio.to_thread(build_workbook, WorkbookSpec.model_validate(outline))
+            context.workspace.write_bytes(args.output, data, args.reason or f"cleaned from {args.path}")
+            if args.outline_output:
+                context.workspace.write_text(
+                    args.outline_output,
+                    json.dumps(outline, indent=1, default=str),
+                    "outline of the cleaned table",
+                )
+        except (ForgeError, OSError, ValueError) as error:
+            return ToolResult(ok=False, content=str(error))
+        context.last_edit_step = context.step
+        return ToolResult(
+            ok=True,
+            content=f"Wrote {args.output}: {len(result.rows)} row(s), {len(result.columns)} column(s).\nWhat was changed:\n"
+            + "\n".join(f"  - {line}" for line in result.report),
+        )
+
+
 def workbook_tools() -> list[Tool]:
-    return [BuildWorkbook(), ReadWorkbook(), EditWorkbook(), CheckWorkbook()]
+    return [BuildWorkbook(), ReadWorkbook(), EditWorkbook(), CheckWorkbook(), CleanTable()]

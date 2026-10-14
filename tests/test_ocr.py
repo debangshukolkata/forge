@@ -208,3 +208,39 @@ def test_a_configured_tesseract_path_wins(tmp_path: Path, monkeypatch: pytest.Mo
     assert (
         ocr.find_tesseract(str(tmp_path / "missing.exe")) == "/usr/bin/tesseract"
     )  # a wrong path falls through
+
+
+@needs_tesseract
+async def test_ocr_pdf_reads_a_whole_file_using_the_text_layer_where_there_is_one(
+    workspace: Workspace,
+) -> None:
+    pytest.importorskip("pypdf")
+    reportlab_canvas = pytest.importorskip("reportlab.pdfgen.canvas")
+    from pypdf import PdfWriter
+
+    from forge.tools.vision import OcrPdf
+
+    layered = workspace.path_of("layered.pdf")
+    sheet = reportlab_canvas.Canvas(str(layered))
+    sheet.setFont("Helvetica", 14)
+    sheet.drawString(72, 700, "This page has a real text layer with the invoice number INV-20417 in it.")
+    sheet.showPage()
+    sheet.save()
+    scan = workspace.path_of("scan.pdf")
+    picture("Scanned page TOTAL 1234", size=(1400, 360)).convert("RGB").save(scan)
+    merged = PdfWriter()
+    merged.append(str(layered))
+    merged.append(str(scan))
+    with workspace.path_of("both.pdf").open("wb") as handle:
+        merged.write(handle)
+    result = await OcrPdf().run(
+        OcrPdf.Args(path="both.pdf", output="docs/both.txt"), ToolContext(workspace=workspace)
+    )
+    assert result.ok, result.content
+    text = workspace.path_of("docs/both.txt").read_text(encoding="utf-8")
+    assert "INV-20417" in text and "(OCR)" in text and "1234" in text
+    assert "2 page(s), 1 read by OCR, 1 from their text layer" in result.content
+    missing = await OcrPdf().run(
+        OcrPdf.Args(path="nothing.pdf", output="docs/x.txt"), ToolContext(workspace=workspace)
+    )
+    assert not missing.ok
