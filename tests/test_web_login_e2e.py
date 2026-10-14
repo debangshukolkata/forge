@@ -94,6 +94,11 @@ def test_landing_flow_in_edge(server: ServerSecurity, original_repo: Path, tmp_p
         page.click("button:has-text('Create account')")
         page.wait_for_selector("text=Start something new.")
         page.screenshot(path=str(shots / "hub-light.png"))
+        # The two hub buttons sit on one line even though the left headline is one line and the right one wraps (user screenshot 2026-10-14).
+        new_box = page.locator("button:has-text('New project')").bounding_box()
+        open_box = page.locator("button:has-text('Open a project')").bounding_box()
+        assert new_box is not None and open_box is not None
+        assert abs(new_box["y"] - open_box["y"]) < 1
 
         # Sign out, wrong password, then in.
         page.click("button:has-text('Sign out')")
