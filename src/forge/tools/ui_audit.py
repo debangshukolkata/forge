@@ -284,7 +284,8 @@ AUDIT_SCRIPT = r"""
     || (el.tagName === 'svg' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 120 && el.querySelectorAll('path, circle, rect, polygon, ellipse, line').length >= 4)
     || /url\(/.test(getComputedStyle(el).backgroundImage)));
   if (!hasPicture && all.length >= 30 && (document.body.innerText || '').length > 600) {
-    findings.push('The page has no imagery at all: no photograph, illustration, drawn SVG scene or video, only text and boxes. Designed pages carry visual content that belongs to the product (findimage for a licensed photograph, generate_image, or draw an SVG illustration), at least in the hero.');
+    const marketing = document.querySelectorAll('section, header, footer').length >= 3 && document.querySelectorAll('table').length === 0 && document.querySelectorAll('input, select, textarea').length < 4;
+    findings.push((marketing ? 'BLOCKER: ' : '') + 'The page has no imagery at all: no photograph, illustration, drawn SVG scene or video, only text and boxes. Designed pages carry visual content that belongs to the product (findimage for a licensed photograph, generate_image, or draw an SVG illustration), at least in the hero.');
   }
   const small = all.filter((el) => visible(el) && window.innerWidth >= 768 && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 24) && parseFloat(getComputedStyle(el).fontSize) < 13);
   if (small.length >= 3) findings.push(small.length + ' blocks of running text are under 13px at desktop width (' + sample(small) + '): body text should be 14px or larger.');
@@ -301,6 +302,9 @@ DESIGN_REMINDER = (
 )
 
 
+IMAGERY_NOT_WANTED = re.compile(
+    r"(?:no|without) imagery (?:by design|is wanted|is intended)|imagery is not wanted", re.IGNORECASE
+)
 SYSTEM_FONTS_REQUIRED = re.compile(
     r"system fonts? (?:are|is) (?:required|mandated|prescribed|the brand)", re.IGNORECASE
 )
@@ -318,6 +322,18 @@ def _system_fonts_required(root: Path) -> bool:
     return False
 
 
+def _imagery_not_wanted(root: Path) -> bool:
+    """A DESIGN.md that says imagery is not wanted (a text-only editorial or a utility page) lifts the blocker on a page with no pictures."""
+    for name in ("DESIGN.md", "design.md", "docs/DESIGN.md"):
+        path = root / name
+        if path.is_file():
+            try:
+                return bool(IMAGERY_NOT_WANTED.search(path.read_text(encoding="utf-8", errors="replace")))
+            except OSError:
+                return False
+    return False
+
+
 async def audit_page(page: Any, root: Path | None = None) -> str:
     """The audit as text for the model: numbered findings, or a clean line; never raises."""
     try:
@@ -329,6 +345,10 @@ async def audit_page(page: Any, root: Path | None = None) -> str:
     findings: list[str] = list(result.get("findings", []))
     if root is not None and _system_fonts_required(root):
         findings = [f for f in findings if "All the text is set in the system font stack" not in f]
+    if root is not None and _imagery_not_wanted(root):
+        findings = [
+            f.removeprefix("BLOCKER: ") if "The page has no imagery at all" in f else f for f in findings
+        ]
     if root is not None:
         findings.extend(source_taste_problems(root))
         findings.extend(token_lint_problems(root))

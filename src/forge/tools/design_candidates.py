@@ -183,6 +183,13 @@ class DesignCandidates(Tool):
         usable: list[str] = []
         for path in args.candidates:
             errors = [f for f in lint_text(loaded[path][1]) if f.severity == "error"]
+            if not str(loaded[path][0].extra.get("composition", "") or "").strip():
+                lines.append(
+                    f"{path}: NOT USABLE until it names its composition: add `composition: lay-...` to the front matter (find_asset type section, tag "
+                    "composition lists seven complete layouts with drawn art; add_asset copies one and shows its pictures), or `composition: custom <one line "
+                    "describing the layout idea>` when none fits the product."
+                )
+                continue
             if errors:
                 lines.append(f"{path}: NOT USABLE until fixed\n{describe_findings(errors, 6)}")
             else:

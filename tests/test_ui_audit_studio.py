@@ -157,3 +157,28 @@ def test_a_brand_guide_that_requires_system_fonts_lifts_the_typography_blocker(t
 
 async def test_the_system_font_finding_is_a_blocker() -> None:
     assert "BLOCKER: All the text is set in the system font stack" in await _audit(SYSTEM_FONTS_PAGE)
+
+
+def _text_page(extra: str, sections: int) -> str:
+    body = "".join(
+        f"<section><h2>Part {n}</h2><p>{'Some honest copy about this part of the page. ' * 12}</p></section>"
+        for n in range(sections)
+    )
+    return f"<!doctype html><html lang='en'><head><style>body{{font-family:Georgia;margin:24px}}</style></head><body><header><h1>Title</h1></header>{extra}{body}<footer>Footer</footer></body></html>"
+
+
+async def test_a_marketing_page_without_imagery_is_a_blocker_and_an_app_page_is_not() -> None:
+    assert "BLOCKER: The page has no imagery" in await _audit(_text_page("", 12))
+    table = "<table><tr><th>A</th></tr><tr><td>1</td></tr></table>"
+    report = await _audit(_text_page(table, 12))
+    assert "no imagery at all" in report and "BLOCKER: The page has no imagery" not in report
+
+
+def test_a_design_md_that_says_imagery_is_not_wanted_lifts_the_imagery_blocker(tmp_path: Path) -> None:
+    from forge.tools.ui_audit import _imagery_not_wanted
+
+    assert not _imagery_not_wanted(tmp_path)
+    (tmp_path / "DESIGN.md").write_text(
+        "## Known Gaps\nNo imagery by design: this is a text-only reading page.\n", encoding="utf-8"
+    )
+    assert _imagery_not_wanted(tmp_path)

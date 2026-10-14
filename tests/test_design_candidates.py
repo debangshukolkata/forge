@@ -26,11 +26,13 @@ def system_text(
     variance: int,
     pill: bool = False,
     on_primary: str = "#FFFFFF",
+    composition: str = "lay-editorial-split",
 ) -> str:
     rounded = f"  sm: {max(radius // 2, 2)}px\n  md: {radius}px\n" + ("  pill: 9999px\n" if pill else "")
     return f"""---
 version: alpha
 name: {name}
+composition: {composition}
 dials:
   density: {density}
   variance: {variance}
@@ -72,9 +74,21 @@ A test system.
 
 BLUE = system_text("Blue", "#FFFFFF", "#111827", "#1D4ED8", "Inter", 8, 5, 4)
 AMBER = system_text(
-    "Amber", "#0B0D12", "#F5F5F4", "#F59E0B", "Space Grotesk", 24, 8, 8, pill=True, on_primary="#111111"
+    "Amber",
+    "#0B0D12",
+    "#F5F5F4",
+    "#F59E0B",
+    "Space Grotesk",
+    24,
+    8,
+    8,
+    pill=True,
+    on_primary="#111111",
+    composition="lay-poster-hero",
 )
-GREEN = system_text("Green", "#FAF8F6", "#1D1A17", "#166534", "Fraunces", 2, 2, 2)
+GREEN = system_text(
+    "Green", "#FAF8F6", "#1D1A17", "#166534", "Fraunces", 2, 2, 2, composition="lay-notebook-grid"
+)
 
 
 def test_two_systems_differ_when_three_dimensions_differ() -> None:
@@ -184,14 +198,23 @@ x
 
 
 def test_a_different_composition_counts_as_a_dimension() -> None:
-    base = fingerprint(
-        parse_design_md(BLUE.replace("version: alpha\n", "version: alpha\ncomposition: lay-poster-hero\n", 1))
-    )
-    other = fingerprint(
-        parse_design_md(
-            BLUE.replace("version: alpha\n", "version: alpha\ncomposition: lay-editorial-split\n", 1)
-        )
-    )
+    base = fingerprint(parse_design_md(BLUE.replace("lay-editorial-split", "lay-poster-hero")))
+    other = fingerprint(parse_design_md(BLUE))
     assert base.composition == "lay-poster-hero" and differences(base, other) == ["composition"]
-    plain = fingerprint(parse_design_md(BLUE))
+    plain = fingerprint(parse_design_md(BLUE.replace("composition: lay-editorial-split" + chr(10), "")))
     assert "composition" not in differences(base, plain)  # a file that names none says nothing either way
+
+
+async def test_a_candidate_without_a_composition_is_not_usable(original_repo: Path, tmp_path: Path) -> None:
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace)
+    bare = BLUE.replace("composition: lay-editorial-split\n", "")
+    workspace.write_text(".forge/candidates/a/DESIGN.md", bare, "x")
+    workspace.write_text(".forge/candidates/b/DESIGN.md", AMBER, "x")
+    refused = await DesignCandidates().run(
+        DesignCandidates.Args(
+            brief="x", candidates=[".forge/candidates/a/DESIGN.md", ".forge/candidates/b/DESIGN.md"]
+        ),
+        context,
+    )
+    assert not refused.ok and "NOT USABLE until it names its composition" in refused.content
