@@ -19,7 +19,11 @@ def _setnav(current: str, items: list[str]) -> str:
 
 def account() -> Screen:
     nav = _setnav("Account", ["Account", "Security", "Notifications", "Billing", "Integrations"])
-    keys = [("Production server", "sk_live_••••8f2c", "Created 3 Feb · used 2 min ago"), ("Staging", "sk_test_••••19ab", "Created 20 Jan · used yesterday"), ("Data export script", "sk_live_••••c07d", "Created 9 Dec · never used")]
+    keys = [
+        ("Production server", "sk_live_••••8f2c", "Created 3 Feb · used 2 min ago"),
+        ("Staging", "sk_test_••••19ab", "Created 20 Jan · used yesterday"),
+        ("Data export script", "sk_live_••••c07d", "Created 9 Dec · never used"),
+    ]
     krows = "".join(
         f'<li style="justify-content:space-between;gap:16px;flex-wrap:wrap"><div><b>{n}</b><div class="muted" style="font-size:.88rem">{u}</div></div><div class="actions"><code class="mono" style="background:var(--hover);padding:3px 8px;border-radius:6px;font-size:.88rem">{v}</code><button class="btn btn--sm">Copy</button><button class="btn btn--sm btn--danger">Revoke</button></div></li>'
         for n, v, u in keys
@@ -47,17 +51,37 @@ def account() -> Screen:
   </div>
 </main></div>"""
     return Screen(
-        "settings-account", "Settings: account, security and API keys", "A settings page with a vertical section menu, a profile form, toggle rows, an API key list with copy and revoke, and a separated danger zone.",
-        "slate", "inter", SETNAV_CSS + SPLIT, body, ["home", "link", "chart", "key", "settings", "plus"], ["clear", "calm", "light"], ["developer tools", "saas", "admin", "account"], "balanced",
+        "settings-account",
+        "Settings: account, security and API keys",
+        "A settings page with a vertical section menu, a profile form, toggle rows, an API key list with copy and revoke, and a separated danger zone.",
+        "slate",
+        "inter",
+        SETNAV_CSS + SPLIT,
+        body,
+        ["home", "link", "chart", "key", "settings", "plus"],
+        ["clear", "calm", "light"],
+        ["developer tools", "saas", "admin", "account"],
+        "balanced",
         uses="the settings of any product: profile, security, keys; the section menu, setting rows with switches and the danger zone are the pattern",
         tags=["settings", "toggles", "api keys", "forms", "side navigation"],
     )
 
 
 def notifications() -> Screen:
-    events = [("A task is assigned to me", True, True, False), ("Someone mentions me", True, True, True), ("A deadline is tomorrow", True, False, True), ("Weekly summary", False, True, False), ("Billing and security notices", True, True, False)]
+    events = [
+        ("A task is assigned to me", True, True, False),
+        ("Someone mentions me", True, True, True),
+        ("A deadline is tomorrow", True, False, True),
+        ("Weekly summary", False, True, False),
+        ("Billing and security notices", True, True, False),
+    ]
     rows = "".join(
-        f'<tr><td><b>{n}</b></td>' + "".join(f'<td class="r" style="text-align:center"><label class="switch" style="display:inline-block"><input type="checkbox"{" checked" if v else ""} aria-label="{n}, {c}"><span></span></label></td>' for v, c in zip((a, b, c2), ("email", "mobile push", "text message"), strict=True)) + "</tr>"
+        f"<tr><td><b>{n}</b></td>"
+        + "".join(
+            f'<td class="r" style="text-align:center"><label class="switch" style="display:inline-block"><input type="checkbox"{" checked" if v else ""} aria-label="{n}, {c}"><span></span></label></td>'
+            for v, c in zip((a, b, c2), ("email", "mobile push", "text message"), strict=True)
+        )
+        + "</tr>"
         for n, a, b, c2 in events
     )
     body = f"""
@@ -76,8 +100,17 @@ def notifications() -> Screen:
   </div>
 </main>"""
     return Screen(
-        "settings-notifications", "Settings: notification preferences", "A preference matrix of events against channels with switches, plus quiet hours with time fields and a digest schedule.",
-        "paper", "dmserif", SETNAV_CSS, body, ["plus"], ["calm", "considerate", "light"], ["productivity", "communication", "collaboration", "mobile app"], "airy",
+        "settings-notifications",
+        "Settings: notification preferences",
+        "A preference matrix of events against channels with switches, plus quiet hours with time fields and a digest schedule.",
+        "paper",
+        "dmserif",
+        SETNAV_CSS,
+        body,
+        ["plus"],
+        ["calm", "considerate", "light"],
+        ["productivity", "communication", "collaboration", "mobile app"],
+        "airy",
         uses="letting people choose what they are told and how; the switch matrix keeps many choices scannable",
         tags=["settings", "matrix", "toggles", "top navigation"],
     )
@@ -85,9 +118,19 @@ def notifications() -> Screen:
 
 def billing() -> Screen:
     usage = [("Seats", "18 of 25", 72), ("Storage", "142 of 200 GB", 71), ("API calls", "410k of 500k", 82)]
-    meters = "".join(f'<div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>{n}</span><b class="num">{v}</b></div><div class="meter" role="img" aria-label="{n} {p} percent used"><i style="width:{p}%"></i></div></div>' for n, v, p in usage)
-    inv = [("INV-2025-03", "1 Mar 2025", "$432.00", "Paid"), ("INV-2025-02", "1 Feb 2025", "$432.00", "Paid"), ("INV-2025-01", "1 Jan 2025", "$398.00", "Paid")]
-    rows = "".join(f'<tr><td class="mono">{a}</td><td class="muted">{b}</td><td class="r num">{c}</td><td><span class="pill pill--ok">{d}</span></td><td class="r"><a href="#">PDF</a></td></tr>' for a, b, c, d in inv)
+    meters = "".join(
+        f'<div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>{n}</span><b class="num">{v}</b></div><div class="meter" role="img" aria-label="{n} {p} percent used"><i style="width:{p}%"></i></div></div>'
+        for n, v, p in usage
+    )
+    inv = [
+        ("INV-2025-03", "1 Mar 2025", "$432.00", "Paid"),
+        ("INV-2025-02", "1 Feb 2025", "$432.00", "Paid"),
+        ("INV-2025-01", "1 Jan 2025", "$398.00", "Paid"),
+    ]
+    rows = "".join(
+        f'<tr><td class="mono">{a}</td><td class="muted">{b}</td><td class="r num">{c}</td><td><span class="pill pill--ok">{d}</span></td><td class="r"><a href="#">PDF</a></td></tr>'
+        for a, b, c, d in inv
+    )
     body = f"""
 <div class="app">
 {sidebar("Relay", "R", [("home", "Home", ""), ("link", "Webhooks", ""), ("chart", "Logs", ""), ("settings", "Settings", "")], "Settings", [("Settings", [("users", "Team", ""), ("card", "Plan and billing", ""), ("shield", "Security", "")])], ("TO", "Tobias Ortiz", "Owner"))}
@@ -104,23 +147,57 @@ def billing() -> Screen:
   <section aria-labelledby="iv" style="margin-top:18px"><div class="card-head"><h2 id="iv">Invoices</h2></div><div class="table-wrap"><table><thead><tr><th>Invoice</th><th>Date</th><th class="r">Amount</th><th>Status</th><th class="r"><span class="sr">Download</span></th></tr></thead><tbody>{rows}</tbody></table></div></section>
 </main></div>"""
     return Screen(
-        "settings-billing", "Settings: plan, usage and invoices", "A billing page with the current plan, usage meters against limits, a payment method card, a billing contact and an invoice table.",
-        "harbour", "jakarta", SPLIT, body, ["home", "link", "chart", "settings", "users", "card", "shield", "download"], ["trustworthy", "plain", "light"], ["saas", "subscriptions", "billing", "membership"], "balanced",
+        "settings-billing",
+        "Settings: plan, usage and invoices",
+        "A billing page with the current plan, usage meters against limits, a payment method card, a billing contact and an invoice table.",
+        "harbour",
+        "jakarta",
+        SPLIT,
+        body,
+        ["home", "link", "chart", "settings", "users", "card", "shield", "download"],
+        ["trustworthy", "plain", "light"],
+        ["saas", "subscriptions", "billing", "membership"],
+        "balanced",
         uses="showing what someone pays for and how much they have used: plan, limits, payment method, invoices",
         tags=["settings", "billing", "usage meters", "table", "side navigation"],
     )
 
 
 def roles() -> Screen:
-    perms = ["View projects", "Edit projects", "Manage members", "Export data", "Change billing", "Delete workspace"]
-    roles = [("Owner", [1, 1, 1, 1, 1, 1]), ("Admin", [1, 1, 1, 1, 0, 0]), ("Editor", [1, 1, 0, 1, 0, 0]), ("Viewer", [1, 0, 0, 0, 0, 0])]
+    perms = [
+        "View projects",
+        "Edit projects",
+        "Manage members",
+        "Export data",
+        "Change billing",
+        "Delete workspace",
+    ]
+    roles = [
+        ("Owner", [1, 1, 1, 1, 1, 1]),
+        ("Admin", [1, 1, 1, 1, 0, 0]),
+        ("Editor", [1, 1, 0, 1, 0, 0]),
+        ("Viewer", [1, 0, 0, 0, 0, 0]),
+    ]
     head = "".join(f'<th style="text-align:center">{r}</th>' for r, _ in roles)
     rows = "".join(
-        f'<tr><td><b>{p}</b></td>' + "".join(f'<td style="text-align:center"><label class="check"><input type="checkbox"{" checked" if values[i] else ""}{" disabled" if r == "Owner" else ""} aria-label="{r} can {p.lower()}"></label></td>' for r, values in roles) + "</tr>"
+        f"<tr><td><b>{p}</b></td>"
+        + "".join(
+            f'<td style="text-align:center"><label class="check"><input type="checkbox"{" checked" if values[i] else ""}{" disabled" if r == "Owner" else ""} aria-label="{r} can {p.lower()}"></label></td>'
+            for r, values in roles
+        )
+        + "</tr>"
         for i, p in enumerate(perms)
     )
-    members = [("Tobias Ortiz", "Owner", "TO"), ("Mara Chen", "Admin", "MC"), ("Eli Brandt", "Editor", "EB"), ("Joon Park", "Viewer", "JP")]
-    lis = "".join(f'<li><span class="avatar">{i}</span><div style="flex:1"><b>{n}</b></div><select class="select" style="width:130px" aria-label="Role for {n}"><option{" selected" if r == "Owner" else ""}>Owner</option><option{" selected" if r == "Admin" else ""}>Admin</option><option{" selected" if r == "Editor" else ""}>Editor</option><option{" selected" if r == "Viewer" else ""}>Viewer</option></select></li>' for n, r, i in members)
+    members = [
+        ("Tobias Ortiz", "Owner", "TO"),
+        ("Mara Chen", "Admin", "MC"),
+        ("Eli Brandt", "Editor", "EB"),
+        ("Joon Park", "Viewer", "JP"),
+    ]
+    lis = "".join(
+        f'<li><span class="avatar">{i}</span><div style="flex:1"><b>{n}</b></div><select class="select" style="width:130px" aria-label="Role for {n}"><option{" selected" if r == "Owner" else ""}>Owner</option><option{" selected" if r == "Admin" else ""}>Admin</option><option{" selected" if r == "Editor" else ""}>Editor</option><option{" selected" if r == "Viewer" else ""}>Viewer</option></select></li>'
+        for n, r, i in members
+    )
     body = f"""
 <div class="app">
 {sidebar("Palisade", "P", [("home", "Overview", ""), ("layers", "Projects", ""), ("users", "Members", ""), ("shield", "Access", ""), ("settings", "Settings", "")], "Access", None, ("TO", "Tobias Ortiz", "Owner"))}
@@ -132,8 +209,17 @@ def roles() -> Screen:
   </div>
 </main></div>"""
     return Screen(
-        "settings-roles", "Settings: roles and permissions grid", "A permission matrix of rights against roles with checkboxes (the owner column fixed), beside a member list where each person's role is a select.",
-        "ink", "grotesk", SPLIT, body, ["home", "layers", "users", "shield", "settings", "plus"], ["technical", "precise", "dark"], ["admin", "security", "enterprise", "developer tools"], "dense",
+        "settings-roles",
+        "Settings: roles and permissions grid",
+        "A permission matrix of rights against roles with checkboxes (the owner column fixed), beside a member list where each person's role is a select.",
+        "ink",
+        "grotesk",
+        SPLIT,
+        body,
+        ["home", "layers", "users", "shield", "settings", "plus"],
+        ["technical", "precise", "dark"],
+        ["admin", "security", "enterprise", "developer tools"],
+        "dense",
         uses="access control: which role may do what; the grid is easier to audit than a list of toggles",
         tags=["settings", "permissions", "matrix", "checkboxes", "dark"],
     )

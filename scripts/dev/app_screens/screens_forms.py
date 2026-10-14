@@ -24,7 +24,7 @@ def wizard() -> Screen:
         ".steps{display:flex;gap:8px;list-style:none;margin:0 0 28px;padding:0;flex-wrap:wrap}.step{display:flex;align-items:center;gap:10px;flex:1;min-width:130px;font-weight:600;color:var(--color-muted)}"
         ".step .dot{width:30px;height:30px;padding:1px;border-radius:999px;border:2px solid var(--color-border);display:grid;place-items:center;font-size:.85rem;flex:none;background:var(--color-surface)}"
         ".step .dot .ico{width:15px;height:15px}.step--done .dot{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary)}.step--now{color:var(--color-ink)}.step--now .dot{border-color:var(--color-primary);color:var(--color-primary)}"
-        ".step:not(:last-child)::after{content:\"\";flex:1;height:2px;background:var(--color-border);margin-left:4px;min-width:16px}.step--done:not(:last-child)::after{background:var(--color-primary)}"
+        '.step:not(:last-child)::after{content:"";flex:1;height:2px;background:var(--color-border);margin-left:4px;min-width:16px}.step--done:not(:last-child)::after{background:var(--color-primary)}'
         ".plan{display:block;border:1.5px solid var(--color-border);border-radius:var(--radius);padding:16px;cursor:pointer;background:var(--color-surface)}.plan:has(input:checked){border-color:var(--color-primary);background:var(--soft)}"
         ".plan input{accent-color:var(--color-primary);margin-right:10px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.form-grid .wide{grid-column:1/-1}"
         "@media (max-width:700px){.form-grid{grid-template-columns:minmax(0,1fr)}}"
@@ -56,15 +56,28 @@ def wizard() -> Screen:
   </div>
 </main>"""
     return Screen(
-        "form-wizard", "Form: multi-step wizard", "A stepper with done, current and next steps, a card of billing fields with a visible error, plan choice cards, and an order summary beside it.",
-        "paper", "dmserif", css + SPLIT, body, ["check", "chevron", "x"], ["calm", "guided", "light"], ["onboarding", "checkout", "registration", "applications", "setup"], "airy",
+        "form-wizard",
+        "Form: multi-step wizard",
+        "A stepper with done, current and next steps, a card of billing fields with a visible error, plan choice cards, and an order summary beside it.",
+        "paper",
+        "dmserif",
+        css + SPLIT,
+        body,
+        ["check", "chevron", "x"],
+        ["calm", "guided", "light"],
+        ["onboarding", "checkout", "registration", "applications", "setup"],
+        "airy",
         uses="a task with several parts that people should finish in order: onboarding, checkout, applications, setup",
         tags=["form", "wizard", "stepper", "validation", "summary"],
     )
 
 
 def line_entry() -> Screen:
-    lines = [("Brand workshop, two days", "2", "1,800.00"), ("Identity guidelines (PDF)", "1", "2,400.00"), ("Printed stationery set", "3", "310.00")]
+    lines = [
+        ("Brand workshop, two days", "2", "1,800.00"),
+        ("Identity guidelines (PDF)", "1", "2,400.00"),
+        ("Printed stationery set", "3", "310.00"),
+    ]
     rows = "".join(
         f'<tr><td><input class="input" value="{d}" aria-label="Description"></td><td><input class="input num" style="width:76px;text-align:right" value="{q}" aria-label="Quantity"></td>'
         f'<td><input class="input num" style="width:120px;text-align:right" value="{p}" aria-label="Unit price"></td><td class="r num" style="width:130px"><b>${float(q) * float(p.replace(",", "")):,.2f}</b></td>'
@@ -94,8 +107,17 @@ def line_entry() -> Screen:
   </form>
 </main></div>"""
     return Screen(
-        "form-line-entry", "Form: invoice with line items", "A document-style data entry screen: header fields, an editable lines table with live amounts, notes and a totals block, with save, preview and send actions.",
-        "slate", "inter", css + SPLIT, body, ["home", "file", "users", "card", "chart", "plus", "x", "send"], ["businesslike", "efficient", "light"], ["invoicing", "quotes", "orders", "expenses", "timesheets"], "balanced",
+        "form-line-entry",
+        "Form: invoice with line items",
+        "A document-style data entry screen: header fields, an editable lines table with live amounts, notes and a totals block, with save, preview and send actions.",
+        "slate",
+        "inter",
+        css + SPLIT,
+        body,
+        ["home", "file", "users", "card", "chart", "plus", "x", "send"],
+        ["businesslike", "efficient", "light"],
+        ["invoicing", "quotes", "orders", "expenses", "timesheets"],
+        "balanced",
         uses="entering a document made of repeated lines: invoices, quotes, purchase orders, expense reports",
         tags=["form", "data entry", "line items", "totals", "side navigation"],
     )
@@ -126,8 +148,17 @@ def long_form() -> Screen:
   <div class="stickybar"><!-- for a form taller than the screen add position:sticky;bottom:0 here --><span class="muted" style="margin-right:auto">Unsaved changes</span><button class="btn">Cancel</button><button class="btn btn--primary">Register patient</button></div>
 </main></div>"""
     return Screen(
-        "form-long", "Form: long page form with validation", "A long single-page form in titled sections (the heading and help on the left, the fields on the right), an error summary that links to each field, inline errors and a sticky action bar.",
-        "harbour", "manrope", css, body, ["users", "calendar", "file", "inbox", "x"], ["clear", "trustworthy", "light"], ["healthcare", "registration", "applications", "hr", "government"], "airy",
+        "form-long",
+        "Form: long page form with validation",
+        "A long single-page form in titled sections (the heading and help on the left, the fields on the right), an error summary that links to each field, inline errors and a sticky action bar.",
+        "harbour",
+        "manrope",
+        css,
+        body,
+        ["users", "calendar", "file", "inbox", "x"],
+        ["clear", "trustworthy", "light"],
+        ["healthcare", "registration", "applications", "hr", "government"],
+        "airy",
         uses="a form with many fields that must be easy to scan and correct: registrations, applications, records",
         tags=["form", "validation", "error summary", "sections", "side navigation"],
     )
@@ -138,7 +169,7 @@ def sign_in() -> Screen:
         ".auth{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);min-height:100vh}.auth-form{display:grid;align-content:center;justify-items:center;padding:clamp(24px,5vw,64px)}.auth-card{width:min(400px,100%);display:grid;gap:18px}"
         ".auth-art{background:var(--color-primary);color:var(--color-on-primary);padding:clamp(28px,5vw,64px);display:grid;align-content:space-between;position:relative}.art-clip{position:absolute;inset:0;overflow:hidden;pointer-events:none}.art-clip svg{position:absolute;right:-6%;top:12%;width:min(78%,560px);opacity:.95}"
         ".auth-art blockquote{margin:0;position:relative;max-width:30ch;font:500 clamp(1.4rem,2.6vw,2rem)/1.25 var(--font-display)}.auth-art cite{display:block;margin-top:14px;font:400 .95rem var(--font-body-md);opacity:.85}.auth-art .brand i{background:var(--color-on-primary);color:var(--color-primary)}"
-        ".or{display:flex;align-items:center;gap:12px;color:var(--color-muted);font-size:.88rem}.or::before,.or::after{content:\"\";flex:1;height:1px;background:var(--color-border)}@media (max-width:860px){.auth{grid-template-columns:minmax(0,1fr)}.auth-art{display:none}}"
+        '.or{display:flex;align-items:center;gap:12px;color:var(--color-muted);font-size:.88rem}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--color-border)}@media (max-width:860px){.auth{grid-template-columns:minmax(0,1fr)}.auth-art{display:none}}'
     )
     art = (
         '<svg viewBox="0 0 400 400" aria-hidden="true"><circle cx="270" cy="270" r="190" fill="none" stroke="currentColor" stroke-opacity=".22" stroke-width="2"/><circle cx="270" cy="270" r="140" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/>'
@@ -162,8 +193,17 @@ def sign_in() -> Screen:
   <aside class="auth-art"><div class="art-clip">{art}</div><div class="brand" style="padding:0;position:relative"><i>H</i>Harbourside</div><blockquote>"We stopped chasing spreadsheets on Mondays. The week simply appears."<cite>Dana Whitlock, operations manager at Pier 9 Charters</cite></blockquote></aside>
 </div>"""
     return Screen(
-        "form-sign-in", "Form: sign-in split screen", "A sign-in page split in two: the form (single sign-on, email, password, remember me) beside a colour panel with drawn contour art and a customer quote.",
-        "harbour", "outfit", css, body, ["shield"], ["welcoming", "confident", "teal"], ["authentication", "saas", "marketplace", "booking", "portal"], "airy",
+        "form-sign-in",
+        "Form: sign-in split screen",
+        "A sign-in page split in two: the form (single sign-on, email, password, remember me) beside a colour panel with drawn contour art and a customer quote.",
+        "harbour",
+        "outfit",
+        css,
+        body,
+        ["shield"],
+        ["welcoming", "confident", "teal"],
+        ["authentication", "saas", "marketplace", "booking", "portal"],
+        "airy",
         uses="the door of an application: sign in, sign up, reset; the panel can carry the product's promise",
         tags=["form", "authentication", "split screen", "drawn art"],
     )
@@ -175,8 +215,16 @@ def quick_capture() -> Screen:
         ".chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid var(--field);background:var(--color-surface);color:var(--color-ink);border-radius:999px;padding:5px 14px;font:600 .88rem var(--font-body-md);cursor:pointer}.chip[aria-pressed=true]{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary)}"
         "@media (max-width:1000px){.cap{grid-template-columns:minmax(0,1fr)}}"
     )
-    recent = [("Pot of the day: cardamom bun", "Bakery", "09:41"), ("Delivery short by 2 trays", "Supplier", "09:12"), ("Oven 2 ran hot, reset", "Equipment", "08:50"), ("Allergen sign replaced", "Compliance", "08:15")]
-    items = "".join(f'<li><div style="flex:1;min-width:0"><div>{t}</div><div class="muted" style="font-size:.85rem">{c}</div></div><span class="mono muted">{w}</span></li>' for t, c, w in recent)
+    recent = [
+        ("Pot of the day: cardamom bun", "Bakery", "09:41"),
+        ("Delivery short by 2 trays", "Supplier", "09:12"),
+        ("Oven 2 ran hot, reset", "Equipment", "08:50"),
+        ("Allergen sign replaced", "Compliance", "08:15"),
+    ]
+    items = "".join(
+        f'<li><div style="flex:1;min-width:0"><div>{t}</div><div class="muted" style="font-size:.85rem">{c}</div></div><span class="mono muted">{w}</span></li>'
+        for t, c, w in recent
+    )
     body = f"""
 <header class="topbar"><div class="brand" style="padding:0"><i>D</i>Dayledger</div><nav aria-label="Primary"><a href="#" aria-current="page">Log</a><a href="#">Checklists</a><a href="#">Reports</a></nav><div class="grow"></div><span class="avatar">LM</span></header>
 <main class="main" style="max-width:1040px;margin:0 auto">
@@ -192,8 +240,17 @@ def quick_capture() -> Screen:
   </div>
 </main>"""
     return Screen(
-        "form-quick-capture", "Form: quick capture", "A fast entry form for frequent small records: one big text box, category chips, two short fields, a keyboard hint, and today's earlier entries beside it.",
-        "paper", "outfit", css, body, ["plus"], ["friendly", "quick", "light"], ["field work", "logs", "hospitality", "operations", "notes"], "balanced",
+        "form-quick-capture",
+        "Form: quick capture",
+        "A fast entry form for frequent small records: one big text box, category chips, two short fields, a keyboard hint, and today's earlier entries beside it.",
+        "paper",
+        "outfit",
+        css,
+        body,
+        ["plus"],
+        ["friendly", "quick", "light"],
+        ["field work", "logs", "hospitality", "operations", "notes"],
+        "balanced",
         uses="something people do many times a day: a log entry, a note, a ticket, a check-in; fewer fields, big targets, keyboard shortcut",
         tags=["form", "data entry", "chips", "top navigation"],
     )

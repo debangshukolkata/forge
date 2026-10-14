@@ -42,8 +42,17 @@ def data_table() -> Screen:
   <div class="pager"><span>Showing 1–7 of 42</span><div class="actions"><button class="btn btn--sm" disabled>Previous</button><button class="btn btn--sm">Next</button></div></div>
 </main>"""
     return Screen(
-        "table-data", "Table: people with filters and bulk actions", "A full data table: search, status segments, a bulk-action bar for selected rows, avatars, status pills, row actions and pagination.",
-        "mono", "archivo", SPLIT, body, ["search", "filter", "plus", "download", "dots", "down"], ["precise", "plain", "light"], ["admin", "team management", "saas", "hr", "back office"], "balanced",
+        "table-data",
+        "Table: people with filters and bulk actions",
+        "A full data table: search, status segments, a bulk-action bar for selected rows, avatars, status pills, row actions and pagination.",
+        "mono",
+        "archivo",
+        SPLIT,
+        body,
+        ["search", "filter", "plus", "download", "dots", "down"],
+        ["precise", "plain", "light"],
+        ["admin", "team management", "saas", "hr", "back office"],
+        "balanced",
         uses="any list of records people manage in bulk: users, customers, orders, assets; the table, its filters and the bulk bar are the pattern",
         tags=["table", "filters", "bulk actions", "pagination", "top navigation"],
     )
@@ -61,10 +70,24 @@ def master_detail() -> Screen:
         f'<li style="padding:0"><a href="#" style="display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;text-decoration:none;color:inherit;{"background:var(--soft);box-shadow:inset 3px 0 0 var(--color-primary)" if sel else ""}"><div style="flex:1;min-width:0"><b class="mono" style="font-size:.88rem">{n}</b><div class="muted" style="font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{v}</div></div><div style="text-align:right"><b class="num">{a}</b><div><span class="pill pill--{t}">{s}</span></div></div></a></li>'
         for n, v, a, t, s, sel in orders
     )
-    lines = [("Corrugated mailer, 300 × 220 mm", "4,000", "$1.24", "$4,960.00"), ("Kraft tape, 48 mm × 100 m", "600", "$2.10", "$1,260.00"), ("Custom tissue, one colour", "8,000", "$0.78", "$6,240.00")]
-    rows = "".join(f'<tr><td>{d}</td><td class="r num">{q}</td><td class="r num">{p}</td><td class="r num"><b>{t}</b></td></tr>' for d, q, p, t in lines)
-    events = [("Priya Nair submitted for review", "Today, 09:12"), ("Budget check passed: Packaging, Q2", "Today, 09:12"), ("Draft created by Priya Nair", "Yesterday, 17:40")]
-    timeline = "".join(f'<li style="gap:14px;align-items:flex-start"><span class="avatar" style="width:10px;height:10px;margin-top:8px;padding:0;background:var(--color-primary)"></span><div><div>{e}</div><div class="muted" style="font-size:.85rem">{w}</div></div></li>' for e, w in events)
+    lines = [
+        ("Corrugated mailer, 300 × 220 mm", "4,000", "$1.24", "$4,960.00"),
+        ("Kraft tape, 48 mm × 100 m", "600", "$2.10", "$1,260.00"),
+        ("Custom tissue, one colour", "8,000", "$0.78", "$6,240.00"),
+    ]
+    rows = "".join(
+        f'<tr><td>{d}</td><td class="r num">{q}</td><td class="r num">{p}</td><td class="r num"><b>{t}</b></td></tr>'
+        for d, q, p, t in lines
+    )
+    events = [
+        ("Priya Nair submitted for review", "Today, 09:12"),
+        ("Budget check passed: Packaging, Q2", "Today, 09:12"),
+        ("Draft created by Priya Nair", "Yesterday, 17:40"),
+    ]
+    timeline = "".join(
+        f'<li style="gap:14px;align-items:flex-start"><span class="avatar" style="width:10px;height:10px;margin-top:8px;padding:0;background:var(--color-primary)"></span><div><div>{e}</div><div class="muted" style="font-size:.85rem">{w}</div></div></li>'
+        for e, w in events
+    )
     body = f"""
 <div class="app">
 {sidebar("Procura", "P", [("inbox", "Approvals", "4"), ("file", "Purchase orders", ""), ("users", "Suppliers", ""), ("chart", "Spend", "")], "Purchase orders", None, ("DK", "Dana Kowalski", "Procurement"))}
@@ -83,8 +106,17 @@ def master_detail() -> Screen:
   </div>
 </main></div>"""
     return Screen(
-        "table-master-detail", "Table: master and detail", "A list on the left and the selected record on the right: header, tabs, key figures, line items, activity and decision buttons.",
-        "slate", "jakarta", SPLIT, body, ["inbox", "file", "users", "chart", "search", "plus", "check"], ["businesslike", "calm", "light"], ["procurement", "approvals", "support", "crm", "orders"], "balanced",
+        "table-master-detail",
+        "Table: master and detail",
+        "A list on the left and the selected record on the right: header, tabs, key figures, line items, activity and decision buttons.",
+        "slate",
+        "jakarta",
+        SPLIT,
+        body,
+        ["inbox", "file", "users", "chart", "search", "plus", "check"],
+        ["businesslike", "calm", "light"],
+        ["procurement", "approvals", "support", "crm", "orders"],
+        "balanced",
         uses="work where someone moves through many records and acts on each: approvals, tickets, orders, candidates",
         tags=["list", "detail", "tabs", "side navigation", "line items"],
     )
@@ -92,10 +124,42 @@ def master_detail() -> Screen:
 
 def kanban() -> Screen:
     columns = [
-        ("To do", "4", [("Draft the onboarding checklist", "Docs", "warn", "Mar 20", "RK"), ("Audit empty states", "Design", "info", "Mar 21", "AO"), ("Pick a status page vendor", "Ops", "", "Mar 25", "JM"), ("Write the March changelog", "Docs", "warn", "Mar 26", "RK")]),
-        ("In progress", "3", [("Rebuild the invoice export", "Billing", "info", "Mar 19", "LF"), ("Fix timezone in reminders", "Bug", "danger", "Today", "HT"), ("Customer interviews, round 2", "Research", "", "Mar 22", "NH")]),
-        ("In review", "2", [("Permissions model v2", "Platform", "info", "Mar 18", "SL"), ("Refund email copy", "Docs", "warn", "Mar 19", "RK")]),
-        ("Done", "3", [("Rate limit the public API", "Platform", "ok", "Mar 14", "SL"), ("Retire the old dashboard", "Design", "ok", "Mar 13", "AO"), ("SSO for Business plan", "Platform", "ok", "Mar 11", "TW")]),
+        (
+            "To do",
+            "4",
+            [
+                ("Draft the onboarding checklist", "Docs", "warn", "Mar 20", "RK"),
+                ("Audit empty states", "Design", "info", "Mar 21", "AO"),
+                ("Pick a status page vendor", "Ops", "", "Mar 25", "JM"),
+                ("Write the March changelog", "Docs", "warn", "Mar 26", "RK"),
+            ],
+        ),
+        (
+            "In progress",
+            "3",
+            [
+                ("Rebuild the invoice export", "Billing", "info", "Mar 19", "LF"),
+                ("Fix timezone in reminders", "Bug", "danger", "Today", "HT"),
+                ("Customer interviews, round 2", "Research", "", "Mar 22", "NH"),
+            ],
+        ),
+        (
+            "In review",
+            "2",
+            [
+                ("Permissions model v2", "Platform", "info", "Mar 18", "SL"),
+                ("Refund email copy", "Docs", "warn", "Mar 19", "RK"),
+            ],
+        ),
+        (
+            "Done",
+            "3",
+            [
+                ("Rate limit the public API", "Platform", "ok", "Mar 14", "SL"),
+                ("Retire the old dashboard", "Design", "ok", "Mar 13", "AO"),
+                ("SSO for Business plan", "Platform", "ok", "Mar 11", "TW"),
+            ],
+        ),
     ]
     tone = {"warn": "pill--warn", "info": "pill--info", "danger": "pill--danger", "ok": "pill--ok", "": ""}
     cols = ""
@@ -119,8 +183,17 @@ def kanban() -> Screen:
   <div class="board">{cols}</div>
 </main></div>"""
     return Screen(
-        "table-kanban", "Board: kanban lanes", "A kanban board with four lanes, labelled cards with due dates and assignees, lane counts and add-card buttons; the lanes scroll sideways inside their frame on a phone.",
-        "paper", "jakarta", css, body, ["grid", "calendar", "chart", "users", "tag", "search", "filter", "plus"], ["warm", "organised", "light"], ["project management", "tasks", "workflow", "recruiting", "support"], "balanced",
+        "table-kanban",
+        "Board: kanban lanes",
+        "A kanban board with four lanes, labelled cards with due dates and assignees, lane counts and add-card buttons; the lanes scroll sideways inside their frame on a phone.",
+        "paper",
+        "jakarta",
+        css,
+        body,
+        ["grid", "calendar", "chart", "users", "tag", "search", "filter", "plus"],
+        ["warm", "organised", "light"],
+        ["project management", "tasks", "workflow", "recruiting", "support"],
+        "balanced",
         uses="work that moves through stages: tasks, candidates, deals, tickets",
         tags=["board", "kanban", "cards", "side navigation"],
     )
@@ -154,8 +227,17 @@ def editable_grid() -> Screen:
   <div class="savebar" role="status"><span><b>3 counts changed</b> since the last save</span><div class="actions"><button class="btn btn--sm btn--ghost" style="color:var(--color-neutral)">Discard</button><button class="btn btn--sm btn--primary" style="background:var(--color-neutral);color:var(--color-ink);border-color:var(--color-neutral)">Save changes</button></div></div>
 </main></div>"""
     return Screen(
-        "table-editable-grid", "Table: editable grid for fast entry", "A grid whose number cells are inputs: scan or type a SKU, tab through counts, low-stock status, and a sticky save bar that says how many cells changed.",
-        "harbour", "inter", css + SPLIT, body, ["box", "truck", "tag", "map", "chart", "search", "filter", "download", "check"], ["practical", "fast", "light"], ["inventory", "warehouse", "data entry", "spreadsheet", "back office"], "dense",
+        "table-editable-grid",
+        "Table: editable grid for fast entry",
+        "A grid whose number cells are inputs: scan or type a SKU, tab through counts, low-stock status, and a sticky save bar that says how many cells changed.",
+        "harbour",
+        "inter",
+        css + SPLIT,
+        body,
+        ["box", "truck", "tag", "map", "chart", "search", "filter", "download", "check"],
+        ["practical", "fast", "light"],
+        ["inventory", "warehouse", "data entry", "spreadsheet", "back office"],
+        "dense",
         uses="repetitive data entry where speed matters: counts, timesheets, prices, scores; keyboard first, with a clear unsaved-changes bar",
         tags=["table", "editable", "data entry", "inputs", "sticky save bar"],
     )

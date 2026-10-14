@@ -8,36 +8,115 @@ from __future__ import annotations
 # The token names match the exported DESIGN.md variables used by the marketing compositions (neutral, ink, muted, primary, accent2, border).
 PALETTES: dict[str, dict[str, str]] = {
     "slate": {  # cool light, one blue: the plain product look
-        "neutral": "#f4f5f7", "surface": "#ffffff", "ink": "#151a22", "muted": "#586273", "primary": "#2352c8", "on-primary": "#ffffff",
-        "accent2": "#b4530c", "border": "#dde1e8", "ok": "#12683f", "warn": "#8a5200", "danger": "#b42318",
+        "neutral": "#f4f5f7",
+        "surface": "#ffffff",
+        "ink": "#151a22",
+        "muted": "#586273",
+        "primary": "#2352c8",
+        "on-primary": "#ffffff",
+        "accent2": "#b4530c",
+        "border": "#dde1e8",
+        "ok": "#12683f",
+        "warn": "#8a5200",
+        "danger": "#b42318",
     },
     "paper": {  # warm light, green and terracotta
-        "neutral": "#f5f0e7", "surface": "#fffdf9", "ink": "#241e17", "muted": "#675b4e", "primary": "#1e6b58", "on-primary": "#ffffff",
-        "accent2": "#a8481b", "border": "#ddd3c3", "ok": "#1b6a3a", "warn": "#8a5300", "danger": "#b3261e",
+        "neutral": "#f5f0e7",
+        "surface": "#fffdf9",
+        "ink": "#241e17",
+        "muted": "#675b4e",
+        "primary": "#1e6b58",
+        "on-primary": "#ffffff",
+        "accent2": "#a8481b",
+        "border": "#ddd3c3",
+        "ok": "#1b6a3a",
+        "warn": "#8a5300",
+        "danger": "#b3261e",
     },
     "ink": {  # dark, one cool accent
-        "neutral": "#0e1116", "surface": "#161b22", "ink": "#edf0f5", "muted": "#9aa5b4", "primary": "#6aa6ff", "on-primary": "#07101f",
-        "accent2": "#f0a35c", "border": "#262d37", "ok": "#5fd08f", "warn": "#f0b45a", "danger": "#ff8a80",
+        "neutral": "#0e1116",
+        "surface": "#161b22",
+        "ink": "#edf0f5",
+        "muted": "#9aa5b4",
+        "primary": "#6aa6ff",
+        "on-primary": "#07101f",
+        "accent2": "#f0a35c",
+        "border": "#262d37",
+        "ok": "#5fd08f",
+        "warn": "#f0b45a",
+        "danger": "#ff8a80",
     },
     "harbour": {  # cool teal on pale blue-grey, amber for attention
-        "neutral": "#edf3f4", "surface": "#ffffff", "ink": "#0e2a33", "muted": "#4d6670", "primary": "#0a6670", "on-primary": "#ffffff",
-        "accent2": "#b8620f", "border": "#d3e0e3", "ok": "#17693d", "warn": "#8b5200", "danger": "#b3261e",
+        "neutral": "#edf3f4",
+        "surface": "#ffffff",
+        "ink": "#0e2a33",
+        "muted": "#4d6670",
+        "primary": "#0a6670",
+        "on-primary": "#ffffff",
+        "accent2": "#b8620f",
+        "border": "#d3e0e3",
+        "ok": "#17693d",
+        "warn": "#8b5200",
+        "danger": "#b3261e",
     },
     "mono": {  # near-black on white with one orange signal
-        "neutral": "#fafafa", "surface": "#ffffff", "ink": "#0b0b0c", "muted": "#55585f", "primary": "#0b0b0c", "on-primary": "#ffffff",
-        "accent2": "#c2410c", "border": "#e2e2e4", "ok": "#166534", "warn": "#8a4b00", "danger": "#b42318",
+        "neutral": "#fafafa",
+        "surface": "#ffffff",
+        "ink": "#0b0b0c",
+        "muted": "#55585f",
+        "primary": "#0b0b0c",
+        "on-primary": "#ffffff",
+        "accent2": "#c2410c",
+        "border": "#e2e2e4",
+        "ok": "#166534",
+        "warn": "#8a4b00",
+        "danger": "#b42318",
     },
 }
 
-FONTS: dict[str, tuple[str, str, str]] = {  # name -> (display stack, text stack, mono stack): all bundled families (find_asset type font)
-    "inter": ('"Inter",system-ui,sans-serif', '"Inter",system-ui,sans-serif', '"JetBrains Mono",ui-monospace,monospace'),
-    "manrope": ('"Manrope","Inter",system-ui,sans-serif', '"Inter",system-ui,sans-serif', '"JetBrains Mono",ui-monospace,monospace'),
-    "jakarta": ('"Plus Jakarta Sans","Inter",system-ui,sans-serif', '"Plus Jakarta Sans","Inter",system-ui,sans-serif', '"JetBrains Mono",ui-monospace,monospace'),
-    "grotesk": ('"Space Grotesk","Inter",system-ui,sans-serif', '"Inter",system-ui,sans-serif', '"JetBrains Mono",ui-monospace,monospace'),
-    "dmserif": ('"Fraunces","Georgia",serif', '"DM Sans","Inter",system-ui,sans-serif', '"JetBrains Mono",ui-monospace,monospace'),
-    "archivo": ('"Archivo","Inter",system-ui,sans-serif', '"Archivo","Inter",system-ui,sans-serif', '"JetBrains Mono",ui-monospace,monospace'),
-    "nunito": ('"Nunito","Inter",system-ui,sans-serif', '"Nunito","Inter",system-ui,sans-serif', '"JetBrains Mono",ui-monospace,monospace'),
-    "outfit": ('"Outfit","Inter",system-ui,sans-serif', '"DM Sans","Inter",system-ui,sans-serif', '"JetBrains Mono",ui-monospace,monospace'),
+FONTS: dict[
+    str, tuple[str, str, str]
+] = {  # name -> (display stack, text stack, mono stack): all bundled families (find_asset type font)
+    "inter": (
+        '"Inter",system-ui,sans-serif',
+        '"Inter",system-ui,sans-serif',
+        '"JetBrains Mono",ui-monospace,monospace',
+    ),
+    "manrope": (
+        '"Manrope","Inter",system-ui,sans-serif',
+        '"Inter",system-ui,sans-serif',
+        '"JetBrains Mono",ui-monospace,monospace',
+    ),
+    "jakarta": (
+        '"Plus Jakarta Sans","Inter",system-ui,sans-serif',
+        '"Plus Jakarta Sans","Inter",system-ui,sans-serif',
+        '"JetBrains Mono",ui-monospace,monospace',
+    ),
+    "grotesk": (
+        '"Space Grotesk","Inter",system-ui,sans-serif',
+        '"Inter",system-ui,sans-serif',
+        '"JetBrains Mono",ui-monospace,monospace',
+    ),
+    "dmserif": (
+        '"Fraunces","Georgia",serif',
+        '"DM Sans","Inter",system-ui,sans-serif',
+        '"JetBrains Mono",ui-monospace,monospace',
+    ),
+    "archivo": (
+        '"Archivo","Inter",system-ui,sans-serif',
+        '"Archivo","Inter",system-ui,sans-serif',
+        '"JetBrains Mono",ui-monospace,monospace',
+    ),
+    "nunito": (
+        '"Nunito","Inter",system-ui,sans-serif',
+        '"Nunito","Inter",system-ui,sans-serif',
+        '"JetBrains Mono",ui-monospace,monospace',
+    ),
+    "outfit": (
+        '"Outfit","Inter",system-ui,sans-serif',
+        '"DM Sans","Inter",system-ui,sans-serif',
+        '"JetBrains Mono",ui-monospace,monospace',
+    ),
 }
 
 ICONS: dict[str, str] = {  # 24 px grid, drawn for this project: stroke icons that take the text colour
@@ -180,7 +259,16 @@ def root_block(palette: str, font: str, extra: str = "") -> str:
     return f":root{{{variables}{scheme}--font-display:{display};--font-body-md:{body};--font-mono:{mono};{extra}}}"
 
 
-def page(title: str, note: str, palette: str, font: str, css: str, body: str, icons: list[str], extra_root: str = "") -> str:
+def page(
+    title: str,
+    note: str,
+    palette: str,
+    font: str,
+    css: str,
+    body: str,
+    icons: list[str],
+    extra_root: str = "",
+) -> str:
     """One complete standalone file: head with the token block, the shared stylesheet, the screen's own CSS and its body."""
     return (
         '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
@@ -193,37 +281,63 @@ def page(title: str, note: str, palette: str, font: str, css: str, body: str, ic
 # --- chart builders ---------------------------------------------------------------------------------------------------------------------------
 
 
-def _points(values: list[float], width: float, height: float, low: float, high: float) -> list[tuple[float, float]]:
+def _points(
+    values: list[float], width: float, height: float, low: float, high: float
+) -> list[tuple[float, float]]:
     step = width / (len(values) - 1)
-    return [(round(i * step, 1), round(height - (v - low) / (high - low) * height, 1)) for i, v in enumerate(values)]
+    return [
+        (round(i * step, 1), round(height - (v - low) / (high - low) * height, 1))
+        for i, v in enumerate(values)
+    ]
 
 
-def line_chart(series: list[tuple[list[float], str]], y_labels: list[str], x_labels: list[str], height: int = 220, area: bool = True, label: str = "Trend chart") -> str:
+def line_chart(
+    series: list[tuple[list[float], str]],
+    y_labels: list[str],
+    x_labels: list[str],
+    height: int = 220,
+    area: bool = True,
+    label: str = "Trend chart",
+) -> str:
     """Smooth-ish line(s) over a grid: the shape is SVG, the axis text is HTML next to it."""
     low = min(min(values) for values, _ in series)
     high = max(max(values) for values, _ in series)
     pad = (high - low) * 0.12 or 1
     low, high = low - pad, high + pad
     width, h = 600.0, 200.0
-    parts = [f'<svg viewBox="0 0 {width:.0f} {h:.0f}" preserveAspectRatio="none" role="img" aria-label="{label}">']
+    parts = [
+        f'<svg viewBox="0 0 {width:.0f} {h:.0f}" preserveAspectRatio="none" role="img" aria-label="{label}">'
+    ]
     for i in range(5):
         y = i * h / 4
-        parts.append(f'<line x1="0" x2="{width:.0f}" y1="{y:.0f}" y2="{y:.0f}" stroke="var(--color-border)" stroke-width="1" vector-effect="non-scaling-stroke"/>')
+        parts.append(
+            f'<line x1="0" x2="{width:.0f}" y1="{y:.0f}" y2="{y:.0f}" stroke="var(--color-border)" stroke-width="1" vector-effect="non-scaling-stroke"/>'
+        )
     for index, (values, colour) in enumerate(series):
         points = _points(values, width, h, low, high)
         path = "M" + " L".join(f"{x},{y}" for x, y in points)
         if area and index == 0:
             parts.append(f'<path d="{path} L{width:.0f},{h:.0f} L0,{h:.0f}Z" fill="{colour}" opacity=".12"/>')
-        parts.append(f'<path d="{path}" fill="none" stroke="{colour}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>')
+        parts.append(
+            f'<path d="{path}" fill="none" stroke="{colour}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
+        )
         x, y = points[-1]
-        parts.append(f'<circle cx="{x}" cy="{y}" r="4.5" fill="{colour}" stroke="var(--color-surface)" stroke-width="2" vector-effect="non-scaling-stroke"/>')
+        parts.append(
+            f'<circle cx="{x}" cy="{y}" r="4.5" fill="{colour}" stroke="var(--color-surface)" stroke-width="2" vector-effect="non-scaling-stroke"/>'
+        )
     parts.append("</svg>")
     ys = "".join(f"<span>{text}</span>" for text in y_labels)
     xs = "".join(f"<span>{text}</span>" for text in x_labels)
     return f'<div class="chart" style="--h:{height}px"><div class="ys">{ys}</div><div class="plot">{"".join(parts)}</div><div class="xs">{xs}</div></div>'
 
 
-def bar_chart(values: list[float], labels: list[str], height: int = 180, highlight: int | None = None, title: str = "Bar chart") -> str:
+def bar_chart(
+    values: list[float],
+    labels: list[str],
+    height: int = 180,
+    highlight: int | None = None,
+    title: str = "Bar chart",
+) -> str:
     top = max(values)
     cells = "".join(
         f'<div class="{"" if highlight is None or i == highlight else "alt"}" style="height:{v / top * 100:.0f}%" title="{labels[i]}: {v:g}"></div>'
@@ -233,7 +347,9 @@ def bar_chart(values: list[float], labels: list[str], height: int = 180, highlig
     return f'<div role="img" aria-label="{title}"><div class="bars" style="--h:{height}px">{cells}</div><div class="bar-labels">{names}</div></div>'
 
 
-def donut(parts: list[tuple[float, str]], size: int = 150, thickness: int = 18, centre: str = "", sub: str = "") -> str:
+def donut(
+    parts: list[tuple[float, str]], size: int = 150, thickness: int = 18, centre: str = "", sub: str = ""
+) -> str:
     """A ring of proportional arcs with the total in the middle (HTML text over SVG)."""
     total = sum(value for value, _ in parts)
     radius = (size - thickness) / 2
@@ -254,14 +370,23 @@ def donut(parts: list[tuple[float, str]], size: int = 150, thickness: int = 18, 
     )
 
 
-def spark(values: list[float], colour: str = "var(--color-primary)", width: int = 96, height: int = 32) -> str:
+def spark(
+    values: list[float], colour: str = "var(--color-primary)", width: int = 96, height: int = 32
+) -> str:
     low, high = min(values), max(values)
     points = _points(values, width, height - 4, low, high if high > low else low + 1)
     path = "M" + " L".join(f"{x},{y + 2:.1f}" for x, y in points)
     return f'<svg viewBox="0 0 {width} {height}" width="{width}" height="{height}" aria-hidden="true"><path d="{path}" fill="none" stroke="{colour}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 
 
-def sidebar(brand: str, mark: str, items: list[tuple[str, str, str]], current: str, sections: list[tuple[str, list[tuple[str, str, str]]]] | None = None, person: tuple[str, str, str] = ("AM", "Ana Moreno", "Operations lead")) -> str:
+def sidebar(
+    brand: str,
+    mark: str,
+    items: list[tuple[str, str, str]],
+    current: str,
+    sections: list[tuple[str, list[tuple[str, str, str]]]] | None = None,
+    person: tuple[str, str, str] = ("AM", "Ana Moreno", "Operations lead"),
+) -> str:
     """The side navigation: items are (icon, label, count); `current` is the label that is the open page."""
 
     def links(entries: list[tuple[str, str, str]]) -> str:
@@ -270,7 +395,10 @@ def sidebar(brand: str, mark: str, items: list[tuple[str, str, str]], current: s
             for ic, label, count in entries
         )
 
-    extra = "".join(f'<div class="nav-title">{title}</div><div class="nav">{links(entries)}</div>' for title, entries in (sections or []))
+    extra = "".join(
+        f'<div class="nav-title">{title}</div><div class="nav">{links(entries)}</div>'
+        for title, entries in (sections or [])
+    )
     initials, name, role = person
     return (
         f'<aside class="side" aria-label="Main"><div class="brand"><i>{mark}</i>{brand}</div><nav class="nav" aria-label="Primary">{links(items)}</nav>{extra}'

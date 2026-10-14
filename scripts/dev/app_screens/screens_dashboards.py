@@ -27,7 +27,10 @@ def sales_kpi() -> Screen:
         for n, c, d, a, t, s in orders
     )
     chart = line_chart(
-        [([42, 46, 44, 51, 58, 55, 63, 70, 66, 74, 81, 88], "var(--color-primary)"), ([30, 31, 33, 32, 36, 38, 37, 41, 43, 42, 46, 49], "var(--color-accent2)")],
+        [
+            ([42, 46, 44, 51, 58, 55, 63, 70, 66, 74, 81, 88], "var(--color-primary)"),
+            ([30, 31, 33, 32, 36, 38, 37, 41, 43, 42, 46, 49], "var(--color-accent2)"),
+        ],
         ["$100k", "$75k", "$50k", "$25k", "$0"],
         ["Apr", "Jun", "Aug", "Oct", "Dec", "Feb"],
         label="Revenue by month, this year and last year",
@@ -51,9 +54,18 @@ def sales_kpi() -> Screen:
 </main></div>"""
     css = "@media (max-width:1100px){#split{grid-template-columns:minmax(0,1fr)!important}}"
     return Screen(
-        "dashboard-kpi", "Dashboard: sales KPIs", "A side-navigation finance dashboard: four KPI cards with deltas, a two-series revenue chart, a channel ring and a recent-orders table.",
-        "slate", "inter", css, body, ["home", "chart", "card", "users", "box", "settings", "help", "download", "up", "down", "chevron"],
-        ["calm", "professional", "light"], ["finance", "sales", "e-commerce", "saas", "admin"], "balanced", uses="the home screen of a business app that answers 'how are we doing' with a few numbers, one trend and the latest records",
+        "dashboard-kpi",
+        "Dashboard: sales KPIs",
+        "A side-navigation finance dashboard: four KPI cards with deltas, a two-series revenue chart, a channel ring and a recent-orders table.",
+        "slate",
+        "inter",
+        css,
+        body,
+        ["home", "chart", "card", "users", "box", "settings", "help", "download", "up", "down", "chevron"],
+        ["calm", "professional", "light"],
+        ["finance", "sales", "e-commerce", "saas", "admin"],
+        "balanced",
+        uses="the home screen of a business app that answers 'how are we doing' with a few numbers, one trend and the latest records",
         tags=["dashboard", "kpi", "chart", "table"],
     )
 
@@ -70,14 +82,20 @@ def ops_board() -> Screen:
         f'<tr><td class="mono">{i}</td><td><b>{r}</b></td><td class="muted">{h}</td><td><span class="pill pill--{t}">{s}</span></td><td style="min-width:130px"><div class="meter" role="img" aria-label="{p} of the route done"><i style="width:{p}"></i></div></td></tr>'
         for i, r, h, s, t, p in shipments
     )
-    bars = bar_chart([94, 91, 96, 88, 93, 97, 90], ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], highlight=5, title="On-time delivery by weekday, percent")
+    bars = bar_chart(
+        [94, 91, 96, 88, 93, 97, 90],
+        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        highlight=5,
+        title="On-time delivery by weekday, percent",
+    )
     exceptions = [
         ("danger", "Held at border", "TRK-20409 · customs paperwork missing", "12 min ago"),
         ("warn", "Delay", "TRK-20417 · road closure, new ETA 16:40", "34 min ago"),
         ("warn", "Temperature", "TRK-20398 · reefer at 6.1 °C, limit 5 °C", "1 h ago"),
     ]
     items = "".join(
-        f'<li><span class="pill pill--{t}" style="flex:none">{h}</span><div style="min-width:0"><div>{d}</div><div class="muted" style="font-size:.85rem">{w}</div></div></li>' for t, h, d, w in exceptions
+        f'<li><span class="pill pill--{t}" style="flex:none">{h}</span><div style="min-width:0"><div>{d}</div><div class="muted" style="font-size:.85rem">{w}</div></div></li>'
+        for t, h, d, w in exceptions
     )
     body = f"""
 <header class="topbar"><div class="brand" style="padding:0"><i>N</i>Northline</div>
@@ -101,25 +119,52 @@ def ops_board() -> Screen:
 </main>"""
     css = "@media (max-width:1100px){#split{grid-template-columns:minmax(0,1fr)!important}}"
     return Screen(
-        "dashboard-ops", "Dashboard: operations board", "A top-navigation operations board: status counters, a shipments table with progress meters, on-time bars and an exceptions list.",
-        "harbour", "manrope", css, body, ["search", "bell", "filter", "plus", "up"], ["practical", "calm", "teal"], ["logistics", "operations", "fleet", "support", "field service"], "balanced",
+        "dashboard-ops",
+        "Dashboard: operations board",
+        "A top-navigation operations board: status counters, a shipments table with progress meters, on-time bars and an exceptions list.",
+        "harbour",
+        "manrope",
+        css,
+        body,
+        ["search", "bell", "filter", "plus", "up"],
+        ["practical", "calm", "teal"],
+        ["logistics", "operations", "fleet", "support", "field service"],
+        "balanced",
         uses="a live board where someone decides what needs attention now: counters first, then the items that are off plan",
         tags=["dashboard", "status", "table", "top navigation"],
     )
 
 
 def analytics_dark() -> Screen:
-    pages = [("/pricing", "18,420", "4.8%", [4, 6, 5, 8, 7, 9, 11]), ("/docs/getting-started", "15,106", "9.1%", [9, 8, 9, 7, 8, 6, 7]), ("/blog/release-3-2", "9,872", "2.2%", [2, 3, 5, 9, 12, 11, 10]), ("/signup", "7,305", "12.6%", [5, 5, 6, 6, 7, 8, 9])]
+    pages = [
+        ("/pricing", "18,420", "4.8%", [4, 6, 5, 8, 7, 9, 11]),
+        ("/docs/getting-started", "15,106", "9.1%", [9, 8, 9, 7, 8, 6, 7]),
+        ("/blog/release-3-2", "9,872", "2.2%", [2, 3, 5, 9, 12, 11, 10]),
+        ("/signup", "7,305", "12.6%", [5, 5, 6, 6, 7, 8, 9]),
+    ]
     rows = "".join(
-        f'<tr><td class="mono">{p}</td><td class="r num">{v}</td><td class="r num">{c}</td><td class="r">{spark([float(x) for x in s], "var(--color-primary)")}</td></tr>' for p, v, c, s in pages
+        f'<tr><td class="mono">{p}</td><td class="r num">{v}</td><td class="r num">{c}</td><td class="r">{spark([float(x) for x in s], "var(--color-primary)")}</td></tr>'
+        for p, v, c, s in pages
     )
     chart = line_chart(
-        [([310, 340, 322, 368, 390, 372, 420, 455, 438, 470], "var(--color-primary)"), ([210, 220, 236, 228, 250, 262, 258, 281, 290, 301], "var(--color-accent2)")],
-        ["500", "375", "250", "125", "0"], ["1 Mar", "5 Mar", "10 Mar", "15 Mar", "20 Mar"], height=240, label="Visitors and signups per day",
+        [
+            ([310, 340, 322, 368, 390, 372, 420, 455, 438, 470], "var(--color-primary)"),
+            ([210, 220, 236, 228, 250, 262, 258, 281, 290, 301], "var(--color-accent2)"),
+        ],
+        ["500", "375", "250", "125", "0"],
+        ["1 Mar", "5 Mar", "10 Mar", "15 Mar", "20 Mar"],
+        height=240,
+        label="Visitors and signups per day",
     )
-    funnel = [("Visited the site", "48,210", 100), ("Viewed pricing", "18,420", 38), ("Started signup", "7,305", 15), ("Verified email", "5,118", 11)]
+    funnel = [
+        ("Visited the site", "48,210", 100),
+        ("Viewed pricing", "18,420", 38),
+        ("Started signup", "7,305", 15),
+        ("Verified email", "5,118", 11),
+    ]
     steps = "".join(
-        f'<li style="display:block"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>{n}</span><b class="num">{v}</b></div><div class="meter"><i style="width:{w}%"></i></div></li>' for n, v, w in funnel
+        f'<li style="display:block"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>{n}</span><b class="num">{v}</b></div><div class="meter"><i style="width:{w}%"></i></div></li>'
+        for n, v, w in funnel
     )
     body = f"""
 <div class="app">
@@ -139,18 +184,44 @@ def analytics_dark() -> Screen:
 </main></div>"""
     css = "@media (max-width:1100px){#split{grid-template-columns:minmax(0,1fr)!important}}"
     return Screen(
-        "dashboard-analytics", "Dashboard: analytics (dark)", "A dark analytics screen: range selector, three metrics with sparklines, a two-line chart, a top-pages table with trends and a funnel.",
-        "ink", "grotesk", css, body, ["chart", "users", "layers", "link", "clock", "settings", "filter", "up", "down"], ["technical", "focused", "dark"], ["analytics", "growth", "developer tools", "saas", "marketing"], "dense",
+        "dashboard-analytics",
+        "Dashboard: analytics (dark)",
+        "A dark analytics screen: range selector, three metrics with sparklines, a two-line chart, a top-pages table with trends and a funnel.",
+        "ink",
+        "grotesk",
+        css,
+        body,
+        ["chart", "users", "layers", "link", "clock", "settings", "filter", "up", "down"],
+        ["technical", "focused", "dark"],
+        ["analytics", "growth", "developer tools", "saas", "marketing"],
+        "dense",
         uses="analysis work where the reader compares trends and drills in: dense, dark, numbers first",
         tags=["dashboard", "analytics", "dark", "chart", "funnel"],
     )
 
 
 def personal_overview() -> Screen:
-    schedule = [("08:30", "Stand-up with the support team", "Room 2 · 15 min"), ("10:00", "Review Priya's onboarding draft", "Shared document"), ("13:30", "Customer call: Aster Dental", "Video · 45 min"), ("16:00", "Plan next week", "Focus block")]
-    items = "".join(f'<li><b class="mono" style="min-width:56px">{t}</b><div><div>{a}</div><div class="muted" style="font-size:.88rem">{b}</div></div></li>' for t, a, b in schedule)
-    ring = lambda pct, label, value: f'<div style="display:flex;gap:14px;align-items:center">{donut([(pct, "var(--color-primary)"), (100 - pct, "transparent")], size=84, thickness=10, centre=f"{pct}%")}<div><b>{label}</b><div class="muted" style="font-size:.88rem">{value}</div></div></div>'  # noqa: E731
-    week = bar_chart([3.5, 5, 4, 6.5, 2, 0.5, 1], ["M", "T", "W", "T", "F", "S", "S"], height=120, highlight=3, title="Hours of focus time by day")
+    schedule = [
+        ("08:30", "Stand-up with the support team", "Room 2 · 15 min"),
+        ("10:00", "Review Priya's onboarding draft", "Shared document"),
+        ("13:30", "Customer call: Aster Dental", "Video · 45 min"),
+        ("16:00", "Plan next week", "Focus block"),
+    ]
+    items = "".join(
+        f'<li><b class="mono" style="min-width:56px">{t}</b><div><div>{a}</div><div class="muted" style="font-size:.88rem">{b}</div></div></li>'
+        for t, a, b in schedule
+    )
+
+    def ring(pct: int, label: str, value: str) -> str:
+        return f'<div style="display:flex;gap:14px;align-items:center">{donut([(pct, "var(--color-primary)"), (100 - pct, "transparent")], size=84, thickness=10, centre=f"{pct}%")}<div><b>{label}</b><div class="muted" style="font-size:.88rem">{value}</div></div></div>'
+
+    week = bar_chart(
+        [3.5, 5, 4, 6.5, 2, 0.5, 1],
+        ["M", "T", "W", "T", "F", "S", "S"],
+        height=120,
+        highlight=3,
+        title="Hours of focus time by day",
+    )
     body = f"""
 <div class="app">
 {sidebar("Tidewell", "T", [("home", "Today", ""), ("calendar", "Week", ""), ("check", "Tasks", "6"), ("star", "Goals", ""), ("chat", "Messages", "2")], "Today", None, ("PN", "Priya Nair", "Customer success"))}
@@ -165,8 +236,17 @@ def personal_overview() -> Screen:
 </main></div>"""
     css = "@media (max-width:900px){#split{grid-template-columns:minmax(0,1fr)!important}}"
     return Screen(
-        "dashboard-personal", "Dashboard: personal day view", "A friendly personal overview: a greeting, today's schedule, progress rings for weekly goals and a focus-time chart.",
-        "paper", "nunito", css, body, ["home", "calendar", "check", "star", "chat", "plus", "chevron"], ["warm", "friendly", "light"], ["productivity", "personal", "wellbeing", "education", "customer success"], "airy",
+        "dashboard-personal",
+        "Dashboard: personal day view",
+        "A friendly personal overview: a greeting, today's schedule, progress rings for weekly goals and a focus-time chart.",
+        "paper",
+        "nunito",
+        css,
+        body,
+        ["home", "calendar", "check", "star", "chat", "plus", "chevron"],
+        ["warm", "friendly", "light"],
+        ["productivity", "personal", "wellbeing", "education", "customer success"],
+        "airy",
         uses="a person's own start-of-day screen: what is on, what they are working towards, how the week is going",
         tags=["dashboard", "personal", "goals", "calendar"],
     )

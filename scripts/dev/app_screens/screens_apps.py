@@ -10,11 +10,46 @@ SPLIT = "@media (max-width:1000px){#split{grid-template-columns:minmax(0,1fr)!im
 
 def inbox() -> Screen:
     msgs = [
-        ("Camille Roy", "Re: Venue contract, final draft", "Thanks, the changes look right. One last question about the cancellation clause: could we…", "09:42", True, True),
-        ("Billing", "Your March invoice is ready", "Invoice INV-2025-03 for $432.00 is available to download.", "08:10", False, False),
-        ("Devon Park", "Photos from Saturday", "Here is the folder with all 214 photos, sorted by room. The ones from the…", "Yesterday", False, False),
-        ("Noura Haddad", "Quick question on the budget", "Do you have a minute tomorrow? I want to check the catering line before…", "Yesterday", True, False),
-        ("Studio Loom", "Proofs for approval", "Attached are the three layouts we discussed. Option B uses the green…", "Mon", False, False),
+        (
+            "Camille Roy",
+            "Re: Venue contract, final draft",
+            "Thanks, the changes look right. One last question about the cancellation clause: could we…",
+            "09:42",
+            True,
+            True,
+        ),
+        (
+            "Billing",
+            "Your March invoice is ready",
+            "Invoice INV-2025-03 for $432.00 is available to download.",
+            "08:10",
+            False,
+            False,
+        ),
+        (
+            "Devon Park",
+            "Photos from Saturday",
+            "Here is the folder with all 214 photos, sorted by room. The ones from the…",
+            "Yesterday",
+            False,
+            False,
+        ),
+        (
+            "Noura Haddad",
+            "Quick question on the budget",
+            "Do you have a minute tomorrow? I want to check the catering line before…",
+            "Yesterday",
+            True,
+            False,
+        ),
+        (
+            "Studio Loom",
+            "Proofs for approval",
+            "Attached are the three layouts we discussed. Option B uses the green…",
+            "Mon",
+            False,
+            False,
+        ),
     ]
     items = "".join(
         f'<li style="padding:0"><a href="#" style="display:block;width:100%;padding:14px 16px;text-decoration:none;color:inherit;{"background:var(--soft);box-shadow:inset 3px 0 0 var(--color-primary)" if sel else ""}"><div style="display:flex;justify-content:space-between;gap:10px"><b style="{"" if unread else "font-weight:500"}">{n}</b><span class="muted" style="font-size:.82rem;white-space:nowrap">{w}</span></div><div style="{"font-weight:600" if unread else ""}">{s}</div><div class="muted" style="font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p}</div></a></li>'
@@ -40,15 +75,29 @@ def inbox() -> Screen:
   </article>
 </div>"""
     return Screen(
-        "inbox", "Inbox: three panes", "A mail-style inbox: folders and labels, a message list with unread emphasis and a selected row, and the open message with actions and an inline reply.",
-        "slate", "inter", css, body, ["edit", "inbox", "star", "send", "file", "trash", "tag", "search", "filter", "plus"], ["productive", "familiar", "light"], ["email", "support", "messaging", "tickets", "case management"], "balanced",
+        "inbox",
+        "Inbox: three panes",
+        "A mail-style inbox: folders and labels, a message list with unread emphasis and a selected row, and the open message with actions and an inline reply.",
+        "slate",
+        "inter",
+        css,
+        body,
+        ["edit", "inbox", "star", "send", "file", "trash", "tag", "search", "filter", "plus"],
+        ["productive", "familiar", "light"],
+        ["email", "support", "messaging", "tickets", "case management"],
+        "balanced",
         uses="work that arrives as messages or tickets: read, decide, answer; the three panes keep the list in view while reading",
         tags=["inbox", "three panes", "list", "reading pane"],
     )
 
 
 def chat() -> Screen:
-    threads = [("Release planning", "Mara: Can we ship Thursday?", "10:21", True), ("Design review", "Eli: Updated the tokens", "09:50", False), ("Support rota", "You: Swapped with Joon", "Yesterday", False), ("Billing alerts", "Bot: Invoice 412 paid", "Yesterday", False)]
+    threads = [
+        ("Release planning", "Mara: Can we ship Thursday?", "10:21", True),
+        ("Design review", "Eli: Updated the tokens", "09:50", False),
+        ("Support rota", "You: Swapped with Joon", "Yesterday", False),
+        ("Billing alerts", "Bot: Invoice 412 paid", "Yesterday", False),
+    ]
     lis = "".join(
         f'<li style="padding:0"><a href="#" style="display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;text-decoration:none;color:inherit;{"background:var(--soft)" if sel else ""}"><span class="avatar">{n[0]}</span><div style="flex:1;min-width:0"><b>{n}</b><div class="muted" style="font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{p}</div></div><span class="muted" style="font-size:.8rem">{w}</span></a></li>'
         for n, p, w, sel in threads
@@ -74,8 +123,17 @@ def chat() -> Screen:
   </section>
 </div>"""
     return Screen(
-        "chat", "Chat: conversations and thread", "A team chat: a conversation list with previews and times, a thread with grouped bubbles, a day marker and your own messages in the accent, and a composer pinned to the bottom.",
-        "ink", "grotesk", css, body, ["search", "dots", "plus", "send"], ["quick", "informal", "dark"], ["messaging", "collaboration", "community", "support chat", "assistant"], "balanced",
+        "chat",
+        "Chat: conversations and thread",
+        "A team chat: a conversation list with previews and times, a thread with grouped bubbles, a day marker and your own messages in the accent, and a composer pinned to the bottom.",
+        "ink",
+        "grotesk",
+        css,
+        body,
+        ["search", "dots", "plus", "send"],
+        ["quick", "informal", "dark"],
+        ["messaging", "collaboration", "community", "support chat", "assistant"],
+        "balanced",
         uses="conversation: a thread of short messages with a composer; the same layout fits an assistant or a support chat",
         tags=["chat", "messages", "composer", "dark"],
     )
@@ -84,11 +142,23 @@ def chat() -> Screen:
 def calendar() -> Screen:
     days = ["Mon 17", "Tue 18", "Wed 19", "Thu 20", "Fri 21"]
     hours = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"]
-    events = [(0, 1, 2, "Standup", "var(--color-primary)"), (0, 3, 2, "Design crit", "var(--color-accent2)"), (1, 0, 1, "Planning", "var(--color-primary)"), (1, 4, 3, "Customer workshop", "var(--color-accent2)"), (2, 2, 2, "1:1 with Rosa", "var(--color-primary)"), (3, 1, 3, "Quarterly review", "var(--color-accent2)"), (4, 5, 2, "Demo day", "var(--color-primary)")]
+    events = [
+        (0, 1, 2, "Standup", "var(--color-primary)"),
+        (0, 3, 2, "Design crit", "var(--color-accent2)"),
+        (1, 0, 1, "Planning", "var(--color-primary)"),
+        (1, 4, 3, "Customer workshop", "var(--color-accent2)"),
+        (2, 2, 2, "1:1 with Rosa", "var(--color-primary)"),
+        (3, 1, 3, "Quarterly review", "var(--color-accent2)"),
+        (4, 5, 2, "Demo day", "var(--color-primary)"),
+    ]
     cols = ""
     for d, day in enumerate(days):
         cells = ""
-        evs = "".join(f'<div class="ev" style="top:calc({s} * var(--row) + 3px);height:calc({span} * var(--row) - 6px);--c:{c}"><b>{t}</b><span>{hours[s]}</span></div>' for dd, s, span, t, c in events if dd == d)
+        evs = "".join(
+            f'<div class="ev" style="top:calc({s} * var(--row) + 3px);height:calc({span} * var(--row) - 6px);--c:{c}"><b>{t}</b><span>{hours[s]}</span></div>'
+            for dd, s, span, t, c in events
+            if dd == d
+        )
         cols += f'<div class="daycol"><div class="dayhead"{" aria-current=date" if d == 1 else ""}>{day}</div><div class="slots">{cells}{evs}</div></div>'
     labels = "".join(f'<div class="hour">{h}</div>' for h in hours)
     css = (
@@ -98,8 +168,15 @@ def calendar() -> Screen:
         ".ev{position:absolute;left:6px;right:6px;border-radius:var(--r);padding:6px 10px;background:color-mix(in srgb,var(--c) 14%,var(--color-surface));border-left:4px solid var(--c);display:grid;align-content:start;overflow:hidden}.ev b{font-size:.88rem;color:var(--color-ink)}.ev span{font-size:.78rem;color:var(--color-muted)}"
         ".minical{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:.85rem}.minical span{padding:6px 0;border-radius:999px}.minical .dim{color:var(--color-muted)}.minical .on{background:var(--color-primary);color:var(--color-on-primary);font-weight:700}"
     )
-    cells = [(d, True) for d in range(24, 29)] + [(d, False) for d in range(1, 32)] + [(d, True) for d in range(1, 7)]  # March 2025 starts on a Saturday
-    mini = "".join(f'<span class="{"dim" if outside else ""}{" on" if not outside and d == 18 else ""}">{d}</span>' for d, outside in cells)
+    cells = (
+        [(d, True) for d in range(24, 29)]
+        + [(d, False) for d in range(1, 32)]
+        + [(d, True) for d in range(1, 7)]
+    )  # March 2025 starts on a Saturday
+    mini = "".join(
+        f'<span class="{"dim" if outside else ""}{" on" if not outside and d == 18 else ""}">{d}</span>'
+        for d, outside in cells
+    )
     body = f"""
 <div class="app">
 <aside class="side" aria-label="Calendar tools"><div class="brand"><i>C</i>Cadence</div><button class="btn btn--primary" style="margin-bottom:16px">{icon("plus")}New event</button>
@@ -108,16 +185,33 @@ def calendar() -> Screen:
 <main class="main"><div class="top"><div><h1>17–21 March</h1><p class="sub">Week 12 · 7 events</p></div><div class="actions"><div class="seg" role="group" aria-label="View"><button aria-pressed="false">Day</button><button aria-pressed="true">Week</button><button aria-pressed="false">Month</button></div><button class="btn btn--icon" aria-label="Previous week">{icon("chevron").replace('class="ico"', 'class="ico" style="transform:scaleX(-1)"')}</button><button class="btn btn--icon" aria-label="Next week">{icon("chevron")}</button></div></div>
 <div class="cal"><div class="hours">{labels}</div>{cols}</div></main></div>"""
     return Screen(
-        "calendar", "Calendar: week view", "A week calendar: a mini month and calendar toggles on the side, a time grid with positioned, colour-coded events, today's column marked and a Day, Week, Month switch.",
-        "paper", "jakarta", css, body, ["plus", "chevron"], ["organised", "calm", "light"], ["scheduling", "booking", "planning", "team calendar", "appointments"], "balanced",
+        "calendar",
+        "Calendar: week view",
+        "A week calendar: a mini month and calendar toggles on the side, a time grid with positioned, colour-coded events, today's column marked and a Day, Week, Month switch.",
+        "paper",
+        "jakarta",
+        css,
+        body,
+        ["plus", "chevron"],
+        ["organised", "calm", "light"],
+        ["scheduling", "booking", "planning", "team calendar", "appointments"],
+        "balanced",
         uses="anything placed in time: meetings, appointments, shifts, bookings",
         tags=["calendar", "week view", "schedule", "side panel"],
     )
 
 
 def record() -> Screen:
-    timeline = [("Call", "Discussed the renewal and the new seats", "Today, 11:20", "Amara Okafor"), ("Email", "Sent the updated quote (3 options)", "Mon 17 Mar", "Amara Okafor"), ("Note", "Prefers invoices in euros, billing contact changed to Lena", "Fri 14 Mar", "Hugo Ferreira"), ("Deal", "Moved to Negotiation", "Wed 12 Mar", "Amara Okafor")]
-    tl = "".join(f'<li style="align-items:flex-start;gap:14px"><span class="pill pill--info" style="min-width:64px;justify-content:center">{k}</span><div><div>{t}</div><div class="muted" style="font-size:.85rem">{w} · {a}</div></div></li>' for k, t, w, a in timeline)
+    timeline = [
+        ("Call", "Discussed the renewal and the new seats", "Today, 11:20", "Amara Okafor"),
+        ("Email", "Sent the updated quote (3 options)", "Mon 17 Mar", "Amara Okafor"),
+        ("Note", "Prefers invoices in euros, billing contact changed to Lena", "Fri 14 Mar", "Hugo Ferreira"),
+        ("Deal", "Moved to Negotiation", "Wed 12 Mar", "Amara Okafor"),
+    ]
+    tl = "".join(
+        f'<li style="align-items:flex-start;gap:14px"><span class="pill pill--info" style="min-width:64px;justify-content:center">{k}</span><div><div>{t}</div><div class="muted" style="font-size:.85rem">{w} · {a}</div></div></li>'
+        for k, t, w, a in timeline
+    )
     body = f"""
 <div class="app">
 {sidebar("Compass", "C", [("home", "Home", ""), ("users", "Contacts", ""), ("layers", "Deals", "7"), ("calendar", "Activities", ""), ("chart", "Reports", "")], "Contacts", None, ("AO", "Amara Okafor", "Account executive"))}
@@ -135,21 +229,38 @@ def record() -> Screen:
   </div>
 </main></div>"""
     return Screen(
-        "record", "Record: customer profile", "A record page: identity header with status pills and actions, tabs, an activity timeline with a note box, and a side card of key details and account health.",
-        "harbour", "dmserif", SPLIT, body, ["home", "users", "layers", "calendar", "chart", "mail", "edit", "plus"], ["considered", "calm", "light"], ["crm", "customers", "patients", "accounts", "candidates"], "balanced",
+        "record",
+        "Record: customer profile",
+        "A record page: identity header with status pills and actions, tabs, an activity timeline with a note box, and a side card of key details and account health.",
+        "harbour",
+        "dmserif",
+        SPLIT,
+        body,
+        ["home", "users", "layers", "calendar", "chart", "mail", "edit", "plus"],
+        ["considered", "calm", "light"],
+        ["crm", "customers", "patients", "accounts", "candidates"],
+        "balanced",
         uses="everything known about one entity: a customer, a patient, a candidate, an asset; the header, tabs, timeline and facts are the pattern",
         tags=["record", "profile", "timeline", "tabs", "side navigation"],
     )
 
 
 def map_list() -> Screen:
-    places = [("Riverside Depot", "1.2 km · open until 20:00", "ok", "Open"), ("Market Street Hub", "2.4 km · closes in 40 min", "warn", "Closing"), ("North Gate Locker", "3.1 km · 24 hours", "ok", "Open"), ("Harbour Pickup", "4.8 km · opens 08:00", "danger", "Closed")]
+    places = [
+        ("Riverside Depot", "1.2 km · open until 20:00", "ok", "Open"),
+        ("Market Street Hub", "2.4 km · closes in 40 min", "warn", "Closing"),
+        ("North Gate Locker", "3.1 km · 24 hours", "ok", "Open"),
+        ("Harbour Pickup", "4.8 km · opens 08:00", "danger", "Closed"),
+    ]
     lis = "".join(
         f'<li style="padding:0"><a href="#" style="display:flex;gap:12px;align-items:center;width:100%;padding:14px 16px;text-decoration:none;color:inherit;{"background:var(--soft)" if i == 0 else ""}"><span class="avatar" style="background:var(--color-primary);color:var(--color-on-primary)">{i + 1}</span><div style="flex:1;min-width:0"><b>{n}</b><div class="muted" style="font-size:.88rem">{d}</div></div><span class="pill pill--{t}">{s}</span></a></li>'
         for i, (n, d, t, s) in enumerate(places)
     )
     pins = [(34, 40, 1), (58, 28, 2), (72, 62, 3), (26, 70, 4)]
-    pin_html = "".join(f'<g transform="translate({x * 8},{y * 5})"><path d="M0 0c-14-18-20-26-20-36a20 20 0 1 1 40 0c0 10-6 18-20 36z" transform="translate(0,34)" fill="{"var(--color-accent2)" if n == 1 else "var(--color-primary)"}" stroke="var(--color-surface)" stroke-width="3"/><circle cx="0" cy="-2" r="7" fill="var(--color-surface)"/></g>' for x, y, n in pins)
+    pin_html = "".join(
+        f'<g transform="translate({x * 8},{y * 5})"><path d="M0 0c-14-18-20-26-20-36a20 20 0 1 1 40 0c0 10-6 18-20 36z" transform="translate(0,34)" fill="{"var(--color-accent2)" if n == 1 else "var(--color-primary)"}" stroke="var(--color-surface)" stroke-width="3"/><circle cx="0" cy="-2" r="7" fill="var(--color-surface)"/></g>'
+        for x, y, n in pins
+    )
     mapsvg = (
         '<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Map of the city with four pickup points" style="position:absolute;inset:0;width:100%;height:100%">'
         '<rect width="800" height="500" fill="color-mix(in srgb,var(--color-primary) 6%,var(--color-neutral))"/>'
@@ -157,7 +268,7 @@ def map_list() -> Screen:
         '<g fill="color-mix(in srgb,var(--color-ink) 7%,var(--color-neutral))"><rect x="60" y="50" width="120" height="70" rx="6"/><rect x="200" y="50" width="90" height="70" rx="6"/><rect x="320" y="40" width="150" height="80" rx="6"/><rect x="500" y="50" width="110" height="70" rx="6"/><rect x="640" y="40" width="120" height="90" rx="6"/>'
         '<rect x="60" y="150" width="120" height="80" rx="6"/><rect x="200" y="150" width="90" height="80" rx="6"/><rect x="320" y="150" width="150" height="70" rx="6"/><rect x="500" y="150" width="110" height="80" rx="6"/><rect x="640" y="160" width="120" height="70" rx="6"/></g>'
         '<g stroke="var(--color-surface)" stroke-width="10" fill="none" stroke-linecap="round"><path d="M0 130H800"/><path d="M190 0V330"/><path d="M310 0V300"/><path d="M485 0V310"/><path d="M625 0V300"/><path d="M0 240C200 250 500 230 800 250"/></g>'
-        f'<g>{pin_html}</g></svg>'
+        f"<g>{pin_html}</g></svg>"
     )
     css = ".mapwrap{position:relative;min-height:560px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--color-border)}.mapctl{position:absolute;right:14px;top:14px;display:grid;gap:8px}"
     body = f"""
@@ -171,8 +282,17 @@ def map_list() -> Screen:
   </div>
 </main>"""
     return Screen(
-        "map-list", "Map: list and map side by side", "A locator: a result list with status pills beside a drawn map with numbered pins, zoom controls and a detail card for the selected place.",
-        "slate", "outfit", css + SPLIT, body, ["search", "filter", "plus", "map"], ["clear", "practical", "light"], ["logistics", "store locator", "delivery", "real estate", "field service"], "balanced",
+        "map-list",
+        "Map: list and map side by side",
+        "A locator: a result list with status pills beside a drawn map with numbered pins, zoom controls and a detail card for the selected place.",
+        "slate",
+        "outfit",
+        css + SPLIT,
+        body,
+        ["search", "filter", "plus", "map"],
+        ["clear", "practical", "light"],
+        ["logistics", "store locator", "delivery", "real estate", "field service"],
+        "balanced",
         uses="choosing a place: stores, pickup points, listings, jobs; the list and the map stay in step",
         tags=["map", "list", "locator", "drawn svg map", "top navigation"],
     )
@@ -198,8 +318,17 @@ def editor() -> Screen:
 </main></div>"""
     css = ".app.doc{grid-template-columns:260px minmax(0,1fr)}@media (max-width:860px){.app.doc{grid-template-columns:minmax(0,1fr)}}@media (max-width:1100px){#split{grid-template-columns:minmax(0,1fr)!important}#split>aside{border-left:0;border-top:1px solid var(--color-border)}}"
     return Screen(
-        "editor", "Editor: document with outline and comments", "A writing surface: a page tree and an on-this-page outline, a formatting bar, a large editable title, checklist items, and a comments column with open threads.",
-        "paper", "dmserif", css, body, ["plus", "file", "link", "check"], ["quiet", "focused", "light"], ["documents", "wiki", "notes", "knowledge base", "handbook"], "airy",
+        "editor",
+        "Editor: document with outline and comments",
+        "A writing surface: a page tree and an on-this-page outline, a formatting bar, a large editable title, checklist items, and a comments column with open threads.",
+        "paper",
+        "dmserif",
+        css,
+        body,
+        ["plus", "file", "link", "check"],
+        ["quiet", "focused", "light"],
+        ["documents", "wiki", "notes", "knowledge base", "handbook"],
+        "airy",
         uses="writing and reviewing long content: documents, wikis, runbooks; the page stays wide and calm, tools sit at the edges",
         tags=["editor", "document", "comments", "outline"],
     )
@@ -207,9 +336,7 @@ def editor() -> Screen:
 
 def states() -> Screen:
     def card(icon_name: str, title: str, text: str, action: str, tone: str = "") -> str:
-        return (
-            f'<section class="card state"><span class="badge {tone}">{icon(icon_name)}</span><h2>{title}</h2><p class="muted">{text}</p>{action}</section>'
-        )
+        return f'<section class="card state"><span class="badge {tone}">{icon(icon_name)}</span><h2>{title}</h2><p class="muted">{text}</p>{action}</section>'
 
     skeleton = '<section class="card state" aria-label="Loading" aria-busy="true"><div class="sk" style="width:46%"></div><div class="sk" style="width:90%;margin-top:18px"></div><div class="sk" style="width:80%"></div><div class="sk" style="width:62%"></div><div class="sk" style="height:84px;margin-top:18px"></div></section>'
     body = f"""
@@ -234,8 +361,17 @@ def states() -> Screen:
         ".sk{height:14px;border-radius:6px;background:linear-gradient(90deg,var(--hover),color-mix(in srgb,var(--color-ink) 10%,var(--color-surface)),var(--hover));background-size:200% 100%;animation:sk 1.4s linear infinite;margin-top:12px}@keyframes sk{to{background-position:-200% 0}}"
     )
     return Screen(
-        "empty-states", "States: empty, no results, error, offline, loading and first run", "Six state cards (empty list, no search results, load error, offline, skeleton loading, all caught up) and a first-run checklist with progress, so every moment without data has a next step.",
-        "mono", "archivo", css, body, ["inbox", "search", "x", "bell", "check", "plus"], ["helpful", "plain", "light"], ["any app", "saas", "onboarding", "error handling"], "airy",
+        "empty-states",
+        "States: empty, no results, error, offline, loading and first run",
+        "Six state cards (empty list, no search results, load error, offline, skeleton loading, all caught up) and a first-run checklist with progress, so every moment without data has a next step.",
+        "mono",
+        "archivo",
+        css,
+        body,
+        ["inbox", "search", "x", "bell", "check", "plus"],
+        ["helpful", "plain", "light"],
+        ["any app", "saas", "onboarding", "error handling"],
+        "airy",
         uses="the screens people see when there is nothing to show or something went wrong: copy them into every list, search and fetch",
         tags=["empty state", "error", "loading", "skeleton", "onboarding"],
     )

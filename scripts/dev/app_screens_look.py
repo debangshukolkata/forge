@@ -1,6 +1,6 @@
 """Renders every application-screen recipe at desktop and phone width: prints sideways scroll and the style audit, writes pictures to test-artifacts/app-screens/ (D-366).
 
-    python scripts/dev/app_screens_look.py [id ...]"""
+python scripts/dev/app_screens_look.py [id ...]"""
 
 from __future__ import annotations
 
@@ -26,7 +26,11 @@ with sync_playwright() as p:
             page.goto(file.resolve().as_uri())
             page.wait_for_timeout(300)
             wide = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
-            findings = [f for f in page.evaluate(AUDIT_SCRIPT)["findings"] if "system font stack" not in f] if name == "desktop" else []
+            findings = (
+                [f for f in page.evaluate(AUDIT_SCRIPT)["findings"] if "system font stack" not in f]
+                if name == "desktop"
+                else []
+            )
             page.screenshot(path=str(out / f"{file.stem}-{name}.png"), full_page=True)
             print(f"{file.stem:24} {name:8} sideways={wide:>4}  audit={[f[:200] for f in findings]}")
             page.close()
