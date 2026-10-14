@@ -216,3 +216,16 @@ async def test_an_application_screen_is_not_asked_for_pictures_or_a_landing_page
     assert "no imagery at all" not in await _audit(_app_page(0, chart=True))
     plain = await _audit(_app_page(0, h1_size="1.4rem"))
     assert "h1 is only" in plain  # without controls it is a content page and the headline rule applies
+
+
+async def test_the_audit_names_what_sticks_out_and_which_images_lack_alt_text() -> None:
+    """D-369: findings that carry the patch (the outermost overflowing element with its likely cause; the image files without alt)."""
+    page = (
+        "<!doctype html><html lang='en'><head><style>body{margin:0;font-family:Georgia}h1{font-size:2rem}</style></head><body>"
+        "<h1>Report</h1><div id='big' style='width:1900px;background:#eee'>A wide block with some words in it for the page.</div>"
+        "<img src='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==' width='40' height='40'>"
+        "</body></html>"
+    )
+    report = await _audit(page)
+    assert "Sticking out: div" in report and "a fixed width" in report
+    assert "without alt text (accessibility): an inline image" in report and 'alt=""' in report

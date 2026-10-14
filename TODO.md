@@ -90,7 +90,7 @@ Everything below can be finished without the user: no office laptop, no files or
 **Part 2, building (light on the machine, while part 1 runs, then after):**
 6. [x] **Progress for calls that do not stream** (vision, design judge, summariser) and for the Gemini provider; offline tests. (done 2026-10-15, D-367)
 7. [x] **S6 rest:** audit only the pages that changed; measure sandbox start-up per command. (measured 2026-10-15, D-368: both are tiny; the cost is `spawn_subagent`, and the verifier no longer scripts a static page)
-8. [ ] **L9 auto-fixers:** overflowing text and missing alt text (the contrast fixer exists).
+8. [x] **L9 auto-fixers:** overflowing text and missing alt text (the contrast fixer exists). (done 2026-10-15, D-369: the findings name the element, its cause and the file; no source rewriter)
 9. [ ] **D1 and D2:** flag a file edited more than N times; cost and time per UI task, one critic round for small edits if too slow.
 10. [ ] **DS7 remainder:** more composition recipes, a React composition, a font shortlist, a reference gallery.
 11. [ ] **AS1 React versions** of the most used app screens (KPI dashboard, data table, wizard, settings, inbox), with tests.

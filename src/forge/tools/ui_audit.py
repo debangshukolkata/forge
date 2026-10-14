@@ -66,8 +66,27 @@ AUDIT_SCRIPT = r"""
   // 2. Horizontal scroll bar.
   const doc = document.documentElement;
   if (doc.scrollWidth > doc.clientWidth + 1) {
+    // Name the outermost elements that stick out (not inside a scrolling frame) and the likely cause, so the fix is a patch, not a search.
+    const sticking = all.filter((el) => {
+      if (!visible(el) || el.getBoundingClientRect().right <= doc.clientWidth + 1) return false;
+      for (let up = el.parentElement; up && up !== document.body; up = up.parentElement) {
+        const o = getComputedStyle(up).overflowX;
+        if (o === 'auto' || o === 'scroll' || o === 'hidden' || o === 'clip') return false;
+      }
+      return true;
+    });
+    const outer = sticking.filter((el) => !sticking.includes(el.parentElement));
+    const why = (el) => {
+      const s = getComputedStyle(el), hints = [];
+      if (el.style.width || el.getAttribute('width')) hints.push('a fixed width');
+      if (s.whiteSpace === 'nowrap') hints.push('white-space: nowrap');
+      if (el.tagName === 'IMG' || el.tagName === 'VIDEO') hints.push('media wider than its box: max-width: 100%');
+      if (s.minWidth && s.minWidth !== 'auto' && s.minWidth !== '0px') hints.push('min-width ' + s.minWidth);
+      return label(el) + ' ends at ' + Math.round(el.getBoundingClientRect().right) + 'px' + (hints.length ? ' (' + hints.join(', ') + ')' : '');
+    };
     findings.push('Horizontal overflow: the page is ' + doc.scrollWidth + 'px wide in a ' + doc.clientWidth +
-      'px window, so it scrolls sideways. Constrain widths (max-w-*, w-full, flex-wrap, break-words).');
+      'px window, so it scrolls sideways. Constrain widths (max-w-*, w-full, flex-wrap, break-words).' +
+      (outer.length ? ' Sticking out: ' + outer.slice(0, 3).map(why).join('; ') + '.' : ''));
   }
 
   // 3. Browser-default links and buttons.
@@ -145,7 +164,8 @@ AUDIT_SCRIPT = r"""
   const broken = Array.from(document.images).filter((i) => i.complete && i.naturalWidth === 0);
   if (broken.length) findings.push('Broken images: ' + broken.slice(0, 4).map((i) => i.getAttribute('src')).join(', ') + '.');
   const noAlt = Array.from(document.images).filter((i) => !i.hasAttribute('alt'));
-  if (noAlt.length) findings.push(noAlt.length + ' image(s) without alt text (accessibility).');
+  if (noAlt.length) findings.push(noAlt.length + ' image(s) without alt text (accessibility): ' + noAlt.slice(0, 4).map((i) => { const s = i.getAttribute('src') || ''; return !s || s.indexOf('data:') === 0 ? 'an inline image' : s.split('/').pop().slice(0, 40); }).join(', ') +
+    '. Add alt text that says what each picture shows to someone who cannot see it; alt="" only when it is purely decorative.');
 
   // 8. Empty-looking sections: big headings/labels with nothing under them (e.g. stats with no values).
   const emptyStats = all.filter((el) => visible(el) && el.children.length === 0 && !(el.innerText || '').trim()
