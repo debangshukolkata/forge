@@ -7,9 +7,11 @@ from html import escape
 from typing import Any
 
 from forge.designsystem.export import export
+from forge.designsystem.fonts import font_css
 from forge.designsystem.spec import DesignSystem
 
 PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{title}</title><style>
+{font_faces}
 {tokens}
 *{{box-sizing:border-box}}
 body{{margin:0;background:{neutral};color:{ink};font-family:{body_font};font-size:{body_size};line-height:1.6}}
@@ -61,6 +63,16 @@ def _tint(colour: str, base: str = "#FFFFFF", share: float = 0.88) -> str:
     )
 
 
+def families_of(system: DesignSystem) -> list[str]:
+    """The first family named in every typography token."""
+    found = [
+        str(system.resolve(style.get("fontFamily", ""))).split(",")[0].strip().strip("\"'")
+        for style in system.typography.values()
+        if isinstance(style, dict) and style.get("fontFamily")
+    ]
+    return list(dict.fromkeys(f for f in found if f))
+
+
 def specimen_html(system: DesignSystem, headline: str = "", lede: str = "", eyebrow: str = "") -> str:
     """The specimen page for `system`. Missing tokens fall back to neutral defaults, so a half-written system can still be looked at."""
     from forge.brand.kit import readable_on
@@ -108,7 +120,14 @@ def specimen_html(system: DesignSystem, headline: str = "", lede: str = "", eyeb
         f'<div style="background:{system.resolve(value)};color:#{readable_on(to_hex(p) if (p := parse(str(system.resolve(value)))) else "FFFFFF")}">{escape(name)}</div>'
         for name, value in list(system.colors.items())[:8]
     )
+    wanted = [
+        str(system.resolve(style.get("fontFamily", ""))).split(",")[0].strip().strip("\"'")
+        for style in system.typography.values()
+        if isinstance(style, dict)
+    ]
+    font_faces, _ = font_css(wanted)
     return PAGE.format(
+        font_faces=font_faces,
         title=escape(system.name),
         name=escape(system.name),
         tokens=tokens,

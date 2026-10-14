@@ -138,6 +138,27 @@ Which check answers which question:
 - *Did my change break what was approved?* `visual_check` against the baseline.
 - *Which of several designs?* `design_candidates` (specimens judged against the brief), before any page exists.
 
+## 0g. Typography decides whether a page looks designed
+A page set in the system font stack (system-ui, Segoe UI, Arial, Helvetica) looks machine-made at once, whatever else is right. The audit reports it as a
+problem; fix it before anything else is polished.
+- **Choose type for the product, its mood and its language**, then load it. A Japanese ramen bar, a children's museum and a law firm do not share a typeface.
+  Say in DESIGN.md why each family fits (the Overview or Typography prose), not only its name.
+- **How to get a font:** `find_asset` (type `font-pairing`) lists tested pairings with their files bundled offline (Fraunces, Playfair Display, DM Sans,
+  Nunito, Manrope, Archivo, Lora, JetBrains Mono, Noto Sans for Devanagari and Bengali, ...); `add_asset` copies the files and the CSS. For anything else
+  `find_font` searches about 2,100 open families and `fetch_font` saves the files and writes the `@font-face` CSS. In a plain HTML project link that CSS from
+  the page (a relative path, no build step needed); in a Vite project import it once. Never rely on a font that is only named in a CSS stack.
+- **Script fit:** Japanese, Chinese, Korean, Devanagari, Bengali and other scripts need a family that has those glyphs (Noto Sans JP, Zen Kaku Gothic New,
+  Shippori Mincho, Noto Sans Devanagari ...) and the right `lang` on the page; a Latin display font plus a script-capable text font is a normal pairing.
+- **Pair by role, with contrast:** one display voice and one text voice (a third only for numbers or code). Serif display with a clean sans, or a quirky
+  display with a quiet text face; never two similar sans faces. Two or three weights in use, tight tracking on large sizes (-0.02em), 1.5 to 1.7 line height
+  for text, line length 45 to 75 characters, a scale with a ratio (1.25 or 1.333), tabular figures in tables and prices.
+- **Starting points by feeling** (use as a shortlist, then decide): warm editorial: Fraunces, Newsreader, Lora with Inter or Nunito; playful and young:
+  Baloo 2, Fredoka, Nunito, Quicksand; luxury and quiet: Cormorant Garamond, Playfair Display with DM Sans; technical and precise: IBM Plex Sans and Mono,
+  JetBrains Mono, Manrope; bold and urgent: Archivo, Space Grotesk, Anton with Inter; Japanese late-night or craft: Zen Kaku Gothic New, Shippori Mincho,
+  Noto Sans JP, with a condensed display for signs.
+- **Avoid the defaults everyone has seen:** Inter or Poppins for everything, Space Grotesk on every dark page, a serif display in a cream-and-terracotta
+  palette. They are fine when chosen for a reason you can state; they are the machine-made look when they are habit.
+
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)
 - **Purpose and tone** of the product (a blood donation drive: warm, trustworthy, urgent but calm).
 - **Palette**: one accent colour (a real brand colour, not default blue), a neutral scale for text and surfaces,

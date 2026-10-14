@@ -268,6 +268,18 @@ AUDIT_SCRIPT = r"""
     if (!/:focus-visible|:focus\b|:focus-within/.test(cssText)) findings.push('No focus style exists for the buttons, links and fields: add a visible :focus-visible ring (keyboard users cannot see where they are).');
     if (all.some((el) => el.matches(':disabled')) && !/:disabled|\[disabled\]|aria-disabled/.test(cssText)) findings.push('Disabled controls look the same as enabled ones: style :disabled (lower contrast, no pointer).');
   }
+  const genericFamily = /^(system-ui|-apple-system|blinkmacsystemfont|segoe ui|segoe ui variable|arial|helvetica|helvetica neue|times new roman|times|verdana|tahoma|trebuchet ms|sans-serif|serif|monospace|ui-sans-serif|ui-serif|ui-monospace|sf pro|sf pro text|roboto|noto sans|noto serif|georgia)$/i;
+  const loadedFamilies = new Set([...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family.replace(/["']/g, '').toLowerCase()));
+  let designedChars = 0, allChars = 0; const usedFamilies = new Map();
+  for (const el of all) { if (!visible(el)) continue;
+    const own = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join('').length; if (!own) continue;
+    const name = getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase();
+    allChars += own; usedFamilies.set(name, (usedFamilies.get(name) || 0) + own);
+    if (loadedFamilies.has(name) || !genericFamily.test(name)) designedChars += own; }
+  if (allChars > 200 && designedChars / allChars < 0.1) {
+    const names = [...usedFamilies.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map((x) => x[0]).join(', ');
+    findings.push('All the text is set in the system font stack (' + names + '): the page has no designed typography, which is the first thing that makes a page look machine-made. Choose a display font and a text font that suit the product, its mood and its language (find_font, or find_asset type font-pairing; fetch_font saves the files), load them with @font-face, and use them from the DESIGN.md typography tokens.');
+  }
   const small = all.filter((el) => visible(el) && window.innerWidth >= 768 && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 24) && parseFloat(getComputedStyle(el).fontSize) < 13);
   if (small.length >= 3) findings.push(small.length + ' blocks of running text are under 13px at desktop width (' + sample(small) + '): body text should be 14px or larger.');
 

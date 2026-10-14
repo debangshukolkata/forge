@@ -330,7 +330,7 @@ CANDIDATES_NOTE = (
     "candidate A (or copy it to .forge/candidates/a/DESIGN.md), write two more DESIGN.md files (.forge/candidates/b and c) that differ from it "
     "and from each other in at least three of: light or dark tone, accent hue, display font, corner style, density, layout energy; find_asset "
     "(type design-system) has tokenised starting points. Run design_candidates with the brief, apply the winner's fixes, design_md_import the "
-    "winner as DESIGN.md (overwrite), and then write the page. Never make the three differ only in colour."
+    "winner as DESIGN.md (overwrite), and then write the page. Never make the three differ only in colour; each names a real display font and text font that suit the product, its mood and its language (find_asset type font-pairing, find_font), never the system stack."
 )
 
 
@@ -351,10 +351,15 @@ def design_gate(context: ToolContext, relative: str) -> str:
     if not clean.lower().endswith(UI_SUFFIXES):
         return ""
     found = find_design_md(context.workspace, relative)
-    if found is not None and not context.design_candidates_asked and context.design_md_written:
-        if not _design_md_errors(found) and not _rounds_file(context).is_file():
-            context.design_candidates_asked = True  # once, and it does not use up the two rounds above
-            return CANDIDATES_NOTE
+    if (
+        found is not None
+        and context.design_md_written
+        and not context.design_candidates_asked
+        and not _design_md_errors(found)
+        and not _rounds_file(context).is_file()
+    ):
+        context.design_candidates_asked = True  # once, and it does not use up the two rounds below
+        return CANDIDATES_NOTE
     if context.design_gate_rounds >= DESIGN_GATE_ROUNDS:
         return ""
     if found is not None:

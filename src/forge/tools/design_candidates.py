@@ -14,10 +14,11 @@ from typing import Any
 
 from pydantic import Field
 
+from forge.designsystem.fonts import font_css
 from forge.designsystem.lint import describe_findings, lint_text
 from forge.designsystem.novelty import describe_fingerprint, differences, fingerprint, is_different_enough
 from forge.designsystem.spec import DesignMdError, DesignSystem, parse_design_md
-from forge.designsystem.specimen import specimen_html
+from forge.designsystem.specimen import families_of, specimen_html
 from forge.errors import ForgeError
 from forge.llm.base import ChatRequest, Message
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
@@ -31,10 +32,10 @@ LABELS = "ABC"
 RUBRIC = (
     "You are a demanding art director judging design systems from specimen pictures (the same components drawn with each candidate's tokens). "
     "You are given the brief, the candidates labelled A, B and C, and sometimes the designs the user already rejected and why. Judge only what you "
-    "see. Score each candidate 1 to 5 on: distinctiveness (does it look designed for this product, not like a default template; generic blue SaaS, "
+    "see. Be strict and use the whole scale: 5 is award-winning studio work, 4 is clearly professional studio work whose distinctive quality you can name, 3 is competent but template-like, 2 is the generic machine-made look, 1 is poor; most machine-made designs are 2 or 3. Score each candidate 1 to 5 on: typography (does the type suit the product, its mood and its language; real pairing and contrast of roles; a system font stack is a 2), distinctiveness (does it look designed for this product, not like a default template; generic blue SaaS, "
     "purple-blue gradients, cream-and-terracotta and identical card rows score low), hierarchy (type scale, weight and spacing guide the eye), "
     "harmony (palette, shape and depth belong together), fit (the feeling the brief asks for), polish (contrast, alignment, rhythm). "
-    'Reply with JSON only: {"scores": {"A": {"distinctiveness": n, "hierarchy": n, "harmony": n, "fit": n, "polish": n}, ...}, "winner": "A", '
+    'Reply with JSON only: {"scores": {"A": {"typography": n, "distinctiveness": n, "hierarchy": n, "harmony": n, "fit": n, "polish": n}, ...}, "winner": "A", '
     '"reasons": "two sentences", "fixes": {"A": ["a concrete change to the tokens"], ...}}. Pick the winner by overall quality for the brief, '
     "not by the highest single score. If a candidate repeats what the user rejected, say so and do not pick it."
 )
@@ -76,6 +77,18 @@ async def draw(html: str, target: Path) -> None:
                 ) from error
         finally:
             await browser.close()
+
+
+def _font_notes(path: str, system: DesignSystem, text: str) -> list[str]:
+    """Typography problems of a candidate: system fonts (a candidate in the system stack is the machine-made look) and families that cannot be shown."""
+    notes = [f"{path}: {f.path}: {f.message}" for f in lint_text(text) if f.rule == "system-font"]
+    _, missing = font_css(families_of(system))
+    if missing:
+        notes.append(
+            f"{path}: {', '.join(missing)} is not bundled, so the specimen shows a fallback; judge the pairing from the names, and fetch the real font "
+            "with find_font and fetch_font when it wins."
+        )
+    return notes
 
 
 def _load(context: ToolContext, path: str) -> tuple[DesignSystem, str]:
@@ -174,6 +187,7 @@ class DesignCandidates(Tool):
         prints = {path: fingerprint(loaded[path][0]) for path in loaded}
         for path in usable:
             lines.append(f"{path}: {describe_fingerprint(prints[path])}")
+            lines.extend(_font_notes(path, loaded[path][0], loaded[path][1]))
         for index, one in enumerate(usable):
             for two in usable[index + 1 :]:
                 if not is_different_enough(prints[one], prints[two]):

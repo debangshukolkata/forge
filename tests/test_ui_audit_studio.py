@@ -94,3 +94,37 @@ def test_source_checks_find_forms_without_error_or_sending_states_and_purple_blu
         encoding="utf-8",
     )
     assert "form with no" not in " ".join(source_taste_problems(tmp_path))
+
+
+def _fraunces_css() -> str:
+    from forge.designsystem.fonts import font_css
+
+    css, missing = font_css(["Fraunces"])
+    assert not missing
+    return css
+
+
+SYSTEM_FONTS_PAGE = (
+    "<!doctype html><html lang='en'><head><style>body{font-family:system-ui,'Segoe UI',sans-serif;margin:0;padding:24px}</style></head><body>"
+    + "<h1>Wonderworks</h1>"
+    + "<p>A hands-on science museum for curious families, open every day of the week with daily workshops and events for children.</p>"
+    * 3
+    + "</body></html>"
+)
+
+
+async def test_a_page_set_entirely_in_the_system_font_stack_is_reported() -> None:
+    report = await _audit(SYSTEM_FONTS_PAGE)
+    assert "system font stack" in report and "find_font" in report
+
+
+async def test_a_page_with_a_loaded_web_font_is_not() -> None:
+    html = (
+        "<!doctype html><html lang='en'><head><style>"
+        + _fraunces_css()
+        + "body{font-family:'Fraunces',serif;margin:0;padding:24px}</style></head><body><h1>Wonderworks</h1>"
+        + "<p>A hands-on science museum for curious families, open every day of the week with daily workshops and events for children.</p>"
+        * 3
+        + "</body></html>"
+    )
+    assert "system font stack" not in await _audit(html)

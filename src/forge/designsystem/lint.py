@@ -39,6 +39,23 @@ TYPOGRAPHY_PROPERTIES = {
     "fontFeature",
     "fontVariation",
 }
+SYSTEM_FONTS = {
+    "system-ui",
+    "-apple-system",
+    "blinkmacsystemfont",
+    "segoe ui",
+    "arial",
+    "helvetica",
+    "helvetica neue",
+    "times new roman",
+    "times",
+    "verdana",
+    "tahoma",
+    "sans-serif",
+    "serif",
+    "ui-sans-serif",
+    "roboto",
+}
 CONTRAST_MINIMUM = 4.5
 MAX_ACCENT_HUES = 3
 ONE_HUE_SPREAD = 25  # degrees: every coloured token inside this arc is a one-note palette
@@ -146,6 +163,16 @@ def _check_values(system: DesignSystem, findings: list[Finding]) -> None:
                 findings.append(
                     Finding("warning", "typography-incomplete", f"typography.{name}", f"no {needed}")
                 )
+        family = str(system.resolve(style.get("fontFamily", ""))).split(",")[0].strip().strip("\"'").lower()
+        if family in SYSTEM_FONTS:
+            findings.append(
+                Finding(
+                    "warning",
+                    "system-font",
+                    f"typography.{name}.fontFamily",
+                    f"{family} is a system font: choose a designed typeface that suits the product and load it (find_font, fetch_font)",
+                )
+            )
         size = system.resolve(style.get("fontSize"))
         if size is not None and not (isinstance(size, str) and DIMENSION.match(size)):
             findings.append(

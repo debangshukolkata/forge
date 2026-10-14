@@ -216,3 +216,16 @@ def test_diff_lists_token_changes_and_flags_regressions() -> None:
     assert result.regression and any(f.rule == "low-contrast" for f in result.new_findings)
     assert "REGRESSION" in describe_diff(result)
     assert describe_diff(diff_systems(before, before)) == "No token changes and no new findings."
+
+
+def test_a_system_font_in_a_design_md_is_a_warning_and_the_specimen_embeds_bundled_fonts() -> None:
+    from forge.designsystem.fonts import font_css
+    from forge.designsystem.specimen import families_of, specimen_html
+
+    system_font = GOOD.replace("fontFamily: Public Sans", "fontFamily: system-ui")
+    assert ("warning", "system-font") in _rules(system_font)
+    assert ("warning", "system-font") not in _rules(GOOD)
+    css, missing = font_css(["Fraunces", "Totally Unknown Font"])
+    assert "@font-face" in css and "data:font/woff2;base64," in css and missing == ["Totally Unknown Font"]
+    system = parse_design_md(GOOD.replace("Public Sans", "Fraunces"))
+    assert families_of(system) == ["Fraunces"] and "data:font/woff2" in specimen_html(system)

@@ -32,9 +32,9 @@ TASKS = REPO / "tests" / "benchmarks" / "design"
 RUNS = Path(os.environ.get("FORGE_BENCH_RUNS", r"C:\Work\ForgeRuns")) / "designbench"
 JUDGE_RUBRIC = (
     "You are a demanding art director. You see a desktop screenshot and a phone screenshot of the same finished web page and its brief. Judge only what you see. "
-    "Score 1 (poor) to 5 (excellent): distinctiveness (looks designed for this product, not a default template: generic blue SaaS, purple-blue gradients, "
+    "Be strict and use the whole scale: 5 is award-winning studio work, 4 is clearly professional studio work whose distinctive quality you can name, 3 is competent but template-like, 2 is the generic machine-made look (system fonts, a default hero, identical cards), 1 is poor; most machine-made pages are 2 or 3. Score: typography (the type suits the product, mood and language; a system font stack is a 2), distinctiveness (looks designed for this product, not a default template: generic blue SaaS, purple-blue gradients, "
     "cream-and-terracotta, identical card rows score low), hierarchy, harmony (palette, type, shape belong together), fit (the feeling the brief asks for), "
-    'polish (alignment, spacing, contrast, nothing broken or clipped). Reply with JSON only: {"distinctiveness": n, "hierarchy": n, "harmony": n, "fit": n, '
+    'polish (alignment, spacing, contrast, nothing broken or clipped). Reply with JSON only: {"typography": n, "distinctiveness": n, "hierarchy": n, "harmony": n, "fit": n, '
     '"polish": n, "worst_problem": "one sentence"}.'
 )  # fmt: skip
 
@@ -180,7 +180,7 @@ def markdown(name: str, rows: list[dict[str, object]]) -> str:
     lines = [
         f"### Run `{name}` ({time.strftime('%Y-%m-%d %H:%M')})",
         "",
-        "| Brief | Wall | Cost | Ladder | DESIGN.md lint (err/warn) | Differs from default in | Audit left | Sideways scroll | Judge (dist/hier/harm/fit/polish) |",
+        "| Brief | Wall | Cost | Ladder | DESIGN.md lint (err/warn) | Differs from default in | Audit left | Sideways scroll | Judge (type/dist/hier/harm/fit/polish) |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
@@ -191,7 +191,7 @@ def markdown(name: str, rows: list[dict[str, object]]) -> str:
         scores = (
             "/".join(
                 str(judge_row.get(k, "?"))
-                for k in ("distinctiveness", "hierarchy", "harmony", "fit", "polish")
+                for k in ("typography", "distinctiveness", "hierarchy", "harmony", "fit", "polish")
             )
             if isinstance(judge_row, dict)
             else "?"

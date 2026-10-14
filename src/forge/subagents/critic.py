@@ -24,7 +24,8 @@ You are given the URL(s) of the running app (and what it is for). Do this:
    - Consistency: one type scale, one spacing rhythm, one radius and shadow style, one accent colour, aligned edges?
    - Polish: depth, alignment, icon and image quality, hover/focus feedback, no default browser looks, no cramped or
      floating elements, imagery or illustration that is designed (not an empty box, not clip art).
-   - Typography and colour: font pairing, weight contrast, line length, line height, contrast ratio, a palette with
+   - Typography and colour: a page whose text is all in the system font stack (system-ui, Segoe UI, Arial, Helvetica) scores 2 at most; the
+     typeface must suit the product, its mood and its language (a Japanese ramen bar set in Segoe UI is a miss); font pairing, weight contrast, line length, line height, contrast ratio, a palette with
      a point of view rather than defaults.
    - States and UX: empty, loading, error and success states exist and look designed; forms validate in plain
      words next to the field; the next step is always obvious; real copy, no lorem ipsum, no vague placeholders.
