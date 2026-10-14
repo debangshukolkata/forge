@@ -226,6 +226,10 @@ def build_workbook(spec: WorkbookSpec) -> bytes:
             workbook.defined_names[name] = DefinedName(name, attr_text=target)
         if spec.title:
             workbook.properties.title = spec.title
+        if spec.mark_inputs:
+            from forge.sheets.inputs import mark_inputs
+
+            mark_inputs(workbook)
     except WorkbookError:
         raise
     except Exception as error:  # a bad range or format in the outline

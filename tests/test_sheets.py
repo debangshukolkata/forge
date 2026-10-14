@@ -175,3 +175,32 @@ def test_excel_recalculation_reports_real_errors_when_excel_is_installed() -> No
     assert errors == [("A", "B2", "#DIV/0!")] and saved
     values = openpyxl.load_workbook(io.BytesIO(saved), data_only=True)["A"]
     assert values["B3"].value == 3
+
+
+def test_numbers_that_formulas_depend_on_are_marked_as_inputs_and_unmarked_ones_are_reported() -> None:
+    outline = {
+        "names": {"Rate": "Assumptions!$B$2"},
+        "sheets": [
+            {
+                "name": "Assumptions",
+                "columns": [{"header": "Item"}, {"header": "Value"}],
+                "rows": [["Rate", 0.2], ["Unused", 5]],
+            },
+            {
+                "name": "Calc",
+                "columns": [{"header": "Amount"}, {"header": "Tax"}],
+                "rows": [[100, "=A2*Rate"], [250, "=A3*Rate"]],
+            },
+        ],
+    }
+    marked = openpyxl.load_workbook(io.BytesIO(build_workbook(parse_workbook(json.dumps(outline)))))
+    assert str(marked["Assumptions"]["B2"].font.color.rgb).endswith("0000FF")  # read through the named range
+    assert str(marked["Calc"]["A2"].font.color.rgb).endswith("0000FF")  # read directly by a formula
+    assert marked["Assumptions"]["B3"].font.color is None or not str(
+        marked["Assumptions"]["B3"].font.color.rgb
+    ).endswith("0000FF")  # nothing reads it
+    assert "not styled as inputs" not in describe_findings(
+        check_workbook(build_workbook(parse_workbook(json.dumps(outline))))
+    )
+    plain = build_workbook(parse_workbook(json.dumps({**outline, "mark_inputs": False})))
+    assert "not styled as inputs" in describe_findings(check_workbook(plain))

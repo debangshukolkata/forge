@@ -75,6 +75,10 @@ class SheetSpec(BaseModel):
 
 class WorkbookSpec(BaseModel):
     title: str = ""
+    mark_inputs: bool = Field(
+        default=True,
+        description="Style the numbers that formulas depend on as inputs (blue font), the modelling convention",
+    )
     brand: BrandKit | None = Field(
         default=None, description="Company colours and fonts: header rows and cell fonts follow it"
     )

@@ -14,6 +14,9 @@ specification, the openpyxl documentation and our own tests with Excel.
 2. **Inputs in one place.** Rates, targets and dates go in a labelled `Assumptions` sheet (or a block at the top), each used through a
    named range (`names` in the outline: `TaxRate` -> `Assumptions!$B$2`). A number typed inside a formula (`=B2*1.2`) is a hidden input:
    `check_workbook` lists it as a hint.
+2b. **Inputs look like inputs.** A number that a formula depends on (a rate, a target, a starting value) is styled blue, the modelling convention, so a reader
+   sees at a glance what may be changed and what is calculated. `build_workbook` does it for you (`mark_inputs`, on by default, also through named ranges);
+   `check_workbook` hints at any such number that is not styled that way.
 3. **One header row, one record per row, one kind of value per column.** No blank rows or columns inside the data, no merged cells in the data, no
    units inside numbers ("12 kg"): put the unit in the header.
 4. **Formats say what a number is.** Currency `#,##0.00`, percentages `0.0%` (store 0.2, not 20), dates `yyyy-mm-dd`, counts `#,##0`. Dates are real

@@ -143,6 +143,18 @@ def check_workbook(data: bytes) -> list[Finding]:
                             f"a number is typed inside the formula ({value[:60]}): put it in a labelled cell or a named range",
                         )
                     )
+    from forge.sheets.inputs import unmarked_inputs
+
+    loose = unmarked_inputs(formulas_book)
+    if loose:
+        findings.append(
+            Finding(
+                "hint",
+                loose[0],
+                f"{len(loose)} number(s) that formulas depend on are not styled as inputs ({', '.join(loose[:4])}{', ...' if len(loose) > 4 else ''}): "
+                "colour them blue (the modelling convention) so a reader sees what may be changed; build_workbook does this by default",
+            )
+        )
     for sheet_name, column, row in _cycles(graph):
         findings.append(
             Finding(
