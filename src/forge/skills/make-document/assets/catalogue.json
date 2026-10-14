@@ -1,0 +1,108 @@
+{
+ "version": 1,
+ "assets": [
+  {
+   "id": "tpl-doc-memo",
+   "type": "template",
+   "title": "Memo: To, From, Date, Subject",
+   "summary": "A plain internal memo: a To/From/Date/Subject block, a decision-needed paragraph first, background after.",
+   "moods": [
+    "plain",
+    "direct"
+   ],
+   "products": [
+    "internal",
+    "management",
+    "hr"
+   ],
+   "tags": [
+    "word",
+    "memo"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "templates/memo.docx",
+     "to": "docs/templates/memo.docx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-347, scripts/dev/make_document_templates.py)",
+   "tested": "built by the document builder, opened and printed by Word (page picture looked at), package validator clean (D-347)",
+   "preview": null,
+   "path": "assets/template/tpl-doc-memo.md",
+   "size": 36457
+  },
+  {
+   "id": "tpl-doc-proposal",
+   "type": "template",
+   "title": "Proposal with contents list, approach, timeline and price",
+   "summary": "A customer proposal in teal: contents list, the problem, the approach, a phase and price table, one clear next step.",
+   "moods": [
+    "warm",
+    "persuasive",
+    "professional"
+   ],
+   "products": [
+    "sales",
+    "consulting",
+    "agency"
+   ],
+   "tags": [
+    "word",
+    "proposal",
+    "toc"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "templates/proposal.docx",
+     "to": "docs/templates/proposal.docx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-347, scripts/dev/make_document_templates.py)",
+   "tested": "built by the document builder, opened and printed by Word (page picture looked at), package validator clean (D-347)",
+   "preview": null,
+   "path": "assets/template/tpl-doc-proposal.md",
+   "size": 36674
+  },
+  {
+   "id": "tpl-doc-report-clean",
+   "type": "template",
+   "title": "Report: summary, results table, next steps",
+   "summary": "A one-page business report in navy: title, summary, a key-figures table with a repeating header row, numbered next steps, header and footer with page number.",
+   "moods": [
+    "formal",
+    "clean",
+    "trustworthy"
+   ],
+   "products": [
+    "finance",
+    "management",
+    "operations"
+   ],
+   "tags": [
+    "word",
+    "report",
+    "table"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "templates/report-clean.docx",
+     "to": "docs/templates/report-clean.docx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-347, scripts/dev/make_document_templates.py)",
+   "tested": "built by the document builder, opened and printed by Word (page picture looked at), package validator clean (D-347)",
+   "preview": null,
+   "path": "assets/template/tpl-doc-report-clean.md",
+   "size": 36764
+  }
+ ]
+}

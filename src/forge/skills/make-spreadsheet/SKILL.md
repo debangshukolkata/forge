@@ -59,3 +59,7 @@ formula; to store text that starts with `=`, begin it with an apostrophe-free sp
 - Do not paste a computed value where a formula belongs; do not leave `#REF!` or `#DIV/0!` showing (wrap divisions: `=IF(B2=0,0,A2/B2)`).
 - Do not enable or write macros; the result is always `.xlsx`.
 - Do not claim the numbers are right because the workbook has no errors: say which source each input came from.
+
+## Starting points and the company look
+`find_asset` (type `recipe`, e.g. "budget", "task tracker") copies a tested outline to adapt. `brand` in the outline, or `brand_file` on `build_workbook`
+(accent, text, body_font), colours the header rows and sets the cell font.

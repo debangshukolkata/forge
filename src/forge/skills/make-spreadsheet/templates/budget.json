@@ -1,0 +1,105 @@
+{
+  "title": "Budget",
+  "brand": {
+    "accent": "1F3864",
+    "body_font": "Calibri"
+  },
+  "sheets": [
+    {
+      "name": "Assumptions",
+      "columns": [
+        {
+          "header": "Item",
+          "width": 28
+        },
+        {
+          "header": "Value",
+          "format": "0.0%"
+        }
+      ],
+      "rows": [
+        [
+          "Growth per month",
+          0.03
+        ],
+        [
+          "Tax rate",
+          0.2
+        ],
+        [
+          "Cost growth per month",
+          0.01
+        ]
+      ]
+    },
+    {
+      "name": "Budget",
+      "columns": [
+        {
+          "header": "Month",
+          "width": 14
+        },
+        {
+          "header": "Revenue",
+          "format": "#,##0"
+        },
+        {
+          "header": "Costs",
+          "format": "#,##0"
+        },
+        {
+          "header": "Profit",
+          "format": "#,##0"
+        },
+        {
+          "header": "Tax",
+          "format": "#,##0"
+        }
+      ],
+      "rows": [
+        [
+          "Jan",
+          10000,
+          8000,
+          "=B2-C2",
+          "=MAX(D2,0)*TaxRate"
+        ],
+        [
+          "Feb",
+          "=B2*(1+GrowthPerMonth)",
+          "=C2*(1+CostGrowth)",
+          "=B3-C3",
+          "=MAX(D3,0)*TaxRate"
+        ],
+        [
+          "Mar",
+          "=B3*(1+GrowthPerMonth)",
+          "=C3*(1+CostGrowth)",
+          "=B4-C4",
+          "=MAX(D4,0)*TaxRate"
+        ]
+      ],
+      "total_row": {
+        "A": "Total",
+        "B": "SUM",
+        "C": "SUM",
+        "D": "SUM",
+        "E": "SUM"
+      },
+      "charts": [
+        {
+          "type": "column",
+          "title": "Revenue and costs",
+          "data": "B1:C4",
+          "categories": "A2:A4",
+          "anchor": "G2"
+        }
+      ]
+    }
+  ],
+  "names": {
+    "GrowthPerMonth": "Assumptions!$B$2",
+    "TaxRate": "Assumptions!$B$3",
+    "CostGrowth": "Assumptions!$B$4"
+  }
+}

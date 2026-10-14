@@ -6,7 +6,7 @@ encrypts and decrypts; `build.py` creates a PDF from an outline (reportlab platy
 and language set. The tools are in `tools/pdf_toolkit.py`; the skill is `skills/pdf-toolkit/SKILL.md`. Rendering pages and OCR use the existing `pdf_render`
 and `ocr_image`.
 
-- **Depends on:** errors
+- **Depends on:** brand, errors
 - **Invariants:** pypdf and reportlab are imported lazily (a missing library is a clear message); the original file is never changed (results are new bytes the tool writes through the workspace); an encrypted file is opened only with the password the user gave; links in a built PDF may only be https, http or mailto; JavaScript and launch actions in an opened PDF are never run (pypdf does not run them) and are reported by `read_pdf`.
 - **Tests:** test_pdfs.py
 - **Decisions:** docs/DECISIONS.md (D-343); clean-room rules in docs/DOCUMENTS_CLEAN_ROOM.md.

@@ -56,7 +56,7 @@ def test_good_files_pass_and_say_what_kind_they_are() -> None:
 
 
 def test_hostile_packages_are_refused() -> None:
-    with pytest.raises(PackageError, match="not an Office package"):
+    with pytest.raises(PackageError, match="not a valid Office package"):
         check_package(b"not a zip")
     evil_name = _rewrite(_docx(), {"../evil.xml": b"<a/>"})
     with pytest.raises(PackageError, match="unsafe entry name"):
@@ -100,7 +100,7 @@ def test_the_validator_names_structural_faults() -> None:
         },
     )
     assert any("media/missing.png" in p for p in validate_package(dangling))
-    assert any("not an Office package" in p for p in validate_package(b"zzz"))
+    assert any("not a valid Office package" in p for p in validate_package(b"zzz"))
 
 
 def test_tools_refuse_hostile_files_and_report_notes(original_repo: Path, tmp_path: Path) -> None:

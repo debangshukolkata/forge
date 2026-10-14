@@ -19,19 +19,16 @@ import re
 import zipfile
 from dataclasses import dataclass, field
 
+from forge.ooxml.check import PackageError, open_archive
+from forge.ooxml.check import check_xml as _check_xml
 from forge.slides.open_deck import DeckError
 from forge.slides.validate import validate_package
 
-MAX_ENTRIES = 5000
-MAX_TOTAL_BYTES = 400 * 1024 * 1024
-MAX_ENTRY_BYTES = 200 * 1024 * 1024
-MAX_RATIO = 250  # uncompressed / compressed, per entry: a bomb is far above this, real decks far below
 MANIFEST = "_unpacked.json"
 XML_SUFFIXES = (".xml", ".rels")
 FORBIDDEN_PARTS = re.compile(
     r"(vbaProject\.bin|vbaData\.xml|\.exe$|\.dll$|\.bat$|\.cmd$|\.ps1$|\.js$|\.vbs$|\.scr$)", re.I
 )
-UNSAFE_XML = re.compile(rb"<!\s*(DOCTYPE|ENTITY)", re.I)
 EXTERNAL = re.compile(
     r'Target="([^"]+)"[^>]*TargetMode="External"|TargetMode="External"[^>]*Target="([^"]+)"'
 )
@@ -44,18 +41,6 @@ class Unpacked:
     external: list[str] = field(default_factory=list)  # external relationship targets found
 
 
-RESERVED_NAMES = re.compile(r"^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$", re.I)
-BAD_CHARACTERS = re.compile(r'[\x00-\x1f<>:"|?*\\]')
-
-
-def _unsafe_name(name: str) -> bool:
-    """Absolute paths, parent folders, characters Windows treats specially (`:` makes an NTFS data stream), device names (CON, NUL, ...)
-    and names ending in a dot or space are refused: unpacking writes these names to disk."""
-    if name.startswith("/") or ".." in name.split("/") or BAD_CHARACTERS.search(name):
-        return True
-    return any(RESERVED_NAMES.match(part) or part != part.rstrip(". ") for part in name.split("/") if part)
-
-
 def check_package(data: bytes) -> None:
     """The checks every deck gets before python-pptx reads it: the archive (bombs, names) and the XML (no DOCTYPE or entities)."""
     archive = check_archive(data)
@@ -65,46 +50,18 @@ def check_package(data: bytes) -> None:
 
 
 def check_archive(data: bytes) -> zipfile.ZipFile:
-    """Opens the zip after checking it against bombs and unsafe names; raises DeckError saying why."""
+    """Opens the zip after checking it against bombs and unsafe names (the shared check in `ooxml`); raises DeckError saying why."""
     try:
-        archive = zipfile.ZipFile(io.BytesIO(data))
-    except zipfile.BadZipFile as error:
-        raise DeckError("the file is not a valid .pptx package (a zip file)") from error
-    entries = archive.infolist()
-    if len(entries) > MAX_ENTRIES:
-        raise DeckError(f"the package has {len(entries)} entries (more than {MAX_ENTRIES}): it is refused")
-    total = 0
-    for info in entries:
-        name = info.filename
-        if _unsafe_name(name):
-            raise DeckError(f"the package has an unsafe entry name {name!r}: it is refused")
-        if info.flag_bits & 0x1:
-            raise DeckError(
-                "the package is encrypted or password-protected: ask the user for an unprotected copy"
-            )
-        if info.file_size > MAX_ENTRY_BYTES:
-            raise DeckError(
-                f"the entry {name} expands to {info.file_size // (1024 * 1024)} MB: it is refused"
-            )
-        if (
-            info.compress_size
-            and info.file_size / info.compress_size > MAX_RATIO
-            and info.file_size > 1024 * 1024
-        ):
-            raise DeckError(
-                f"the entry {name} expands {info.file_size // info.compress_size}x (a zip bomb?): it is refused"
-            )
-        total += info.file_size
-    if total > MAX_TOTAL_BYTES:
-        raise DeckError(f"the package expands to {total // (1024 * 1024)} MB: it is refused")
-    return archive
+        return open_archive(data)
+    except PackageError as error:
+        raise DeckError(str(error).replace("a valid Office package", "a valid .pptx package")) from error
 
 
 def check_xml(name: str, data: bytes) -> None:
-    if UNSAFE_XML.search(data[:4096]) or UNSAFE_XML.search(data):
-        raise DeckError(
-            f"{name} declares a DOCTYPE or an entity, which is not allowed in a deck: it is refused"
-        )
+    try:
+        _check_xml(name, data)
+    except PackageError as error:
+        raise DeckError(str(error)) from error
 
 
 def _pretty(data: bytes) -> bytes:

@@ -7,7 +7,7 @@ formulas, named ranges, number and date formats, tables, conditional formatting,
 formulas that return text where numbers are expected, hard-coded numbers beside formulas); `excel.py` has Excel itself recalculate the file when Excel
 is installed (Windows only) so the values and errors are the real ones. The tools are in `tools/workbook.py`; the skill is `skills/make-spreadsheet/SKILL.md`.
 
-- **Depends on:** errors, ooxml, toolkit
+- **Depends on:** brand, errors, ooxml, toolkit
 - **Invariants:** openpyxl is imported lazily (a missing library is a clear message); an existing workbook with charts, pictures or macros is never silently stripped (openpyxl would drop them): editing it is refused unless the caller says the loss is fine; macros (.xlsm) are never run and Excel gets its paths through environment variables with macros force-disabled (D-202); a formula is never replaced by its value.
 - **Tests:** test_sheets.py
 - **Decisions:** docs/DECISIONS.md (D-339); clean-room rules in docs/DOCUMENTS_CLEAN_ROOM.md.

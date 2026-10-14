@@ -54,3 +54,9 @@ fields: Word fills them when the file is opened (the user may be asked to press 
 ## Do not
 - Do not paste long text as one paragraph, do not use tables for layout, do not leave template sample text.
 - Do not write macros; the result is always `.docx`.
+
+## Start from a template, and the company look
+- Look for a ready template first: `find_asset` (type `template`, e.g. "business report", "memo", "proposal") and `add_asset` copy a tested .docx into the
+  project; put its path in `template`. Its styles, header and footer are kept and its sample text is removed.
+- The company look: `brand` in the outline, or `brand_file` (a JSON file with `accent`, `text`, `title_font`, `body_font`) on the build tool. Headings,
+  table headers and fonts follow it; a colour that would be unreadable on white is darkened. The same file works for decks, workbooks and PDFs.

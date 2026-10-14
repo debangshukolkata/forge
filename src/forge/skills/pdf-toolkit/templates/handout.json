@@ -1,0 +1,47 @@
+{
+  "title": "Handout",
+  "author": "Company name",
+  "footer": "Company name",
+  "brand": {
+    "accent": "1F3864",
+    "text": "262626"
+  },
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "What you need to know"
+    },
+    {
+      "type": "paragraph",
+      "text": "One short paragraph that says what this handout is for and who it is for."
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "The first thing to do",
+        "The second thing to do"
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 1,
+      "text": "Contacts"
+    },
+    {
+      "type": "table",
+      "header": [
+        "Name",
+        "Role",
+        "Email"
+      ],
+      "rows": [
+        [
+          "Name",
+          "Role",
+          "name@example.com"
+        ]
+      ]
+    }
+  ]
+}

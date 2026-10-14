@@ -7,10 +7,15 @@ causes of the repair prompt before the user ever sees it."""
 from __future__ import annotations
 
 import io
-import posixpath
 import re
 import zipfile
-from xml.etree import ElementTree as ET
+
+from forge.ooxml.validate import (
+    check_content_types,
+    check_relationships,
+    parse_xml_part,
+    rels_for,
+)
 
 CONTENT_TYPES = "[Content_Types].xml"
 NS_CT = "{http://schemas.openxmlformats.org/package/2006/content-types}"
@@ -24,72 +29,6 @@ MAX_FONT_HUNDREDTHS = 400_000  # 4000 pt, the schema limit for sz
 MAX_PROBLEMS = 40
 
 
-def _parse(data: bytes, name: str, problems: list[str]) -> ET.Element | None:
-    try:
-        return ET.fromstring(data)
-    except ET.ParseError as error:
-        problems.append(f"{name}: the XML is not well formed ({error})")
-        return None
-
-
-def _resolve(rels_name: str, target: str) -> str:
-    """The part a relationship points to: targets are relative to the folder of the part that owns the rels file."""
-    if target.startswith("/"):
-        return target.lstrip("/")
-    owner_folder = posixpath.dirname(posixpath.dirname(rels_name))
-    return posixpath.normpath(posixpath.join(owner_folder, target))
-
-
-def _check_content_types(names: set[str], archive: zipfile.ZipFile, problems: list[str]) -> None:
-    if CONTENT_TYPES not in names:
-        problems.append(f"{CONTENT_TYPES} is missing: PowerPoint cannot read the package")
-        return
-    root = _parse(archive.read(CONTENT_TYPES), CONTENT_TYPES, problems)
-    if root is None:
-        return
-    defaults = {e.get("Extension", "").lower() for e in root.findall(f"{NS_CT}Default")}
-    overrides = {e.get("PartName", "").lstrip("/") for e in root.findall(f"{NS_CT}Override")}
-    for part in overrides:
-        if part not in names:
-            problems.append(f"{CONTENT_TYPES}: an override names the part {part}, which is not in the file")
-    for name in sorted(names):
-        if name == CONTENT_TYPES or name.endswith("/"):
-            continue
-        extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-        if name not in overrides and extension not in defaults:
-            problems.append(f"{name}: has no content type (no Default for .{extension} and no Override)")
-
-
-def _check_relationships(
-    names: set[str], archive: zipfile.ZipFile, problems: list[str]
-) -> dict[str, dict[str, str]]:
-    """Every internal relationship target exists and ids are unique; returns rels file -> {id: target part}."""
-    found: dict[str, dict[str, str]] = {}
-    for name in sorted(n for n in names if n.endswith(".rels")):
-        root = _parse(archive.read(name), name, problems)
-        if root is None:
-            continue
-        ids: dict[str, str] = {}
-        for rel in root.findall(f"{NS_REL}Relationship"):
-            rel_id = rel.get("Id", "")
-            if rel_id in ids:
-                problems.append(f"{name}: the relationship id {rel_id} is used twice")
-            if rel.get("TargetMode") == "External":
-                ids[rel_id] = ""
-                continue
-            part = _resolve(name, rel.get("Target", ""))
-            ids[rel_id] = part
-            if part not in names:
-                problems.append(f"{name}: relationship {rel_id} points to {part}, which is not in the file")
-        found[name] = ids
-    return found
-
-
-def _rels_for(part: str) -> str:
-    folder, base = posixpath.split(part)
-    return posixpath.join(folder, "_rels", base + ".rels")
-
-
 def _check_presentation(
     archive: zipfile.ZipFile, rels: dict[str, dict[str, str]], problems: list[str]
 ) -> list[str]:
@@ -98,10 +37,10 @@ def _check_presentation(
     if name not in archive.namelist():
         problems.append("ppt/presentation.xml is missing: this is not a PowerPoint package")
         return []
-    root = _parse(archive.read(name), name, problems)
+    root = parse_xml_part(archive.read(name), name, problems)
     if root is None:
         return []
-    slide_rels = rels.get(_rels_for(name), {})
+    slide_rels = rels.get(rels_for(name), {})
     seen: set[str] = set()
     slides: list[str] = []
     for item in root.iter(f"{NS_P}sldId"):
@@ -121,7 +60,7 @@ def _check_presentation(
 def _check_slide(
     archive: zipfile.ZipFile, part: str, rels: dict[str, dict[str, str]], problems: list[str]
 ) -> None:
-    root = _parse(archive.read(part), part, problems)
+    root = parse_xml_part(archive.read(part), part, problems)
     if root is None:
         return
     ids: dict[str, int] = {}
@@ -133,7 +72,7 @@ def _check_slide(
             problems.append(
                 f"{part}: the shape id {shape_id} is used by {count} shapes (ids must be unique per slide)"
             )
-    own = rels.get(_rels_for(part), {})
+    own = rels.get(rels_for(part), {})
     for tag in ("embed", "link", "id"):
         for element in root.iter():
             value = element.get(f"{NS_R}{tag}")
@@ -184,7 +123,7 @@ def _check_slide(
 def _check_chart(
     archive: zipfile.ZipFile, part: str, rels: dict[str, dict[str, str]], problems: list[str]
 ) -> None:
-    root = _parse(archive.read(part), part, problems)
+    root = parse_xml_part(archive.read(part), part, problems)
     if root is None:
         return
     if root.find(f"{NS_C}chart") is None:
@@ -202,7 +141,7 @@ def _check_chart(
     external = root.find(f"{NS_C}externalData")
     if external is not None:
         rel_id = external.get(f"{NS_R}id", "")
-        if rel_id not in rels.get(_rels_for(part), {}):
+        if rel_id not in rels.get(rels_for(part), {}):
             problems.append(f"{part}: the embedded workbook relationship {rel_id} is missing")
 
 
@@ -218,8 +157,8 @@ def validate_package(data: bytes) -> list[str]:
         names = set(raw_names)
         if len(raw_names) != len(names):
             problems.append("the package contains the same part name twice")
-        _check_content_types(names, archive, problems)
-        rels = _check_relationships(names, archive, problems)
+        check_content_types(names, archive, "", problems)
+        rels = check_relationships(names, archive, problems)
         for slide in _check_presentation(archive, rels, problems):
             if slide in names:
                 _check_slide(archive, slide, rels, problems)
@@ -228,5 +167,5 @@ def validate_package(data: bytes) -> list[str]:
         for name in sorted(
             n for n in names if n.endswith(".xml") and n.startswith("ppt/") and "/slides/" not in n
         ):
-            _parse(archive.read(name), name, problems)
+            parse_xml_part(archive.read(name), name, problems)
     return problems[:MAX_PROBLEMS]

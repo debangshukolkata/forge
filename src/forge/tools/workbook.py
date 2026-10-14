@@ -15,6 +15,7 @@ from forge.sheets.edit import Operation, edit_workbook
 from forge.sheets.read import describe_workbook, read_workbook
 from forge.sheets.spec import WorkbookError, parse_workbook
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.brand_file import BRAND_FILE_DESCRIPTION, load_brand_file
 from forge.tools.vision import image_path
 
 MAX_BYTES = 60 * 1024 * 1024
@@ -49,6 +50,7 @@ class BuildWorkbook(Tool):
     class Args(ToolArgs):
         outline: str = Field(description="Path of the JSON or YAML outline, relative to the repository root")
         output: str = Field(description="Path of the .xlsx to write, e.g. docs/budget.xlsx")
+        brand_file: str = Field(default="", description=BRAND_FILE_DESCRIPTION)
         reason: str = Field(default="", description="One line saying why; shown to the user in CHANGES.md.")
 
     def summary(self, args: BuildWorkbook.Args) -> str:
@@ -64,6 +66,9 @@ class BuildWorkbook(Tool):
             spec = parse_workbook(
                 outline.read_text(encoding="utf-8"), as_yaml=outline.suffix.lower() in {".yaml", ".yml"}
             )
+            kit = load_brand_file(context, args.brand_file)
+            if kit is not None:
+                spec.brand = kit
             data = await asyncio.to_thread(build_workbook, spec)
             context.workspace.write_bytes(args.output, data, args.reason or "workbook built from an outline")
         except (ForgeError, OSError, ValueError) as error:

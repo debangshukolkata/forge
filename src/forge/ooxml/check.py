@@ -69,7 +69,7 @@ def open_archive(data: bytes) -> zipfile.ZipFile:
         archive = zipfile.ZipFile(io.BytesIO(data))
     except zipfile.BadZipFile as error:
         raise PackageError(
-            "the file is not an Office package (a zip file): it may be damaged, or an old .doc/.xls/.ppt"
+            "the file is not a valid Office package (a zip file): it may be damaged, or an old .doc/.xls/.ppt"
         ) from error
     entries = archive.infolist()
     if len(entries) > MAX_ENTRIES:
@@ -101,6 +101,14 @@ def open_archive(data: bytes) -> zipfile.ZipFile:
     return archive
 
 
+def check_xml(name: str, data: bytes) -> None:
+    """Refuses XML with a DOCTYPE or an entity declaration (expansion bombs, external entities)."""
+    if UNSAFE_XML.search(data):
+        raise PackageError(
+            f"{name} declares a DOCTYPE or an entity, which is not allowed in an Office file: it is refused"
+        )
+
+
 def kind_of(names: set[str]) -> str:
     if "word/document.xml" in names:
         return "docx"
@@ -130,10 +138,7 @@ def check_package(data: bytes) -> PackageReport:
             report.activex = True
         if name.endswith((".xml", ".rels")):
             content = archive.read(name)
-            if UNSAFE_XML.search(content):
-                raise PackageError(
-                    f"{name} declares a DOCTYPE or an entity, which is not allowed in an Office file: it is refused"
-                )
+            check_xml(name, content)
             if name.endswith(".rels"):
                 for match in EXTERNAL.finditer(content.decode("utf-8", errors="replace")):
                     target = match.group(1) or match.group(2)

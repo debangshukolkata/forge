@@ -8,6 +8,7 @@ import io
 from collections.abc import Callable
 from typing import Any
 
+from forge.brand.kit import Resolved
 from forge.documents.spec import (
     Bullets,
     DocumentError,
@@ -112,8 +113,8 @@ def _paragraph(document: Any, block: Paragraph) -> None:
         paragraph.add_run(block.text)
 
 
-def _table(document: Any, block: Table) -> None:
-    from docx.shared import Inches
+def _table(document: Any, block: Table, brand: Resolved) -> None:
+    from docx.shared import Inches, RGBColor
 
     if block.caption:
         caption = document.add_paragraph(block.caption, style="Caption")
@@ -127,6 +128,10 @@ def _table(document: Any, block: Table) -> None:
         cell.text = text
         for run in cell.paragraphs[0].runs:
             run.bold = True
+            if brand.header_fill and brand.header_text:
+                run.font.color.rgb = RGBColor.from_string(brand.header_text)
+        if brand.header_fill:
+            _shade(cell, brand.header_fill)
     _repeat_header(table.rows[0])
     for row in block.rows:
         cells = table.add_row().cells
@@ -136,6 +141,38 @@ def _table(document: Any, block: Table) -> None:
         for row in table.rows:
             row.cells[index].width = Inches(width)
     document.add_paragraph()
+
+
+def _shade(cell: Any, fill: str) -> None:
+    """Background colour of a table cell."""
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+
+    shading = OxmlElement("w:shd")
+    shading.set(qn("w:val"), "clear")
+    shading.set(qn("w:color"), "auto")
+    shading.set(qn("w:fill"), fill)
+    cell._tc.get_or_add_tcPr().append(shading)
+
+
+def _apply_brand(document: Any, brand: Resolved) -> None:
+    """Company fonts and colours on the styles every heading and paragraph already uses, so nothing is formatted by hand."""
+    from docx.shared import RGBColor
+
+    for name in ("Title", "Heading 1", "Heading 2", "Heading 3", "Heading 4"):
+        try:
+            style = document.styles[name]
+        except KeyError:
+            continue
+        if brand.title_font:
+            style.font.name = brand.title_font
+        if brand.heading:
+            style.font.color.rgb = RGBColor.from_string(brand.heading)
+    normal = document.styles["Normal"]
+    if brand.body_font:
+        normal.font.name = brand.body_font
+    if brand.text:
+        normal.font.color.rgb = RGBColor.from_string(brand.text)
 
 
 def _repeat_header(row: Any) -> None:
@@ -180,6 +217,9 @@ def build_document(spec: DocumentSpec, load: Callable[[str], bytes], template: b
             normal.font.name, normal.font.size = spec.font, Pt(spec.font_size)
             normal.paragraph_format.space_after = Pt(6)
             normal.paragraph_format.line_spacing = 1.15
+        brand = Resolved(spec.brand)
+        if spec.brand:
+            _apply_brand(document, brand)
         properties = document.core_properties
         properties.title, properties.author, properties.language = spec.title, spec.author, spec.language
         run_properties = normal.element.get_or_add_rPr()
@@ -216,7 +256,7 @@ def build_document(spec: DocumentSpec, load: Callable[[str], bytes], template: b
                 for item in block.items:
                     document.add_paragraph(item, style="List Number")
             elif isinstance(block, Table):
-                _table(document, block)
+                _table(document, block, brand)
             elif isinstance(block, Image):
                 _image(document, block, load)
             elif isinstance(block, Quote):

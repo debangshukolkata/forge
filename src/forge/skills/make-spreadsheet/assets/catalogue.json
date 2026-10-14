@@ -1,0 +1,75 @@
+{
+ "version": 1,
+ "assets": [
+  {
+   "id": "rcp-xl-budget",
+   "type": "recipe",
+   "title": "Monthly budget with an assumptions sheet",
+   "summary": "An outline for a three-month budget: an Assumptions sheet with named growth, cost growth and tax rates, formulas for revenue, costs, profit and tax, a total row and a chart.",
+   "moods": [
+    "clean",
+    "formal"
+   ],
+   "products": [
+    "finance",
+    "planning",
+    "small business"
+   ],
+   "tags": [
+    "excel",
+    "budget",
+    "formulas",
+    "named ranges"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "templates/budget.json",
+     "to": "docs/budget-outline.json"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-347, scripts/dev/make_document_templates.py)",
+   "tested": "built into a workbook, checked with check_workbook and calculated by Excel with no error cells (D-347)",
+   "preview": null,
+   "path": "assets/recipe/rcp-xl-budget.md",
+   "size": 2132
+  },
+  {
+   "id": "rcp-xl-tracker",
+   "type": "recipe",
+   "title": "Task tracker with drop-downs and colour flags",
+   "summary": "An outline for a task list as an Excel table: status and priority drop-downs, green for Done, red for High priority, dates formatted, header frozen.",
+   "moods": [
+    "clean",
+    "practical"
+   ],
+   "products": [
+    "projects",
+    "operations",
+    "teams"
+   ],
+   "tags": [
+    "excel",
+    "tracker",
+    "validation",
+    "conditional formatting"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "templates/tracker.json",
+     "to": "docs/tracker-outline.json"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-347, scripts/dev/make_document_templates.py)",
+   "tested": "built into a workbook, checked with check_workbook and calculated by Excel with no error cells (D-347)",
+   "preview": null,
+   "path": "assets/recipe/rcp-xl-tracker.md",
+   "size": 1663
+  }
+ ]
+}

@@ -26,7 +26,7 @@ BAD_SHEET_CHARACTERS = "[]:*?/\\"
 MAX_PROBLEMS = 40
 
 
-def _parse(data: bytes, name: str, problems: list[str]) -> ET.Element | None:
+def parse_xml_part(data: bytes, name: str, problems: list[str]) -> ET.Element | None:
     try:
         return ET.fromstring(data)
     except ET.ParseError as error:
@@ -34,18 +34,18 @@ def _parse(data: bytes, name: str, problems: list[str]) -> ET.Element | None:
         return None
 
 
-def _resolve(rels_name: str, target: str) -> str:
+def resolve_target(rels_name: str, target: str) -> str:
     if target.startswith("/"):
         return target.lstrip("/")
     owner_folder = posixpath.dirname(posixpath.dirname(rels_name))
     return posixpath.normpath(posixpath.join(owner_folder, target))
 
 
-def _content_types(names: set[str], archive: zipfile.ZipFile, kind: str, problems: list[str]) -> None:
+def check_content_types(names: set[str], archive: zipfile.ZipFile, kind: str, problems: list[str]) -> None:
     if CONTENT_TYPES not in names:
         problems.append(f"{CONTENT_TYPES} is missing: the Office program cannot read the package")
         return
-    root = _parse(archive.read(CONTENT_TYPES), CONTENT_TYPES, problems)
+    root = parse_xml_part(archive.read(CONTENT_TYPES), CONTENT_TYPES, problems)
     if root is None:
         return
     defaults = {e.get("Extension", "").lower() for e in root.findall(f"{NS_CT}Default")}
@@ -69,12 +69,12 @@ def _content_types(names: set[str], archive: zipfile.ZipFile, kind: str, problem
         )
 
 
-def _relationships(
+def check_relationships(
     names: set[str], archive: zipfile.ZipFile, problems: list[str]
 ) -> dict[str, dict[str, str]]:
     found: dict[str, dict[str, str]] = {}
     for name in sorted(n for n in names if n.endswith(".rels")):
-        root = _parse(archive.read(name), name, problems)
+        root = parse_xml_part(archive.read(name), name, problems)
         if root is None:
             continue
         ids: dict[str, str] = {}
@@ -85,7 +85,7 @@ def _relationships(
             if rel.get("TargetMode") == "External":
                 ids[rel_id] = ""
                 continue
-            part = _resolve(name, rel.get("Target", ""))
+            part = resolve_target(name, rel.get("Target", ""))
             ids[rel_id] = part
             if part not in names:
                 problems.append(f"{name}: relationship {rel_id} points to {part}, which is not in the file")
@@ -93,16 +93,16 @@ def _relationships(
     return found
 
 
-def _rels_for(part: str) -> str:
+def rels_for(part: str) -> str:
     folder, base = posixpath.split(part)
     return posixpath.join(folder, "_rels", base + ".rels")
 
 
 def _word(archive: zipfile.ZipFile, rels: dict[str, dict[str, str]], problems: list[str]) -> None:
-    root = _parse(archive.read("word/document.xml"), "word/document.xml", problems)
+    root = parse_xml_part(archive.read("word/document.xml"), "word/document.xml", problems)
     if root is None:
         return
-    known = rels.get(_rels_for("word/document.xml"), {})
+    known = rels.get(rels_for("word/document.xml"), {})
     for element in root.iter():
         for key, value in element.attrib.items():
             if key in (f"{NS_R}id", f"{NS_R}embed", f"{NS_R}link") and value not in known:
@@ -120,10 +120,10 @@ def _word(archive: zipfile.ZipFile, rels: dict[str, dict[str, str]], problems: l
 def _excel(
     archive: zipfile.ZipFile, rels: dict[str, dict[str, str]], names: set[str], problems: list[str]
 ) -> None:
-    root = _parse(archive.read("xl/workbook.xml"), "xl/workbook.xml", problems)
+    root = parse_xml_part(archive.read("xl/workbook.xml"), "xl/workbook.xml", problems)
     if root is None:
         return
-    known = rels.get(_rels_for("xl/workbook.xml"), {})
+    known = rels.get(rels_for("xl/workbook.xml"), {})
     seen: set[str] = set()
     sheets = root.find(f"{NS_S}sheets")
     if sheets is None or not len(sheets):
@@ -163,13 +163,13 @@ def validate_package(data: bytes) -> list[str]:
             problems.append(
                 "the package has no main document part (word/document.xml, xl/workbook.xml or ppt/presentation.xml)"
             )
-        _content_types(names, archive, kind, problems)
-        rels = _relationships(names, archive, problems)
+        check_content_types(names, archive, kind, problems)
+        rels = check_relationships(names, archive, problems)
         if kind == "docx":
             _word(archive, rels, problems)
         elif kind == "xlsx":
             _excel(archive, rels, names, problems)
         for name in sorted(n for n in names if n.endswith(".xml") and n != CONTENT_TYPES):
             if name not in ("word/document.xml", "xl/workbook.xml"):
-                _parse(archive.read(name), name, problems)
+                parse_xml_part(archive.read(name), name, problems)
     return problems[:MAX_PROBLEMS]

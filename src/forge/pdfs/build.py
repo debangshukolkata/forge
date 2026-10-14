@@ -11,6 +11,7 @@ from xml.sax.saxutils import escape
 
 from pydantic import BaseModel, Field, ValidationError
 
+from forge.brand.kit import BrandKit, Resolved
 from forge.pdfs.read import PdfError
 
 
@@ -64,6 +65,10 @@ class PdfSpec(BaseModel):
     language: str = "en-GB"
     page_size: Literal["A4", "Letter"] = "A4"
     footer: str = ""
+    brand: BrandKit | None = Field(
+        default=None,
+        description="Company colours: headings and table headers follow it; fonts map to the standard PDF fonts",
+    )
     blocks: list[Block]
 
 
@@ -99,6 +104,15 @@ def build_pdf(spec: PdfSpec, load: Callable[[str], bytes]) -> bytes:
     styles = styles_module.getSampleStyleSheet()
     body = styles["BodyText"]
     body.leading = 15
+    brand = Resolved(spec.brand)
+    if spec.brand:
+        body.fontName = brand.pdf_font(brand.body_font)
+        if brand.text:
+            body.textColor = colors.HexColor("#" + brand.text)
+        for name in ("Title", "Heading1", "Heading2", "Heading3"):
+            styles[name].fontName = brand.pdf_font(brand.title_font or brand.body_font, bold=True)
+            if brand.heading:
+                styles[name].textColor = colors.HexColor("#" + brand.heading)
     story: list[Any] = [platypus.Paragraph(escape(spec.title), styles["Title"]), platypus.Spacer(1, 8)]
     try:
         for block in spec.blocks:
@@ -126,7 +140,10 @@ def build_pdf(spec: PdfSpec, load: Callable[[str], bytes]) -> bytes:
                 )
             elif isinstance(block, Table):
                 head = styles_module.ParagraphStyle(
-                    "head", parent=body, textColor=colors.white, fontName="Helvetica-Bold"
+                    "head",
+                    parent=body,
+                    textColor=colors.HexColor("#" + (brand.header_text or "FFFFFF")),
+                    fontName=brand.pdf_font(brand.body_font, bold=True),
                 )
                 cells = [[platypus.Paragraph(escape(c), head) for c in block.header]] + [
                     [platypus.Paragraph(escape(c), body) for c in row] for row in block.rows
@@ -135,7 +152,12 @@ def build_pdf(spec: PdfSpec, load: Callable[[str], bytes]) -> bytes:
                 table.setStyle(
                     platypus.TableStyle(
                         [
-                            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1F3864")),
+                            (
+                                "BACKGROUND",
+                                (0, 0),
+                                (-1, 0),
+                                colors.HexColor("#" + (brand.header_fill or "1F3864")),
+                            ),
                             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BBBBBB")),
                             ("VALIGN", (0, 0), (-1, -1), "TOP"),
                         ]

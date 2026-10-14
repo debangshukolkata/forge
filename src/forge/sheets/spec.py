@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
+from forge.brand.kit import BrandKit
 from forge.errors import ForgeError
 
 
@@ -74,6 +75,9 @@ class SheetSpec(BaseModel):
 
 class WorkbookSpec(BaseModel):
     title: str = ""
+    brand: BrandKit | None = Field(
+        default=None, description="Company colours and fonts: header rows and cell fonts follow it"
+    )
     sheets: list[SheetSpec]
     names: dict[str, str] = Field(
         default_factory=dict, description="Named ranges: {'TaxRate': 'Assumptions!$B$2'}"

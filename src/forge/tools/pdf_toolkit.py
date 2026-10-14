@@ -11,6 +11,7 @@ from forge.pdfs.build import build_pdf, parse_pdf_spec
 from forge.pdfs.edit import Operation, apply, extract_images, split_pdf
 from forge.pdfs.read import PdfError, describe_pdf, read_pdf
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.brand_file import BRAND_FILE_DESCRIPTION, load_brand_file
 from forge.tools.vision import image_path
 
 MAX_BYTES = 200 * 1024 * 1024
@@ -155,6 +156,7 @@ class BuildPdf(Tool):
     class Args(ToolArgs):
         outline: str = Field(description="Path of the JSON or YAML outline")
         output: str = Field(description="Path of the .pdf to write")
+        brand_file: str = Field(default="", description=BRAND_FILE_DESCRIPTION)
         reason: str = Field(default="", description="One line saying why; shown to the user in CHANGES.md.")
 
     def summary(self, args: BuildPdf.Args) -> str:
@@ -170,6 +172,9 @@ class BuildPdf(Tool):
             spec = parse_pdf_spec(
                 outline.read_text(encoding="utf-8"), as_yaml=outline.suffix.lower() in {".yaml", ".yml"}
             )
+            kit = load_brand_file(context, args.brand_file)
+            if kit is not None:
+                spec.brand = kit
             data = await asyncio.to_thread(
                 build_pdf, spec, lambda name: image_path(context, name).read_bytes()
             )

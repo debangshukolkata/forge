@@ -30,6 +30,9 @@ BINARY_SUFFIXES = {
     ".gif",
     ".ico",
     ".pdf",
+    ".docx",
+    ".xlsx",
+    ".pptx",
 }
 
 

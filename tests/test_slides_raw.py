@@ -12,6 +12,7 @@ import pytest
 pytest.importorskip("pptx")
 from pptx import Presentation
 
+from forge.ooxml.check import MAX_ENTRIES
 from forge.slides import rawpackage
 from forge.slides.build import build_deck
 from forge.slides.open_deck import DeckError
@@ -113,7 +114,7 @@ def test_hostile_archives_are_refused_before_anything_is_read(
 
 
 def test_too_many_entries_and_not_a_zip() -> None:
-    many = {f"p{i}.txt": b"" for i in range(rawpackage.MAX_ENTRIES + 1)}
+    many = {f"p{i}.txt": b"" for i in range(MAX_ENTRIES + 1)}
     with pytest.raises(DeckError, match="entries"):
         rawpackage.check_archive(_zip(many))
     with pytest.raises(DeckError, match="not a valid"):

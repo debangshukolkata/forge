@@ -7,6 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
+from forge.brand.kit import BrandKit
 from forge.errors import ForgeError
 
 
@@ -88,6 +89,9 @@ class DocumentSpec(BaseModel):
     font_size: float = 11
     template: str | None = Field(
         default=None, description="A .docx or .dotx whose styles, header and footer are used"
+    )
+    brand: BrandKit | None = Field(
+        default=None, description="Company colours and fonts: headings, table headers and body font follow it"
     )
     blocks: list[Block]
 

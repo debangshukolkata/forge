@@ -7,6 +7,7 @@ import io
 import re
 from typing import Any
 
+from forge.brand.kit import Resolved
 from forge.sheets.spec import ChartSpec, Conditional, SheetSpec, WorkbookError, WorkbookSpec
 
 INVALID_TITLE = re.compile(r"[\[\]:*?/\\]")
@@ -117,7 +118,7 @@ def _conditional(sheet: Any, rule: Conditional) -> None:
     sheet.conditional_formatting.add(rule.range, made)
 
 
-def _build_sheet(workbook: Any, spec: SheetSpec, first: bool) -> None:
+def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -> None:
     from openpyxl.comments import Comment
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import column_index_from_string, get_column_letter
@@ -128,8 +129,9 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool) -> None:
     sheet.title = spec.name
     if spec.tab_colour:
         sheet.sheet_properties.tabColor = spec.tab_colour
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color=HEADER_FILL, end_color=HEADER_FILL, fill_type="solid")
+    fill_colour = brand.header_fill or HEADER_FILL
+    header_font = Font(bold=True, color=brand.header_text or "FFFFFF", name=brand.body_font)
+    header_fill = PatternFill(start_color=fill_colour, end_color=fill_colour, fill_type="solid")
     for index, column in enumerate(spec.columns, start=1):
         cell = sheet.cell(row=1, column=index, value=column.header)
         if not spec.table:
@@ -142,6 +144,8 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool) -> None:
     for row_number, row in enumerate(spec.rows, start=first_row):
         for index, value in enumerate(row, start=1):
             cell = sheet.cell(row=row_number, column=index, value=value)
+            if brand.body_font:
+                cell.font = Font(name=brand.body_font, color=brand.text)
             if index <= len(spec.columns) and spec.columns[index - 1].format:
                 cell.number_format = spec.columns[index - 1].format
     last_row = len(spec.rows) + first_row - 1
@@ -204,9 +208,10 @@ def build_workbook(spec: WorkbookSpec) -> bytes:
     openpyxl = load_openpyxl()
     _check_names(spec)
     workbook = openpyxl.Workbook()
+    brand = Resolved(spec.brand)
     try:
         for index, sheet in enumerate(spec.sheets):
-            _build_sheet(workbook, sheet, index == 0)
+            _build_sheet(workbook, sheet, index == 0, brand)
         from openpyxl.workbook.defined_name import DefinedName
 
         for name, target in spec.names.items():

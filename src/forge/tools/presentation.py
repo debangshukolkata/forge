@@ -32,12 +32,13 @@ from forge.slides.measure import measure_deck, overflow_problems
 from forge.slides.open_deck import DeckError, open_deck, save_deck
 from forge.slides.read import describe_deck, slide_notes
 from forge.slides.review import review_deck, summarize
-from forge.slides.spec import parse_deck
+from forge.slides.spec import BrandKit, parse_deck
 from forge.slides.template import analyze_template, describe_template
 from forge.slides.template_build import _open
 from forge.slides.template_samples import analyze_samples, describe_samples
 from forge.slides.validate import validate_package
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.brand_file import BRAND_FILE_DESCRIPTION, load_brand_file
 from forge.tools.vision import image_path
 
 PREVIEW_FOLDER = ".forge/reports/slides"
@@ -69,6 +70,7 @@ class BuildPresentation(Tool):
     class Args(ToolArgs):
         outline: str = Field(description="Path of the JSON or YAML outline, relative to the repository root")
         output: str = Field(description="Path of the .pptx to write, e.g. docs/q3-review.pptx")
+        brand_file: str = Field(default="", description=BRAND_FILE_DESCRIPTION)
         reason: str = Field(default="", description="One line saying why; shown to the user in CHANGES.md.")
 
     def summary(self, args: BuildPresentation.Args) -> str:
@@ -84,6 +86,9 @@ class BuildPresentation(Tool):
             deck = parse_deck(
                 outline.read_text(encoding="utf-8"), as_yaml=outline.suffix.lower() in {".yaml", ".yml"}
             )
+            kit = load_brand_file(context, args.brand_file)
+            if kit is not None:
+                deck.brand = BrandKit.model_validate(kit.model_dump())
             built = await asyncio.to_thread(
                 build_deck, deck, lambda name: image_path(context, name).read_bytes()
             )

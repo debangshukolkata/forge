@@ -39,3 +39,7 @@ Written for DebCraft from the PDF specification, the pypdf and reportlab documen
             {"type": "image", "path": "docs/logo.png", "width_in": 2, "caption": "Logo"},
             {"type": "page_break"}]}
 ```
+
+## Starting points and the company look
+`find_asset` (type `recipe`, e.g. "handout") copies a tested outline. `brand` in the outline, or `brand_file` on `build_pdf`, sets heading and table
+header colours; fonts map to the closest standard PDF font (Helvetica, Times, Courier).

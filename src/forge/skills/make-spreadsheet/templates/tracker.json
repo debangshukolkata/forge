@@ -1,0 +1,84 @@
+{
+  "title": "Task tracker",
+  "brand": {
+    "accent": "0F766E",
+    "body_font": "Calibri"
+  },
+  "sheets": [
+    {
+      "name": "Tasks",
+      "table": true,
+      "columns": [
+        {
+          "header": "Task",
+          "width": 36
+        },
+        {
+          "header": "Owner",
+          "width": 16
+        },
+        {
+          "header": "Status",
+          "width": 14
+        },
+        {
+          "header": "Due",
+          "width": 14,
+          "format": "yyyy-mm-dd"
+        },
+        {
+          "header": "Priority",
+          "width": 10
+        }
+      ],
+      "rows": [
+        [
+          "Write the plan",
+          "Asha",
+          "Open",
+          "2026-02-01",
+          "High"
+        ],
+        [
+          "Review with the team",
+          "Ravi",
+          "Done",
+          "2026-02-05",
+          "Medium"
+        ]
+      ],
+      "validations": [
+        {
+          "range": "C2:C200",
+          "choices": [
+            "Open",
+            "In progress",
+            "Done"
+          ]
+        },
+        {
+          "range": "E2:E200",
+          "choices": [
+            "High",
+            "Medium",
+            "Low"
+          ]
+        }
+      ],
+      "conditional": [
+        {
+          "range": "C2:C200",
+          "rule": "text_contains",
+          "value": "Done",
+          "fill": "C6EFCE"
+        },
+        {
+          "range": "E2:E200",
+          "rule": "text_contains",
+          "value": "High",
+          "fill": "FFC7CE"
+        }
+      ]
+    }
+  ]
+}

@@ -14,6 +14,7 @@ from forge.documents.spec import DocumentError, parse_document
 from forge.errors import ForgeError
 from forge.ooxml.validate import validate_package
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.brand_file import BRAND_FILE_DESCRIPTION, load_brand_file
 from forge.tools.vision import image_path
 
 MAX_BYTES = 60 * 1024 * 1024
@@ -48,6 +49,7 @@ class BuildDocument(Tool):
     class Args(ToolArgs):
         outline: str = Field(description="Path of the JSON or YAML outline, relative to the repository root")
         output: str = Field(description="Path of the .docx to write, e.g. docs/report.docx")
+        brand_file: str = Field(default="", description=BRAND_FILE_DESCRIPTION)
         reason: str = Field(default="", description="One line saying why; shown to the user in CHANGES.md.")
 
     def summary(self, args: BuildDocument.Args) -> str:
@@ -63,6 +65,9 @@ class BuildDocument(Tool):
             spec = parse_document(
                 outline.read_text(encoding="utf-8"), as_yaml=outline.suffix.lower() in {".yaml", ".yml"}
             )
+            kit = load_brand_file(context, args.brand_file)
+            if kit is not None:
+                spec.brand = kit
             template = _read(context, spec.template) if spec.template else None
             data = await asyncio.to_thread(
                 build_document, spec, lambda name: image_path(context, name).read_bytes(), template
