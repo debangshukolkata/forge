@@ -164,3 +164,13 @@ async def test_a_streamed_call_reports_what_it_is_doing_and_how_much(monkeypatch
     assert any(s["stage"] == "thinking" and "Comparing the three layouts" in s["snippet"] for s in seen)
     calling = [s for s in seen if s["stage"] == "calling"]
     assert calling and calling[-1]["tool"] == "write_file" and calling[-1]["chars"] == 1200
+
+
+def test_prompts_and_design_skill_tell_the_model_to_build_variants_side_by_side() -> None:
+    """D-362: three designs were built one after another although parallel builders existed; the instruction must be a rule, not a 'can'."""
+    root = Path(__file__).resolve().parents[1] / "src" / "forge"
+    for relative in ("agent/prompts/system.md", "agent/prompts/system_modeb.md"):
+        text = (root / relative).read_text(encoding="utf-8")
+        assert "built at the same time, not one after" in text
+    skill = (root / "skills/ui-design-quality/SKILL.md").read_text(encoding="utf-8")
+    assert "Build the variants at the same time" in skill
