@@ -124,7 +124,10 @@ report evidence. Work through these layers, skipping only those that cannot appl
 4. Behaviour: list the acceptance checks the requirement implies, concretely: every page and route, every
    exact label, button text, message, column and link it names, each validation and error case, edge cases
    (empty input, duplicate, boundary values, second click, back button), persistence across reloads and
-   pages, and that earlier features still work (regression). Turn them into a script and run it: for a web
+   pages, and that earlier features still work (regression). When there is behaviour to exercise (forms, scripts, state, an API,
+   several routes), turn the checks into a script and run it; for a static page with nothing to click or submit there is no
+   behaviour to script: use the browser tools (steps 5 and 6) and skip the script and the Playwright install, which cost minutes
+   and prove nothing more there. For a script: for a web
    UI a Playwright script (python, sync API) under tests/e2e/ launched with
    `p.chromium.launch(channel="msedge", headless=True)` (no browser download is needed; if playwright is
    missing install it with `python -m pip install playwright`, the user is asked to approve); for an API or

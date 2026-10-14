@@ -185,3 +185,11 @@ def test_the_order_design_first_page_last_is_stated_where_the_model_reads_first(
         ).read_text(encoding="utf-8")
     skill = (root / "skills/ui-design-quality/SKILL.md").read_text(encoding="utf-8")
     assert skill.index("Order of work for a new page") < skill.index("## 0. Make sure the styles load")
+
+
+def test_the_verifier_does_not_script_a_static_page() -> None:
+    """D-368: on a static dashboard the verifier installed Playwright (99 s) and wrote a 265-line script twice: 515 s for a review the browser tools do in one minute."""
+    from forge.subagents.subagent import VERIFIER_PROMPT
+
+    assert "for a static page with nothing to click or submit there is no" in VERIFIER_PROMPT
+    assert "skip the script and the Playwright install" in VERIFIER_PROMPT
