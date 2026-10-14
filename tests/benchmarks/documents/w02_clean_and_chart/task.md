@@ -1,0 +1,1 @@
+project/export.csv is a messy export (title lines, text numbers, mixed dates, a duplicate row, a total line). Turn it into a clean Excel workbook project/orders.xlsx: real numbers and dates, a proper table, a total row that uses formulas (not typed numbers), and one chart of amount by product. Tell me what you changed and anything you were unsure about.

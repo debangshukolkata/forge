@@ -1,0 +1,10 @@
+Quarterly export;;;
+Generated 03/01/2026;;;
+;;;
+Product;Order date;Amount;Margin
+Kettle ;15/01/2026;"$1,200.50";12%
+Toaster;16/01/2026;(300);8%
+;;;
+Kettle ;15/01/2026;"$1,200.50";12%
+Blender;28/02/2026;"$950";N/A
+Total;;"$1,850.50";

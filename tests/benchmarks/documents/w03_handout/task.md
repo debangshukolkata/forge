@@ -1,0 +1,1 @@
+From project/notes.md make a one-page PDF handout (project/handout.pdf) for volunteers: a clear title, the key facts, the schedule as a table and the contact line. It must be easy to read printed. Look at the pages before you finish.
