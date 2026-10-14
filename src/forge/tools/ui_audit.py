@@ -280,6 +280,12 @@ AUDIT_SCRIPT = r"""
     const names = [...usedFamilies.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map((x) => x[0]).join(', ');
     findings.push('All the text is set in the system font stack (' + names + '): the page has no designed typography, which is the first thing that makes a page look machine-made. Choose a display font and a text font that suit the product, its mood and its language (find_font, or find_asset type font-pairing; fetch_font saves the files), load them with @font-face, and use them from the DESIGN.md typography tokens.');
   }
+  const hasPicture = all.some((el) => visible(el) && ((el.tagName === 'IMG' && el.naturalWidth >= 200) || el.tagName === 'VIDEO' || el.tagName === 'CANVAS' || el.tagName === 'PICTURE'
+    || (el.tagName === 'svg' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 120 && el.querySelectorAll('path, circle, rect, polygon, ellipse, line').length >= 4)
+    || /url\(/.test(getComputedStyle(el).backgroundImage)));
+  if (!hasPicture && all.length >= 30 && (document.body.innerText || '').length > 600) {
+    findings.push('The page has no imagery at all: no photograph, illustration, drawn SVG scene or video, only text and boxes. Designed pages carry visual content that belongs to the product (findimage for a licensed photograph, generate_image, or draw an SVG illustration), at least in the hero.');
+  }
   const small = all.filter((el) => visible(el) && window.innerWidth >= 768 && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 24) && parseFloat(getComputedStyle(el).fontSize) < 13);
   if (small.length >= 3) findings.push(small.length + ' blocks of running text are under 13px at desktop width (' + sample(small) + '): body text should be 14px or larger.');
 

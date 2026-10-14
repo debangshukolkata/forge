@@ -128,3 +128,17 @@ async def test_a_page_with_a_loaded_web_font_is_not() -> None:
         + "</body></html>"
     )
     assert "system font stack" not in await _audit(html)
+
+
+async def test_a_page_of_only_text_and_boxes_is_reported_as_having_no_imagery() -> None:
+    cards = "".join(
+        f"<div class='c'><h3>Card {n}</h3><p>Some words about this card for the page.</p></div>"
+        for n in range(12)
+    )
+    page = f"<!doctype html><html lang='en'><head><style>body{{font-family:Georgia;margin:24px}}.c{{padding:12px;border:1px solid #ccc;margin:8px}}</style></head><body><h1>Title</h1>{cards}<p>{'Plenty of copy. ' * 60}</p></body></html>"
+    assert "no imagery at all" in await _audit(page)
+    with_svg = page.replace(
+        "<h1>Title</h1>",
+        "<h1>Title</h1><svg width='300' height='200'><circle cx='50' cy='50' r='30'/><rect x='90' y='20' width='60' height='60'/><path d='M0 150 L300 120'/><line x1='0' y1='10' x2='300' y2='10'/></svg>",
+    )
+    assert "no imagery at all" not in await _audit(with_svg)
