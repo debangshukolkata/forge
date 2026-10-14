@@ -1,0 +1,1 @@
+Finance says our monthly sales report is wrong around month ends. Orders placed in the first hours of 1 April (India time) are being counted in March's total. Orders are stored with UTC timestamps, and finance reports in India time (Asia/Kolkata). The code is in this project; please find out why and fix it.

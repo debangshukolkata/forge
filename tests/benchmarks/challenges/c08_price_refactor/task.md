@@ -1,0 +1,1 @@
+`price_order` in `pricing.py` has grown hard to read and every new discount rule makes it worse. Refactor it so it is readable and easy to extend with new rules. Behaviour must not change: the finance team's numbers have to stay exactly as they are.

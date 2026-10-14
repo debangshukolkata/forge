@@ -1,0 +1,1 @@
+{"id": "c04_lost_counts", "title": "the hit counter loses counts under load", "trap": "a race that a single-threaded test never shows"}

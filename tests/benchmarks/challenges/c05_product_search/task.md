@@ -1,0 +1,1 @@
+Add a function `search_products(connection, term)` to `products.py` that returns the products whose name contains the search term, ignoring case, newest first. The database layer and an existing lookup are already in this project. Add tests.

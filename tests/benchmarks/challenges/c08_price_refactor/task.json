@@ -1,0 +1,1 @@
+{"id": "c08_price_refactor", "title": "refactor a pricing function without changing behaviour", "trap": "quirks that a tidy rewrite silently changes"}

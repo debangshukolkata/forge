@@ -1,0 +1,1 @@
+Write a function `bucketize(events, width_s)` in a new file `buckets.py` that groups events into fixed-width time windows, so we can chart events per window. Each event is a `(timestamp, value)` pair, timestamps are seconds as numbers. Return the windows with their events and the sum of their values. Add tests.
