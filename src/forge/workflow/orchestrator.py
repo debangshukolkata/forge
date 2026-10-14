@@ -25,6 +25,7 @@ from forge.protocol.events import EventType
 from forge.subagents.builder import result_text
 from forge.subagents.critic import CRITIC_ROUND_LIMIT
 from forge.subagents.spawn_tool import SpawnSubagent, run_builder
+from forge.subagents.variants_tool import BuildVariants
 from forge.toolkit.base import Tool, ToolContext, ToolResult
 from forge.toolkit.folders import clean_folder
 from forge.toolkit.powershell import ps_quote
@@ -338,6 +339,7 @@ class Orchestrator:
             [
                 *default_tools(),
                 SpawnSubagent(),
+                BuildVariants(),
                 *self._db_tools(),
                 *self.host.extra_tools,  # Mode B profile/contract tools, MCP server tools
                 AskUser(),

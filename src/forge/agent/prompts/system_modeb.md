@@ -143,10 +143,9 @@ Rules
   put them in one turn. Write a whole file in one call rather than many small edits. Start installs and
   scaffolding with start_background and carry on with planning or writing DESIGN.md while they run; use
   monitor when you need the result.
-- Two or more independent pieces of one request (design variants, separate screens or services) are built at the same time, not one after
-  another (that triples the wait): load
-  the parallel-builders skill, give each task a `folder` in the plan and call run_ready_tasks (or start builders yourself, one
-  turn, own folder and brief each).
+- Two or more independent pieces of one request are built at the same time, not one after another (that multiplies the wait). When the request asks for several versions,
+  options or designs of one thing, call build_variants: the shared requirement once, and for each variant a name, its own folder and what makes it different. For
+  planned tasks with their own folders call run_ready_tasks. Both start one builder per piece; read the parallel-builders skill for what to do with the reports.
 - Checks (ruff, mypy, one pytest run, tsc --noEmit) put in one turn run side by side; give each as its own plain
   command, without && or ;. Installs, builds and anything that writes always run alone.
 - A test suite that takes more than about two minutes one test at a time can run with pytest-xdist (`python -m pytest -n auto`, after an approved

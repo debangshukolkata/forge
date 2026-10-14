@@ -50,6 +50,7 @@ from forge.protocol.inputs import Answer, Approve, Interrupt, Reject, SendMessag
 from forge.safety.permissions import PermissionGate, PermissionMode
 from forge.safety.redact import default_redactor
 from forge.subagents.spawn_tool import SpawnSubagent
+from forge.subagents.variants_tool import BuildVariants
 from forge.toolkit.background import BackgroundManager
 from forge.toolkit.base import Tool, ToolContext
 from forge.toolkit.shell import ShellSession, execute
@@ -284,6 +285,7 @@ class SessionHost:
             ToolRegistry(
                 [
                     SpawnSubagent(),
+                    BuildVariants(),
                     AskUser(),
                     *default_tools(),
                     *(db_tools() if context.db else []),

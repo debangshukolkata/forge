@@ -295,7 +295,7 @@ planned: look at it, then approve it again. A change you did not plan is a regre
 
 ## 6. Several variants of one page (three designs, A/B, "options")
 Variants that look the same are a failed task, however polished each one is.
-- Build the variants at the same time, not one after another: write the one-line briefs yourself, then load the parallel-builders skill and start one builder per variant in a single turn, each with its own folder (and its own DESIGN.md and port). Each builder follows this skill for its own variant. Then verify and compare them yourself, as below.
+- Build the variants at the same time, not one after another: call `build_variants` with the shared requirement and, per variant, a name, its own folder and its direction (the one-line brief you wrote for it). Each builder writes its own DESIGN.md in its folder and builds from its tokens, so the variants cannot share a stylesheet. Then verify each variant yourself, run `compare_designs` and have the whole reviewed once.
 - Write a one-line design brief per variant first (palette, fonts, layout idea, mood) and make them differ on all of
   them: for example light and warm with a serif heading, dark and loud with huge type, clean product style with
   cards. Different colours on the same layout do not count.

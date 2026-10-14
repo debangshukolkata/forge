@@ -10,6 +10,11 @@ decisions, and none needs another's output. Typical: the three design variants, 
 services, several documents. Do not use it for work that edits the same files, for one small task, or when the pieces depend on a design
 you have not decided yet: decide that first, alone.
 
+## The short way for variants: `build_variants`
+For several versions, options or designs of one thing, call `build_variants` once: the shared requirement, and for each variant a name, a folder of its own and what makes it
+different. It starts one builder per variant (own folder, shell and port), runs up to `limits.max_parallel_builders` at the same time and returns every report. Then
+verify each result yourself as described below. The long way (briefs and `spawn_subagent` by hand, or `run_ready_tasks` for planned tasks) is for pieces that are not variants.
+
 ## Before you start
 1. List the pieces and give each a **folder** of its own below the repository root (for example `designs/design-a`). No folder may be
    inside another. Shared files (a root `package.json`, lock files, the database schema, configuration, a shared component) are yours:
