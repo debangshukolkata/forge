@@ -121,5 +121,5 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 # No type stubs are published for these.
-module = ["pypdfium2", "pypdfium2.*", "openpyxl", "openpyxl.*"]
+module = ["pypdfium2", "pypdfium2.*", "openpyxl", "openpyxl.*", "reportlab", "reportlab.*"]
 ignore_missing_imports = true

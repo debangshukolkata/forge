@@ -17,6 +17,7 @@ from forge.tools.imagegen import imagegen_tools
 from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
+from forge.tools.pdf_toolkit import pdf_toolkit_tools
 from forge.tools.presentation import presentation_tools
 from forge.tools.presentation_raw import raw_tools
 from forge.tools.presentation_sources import source_tools
@@ -74,6 +75,7 @@ def default_tools() -> list[Tool]:
         *source_tools(),
         *workbook_tools(),
         *document_tools(),
+        *pdf_toolkit_tools(),
         *imagegen_tools(),
         *findimage_tools(),
         *font_tools(),
