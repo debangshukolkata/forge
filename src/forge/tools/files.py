@@ -325,23 +325,44 @@ def find_design_md(workspace: object, relative: str) -> Path | None:
     )
 
 
+CANDIDATES_NOTE = (
+    "Your DESIGN.md is a first draft. Before the first page, compare candidates (the ui-design-quality skill, section 0e): keep this file as "
+    "candidate A (or copy it to .forge/candidates/a/DESIGN.md), write two more DESIGN.md files (.forge/candidates/b and c) that differ from it "
+    "and from each other in at least three of: light or dark tone, accent hue, display font, corner style, density, layout energy; find_asset "
+    "(type design-system) has tokenised starting points. Run design_candidates with the brief, apply the winner's fixes, design_md_import the "
+    "winner as DESIGN.md (overwrite), and then write the page. Never make the three differ only in colour."
+)
+
+
+def _rounds_file(context: ToolContext) -> Path:
+    return Path(context.workspace.root) / ".forge" / "design-rounds.json"
+
+
 def design_md_exists(workspace: object, relative: str) -> bool:
     return find_design_md(workspace, relative) is not None
 
 
 def design_gate(context: ToolContext, relative: str) -> str:
     """D4 (D-312): the model skipped DESIGN.md in all three page-redesign speed runs although the skill asks for it first, so the first UI
-    file of a project without one is refused with what to write. Twice at most; DESIGN.md itself and non-UI files pass."""
+    file of a project without one is refused with what to write. Twice at most; DESIGN.md itself and non-UI files pass. A DESIGN.md the
+    model wrote itself must also have been compared with candidates once (D-352: the first design benchmark run skipped the whole
+    design ladder, so it is a gate and not only advice); a file the user supplied is never questioned."""
     clean = relative.replace("\\", "/")
-    if not clean.lower().endswith(UI_SUFFIXES) or context.design_gate_rounds >= DESIGN_GATE_ROUNDS:
+    if not clean.lower().endswith(UI_SUFFIXES):
         return ""
     found = find_design_md(context.workspace, relative)
+    if found is not None and not context.design_candidates_asked and context.design_md_written:
+        if not _design_md_errors(found) and not _rounds_file(context).is_file():
+            context.design_candidates_asked = True  # once, and it does not use up the two rounds above
+            return CANDIDATES_NOTE
+    if context.design_gate_rounds >= DESIGN_GATE_ROUNDS:
+        return ""
     if found is not None:
         broken = _design_md_errors(found)
-        if not broken:
-            return ""
-        context.design_gate_rounds += 1
-        return f"The project's DESIGN.md has errors that must be fixed before pages are built (design_md_lint shows them):\n{broken}"
+        if broken:
+            context.design_gate_rounds += 1
+            return f"The project's DESIGN.md has errors that must be fixed before pages are built (design_md_lint shows them):\n{broken}"
+        return ""
     context.design_gate_rounds += 1
     return DESIGN_NOTE
 
@@ -398,6 +419,8 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
     )
     await context.emit("file_changed", {"path": relative, "op": "create" if created else op, "diff": diff})
     message = f"{'Created' if created else 'Updated'} {relative}."
+    if Path(relative).name.lower() == "design.md" and not relative.replace("\\", "/").startswith(".forge/"):
+        context.design_md_written = True
     if Path(relative).name.lower() == "design.md":
         from forge.designsystem.lint import describe_findings, lint_text
 

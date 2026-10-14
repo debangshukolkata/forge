@@ -113,6 +113,10 @@ class ToolContext:
     design_first: bool = (
         True  # D4: the first page or style file of a project waits for a DESIGN.md (the design concept)
     )
+    design_md_written: bool = (
+        False  # the model wrote the project DESIGN.md itself (not imported from the user) (D-352)
+    )
+    design_candidates_asked: bool = False
     design_gate_rounds: int = 0  # how many times that was asked for in this session
     write_only_is_builder: bool = (
         False  # selects the wording of the refusal (builders build, verifiers only verify)

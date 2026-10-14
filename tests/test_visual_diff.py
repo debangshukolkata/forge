@@ -213,9 +213,9 @@ async def test_a_design_md_in_the_folder_or_above_opens_the_gate(original_repo: 
     workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
     context = ToolContext(workspace=workspace)
     tool = WriteFile()
-    assert (
-        await tool.run(tool.Args(path="site/DESIGN.md", content="# Design"), context)
-    ).ok  # DESIGN.md itself is never gated
+    workspace.write_text(
+        "site/DESIGN.md", "# Design", "the user's own file"
+    )  # a file the user supplied is never questioned
     assert (await tool.run(tool.Args(path="site/index.html", content="<h1>x</h1>"), context)).ok
     assert (
         await tool.run(tool.Args(path="site/pages/about/index.html", content="<h1>y</h1>"), context)

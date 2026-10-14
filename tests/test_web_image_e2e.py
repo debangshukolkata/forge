@@ -86,7 +86,13 @@ def test_the_image_the_model_looks_at_appears_in_the_chat_and_enlarges(
                 "path": ".forge/screenshots/shot-test.png",
             },
         )
-        page.wait_for_function("document.querySelectorAll('[data-testid=chat-image]').length === 2")
+        for _ in range(
+            100
+        ):  # a locator count, not wait_for_function: the page's CSP forbids the eval that function needs
+            if page.locator("[data-testid=chat-image]").count() == 2:
+                break
+            page.wait_for_timeout(100)
+        assert page.locator("[data-testid=chat-image]").count() == 2
         assert page.problems == []  # type: ignore[attr-defined]
         browser.close()  # type: ignore[attr-defined]
 

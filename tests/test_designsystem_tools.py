@@ -124,3 +124,24 @@ def test_the_code_is_compared_with_the_design_md_tokens(tmp_path: Path) -> None:
         export(parse_design_md(filled_template()), "css-tailwind"), encoding="utf-8"
     )
     assert not any("DESIGN.md" in p for p in token_lint_problems(tmp_path))
+
+
+async def test_a_design_md_the_model_wrote_must_be_compared_with_candidates_once(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace)
+    await WriteFile().run(WriteFile.Args(path="DESIGN.md", content=filled_template()), context)
+    asked = design_gate(context, "src/App.tsx")
+    assert "design_candidates" in asked and "differ" in asked
+    assert design_gate(context, "src/App.tsx") == ""  # once only: a wrong refusal can never trap the model
+    other = ToolContext(workspace=workspace)
+    other.design_md_written = True
+    (workspace.root / ".forge").mkdir(exist_ok=True)
+    (workspace.root / ".forge" / "design-rounds.json").write_text("[]", encoding="utf-8")
+    assert design_gate(other, "src/App.tsx") == ""  # candidates were compared
+    imported = ToolContext(
+        workspace=workspace
+    )  # a file the user supplied (design_md_import never sets the flag)
+    (workspace.root / ".forge" / "design-rounds.json").unlink()
+    assert design_gate(imported, "src/App.tsx") == ""
