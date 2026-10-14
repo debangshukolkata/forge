@@ -211,5 +211,24 @@ def build_pdf(spec: PdfSpec, load: Callable[[str], bytes]) -> bytes:
     return out.getvalue()
 
 
+def build_pdf_any(spec: PdfSpec, load: Callable[[str], bytes]) -> tuple[bytes, str]:
+    """`build_pdf`, or a browser layout when the outline holds Indic, Arabic, Hebrew, Thai, CJK, Cyrillic or Greek text that reportlab's standard fonts cannot
+    draw or shape (D-374). Returns the PDF and a note for the person (empty when nothing special happened)."""
+    from forge.pdfs.html_build import HtmlUnavailable, build_pdf_html, scripts_in, spec_texts
+
+    scripts = scripts_in(spec_texts(spec))
+    if not scripts:
+        return build_pdf(spec, load), ""
+    try:
+        return build_pdf_html(
+            spec, load, scripts
+        ), f"{', '.join(scripts)} text was laid out by the browser engine (fonts embedded)."
+    except HtmlUnavailable as error:
+        return (
+            build_pdf(spec, load),
+            f"WARNING: {error} The PDF uses standard fonts, so {', '.join(scripts)} characters may be missing or misplaced.",
+        )
+
+
 def _safe_footer(text: str) -> str:
     return text.encode("latin-1", errors="replace").decode("latin-1")

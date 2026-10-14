@@ -7,7 +7,7 @@ import asyncio
 from pydantic import Field
 
 from forge.errors import ForgeError
-from forge.pdfs.build import build_pdf, parse_pdf_spec
+from forge.pdfs.build import build_pdf_any, parse_pdf_spec
 from forge.pdfs.edit import Operation, apply, extract_images, split_pdf
 from forge.pdfs.read import PdfError, describe_pdf, read_pdf
 from forge.pdfs.redact import PATTERNS, redact
@@ -176,15 +176,17 @@ class BuildPdf(Tool):
             kit = load_brand_file(context, args.brand_file)
             if kit is not None:
                 spec.brand = kit
-            data = await asyncio.to_thread(
-                build_pdf, spec, lambda name: image_path(context, name).read_bytes()
+            data, note = await asyncio.to_thread(
+                build_pdf_any, spec, lambda name: image_path(context, name).read_bytes()
             )
             context.workspace.write_bytes(args.output, data, args.reason or "pdf built from an outline")
         except (ForgeError, OSError, ValueError) as error:
             return ToolResult(ok=False, content=str(error))
         context.last_edit_step = context.step
         return ToolResult(
-            ok=True, content=f"Wrote {args.output}. Render it with pdf_render and look at the pages."
+            ok=True,
+            content=f"Wrote {args.output}. Render it with pdf_render and look at the pages."
+            + (chr(10) + note if note else ""),
         )
 
 

@@ -98,6 +98,7 @@ extend-ignore = ["E501"]
 "tests/test_live_learning.py" = ["E501"]
 "tests/test_parity.py" = ["E501"]
 "src/forge/vision/metrics.py" = ["E501"]
+"tests/test_pdf_scripts*.py" = ["RUF001"]  # the strings are Greek, Cyrillic and Indic text on purpose
 "scripts/dev/app_screens/*" = ["E501", "RUF001"]  # screen markup is data: long lines and typographic signs (×, –) are content
 "src/forge/vision/synthetic.py" = ["E501"]
 "src/forge/vision/evals.py" = ["E501"]
