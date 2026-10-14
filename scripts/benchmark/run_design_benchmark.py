@@ -196,8 +196,9 @@ def markdown(name: str, rows: list[dict[str, object]]) -> str:
             if isinstance(judge_row, dict)
             else "?"
         )
+        cost = format(float(r["cost_usd"]), ".2f") if r.get("cost_usd") is not None else ""  # type: ignore[arg-type]
         lines.append(
-            f"| {r['id']} | {r.get('wall_s')}s | {'' if r.get('cost_usd') is None else f'${float(r['cost_usd']):.2f}'} | {'yes' if r.get('ladder_used') else 'no'} | "  # type: ignore[arg-type]
+            f"| {r['id']} | {r.get('wall_s')}s | {cost} | {'yes' if r.get('ladder_used') else 'no'} | "  # type: ignore[arg-type]
             f"{r.get('lint_errors', '-')}/{r.get('lint_warnings', '-')} | {r.get('differs_from_default_in', '-')} | {r.get('audit_findings', '-')} | "
             f"{'desktop ' if r.get('sideways_scroll_desktop') else ''}{'phone' if r.get('sideways_scroll_phone') else 'no'} | {scores} |"
         )
