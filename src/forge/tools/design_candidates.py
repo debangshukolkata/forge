@@ -241,11 +241,12 @@ class DesignCandidates(Tool):
             )
             if args.rejected:
                 asked += f"\nThe user rejected earlier designs ({', '.join(args.rejected)}) because: {args.rejected_reason or 'they did not like it'}."
-            response = await context.router.chat(
+            response = await context.ask_model(
                 "vision",
                 ChatRequest(
                     messages=[Message.system(RUBRIC), Message(role="user", content=asked, images=urls)]
                 ),
+                "comparing the candidate designs",
             )
             found = re.search(r"\{.*\}", response.text, re.S)
             try:

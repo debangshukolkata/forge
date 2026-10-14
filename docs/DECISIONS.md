@@ -3826,3 +3826,8 @@ Options: (1) more prose guidance, (2) screens as React components with a build s
 Built: 24 screens in five families (docs/APP_SCREENS.md), five palettes and bundled fonts, an original icon sprite and chart builders, catalogue entries with pictures, skill section 0i, a line in both system prompts, candidates notes that accept `composition: app-...`. Tests: audit and sideways scroll for every screen at both widths, retrieval 24 of 24, copy into a project, prompt wording.
 Audit: charts count as imagery; application-like pages are not asked for pictures or a landing headline (the screens exposed both false positives).
 Not done: React versions; a live run measuring the saved output tokens.
+
+### D-367 - Progress for model calls made by tools, and for Gemini (tonight's list, item 6)
+Context: D-361 and D-364 showed stage, size and quiet time for streamed calls of the main model and of helpers. Model calls made inside a tool (a picture question, the candidate comparison, the document review) and the Gemini provider still showed nothing.
+Built: `ToolContext.ask_model(role, request, what)` wraps the router call and emits a `tool_progress` heartbeat every 4 s ("asking the vision model: looking at the picture (12 s)") that the activity line already shows; used by view_image, design_candidates and critique_document. The Gemini provider passes the same `StreamProgress` (waiting, thinking with the reasoning summary, writing, preparing a named tool with the size of its arguments). Tests offline (fake router, SDK chunk types); the Gemini path has not been run live from the build machine.
+Not done: the summariser and the eval judge still call the router directly (no tool is on screen for them).

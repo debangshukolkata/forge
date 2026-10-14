@@ -182,11 +182,12 @@ class CritiqueDocument(Tool):
         question = f"The file has {count} page(s); the sheet(s) show the first {len(pictures)}. " + (
             f"Purpose: {args.purpose}" if args.purpose else ""
         )
-        response = await context.router.chat(
+        response = await context.ask_model(
             "vision",
             ChatRequest(
                 messages=[Message.system(CRITIC_RUBRIC), Message(role="user", content=question, images=urls)]
             ),
+            "reviewing the document pictures",
         )
         text = response.text.strip()
         match = re.search(r"\{.*\}", text, re.S)

@@ -88,7 +88,7 @@ Everything below can be finished without the user: no office laptop, no files or
 5. [ ] **C1 coding benchmark rerun** (docs/CODE_BENCHMARK.md) and read the result: it decides whether C8, C11 and C12 are worth building.
 
 **Part 2, building (light on the machine, while part 1 runs, then after):**
-6. [ ] **Progress for calls that do not stream** (vision, design judge, summariser) and for the Gemini provider; offline tests.
+6. [x] **Progress for calls that do not stream** (vision, design judge, summariser) and for the Gemini provider; offline tests. (done 2026-10-15, D-367)
 7. [ ] **S6 rest:** audit only the pages that changed; measure sandbox start-up per command.
 8. [ ] **L9 auto-fixers:** overflowing text and missing alt text (the contrast fixer exists).
 9. [ ] **D1 and D2:** flag a file edited more than N times; cost and time per UI task, one critic round for small edits if too slow.

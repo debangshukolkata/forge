@@ -111,7 +111,7 @@ class ViewImage(Tool):
                 Message(role="user", content=f"{args.question}\n\n{scale}", images=[url]),
             ]
         )
-        response = await context.router.chat("vision", request)
+        response = await context.ask_model("vision", request, "looking at the picture")
         note = ""
         if meta["sent_size"] != meta["original_size"] and region is None:
             factor = meta["original_size"][0] / meta["sent_size"][0]

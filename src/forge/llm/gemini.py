@@ -5,6 +5,7 @@ DebCraft never stores or reads Google credentials; only the project and location
 
 from __future__ import annotations
 
+import json
 from typing import Any, cast
 
 from google import genai
@@ -12,7 +13,7 @@ from google.genai import types
 
 from forge.config import GeminiProviderConfig, ModelConfig, Secrets
 from forge.errors import ConfigError, LLMError
-from forge.llm.base import ChatRequest, LLMResponse, TextDeltaCallback
+from forge.llm.base import ChatRequest, LLMResponse, StreamProgress, TextDeltaCallback
 from forge.llm.gemini_errors import SDK_ERRORS, map_gemini_error
 from forge.llm.translate_gemini import (
     THINKING_BUDGETS,
@@ -22,6 +23,22 @@ from forge.llm.translate_gemini import (
 )
 
 DEFAULT_LOCATION = "us-central1"
+
+
+def function_calls(chunk: Any) -> list[tuple[str, int]]:
+    """(name, size of its arguments) of each function call a streamed chunk carries."""
+    found: list[tuple[str, int]] = []
+    for candidate in getattr(chunk, "candidates", None) or []:
+        for part in getattr(getattr(candidate, "content", None), "parts", None) or []:
+            call = getattr(part, "function_call", None)
+            if call is not None:
+                found.append(
+                    (
+                        str(getattr(call, "name", "") or ""),
+                        len(json.dumps(getattr(call, "args", None) or {}, default=str)),
+                    )
+                )
+    return found
 
 
 class GeminiProvider:
@@ -61,6 +78,10 @@ class GeminiProvider:
         config = self._config(request, system_instruction)
         accumulator = GeminiStreamAccumulator(self.model_key)
         thinking = ""
+        progress = StreamProgress(
+            request.on_progress
+        )  # what the call is doing, for the activity line (D-367)
+        await progress.tick(force=True)
         try:
             if on_text_delta is None:
                 response = await self._client.aio.models.generate_content(
@@ -74,8 +95,16 @@ class GeminiProvider:
                 async for chunk in stream:
                     text, thought = accumulator.add_chunk(chunk)
                     thinking += thought
+                    if thought:
+                        progress.stage, progress.snippet = "thinking", (progress.snippet + thought)[-200:]
+                    for name, size in function_calls(chunk):
+                        progress.stage, progress.tool, progress.snippet = "calling", name, ""
+                        progress.chars += size
                     if text:
+                        progress.stage, progress.snippet = "writing", ""
+                        progress.chars += len(text)
                         await on_text_delta(text)
+                    await progress.tick()
         except SDK_ERRORS as error:
             raise map_gemini_error(error) from error
         if request.on_thinking is not None and thinking:

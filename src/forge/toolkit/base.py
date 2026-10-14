@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import hashlib
+import time
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -143,6 +146,36 @@ class ToolContext:
     async def emit(self, event_type: str, payload: dict[str, Any]) -> None:
         if self.publish is not None:
             await self.publish(event_type, payload)
+
+    async def ask_model(self, role: str, request: Any, what: str, beat_s: float = 4.0) -> Any:
+        """A model call made by a tool (a picture question, a judge, a review): while it runs the activity line says what is being asked and for
+        how long, so a slow answer never looks like a frozen tool (D-367). Returns the router's response."""
+        started = time.monotonic()
+
+        async def beat() -> None:
+            while True:
+                await asyncio.sleep(beat_s)
+                seconds = round(time.monotonic() - started)
+                await self.emit(
+                    "tool_progress",
+                    {
+                        "source": "model",
+                        "name": role,
+                        "line": f"asking the {role} model: {what} ({seconds} s)",
+                        "percent": None,
+                        "stalled_s": None,
+                        "lines": 0,
+                        "elapsed_s": seconds,
+                    },
+                )
+
+        task = asyncio.create_task(beat())
+        try:
+            return await self.router.chat(role, request)
+        finally:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
     def cap_output(self, text: str, kind: OutputKind = "tool") -> tuple[str, str | None]:
         """Keeps the head and tail of long output (spec §10.3) and saves the full text to
