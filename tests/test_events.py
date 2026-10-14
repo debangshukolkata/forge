@@ -148,3 +148,34 @@ async def test_a_subagent_keeps_its_own_log_without_the_streamed_text(tmp_path) 
     (saved,) = list((tmp_path / ".forge" / "transcripts" / "subagents").glob("*-agent-*.jsonl"))
     kinds = [json.loads(line)["type"] for line in saved.read_text(encoding="utf-8").splitlines()]
     assert kinds == ["llm_call", "tool_call_finished"]
+
+
+async def test_a_subagents_model_call_in_flight_is_relayed_to_the_session() -> None:
+    """D-364: a helper's long model call (a builder writing a file) shows what it is doing instead of silence."""
+    from forge.protocol.events import EventBus
+    from forge.subagents.subagent import _tracked_run
+
+    emitted: list[tuple[str, dict]] = []
+
+    class Context:
+        async def emit(self, kind: str, payload: dict) -> None:
+            emitted.append((kind, payload))
+
+    class Loop:
+        on_progress = None
+
+        async def run(self, history: list, on_delta: object) -> None:
+            assert self.on_progress is not None
+            await self.on_progress(
+                {"stage": "calling", "tool": "write_file", "chars": 900, "snippet": "", "elapsed_s": 4.0}
+            )
+
+    await _tracked_run(Context(), Loop(), EventBus(), [], "builder", "Build design A")  # type: ignore[arg-type]
+    steps = [p for kind, p in emitted if kind == "subagent_step" and p["kind"] == "model_progress"]
+    assert (
+        len(steps) == 1
+        and steps[0]["stage"] == "calling"
+        and steps[0]["tool"] == "write_file"
+        and steps[0]["chars"] == 900
+    )
+    assert steps[0]["agent"].startswith("agent-") and steps[0]["role"] == "builder"

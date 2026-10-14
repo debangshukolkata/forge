@@ -89,6 +89,28 @@ export function RunTotals({ forge }: { forge: Forge }) {
   );
 }
 
+type ModelLive = { stage: string; tool: string; chars: number; snippet: string; at: number };
+
+/** What a model call in flight says about itself (D-361, D-364): its stage, how much it has produced and, when quiet, for how long. */
+function modelLine(model: ModelLive, now: number): { label?: string; detail?: string } {
+  const quiet = Math.floor((now - model.at) / 1000);
+  const size = model.chars > 0 ? `${model.chars.toLocaleString()} characters so far` : undefined;
+  let label: string | undefined;
+  let detail: string | undefined;
+  if (model.stage === "calling") {
+    label = `Preparing: ${toolActivity(model.tool || "tool", "").label}`;
+    detail = size ?? "the model is deciding what to send";
+  } else if (model.stage === "writing") {
+    label = "Writing the reply";
+    detail = size;
+  } else if (model.stage === "thinking") {
+    const line = model.snippet.trim().split("\n").pop();
+    if (line) detail = line.length > 140 ? `…${line.slice(-140)}` : line;
+  }
+  if (quiet >= 15) detail = `${detail ? detail + " · " : ""}no new data for ${quiet}s (after 100 s it retries)`;
+  return { label, detail };
+}
+
 export function ActivityLine({ forge }: { forge: Forge }) {
   const { activity, state } = forge;
   const running = activity.kind !== "idle";
@@ -105,7 +127,8 @@ export function ActivityLine({ forge }: { forge: Forge }) {
     const helper = [...forge.timeline.items].reverse().find((item) => item.kind === "tool" && item.agent && item.state === "running");
     if (activity.tool.name === "spawn_subagent" && helper?.kind === "tool" && helper.agent) {
       label = `${roleLabel(helper.agent.role)} is working`;
-      detail = `${agentCounts(helper.agent)} · ${latestStepText(helper.agent)}`;
+      const live = helper.agent.live ? modelLine(helper.agent.live, now) : undefined;
+      detail = `${agentCounts(helper.agent)} · ${live?.label ? `${live.label}: ` : ""}${live?.detail ?? latestStepText(helper.agent)}`;
     }
   } else if (activity.kind === "writing") {
     label = "Writing the reply";
@@ -130,20 +153,9 @@ export function ActivityLine({ forge }: { forge: Forge }) {
   // never looks frozen. Only for the plain "thinking"/"writing" lines: a running tool keeps its own detail.
   const model = activity.kind === "thinking" || activity.kind === "writing" ? activity.model : undefined;
   if (model) {
-    const quiet = Math.floor((now - model.at) / 1000);
-    const size = model.chars > 0 ? `${model.chars.toLocaleString()} characters so far` : undefined;
-    if (model.stage === "calling") {
-      label = `Preparing: ${toolActivity(model.tool || "tool", "").label}`;
-      detail = size ?? "the model is deciding what to send";
-    } else if (model.stage === "writing") {
-      label = "Writing the reply";
-      detail = size;
-    } else if (model.stage === "thinking") {
-      label = label || "Thinking";
-      const line = model.snippet.trim().split("\n").pop();
-      if (line) detail = line.length > 140 ? `…${line.slice(-140)}` : line;
-    }
-    if (quiet >= 15) detail = `${detail ? detail + " · " : ""}no new data for ${quiet}s (after 100 s it retries)`;
+    const line = modelLine(model, now);
+    label = line.label ?? (label || "Thinking");
+    detail = line.detail ?? detail;
   } else if (activity.kind === "thinking" && !detail) {
     const waited = Math.floor((now - activity.since) / 1000);
     if (waited >= 20) detail = `waiting for the model's answer (${waited}s)`;

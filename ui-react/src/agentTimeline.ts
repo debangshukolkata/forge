@@ -24,6 +24,10 @@ export function agentStarted(items: ChatItem[], key: string, p: ForgeEvent["payl
 export function agentStep(items: ChatItem[], p: ForgeEvent["payload"]): ChatItem[] {
   return withAgent(items, p.agent, (agent, item) => {
     let steps: AgentStep[] = agent.steps;
+    if (p.kind === "model_progress") {
+      const live = { stage: String(p.stage || ""), tool: String(p.tool || ""), chars: Number(p.chars || 0), snippet: String(p.snippet || ""), at: Date.now() };
+      return { ...item, agent: { ...agent, live } };
+    }
     if (p.kind === "tool_started") {
       steps = [...steps, { kind: "tool", name: p.name, summary: p.summary || "", state: "running" }];
     } else if (p.kind === "tool_finished") {
@@ -41,7 +45,7 @@ export function agentStep(items: ChatItem[], p: ForgeEvent["payload"]): ChatItem
       steps = [...steps, { kind: "thinking", text: p.text || "" }];
     }
     if (steps.length > MAX_STEPS) steps = steps.slice(steps.length - MAX_STEPS);
-    return { ...item, agent: { ...agent, steps } };
+    return { ...item, agent: { ...agent, steps, live: undefined } };
   });
 }
 

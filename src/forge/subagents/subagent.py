@@ -230,7 +230,11 @@ async def _tracked_run(
                     duration_s=payload.get("duration_s"),
                 )
 
+    async def progress(info: dict[str, object]) -> None:
+        await step("model_progress", **info)  # a long model call of the subagent (D-364)
+
     loop.on_thinking = thinking
+    loop.on_progress = progress
     relayer = asyncio.create_task(relay())
     ok = True
     try:

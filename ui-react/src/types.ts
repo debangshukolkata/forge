@@ -226,6 +226,8 @@ export interface AgentView {
   role: string;
   purpose: string;
   steps: AgentStep[];
+  // The helper's model call in flight (D-364): what it is doing, how much it has produced, and when it last said anything.
+  live?: { stage: string; tool: string; chars: number; snippet: string; at: number };
   done?: { ok: boolean; tool_calls: number; failed_calls: number; duration_s: number; cost_usd?: number };
 }
 
