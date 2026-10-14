@@ -125,6 +125,10 @@ PARALLEL_SUBAGENT_TYPES = frozenset(
     {"explore", "reviewer", "design-critic"}
 )  # only look, read or screenshot (unique file names); may run side by side
 MAX_PARALLEL_SUBAGENTS = 4
+REWORK_EDITS = (
+    6  # a UI file changed this many times gets a note to stop patching and fix the cause once (D1, D-370)
+)
+REWORK_EVERY = 4  # and again every this many edits after that
 
 
 def _is_builder(call: ToolCall) -> bool:
@@ -532,10 +536,12 @@ class AgentLoop:
                 **full,
             },
         )
-        self._note_ui_evidence(tool.name, call.arguments or {}, result)
+        rework = self._note_ui_evidence(tool.name, call.arguments or {}, result)
         # Every result is capped here (spec §10.3), whatever the tool did itself.
         content, _ = self.context.cap_output(result.content, tool.output_kind)
         content, marker = flag(content)
+        if rework:
+            content += "\n" + rework
         if marker:
             await self.bus.publish(
                 EventType.NOTICE,
@@ -546,21 +552,30 @@ class AgentLoop:
             )
         return Message.tool_result(call.id, content if result.ok else f"Error: {content}")
 
-    def _note_ui_evidence(self, tool_name: str, arguments: dict[str, Any], result: ToolResult) -> None:
+    def _note_ui_evidence(self, tool_name: str, arguments: dict[str, Any], result: ToolResult) -> str | None:
         """Remembers when UI files were edited and when the app was last used in a browser, so task_update can
-        ask for the second after the first (D-167)."""
+        ask for the second after the first (D-167). Returns a note when one UI file has been changed again and again (D1, D-370)."""
         if not result.ok:
-            return
+            return None
         if tool_name.startswith("browser_") and tool_name != "browser_close":
             self.context.last_browser_step = self.context.step
-            return
+            return None
         if tool_name == "add_asset" and result.meta.get("ui_files"):
             self.context.last_ui_edit_step = self.context.step
-            return
+            return None
         if tool_name in ("write_file", "edit_file", "multi_edit", "move_file"):
             path = str(arguments.get("path") or arguments.get("destination") or "").replace("\\", "/").lower()
             if path.endswith(UI_SUFFIXES) and not is_test_path(path):
                 self.context.last_ui_edit_step = self.context.step
+                count = self.context.edit_counts.get(path, 0) + 1
+                self.context.edit_counts[path] = count
+                if count >= REWORK_EDITS and (count - REWORK_EDITS) % REWORK_EVERY == 0:
+                    return (
+                        f"[note: {path} has now been changed {count} times in this run. Fixing one value at a time is the pattern behind drifting pages. "
+                        "Stop patching: read the whole file, list everything still wrong, name the cause behind the findings, and fix it in one multi_edit "
+                        "(or write the file once, whole).]"
+                    )
+        return None
 
     async def _post_edit_hooks(self, args: ToolArgs, result: ToolResult) -> ToolResult:
         """config hooks.post_edit (e.g. "ruff format {file}") after each successful edit; the output is

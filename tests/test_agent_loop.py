@@ -221,3 +221,36 @@ async def test_a_running_subagent_reports_its_steps_to_the_session(
     assert all(s["agent"].startswith("agent-") for s in steps)
     finished = [e.payload for e in host.bus.events_since(0) if e.type == EventType.AGENT_FINISHED]
     assert len(finished) == 1 and finished[0]["cost_usd"] > 0  # the mocked replies carry token counts
+
+
+async def test_a_ui_file_changed_again_and_again_gets_a_note_to_fix_the_cause_once(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """D1, D-370: patching one value at a time is the pattern behind drifting pages; from the sixth change of one UI file the result carries a note."""
+    from forge.agent.loop import REWORK_EDITS, REWORK_EVERY
+    from forge.toolkit.base import ToolResult
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return reply(request, responses_body([text_output("ok")]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace)
+    loop = host.agent
+    assert loop is not None
+    ok = ToolResult(ok=True, content="")
+    notes = [
+        loop._note_ui_evidence("edit_file", {"path": "static/Style.css"}, ok)
+        for _ in range(REWORK_EDITS + REWORK_EVERY)
+    ]
+    assert all(note is None for note in notes[: REWORK_EDITS - 1])
+    assert (
+        notes[REWORK_EDITS - 1]
+        and "changed 6 times" in notes[REWORK_EDITS - 1]
+        and "one multi_edit" in notes[REWORK_EDITS - 1]
+    )
+    assert all(note is None for note in notes[REWORK_EDITS : REWORK_EDITS + REWORK_EVERY - 1])
+    assert notes[-1] and "changed 10 times" in notes[-1]
+    assert (
+        loop._note_ui_evidence("edit_file", {"path": "tests/test_page.py"}, ok) is None
+    )  # tests and other files are not counted
+    assert loop._note_ui_evidence("edit_file", {"path": "notes.md"}, ok) is None

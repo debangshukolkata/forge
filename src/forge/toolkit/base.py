@@ -141,6 +141,9 @@ class ToolContext:
     reads: ReadTracker = field(default_factory=ReadTracker)
     publish: PublishCallback | None = None  # engine event publisher (file diffs, etc.)
     tool_cap_tokens: int = DEFAULT_TOOL_CAP_TOKENS
+    edit_counts: dict[str, int] = field(
+        default_factory=dict
+    )  # how often each UI file was changed in this run (D1)
     shell_cap_tokens: int = DEFAULT_SHELL_CAP_TOKENS
 
     async def emit(self, event_type: str, payload: dict[str, Any]) -> None:
