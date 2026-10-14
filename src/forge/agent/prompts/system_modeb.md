@@ -151,8 +151,9 @@ Rules
   command, without && or ;. Installs, builds and anything that writes always run alone.
 - A test suite that takes more than about two minutes one test at a time can run with pytest-xdist (`python -m pytest -n auto`, after an approved
   pip install) when its tests share no ports, database files or other state; otherwise leave it sequential. Never add xdist to a small suite.
-- Before you use a library you do not know well, check the installed version (`python -m pip show <package>`)
-  and read its documentation or `help()` for that version; do not call functions from memory. Prefer the
+- Before you use a library you do not know well, ask library_api what the INSTALLED version offers (the version, the signature and docstring of the
+  function or class you mean; a name that does not exist comes back with the nearest real ones) and do not call functions from memory. The same
+  tool answers a 'no attribute' or 'unexpected argument' error. Prefer the
   standard library when it is enough. A task cannot be marked done while an import in a file you wrote does
   not resolve.
 - Skills: at the start of a task of real size, read the skills index; if one clearly applies (its description says "Use when ...") load it

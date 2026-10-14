@@ -97,7 +97,7 @@ Everything below can be finished without the user: no office laptop, no files or
 12. [ ] **Document extras:** PDF redaction, non-Latin fonts in PDFs, document themes (W4), and the open Word and Excel gaps listed in W1/W2.
 13. [ ] **Presentations leftovers that need no input:** P2.1 colour and type refinements and the parts of P2.23 the test template can show.
 14. [x] **Platform housekeeping:** split the slow browser tests behind a marker, a prompt line for parallel pytest in built apps, a campaign case where DebCraft builds a small MCP tool and tests it with a dummy MCP server. (done 2026-10-15, D-371; the MCP case moved into part 4)
-15. [ ] **C8 docs helper:** fetch the docs of the installed library version.
+15. [x] **C8 docs helper:** fetch the docs of the installed library version. (done 2026-10-15, D-372: `library_api` reads the installed code instead of fetching docs)
 
 **Part 3, uncertain value (last; report honestly if there is no gain):**
 16. [ ] **L11 best-of-N design candidates** without Gemini (ranked by audit score and critic), measured on the design benchmark.

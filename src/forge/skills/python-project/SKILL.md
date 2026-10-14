@@ -31,7 +31,7 @@ code, and when you review your own code run through `rcp-security` for anything 
 - Put the work in functions that take their inputs (`main(argv)`, `create_app()`), so tests can call them without a process or a server.
 - One test per behaviour, with edge cases and the error path; expected values written by hand, not recomputed from the code.
 - Dependencies go in `pyproject.toml` (runtime in `dependencies`, tools in the `dev` extra); do not leave an unused one.
-- Before using a library you do not know well, check the installed version (`python -m pip show <package>`) and read its docs.
+- Before using a library you do not know well, ask `library_api` (installed version, signature, docstring, nearest real names; or `python -m pip show <package>`) and read its docs.
 
 ## Gotchas
 - `from __future__ import annotations` first, type hints everywhere, errors as specific exception classes.

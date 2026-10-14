@@ -18,6 +18,7 @@ from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFil
 from forge.tools.findimage import findimage_tools
 from forge.tools.fonts import font_tools
 from forge.tools.imagegen import imagegen_tools
+from forge.tools.library_api import LibraryApi
 from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
@@ -53,6 +54,7 @@ def default_tools() -> list[Tool]:
         VisualBaseline(),
         VisualCheck(),
         PythonRun(),
+        LibraryApi(),
         StartBackground(),
         ReadBackground(),
         StopBackground(),
