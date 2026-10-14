@@ -58,7 +58,7 @@ fields: Word fills them when the file is opened (the user may be asked to press 
 ## Start from a template, and the company look
 - Look for a ready template first: `find_asset` (type `template`, e.g. "business report", "memo", "proposal") and `add_asset` copy a tested .docx into the
   project; put its path in `template`. Its styles, header and footer are kept and its sample text is removed.
-- The company look: `brand` in the outline, or `brand_file` (a JSON file with `accent`, `text`, `title_font`, `body_font`) on the build tool. With no company look, pick a theme from the deck list so a report and its deck match: `brand_file: theme:<name>` (clean, dark, warm, forest, ocean, sunset, slate, midnight, paper, mint, plum, terracotta, mono, sky, coral, graphite, ruby, olive, indigo; choose by mood and topic as for decks; the dark themes keep their accent and fonts on white paper). Headings,
+- The company look: `brand` in the outline, or `brand_file` (a JSON file with `accent`, `text`, `title_font`, `body_font`) on the build tool. Save the look once with `save_brand` (colours and fonts, or a theme to start from): it is written to `brand.json` and every deck, Word, Excel and PDF of the project then uses it. With no company look, pick a theme from the deck list so a report and its deck match: `brand_file: theme:<name>` (clean, dark, warm, forest, ocean, sunset, slate, midnight, paper, mint, plum, terracotta, mono, sky, coral, graphite, ruby, olive, indigo; choose by mood and topic as for decks; the dark themes keep their accent and fonts on white paper). Headings,
   table headers and fonts follow it; a colour that would be unreadable on white is darkened. The same file works for decks, workbooks and PDFs.
 
 ## Gotchas

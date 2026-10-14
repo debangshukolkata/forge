@@ -7,6 +7,7 @@ from forge.toolkit.background import Monitor, ReadBackground, StartBackground, S
 from forge.toolkit.base import Tool
 from forge.toolkit.shell import PythonRun, RunCommand
 from forge.tools.assets import AddAsset, FindAsset
+from forge.tools.brand_file import SaveBrand
 from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.design_candidates import design_candidate_tools
@@ -55,6 +56,7 @@ def default_tools() -> list[Tool]:
         VisualCheck(),
         PythonRun(),
         LibraryApi(),
+        SaveBrand(),
         StartBackground(),
         ReadBackground(),
         StopBackground(),

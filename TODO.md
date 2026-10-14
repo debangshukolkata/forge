@@ -95,7 +95,7 @@ Everything below can be finished without the user: no office laptop, no files or
 10. [ ] **DS7 remainder:** more composition recipes, a React composition, a font shortlist, a reference gallery.
 11. [~] **AS1 React versions** of the most used app screens (KPI dashboard, data table, wizard, settings, inbox), with tests. (built 2026-10-15, D-377; type-check and Vite build pass, the browser test runs after the benchmark runs)
 12. [x] **Document extras:** PDF redaction, non-Latin fonts in PDFs, document themes (W4), and the open Word and Excel gaps listed in W1/W2. (PDF redaction D-373, non-Latin PDF text D-374, document themes D-375 done 2026-10-15; the Word and Excel gaps that need LibreOffice or user files stay open)
-13. [ ] **Presentations leftovers that need no input:** P2.1 colour and type refinements and the parts of P2.23 the test template can show.
+13. [~] **Presentations leftovers that need no input:** P2.1 colour and type refinements and the parts of P2.23 the test template can show. (saving the brand kit with the project done 2026-10-15, D-378; the logo and more font pairings stay open)
 14. [x] **Platform housekeeping:** split the slow browser tests behind a marker, a prompt line for parallel pytest in built apps, a campaign case where DebCraft builds a small MCP tool and tests it with a dummy MCP server. (done 2026-10-15, D-371; the MCP case moved into part 4)
 15. [x] **C8 docs helper:** fetch the docs of the installed library version. (done 2026-10-15, D-372: `library_api` reads the installed code instead of fetching docs)
 
@@ -225,7 +225,7 @@ Goal (2026-10-09): presentations the way Claude makes them, equivalent capabilit
   edit. Size M. This is what makes "opens cleanly" a guarantee.
 
 ### P2 Capability gaps
-- [~] **P2.1 Colour and type system.** 15+ curated palettes chosen from the topic (not blue by default), dominance rule (one main colour, **(built 2026-10-13, D-281: 19 contrast-checked themes chosen by topic, brand kit overrides with derived colours. Open: logo in the brand kit, saving the kit with the project, more font pairings beyond Calibri and Georgia)**
+- [~] **P2.1 Colour and type system.** 15+ curated palettes chosen from the topic (not blue by default), dominance rule (one main colour, **(built 2026-10-13, D-281: 19 contrast-checked themes chosen by topic, brand kit overrides with derived colours. Saving the kit with the project built 2026-10-15, D-378. Open: logo in the brand kit, more font pairings beyond Calibri and Georgia)**
   one accent), font pairings, user brand kits (logo, colours, fonts) saved with the project. Size M.
 - [x] **P2.2 Gradients, shadows, transparency, background images** in free-form, plus rounded image frames, circles, masks. Size M. **(done 2026-10-13, D-282)**
 - [x] **P2.3 Icons.** An icon set turned into pictures or native shapes, placed in coloured circles, sized and recoloured. Needs decision 3. Size M. **(done 2026-10-13, D-283: Lucide (all 1,877) and 164 Material Symbols as native shapes, `find_icon` tool, badges; looked at in real PowerPoint renders)**
