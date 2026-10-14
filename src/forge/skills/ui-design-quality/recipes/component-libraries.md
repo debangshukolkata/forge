@@ -91,6 +91,21 @@ Material's default look (blue, Roboto, big shadows) is exactly what to remove wi
 `npx shadcn@latest init` then `npx shadcn@latest add button card dialog tabs input form`. Components land in the project
 and are yours to restyle; theme through the CSS variables it writes. Needs the network once; keep to `components-native.tsx` when offline.
 
+Rules that keep a shadcn project clean (our own words, from the library's habits; they apply when the project already uses it):
+- Use an existing component before writing custom markup: look in `components/ui` first, add the missing one with the CLI (`npx shadcn@latest add <name>`), and compose
+  from it. Wrap, do not fork, unless the design needs a different structure.
+- Colours are semantic tokens (`bg-primary`, `text-muted-foreground`, `border-border`), never raw palette classes such as `bg-blue-500`; the tokens are the CSS variables in the
+  global stylesheet, and they are where the DESIGN.md colours go.
+- Spacing between siblings with `gap-*` on a flex or grid parent, not `space-x-*`/`space-y-*`; equal width and height with `size-*`.
+- A dialog, sheet or alert dialog always has a title (hidden with `sr-only` if the design has none) and a description; a form uses its field and label components, so labels
+  and errors are connected to the inputs.
+- Edit the project's existing global CSS file for tokens; do not create a second one. Preview what a registry change would do with `npx shadcn@latest add <name> --dry-run`
+  (or `--diff`) and never overwrite a component the project changed without saying so.
+- Never guess a registry: a third-party registry (`@name/component`) is used only when the user named it. Behind the company network the CLI may fail on certificates:
+  see the Node certificate note in `forge doctor`; fall back to `components-native.tsx`.
+- Re-theme before the first screen: the default zinc, neutral look is the generic default. Set the radius, the primary and the font from DESIGN.md, then check the page
+  with `browser_screenshot`; a shadcn page that still looks stock has not been designed.
+
 ## Tabler
 Icons: `npm i @tabler/icons-react` (MIT, about 5,000 icons, consistent stroke): a good alternative to lucide. The Tabler dashboard
 kit (`@tabler/core`, Bootstrap 5) is MIT: use its demo pages as layout references for dashboards and rebuild them in
