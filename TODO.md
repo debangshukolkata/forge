@@ -3,14 +3,14 @@
 Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task lives in this file and nowhere else** (consolidated 2026-10-12 from this file, `docs/PPT_PARITY.md` and `docs/TODO_LATER.md`). Add new tasks here, in the group they belong to. The other two files keep only background, decisions and sizing, and point back here. Finished work is in the history at the end.
 
 ## Contents (open items per group)
-- 0. Build order (read this first): **20 open**
+- 0. Build order (read this first): **21 open**
 - 1. Waiting on you (your actions and decisions): **7 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **20 open**
 - 3. Parallel work and speed: **6 open**
 - 4. Presentations (match Claude's PowerPoint abilities): **11 open**
 - 5. Platform, runtime and coding competency: **19 open**
 - 6. Parked (not started; your choice when): **3 open**
-- **Total open: 86** (counted by script 2026-10-15: items marked `[ ]` or `[~]`; `[~]` are partly done; section 0 now includes tonight's 19)
+- **Total open: 87** (counted by script 2026-10-15: items marked `[ ]` or `[~]`; `[~]` are partly done; section 0 includes tonight's 20)
 
 ## 0. Build order (read this first)
 How to take the work up in the best order. Each phase says what it needs and when it is done. IDs refer to the items below (`D` design, `L` libraries, `X` parallel, `S` speed, `C` coding competency, `W` documents, `P0.x/P1.x/P2.x/P3.x` presentations). Do not start a later phase's big items before the earlier phase's measurements exist.
@@ -104,6 +104,9 @@ Everything below can be finished without the user: no office laptop, no files or
 17. [ ] **L4 / L5 shadcn quickstart** built and tested here (it does not prove the office laptop works: certificate issue, D-363).
 18. [ ] **C14 skill A/B loop and C15 server-lifecycle helper** (lowest priority).
 19. [ ] **Housekeeping at the end:** full test run, tick TODO.md, D-notes, memory notes, `docs/OVERNIGHT_2026-10-15.md` (what was built, what to pull, what to run on the laptop, what failed).
+**Part 4, coding challenges (agreed with the user 2026-10-15; only after items 1 to 19 are finished):**
+20. [ ] **Approach challenges for Forge.** About 8 small tasks, each with one deliberate trap (a bug whose symptom is not its cause; an ambiguous spec that should be noticed and stated; an off-by-one or time-zone edge; a concurrency race; SQL built by string concatenation; a feature that must follow an existing repository's conventions in Mode A; a library API the model may misremember; a refactor that must not change behaviour). Run each with a time box (about 5 minutes or the first 20 tool calls), stop the run, and judge only the approach from `.forge/transcripts/events.jsonl` against a per-challenge checklist: reads the existing code and tests first, states assumptions, finds the root cause before editing, writes a failing test or check before the fix, small edits, runs the checks, does not invent APIs. If the approach is wrong, fix Forge (expect gates and required steps rather than advice, which this model ignores) and run the same challenge again; then give NEW challenges until the approach is right. Do not trade quality or speed for fewer tokens (D-161). List every new gate in the morning summary for the user's review. Record in docs/CODE_BENCHMARK.md (section "Approach challenges") and DECISIONS.
+If the session usage limit is hit, resume at 4:30 AM IST (a one-time schedule was set 2026-10-15 for 04:33; if it did not fire, the user's next message restarts the work from this list).
 Not done at night on purpose: anything that needs the office laptop (Gemini probe, shadcn recheck, template probe, three-design rerun), the user's files or keys, the DS8 model decision, S7 faster-model OK, the one-click installer, the internal rename and pushing.
 
 ## 1. Waiting on you (your actions and decisions)
