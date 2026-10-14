@@ -228,6 +228,49 @@ AUDIT_SCRIPT = r"""
   const placeholder = bodyText.match(/lorem ipsum|john doe|jane doe|\bacme\b|your (company|name|text) here|sample text|coming soon/i);
   if (placeholder) findings.push('Placeholder content on the page ("' + placeholder[0] + '"): write real copy.');
 
+  // 12. Design studio rules (D-351): banned looks and missing interaction states.
+  const parseRgb = (c) => { const m = (c || '').match(/rgba?\(([^)]+)\)/); if (!m) return null;
+    const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(parseFloat); return p.length >= 3 ? { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 } : null; };
+  const hsl = ({ r, g, b }) => { r /= 255; g /= 255; b /= 255; const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2;
+    if (max === min) return { h: 0, s: 0, l }; const d = max - min, s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    const h = max === r ? ((g - b) / d + (g < b ? 6 : 0)) : max === g ? (b - r) / d + 2 : (r - g) / d + 4; return { h: h * 60, s, l }; };
+  const between = (h, lo, hi) => h >= lo && h <= hi;
+  const badGradients = [];
+  for (const el of all) {
+    if (!visible(el)) continue;
+    const image = getComputedStyle(el).backgroundImage;
+    if (!image || !image.includes('gradient')) continue;
+    const stops = (image.match(/rgba?\([^)]+\)/g) || []).map(parseRgb).filter((c) => c && c.a > 0.3).map(hsl).filter((c) => c.s > 0.4 && c.l > 0.15 && c.l < 0.9);
+    if (stops.length < 2) continue;
+    const hues = stops.map((c) => c.h);
+    const purpleBlue = hues.some((h) => between(h, 255, 300)) && hues.some((h) => between(h, 190, 265) && !hues.every((x) => between(x, 255, 300)));
+    const pinkCyan = hues.some((h) => between(h, 300, 350)) && hues.some((h) => between(h, 165, 205));
+    const rainbow = new Set(hues.map((h) => Math.floor(h / 60))).size >= 4;
+    if (purpleBlue || pinkCyan || rainbow) badGradients.push(el);
+  }
+  if (badGradients.length) findings.push('A purple-blue, pink-cyan or rainbow gradient is used (' + sample(badGradients) + '): the most common generic-AI look. Use a flat colour from DESIGN.md, or a gradient of two close tones of the one accent.');
+  const greyBoxes = all.filter((el) => { if (!visible(el) || !['DIV', 'SPAN', 'FIGURE', 'SECTION'].includes(el.tagName)) return false;
+    const r = el.getBoundingClientRect(); if (r.width < 80 || r.height < 80 || el.children.length > 0 || (el.innerText || '').trim()) return false;
+    const c = parseRgb(getComputedStyle(el).backgroundColor); if (!c || c.a < 0.9) return false; const v = hsl(c);
+    return v.s < 0.15 && v.l > 0.55 && v.l < 0.93 && getComputedStyle(el).backgroundImage === 'none'; });
+  if (greyBoxes.length >= 1) findings.push(greyBoxes.length + ' empty grey box(es) stand in for an image (' + sample(greyBoxes) + '): use a real picture, a drawn SVG or an honest empty state, never a placeholder block.');
+  const accentArea = new Map(); const viewportArea = window.innerWidth * window.innerHeight;
+  for (const el of all) { if (!visible(el)) continue; const c = parseRgb(getComputedStyle(el).backgroundColor); if (!c || c.a < 0.9) continue; const v = hsl(c);
+    if (v.s > 0.45 && v.l > 0.25 && v.l < 0.8) { const r = el.getBoundingClientRect(); const area = Math.max(0, Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0)) * Math.min(r.width, window.innerWidth);
+      const bucket = Math.round(v.h / 40) % 9; accentArea.set(bucket, (accentArea.get(bucket) || 0) + area); } }
+  const accents = [...accentArea.values()].filter((a) => a / viewportArea > 0.012).length;
+  if (accents >= 4) findings.push(accents + ' different saturated colour families fill parts of this screen: keep one accent (and one signal colour for status) so the page has a single voice.');
+  const rules = []; for (const sheet of Array.from(document.styleSheets)) { try { for (const rule of Array.from(sheet.cssRules || [])) rules.push(rule.cssText || ''); } catch (e) { /* a cross-origin stylesheet */ } }
+  const cssText = rules.join('\n');
+  const interactive = all.filter((el) => visible(el) && (el.tagName === 'BUTTON' || el.tagName === 'A' && el.hasAttribute('href') || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA'));
+  if (cssText && interactive.length >= 2) {
+    if (!/:hover/.test(cssText)) findings.push('No hover style exists for the ' + interactive.length + ' buttons, links and fields: add a visible hover state (colour or lift).');
+    if (!/:focus-visible|:focus\b|:focus-within/.test(cssText)) findings.push('No focus style exists for the buttons, links and fields: add a visible :focus-visible ring (keyboard users cannot see where they are).');
+    if (all.some((el) => el.matches(':disabled')) && !/:disabled|\[disabled\]|aria-disabled/.test(cssText)) findings.push('Disabled controls look the same as enabled ones: style :disabled (lower contrast, no pointer).');
+  }
+  const small = all.filter((el) => visible(el) && window.innerWidth >= 768 && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 24) && parseFloat(getComputedStyle(el).fontSize) < 13);
+  if (small.length >= 3) findings.push(small.length + ' blocks of running text are under 13px at desktop width (' + sample(small) + '): body text should be 14px or larger.');
+
   return { findings, stats: { elements: all.length, utilityClasses: expected, ineffective: missing, viewport: window.innerWidth + 'x' + window.innerHeight } };
 }
 """
@@ -332,6 +375,24 @@ SOURCE_RULES: list[tuple[re.Pattern[str], str]] = [
         "placeholder text in the source: write real copy",
     ),
     (re.compile(r"<img(?![^>]*\balt=)[^>]*>"), "an <img> without alt text"),
+    (
+        re.compile(
+            r"(?:from|via|to)-(?:purple|violet|indigo|fuchsia)-\d+[^\"'`]*\bto-(?:blue|cyan|sky|pink|teal)-\d+"
+        ),
+        "a purple-to-blue (or pink, cyan) Tailwind gradient: the most common generic-AI look; use a flat colour from DESIGN.md",
+    ),
+]
+# Checks of the whole file rather than one pattern: a form needs an error state and a sending state (the 8-state model, D-351).
+FORM = re.compile(r"<form\b|onSubmit|handleSubmit")
+STATE_CHECKS: list[tuple[re.Pattern[str], str]] = [
+    (
+        re.compile(r"aria-invalid|role=[\"']alert|\berror\b", re.IGNORECASE),
+        "a form with no error state (aria-invalid, an error message with role=alert): say what went wrong and what to do",
+    ),
+    (
+        re.compile(r"disabled|loading|pending|submitting|isLoading|aria-busy", re.IGNORECASE),
+        "a form with no sending state (disabled or loading while the request runs)",
+    ),
 ]
 
 
@@ -350,6 +411,10 @@ def source_taste_problems(root: Path) -> list[str]:
         for pattern, message in SOURCE_RULES:
             if pattern.search(text):
                 counts.setdefault(message, []).append(path.relative_to(root).as_posix())
+        if path.suffix in (".tsx", ".jsx", ".vue", ".svelte", ".html") and FORM.search(text):
+            for satisfied, message in STATE_CHECKS:
+                if not satisfied.search(text):
+                    counts.setdefault(message, []).append(path.relative_to(root).as_posix())
     return [
         f"Source: {message} ({', '.join(files[:3])}{', ...' if len(files) > 3 else ''})."
         for message, files in counts.items()
