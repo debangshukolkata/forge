@@ -118,3 +118,15 @@ Not concluded: a wall-time gain. To measure it, three runs per arm (see TODO X8)
 
 ### Where the tool time goes (D-368, 2026-10-15)
 From the event logs of the dashboard brief: tool time is almost all `spawn_subagent` (speed-6: 5 runs, 904 s of 2,658 s; speed-new: 2 runs, 426 s of 1,188 s). Everything else is small: `browser_screenshot` 2.2 s, `browser_open` 3.4 s, `run_command` 1.4 s, `start_background` 2.2 s, `view_image` 24 s (a vision call), `design_candidates` 22 s (a vision call). The 515 s verifier wrote a Playwright script twice and installed Playwright (99 s) for a static page; the verifier prompt now skips the script when there is no behaviour to exercise.
+
+### X8: three throwaway designs, serial against parallel builders (D-380, 2026-10-15)
+Brief: three designs of the home screen of a blood donation app (tests/benchmarks/parallel/three_designs.md). Arms: `limits.max_parallel_builders` 1 (builders one after another) against 3. Same code and prompts in both arms (commit `b030af7`: `build_variants` available), alternating runs, idle machine, runner `scripts/benchmark/run_parallel_designs.py`.
+
+**First attempt (x8-1, stopped after one pair).** Serial 2,788 s with 100 main-agent model calls; "parallel" 1,441 s with 64: the model never spawned a builder in either arm (it loaded the parallel-builders skill, then reasoned "treat this as a single-agent job to minimise coordination errors"), so the 1.9x difference was route variance, not parallelism. That is why the route became a tool (D-380). Lesson: one run per arm, with the arms behaving alike, shows nothing.
+
+**Second attempt (x8-2), interim after the first pair** (the main agent's model calls only; the builders' own calls are in their subagent logs):
+| Arm | Wall | Main-agent calls | Input tokens | Cost | Agents (peak at once) | 429 notices | Designs | Audit findings left | Sideways scroll |
+|---|---|---|---|---|---|---|---|---|---|
+| serial 1 | 1,914 s | 40 | 2.68 M | $2.44 | 4 (1) | 0 | 3, all different | 4 | 0 |
+| parallel 1 | 750 s | 17 | 0.74 M | $1.99 | 4 (3) | 0 | 3, all different | 0 | 0 |
+The parallel arm was 2.6x faster and 18 % cheaper with no 429s from Azure at three builders at once. One pair is one pair: the table is completed with runs 2 and 3 of each arm.
