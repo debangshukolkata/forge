@@ -169,9 +169,12 @@ AUDIT_SCRIPT = r"""
   if (textColours.size > 9) findings.push(textColours.size + ' different text colours: reduce to a few neutrals plus the accent.');
   const radii = new Set(all.filter(visible).map((el) => getComputedStyle(el).borderTopLeftRadius).filter((r) => r !== '0px' && !r.includes('%') && parseFloat(r) < 999));
   if (radii.size > 6) findings.push(radii.size + ' different corner radii: pick two or three and reuse them.');
+  // A working application (many controls, or an app shell with controls) shows data, not pictures, and its page title is smaller than a landing page's hero.
+  const appLike = document.querySelectorAll('button, input, select, textarea, [role=tab], a[class*=btn]').length >= 8
+    || (!!document.querySelector('aside, [role=tablist], header nav') && document.querySelectorAll('button, input, select, textarea, a[class*=btn]').length >= 3);
   const heading = document.querySelector('h1');
   if (!heading) findings.push('No h1 on the page: every page needs one clear main heading.');
-  else if (parseFloat(getComputedStyle(heading).fontSize) < 28) findings.push('The h1 is only ' + Math.round(parseFloat(getComputedStyle(heading).fontSize)) + 'px: the main heading should dominate (36px or more).');
+  else if (parseFloat(getComputedStyle(heading).fontSize) < (appLike ? 19 : 28)) findings.push('The h1 is only ' + Math.round(parseFloat(getComputedStyle(heading).fontSize)) + 'px: the main heading should dominate (' + (appLike ? '20px or more in an application' : '36px or more') + ').');
   const paragraphs = all.filter((el) => el.tagName === 'P' && visible(el) && el.getBoundingClientRect().width > 0);
   const wide = paragraphs.filter((el) => { const w = el.getBoundingClientRect().width, f = parseFloat(getComputedStyle(el).fontSize); return (el.innerText || '').length > 120 && w / f > 52; });
   if (wide.length) findings.push('Text lines are too long (more than about 80 characters): ' + sample(wide) + '. Limit with max-w-prose or max-w-2xl.');
@@ -213,7 +216,7 @@ AUDIT_SCRIPT = r"""
   // 11. Taste checks (distilled from common "generic AI page" tells).
   const firstAction = all.find((el) => (el.tagName === 'A' || el.tagName === 'BUTTON') && visible(el) && !el.closest('header, nav')
     && getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)');
-  if (firstAction && firstAction.getBoundingClientRect().top + window.scrollY > window.innerHeight) {
+  if (!appLike && firstAction && firstAction.getBoundingClientRect().top + window.scrollY > window.innerHeight) {
     findings.push('The first primary action ' + label(firstAction) + ' is below the fold at ' + window.innerWidth + 'x' +
       window.innerHeight + ': the hero must show the headline and the main action without scrolling.');
   }
@@ -286,8 +289,9 @@ AUDIT_SCRIPT = r"""
   }
   const hasPicture = all.some((el) => visible(el) && ((el.tagName === 'IMG' && el.naturalWidth >= 200) || el.tagName === 'VIDEO' || el.tagName === 'CANVAS' || el.tagName === 'PICTURE'
     || (el.tagName === 'svg' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 120 && el.querySelectorAll('path, circle, rect, polygon, ellipse, line').length >= 4)
+    || (el.getAttribute('role') === 'img' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 80)  // a chart is the picture of a dashboard
     || /url\(/.test(getComputedStyle(el).backgroundImage)));
-  if (!hasPicture && all.length >= 30 && (document.body.innerText || '').length > 600) {
+  if (!hasPicture && !appLike && all.length >= 30 && (document.body.innerText || '').length > 600) {
     const marketing = document.querySelectorAll('section, header, footer').length >= 3 && document.querySelectorAll('table').length === 0 && document.querySelectorAll('input, select, textarea').length < 4;
     findings.push((marketing ? 'BLOCKER: ' : '') + 'The page has no imagery at all: no photograph, illustration, drawn SVG scene or video, only text and boxes. Designed pages carry visual content that belongs to the product (findimage for a licensed photograph, generate_image, or draw an SVG illustration), at least in the hero.');
   }

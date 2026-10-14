@@ -4389,6 +4389,1046 @@
    "size": 90948
   },
   {
+   "id": "app-calendar",
+   "type": "section",
+   "title": "App screen: Calendar: week view",
+   "summary": "A week calendar: a mini month and calendar toggles on the side, a time grid with positioned, colour-coded events, today's column marked and a Day, Week, Month switch.",
+   "moods": [
+    "organised",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "scheduling",
+    "booking",
+    "planning",
+    "team calendar",
+    "appointments"
+   ],
+   "tags": [
+    "calendar",
+    "week view",
+    "schedule",
+    "side panel",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/calendar.html",
+     "to": "screens/calendar.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-calendar.md",
+   "size": 20283
+  },
+  {
+   "id": "app-chat",
+   "type": "section",
+   "title": "App screen: Chat: conversations and thread",
+   "summary": "A team chat: a conversation list with previews and times, a thread with grouped bubbles, a day marker and your own messages in the accent, and a composer pinned to the bottom.",
+   "moods": [
+    "quick",
+    "informal",
+    "dark"
+   ],
+   "products": [
+    "messaging",
+    "collaboration",
+    "community",
+    "support chat",
+    "assistant"
+   ],
+   "tags": [
+    "chat",
+    "messages",
+    "composer",
+    "dark",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "dark"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/chat.html",
+     "to": "screens/chat.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-chat.md",
+   "size": 20010
+  },
+  {
+   "id": "app-dashboard-analytics",
+   "type": "section",
+   "title": "App screen: Dashboard: analytics (dark)",
+   "summary": "A dark analytics screen: range selector, three metrics with sparklines, a two-line chart, a top-pages table with trends and a funnel.",
+   "moods": [
+    "technical",
+    "focused",
+    "dark"
+   ],
+   "products": [
+    "analytics",
+    "growth",
+    "developer tools",
+    "saas",
+    "marketing"
+   ],
+   "tags": [
+    "dashboard",
+    "analytics",
+    "dark",
+    "chart",
+    "funnel",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "dark"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/dashboard-analytics.html",
+     "to": "screens/dashboard-analytics.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-dashboard-analytics.md",
+   "size": 24082
+  },
+  {
+   "id": "app-dashboard-kpi",
+   "type": "section",
+   "title": "App screen: Dashboard: sales KPIs",
+   "summary": "A side-navigation finance dashboard: four KPI cards with deltas, a two-series revenue chart, a channel ring and a recent-orders table.",
+   "moods": [
+    "calm",
+    "professional",
+    "light"
+   ],
+   "products": [
+    "finance",
+    "sales",
+    "e-commerce",
+    "saas",
+    "admin"
+   ],
+   "tags": [
+    "dashboard",
+    "kpi",
+    "chart",
+    "table",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/dashboard-kpi.html",
+     "to": "screens/dashboard-kpi.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-dashboard-kpi.md",
+   "size": 24693
+  },
+  {
+   "id": "app-dashboard-ops",
+   "type": "section",
+   "title": "App screen: Dashboard: operations board",
+   "summary": "A top-navigation operations board: status counters, a shipments table with progress meters, on-time bars and an exceptions list.",
+   "moods": [
+    "practical",
+    "calm",
+    "teal"
+   ],
+   "products": [
+    "logistics",
+    "operations",
+    "fleet",
+    "support",
+    "field service"
+   ],
+   "tags": [
+    "dashboard",
+    "status",
+    "table",
+    "top navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/dashboard-ops.html",
+     "to": "screens/dashboard-ops.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-dashboard-ops.md",
+   "size": 20394
+  },
+  {
+   "id": "app-dashboard-personal",
+   "type": "section",
+   "title": "App screen: Dashboard: personal day view",
+   "summary": "A friendly personal overview: a greeting, today's schedule, progress rings for weekly goals and a focus-time chart.",
+   "moods": [
+    "warm",
+    "friendly",
+    "light"
+   ],
+   "products": [
+    "productivity",
+    "personal",
+    "wellbeing",
+    "education",
+    "customer success"
+   ],
+   "tags": [
+    "dashboard",
+    "personal",
+    "goals",
+    "calendar",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/dashboard-personal.html",
+     "to": "screens/dashboard-personal.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-dashboard-personal.md",
+   "size": 21553
+  },
+  {
+   "id": "app-editor",
+   "type": "section",
+   "title": "App screen: Editor: document with outline and comments",
+   "summary": "A writing surface: a page tree and an on-this-page outline, a formatting bar, a large editable title, checklist items, and a comments column with open threads.",
+   "moods": [
+    "quiet",
+    "focused",
+    "light"
+   ],
+   "products": [
+    "documents",
+    "wiki",
+    "notes",
+    "knowledge base",
+    "handbook"
+   ],
+   "tags": [
+    "editor",
+    "document",
+    "comments",
+    "outline",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/editor.html",
+     "to": "screens/editor.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-editor.md",
+   "size": 19592
+  },
+  {
+   "id": "app-empty-states",
+   "type": "section",
+   "title": "App screen: States: empty, no results, error, offline, loading and first run",
+   "summary": "Six state cards (empty list, no search results, load error, offline, skeleton loading, all caught up) and a first-run checklist with progress, so every moment without data has a next step.",
+   "moods": [
+    "helpful",
+    "plain",
+    "light"
+   ],
+   "products": [
+    "any app",
+    "saas",
+    "onboarding",
+    "error handling"
+   ],
+   "tags": [
+    "empty state",
+    "error",
+    "loading",
+    "skeleton",
+    "onboarding",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/empty-states.html",
+     "to": "screens/empty-states.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-empty-states.md",
+   "size": 20061
+  },
+  {
+   "id": "app-form-line-entry",
+   "type": "section",
+   "title": "App screen: Form: invoice with line items",
+   "summary": "A document-style data entry screen: header fields, an editable lines table with live amounts, notes and a totals block, with save, preview and send actions.",
+   "moods": [
+    "businesslike",
+    "efficient",
+    "light"
+   ],
+   "products": [
+    "invoicing",
+    "quotes",
+    "orders",
+    "expenses",
+    "timesheets"
+   ],
+   "tags": [
+    "form",
+    "data entry",
+    "line items",
+    "totals",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/form-line-entry.html",
+     "to": "screens/form-line-entry.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-form-line-entry.md",
+   "size": 20249
+  },
+  {
+   "id": "app-form-long",
+   "type": "section",
+   "title": "App screen: Form: long page form with validation",
+   "summary": "A long single-page form in titled sections (the heading and help on the left, the fields on the right), an error summary that links to each field, inline errors and a sticky action bar.",
+   "moods": [
+    "clear",
+    "trustworthy",
+    "light"
+   ],
+   "products": [
+    "healthcare",
+    "registration",
+    "applications",
+    "hr",
+    "government"
+   ],
+   "tags": [
+    "form",
+    "validation",
+    "error summary",
+    "sections",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/form-long.html",
+     "to": "screens/form-long.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-form-long.md",
+   "size": 19862
+  },
+  {
+   "id": "app-form-quick-capture",
+   "type": "section",
+   "title": "App screen: Form: quick capture",
+   "summary": "A fast entry form for frequent small records: one big text box, category chips, two short fields, a keyboard hint, and today's earlier entries beside it.",
+   "moods": [
+    "friendly",
+    "quick",
+    "light"
+   ],
+   "products": [
+    "field work",
+    "logs",
+    "hospitality",
+    "operations",
+    "notes"
+   ],
+   "tags": [
+    "form",
+    "data entry",
+    "chips",
+    "top navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/form-quick-capture.html",
+     "to": "screens/form-quick-capture.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-form-quick-capture.md",
+   "size": 18252
+  },
+  {
+   "id": "app-form-sign-in",
+   "type": "section",
+   "title": "App screen: Form: sign-in split screen",
+   "summary": "A sign-in page split in two: the form (single sign-on, email, password, remember me) beside a colour panel with drawn contour art and a customer quote.",
+   "moods": [
+    "welcoming",
+    "confident",
+    "teal"
+   ],
+   "products": [
+    "authentication",
+    "saas",
+    "marketplace",
+    "booking",
+    "portal"
+   ],
+   "tags": [
+    "form",
+    "authentication",
+    "split screen",
+    "drawn art",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/form-sign-in.html",
+     "to": "screens/form-sign-in.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-form-sign-in.md",
+   "size": 17860
+  },
+  {
+   "id": "app-form-wizard",
+   "type": "section",
+   "title": "App screen: Form: multi-step wizard",
+   "summary": "A stepper with done, current and next steps, a card of billing fields with a visible error, plan choice cards, and an order summary beside it.",
+   "moods": [
+    "calm",
+    "guided",
+    "light"
+   ],
+   "products": [
+    "onboarding",
+    "checkout",
+    "registration",
+    "applications",
+    "setup"
+   ],
+   "tags": [
+    "form",
+    "wizard",
+    "stepper",
+    "validation",
+    "summary",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/form-wizard.html",
+     "to": "screens/form-wizard.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-form-wizard.md",
+   "size": 20127
+  },
+  {
+   "id": "app-inbox",
+   "type": "section",
+   "title": "App screen: Inbox: three panes",
+   "summary": "A mail-style inbox: folders and labels, a message list with unread emphasis and a selected row, and the open message with actions and an inline reply.",
+   "moods": [
+    "productive",
+    "familiar",
+    "light"
+   ],
+   "products": [
+    "email",
+    "support",
+    "messaging",
+    "tickets",
+    "case management"
+   ],
+   "tags": [
+    "inbox",
+    "three panes",
+    "list",
+    "reading pane",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/inbox.html",
+     "to": "screens/inbox.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-inbox.md",
+   "size": 22568
+  },
+  {
+   "id": "app-map-list",
+   "type": "section",
+   "title": "App screen: Map: list and map side by side",
+   "summary": "A locator: a result list with status pills beside a drawn map with numbered pins, zoom controls and a detail card for the selected place.",
+   "moods": [
+    "clear",
+    "practical",
+    "light"
+   ],
+   "products": [
+    "logistics",
+    "store locator",
+    "delivery",
+    "real estate",
+    "field service"
+   ],
+   "tags": [
+    "map",
+    "list",
+    "locator",
+    "drawn svg map",
+    "top navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/map-list.html",
+     "to": "screens/map-list.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-map-list.md",
+   "size": 21044
+  },
+  {
+   "id": "app-record",
+   "type": "section",
+   "title": "App screen: Record: customer profile",
+   "summary": "A record page: identity header with status pills and actions, tabs, an activity timeline with a note box, and a side card of key details and account health.",
+   "moods": [
+    "considered",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "crm",
+    "customers",
+    "patients",
+    "accounts",
+    "candidates"
+   ],
+   "tags": [
+    "record",
+    "profile",
+    "timeline",
+    "tabs",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/record.html",
+     "to": "screens/record.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-record.md",
+   "size": 20531
+  },
+  {
+   "id": "app-settings-account",
+   "type": "section",
+   "title": "App screen: Settings: account, security and API keys",
+   "summary": "A settings page with a vertical section menu, a profile form, toggle rows, an API key list with copy and revoke, and a separated danger zone.",
+   "moods": [
+    "clear",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "developer tools",
+    "saas",
+    "admin",
+    "account"
+   ],
+   "tags": [
+    "settings",
+    "toggles",
+    "api keys",
+    "forms",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/settings-account.html",
+     "to": "screens/settings-account.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-settings-account.md",
+   "size": 21498
+  },
+  {
+   "id": "app-settings-billing",
+   "type": "section",
+   "title": "App screen: Settings: plan, usage and invoices",
+   "summary": "A billing page with the current plan, usage meters against limits, a payment method card, a billing contact and an invoice table.",
+   "moods": [
+    "trustworthy",
+    "plain",
+    "light"
+   ],
+   "products": [
+    "saas",
+    "subscriptions",
+    "billing",
+    "membership"
+   ],
+   "tags": [
+    "settings",
+    "billing",
+    "usage meters",
+    "table",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/settings-billing.html",
+     "to": "screens/settings-billing.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-settings-billing.md",
+   "size": 20033
+  },
+  {
+   "id": "app-settings-notifications",
+   "type": "section",
+   "title": "App screen: Settings: notification preferences",
+   "summary": "A preference matrix of events against channels with switches, plus quiet hours with time fields and a digest schedule.",
+   "moods": [
+    "calm",
+    "considerate",
+    "light"
+   ],
+   "products": [
+    "productivity",
+    "communication",
+    "collaboration",
+    "mobile app"
+   ],
+   "tags": [
+    "settings",
+    "matrix",
+    "toggles",
+    "top navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/settings-notifications.html",
+     "to": "screens/settings-notifications.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-settings-notifications.md",
+   "size": 20366
+  },
+  {
+   "id": "app-settings-roles",
+   "type": "section",
+   "title": "App screen: Settings: roles and permissions grid",
+   "summary": "A permission matrix of rights against roles with checkboxes (the owner column fixed), beside a member list where each person's role is a select.",
+   "moods": [
+    "technical",
+    "precise",
+    "dark"
+   ],
+   "products": [
+    "admin",
+    "security",
+    "enterprise",
+    "developer tools"
+   ],
+   "tags": [
+    "settings",
+    "permissions",
+    "matrix",
+    "checkboxes",
+    "dark",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "dark"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/settings-roles.html",
+     "to": "screens/settings-roles.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-settings-roles.md",
+   "size": 21878
+  },
+  {
+   "id": "app-table-data",
+   "type": "section",
+   "title": "App screen: Table: people with filters and bulk actions",
+   "summary": "A full data table: search, status segments, a bulk-action bar for selected rows, avatars, status pills, row actions and pagination.",
+   "moods": [
+    "precise",
+    "plain",
+    "light"
+   ],
+   "products": [
+    "admin",
+    "team management",
+    "saas",
+    "hr",
+    "back office"
+   ],
+   "tags": [
+    "table",
+    "filters",
+    "bulk actions",
+    "pagination",
+    "top navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/table-data.html",
+     "to": "screens/table-data.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-table-data.md",
+   "size": 21401
+  },
+  {
+   "id": "app-table-editable-grid",
+   "type": "section",
+   "title": "App screen: Table: editable grid for fast entry",
+   "summary": "A grid whose number cells are inputs: scan or type a SKU, tab through counts, low-stock status, and a sticky save bar that says how many cells changed.",
+   "moods": [
+    "practical",
+    "fast",
+    "light"
+   ],
+   "products": [
+    "inventory",
+    "warehouse",
+    "data entry",
+    "spreadsheet",
+    "back office"
+   ],
+   "tags": [
+    "table",
+    "editable",
+    "data entry",
+    "inputs",
+    "sticky save bar",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/table-editable-grid.html",
+     "to": "screens/table-editable-grid.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-table-editable-grid.md",
+   "size": 20793
+  },
+  {
+   "id": "app-table-kanban",
+   "type": "section",
+   "title": "App screen: Board: kanban lanes",
+   "summary": "A kanban board with four lanes, labelled cards with due dates and assignees, lane counts and add-card buttons; the lanes scroll sideways inside their frame on a phone.",
+   "moods": [
+    "warm",
+    "organised",
+    "light"
+   ],
+   "products": [
+    "project management",
+    "tasks",
+    "workflow",
+    "recruiting",
+    "support"
+   ],
+   "tags": [
+    "board",
+    "kanban",
+    "cards",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/table-kanban.html",
+     "to": "screens/table-kanban.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-table-kanban.md",
+   "size": 25297
+  },
+  {
+   "id": "app-table-master-detail",
+   "type": "section",
+   "title": "App screen: Table: master and detail",
+   "summary": "A list on the left and the selected record on the right: header, tabs, key figures, line items, activity and decision buttons.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "procurement",
+    "approvals",
+    "support",
+    "crm",
+    "orders"
+   ],
+   "tags": [
+    "list",
+    "detail",
+    "tabs",
+    "side navigation",
+    "line items",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/table-master-detail.html",
+     "to": "screens/table-master-detail.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-table-master-detail.md",
+   "size": 22117
+  },
+  {
    "id": "lay-editorial-split",
    "type": "section",
    "title": "Composition: Editorial split",

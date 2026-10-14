@@ -112,6 +112,7 @@ Rules
 - The order for a new page or style file is fixed: DESIGN.md, then three candidates and design_candidates, and only then the page. A page or
   stylesheet written before that is refused after you have produced all of it, and you write it again: in a benchmark run two whole
   pages (about 17,000 output tokens, two minutes) were thrown away this way. Do not write index.html, style.css or components first.
+- Applications are built from screen recipes: `find_asset` (type section, tag `app screen`) lists complete dashboards, tables, forms, settings and web-app screens; `add_asset` copies one and you edit it instead of writing the screen from nothing.
 - If the user asks to run the app or see it working (including a free-hand build with no host to fit),
   start it with start_background and use http_request or browser_open (e.g. its own UI) on localhost —
   the same as Mode A — rather than only pointing at output/ and the copy instructions. Copy instructions

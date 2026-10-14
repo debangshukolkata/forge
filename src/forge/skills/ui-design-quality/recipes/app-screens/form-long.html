@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form: long page form with validation</title>
+<!-- SCREEN: Form: long page form with validation. A long single-page form in titled sections (the heading and help on the left, the fields on the right), an error summary that links to each field, inline errors and a sticky action bar. Use it for a form with many fields that must be easy to scan and correct: registrations, applications, records.
+     Replace the :root block with the tokens exported from DESIGN.md (design_md_export css-variables) and delete it; change every word and number to the product's own; keep the structure that fits. -->
+<style>
+:root{--color-neutral:#edf3f4;--color-surface:#ffffff;--color-ink:#0e2a33;--color-muted:#4d6670;--color-primary:#0a6670;--color-on-primary:#ffffff;--color-accent2:#b8620f;--color-border:#d3e0e3;--color-ok:#17693d;--color-warn:#8b5200;--color-danger:#b3261e;--font-display:"Manrope","Inter",system-ui,sans-serif;--font-body-md:"Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font:400 15px/1.55 var(--font-body-md);-webkit-font-smoothing:antialiased}
+h1{font:600 1.85rem/1.2 var(--font-display);letter-spacing:-.02em;margin:0}h2{font:600 1.05rem/1.3 var(--font-display);margin:0}h3{font:600 .95rem/1.3 var(--font-display);margin:0}p{margin:0}
+a{color:var(--color-primary)}:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:4px}
+.ico{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.muted{color:var(--color-muted)}.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:root{--soft:color-mix(in srgb,var(--color-primary) 11%,var(--color-surface));--hover:color-mix(in srgb,var(--color-ink) 5%,var(--color-surface));--radius:14px;--r:10px;--field:color-mix(in srgb,var(--color-ink) 26%,var(--color-surface));--shadow:0 1px 2px color-mix(in srgb,var(--color-ink) 8%,transparent)}
+/* shell */
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.side{background:var(--color-surface);border-right:1px solid var(--color-border);padding:18px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font:700 1.05rem var(--font-display);letter-spacing:-.01em}
+.brand i{width:28px;height:28px;padding:1px;border-radius:var(--r);background:var(--color-primary);color:var(--color-on-primary);display:grid;place-items:center;font-style:normal;font-size:.85rem}
+.nav-title{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted);padding:14px 10px 6px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);color:var(--color-muted);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--hover);color:var(--color-ink)}.nav a[aria-current=page]{background:var(--soft);color:var(--color-ink);font-weight:600}
+.nav .count{margin-left:auto;font-size:.75rem;padding:1px 7px;border-radius:999px;background:var(--hover);color:var(--color-muted)}
+.side .me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px 4px;border-top:1px solid var(--color-border)}
+.avatar{width:32px;height:32px;padding:1px;border-radius:999px;background:var(--soft);color:var(--color-primary);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
+.main{padding:26px clamp(16px,3vw,40px) 48px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap;margin-bottom:22px}
+.top .sub{color:var(--color-muted);margin-top:2px}.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.topbar{display:flex;align-items:center;gap:20px;padding:0 clamp(16px,3vw,40px);height:60px;background:var(--color-surface);border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:5}
+.topbar nav{display:flex;gap:4px;margin-left:12px;overflow-x:auto;min-width:0}.topbar nav a{padding:8px 12px;border-radius:var(--r);color:var(--color-muted);text-decoration:none;font-weight:500;white-space:nowrap}
+.topbar nav a[aria-current=page]{color:var(--color-ink);background:var(--soft);font-weight:600}.topbar .grow{flex:1}
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border-radius:var(--r);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-ink);font:600 .9rem var(--font-body-md);cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--hover)}.btn--primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary)}.btn--primary:hover{background:var(--color-primary);filter:brightness(1.08)}
+.btn--ghost{border-color:transparent;background:transparent;color:var(--color-muted)}.btn--sm{min-height:32px;padding:0 12px;font-size:.85rem}.btn--danger{color:var(--color-danger);border-color:color-mix(in srgb,var(--color-danger) 40%,var(--color-border))}
+.btn:disabled{opacity:.5;cursor:not-allowed}.btn--icon{width:38px;padding:0}.btn--sm.btn--icon{width:32px}
+.field{display:grid;gap:6px;align-content:start}.field label,.label{font-weight:600;font-size:.88rem}.field .hint{font-size:.85rem;color:var(--color-muted)}
+.input,.select,.textarea{width:100%;min-height:40px;padding:8px 12px;border-radius:var(--r);border:1px solid var(--field);background:var(--color-surface);color:var(--color-ink);font:400 .95rem var(--font-body-md)}
+.textarea{min-height:96px;resize:vertical}.input::placeholder{color:var(--color-muted)}.input:hover,.select:hover{border-color:var(--color-ink)}
+.input:focus-visible,.select:focus-visible,.textarea:focus-visible{outline:2px solid var(--color-primary);outline-offset:0;border-color:var(--color-primary)}
+.field.is-error .input{border-color:var(--color-danger)}.field .error{color:var(--color-danger);font-size:.85rem;display:flex;gap:6px;align-items:center}
+.search{position:relative;display:flex;align-items:center}.search .ico{position:absolute;left:11px;color:var(--color-muted)}.search .input{padding-left:36px}
+.switch{position:relative;width:42px;height:24px;flex:none}.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:999px;background:color-mix(in srgb,var(--color-ink) 24%,var(--color-surface));transition:background .15s}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:999px;background:var(--color-surface);box-shadow:var(--shadow);transition:transform .15s}
+.switch input:checked+span{background:var(--color-primary)}.switch input:checked+span::after{transform:translateX(18px)}.switch input:focus-visible+span{outline:2px solid var(--color-primary);outline-offset:2px}
+.check{display:inline-flex;align-items:center;gap:10px}.check input{width:18px;height:18px;accent-color:var(--color-primary);margin:0}
+.seg{display:inline-flex;padding:3px;border-radius:var(--r);background:var(--hover);border:1px solid var(--color-border)}.seg button{border:0;background:transparent;color:var(--color-muted);font:600 .85rem var(--font-body-md);padding:6px 12px;border-radius:var(--r);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--color-surface);color:var(--color-ink);box-shadow:var(--shadow)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--color-border);overflow-x:auto}.tabs a{padding:10px 14px;color:var(--color-muted);text-decoration:none;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs a[aria-current=page]{color:var(--color-ink);border-bottom-color:var(--color-primary)}
+/* surfaces */
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card>header,.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.card-head p{color:var(--color-muted);font-size:.88rem}
+.grid{display:grid;gap:16px}.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi .label{color:var(--color-muted);font-weight:500;font-size:.88rem}.kpi .value{font:600 1.9rem/1.15 var(--font-display);letter-spacing:-.02em;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:.85rem;font-weight:600}.delta .ico{width:14px;height:14px}.delta--up{color:var(--color-ok)}.delta--down{color:var(--color-danger)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:.8rem;font-weight:600;line-height:1.5;white-space:nowrap;background:var(--hover);color:var(--color-muted)}
+.pill::before{content:"";width:6px;height:6px;border-radius:999px;background:currentColor}
+.pill--ok{background:color-mix(in srgb,var(--color-ok) 14%,var(--color-surface));color:var(--color-ok)}.pill--warn{background:color-mix(in srgb,var(--color-warn) 15%,var(--color-surface));color:var(--color-warn)}
+.pill--danger{background:color-mix(in srgb,var(--color-danger) 13%,var(--color-surface));color:var(--color-danger)}.pill--info{background:var(--soft);color:var(--color-primary)}
+.divider{height:1px;background:var(--color-border);border:0;margin:16px 0}
+.list{list-style:none;margin:0;padding:0}.list li{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--color-border)}.list li:last-child{border-bottom:0}
+/* tables */
+.table-wrap{position:relative;overflow-x:auto;border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}th{text-align:left;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--color-muted);font-weight:600;padding:11px 16px;border-bottom:1px solid var(--color-border);white-space:nowrap}thead{background:color-mix(in srgb,var(--color-ink) 3%,var(--color-surface))}
+td{padding:12px 16px;border-bottom:1px solid var(--color-border);vertical-align:middle}tr:last-child td{border-bottom:0}tbody tr:hover td{background:var(--hover)}
+td.r,th.r{text-align:right}th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}th button:focus-visible{outline:2px solid var(--color-primary)}
+.cell-main{display:flex;align-items:center;gap:12px;min-width:0}.cell-main b{display:block;font-weight:600}.cell-main span{color:var(--color-muted);font-size:.85rem}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 4px 0;color:var(--color-muted);font-size:.9rem}
+/* charts: SVG for the shape, HTML for the labels, so text stays readable at every width */
+.chart{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px}.chart .ys{display:flex;flex-direction:column;justify-content:space-between;font-size:.75rem;color:var(--color-muted);text-align:right;padding:2px 0}
+.chart svg{width:100%;height:100%;display:block}.chart .plot{height:var(--h,220px);position:relative}.chart .xs{grid-column:2;display:flex;justify-content:space-between;font-size:.75rem;color:var(--color-muted);padding-top:8px}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;align-items:end;height:var(--h,180px)}.bars div{background:var(--color-primary);border-radius:6px;min-height:4px;position:relative}
+.bars div.alt{background:color-mix(in srgb,var(--color-primary) 35%,var(--color-surface))}.bar-labels{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;font-size:.75rem;color:var(--color-muted);text-align:center;padding-top:8px}
+.meter{height:8px;border-radius:999px;background:var(--hover);overflow:hidden;border:1px solid var(--color-border)}.meter i{display:block;height:100%;background:var(--color-primary);border-radius:999px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--color-muted)}.legend i{display:inline-block;width:10px;height:10px;border-radius:6px;margin-right:6px;vertical-align:-1px}
+/* narrow screens: the sidebar becomes a strip, grids stack, tables scroll inside their frame */
+@media (max-width:1100px){.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.app{grid-template-columns:minmax(0,1fr)}.side{position:static;height:auto;flex-direction:row;align-items:center;gap:6px;padding:10px 12px;border-right:0;border-bottom:1px solid var(--color-border);overflow-x:auto}
+.side .brand{padding:0 8px 0 0}.side .nav-title,.side .me{display:none}.nav{display:flex;gap:2px}.nav a{white-space:nowrap}.cols-3,.cols-2,.cols-4{grid-template-columns:minmax(0,1fr)}.main{padding:18px 16px 40px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.sections{display:grid;gap:18px}.fs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:28px;padding:26px;align-items:start}.fs h2{font-size:1.05rem}.fs>div:first-child p{margin-top:6px;color:var(--color-muted);font-size:.92rem}.fields{display:grid;gap:18px}.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.stickybar{margin-top:18px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:12px 16px;display:flex;gap:12px;justify-content:flex-end;align-items:center;flex-wrap:wrap}@media (max-width:900px){.fs,.row2{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.4-3 2.6-5 5.5-5s5.1 2 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.6-.2 4.3 1.5 4.6 4.3"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5v4h4"/><path d="M9.5 13h5M9.5 16h5"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 13.5 6.5 5h11L20 13.5V19H4z"/><path d="M4 13.5h5l1 2h4l1-2h5"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol></svg>
+<div class="app">
+<aside class="side" aria-label="Main"><div class="brand"><i>W</i>Ward &amp; Co</div><nav class="nav" aria-label="Primary"><a href="#" aria-current=page><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg>Patients</a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>Appointments<span class=count>6</span></a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg>Referrals</a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-inbox"/></svg>Messages<span class=count>2</span></a></nav><div class="me"><span class="avatar">EN</span><div><b style="font-size:.9rem">Dr Elena Novak</b><div class="muted" style="font-size:.8rem">General practice</div></div></div></aside>
+<main class="main" style="max-width:980px">
+  <div class="top"><div><h1>New patient registration</h1><p class="sub">Fields marked * are needed to book a first appointment.</p></div></div>
+  <div role="alert" class="card" style="border-color:var(--color-danger);background:color-mix(in srgb,var(--color-danger) 7%,var(--color-surface));display:flex;gap:12px;align-items:flex-start;margin-bottom:18px"><span style="color:var(--color-danger)"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg></span><div><b>2 fields need your attention</b><p class="muted" style="margin-top:2px"><a href="#dob">Date of birth</a> is not a valid date, and <a href="#phone">phone</a> needs a number we can reach.</p></div></div>
+  <form class="sections" aria-label="Registration">
+    <section class="card fs" aria-labelledby="s1"><div><h2 id="s1">About the patient</h2><p>As it appears on their ID. We use it on every letter.</p></div>
+      <div class="fields"><div class="row2"><div class="field"><label for="fn">First name *</label><input class="input" id="fn" value="Marcus" autocomplete="given-name"></div><div class="field"><label for="ln">Last name *</label><input class="input" id="ln" value="Adeyemi" autocomplete="family-name"></div></div>
+      <div class="row2"><div class="field is-error"><label for="dob">Date of birth *</label><input class="input" id="dob" value="31/02/1988" aria-invalid="true" aria-describedby="dob-e"><p class="error" id="dob-e"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg>There is no 31 February. Use day, month, year.</p></div><div class="field"><label for="sex">Sex recorded at birth</label><select class="select" id="sex"><option>Male</option><option>Female</option><option>Prefer not to say</option></select></div></div></div></section>
+    <section class="card fs" aria-labelledby="s2"><div><h2 id="s2">Contact</h2><p>For appointment reminders only.</p></div>
+      <div class="fields"><div class="row2"><div class="field is-error"><label for="phone">Phone *</label><input class="input" id="phone" value="0121 4" type="tel" aria-invalid="true" aria-describedby="phone-e"><p class="error" id="phone-e"><svg class="ico" aria-hidden="true"><use href="#i-x"/></svg>That number is too short.</p></div><div class="field"><label for="em">Email</label><input class="input" id="em" type="email" placeholder="name@example.com"></div></div>
+      <div class="field"><label for="ad">Address</label><textarea class="textarea" id="ad" style="min-height:80px">52 Larch Road, Birmingham B13 9QA</textarea></div></div></section>
+    <section class="card fs" aria-labelledby="s3"><div><h2 id="s3">Preferences</h2><p>You can change these at any time.</p></div>
+      <div class="fields"><label class="check"><input type="checkbox" checked> Send reminders by text message</label><label class="check"><input type="checkbox"> Send reminders by email</label><label class="check"><input type="checkbox" checked> Share my record with my pharmacy</label></div></section>
+  </form>
+  <div class="stickybar"><!-- for a form taller than the screen add position:sticky;bottom:0 here --><span class="muted" style="margin-right:auto">Unsaved changes</span><button class="btn">Cancel</button><button class="btn btn--primary">Register patient</button></div>
+</main></div>
+</body>
+</html>

@@ -180,6 +180,22 @@ The machine-made page is a centred column: a hero with a gradient, three identic
 - **Details that signal craft:** real dividers and rules, tabular numerals, hanging punctuation in quotes, small caps for metadata, one considered hover
   per control, focus rings that match the palette.
 
+## 0i. Applications: start from a screen recipe, not a blank file
+For an application (dashboard, table, form, settings, inbox, calendar, record page, board) do not write the screen from nothing: that is thousands of output
+tokens and it looks generic. `find_asset` with type `section` and the tag `app screen` lists 24 complete screens in plain HTML and CSS with believable content, drawn
+charts (SVG shapes with HTML labels) and an icon sprite. Families: **dashboards** (sales KPIs, operations board, dark analytics, personal day view), **tables**
+(people table with filters and bulk actions, master and detail, kanban board, editable grid for fast entry), **forms** (multi-step wizard, invoice with line items,
+long form with an error summary, sign-in split screen, quick capture), **settings** (account and API keys, notification matrix, plan and billing, roles and
+permissions), and **web-app screens** (inbox, chat, week calendar, customer record, map with a list, document editor, empty / error / offline / loading states).
+- Pick by the job the user does on the screen, not by the product's industry; then `add_asset` copies the file (it lands in `screens/`) and `view_image` its
+  reference pictures. Name it in the candidate's front matter as `composition: app-dashboard-kpi` (or the id you chose).
+- Make it the product's own: replace the `:root` block with the tokens from `design_md_export css-variables`, fetch the fonts the tokens name, change every
+  word, name and number to the product's real content, delete what the product does not have, add what it does. Never ship the sample copy or numbers.
+- Reuse the shell: the other screens of the same app use the same classes (`.app`, `.side`, `.topbar`, `.card`, `.table-wrap`, `.field`, `.pill`), so copy
+  the first screen, then write only what differs; keep one shell for the whole app. Every list, search and fetch also needs its empty, no-results, error and
+  loading states: `app-empty-states` has them. In a React project split the screen into components with the same structure.
+- Screens must work on a phone: the side navigation becomes a strip and tables scroll inside their frame. Check at 375 px with `browser_screenshot`.
+
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)
 - **Purpose and tone** of the product (a blood donation drive: warm, trustworthy, urgent but calm).
 - **Palette**: one accent colour (a real brand colour, not default blue), a neutral scale for text and surfaces,

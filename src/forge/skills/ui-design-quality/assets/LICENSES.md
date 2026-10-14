@@ -120,6 +120,30 @@ Generated from the assets' front-matter; do not edit by hand.
 | `pair-journal` | OFL-1.1 | bundled fonts Lora and Plus Jakarta Sans (Fontsource, 5.3.0) |
 | `pair-playful-rounded` | OFL-1.1 | bundled fonts Nunito and DM Sans (Fontsource, 5.3.0) |
 | `pair-warm-editorial` | OFL-1.1 | bundled fonts Fraunces and Inter (Fontsource, 5.3.0) |
+| `app-calendar` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-chat` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-dashboard-analytics` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-dashboard-kpi` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-dashboard-ops` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-dashboard-personal` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-editor` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-empty-states` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-form-line-entry` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-form-long` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-form-quick-capture` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-form-sign-in` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-form-wizard` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-inbox` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-map-list` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-record` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-settings-account` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-settings-billing` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-settings-notifications` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-settings-roles` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-table-data` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-table-editable-grid` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-table-kanban` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-table-master-detail` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `lay-editorial-split` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-fullbleed-blocks` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-menu-list` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |

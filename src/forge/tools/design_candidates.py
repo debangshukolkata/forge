@@ -186,7 +186,7 @@ class DesignCandidates(Tool):
             if not str(loaded[path][0].extra.get("composition", "") or "").strip():
                 lines.append(
                     f"{path}: NOT USABLE until it names its composition: add `composition: lay-...` to the front matter (find_asset type section, tag "
-                    "composition lists seven complete layouts with drawn art; add_asset copies one and shows its pictures), or `composition: custom <one line "
+                    "composition lists seven complete page layouts with drawn art; for an application use `composition: app-...` from the tag 'app screen'; add_asset copies one and shows its pictures), or `composition: custom <one line "
                     "describing the layout idea>` when none fits the product."
                 )
                 continue

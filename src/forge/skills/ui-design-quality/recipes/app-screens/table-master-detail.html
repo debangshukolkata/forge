@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Table: master and detail</title>
+<!-- SCREEN: Table: master and detail. A list on the left and the selected record on the right: header, tabs, key figures, line items, activity and decision buttons. Use it for work where someone moves through many records and acts on each: approvals, tickets, orders, candidates.
+     Replace the :root block with the tokens exported from DESIGN.md (design_md_export css-variables) and delete it; change every word and number to the product's own; keep the structure that fits. -->
+<style>
+:root{--color-neutral:#f4f5f7;--color-surface:#ffffff;--color-ink:#151a22;--color-muted:#586273;--color-primary:#2352c8;--color-on-primary:#ffffff;--color-accent2:#b4530c;--color-border:#dde1e8;--color-ok:#12683f;--color-warn:#8a5200;--color-danger:#b42318;--font-display:"Plus Jakarta Sans","Inter",system-ui,sans-serif;--font-body-md:"Plus Jakarta Sans","Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font:400 15px/1.55 var(--font-body-md);-webkit-font-smoothing:antialiased}
+h1{font:600 1.85rem/1.2 var(--font-display);letter-spacing:-.02em;margin:0}h2{font:600 1.05rem/1.3 var(--font-display);margin:0}h3{font:600 .95rem/1.3 var(--font-display);margin:0}p{margin:0}
+a{color:var(--color-primary)}:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:4px}
+.ico{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.muted{color:var(--color-muted)}.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:root{--soft:color-mix(in srgb,var(--color-primary) 11%,var(--color-surface));--hover:color-mix(in srgb,var(--color-ink) 5%,var(--color-surface));--radius:14px;--r:10px;--field:color-mix(in srgb,var(--color-ink) 26%,var(--color-surface));--shadow:0 1px 2px color-mix(in srgb,var(--color-ink) 8%,transparent)}
+/* shell */
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.side{background:var(--color-surface);border-right:1px solid var(--color-border);padding:18px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font:700 1.05rem var(--font-display);letter-spacing:-.01em}
+.brand i{width:28px;height:28px;padding:1px;border-radius:var(--r);background:var(--color-primary);color:var(--color-on-primary);display:grid;place-items:center;font-style:normal;font-size:.85rem}
+.nav-title{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted);padding:14px 10px 6px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);color:var(--color-muted);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--hover);color:var(--color-ink)}.nav a[aria-current=page]{background:var(--soft);color:var(--color-ink);font-weight:600}
+.nav .count{margin-left:auto;font-size:.75rem;padding:1px 7px;border-radius:999px;background:var(--hover);color:var(--color-muted)}
+.side .me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px 4px;border-top:1px solid var(--color-border)}
+.avatar{width:32px;height:32px;padding:1px;border-radius:999px;background:var(--soft);color:var(--color-primary);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
+.main{padding:26px clamp(16px,3vw,40px) 48px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap;margin-bottom:22px}
+.top .sub{color:var(--color-muted);margin-top:2px}.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.topbar{display:flex;align-items:center;gap:20px;padding:0 clamp(16px,3vw,40px);height:60px;background:var(--color-surface);border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:5}
+.topbar nav{display:flex;gap:4px;margin-left:12px;overflow-x:auto;min-width:0}.topbar nav a{padding:8px 12px;border-radius:var(--r);color:var(--color-muted);text-decoration:none;font-weight:500;white-space:nowrap}
+.topbar nav a[aria-current=page]{color:var(--color-ink);background:var(--soft);font-weight:600}.topbar .grow{flex:1}
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border-radius:var(--r);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-ink);font:600 .9rem var(--font-body-md);cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--hover)}.btn--primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary)}.btn--primary:hover{background:var(--color-primary);filter:brightness(1.08)}
+.btn--ghost{border-color:transparent;background:transparent;color:var(--color-muted)}.btn--sm{min-height:32px;padding:0 12px;font-size:.85rem}.btn--danger{color:var(--color-danger);border-color:color-mix(in srgb,var(--color-danger) 40%,var(--color-border))}
+.btn:disabled{opacity:.5;cursor:not-allowed}.btn--icon{width:38px;padding:0}.btn--sm.btn--icon{width:32px}
+.field{display:grid;gap:6px;align-content:start}.field label,.label{font-weight:600;font-size:.88rem}.field .hint{font-size:.85rem;color:var(--color-muted)}
+.input,.select,.textarea{width:100%;min-height:40px;padding:8px 12px;border-radius:var(--r);border:1px solid var(--field);background:var(--color-surface);color:var(--color-ink);font:400 .95rem var(--font-body-md)}
+.textarea{min-height:96px;resize:vertical}.input::placeholder{color:var(--color-muted)}.input:hover,.select:hover{border-color:var(--color-ink)}
+.input:focus-visible,.select:focus-visible,.textarea:focus-visible{outline:2px solid var(--color-primary);outline-offset:0;border-color:var(--color-primary)}
+.field.is-error .input{border-color:var(--color-danger)}.field .error{color:var(--color-danger);font-size:.85rem;display:flex;gap:6px;align-items:center}
+.search{position:relative;display:flex;align-items:center}.search .ico{position:absolute;left:11px;color:var(--color-muted)}.search .input{padding-left:36px}
+.switch{position:relative;width:42px;height:24px;flex:none}.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:999px;background:color-mix(in srgb,var(--color-ink) 24%,var(--color-surface));transition:background .15s}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:999px;background:var(--color-surface);box-shadow:var(--shadow);transition:transform .15s}
+.switch input:checked+span{background:var(--color-primary)}.switch input:checked+span::after{transform:translateX(18px)}.switch input:focus-visible+span{outline:2px solid var(--color-primary);outline-offset:2px}
+.check{display:inline-flex;align-items:center;gap:10px}.check input{width:18px;height:18px;accent-color:var(--color-primary);margin:0}
+.seg{display:inline-flex;padding:3px;border-radius:var(--r);background:var(--hover);border:1px solid var(--color-border)}.seg button{border:0;background:transparent;color:var(--color-muted);font:600 .85rem var(--font-body-md);padding:6px 12px;border-radius:var(--r);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--color-surface);color:var(--color-ink);box-shadow:var(--shadow)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--color-border);overflow-x:auto}.tabs a{padding:10px 14px;color:var(--color-muted);text-decoration:none;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs a[aria-current=page]{color:var(--color-ink);border-bottom-color:var(--color-primary)}
+/* surfaces */
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card>header,.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.card-head p{color:var(--color-muted);font-size:.88rem}
+.grid{display:grid;gap:16px}.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi .label{color:var(--color-muted);font-weight:500;font-size:.88rem}.kpi .value{font:600 1.9rem/1.15 var(--font-display);letter-spacing:-.02em;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:.85rem;font-weight:600}.delta .ico{width:14px;height:14px}.delta--up{color:var(--color-ok)}.delta--down{color:var(--color-danger)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:.8rem;font-weight:600;line-height:1.5;white-space:nowrap;background:var(--hover);color:var(--color-muted)}
+.pill::before{content:"";width:6px;height:6px;border-radius:999px;background:currentColor}
+.pill--ok{background:color-mix(in srgb,var(--color-ok) 14%,var(--color-surface));color:var(--color-ok)}.pill--warn{background:color-mix(in srgb,var(--color-warn) 15%,var(--color-surface));color:var(--color-warn)}
+.pill--danger{background:color-mix(in srgb,var(--color-danger) 13%,var(--color-surface));color:var(--color-danger)}.pill--info{background:var(--soft);color:var(--color-primary)}
+.divider{height:1px;background:var(--color-border);border:0;margin:16px 0}
+.list{list-style:none;margin:0;padding:0}.list li{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--color-border)}.list li:last-child{border-bottom:0}
+/* tables */
+.table-wrap{position:relative;overflow-x:auto;border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}th{text-align:left;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--color-muted);font-weight:600;padding:11px 16px;border-bottom:1px solid var(--color-border);white-space:nowrap}thead{background:color-mix(in srgb,var(--color-ink) 3%,var(--color-surface))}
+td{padding:12px 16px;border-bottom:1px solid var(--color-border);vertical-align:middle}tr:last-child td{border-bottom:0}tbody tr:hover td{background:var(--hover)}
+td.r,th.r{text-align:right}th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}th button:focus-visible{outline:2px solid var(--color-primary)}
+.cell-main{display:flex;align-items:center;gap:12px;min-width:0}.cell-main b{display:block;font-weight:600}.cell-main span{color:var(--color-muted);font-size:.85rem}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 4px 0;color:var(--color-muted);font-size:.9rem}
+/* charts: SVG for the shape, HTML for the labels, so text stays readable at every width */
+.chart{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px}.chart .ys{display:flex;flex-direction:column;justify-content:space-between;font-size:.75rem;color:var(--color-muted);text-align:right;padding:2px 0}
+.chart svg{width:100%;height:100%;display:block}.chart .plot{height:var(--h,220px);position:relative}.chart .xs{grid-column:2;display:flex;justify-content:space-between;font-size:.75rem;color:var(--color-muted);padding-top:8px}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;align-items:end;height:var(--h,180px)}.bars div{background:var(--color-primary);border-radius:6px;min-height:4px;position:relative}
+.bars div.alt{background:color-mix(in srgb,var(--color-primary) 35%,var(--color-surface))}.bar-labels{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;font-size:.75rem;color:var(--color-muted);text-align:center;padding-top:8px}
+.meter{height:8px;border-radius:999px;background:var(--hover);overflow:hidden;border:1px solid var(--color-border)}.meter i{display:block;height:100%;background:var(--color-primary);border-radius:999px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--color-muted)}.legend i{display:inline-block;width:10px;height:10px;border-radius:6px;margin-right:6px;vertical-align:-1px}
+/* narrow screens: the sidebar becomes a strip, grids stack, tables scroll inside their frame */
+@media (max-width:1100px){.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.app{grid-template-columns:minmax(0,1fr)}.side{position:static;height:auto;flex-direction:row;align-items:center;gap:6px;padding:10px 12px;border-right:0;border-bottom:1px solid var(--color-border);overflow-x:auto}
+.side .brand{padding:0 8px 0 0}.side .nav-title,.side .me{display:none}.nav{display:flex;gap:2px}.nav a{white-space:nowrap}.cols-3,.cols-2,.cols-4{grid-template-columns:minmax(0,1fr)}.main{padding:18px 16px 40px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:1100px){#split{grid-template-columns:minmax(0,1fr)!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 13.5 6.5 5h11L20 13.5V19H4z"/><path d="M4 13.5h5l1 2h4l1-2h5"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5v4h4"/><path d="M9.5 13h5M9.5 16h5"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.4-3 2.6-5 5.5-5s5.1 2 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.2c2.6-.2 4.3 1.5 4.6 4.3"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4"/><path d="M4 20h16"/><path d="m8 15 3-4 3 2 4-6"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol></svg>
+<div class="app">
+<aside class="side" aria-label="Main"><div class="brand"><i>P</i>Procura</div><nav class="nav" aria-label="Primary"><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-inbox"/></svg>Approvals<span class=count>4</span></a><a href="#" aria-current=page><svg class="ico" aria-hidden="true"><use href="#i-file"/></svg>Purchase orders</a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-users"/></svg>Suppliers</a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-chart"/></svg>Spend</a></nav><div class="me"><span class="avatar">DK</span><div><b style="font-size:.9rem">Dana Kowalski</b><div class="muted" style="font-size:.8rem">Procurement</div></div></div></aside>
+<main class="main" style="padding-top:20px">
+  <div class="top"><div><h1>Purchase orders</h1><p class="sub">12 open · $48,310 awaiting approval</p></div><button class="btn btn--primary"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg>New order</button></div>
+  <div class="grid" style="grid-template-columns:minmax(260px,340px) minmax(0,1fr);align-items:start" id="split">
+    <section class="card" style="padding:0;overflow:hidden" aria-label="Orders"><div style="padding:12px 14px;border-bottom:1px solid var(--color-border)"><div class="search"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg><input class="input" placeholder="Search orders" aria-label="Search orders"></div></div><ul class="list"><li style="padding:0"><a href="#" style="display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;text-decoration:none;color:inherit;background:var(--soft);box-shadow:inset 3px 0 0 var(--color-primary)"><div style="flex:1;min-width:0"><b class="mono" style="font-size:.88rem">PO-1184</b><div class="muted" style="font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alder &amp; Finch Packaging</div></div><div style="text-align:right"><b class="num">$12,480</b><div><span class="pill pill--warn">In review</span></div></div></a></li><li style="padding:0"><a href="#" style="display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;text-decoration:none;color:inherit;"><div style="flex:1;min-width:0"><b class="mono" style="font-size:.88rem">PO-1183</b><div class="muted" style="font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Kestrel Components</div></div><div style="text-align:right"><b class="num">$3,915</b><div><span class="pill pill--ok">Approved</span></div></div></a></li><li style="padding:0"><a href="#" style="display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;text-decoration:none;color:inherit;"><div style="flex:1;min-width:0"><b class="mono" style="font-size:.88rem">PO-1182</b><div class="muted" style="font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Marlow Office Supply</div></div><div style="text-align:right"><b class="num">$864</b><div><span class="pill pill--ok">Approved</span></div></div></a></li><li style="padding:0"><a href="#" style="display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;text-decoration:none;color:inherit;"><div style="flex:1;min-width:0"><b class="mono" style="font-size:.88rem">PO-1181</b><div class="muted" style="font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Tern Logistics</div></div><div style="text-align:right"><b class="num">$7,200</b><div><span class="pill pill--danger">Rejected</span></div></div></a></li><li style="padding:0"><a href="#" style="display:flex;gap:12px;align-items:center;width:100%;padding:12px 14px;text-decoration:none;color:inherit;"><div style="flex:1;min-width:0"><b class="mono" style="font-size:.88rem">PO-1180</b><div class="muted" style="font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Alder &amp; Finch Packaging</div></div><div style="text-align:right"><b class="num">$5,640</b><div><span class="pill pill--info">Draft</span></div></div></a></li></ul></section>
+    <section class="card" aria-labelledby="po">
+      <div class="card-head" style="align-items:flex-start"><div><p class="mono muted">PO-1184 · Raised 12 March</p><h2 id="po" style="font-size:1.35rem;margin-top:4px">Alder &amp; Finch Packaging</h2></div><span class="pill pill--warn">In review</span></div>
+      <div class="tabs" role="tablist" style="margin-bottom:18px"><a href="#" aria-current="page">Lines</a><a href="#">Approvals</a><a href="#">Documents</a><a href="#">History</a></div>
+      <div class="grid cols-3" style="margin-bottom:18px"><div><div class="label muted">Total</div><b class="num" style="font:600 1.4rem var(--font-display)">$12,480.00</b></div><div><div class="label muted">Budget left</div><b class="num" style="font:600 1.4rem var(--font-display)">$21,900</b></div><div><div class="label muted">Delivery</div><b style="font:600 1.4rem var(--font-display)">28 March</b></div></div>
+      <div class="table-wrap"><table><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Unit</th><th class="r">Total</th></tr></thead><tbody><tr><td>Corrugated mailer, 300 × 220 mm</td><td class="r num">4,000</td><td class="r num">$1.24</td><td class="r num"><b>$4,960.00</b></td></tr><tr><td>Kraft tape, 48 mm × 100 m</td><td class="r num">600</td><td class="r num">$2.10</td><td class="r num"><b>$1,260.00</b></td></tr><tr><td>Custom tissue, one colour</td><td class="r num">8,000</td><td class="r num">$0.78</td><td class="r num"><b>$6,240.00</b></td></tr></tbody></table></div>
+      <h3 style="margin:22px 0 4px">Activity</h3><ul class="list"><li style="gap:14px;align-items:flex-start"><span class="avatar" style="width:10px;height:10px;margin-top:8px;padding:0;background:var(--color-primary)"></span><div><div>Priya Nair submitted for review</div><div class="muted" style="font-size:.85rem">Today, 09:12</div></div></li><li style="gap:14px;align-items:flex-start"><span class="avatar" style="width:10px;height:10px;margin-top:8px;padding:0;background:var(--color-primary)"></span><div><div>Budget check passed: Packaging, Q2</div><div class="muted" style="font-size:.85rem">Today, 09:12</div></div></li><li style="gap:14px;align-items:flex-start"><span class="avatar" style="width:10px;height:10px;margin-top:8px;padding:0;background:var(--color-primary)"></span><div><div>Draft created by Priya Nair</div><div class="muted" style="font-size:.85rem">Yesterday, 17:40</div></div></li></ul>
+      <div class="actions" style="margin-top:18px;justify-content:flex-end"><button class="btn btn--danger">Reject</button><button class="btn">Ask a question</button><button class="btn btn--primary"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Approve</button></div>
+    </section>
+  </div>
+</main></div>
+</body>
+</html>

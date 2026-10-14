@@ -189,3 +189,30 @@ async def test_a_font_that_is_named_but_not_loaded_counts_as_the_system_stack() 
         "font-family:system-ui,'Segoe UI',sans-serif", "font-family:'Totally Missing Display',sans-serif"
     )
     assert "BLOCKER: All the text is set in the system font stack" in await _audit(page)
+
+
+def _app_page(buttons: int, h1_size: str = "1.6rem", chart: bool = False) -> str:
+    controls = "".join(f"<button class='b'>Action {n}</button>" for n in range(buttons))
+    picture = (
+        "<div role='img' aria-label='Chart' style='width:300px;height:120px;background:#ddd'></div>"
+        if chart
+        else ""
+    )
+    paragraphs = "".join(
+        f"<div class='c'><h3>Card {n}</h3><p>Some words about this card for the page.</p></div>"
+        for n in range(10)
+    )
+    return (
+        "<!doctype html><html lang='en'><head><style>body{font-family:Georgia;margin:0;display:flex}aside{width:200px;padding:16px;border-right:1px solid #ccc}"
+        f"main{{padding:24px}}h1{{font-size:{h1_size}}}.c{{padding:12px;border:1px solid #ccc;margin:8px}}.b{{padding:6px 12px;border:1px solid #888;background:#fff;margin:4px}}</style></head>"
+        f"<body><aside><nav><a href='#'>Home</a></nav>{controls}</aside><main><h1>Orders</h1>{picture}{paragraphs}<p>{'Plenty of copy. ' * 60}</p></main></body></html>"
+    )
+
+
+async def test_an_application_screen_is_not_asked_for_pictures_or_a_landing_page_headline() -> None:
+    """D-366: dashboards and tables show data; a chart counts as their picture, and an app shell with controls is not a landing page."""
+    report = await _audit(_app_page(4))
+    assert "no imagery at all" not in report and "h1 is only" not in report
+    assert "no imagery at all" not in await _audit(_app_page(0, chart=True))
+    plain = await _audit(_app_page(0, h1_size="1.4rem"))
+    assert "h1 is only" in plain  # without controls it is a content page and the headline rule applies
