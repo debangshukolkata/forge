@@ -14,6 +14,7 @@ Copy the file below and replace every value with a decision that comes from this
 ---
 version: alpha
 name: <Product> design system
+composition: lay-editorial-split   # the layout recipe this design is built on (find_asset type section, tag composition)
 dials:                      # 1-10: how dense, how adventurous, how animated
   density: 5
   variance: 5

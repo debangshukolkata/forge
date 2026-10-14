@@ -34,8 +34,18 @@ getdesignsystem.io, agent-design.com: no stated licence for their design files, 
 their files are used only when you supply one. Ideas adopted from MIT or CC0 sources (OJO-Design-Skills: the style gate, dials, banned patterns;
 superdesign-prompts: design-first specs) are written in our own words.
 
+## Gates that keep the model on the ladder (D-352, D-354)
+The first benchmark runs showed the model ignores advice, so these are checks, not suggestions: a DESIGN.md the model wrote itself must be compared with
+candidates once before the first page; a DESIGN.md without tokens is an error; candidates that are too alike are refused; a page set entirely in the system
+font stack cannot be marked done (a brand guide that says system fonts are required lifts this); the audit reports pages with no imagery, purple-blue
+gradients, grey placeholder boxes, too many accents, missing hover and focus states. See `docs/DESIGN_BENCHMARK.md` for the evidence.
+
+## Compositions
+Seven plain-HTML layouts with drawn art (`find_asset`, type `section`, ids `lay-*`) give a candidate a real composition: poster hero, vertical type
+sign, editorial split, ticket stubs, lab notebook, full-bleed colour bands, menu with leaders. A DESIGN.md names its layout as `composition: lay-...`.
+
 ## Limits
 - A specimen draws tokens, not the bold move of a real page: the winner is a starting point and the real hero decides.
 - Fonts not installed on the computer show as fallbacks in specimens.
 - Shape and depth rules that live in prose (hard shadows, glass blur) are not drawn.
-- Not built yet: the machine-checked banned patterns and interaction-state checks (DS4), the benchmark of the three modes (DS5), CC0 prompts from superdesign-prompts.
+- Not built yet: CC0 prompts from superdesign-prompts, a stronger design-role model (DS8, waiting for the model options), more than seven compositions, composition recipes for React projects, and a benchmark run after the latest changes.

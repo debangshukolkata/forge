@@ -2,6 +2,7 @@
 version: alpha
 name: Neo-brutalist
 description: "Flat saturated colours on cream with thick black outlines and hard shadows: playful and honest."
+composition: lay-notebook-grid
 dials:
   density: 5
   variance: 7

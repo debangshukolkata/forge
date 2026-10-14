@@ -2,6 +2,7 @@
 version: alpha
 name: Clean product
 description: "White and pale blue-grey, one saturated accent, navy text, layered soft shadows: confident B2B."
+composition: lay-fullbleed-blocks
 dials:
   density: 5
   variance: 4

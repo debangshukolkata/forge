@@ -181,3 +181,17 @@ type:
 x
 """
     assert any(f.rule == "no-tokens" and f.severity == "error" for f in lint_text(other))
+
+
+def test_a_different_composition_counts_as_a_dimension() -> None:
+    base = fingerprint(
+        parse_design_md(BLUE.replace("version: alpha\n", "version: alpha\ncomposition: lay-poster-hero\n", 1))
+    )
+    other = fingerprint(
+        parse_design_md(
+            BLUE.replace("version: alpha\n", "version: alpha\ncomposition: lay-editorial-split\n", 1)
+        )
+    )
+    assert base.composition == "lay-poster-hero" and differences(base, other) == ["composition"]
+    plain = fingerprint(parse_design_md(BLUE))
+    assert "composition" not in differences(base, plain)  # a file that names none says nothing either way

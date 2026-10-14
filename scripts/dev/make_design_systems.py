@@ -49,6 +49,7 @@ class System:
     display_weight: int = 700
     display_size: int = 56
     tracking: str = "-0.02em"
+    composition: str = ""  # the layout recipe (find_asset type section, tag composition) this system suits
     gaps: str = "Fonts are named, not bundled: load them with find_font or fall back to the system stack."
 
 
@@ -487,6 +488,15 @@ SYSTEMS = [
 ]
 
 
+COMPOSITIONS = {
+    "ds-soft-editorial": "lay-editorial-split",
+    "ds-bold-poster": "lay-poster-hero",
+    "ds-playful-friendly": "lay-ticket-stub",
+    "ds-neo-brutalist": "lay-notebook-grid",
+    "ds-clean-product": "lay-fullbleed-blocks",
+}  # the composition recipes (assets/section) each system pairs with; the others name none
+
+
 def design_md(system: System) -> str:
     on_primary = system.on_primary or ("#" + readable_on(system.primary.lstrip("#")))
     hover = "#" + mix(
@@ -508,6 +518,7 @@ def design_md(system: System) -> str:
         "version: alpha",
         f"name: {system.title}",
         f'description: "{system.summary}"',
+        *([f"composition: {COMPOSITIONS[system.id]}"] if system.id in COMPOSITIONS else []),
         "dials:",
         f"  density: {system.dials[0]}",
         f"  variance: {system.dials[1]}",

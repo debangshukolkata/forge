@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab notebook</title>
+<!-- COMPOSITION: notebook-grid. Graph paper, a handwritten headline, experiment cards held with tape and a dashed arrow, a margin note.
+     Use for: science, maker spaces, kids and curiosity, workshops, tutorials. Replace the :root block with the exported tokens and delete it. -->
+<style>
+:root{--color-neutral:#fbfaf3;--color-ink:#1c2b3a;--color-muted:#51657a;--color-primary:#c2410c;--color-accent2:#1f7a70;--color-yellow:#ffd166;--font-display:"Caveat Brush","Patrick Hand","Comic Neue",cursive;--font-body-md:"Nunito","Inter",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;color:var(--color-ink);font-family:var(--font-body-md);background-color:var(--color-neutral);background-image:linear-gradient(#cfdbe6 1px,transparent 1px),linear-gradient(90deg,#cfdbe6 1px,transparent 1px);background-size:28px 28px}
+.nb{max-width:1160px;margin:0 auto;padding:clamp(24px,5vw,72px) clamp(16px,4vw,48px);position:relative}
+.nb__title{font-family:var(--font-display);font-size:clamp(3rem,9vw,7rem);line-height:.92;margin:0;transform:rotate(-1.5deg);max-width:11ch}
+.nb__title mark{background:linear-gradient(transparent 58%,var(--color-yellow) 58%);color:inherit;padding:0 .08em}
+.nb__lede{max-width:40ch;font-size:1.15rem;line-height:1.6;margin:22px 0 0;color:var(--color-muted)}
+.nb__note{position:absolute;right:clamp(8px,6vw,80px);top:clamp(24px,5vw,64px);width:190px;transform:rotate(5deg);font-family:var(--font-display);font-size:1.25rem;line-height:1.15;color:var(--color-primary)}
+.nb__note svg{width:90px;display:block;margin:6px 0 0 20px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(22px,3.4vw,44px);margin-top:clamp(40px,6vw,80px)}
+.card{position:relative;background:#fff;border:2px solid var(--color-ink);border-radius:6px;padding:26px 22px 22px;box-shadow:5px 5px 0 var(--color-ink)}
+.card::before{content:"";position:absolute;top:-14px;left:50%;width:84px;height:26px;transform:translateX(-50%) rotate(-3deg);background:rgba(255,209,102,.8);border:1px solid rgba(0,0,0,.08)}
+.card:nth-child(2){transform:rotate(1.2deg)}.card:nth-child(3){transform:rotate(-1deg)}
+.card__tag{font-size:.8rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--color-accent2);margin:0 0 6px}
+.card h3{font-family:var(--font-display);font-size:1.9rem;line-height:1;margin:0 0 8px}
+.card p{margin:0;line-height:1.55;color:var(--color-muted)}
+.card__meta{margin-top:14px!important;padding-top:12px;border-top:2px dashed #b9c7d4;font-weight:700;color:var(--color-ink)!important;font-size:.9rem}
+.btn{display:inline-block;margin-top:44px;background:var(--color-primary);color:#fff;font-weight:800;text-decoration:none;padding:.9rem 1.5rem;border:2px solid var(--color-ink);border-radius:6px;box-shadow:4px 4px 0 var(--color-ink)}
+.btn:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--color-ink)}.btn:focus-visible{outline:3px solid var(--color-accent2);outline-offset:3px}
+@media (max-width:820px){.cards{grid-template-columns:1fr;max-width:440px}.nb__note{position:static;margin-top:18px;transform:rotate(2deg)}}
+</style>
+</head>
+<body>
+<section class="nb" aria-labelledby="nb-title">
+  <h1 class="nb__title" id="nb-title">Try it, <mark>break</mark> it, ask why</h1>
+  <p class="nb__lede">Three hands-on labs this month, built for kids aged 4 to 10 and the grown-ups who get dragged in.</p>
+  <div class="nb__note">Bring wellies!
+    <svg viewBox="0 0 90 70" aria-hidden="true"><path d="M6 8c30 0 60 10 70 48" fill="none" stroke="#c2410c" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="round"/><path d="M62 50l14 10 4-16" fill="none" stroke="#c2410c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="cards">
+    <article class="card"><p class="card__tag">Lab 01 · Water</p><h3>Make a river</h3><p>Dig channels, build dams and watch where the water goes when you change your mind.</p><p class="card__meta">Sat 10:00 · ages 4 to 7</p></article>
+    <article class="card"><p class="card__tag">Lab 02 · Air</p><h3>Fly a rocket</h3><p>Fold, tape, launch. Then fold it a different way and see whether it goes further.</p><p class="card__meta">Sat 13:00 · ages 6 to 10</p></article>
+    <article class="card"><p class="card__tag">Lab 03 · Light</p><h3>Catch a rainbow</h3><p>Prisms, mirrors and one very dark tent. Bring a torch and a bad idea.</p><p class="card__meta">Sun 11:00 · ages 5 to 9</p></article>
+  </div>
+  <a class="btn" href="#labs">Save my place</a>
+</section>
+</body>
+</html>

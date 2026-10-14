@@ -2,6 +2,7 @@
 version: alpha
 name: Bold campaign poster
 description: "Near-black, one hot colour, huge grotesk type and hard offset shadows: loud and urgent."
+composition: lay-poster-hero
 dials:
   density: 6
   variance: 9

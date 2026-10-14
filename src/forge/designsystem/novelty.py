@@ -1,6 +1,6 @@
 """How different two design systems really are (D-350).
 
-A "new" design that only changes the accent colour is the same design. The fingerprint reads six dimensions from a DESIGN.md; two systems
+A "new" design that only changes the accent colour is the same design. The fingerprint reads seven dimensions from a DESIGN.md; two systems
 count as different when they differ on at least three of them (the rule of the creative second round, and of the three candidates of the first)."""
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from forge.designsystem.colour import hue_and_saturation, parse
 from forge.designsystem.spec import DesignSystem
 
 MIN_DIFFERENT_DIMENSIONS = 3
-DIMENSIONS = ("tone", "accent hue", "display font", "corner style", "density", "layout energy")
+DIMENSIONS = ("tone", "accent hue", "display font", "corner style", "density", "layout energy", "composition")
 HUE_NAMES = (
     (15, "red"),
     (45, "orange"),
@@ -34,9 +34,18 @@ class Fingerprint:
     corner_style: str  # "sharp", "soft", "round" or "pill"
     density: str  # "airy", "balanced" or "dense" ("" when the file gives no dial)
     energy: str  # "calm", "balanced" or "bold" ("" when the file gives no dial)
+    composition: str = ""  # the layout recipe the design is built on (`composition:` in the front matter), "" when none is named
 
     def values(self) -> tuple[str, ...]:
-        return (self.tone, self.accent_hue, self.display_font, self.corner_style, self.density, self.energy)
+        return (
+            self.tone,
+            self.accent_hue,
+            self.display_font,
+            self.corner_style,
+            self.density,
+            self.energy,
+            self.composition,
+        )
 
 
 def _band(value: object, low: int, high: int, names: tuple[str, str, str]) -> str:
@@ -121,6 +130,7 @@ def fingerprint(system: DesignSystem) -> Fingerprint:
         corner,
         _band(dials.get("density"), 3, 7, ("airy", "balanced", "dense")),
         _band(dials.get("variance"), 3, 7, ("calm", "balanced", "bold")),
+        str(system.extra.get("composition", "") or "").strip().lower(),
     )
 
 
@@ -148,4 +158,6 @@ def describe_fingerprint(print_: Fingerprint) -> str:
         parts.append(print_.density)
     if print_.energy:
         parts.append(print_.energy)
+    if print_.composition:
+        parts.append(f"composition {print_.composition}")
     return ", ".join(parts)

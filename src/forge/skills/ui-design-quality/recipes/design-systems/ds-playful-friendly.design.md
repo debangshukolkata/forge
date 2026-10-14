@@ -2,6 +2,7 @@
 version: alpha
 name: Playful and friendly
 description: "Bright, rounded and bouncy: big radii, thick-stroke icons and a rounded sans."
+composition: lay-ticket-stub
 dials:
   density: 4
   variance: 6

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vertical type</title>
+<!-- COMPOSITION: vertical-type. A tall sign-like column of oversized vertical type beside a quiet text block and a drawn lantern motif.
+     Use for: late-night food, craft, Japanese or East Asian brands (set the vertical word in a script-capable font and lang="ja"), editorial covers.
+     Replace the :root block with the exported tokens and delete it. -->
+<style>
+:root{--color-neutral:#14100e;--color-ink:#f4ece1;--color-muted:#b9aa98;--color-primary:#d9382c;--color-gold:#e8b24a;--font-display:"Shippori Mincho","Noto Serif JP",Georgia,serif;--font-body-md:"Zen Kaku Gothic New","Noto Sans JP",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font-family:var(--font-body-md)}
+.sign{min-height:min(100svh,760px);overflow:hidden;display:grid;grid-template-columns:minmax(110px,20vw) minmax(0,1fr) minmax(0,22vw);gap:clamp(16px,4vw,56px);padding:clamp(20px,4vw,56px);align-items:stretch}
+.sign__word{writing-mode:vertical-rl;text-orientation:upright;font-family:var(--font-display);font-weight:800;font-size:clamp(3.5rem,min(13vw,15vh),10rem);line-height:1;letter-spacing:.06em;color:var(--color-primary);border-right:2px solid var(--color-primary);padding-right:clamp(8px,2vw,28px);margin:0}
+.sign__body{min-width:0;align-self:end;display:grid;gap:clamp(14px,2.4vw,28px);padding-bottom:clamp(0px,2vw,24px)}
+.sign__kicker{font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;color:var(--color-gold);margin:0}
+.sign__title{font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,3.6vw,3.1rem);line-height:1.12;margin:0}
+.sign__text{max-width:34ch;line-height:1.75;color:var(--color-muted);margin:0}
+.sign__hours{display:flex;gap:clamp(16px,3vw,40px);border-top:1px solid #3a302a;padding-top:16px;font-size:.95rem}
+.sign__hours b{display:block;font-family:var(--font-display);font-size:1.6rem;color:var(--color-ink)}
+.btn{justify-self:start;color:var(--color-neutral);background:var(--color-gold);text-decoration:none;font-weight:700;padding:.9rem 1.5rem;border-radius:2px;letter-spacing:.04em}
+.btn:hover{background:#f3c966}.btn:focus-visible{outline:2px solid var(--color-ink);outline-offset:4px}
+.sign__art{align-self:center;justify-self:end;width:100%;max-width:300px}
+@media (max-width:760px){.sign{grid-template-columns:minmax(0,auto) minmax(0,1fr)}.sign__art{grid-column:1/-1;max-width:180px;justify-self:start}.sign__word{font-size:clamp(3rem,18vw,6rem)}}
+</style>
+</head>
+<body>
+<section class="sign" aria-labelledby="sign-title">
+  <p class="sign__word" lang="ja" aria-hidden="true">黒ラーメン</p>
+  <div class="sign__body">
+    <p class="sign__kicker">Namba, Osaka · 22:00 to 04:00</p>
+    <h1 class="sign__title" id="sign-title">Ten seats, one broth, nothing before ten at night.</h1>
+    <p class="sign__text">Behind the black curtain, past the paper lantern. We simmer the broth all day and open when the city quiets down.</p>
+    <div class="sign__hours"><span><b>22:00</b>Doors</span><span><b>03:30</b>Last bowl</span><span><b>04:00</b>Close</span></div>
+    <a class="btn" href="#find">How to find the door</a>
+  </div>
+  <!-- Drawn lantern, not a placeholder. -->
+  <svg class="sign__art" viewBox="0 0 200 320" role="img" aria-label="A paper lantern glowing red">
+    <line x1="100" y1="0" x2="100" y2="40" stroke="#b9aa98" stroke-width="3"/>
+    <rect x="70" y="36" width="60" height="14" rx="3" fill="#3a302a"/>
+    <ellipse cx="100" cy="150" rx="78" ry="100" fill="#d9382c"/>
+    <g fill="none" stroke="#8f2018" stroke-width="3"><path d="M24 150h152M34 100h132M34 200h132M60 62h80M60 238h80"/></g>
+    <ellipse cx="100" cy="150" rx="78" ry="100" fill="url(#glow)"/>
+    <defs><radialGradient id="glow" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ffd79a" stop-opacity=".55"/><stop offset="1" stop-color="#d9382c" stop-opacity="0"/></radialGradient></defs>
+    <rect x="70" y="248" width="60" height="14" rx="3" fill="#3a302a"/><path d="M100 262v40M88 302h24" stroke="#b9aa98" stroke-width="3"/>
+    <text x="100" y="165" text-anchor="middle" font-size="64" fill="#f4ece1" font-family="serif" lang="ja">黒</text>
+  </svg>
+</section>
+</body>
+</html>

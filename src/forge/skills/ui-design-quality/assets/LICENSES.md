@@ -120,6 +120,13 @@ Generated from the assets' front-matter; do not edit by hand.
 | `pair-journal` | OFL-1.1 | bundled fonts Lora and Plus Jakarta Sans (Fontsource, 5.3.0) |
 | `pair-playful-rounded` | OFL-1.1 | bundled fonts Nunito and DM Sans (Fontsource, 5.3.0) |
 | `pair-warm-editorial` | OFL-1.1 | bundled fonts Fraunces and Inter (Fontsource, 5.3.0) |
+| `lay-editorial-split` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-fullbleed-blocks` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-menu-list` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-notebook-grid` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-poster-hero` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-ticket-stub` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-vertical-type` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `sec-contact-form` | original | authored for DebCraft (section library, D-273) |
 | `sec-cta-band` | original | authored for DebCraft (section library, D-273) |
 | `sec-faq-list` | original | authored for DebCraft (section library, D-273) |

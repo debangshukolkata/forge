@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menu with leaders</title>
+<!-- COMPOSITION: menu-list. A printed-menu feel: numbered dishes, dotted leaders to the price, a two-column layout with a ruled heading and a drawn bowl.
+     Use for: restaurants, cafes, bars, price lists, rate cards. Replace the :root block with the exported tokens and delete it. -->
+<style>
+:root{--color-neutral:#17120f;--color-ink:#f2e8d8;--color-muted:#a99a86;--color-primary:#ff6a55;--color-gold:#d9a441;--color-border:#3b312a;--font-display:"Shippori Mincho","Playfair Display",Georgia,serif;--font-body-md:"Zen Kaku Gothic New","DM Sans",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font-family:var(--font-body-md)}
+.menu{max-width:1100px;margin:0 auto;padding:clamp(28px,5vw,80px) clamp(16px,4vw,48px)}
+.menu__head{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;border-bottom:2px solid var(--color-ink);padding-bottom:20px;margin-bottom:clamp(24px,4vw,48px)}
+.menu__title{font-family:var(--font-display);font-size:clamp(2.6rem,7vw,5.4rem);line-height:.95;margin:0;letter-spacing:-.01em}
+.menu__title small{display:block;font-family:var(--font-body-md);font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;color:var(--color-gold);margin-bottom:12px}
+.menu__bowl{width:clamp(96px,16vw,170px)}
+.menu__cols{display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(28px,6vw,88px)}
+.menu h3{font-size:.78rem;letter-spacing:.26em;text-transform:uppercase;color:var(--color-gold);border-bottom:1px solid var(--color-border);padding-bottom:10px;margin:0 0 6px}
+.dish{display:grid;grid-template-columns:2.2rem minmax(0,1fr) auto;gap:6px 14px;align-items:baseline;padding:16px 0}
+.dish__no{font-family:var(--font-display);color:var(--color-primary);font-size:1.2rem}
+.dish__name{font-family:var(--font-display);font-size:1.35rem;position:relative;display:flex;align-items:baseline;gap:10px}
+.dish__name::after{content:"";flex:1;border-bottom:2px dotted #5a4c40;transform:translateY(-4px)}
+.dish__price{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.15rem}
+.dish p{grid-column:2/4;margin:0;color:var(--color-muted);line-height:1.55;font-size:.95rem;max-width:44ch}
+.menu__foot{margin-top:28px;padding-top:16px;border-top:1px solid var(--color-border);color:var(--color-muted);font-size:.9rem}
+@media (max-width:760px){.menu__cols{grid-template-columns:1fr}.menu__head{grid-template-columns:1fr}.menu__bowl{display:none}}
+</style>
+</head>
+<body>
+<section class="menu" aria-labelledby="menu-title">
+  <div class="menu__head">
+    <h1 class="menu__title" id="menu-title"><small>Kuro · the short menu</small>Four bowls,<br>no more</h1>
+    <!-- Drawn bowl with steam: not a placeholder. -->
+    <svg class="menu__bowl" viewBox="0 0 160 140" role="img" aria-label="A steaming bowl of ramen">
+      <g fill="none" stroke="#d9a441" stroke-width="3" stroke-linecap="round"><path d="M50 30c-10-12 10-18 0-30M80 34c-10-12 10-18 0-30M110 30c-10-12 10-18 0-30"/></g>
+      <path d="M12 62h136c0 44-30 70-68 70S12 106 12 62z" fill="#e0432f"/><path d="M12 62h136" stroke="#f2e8d8" stroke-width="5"/>
+      <path d="M40 62c10-14 30-14 40 0M70 62c10-14 30-14 40 0" fill="none" stroke="#f2e8d8" stroke-width="4"/><circle cx="118" cy="66" r="9" fill="#d9a441"/>
+    </svg>
+  </div>
+  <div class="menu__cols">
+    <div>
+      <h3>Bowls</h3>
+      <div class="dish"><span class="dish__no">01</span><span class="dish__name">Shoyu</span><span class="dish__price">¥980</span><p>Clear soy broth, chicken oil, thin noodles, a soft egg.</p></div>
+      <div class="dish"><span class="dish__no">02</span><span class="dish__name">Tonkotsu</span><span class="dish__price">¥1,100</span><p>Twelve-hour pork broth, black garlic, firm noodles.</p></div>
+    </div>
+    <div>
+      <h3>Bowls, continued</h3>
+      <div class="dish"><span class="dish__no">03</span><span class="dish__name">Spicy miso</span><span class="dish__price">¥1,150</span><p>Red miso, chilli oil, corn and butter for the long night.</p></div>
+      <div class="dish"><span class="dish__no">04</span><span class="dish__name">Cold sesame</span><span class="dish__price">¥1,000</span><p>Chilled noodles, sesame tare, cucumber. Summer only.</p></div>
+    </div>
+  </div>
+  <p class="menu__foot">Prices include tax. Extra egg ¥150, extra noodles ¥100. Cash and IC cards only.</p>
+</section>
+</body>
+</html>

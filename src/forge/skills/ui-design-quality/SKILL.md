@@ -164,6 +164,20 @@ problem; fix it before anything else is polished.
 - **Avoid the defaults everyone has seen:** Inter or Poppins for everything, Space Grotesk on every dark page, a serif display in a cream-and-terracotta
   palette. They are fine when chosen for a reason you can state; they are the machine-made look when they are habit.
 
+## 0h. Compose the page; do not stack cards
+The machine-made page is a centred column: a hero with a gradient, three identical cards, a form. A designed page has a composition.
+- **Give every candidate a composition.** `find_asset` with type `section` and the tag `composition` lists complete plain-HTML layouts with drawn art
+  (poster hero, vertical type sign, editorial split, ticket stubs, lab notebook, full-bleed colour bands, menu with leaders); `add_asset` copies one and
+  `view_image` its reference pictures. Pick the one whose world matches the product's concept, then rewrite its words, redraw its art and bind it to
+  your tokens (`design_md_export`). A React project uses the `section` assets of the templates the same way.
+- **The hero carries a picture that belongs to the product**: a drawn SVG scene or object (the recipes show how: a lantern, a sun over a harbour, a bowl
+  with steam), a licensed photograph (`findimage`), or a generated image. Never a gradient and never a grey box. The audit reports a page with no imagery.
+- **Break the stack once:** one element at three times the size of its neighbours, a vertical or rotated word, an overlap, a full-bleed band, a cropped
+  shape. Do it once and keep the rest calm.
+- **Rhythm over repetition:** neighbouring sections differ in width, alignment or background; never the same card grid twice in a row.
+- **Details that signal craft:** real dividers and rules, tabular numerals, hanging punctuation in quotes, small caps for metadata, one considered hover
+  per control, focus rings that match the palette.
+
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)
 - **Purpose and tone** of the product (a blood donation drive: warm, trustworthy, urgent but calm).
 - **Palette**: one accent colour (a real brand colour, not default blue), a neutral scale for text and surfaces,

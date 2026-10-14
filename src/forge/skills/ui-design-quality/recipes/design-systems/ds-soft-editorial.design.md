@@ -2,6 +2,7 @@
 version: alpha
 name: Soft editorial
 description: "Warm off-white, a serif display, generous whitespace and soft shadows: humane and trustworthy."
+composition: lay-editorial-split
 dials:
   density: 3
   variance: 5

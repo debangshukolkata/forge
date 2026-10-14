@@ -286,7 +286,7 @@
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
    "preview": null,
    "path": "assets/design-system/ds-bold-poster.md",
-   "size": 2945
+   "size": 2974
   },
   {
    "id": "ds-claymorphism",
@@ -357,7 +357,7 @@
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
    "preview": null,
    "path": "assets/design-system/ds-clean-product.md",
-   "size": 2901
+   "size": 2935
   },
   {
    "id": "ds-dark-dashboard",
@@ -499,7 +499,7 @@
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
    "preview": null,
    "path": "assets/design-system/ds-neo-brutalist.md",
-   "size": 3000
+   "size": 3031
   },
   {
    "id": "ds-playful-friendly",
@@ -535,7 +535,7 @@
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
    "preview": null,
    "path": "assets/design-system/ds-playful-friendly.md",
-   "size": 2903
+   "size": 2932
   },
   {
    "id": "ds-retro-terminal",
@@ -606,7 +606,7 @@
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
    "preview": null,
    "path": "assets/design-system/ds-soft-editorial.md",
-   "size": 3050
+   "size": 3083
   },
   {
    "id": "ds-tpl-charity",
@@ -4387,6 +4387,288 @@
    "preview": null,
    "path": "assets/font-pairing/pair-warm-editorial.md",
    "size": 90948
+  },
+  {
+   "id": "lay-editorial-split",
+   "type": "section",
+   "title": "Composition: Editorial split",
+   "summary": "A large serif headline with a small-caps dateline, thin rules and a tall arch of drawn landscape art.",
+   "moods": [
+    "warm",
+    "calm",
+    "editorial"
+   ],
+   "products": [
+    "care",
+    "culture",
+    "education",
+    "boutique",
+    "libraries"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/editorial-split.html",
+     "to": "compositions/editorial-split.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
+   "preview": null,
+   "path": "assets/section/lay-editorial-split.md",
+   "size": 4592
+  },
+  {
+   "id": "lay-fullbleed-blocks",
+   "type": "section",
+   "title": "Composition: Full-bleed colour blocks",
+   "summary": "Sections as edge-to-edge colour bands with huge numbers and off-centre text, so the page has rhythm.",
+   "moods": [
+    "confident",
+    "modern",
+    "bold"
+   ],
+   "products": [
+    "studios",
+    "agencies",
+    "product stories",
+    "reports"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/fullbleed-blocks.html",
+     "to": "compositions/fullbleed-blocks.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
+   "preview": null,
+   "path": "assets/section/lay-fullbleed-blocks.md",
+   "size": 4063
+  },
+  {
+   "id": "lay-menu-list",
+   "type": "section",
+   "title": "Composition: Menu with leaders",
+   "summary": "A printed-menu layout: numbered dishes, dotted leaders to the price, two columns, a ruled heading and a drawn bowl.",
+   "moods": [
+    "warm",
+    "refined",
+    "dark"
+   ],
+   "products": [
+    "restaurants",
+    "cafes",
+    "bars",
+    "price lists"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "dark"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/menu-list.html",
+     "to": "compositions/menu-list.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
+   "preview": null,
+   "path": "assets/section/lay-menu-list.md",
+   "size": 5080
+  },
+  {
+   "id": "lay-notebook-grid",
+   "type": "section",
+   "title": "Composition: Lab notebook",
+   "summary": "Graph paper, a handwritten headline with a highlighter mark, taped experiment cards and a dashed arrow.",
+   "moods": [
+    "playful",
+    "curious",
+    "handmade"
+   ],
+   "products": [
+    "science",
+    "kids",
+    "maker spaces",
+    "workshops",
+    "tutorials"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/notebook-grid.html",
+     "to": "compositions/notebook-grid.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
+   "preview": null,
+   "path": "assets/section/lay-notebook-grid.md",
+   "size": 5216
+  },
+  {
+   "id": "lay-poster-hero",
+   "type": "section",
+   "title": "Composition: Poster hero",
+   "summary": "A headline that fills the width in heavy uppercase type, a hard-shadow action, a rotated sticker, a marquee strip and a drawn sun.",
+   "moods": [
+    "bold",
+    "urgent",
+    "loud"
+   ],
+   "products": [
+    "events",
+    "nightlife",
+    "launches",
+    "sport"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "dark"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/poster-hero.html",
+     "to": "compositions/poster-hero.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
+   "preview": null,
+   "path": "assets/section/lay-poster-hero.md",
+   "size": 5201
+  },
+  {
+   "id": "lay-ticket-stub",
+   "type": "section",
+   "title": "Composition: Ticket stubs",
+   "summary": "Prices or plans as paper tickets with a perforated tear line and notched edges, slightly rotated.",
+   "moods": [
+    "playful",
+    "warm",
+    "friendly"
+   ],
+   "products": [
+    "museums",
+    "events",
+    "cinemas",
+    "entry prices"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/ticket-stub.html",
+     "to": "compositions/ticket-stub.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
+   "preview": null,
+   "path": "assets/section/lay-ticket-stub.md",
+   "size": 5248
+  },
+  {
+   "id": "lay-vertical-type",
+   "type": "section",
+   "title": "Composition: Vertical type sign",
+   "summary": "An oversized vertical word like a shop sign beside a quiet text block and a drawn paper lantern; set for Japanese or East Asian type.",
+   "moods": [
+    "dramatic",
+    "night",
+    "craft"
+   ],
+   "products": [
+    "late-night food",
+    "japanese brands",
+    "bars",
+    "craft"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "dark"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/vertical-type.html",
+     "to": "compositions/vertical-type.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
+   "preview": null,
+   "path": "assets/section/lay-vertical-type.md",
+   "size": 4884
   },
   {
    "id": "sec-contact-form",

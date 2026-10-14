@@ -332,7 +332,7 @@ def find_design_md(workspace: object, relative: str) -> Path | None:
 CANDIDATES_NOTE = (
     "Your DESIGN.md is a first draft. Before the first page, compare candidates (the ui-design-quality skill, section 0e): keep this file as "
     "candidate A (or copy it to .forge/candidates/a/DESIGN.md), write two more DESIGN.md files (.forge/candidates/b and c) that differ from it "
-    "and from each other in at least three of: light or dark tone, accent hue, display font, corner style, density, layout energy; find_asset "
+    "and from each other in at least three of: light or dark tone, accent hue, composition (name a layout from find_asset type section, tag composition, as `composition: lay-...` in the front matter), display font, corner style, density, layout energy; find_asset "
     "(type design-system) has tokenised starting points. Run design_candidates with the brief, apply the winner's fixes, design_md_import the "
     "winner as DESIGN.md (overwrite), and then write the page. Never make the three differ only in colour; each names a real display font and text font that suit the product, its mood and its language (find_asset type font-pairing, find_font), never the system stack."
 )
