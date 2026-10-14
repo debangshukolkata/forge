@@ -142,3 +142,18 @@ async def test_a_page_of_only_text_and_boxes_is_reported_as_having_no_imagery() 
         "<h1>Title</h1><svg width='300' height='200'><circle cx='50' cy='50' r='30'/><rect x='90' y='20' width='60' height='60'/><path d='M0 150 L300 120'/><line x1='0' y1='10' x2='300' y2='10'/></svg>",
     )
     assert "no imagery at all" not in await _audit(with_svg)
+
+
+def test_a_brand_guide_that_requires_system_fonts_lifts_the_typography_blocker(tmp_path: Path) -> None:
+    from forge.tools.ui_audit import _system_fonts_required
+
+    assert not _system_fonts_required(tmp_path)
+    (tmp_path / "DESIGN.md").write_text(
+        "## Known Gaps\nThe company standard says system fonts are required for all intranet pages.\n",
+        encoding="utf-8",
+    )
+    assert _system_fonts_required(tmp_path)
+
+
+async def test_the_system_font_finding_is_a_blocker() -> None:
+    assert "BLOCKER: All the text is set in the system font stack" in await _audit(SYSTEM_FONTS_PAGE)

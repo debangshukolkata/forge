@@ -27,7 +27,11 @@ pytestmark = [
 def _check(result: dict[str, object]) -> None:
     assert result["errors"] == []
     for width in (1280, 375):
-        assert "no measurable problems" in str(result["audit"][width]), result["audit"][width]  # type: ignore[index]
+        audit = str(result["audit"][width])  # type: ignore[index]
+        # the scaffolds carry placeholders for the product's own pictures: the one finding allowed is the missing imagery
+        assert "no measurable problems" in audit or (
+            "1 problem(s)" in audit and "no imagery at all" in audit
+        ), audit
         assert result["overflow"][width] == 0, f"horizontal overflow at {width}px"  # type: ignore[index]
 
 

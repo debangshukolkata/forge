@@ -278,7 +278,7 @@ AUDIT_SCRIPT = r"""
     if (loadedFamilies.has(name) || !genericFamily.test(name)) designedChars += own; }
   if (allChars > 200 && designedChars / allChars < 0.1) {
     const names = [...usedFamilies.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map((x) => x[0]).join(', ');
-    findings.push('All the text is set in the system font stack (' + names + '): the page has no designed typography, which is the first thing that makes a page look machine-made. Choose a display font and a text font that suit the product, its mood and its language (find_font, or find_asset type font-pairing; fetch_font saves the files), load them with @font-face, and use them from the DESIGN.md typography tokens.');
+    findings.push('BLOCKER: All the text is set in the system font stack (' + names + '): the page has no designed typography, which is the first thing that makes a page look machine-made. Choose a display font and a text font that suit the product, its mood and its language (find_font, or find_asset type font-pairing; fetch_font saves the files), load them (fetch_font writes a ready @font-face CSS file in fonts/: link it from the page or import it), and use them from the DESIGN.md typography tokens; then screenshot again.');
   }
   const hasPicture = all.some((el) => visible(el) && ((el.tagName === 'IMG' && el.naturalWidth >= 200) || el.tagName === 'VIDEO' || el.tagName === 'CANVAS' || el.tagName === 'PICTURE'
     || (el.tagName === 'svg' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 120 && el.querySelectorAll('path, circle, rect, polygon, ellipse, line').length >= 4)
@@ -301,6 +301,23 @@ DESIGN_REMINDER = (
 )
 
 
+SYSTEM_FONTS_REQUIRED = re.compile(
+    r"system fonts? (?:are|is) (?:required|mandated|prescribed|the brand)", re.IGNORECASE
+)
+
+
+def _system_fonts_required(root: Path) -> bool:
+    """A brand guide or DESIGN.md that says system fonts are required (a company standard) lifts the typography blocker."""
+    for name in ("DESIGN.md", "design.md", "docs/DESIGN.md"):
+        path = root / name
+        if path.is_file():
+            try:
+                return bool(SYSTEM_FONTS_REQUIRED.search(path.read_text(encoding="utf-8", errors="replace")))
+            except OSError:
+                return False
+    return False
+
+
 async def audit_page(page: Any, root: Path | None = None) -> str:
     """The audit as text for the model: numbered findings, or a clean line; never raises."""
     try:
@@ -310,6 +327,8 @@ async def audit_page(page: Any, root: Path | None = None) -> str:
     ) as error:  # a page that blocks scripts or is mid-navigation must not break the screenshot
         return f"Style audit could not run: {str(error).splitlines()[0]}"
     findings: list[str] = list(result.get("findings", []))
+    if root is not None and _system_fonts_required(root):
+        findings = [f for f in findings if "All the text is set in the system font stack" not in f]
     if root is not None:
         findings.extend(source_taste_problems(root))
         findings.extend(token_lint_problems(root))
