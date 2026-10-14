@@ -297,6 +297,7 @@ class SessionHost:
             self.context_manager,
         )
         loop.on_thinking = self.stream_thinking
+        loop.on_progress = self.stream_progress
         loop.path_rules = PathRules(self.rule_folders(workspace))
         context.pin = self.context_manager.pinned.set
         self._restore_todos(context)
@@ -460,6 +461,10 @@ class SessionHost:
         """A short summary of what the model is working out, shown while it waits on a slow reasoning call."""
         if text.strip():
             await self.bus.publish(EventType.THINKING_DELTA, {"text": text})
+
+    async def stream_progress(self, progress: dict[str, Any]) -> None:
+        """A model call in flight (about once a second): what it is doing and how much, so the screen never looks frozen (D-361)."""
+        await self.bus.publish(EventType.MODEL_PROGRESS, progress)
 
     async def stream_delta(self, delta: str) -> None:
         self._streamed.append(delta)

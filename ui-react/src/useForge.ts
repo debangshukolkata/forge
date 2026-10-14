@@ -158,6 +158,8 @@ export interface LiveActivity {
   tool?: { name: string; summary: string };
   // A running command or monitor (D-219): its newest output line, a progress figure if the output shows one, and quiet time.
   progress?: { line: string; percent: number | null; stalled_s: number | null; lines: number; elapsed_s: number };
+  // A model call in flight (D-361): what it is doing, how much it has produced so far, and when we last heard from it.
+  model?: { stage: string; tool: string; chars: number; snippet: string; at: number };
   waitingFor?: string;
   since: number;
 }
@@ -302,6 +304,13 @@ export function useForge(): Forge {
         break;
       case "tool_call_started":
         setActivity({ kind: "tool", tool: { name: p.name, summary: p.summary || "" }, since: now });
+        break;
+      case "model_progress":
+        setActivity((a) => {
+          const base: LiveActivity = a.kind === "thinking" || a.kind === "writing" ? a : a.kind === "idle" ? { kind: "thinking", since: now } : a;
+          if (base.kind !== "thinking" && base.kind !== "writing") return a; // a running tool or a question keeps its own line
+          return { ...base, model: { stage: String(p.stage ?? ""), tool: String(p.tool ?? ""), chars: Number(p.chars ?? 0), snippet: String(p.snippet ?? ""), at: now } };
+        });
         break;
       case "tool_progress":
         setActivity((a) =>

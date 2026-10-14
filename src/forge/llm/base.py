@@ -6,6 +6,7 @@ context manager and UIs never see provider specifics.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal, Protocol
 
@@ -93,6 +94,9 @@ class LLMResponse(BaseModel):
 
 
 TextDeltaCallback = Callable[[str], Awaitable[None]]
+ProgressCallback = Callable[
+    [dict[str, Any]], Awaitable[None]
+]  # {"stage", "tool", "chars", "snippet", "elapsed_s"} about once a second
 
 
 class ChatRequest(BaseModel):
@@ -105,6 +109,8 @@ class ChatRequest(BaseModel):
     hosted_tools: list[str] = Field(default_factory=list)
     # Called with each finished piece of the model's reasoning summary while it thinks (D-174); local only.
     on_thinking: TextDeltaCallback | None = Field(default=None, exclude=True)
+    # Called about once a second while a streamed answer is coming in, so the person watching can see that something is happening (D-361); local only.
+    on_progress: ProgressCallback | None = Field(default=None, exclude=True)
 
 
 class LLMProvider(Protocol):
@@ -113,3 +119,36 @@ class LLMProvider(Protocol):
     async def chat(self, request: ChatRequest, on_text_delta: TextDeltaCallback | None = None) -> LLMResponse:
         """One model call. Streams text through on_text_delta when given. Raises forge.errors.LLMError."""
         ...
+
+
+class StreamProgress:
+    """What a streamed answer is doing right now, reported about once a second (D-361). The person watching a long call sees whether the model is
+    thinking, writing text, or preparing a tool call (and how much of it, for example a big file), instead of a bare timer."""
+
+    INTERVAL_S = 1.0
+
+    def __init__(self, callback: ProgressCallback | None) -> None:
+        self.callback = callback
+        self.stage = "waiting"
+        self.tool = ""
+        self.chars = 0
+        self.snippet = ""
+        self._started = time.perf_counter()
+        self._last = 0.0
+
+    async def tick(self, force: bool = False) -> None:
+        if self.callback is None:
+            return
+        now = time.perf_counter()
+        if not force and now - self._last < self.INTERVAL_S:
+            return
+        self._last = now
+        await self.callback(
+            {
+                "stage": self.stage,
+                "tool": self.tool,
+                "chars": self.chars,
+                "snippet": self.snippet,
+                "elapsed_s": round(now - self._started, 1),
+            }
+        )

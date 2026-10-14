@@ -19,7 +19,7 @@ from forge.agent.tool_output import save_full_output
 from forge.context.manager import ContextManager
 from forge.context.warnings import next_warning
 from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthError
-from forge.llm.base import ChatRequest, LLMResponse, Message, TextDeltaCallback, ToolCall
+from forge.llm.base import ChatRequest, LLMResponse, Message, ProgressCallback, TextDeltaCallback, ToolCall
 from forge.llm.router import LLMRouter
 from forge.llm.tool_args import parse_error_result
 from forge.parity.path_rules import PathRules
@@ -158,6 +158,9 @@ class AgentLoop:
         self.max_iterations = max_iterations
         self.context_manager = context_manager
         self.on_thinking: TextDeltaCallback | None = None  # set by the session host (D-174)
+        self.on_progress: ProgressCallback | None = (
+            None  # a call in flight: what it is doing and how much (D-361)
+        )
         self._last_step_read_only = False  # the previous step only read things and nothing failed
         self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
         self.role = "coder"  # subagents run on other roles' models (reviewer, debugger)
@@ -313,6 +316,7 @@ class AgentLoop:
             tools=tools,
             reasoning_effort=reasoning_effort,
             on_thinking=self.on_thinking,
+            on_progress=self.on_progress,
         )
         try:
             response = await self.router.chat(self.role, request, timed_delta)

@@ -26,6 +26,7 @@ class EventType(StrEnum):
     THINKING_DELTA = (
         "thinking_delta"  # a finished piece of the model's reasoning summary (progress while it thinks)
     )
+    MODEL_PROGRESS = "model_progress"  # a model call in flight: thinking, writing text or preparing a tool call, with a running size (D-361)
     MESSAGE_DONE = "message_done"
     LLM_CALL = "llm_call"  # one model call: latency, tokens, tool calls asked for (run log; no UI row)
     TOOL_CALL_STARTED = "tool_call_started"

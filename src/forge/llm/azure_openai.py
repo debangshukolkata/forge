@@ -11,7 +11,7 @@ from openai import AsyncAzureOpenAI
 from forge.config import AzureProviderConfig, ModelConfig, Secrets
 from forge.errors import ConfigError, LLMError, LLMNotFoundError
 from forge.llm.azure_errors import map_openai_error
-from forge.llm.base import ChatRequest, LLMResponse, TextDeltaCallback
+from forge.llm.base import ChatRequest, LLMResponse, ProgressCallback, StreamProgress, TextDeltaCallback
 from forge.llm.translate_chat import (
     ChatStreamAccumulator,
     from_chat_completion,
@@ -112,12 +112,14 @@ class AzureOpenAIProvider:
                 response = await self._client.responses.create(**params)
                 return from_responses_output(response.model_dump(exclude_none=True))
             try:
-                return await self._stream_responses(params, on_text_delta, request.on_thinking)
+                return await self._stream_responses(
+                    params, on_text_delta, request.on_thinking, request.on_progress
+                )
             except openai.BadRequestError as error:
                 if not wants_summary or "summary" not in str(error).lower():
                     raise
                 params["reasoning"].pop("summary", None)  # this deployment does not offer summaries
-                return await self._stream_responses(params, on_text_delta, None)
+                return await self._stream_responses(params, on_text_delta, None, request.on_progress)
         except openai.OpenAIError as error:
             raise map_openai_error(error) from error
 
@@ -126,18 +128,46 @@ class AzureOpenAIProvider:
         params: dict[str, Any],
         on_text_delta: TextDeltaCallback,
         on_thinking: TextDeltaCallback | None = None,
+        on_progress: ProgressCallback | None = None,
     ) -> LLMResponse:
         stream = await self._client.responses.create(**params, stream=True, timeout=self.stream_idle_s)
         final: dict[str, Any] | None = None
+        progress = StreamProgress(on_progress)
+        await progress.tick(force=True)
         async for event in stream:
-            if event.type == "response.output_text.delta":
+            kind = event.type
+            if kind == "response.output_text.delta":
+                progress.stage, progress.chars = "writing", progress.chars + len(event.delta)
                 await on_text_delta(event.delta)
-            elif event.type == "response.reasoning_summary_text.done" and on_thinking is not None:
+            elif kind == "response.output_item.added":
+                item = getattr(event, "item", None)
+                item_type = getattr(item, "type", "")
+                if item_type == "reasoning":
+                    progress.stage = "thinking"
+                elif item_type == "function_call":
+                    progress.stage, progress.tool, progress.chars = (
+                        "calling",
+                        str(getattr(item, "name", "") or ""),
+                        0,
+                    )
+                elif item_type == "message":
+                    progress.stage = "writing"
+            elif kind == "response.function_call_arguments.delta":
+                progress.stage, progress.chars = (
+                    "calling",
+                    progress.chars + len(getattr(event, "delta", "") or ""),
+                )
+            elif kind == "response.reasoning_summary_text.delta":
+                progress.stage = "thinking"
+                progress.snippet = (progress.snippet + str(getattr(event, "delta", "") or ""))[-200:]
+            elif kind == "response.reasoning_summary_text.done" and on_thinking is not None:
+                progress.snippet = ""
                 await on_thinking(str(getattr(event, "text", "") or ""))
-            elif event.type in ("response.completed", "response.incomplete"):
+            elif kind in ("response.completed", "response.incomplete"):
                 final = event.response.model_dump(exclude_none=True)
-            elif event.type in ("response.failed", "error"):
+            elif kind in ("response.failed", "error"):
                 raise LLMError(f"Streaming failed: {event.model_dump_json()[:500]}")
+            await progress.tick()
         if final is None:
             raise LLMError("Stream ended without a final response")
         return from_responses_output(final)

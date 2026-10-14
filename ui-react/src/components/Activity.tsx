@@ -126,6 +126,28 @@ export function ActivityLine({ forge }: { forge: Forge }) {
     ));
     loader = "dots";
   }
+  // A model call in flight (D-361): say what it is doing and how much it has produced, and warn when it has gone quiet, so a long call
+  // never looks frozen. Only for the plain "thinking"/"writing" lines: a running tool keeps its own detail.
+  const model = activity.kind === "thinking" || activity.kind === "writing" ? activity.model : undefined;
+  if (model) {
+    const quiet = Math.floor((now - model.at) / 1000);
+    const size = model.chars > 0 ? `${model.chars.toLocaleString()} characters so far` : undefined;
+    if (model.stage === "calling") {
+      label = `Preparing: ${toolActivity(model.tool || "tool", "").label}`;
+      detail = size ?? "the model is deciding what to send";
+    } else if (model.stage === "writing") {
+      label = "Writing the reply";
+      detail = size;
+    } else if (model.stage === "thinking") {
+      label = label || "Thinking";
+      const line = model.snippet.trim().split("\n").pop();
+      if (line) detail = line.length > 140 ? `…${line.slice(-140)}` : line;
+    }
+    if (quiet >= 15) detail = `${detail ? detail + " · " : ""}no new data for ${quiet}s (after 100 s it retries)`;
+  } else if (activity.kind === "thinking" && !detail) {
+    const waited = Math.floor((now - activity.since) / 1000);
+    if (waited >= 20) detail = `waiting for the model's answer (${waited}s)`;
+  }
   const taskUsage: UsageBucket | undefined = state.current_task
     ? forge.cost?.project?.by_task?.[state.current_task]
     : undefined;

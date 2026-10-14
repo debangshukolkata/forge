@@ -99,3 +99,68 @@ async def test_streamed_answers_use_an_idle_limit_not_the_long_timeout(
     with pytest.raises(Stop):
         await provider._stream_responses({"model": "d", "input": []}, lambda text: None)  # type: ignore[arg-type, return-value]
     assert seen["timeout"] == 100.0 and seen["stream"] is True
+
+
+async def test_a_streamed_call_reports_what_it_is_doing_and_how_much(monkeypatch: pytest.MonkeyPatch) -> None:
+    """D-361: thinking, then a big tool call (a whole file as arguments): the screen can say so instead of showing a bare timer."""
+    from types import SimpleNamespace
+
+    from forge.config import AzureProviderConfig, ModelConfig, Secrets
+    from forge.llm import base
+    from forge.llm.azure_openai import AzureOpenAIProvider
+
+    secrets = Secrets(
+        {
+            "AZURE_OPENAI_ENDPOINT": "https://x.openai.azure.com/",
+            "AZURE_OPENAI_API_KEY": "k",
+            "AZURE_OPENAI_API_VERSION": "2025-04-01-preview",
+            "DEP": "d",
+        },
+        None,
+    )  # check_secrets: fake
+    provider = AzureOpenAIProvider(
+        "t",
+        ModelConfig(label="t", deployment_env="DEP", context_window=1000, max_output=100),
+        AzureProviderConfig(),
+        secrets,
+    )
+    monkeypatch.setattr(base.StreamProgress, "INTERVAL_S", 0.0)
+    final = SimpleNamespace(
+        model_dump=lambda exclude_none=True: {
+            "output": [],
+            "usage": {"input_tokens": 1, "output_tokens": 1},
+            "model": "d",
+        }
+    )
+    events = [
+        SimpleNamespace(type="response.output_item.added", item=SimpleNamespace(type="reasoning")),
+        SimpleNamespace(type="response.reasoning_summary_text.delta", delta="Comparing the three layouts"),
+        SimpleNamespace(
+            type="response.output_item.added", item=SimpleNamespace(type="function_call", name="write_file")
+        ),
+        SimpleNamespace(type="response.function_call_arguments.delta", delta="a" * 500),
+        SimpleNamespace(type="response.function_call_arguments.delta", delta="b" * 700),
+        SimpleNamespace(type="response.completed", response=final),
+    ]
+
+    async def fake_stream() -> Any:
+        for event in events:
+            yield event
+
+    async def fake_create(**kwargs: Any) -> Any:
+        return fake_stream()
+
+    monkeypatch.setattr(provider._client.responses, "create", fake_create)
+    seen: list[dict[str, Any]] = []
+
+    async def progress(info: dict[str, Any]) -> None:
+        seen.append(info)
+
+    async def delta(text: str) -> None:
+        return None
+
+    await provider._stream_responses({"model": "d", "input": []}, delta, None, progress)
+    assert seen[0]["stage"] == "waiting"
+    assert any(s["stage"] == "thinking" and "Comparing the three layouts" in s["snippet"] for s in seen)
+    calling = [s for s in seen if s["stage"] == "calling"]
+    assert calling and calling[-1]["tool"] == "write_file" and calling[-1]["chars"] == 1200
