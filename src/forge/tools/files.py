@@ -299,7 +299,7 @@ UI_SUFFIXES = (
     ".svelte",
 )  # files that decide how a page looks
 CANDIDATES_REFUSALS = 3
-DESIGN_GATE_ROUNDS = 2  # asked at most twice per session: a wrong refusal can never trap the model
+DESIGN_GATE_ROUNDS = 4  # asked at most four times per session (no DESIGN.md, errors in it): a wrong refusal can never trap the model
 DESIGN_NOTE = (
     "Before the first page or style file of a project: write its DESIGN.md in the TOKEN FORMAT: front matter between --- lines with name, colors "
     "(primary, neutral, ink, muted, surface, border), typography (display and body-md, each with fontFamily, fontSize, fontWeight, lineHeight), rounded, "
@@ -360,11 +360,18 @@ def design_gate(context: ToolContext, relative: str) -> str:
         found is not None
         and context.design_md_written
         and context.design_candidates_refusals < CANDIDATES_REFUSALS
-        and not _design_md_errors(found)
         and not _rounds_file(context).is_file()
     ):
-        context.design_candidates_refusals += 1  # three times (the model tried to write the page again at once in the fourth benchmark run), then it passes
-        return CANDIDATES_NOTE
+        # The file is the model's own and no candidates were compared: refused three times, whatever else is wrong with it (the fifth benchmark
+        # run spent its two other rounds writing pages before a DESIGN.md existed and then slipped through with a file that had an error).
+        context.design_candidates_refusals += 1
+        broken = _design_md_errors(found)
+        errors_first = (
+            f"The DESIGN.md has errors to fix first (design_md_lint shows them):\n{broken}\n\n"
+            if broken
+            else ""
+        )
+        return errors_first + CANDIDATES_NOTE
     if context.design_gate_rounds >= DESIGN_GATE_ROUNDS:
         return ""
     if found is not None:

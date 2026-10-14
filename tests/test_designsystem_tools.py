@@ -151,3 +151,21 @@ async def test_a_design_md_the_model_wrote_must_be_compared_with_candidates_once
     )  # a file the user supplied (design_md_import never sets the flag)
     (workspace.root / ".forge" / "design-rounds.json").unlink()
     assert design_gate(imported, "src/App.tsx") == ""
+
+
+async def test_a_model_written_design_md_with_an_error_still_has_to_be_compared_with_candidates(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """Benchmark 5: the model used up the other refusals writing pages first, then wrote a DESIGN.md with one error and slipped through."""
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace)
+    for _ in range(2):  # the missing-file refusals that used up the old two rounds
+        assert "TOKEN FORMAT" in design_gate(context, "src/App.tsx")
+    await WriteFile().run(
+        WriteFile.Args(
+            path="DESIGN.md", content=filled_template().replace('"{colors.primary}"', '"{colors.nope}"', 1)
+        ),
+        context,
+    )
+    refused = design_gate(context, "src/App.tsx")
+    assert "errors to fix first" in refused and "design_candidates" in refused

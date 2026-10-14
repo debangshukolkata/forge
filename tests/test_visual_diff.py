@@ -188,7 +188,7 @@ async def test_baseline_then_check_catches_an_unplanned_change(original_repo: Pa
 # --- D4: the first page or style file waits for a DESIGN.md ---
 
 
-async def test_the_first_ui_file_without_a_design_md_is_refused_twice_then_allowed(
+async def test_the_first_ui_file_without_a_design_md_is_refused_four_times_then_allowed(
     original_repo: Path, tmp_path: Path
 ) -> None:
     from forge.tools.files import WriteFile
@@ -203,8 +203,9 @@ async def test_the_first_ui_file_without_a_design_md_is_refused_twice_then_allow
     first = await write("site/index.html", "<h1>x</h1>")
     assert not first.ok and "DESIGN.md" in first.content and "ASCII wireframe" in first.content  # type: ignore[attr-defined]
     assert (await write("site/app.py", "x = 1\n")).ok  # not a UI file
-    assert not (await write("site/style.css", "a{}")).ok  # asked again: the second round
-    assert (await write("site/style.css", "a{}")).ok  # never a trap: the third write goes through
+    for _ in range(3):  # four refusals in all (no DESIGN.md yet)
+        assert not (await write("site/style.css", "a{}")).ok
+    assert (await write("site/style.css", "a{}")).ok  # never a trap: the fifth write goes through
 
 
 async def test_a_design_md_in_the_folder_or_above_opens_the_gate(original_repo: Path, tmp_path: Path) -> None:
