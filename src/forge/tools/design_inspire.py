@@ -273,7 +273,12 @@ class DesignMdImport(Tool):
             if source.lower().startswith(("http://", "https://")):
                 text = await self._fetch(source, context)
             else:
-                file = image_path(context, source)
+                # The candidates the design ladder asks for live in .forge/candidates: importing the winner is the next step of that ladder (D-379).
+                file = (
+                    context.workspace.path_of(source)
+                    if source.replace(chr(92), "/").startswith(".forge/candidates/")
+                    else image_path(context, source)
+                )
                 if not file.is_file() or file.stat().st_size > MAX_IMPORT_BYTES:
                     return ToolResult(
                         ok=False, content=f"No usable file at {source} (it must exist and be under 400 KB)."

@@ -189,7 +189,7 @@ class DeleteFile(Tool):
         if under is not None and not args.path.replace("\\", "/").lstrip("./").startswith(under):
             return ToolResult(ok=False, content=f"You may only delete files below {under} (your own checks).")
         context.workspace.delete(args.path, reason=args.reason)
-        context.last_edit_step = context.step
+        context.note_edit(args.path)
         await context.emit("file_changed", {"path": args.path, "op": "delete", "diff": ""})
         return ToolResult(ok=True, content=f"Deleted {args.path}.")
 
@@ -213,7 +213,7 @@ class MoveFile(Tool):
                 if not path.replace("\\", "/").lstrip("./").startswith(under):
                     return ToolResult(ok=False, content=f"You may only move files below {under}.")
         context.workspace.move(args.source, args.destination, reason=args.reason)
-        context.last_edit_step = context.step
+        context.note_edit(args.source, args.destination)
         await context.emit(
             "file_changed", {"path": args.destination, "op": "move", "from": args.source, "diff": ""}
         )
@@ -398,6 +398,30 @@ def _design_md_errors(path: Path) -> str:
     return describe_findings(errors) if errors else ""
 
 
+ALLOWED_CONTROL = chr(9) + chr(10) + chr(13)
+
+
+def control_character_problem(text: str, before: str = "") -> str | None:
+    """A text file must not gain control characters. Seen live (D-379): the model's arguments carried an en dash and a curly apostrophe as U+0013 and U+0019, the
+    file then held NUL bytes and every later write failed with 'is a binary file'. Said at once, with the place and the fix, the model repairs one line instead."""
+
+    def control(value: str) -> list[int]:
+        return [i for i, ch in enumerate(value) if ord(ch) < 32 and ch not in ALLOWED_CONTROL]
+
+    found = control(text)
+    if len(found) <= len(control(before)):
+        return None
+    first = found[0]
+    line = text.count(chr(10), 0, first) + 1
+    column = first - text.rfind(chr(10), 0, first)
+    around = text[max(0, first - 30) : first + 30].replace(chr(10), " ")
+    return (
+        f"Not saved: the text has {len(found)} control character(s), the first U+{ord(text[first]):04X} at line {line}, column {column} (near: {around!r}). "
+        "That is usually a mangled en dash, curly quote or other non-ASCII character. Write it as the plain character or an HTML entity (&ndash;, &rsquo;) "
+        "and send the file again."
+    )
+
+
 async def _save(context: ToolContext, relative: str, text: str, reason: str, op: str) -> ToolResult:
     workspace = context.workspace
     if context.write_only_under is not None and not relative.replace("\\", "/").lstrip("./").startswith(
@@ -427,9 +451,12 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
             "because it looked like a secret; never write the marker into code. Use an obvious placeholder "
             "(e.g. 'test-api-key' in tests) or read the value from the environment/config.",
         )
+    mangled = control_character_problem(text, before)
+    if mangled:
+        return ToolResult(ok=False, content=mangled)
     created = not path.is_file()
     workspace.write_text(relative, text, reason=reason)
-    context.last_edit_step = context.step
+    context.note_edit(relative)
     context.reads.record(relative, Path(path).read_bytes())  # the model now knows the current content
     diff = "".join(
         difflib.unified_diff(before.splitlines(True), text.splitlines(True), f"a/{relative}", f"b/{relative}")

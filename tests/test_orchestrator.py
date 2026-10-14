@@ -183,7 +183,7 @@ async def test_no_claim_without_evidence(host: SessionHost) -> None:
     context = orch.context
 
     context.step += 1
-    context.last_edit_step = context.step  # an edit, no test run after it
+    context.note_edit("app.py")  # an edit, no test run after it
     refused = await orch.task_update("T1", "done", "", "looks fine", "", context)
     context.step += 1
     context.last_verified_step = context.step  # tests passed after the edit
@@ -206,7 +206,7 @@ async def test_an_invented_import_in_a_file_the_model_wrote_blocks_done(host: Se
     relative = app_dir.relative_to(orch.workspace.repo_dir).as_posix() + "/benchmark_helper.py"
     orch.workspace.write_text(relative, "import json\nimport magic_forms_toolkit\n")
     context.step += 1
-    context.last_edit_step = context.step
+    context.note_edit("app.py")
     context.last_verified_step = context.step + 1
     context.step += 1
 
@@ -617,7 +617,7 @@ async def test_quality_gate_findings_send_a_task_back_twice_then_it_may_close(ho
         relative, "def add(item, items=[]):\n    items.append(item)\n    return items\n"
     )
     context.step += 1
-    context.last_edit_step = context.step
+    context.note_edit("app.py")
     context.last_verified_step = context.step + 1
     context.step += 1
 
@@ -645,10 +645,30 @@ async def test_gates_can_be_switched_off_per_project(host: SessionHost) -> None:
     )
     (orch.workspace.forge_dir / "gates.json").write_text('{"enabled": false}', encoding="utf-8")
     context.step += 1
-    context.last_edit_step = context.step
+    context.note_edit("app.py")
     context.last_verified_step = context.step + 1
     context.step += 1
 
     accepted = await orch.task_update("T1", "done", "Helper added.", "pytest passed", "", context)
 
     assert accepted.ok
+
+
+async def test_a_task_that_only_changed_a_page_is_not_asked_for_a_test_run(host: SessionHost) -> None:
+    """D-379: a design task wrote a pytest suite that checks static pages exist, because the gate wanted a passing test run after any edit."""
+    from forge.toolkit.base import ToolContext
+
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="home page")]
+    orch.state.current_task = "T1"
+    context = host.agent.context  # type: ignore[union-attr]
+    assert isinstance(context, ToolContext)
+    context.step = 5
+    context.note_edit("designs/a/index.html", "designs/a/style.css", "DESIGN.md")
+    context.last_ui_edit_step = 5
+    refused = await orch.task_update("T1", "done", "", "looked at it", "", context)
+    assert not refused.ok and "no passing test run" not in refused.content and "browser" in refused.content
+    context.step = 6
+    context.note_edit("app.py")  # code is different: it needs a passing test run
+    again = await orch.task_update("T1", "done", "", "looked at it", "", context)
+    assert not again.ok and "no passing test run since your last edit" in again.content

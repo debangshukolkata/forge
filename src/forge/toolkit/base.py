@@ -62,6 +62,29 @@ class ReadTracker:
 PublishCallback = Callable[[str, dict[str, Any]], Awaitable[None]]
 
 
+STATIC_SUFFIXES = (
+    ".html",
+    ".htm",
+    ".css",
+    ".scss",
+    ".sass",
+    ".less",
+    ".svg",
+    ".md",
+    ".txt",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".ico",
+    ".woff",
+    ".woff2",
+    ".ttf",
+    ".otf",
+)
+
+
 @dataclass
 class ToolContext:
     workspace: Workspace
@@ -107,6 +130,7 @@ class ToolContext:
     end_turn: bool = False  # a phase tool finished its phase: the agent loop stops after this step
     step: int = 0  # increases with every tool call; used for 'no claim without evidence'
     last_edit_step: int = 0
+    last_code_edit_step: int = 0  # the last change to something that has behaviour to test: not a page, a stylesheet, a note or a picture (D-379)
     last_verified_step: int = 0
     todos: list[dict[str, str]] = field(default_factory=list)  # the model's own todo list (D-177)
     pin: Callable[[str, str | None], None] | None = None  # sets a pinned-context slot (set by the host)
@@ -145,6 +169,12 @@ class ToolContext:
         default_factory=dict
     )  # how often each UI file was changed in this run (D1)
     shell_cap_tokens: int = DEFAULT_SHELL_CAP_TOKENS
+
+    def note_edit(self, *relatives: str) -> None:
+        """Remembers that files were changed, and whether any of them is code: a task that only changed a page, a stylesheet or a note has no test to run (D-379)."""
+        self.last_edit_step = self.step
+        if any(not relative.lower().endswith(STATIC_SUFFIXES) for relative in relatives):
+            self.last_code_edit_step = self.step
 
     async def emit(self, event_type: str, payload: dict[str, Any]) -> None:
         if self.publish is not None:

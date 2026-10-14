@@ -575,8 +575,10 @@ class Orchestrator:
             return ToolResult(ok=False, content=f"No task {task_id}. Tasks: {known}.")
         # Any existing task can be updated, also a blocked or finished one the model returns to after
         # fixing the cause (it used to be refused unless that task was the current one, D-164).
-        edited = context.last_edit_step > self._task_start_step
-        if status == "done" and edited and context.last_verified_step <= context.last_edit_step:
+        edited = (
+            context.last_code_edit_step > self._task_start_step
+        )  # a page, a stylesheet or a note has no test (D-379)
+        if status == "done" and edited and context.last_verified_step <= context.last_code_edit_step:
             return ToolResult(
                 ok=False,
                 content=(
@@ -592,7 +594,7 @@ class Orchestrator:
             if unresolved:
                 return ToolResult(ok=False, content=import_note(unresolved))
             if self.host.router.config.review.gate and self._wrote_code():
-                reviewed = context.last_review_step > context.last_edit_step
+                reviewed = context.last_review_step > context.last_code_edit_step
                 rounds = self._review_rounds.get(task_id, 0)
                 if (not reviewed or not context.review_ship) and rounds < REVIEW_ROUNDS:
                     self._review_rounds[task_id] = rounds + 1
@@ -664,10 +666,10 @@ class Orchestrator:
     def _also_missing(self, context: ToolContext, refused_for: str) -> str:
         """What else a done task still lacks, so one refusal names every check and the model does them in one step instead of
         meeting the gates one call at a time (D-365: five refusals in one dashboard run)."""
-        edited = context.last_edit_step > self._task_start_step
+        edited = context.last_code_edit_step > self._task_start_step
         ui_edited = context.last_ui_edit_step > self._task_start_step
         missing: dict[str, str] = {}
-        if edited and context.last_verified_step <= context.last_edit_step:
+        if edited and context.last_verified_step <= context.last_code_edit_step:
             missing["tests"] = "a passing test run (run_command)"
         if ui_edited and context.last_browser_step <= context.last_ui_edit_step:
             missing["browser"] = (

@@ -125,7 +125,7 @@ async def _code_task(host: SessionHost):  # type: ignore[no-untyped-def]
     relative = orch.workspace.app_dir.relative_to(orch.workspace.repo_dir).as_posix() + "/review_helper.py"
     orch.workspace.write_text(relative, "def add(a: int, b: int) -> int:\n    return a + b\n")
     ctx.step += 1
-    ctx.last_edit_step = ctx.step
+    ctx.note_edit("app.py")
     ctx.last_verified_step = ctx.step + 1
     ctx.step += 1
     return orch, ctx
@@ -170,7 +170,7 @@ async def test_an_edit_after_the_review_makes_it_stale(orch_host: SessionHost) -
     ctx.step += 1
     ctx.last_review_step, ctx.review_ship = ctx.step, True
     ctx.step += 1
-    ctx.last_edit_step = ctx.step  # edited again after the review
+    ctx.note_edit("app.py")  # edited again after the review
     ctx.last_verified_step = ctx.step + 1
     ctx.step += 1
     refused = await orch.task_update("T1", "done", "", "pytest passed", "", ctx)
