@@ -42,6 +42,19 @@ llm:
       vision: true
       price_per_mtok: { input: 2.5, cached_input: 1.25, output: 10.0 }   # USD; confirm tenant pricing
 
+    gpt54:                        # optional stronger model (D-359): a deployment on the second Azure resource; not used until a role names it
+      provider: azure
+      label: gpt-5.4
+      deployment_env: AZURE_STRONG_DEPLOYMENT
+      endpoint_env: AZURE_FALLBACK_ENDPOINT
+      api_key_env: AZURE_FALLBACK_API_KEY
+      api_version_env: AZURE_FALLBACK_API_VERSION
+      context_window: 272000      # input tokens (confirm for the tenant's deployment)
+      max_output: 32000
+      reasoning_effort: medium
+      vision: true
+      price_per_mtok: { input: 2.5, cached_input: 0.25, output: 15.0 }   # USD; placeholder, confirm tenant pricing
+
   roles:                          # DECISIONS D-024
     coder: gpt51
     kb_builder: gpt51

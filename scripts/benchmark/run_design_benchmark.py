@@ -217,11 +217,24 @@ def main() -> int:
     parser.add_argument("name")
     parser.add_argument("--tasks", default="")
     parser.add_argument("--env", action="append", default=[])
+    parser.add_argument(
+        "--all-roles",
+        default="",
+        help="a model key (for example gpt54) used for every role: the builder, the reviewer, the vision judge",
+    )
     args = parser.parse_args()
     run_dir = RUNS / args.name
     run_dir.mkdir(parents=True, exist_ok=True)
     home = run_dir / "home"
     home.mkdir(exist_ok=True)
+    if args.all_roles:  # an A/B on the model: every role names the same model in the run's own config.yaml
+        import yaml
+
+        roles = {
+            role: args.all_roles
+            for role in ("coder", "kb_builder", "summariser", "vision", "reviewer", "judge")
+        }
+        (home / "config.yaml").write_text(yaml.safe_dump({"llm": {"roles": roles}}), encoding="utf-8")
     env = {
         **os.environ,
         "FORGE_HOME": str(home),
