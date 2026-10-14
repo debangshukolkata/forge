@@ -58,6 +58,25 @@ def _pixels(value: object) -> float | None:
     return None
 
 
+def _first_saturated(system: DesignSystem) -> str:
+    for value in system.colors.values():
+        resolved = str(system.resolve(value))
+        measured = hue_and_saturation(resolved)
+        if measured and measured[1] >= 0.15:
+            return resolved
+    return ""
+
+
+def _display_style(system: DesignSystem) -> Any:
+    """The typography token that carries the display voice: one named display, headline, h1, title or hero, else the one with the largest size."""
+    for name in ("display", "headline", "h1", "hero", "title"):
+        if isinstance(system.typography.get(name), dict):
+            return system.typography[name]
+    styles = [s for s in system.typography.values() if isinstance(s, dict)]
+    sized = [(_pixels(system.resolve(s.get("fontSize", ""))) or 0.0, s) for s in styles]
+    return max(sized, key=lambda pair: pair[0])[1] if sized else {}
+
+
 def fingerprint(system: DesignSystem) -> Fingerprint:
     colours = system.colors
     background = next(
@@ -70,17 +89,15 @@ def fingerprint(system: DesignSystem) -> Fingerprint:
     )
     parsed = parse(str(background)) or (255, 255, 255, 1.0)
     tone = "dark" if (0.2126 * parsed[0] + 0.7152 * parsed[1] + 0.0722 * parsed[2]) < 110 else "light"
-    accent = system.resolve(colours.get("primary") or colours.get("accent") or "#808080")
+    accent = system.resolve(
+        colours.get("primary") or colours.get("accent") or _first_saturated(system) or "#808080"
+    )
     measured = hue_and_saturation(str(accent))
     if measured is None or measured[1] < 0.15:
         hue_name = "neutral"
     else:
         hue_name = next(name for limit, name in HUE_NAMES if measured[0] <= limit)
-    display: Any = (
-        system.typography.get("display")
-        or system.typography.get("h1")
-        or next(iter(system.typography.values()), {})
-    )
+    display = _display_style(system)
     family = str(system.resolve(display.get("fontFamily", ""))) if isinstance(display, dict) else ""
     font = family.split(",")[0].strip().strip("\"'").lower()
     radii = [

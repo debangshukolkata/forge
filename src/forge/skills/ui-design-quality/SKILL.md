@@ -109,6 +109,11 @@ one that comes from the product. Only then build.
 - *Write two or three candidate DESIGN.md files* (for example `.forge/candidates/a/DESIGN.md`, `b`, `c`) that differ on at least three of: tone (light or
   dark), accent hue, display font, corner style, density, layout energy. Put the dials in the front matter (`dials: {density: 5, variance: 4, motion: 3}`).
   Never make the three differ only in colour.
+- *Every candidate has a concept and a signature move.* Under Overview write the concept in one sentence, taken from the product's own world and
+  not from a page template (a late-night ramen bar: the paper lantern and the shop sign at 3 am; a children's science museum: a lab notebook full of
+  experiments), and name the one signature move that carries it (oversized vertical type, a ticket-stub layout, a hand-drawn diagram system, a full-bleed
+  colour block that changes with the section). The signature move is spent once and everything else stays calm. A candidate without a concept is a
+  template with a colour change.
 - *Let the critic choose.* `design_candidates` lints them, checks they differ enough, draws a specimen of each and has the vision model judge them against
   the brief. Apply the winner's fixes, `design_md_import` the winner as `DESIGN.md`, and write the other two (one line each) and why they lost under
   Overview. Look at the winner's `design_specimen` with `view_image` yourself too.

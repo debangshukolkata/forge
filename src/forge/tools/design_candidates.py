@@ -29,6 +29,9 @@ from forge.vision import images
 CANDIDATE_FOLDER = ".forge/candidates"
 ROUNDS_FILE = ".forge/design-rounds.json"
 LABELS = "ABC"
+MAX_SIMILAR_REFUSALS = (
+    2  # then the candidates are judged as they are: a wrong refusal can never trap the model
+)
 RUBRIC = (
     "You are a demanding art director judging design systems from specimen pictures (the same components drawn with each candidate's tokens). "
     "You are given the brief, the candidates labelled A, B and C, and sometimes the designs the user already rejected and why. Judge only what you "
@@ -199,6 +202,15 @@ class DesignCandidates(Tool):
                     lines.append(
                         f"TOO CLOSE TO THE REJECTED DESIGN: {one} resembles {old} (differs in {', '.join(differences(prints[one], prints[old])) or 'nothing'}); the user did not like that one."
                     )
+        similar = [line for line in lines if line.startswith(("TOO SIMILAR", "TOO CLOSE"))]
+        if similar and context.design_similar_refusals < MAX_SIMILAR_REFUSALS:
+            context.design_similar_refusals += 1
+            return ToolResult(
+                ok=False,
+                content="Not judged: the candidates are not different enough, so choosing among them would be choosing among copies."
+                + "\n".join(lines)
+                + "\nRewrite the similar candidates so that they differ in at least three dimensions (for example a dark candidate with a different accent hue and a different display font), then call design_candidates again.",
+            )
         if len(usable) < 2:
             return ToolResult(ok=False, content="Fewer than two usable candidates.\n" + "\n".join(lines))
         folder = context.workspace.root / CANDIDATE_FOLDER

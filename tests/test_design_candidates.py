@@ -140,7 +140,19 @@ async def test_the_specimen_is_drawn_and_candidates_are_compared(original_repo: 
         ),
         context,
     )
+    assert not again.ok and "Not judged" in again.content
     assert "TOO SIMILAR" in again.content and "TOO CLOSE TO THE REJECTED DESIGN" in again.content
+    args = DesignCandidates.Args(
+        brief="A bakery site",
+        candidates=[".forge/candidates/a/DESIGN.md", ".forge/candidates/similar/DESIGN.md"],
+        rejected=[".forge/candidates/a/DESIGN.md"],
+        rejected_reason="too corporate",
+    )
+    assert not (await DesignCandidates().run(args, context)).ok  # the second refusal
+    third = await DesignCandidates().run(
+        args, context
+    )  # then it is judged as it is: a wrong refusal can never trap the model
+    assert third.ok and "TOO SIMILAR" in third.content
     rounds = (workspace.root / ".forge" / "design-rounds.json").read_text(encoding="utf-8")
     assert "too corporate" in rounds and "bakery" in rounds
     assert not (
@@ -153,3 +165,19 @@ async def test_the_specimen_is_drawn_and_candidates_are_compared(original_repo: 
 def test_the_candidates_used_here_are_valid_design_files() -> None:
     for text in (BLUE, AMBER, GREEN):
         assert [f for f in lint_text(text) if f.severity == "error"] == []
+
+
+def test_a_design_md_in_other_key_names_is_an_error_not_a_pass() -> None:
+    """The second benchmark run wrote palette: and type: keys; the file had no tokens and still passed, so the candidates were unreadable copies."""
+    other = """---
+name: Wonderworks
+palette:
+  primary: '#FB7C1F'
+type:
+  display:
+    family: Playfair Display
+---
+## Overview
+x
+"""
+    assert any(f.rule == "no-tokens" and f.severity == "error" for f in lint_text(other))

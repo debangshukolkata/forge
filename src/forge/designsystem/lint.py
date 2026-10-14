@@ -306,6 +306,15 @@ def _check_structure(system: DesignSystem, findings: list[Finding]) -> None:
     omitted = {o.lower() for o in system.omitted}
     if not system.name:
         findings.append(Finding("error", "missing-name", "name", "the front matter needs a name"))
+    if not any(system.group(g) for g in ("colors", "typography", "rounded", "spacing")):
+        findings.append(
+            Finding(
+                "error",
+                "no-tokens",
+                "file",
+                "none of colors, typography, rounded or spacing holds tokens (other key names such as palette or type are not read): write the front matter in the token format (recipe design-md-template.md; find_asset type design-system has complete examples)",
+            )
+        )
     for group in system.invalid_groups:
         findings.append(Finding("error", "bad-group", group, f"{group} must be a mapping of tokens"))
     if "primary" not in system.colors and system.colors:

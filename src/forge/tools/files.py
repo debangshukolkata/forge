@@ -300,7 +300,11 @@ UI_SUFFIXES = (
 )  # files that decide how a page looks
 DESIGN_GATE_ROUNDS = 2  # asked at most twice per session: a wrong refusal can never trap the model
 DESIGN_NOTE = (
-    "Before the first page or style file of a project: write its DESIGN.md (the design concept). Put in it, compactly: the product and who "
+    "Before the first page or style file of a project: write its DESIGN.md in the TOKEN FORMAT: front matter between --- lines with name, colors "
+    "(primary, neutral, ink, muted, surface, border), typography (display and body-md, each with fontFamily, fontSize, fontWeight, lineHeight), rounded, "
+    "spacing and components, then prose sections (Overview, Colors, Typography, Layout, Components, Do's and Don'ts). Other key names (palette, type) "
+    "are not read. find_asset (type design-system) has complete examples to start from; read_file on the recipe design-md-template.md shows the shape. "
+    "In it, compactly: the product and who "
     "it is for in a sentence; 4 to 6 named colours with hex values; the type roles with family, size and weight; the layout of each screen "
     "as a small ASCII wireframe; one alignment and spacing rule; three design principles. Check it against the brief and replace every "
     "generic choice (a default blue, a default font, a row of three cards) with one that comes from the product. The ui-design-quality skill "

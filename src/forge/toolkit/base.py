@@ -117,6 +117,7 @@ class ToolContext:
         False  # the model wrote the project DESIGN.md itself (not imported from the user) (D-352)
     )
     design_candidates_asked: bool = False
+    design_similar_refusals: int = 0
     design_gate_rounds: int = 0  # how many times that was asked for in this session
     write_only_is_builder: bool = (
         False  # selects the wording of the refusal (builders build, verifiers only verify)
