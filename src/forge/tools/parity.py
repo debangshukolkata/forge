@@ -36,7 +36,17 @@ MAX_SKILL_FILE_BYTES = 200_000
 
 
 # Folders that hold many files of one kind: listed as one line each (the catalogue tools find the assets inside).
-BULK_FOLDERS = ("assets/", "fonts/", "templates/", "recipes/sections/", "recipes/templates/")
+BULK_FOLDERS = (
+    "assets/",
+    "fonts/",
+    "templates/",
+    "recipes/sections/",
+    "recipes/templates/",
+    "recipes/app-screens/",  # D-366, D-377: found with find_asset; listed one by one they pushed the reference files out of the 60 shown
+    "recipes/app-react/",
+    "recipes/compositions/",
+    "recipes/design-systems/",
+)
 KEPT_FROM_BULK = {"assets/INDEX.md", "assets/README.md"}
 
 
