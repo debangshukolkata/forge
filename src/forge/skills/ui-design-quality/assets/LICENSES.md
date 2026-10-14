@@ -10,6 +10,20 @@ Generated from the assets' front-matter; do not edit by hand.
 | `cmp-skeleton-rows` | original | authored for DebCraft (components-native.tsx, D-251) |
 | `cmp-tabs` | original | authored for DebCraft (components-native.tsx, D-251) |
 | `cmp-toasts` | original | authored for DebCraft (components-native.tsx, D-251) |
+| `ds-bento` | original | authored for DebCraft (D-350) from dir-bento |
+| `ds-bold-poster` | original | authored for DebCraft (D-350) from dir-bold-poster |
+| `ds-claymorphism` | original | authored for DebCraft (D-350) from dir-claymorphism |
+| `ds-clean-product` | original | authored for DebCraft (D-350) from dir-clean-product |
+| `ds-dark-dashboard` | original | authored for DebCraft (D-350) from dir-dark-dashboard |
+| `ds-glass-aurora` | original | authored for DebCraft (D-350) from dir-glass-aurora |
+| `ds-minimal-monochrome` | original | authored for DebCraft (D-350) from dir-minimal-monochrome |
+| `ds-neo-brutalist` | original | authored for DebCraft (D-350) from dir-neo-brutalist |
+| `ds-playful-friendly` | original | authored for DebCraft (D-350) from dir-playful-friendly |
+| `ds-retro-terminal` | original | authored for DebCraft (D-350) from dir-retro-terminal |
+| `ds-soft-editorial` | original | authored for DebCraft (D-350) from dir-soft-editorial |
+| `ds-tpl-charity` | original | authored for DebCraft (D-350) from the charity template (recipes/templates/charity) |
+| `ds-tpl-portfolio` | original | authored for DebCraft (D-350) from the portfolio template (recipes/templates/portfolio) |
+| `ds-tpl-saas` | original | authored for DebCraft (D-350) from the SaaS template (recipes/templates/saas) |
 | `dir-bento` | original | authored for DebCraft (style-directions.md, D-251) |
 | `dir-bold-poster` | original | authored for DebCraft (style-directions.md, D-251) |
 | `dir-claymorphism` | original | authored for DebCraft (style-directions.md, D-251) |

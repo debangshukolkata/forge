@@ -34,6 +34,7 @@ ASSET_TYPES = (
     "direction",
     "effect",
     "component",
+    "design-system",
     "template",
     "section",
     "font",
@@ -44,7 +45,16 @@ ASSET_TYPES = (
     "skeleton",
 )
 # Visual assets get a preview image; code skeletons and recipes do not need one.
-PREVIEW_TYPES = ("direction", "effect", "component", "template", "section", "font-pairing", "palette")
+PREVIEW_TYPES = (
+    "direction",
+    "effect",
+    "component",
+    "design-system",
+    "template",
+    "section",
+    "font-pairing",
+    "palette",
+)
 DENSITIES = ("airy", "balanced", "dense", "any")
 FRONT = re.compile(r"^---\s*\n(.*?)\n---\s*\n?", re.S)
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")

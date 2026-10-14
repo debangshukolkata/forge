@@ -14,6 +14,10 @@ Copy the file below and replace every value with a decision that comes from this
 ---
 version: alpha
 name: <Product> design system
+dials:                      # 1-10: how dense, how adventurous, how animated
+  density: 5
+  variance: 5
+  motion: 3
 description: "One line: who it is for and what it must feel like."
 colors:
   primary: "#______"        # the accent: one per screen, used for the single most important action

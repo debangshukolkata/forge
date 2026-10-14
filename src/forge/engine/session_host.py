@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import re
 import traceback
 from collections.abc import Awaitable, Callable
 from datetime import datetime
@@ -98,6 +99,9 @@ class SessionHost:
             system_prompt(workspace) if workspace is not None else DEFAULT_SYSTEM_PROMPT
         )
         self.history: list[Message] = [Message.system(self.system_prompt)]
+        self.user_urls: set[str] = (
+            set()
+        )  # web addresses the user typed: what design_md_import may fetch (D-349)
         self.user_github_repos: set[str] = set()  # repositories the user linked in this session (D-237)
         self._inputs: asyncio.Queue[UserInput] = asyncio.Queue()
         self._current_turn: asyncio.Task[None] | None = None
@@ -265,6 +269,7 @@ class SessionHost:
         context.router = self.router
         context.ask_user = self._ask_user
         context.user_github_repos = lambda: self.user_github_repos
+        context.user_urls = lambda: self.user_urls
         context.skills_changed = self.refresh_instructions
         if workspace.mode_b:
             context.profile = self.host_profile()
@@ -325,6 +330,7 @@ class SessionHost:
                 )
             return
         if isinstance(user_input, SendMessage):
+            self.user_urls |= {u.rstrip(".,;)") for u in re.findall(r"https?://[^\s<>\"']+", user_input.text)}
             self.user_github_repos |= skill_install.repos_in(
                 user_input.text
             )  # what install_skill may use (D-237)

@@ -218,6 +218,506 @@
    "size": 8362
   },
   {
+   "id": "ds-bento",
+   "type": "design-system",
+   "title": "Bento and cards",
+   "summary": "An unequal grid of rounded tiles, each holding one idea, in neutral tones with two tinted accents.",
+   "moods": [
+    "modern",
+    "organised",
+    "light"
+   ],
+   "products": [
+    "feature overviews",
+    "personal sites",
+    "dashboard home"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-bento.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-bento",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-bento.md",
+   "size": 2896
+  },
+  {
+   "id": "ds-bold-poster",
+   "type": "design-system",
+   "title": "Bold campaign poster",
+   "summary": "Near-black, one hot colour, huge grotesk type and hard offset shadows: loud and urgent.",
+   "moods": [
+    "bold",
+    "urgent",
+    "loud"
+   ],
+   "products": [
+    "events",
+    "drives",
+    "launches",
+    "sport"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-bold-poster.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-bold-poster",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-bold-poster.md",
+   "size": 2945
+  },
+  {
+   "id": "ds-claymorphism",
+   "type": "design-system",
+   "title": "Claymorphism",
+   "summary": "Pastel fills, chunky radii and soft inner shadows that make everything look moulded: gentle and tactile.",
+   "moods": [
+    "soft",
+    "tactile",
+    "gentle"
+   ],
+   "products": [
+    "onboarding",
+    "games",
+    "kids products"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-claymorphism.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-claymorphism",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-claymorphism.md",
+   "size": 2867
+  },
+  {
+   "id": "ds-clean-product",
+   "type": "design-system",
+   "title": "Clean product",
+   "summary": "White and pale blue-grey, one saturated accent, navy text, layered soft shadows: confident B2B.",
+   "moods": [
+    "clean",
+    "confident",
+    "precise"
+   ],
+   "products": [
+    "b2b",
+    "fintech",
+    "dashboards",
+    "saas"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-clean-product.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-clean-product",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-clean-product.md",
+   "size": 2901
+  },
+  {
+   "id": "ds-dark-dashboard",
+   "type": "design-system",
+   "title": "Dark dashboard",
+   "summary": "Near-black surfaces, light text, one indigo accent and clear status colours: dense and calm.",
+   "moods": [
+    "dark",
+    "dense",
+    "technical",
+    "calm"
+   ],
+   "products": [
+    "analytics",
+    "ops",
+    "monitoring",
+    "admin"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-dark-dashboard.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-dark-dashboard",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-dark-dashboard.md",
+   "size": 2959
+  },
+  {
+   "id": "ds-glass-aurora",
+   "type": "design-system",
+   "title": "Glass and aurora",
+   "summary": "A dark base, frosted glass panels and a sparing indigo-to-cyan glow: modern AI and developer tools.",
+   "moods": [
+    "dark",
+    "modern",
+    "glowing"
+   ],
+   "products": [
+    "saas",
+    "ai",
+    "developer tools"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-glass-aurora.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-glass-aurora",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-glass-aurora.md",
+   "size": 2909
+  },
+  {
+   "id": "ds-minimal-monochrome",
+   "type": "design-system",
+   "title": "Minimal monochrome",
+   "summary": "Black, white, one grey and one accent used once per screen; large type and huge margins.",
+   "moods": [
+    "minimal",
+    "refined",
+    "quiet"
+   ],
+   "products": [
+    "portfolio",
+    "architecture",
+    "luxury"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-minimal-monochrome.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-minimal-monochrome",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-minimal-monochrome.md",
+   "size": 2872
+  },
+  {
+   "id": "ds-neo-brutalist",
+   "type": "design-system",
+   "title": "Neo-brutalist",
+   "summary": "Flat saturated colours on cream with thick black outlines and hard shadows: playful and honest.",
+   "moods": [
+    "playful",
+    "raw",
+    "honest"
+   ],
+   "products": [
+    "creative tools",
+    "indie products",
+    "playful brands"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-neo-brutalist.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-neo-brutalist",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-neo-brutalist.md",
+   "size": 3000
+  },
+  {
+   "id": "ds-playful-friendly",
+   "type": "design-system",
+   "title": "Playful and friendly",
+   "summary": "Bright, rounded and bouncy: big radii, thick-stroke icons and a rounded sans.",
+   "moods": [
+    "playful",
+    "friendly",
+    "bright"
+   ],
+   "products": [
+    "kids",
+    "food",
+    "community",
+    "consumer apps"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-playful-friendly.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-playful-friendly",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-playful-friendly.md",
+   "size": 2903
+  },
+  {
+   "id": "ds-retro-terminal",
+   "type": "design-system",
+   "title": "Retro terminal",
+   "summary": "Monospace type, 1px borders and phosphor green on black: for developer tools and nostalgia.",
+   "moods": [
+    "retro",
+    "technical",
+    "nostalgic"
+   ],
+   "products": [
+    "developer tools",
+    "games"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-retro-terminal.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-retro-terminal",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-retro-terminal.md",
+   "size": 2893
+  },
+  {
+   "id": "ds-soft-editorial",
+   "type": "design-system",
+   "title": "Soft editorial",
+   "summary": "Warm off-white, a serif display, generous whitespace and soft shadows: humane and trustworthy.",
+   "moods": [
+    "warm",
+    "calm",
+    "trustworthy",
+    "editorial"
+   ],
+   "products": [
+    "health",
+    "charity",
+    "education",
+    "boutique"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-soft-editorial.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from dir-soft-editorial",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-soft-editorial.md",
+   "size": 3050
+  },
+  {
+   "id": "ds-tpl-charity",
+   "type": "design-system",
+   "title": "Charity and community (template palette)",
+   "summary": "The palette and type of the charity landing template: warm paper, ink and one brave red.",
+   "moods": [
+    "warm",
+    "editorial",
+    "trustworthy"
+   ],
+   "products": [
+    "charity",
+    "health",
+    "community",
+    "events",
+    "education"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-tpl-charity.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from the charity template (recipes/templates/charity)",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-tpl-charity.md",
+   "size": 3028
+  },
+  {
+   "id": "ds-tpl-portfolio",
+   "type": "design-system",
+   "title": "Portfolio (template palette)",
+   "summary": "The palette and type of the portfolio template: white, stone and ink with a Playfair display.",
+   "moods": [
+    "refined",
+    "editorial",
+    "quiet"
+   ],
+   "products": [
+    "portfolio",
+    "studio",
+    "photography",
+    "writing"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-tpl-portfolio.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from the portfolio template (recipes/templates/portfolio)",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-tpl-portfolio.md",
+   "size": 2965
+  },
+  {
+   "id": "ds-tpl-saas",
+   "type": "design-system",
+   "title": "SaaS (template palette)",
+   "summary": "The palette and type of the SaaS landing template: cool slate, one indigo accent, Plus Jakarta Sans.",
+   "moods": [
+    "clean",
+    "modern",
+    "confident"
+   ],
+   "products": [
+    "saas",
+    "b2b",
+    "developer tools",
+    "fintech"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-tpl-saas.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from the SaaS template (recipes/templates/saas)",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-tpl-saas.md",
+   "size": 2946
+  },
+  {
    "id": "dir-bento",
    "type": "direction",
    "title": "Bento and cards",
