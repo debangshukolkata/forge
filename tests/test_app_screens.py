@@ -20,7 +20,11 @@ def test_there_are_screens_in_every_family_each_in_the_catalogue_with_pictures()
     assert len(FILES) == 24
     for family, count in FAMILIES.items():
         assert len([f for f in FILES if f.stem.startswith(family + "-")]) == count, family
-    ids = {a.id for a in build_catalogue(SKILL).assets if a.id.startswith("app-")}
+    ids = {
+        a.id
+        for a in build_catalogue(SKILL).assets
+        if a.id.startswith("app-") and not a.id.startswith("app-react-")
+    }
     assert ids == {f"app-{f.stem}" for f in FILES}
     for file in FILES:
         for label in ("desktop", "phone"):

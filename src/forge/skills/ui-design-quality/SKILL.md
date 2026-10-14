@@ -193,7 +193,7 @@ permissions), and **web-app screens** (inbox, chat, week calendar, customer reco
   word, name and number to the product's real content, delete what the product does not have, add what it does. Never ship the sample copy or numbers.
 - Reuse the shell: the other screens of the same app use the same classes (`.app`, `.side`, `.topbar`, `.card`, `.table-wrap`, `.field`, `.pill`), so copy
   the first screen, then write only what differs; keep one shell for the whole app. Every list, search and fetch also needs its empty, no-results, error and
-  loading states: `app-empty-states` has them. In a React project split the screen into components with the same structure.
+  loading states: `app-empty-states` has them. **In a React project use the React version** (`app-react-<id>`: dashboard-kpi, table-data, form-wizard, settings-account, inbox: `Screen.tsx` + `screen.css` + `tokens.css`, type-checked and built with Vite) and split it into components; for the other screens copy the HTML recipe and convert it the same way.
 - Screens must work on a phone: the side navigation becomes a strip and tables scroll inside their frame. Check at 375 px with `browser_screenshot`.
 
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)

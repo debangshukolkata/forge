@@ -5039,6 +5039,263 @@
    "size": 21044
   },
   {
+   "id": "app-react-dashboard-kpi",
+   "type": "section",
+   "title": "React app screen: Dashboard: sales KPIs",
+   "summary": "A side-navigation finance dashboard: four KPI cards with deltas, a two-series revenue chart, a channel ring and a recent-orders table. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "calm",
+    "professional",
+    "light"
+   ],
+   "products": [
+    "finance",
+    "sales",
+    "e-commerce",
+    "saas",
+    "admin"
+   ],
+   "tags": [
+    "dashboard",
+    "kpi",
+    "chart",
+    "table",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/dashboard-kpi/Screen.tsx",
+     "to": "src/screens/dashboard-kpi/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/dashboard-kpi/screen.css",
+     "to": "src/screens/dashboard-kpi/screen.css"
+    },
+    {
+     "from": "recipes/app-react/dashboard-kpi/tokens.css",
+     "to": "src/screens/dashboard-kpi/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-dashboard-kpi.md",
+   "size": 25015
+  },
+  {
+   "id": "app-react-form-wizard",
+   "type": "section",
+   "title": "React app screen: Form: multi-step wizard",
+   "summary": "A stepper with done, current and next steps, a card of billing fields with a visible error, plan choice cards, and an order summary beside it. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "calm",
+    "guided",
+    "light"
+   ],
+   "products": [
+    "onboarding",
+    "checkout",
+    "registration",
+    "applications",
+    "setup"
+   ],
+   "tags": [
+    "form",
+    "wizard",
+    "stepper",
+    "validation",
+    "summary",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/form-wizard/Screen.tsx",
+     "to": "src/screens/form-wizard/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/form-wizard/screen.css",
+     "to": "src/screens/form-wizard/screen.css"
+    },
+    {
+     "from": "recipes/app-react/form-wizard/tokens.css",
+     "to": "src/screens/form-wizard/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-form-wizard.md",
+   "size": 20299
+  },
+  {
+   "id": "app-react-inbox",
+   "type": "section",
+   "title": "React app screen: Inbox: three panes",
+   "summary": "A mail-style inbox: folders and labels, a message list with unread emphasis and a selected row, and the open message with actions and an inline reply. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "productive",
+    "familiar",
+    "light"
+   ],
+   "products": [
+    "email",
+    "support",
+    "messaging",
+    "tickets",
+    "case management"
+   ],
+   "tags": [
+    "inbox",
+    "three panes",
+    "list",
+    "reading pane",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/inbox/Screen.tsx",
+     "to": "src/screens/inbox/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/inbox/screen.css",
+     "to": "src/screens/inbox/screen.css"
+    },
+    {
+     "from": "recipes/app-react/inbox/tokens.css",
+     "to": "src/screens/inbox/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-inbox.md",
+   "size": 23117
+  },
+  {
+   "id": "app-react-settings-account",
+   "type": "section",
+   "title": "React app screen: Settings: account, security and API keys",
+   "summary": "A settings page with a vertical section menu, a profile form, toggle rows, an API key list with copy and revoke, and a separated danger zone. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "clear",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "developer tools",
+    "saas",
+    "admin",
+    "account"
+   ],
+   "tags": [
+    "settings",
+    "toggles",
+    "api keys",
+    "forms",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/settings-account/Screen.tsx",
+     "to": "src/screens/settings-account/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/settings-account/screen.css",
+     "to": "src/screens/settings-account/screen.css"
+    },
+    {
+     "from": "recipes/app-react/settings-account/tokens.css",
+     "to": "src/screens/settings-account/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-settings-account.md",
+   "size": 21677
+  },
+  {
+   "id": "app-react-table-data",
+   "type": "section",
+   "title": "React app screen: Table: people with filters and bulk actions",
+   "summary": "A full data table: search, status segments, a bulk-action bar for selected rows, avatars, status pills, row actions and pagination. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "precise",
+    "plain",
+    "light"
+   ],
+   "products": [
+    "admin",
+    "team management",
+    "saas",
+    "hr",
+    "back office"
+   ],
+   "tags": [
+    "table",
+    "filters",
+    "bulk actions",
+    "pagination",
+    "top navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/table-data/Screen.tsx",
+     "to": "src/screens/table-data/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/table-data/screen.css",
+     "to": "src/screens/table-data/screen.css"
+    },
+    {
+     "from": "recipes/app-react/table-data/tokens.css",
+     "to": "src/screens/table-data/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-table-data.md",
+   "size": 21445
+  },
+  {
    "id": "app-record",
    "type": "section",
    "title": "App screen: Record: customer profile",

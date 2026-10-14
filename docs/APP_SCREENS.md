@@ -29,4 +29,6 @@ the file to `screens/`, name it as `composition: app-...` in the candidate DESIG
 Audit changes made with it (tests/test_ui_audit_studio.py): a `role="img"` chart of 150 x 80 px or more counts as imagery; a page that looks like an application
 (eight or more controls, or an aside, tab list or header navigation with three or more) is not asked for pictures or a 36 px landing headline (20 px is enough).
 
-Open: React versions of the screens (the plain HTML ones are the structure to port); live measurement of the output tokens saved on the dashboard brief.
+React versions (D-377): five screens (`app-react-dashboard-kpi`, `-table-data`, `-form-wizard`, `-settings-account`, `-inbox`) with `Screen.tsx`, `screen.css` and `tokens.css`, made from the same definitions by a small HTML-to-JSX converter (`scripts/dev/app_screens/jsx.py`) so the structure cannot drift; `tests/test_app_screens_react.py` type-checks and builds each with Vite, audits it at both widths and compares its text with the HTML recipe.
+
+Open: React versions of the other 19 screens (copy and convert the HTML recipe the same way); live measurement of the output tokens saved on the dashboard brief.

@@ -135,6 +135,11 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-form-wizard` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-inbox` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-map-list` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-dashboard-kpi` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-form-wizard` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-inbox` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-settings-account` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-table-data` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-record` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-settings-account` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-settings-billing` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
