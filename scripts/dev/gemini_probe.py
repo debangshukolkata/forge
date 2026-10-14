@@ -8,6 +8,8 @@ model_options.py tried only one region (us-central1, or GOOGLE_CLOUD_LOCATION) a
 2. sends one tiny text request, one picture request and, for image models, one image-generation request to every candidate name in every region;
 3. prints a table of model, region, text, pictures, image output, and which regions to put in GOOGLE_CLOUD_LOCATION.
 
+On a company network that inspects HTTPS it first switches Python to the Windows certificate store (the same setting DebCraft uses), because the `global` endpoint failed with
+CERTIFICATE_VERIFY_FAILED without it (2026-10-14). It also probes every Gemini and Imagen name the region lists for the project, not only the names in this file.
 It prints no key and no token. Needs the google-genai package and Google credentials (the office laptop's default credentials, GOOGLE_CLOUD_PROJECT optional).
 Paste the output to the assistant."""
 
@@ -44,6 +46,15 @@ LOCATIONS = [
     "asia-northeast1",
 ]
 TIMEOUT_S = 90
+SKIP_NAMES = (
+    "live",
+    "tts",
+    "transcribe",
+    "embedding",
+    "translate",
+    "robotics",
+    "computer-use",
+)  # not plain text or picture models
 
 
 def red_square() -> bytes:
@@ -138,6 +149,12 @@ async def main() -> None:
     lines: list[str] = []
     say(lines, "DebCraft Gemini probe (no keys or tokens are printed)")
     try:
+        from forge.net import use_system_certificates
+
+        say(lines, f"Windows certificate store in use: {use_system_certificates()}")
+    except Exception as error:  # the probe still runs; certificate errors are then explained at the end
+        say(lines, f"could not switch to the Windows certificate store ({type(error).__name__})")
+    try:
         from google import genai
         from google.genai import types
     except ImportError:
@@ -157,6 +174,7 @@ async def main() -> None:
         return
     say(lines, "")
     say(lines, "== models each region lists for Google (names containing gemini, imagen, nano or banana) ==")
+    listed: dict[str, list[str]] = {}
     for location in locations:
         try:
             client = client_for(genai, project, location)
@@ -167,11 +185,12 @@ async def main() -> None:
                     if m.name and any(k in m.name.lower() for k in ("gemini", "imagen"))
                 }
             )
+            listed[location] = names
             say(
                 lines,
                 f"{location}: {len(names)} listed"
                 + (
-                    ": " + ", ".join(n for n in names if any(k in n for k in ("3", "image", "imagen")))[:600]
+                    ": " + ", ".join(n for n in names if any(k in n for k in ("3", "image", "imagen")))
                     if names
                     else ""
                 ),
@@ -181,10 +200,32 @@ async def main() -> None:
     say(lines, "")
     say(lines, f"{'model':36} {'region':16} {'text':16} {'pictures':16} {'image output':16}")
     working: dict[str, list[str]] = {}
-    for name in [*TEXT_MODELS, *IMAGE_MODELS, *IMAGEN_MODELS, *extra]:
-        is_image = name in IMAGE_MODELS
-        is_imagen = name in IMAGEN_MODELS
-        for location in locations:
+    known = {*TEXT_MODELS, *IMAGE_MODELS, *IMAGEN_MODELS, *extra}
+    found_here: dict[
+        str, list[str]
+    ] = {}  # listed names the fixed lists do not know: tried in `global` and in the region that lists them
+    for location, names in listed.items():
+        for name in names:
+            if name not in known and not any(word in name for word in SKIP_NAMES):
+                found_here.setdefault(name, [])
+                if location not in found_here[name]:
+                    found_here[name].append(location)
+    if found_here:
+        say(lines, "")
+        say(
+            lines,
+            "names the project lists that this script did not know, tried too: "
+            + ", ".join(sorted(found_here)),
+        )
+    for name in [*TEXT_MODELS, *IMAGE_MODELS, *IMAGEN_MODELS, *extra, *sorted(found_here)]:
+        is_image = name in IMAGE_MODELS or (name in found_here and "image" in name and "imagen" not in name)
+        is_imagen = name in IMAGEN_MODELS or (name in found_here and "imagen" in name)
+        where = (
+            [x for x in locations if x == "global" or x in found_here[name]]
+            if name in found_here
+            else locations
+        )
+        for location in where:
             client = client_for(genai, project, location)
             text, pictures, image = "", "", ""
             if is_imagen:
@@ -207,7 +248,7 @@ async def main() -> None:
     say(lines, "== summary: models that answered, and where ==")
     for name, places in working.items():
         say(lines, f"{name}: {', '.join(places)}")
-    third = [n for n in working if n.startswith(("gemini-3", "gemini-3.1"))]
+    third = [n for n in working if n.startswith(("gemini-3", "gemini-4"))]
     say(lines, "")
     say(
         lines,
@@ -222,6 +263,12 @@ async def main() -> None:
         lines,
         "Use the region shown next to a model as GOOGLE_CLOUD_LOCATION (Gemini 3 models usually need `global`).",
     )
+    if sum("CERTIFICATE_VERIFY_FAILED" in line for line in lines) >= 3:
+        say(lines, "")
+        say(
+            lines,
+            "Many calls failed with CERTIFICATE_VERIFY_FAILED: the company HTTPS inspection certificate is not trusted by this Python. Check the first lines (Windows certificate store in use: True?); if it says False, run `pip install truststore` in this environment and run the probe again.",
+        )
     if args.out:
         with open(args.out, "w", encoding="utf-8") as handle:
             handle.write("\n".join(lines) + "\n")
