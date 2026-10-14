@@ -13,7 +13,16 @@ from forge.documents.spec import DocumentError
 
 
 class Operation(BaseModel):
-    op: Literal["replace_text", "set_paragraph", "delete_paragraph", "append_paragraph", "add_comment"]
+    op: Literal[
+        "replace_text",
+        "set_paragraph",
+        "delete_paragraph",
+        "append_paragraph",
+        "add_comment",
+        "add_footnote",
+        "accept_changes",
+        "reject_changes",
+    ]
     find: str = ""
     replace: str = ""
     index: int | None = Field(
@@ -81,7 +90,15 @@ def edit_document(data: bytes, operations: list[Operation]) -> tuple[bytes, list
             if not total:
                 raise DocumentError(f"The text {operation.find!r} is not in the document")
             done.append(f"replaced {total} occurrence(s) of {operation.find!r}")
-        elif kind in ("set_paragraph", "delete_paragraph", "add_comment"):
+        elif kind in ("accept_changes", "reject_changes"):
+            from forge.documents.changes import resolve_changes
+
+            settled = resolve_changes(document, accept=kind == "accept_changes")
+            done.append(
+                f"{'accepted' if kind == 'accept_changes' else 'rejected'} {settled} tracked change(s)"
+                + ("" if kind == "accept_changes" else " (formatting changes keep the new formatting)")
+            )
+        elif kind in ("set_paragraph", "delete_paragraph", "add_comment", "add_footnote"):
             numbered = _numbered(document)
             if operation.index is None or not 1 <= operation.index <= len(numbered):
                 raise DocumentError(f"index must be between 1 and {len(numbered)}")
@@ -97,6 +114,11 @@ def edit_document(data: bytes, operations: list[Operation]) -> tuple[bytes, list
                 if operation.style:
                     paragraph.style = operation.style
                 done.append(f"paragraph {operation.index} set")
+            elif kind == "add_footnote":
+                from forge.documents.footnotes import add_footnote
+
+                add_footnote(document, paragraph, operation.text)
+                done.append(f"footnote added to paragraph {operation.index}")
             elif kind == "delete_paragraph":
                 paragraph._p.getparent().remove(paragraph._p)
                 done.append(f"paragraph {operation.index} deleted")

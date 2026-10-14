@@ -6,7 +6,7 @@ page breaks, a table of contents field, header, footer and page-number field, la
 Markdown with the comments and the count of tracked changes; `edit.py` replaces text across runs, sets or deletes paragraphs and adds comments while
 keeping formatting; `check.py` finds structure and accessibility problems. The tools are in `tools/document.py`; the skill is `skills/make-document/SKILL.md`.
 
-- **Depends on:** errors
+- **Depends on:** errors, toolkit
 - **Invariants:** python-docx is imported lazily (a missing library is a clear message); links may only be https, http or mailto; macros are never run or kept (result is always .docx); a picture without alt text is reported; a template's styles, header and footer are kept and its sample body text removed.
 - **Tests:** test_documents.py
 - **Decisions:** docs/DECISIONS.md (D-342); clean-room rules in docs/DOCUMENTS_CLEAN_ROOM.md.

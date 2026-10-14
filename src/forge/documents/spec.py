@@ -19,6 +19,7 @@ class Run(BaseModel):
     bold: bool = False
     italic: bool = False
     link: str | None = Field(default=None, description="A web address (https://...) this text links to")
+    footnote: str | None = Field(default=None, description="A footnote whose mark follows this text")
 
 
 class Heading(BaseModel):

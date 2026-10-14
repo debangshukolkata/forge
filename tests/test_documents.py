@@ -169,3 +169,75 @@ async def test_the_tools(original_repo: Path, tmp_path: Path) -> None:
     assert edited.ok
     assert (await CheckDocument().run(CheckDocument.Args(path="docs/r.docx"), context)).ok
     assert not (await ReadDocument().run(ReadDocument.Args(path="docs/none.docx"), context)).ok
+    from forge.documents.preview import libreoffice, word_available
+    from forge.tools.document import PreviewDocument
+
+    if word_available() or libreoffice():
+        shown = await PreviewDocument().run(
+            PreviewDocument.Args(path="docs/r.docx", pdf_output="docs/r.pdf"), context
+        )
+        assert shown.ok and "page(s)" in shown.content and workspace.path_of("docs/r.pdf").is_file()
+
+
+TRACKED = (
+    '<w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:r><w:t xml:space="preserve">Keep </w:t></w:r>'
+    '<w:ins w:id="1" w:author="A"><w:r><w:t>added </w:t></w:r></w:ins>'
+    '<w:del w:id="2" w:author="A"><w:r><w:delText>removed </w:delText></w:r></w:del><w:r><w:t>end</w:t></w:r></w:p>'
+)
+
+
+def _with_tracked_changes() -> bytes:
+    from docx.oxml import parse_xml
+
+    document = docx.Document()
+    document.add_paragraph("placeholder")
+    document.element.body.insert(0, parse_xml(TRACKED))
+    out = io.BytesIO()
+    document.save(out)
+    return out.getvalue()
+
+
+def test_tracked_changes_are_counted_accepted_and_rejected() -> None:
+    data = _with_tracked_changes()
+    info = read_document(data)
+    assert info.insertions == 1 and info.deletions == 1
+    accepted, done = edit_document(data, [Operation(op="accept_changes")])
+    text = read_document(accepted).markdown
+    assert text.startswith("Keep added end") and "removed" not in text and "accepted 2" in done[0]
+    rejected, _ = edit_document(data, [Operation(op="reject_changes")])
+    text = read_document(rejected).markdown
+    assert text.startswith("Keep removed end") and "added" not in text
+    after = read_document(accepted)
+    assert after.insertions == 0 and after.deletions == 0
+
+
+def test_footnotes_are_built_read_and_added_to_an_existing_document() -> None:
+    outline = {
+        "title": "Notes",
+        "blocks": [
+            {
+                "type": "paragraph",
+                "runs": [
+                    {"text": "Sales rose 12%", "footnote": "Source: finance report, page 4."},
+                    {"text": " this year."},
+                ],
+            },
+            {"type": "paragraph", "text": "Second paragraph."},
+        ],
+    }
+    data = build_document(parse_document(json.dumps(outline)), lambda n: b"")
+    assert read_document(data).footnotes == ["Source: finance report, page 4."]
+    edited, done = edit_document(data, [Operation(op="add_footnote", index=3, text="A second note.")])
+    assert read_document(edited).footnotes == ["Source: finance report, page 4.", "A second note."]
+    assert "footnote added" in done[0]
+    assert "w:footnoteReference" in docx.Document(io.BytesIO(edited)).element.xml
+    with pytest.raises(DocumentError, match="needs text"):
+        edit_document(data, [Operation(op="add_footnote", index=1, text=" ")])
+
+
+def test_word_exports_the_document_to_pdf_when_installed() -> None:
+    from forge.documents.preview import libreoffice, to_pdf, word_available
+
+    if not (word_available() or libreoffice()):
+        pytest.skip("neither Word nor LibreOffice here")
+    assert to_pdf(_built()).startswith(b"%PDF")

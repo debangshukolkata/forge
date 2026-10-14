@@ -42,8 +42,13 @@ fields: Word fills them when the file is opened (the user may be asked to press 
 2. Changing an existing document: `read_document` first (comments and tracked-change counts are shown; deleted text is not), then `edit_document`.
    `replace_text` works across Word's split runs and in tables, headers and footers; paragraph numbers are those of `read_document`'s non-empty paragraphs.
    Do not accept or reject the user's tracked changes yourself; mention them.
-3. A picture for the document: make it first (chart, `findimage`, `generate_image`), then put it in with alt text.
-4. In your answer say what the document contains and which facts came from which source; say that the contents list fills when opened in Word.
+3. **Look at it.** `preview_document` makes pictures of the pages with Word itself (LibreOffice if Word is missing); `view_image` them: headings not
+   stranded at a page bottom, tables not split badly, pictures sized, header and footer right. It can also save the PDF (`pdf_output`). If it says neither
+   is available, say that the layout was not looked at.
+   Footnotes: `footnote` on a run in the outline, or `add_footnote` on a paragraph of an existing file. Tracked changes: `accept_changes` and
+   `reject_changes` settle all of them at once; only do this when the user asked, and tell them how many were settled.
+4. A picture for the document: make it first (chart, `findimage`, `generate_image`), then put it in with alt text.
+5. In your answer say what the document contains and which facts came from which source; say that the contents list fills when opened in Word.
 
 ## Do not
 - Do not paste long text as one paragraph, do not use tables for layout, do not leave template sample text.

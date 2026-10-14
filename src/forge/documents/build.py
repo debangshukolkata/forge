@@ -96,6 +96,8 @@ def _hyperlink(paragraph: Any, text: str, url: str, bold: bool, italic: bool) ->
 
 
 def _paragraph(document: Any, block: Paragraph) -> None:
+    from forge.documents.footnotes import add_footnote
+
     paragraph = document.add_paragraph()
     if block.runs:
         for run in block.runs:
@@ -104,6 +106,8 @@ def _paragraph(document: Any, block: Paragraph) -> None:
             else:
                 made = paragraph.add_run(run.text)
                 made.bold, made.italic = run.bold or None, run.italic or None
+            if run.footnote:
+                add_footnote(document, paragraph, run.footnote)
     else:
         paragraph.add_run(block.text)
 

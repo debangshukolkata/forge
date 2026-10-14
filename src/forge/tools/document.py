@@ -9,11 +9,13 @@ from pydantic import Field
 from forge.documents.build import build_document
 from forge.documents.check import check_document, describe_problems
 from forge.documents.edit import Operation, edit_document
+from forge.documents.preview import PreviewUnavailable, to_pdf
 from forge.documents.read import describe_document, read_document
 from forge.documents.spec import DocumentError, parse_document
 from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.vision import image_path
+from forge.tools.vision import _relative, _scratch, image_path
+from forge.vision import pdf as pdf_render
 
 MAX_BYTES = 60 * 1024 * 1024
 
@@ -147,5 +149,53 @@ class CheckDocument(Tool):
         return ToolResult(ok=True, content=describe_problems(problems))
 
 
+class PreviewDocument(Tool):
+    name = "preview_document"
+    read_only = False
+    description = (
+        "Show a Word document as pictures of its pages, made by Word itself (or LibreOffice when Word is missing), so you can look at the layout "
+        "with view_image: page breaks, tables, pictures, headers and footers, the contents list. Can also save the document as a PDF."
+    )
+
+    class Args(ToolArgs):
+        path: str = Field(description="The .docx file")
+        pages: list[int] | None = Field(
+            default=None, description="Pages to render (1-based); empty = all, at most 12"
+        )
+        dpi: int = Field(default=100, ge=60, le=200)
+        pdf_output: str = Field(default="", description="Also write the PDF here, e.g. docs/report.pdf")
+
+    def summary(self, args: PreviewDocument.Args) -> str:
+        return f"preview document {args.path}"
+
+    async def run(self, args: PreviewDocument.Args, context: ToolContext) -> ToolResult:
+        if args.pdf_output and not args.pdf_output.lower().endswith(".pdf"):
+            return ToolResult(ok=False, content="pdf_output must end in .pdf")
+        try:
+            source = image_path(context, args.path)
+            data = _read(context, args.path)
+            pdf_bytes = await asyncio.to_thread(to_pdf, data, source.suffix.lower() or ".docx")
+            if args.pdf_output:
+                context.workspace.write_bytes(args.pdf_output, pdf_bytes, f"{args.path} saved as PDF")
+            folder = _scratch(context)
+            temporary = folder / f"{source.stem}-preview.pdf"
+            temporary.write_bytes(
+                pdf_bytes
+            )  # a scratch file in the jail-checked folder, like pdf_render's pictures
+            count = pdf_render.page_count(temporary)
+            wanted = args.pages or list(range(1, min(count, 12) + 1))
+            written = await asyncio.to_thread(pdf_render.render, temporary, folder, wanted, args.dpi)
+        except PreviewUnavailable as error:
+            return ToolResult(
+                ok=False,
+                content=f"{error} Use check_document and read_document instead, and say the layout was not looked at.",
+            )
+        except (ForgeError, OSError, ValueError) as error:
+            return ToolResult(ok=False, content=str(error))
+        listing = "\n".join(_relative(context, p) for p in written)
+        done = f"{count} page(s); rendered {len(written)}. Look at them with view_image:"
+        return ToolResult(ok=True, content=f"{done}\n{listing}")
+
+
 def document_tools() -> list[Tool]:
-    return [BuildDocument(), ReadDocument(), EditDocument(), CheckDocument()]
+    return [BuildDocument(), ReadDocument(), EditDocument(), CheckDocument(), PreviewDocument()]

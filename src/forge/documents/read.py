@@ -20,6 +20,7 @@ class DocumentInfo:
     language: str
     markdown: str
     comments: list[str] = field(default_factory=list)
+    footnotes: list[str] = field(default_factory=list)
     insertions: int = 0
     deletions: int = 0
     pictures: int = 0
@@ -99,11 +100,14 @@ def read_document(data: bytes) -> DocumentInfo:
             without_alt += 1
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         macros = any(n.endswith("vbaProject.bin") for n in archive.namelist())
+    from forge.documents.footnotes import footnote_texts
+
     return DocumentInfo(
         document.core_properties.title or "",
         document.core_properties.language or "",
         "\n".join(lines).strip(),
         _comments(data),
+        footnote_texts(document),
         len(body.findall(f".//{W}ins")),
         len(body.findall(f".//{W}del")),
         len(pictures),
@@ -125,6 +129,10 @@ def describe_document(info: DocumentInfo, name: str = "document", limit: int = 1
         )
     if info.comments:
         head.append("Comments:\n" + "\n".join(f"  - {c[:300]}" for c in info.comments[:30]))
+    if info.footnotes:
+        head.append(
+            "Footnotes:\n" + "\n".join(f"  {n}. {t[:300]}" for n, t in enumerate(info.footnotes, start=1))
+        )
     text = info.markdown
     if len(text) > limit:
         text = text[:limit] + f"\n... (cut at {limit} characters)"
