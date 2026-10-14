@@ -3,14 +3,14 @@
 Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task lives in this file and nowhere else** (consolidated 2026-10-12 from this file, `docs/PPT_PARITY.md` and `docs/TODO_LATER.md`). Add new tasks here, in the group they belong to. The other two files keep only background, decisions and sizing, and point back here. Finished work is in the history at the end.
 
 ## Contents (open items per group)
-- 0. Build order (read this first): **1 open**
+- 0. Build order (read this first): **20 open**
 - 1. Waiting on you (your actions and decisions): **7 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **20 open**
 - 3. Parallel work and speed: **6 open**
 - 4. Presentations (match Claude's PowerPoint abilities): **11 open**
 - 5. Platform, runtime and coding competency: **19 open**
 - 6. Parked (not started; your choice when): **3 open**
-- **Total open: 67** (counted by script 2026-10-15: items marked `[ ]` or `[~]`; `[~]` are partly done)
+- **Total open: 86** (counted by script 2026-10-15: items marked `[ ]` or `[~]`; `[~]` are partly done; section 0 now includes tonight's 19)
 
 ## 0. Build order (read this first)
 How to take the work up in the best order. Each phase says what it needs and when it is done. IDs refer to the items below (`D` design, `L` libraries, `X` parallel, `S` speed, `C` coding competency, `W` documents, `P0.x/P1.x/P2.x/P3.x` presentations). Do not start a later phase's big items before the earlier phase's measurements exist.
@@ -76,6 +76,35 @@ Prioritised by value to the user's real needs (the TCS template, then design qua
 9. [x] **(done 2026-10-14, D-341; D6 was already built, D-312)** **C17 download button** for the scrubbed run report in the web UI, and **D6 visual regression** on top of the merged visual diff tool.
 10. [x] **Housekeeping:** full test run at the end, update TODO.md ticks, DECISIONS, the memory notes and `docs/OVERNIGHT_2026-10-14.md` (what was built, what to pull, what to run on the laptop, what failed). (done: docs/OVERNIGHT_2026-10-14.md)
 Not done at night on purpose: anything that needs the office laptop (probe results, three-design rerun, shadcn command), the user's keys or documents, spending on repeated benchmarks, and pushing.
+
+## 0c. Tonight, 2026-10-15 (autonomous: nothing here needs the user)
+Everything below can be finished without the user: no office laptop, no files or keys from the user, no decision. Rules for the night: commit locally with tests and a D-note, never push (the user pushes in the morning), stop an item and move on after the same failure 3 times, report honestly when a measurement shows no gain. **Timing runs never overlap**: while one runs, only edit code and run small unit tests (no browser tests, no full suite). Azure spend is allowed for the measuring runs in part 1 (estimate $30 to $40 in all, the keys are already on this machine). Morning summary goes to `docs/OVERNIGHT_2026-10-15.md`.
+
+**Part 1, measuring runs (idle machine, one at a time, first):**
+1. [ ] **X8 serial vs parallel designs.** New brief "three throwaway designs" in `tests/benchmarks/design`; arm A with `limits.max_parallel_builders: 1`, arm B with 3 (config in the run's own home); 3 runs per arm, one after the other. Record wall time, model calls, tokens, Azure 429s and the ladder cost per builder in docs/SPEED_BENCHMARK.md; if each builder's own candidates ladder is too heavy, change the builder brief to skip it and measure again.
+2. [ ] **AS1 live run.** The dashboard brief plus a table brief and a form brief: does the model pick an `app-*` screen, how many output tokens does it write, wall time against speed-6 (2658 s, 95,000 output tokens, 77 calls). Record in docs/APP_SCREENS.md and SPEED_BENCHMARK.md.
+3. [ ] **S5 follow-up.** From the event logs of runs 1 and 2: pages still written 2 to 3 times; "not different enough" candidate refusals. Fix what the logs show (hand each candidate a direction up front, patch with `multi_edit` after a review instead of rewriting), then 3 runs to see whether it holds.
+4. [ ] **DS9 / DS5 benchmark rerun.** The three design briefs and a dashboard brief, 2 runs per brief, scored by the judge; the user's own look at the screenshots stays the real calibration (kept for the morning).
+5. [ ] **C1 coding benchmark rerun** (docs/CODE_BENCHMARK.md) and read the result: it decides whether C8, C11 and C12 are worth building.
+
+**Part 2, building (light on the machine, while part 1 runs, then after):**
+6. [ ] **Progress for calls that do not stream** (vision, design judge, summariser) and for the Gemini provider; offline tests.
+7. [ ] **S6 rest:** audit only the pages that changed; measure sandbox start-up per command.
+8. [ ] **L9 auto-fixers:** overflowing text and missing alt text (the contrast fixer exists).
+9. [ ] **D1 and D2:** flag a file edited more than N times; cost and time per UI task, one critic round for small edits if too slow.
+10. [ ] **DS7 remainder:** more composition recipes, a React composition, a font shortlist, a reference gallery.
+11. [ ] **AS1 React versions** of the most used app screens (KPI dashboard, data table, wizard, settings, inbox), with tests.
+12. [ ] **Document extras:** PDF redaction, non-Latin fonts in PDFs, document themes (W4), and the open Word and Excel gaps listed in W1/W2.
+13. [ ] **Presentations leftovers that need no input:** P2.1 colour and type refinements and the parts of P2.23 the test template can show.
+14. [ ] **Platform housekeeping:** split the slow browser tests behind a marker, a prompt line for parallel pytest in built apps, a campaign case where DebCraft builds a small MCP tool and tests it with a dummy MCP server.
+15. [ ] **C8 docs helper:** fetch the docs of the installed library version.
+
+**Part 3, uncertain value (last; report honestly if there is no gain):**
+16. [ ] **L11 best-of-N design candidates** without Gemini (ranked by audit score and critic), measured on the design benchmark.
+17. [ ] **L4 / L5 shadcn quickstart** built and tested here (it does not prove the office laptop works: certificate issue, D-363).
+18. [ ] **C14 skill A/B loop and C15 server-lifecycle helper** (lowest priority).
+19. [ ] **Housekeeping at the end:** full test run, tick TODO.md, D-notes, memory notes, `docs/OVERNIGHT_2026-10-15.md` (what was built, what to pull, what to run on the laptop, what failed).
+Not done at night on purpose: anything that needs the office laptop (Gemini probe, shadcn recheck, template probe, three-design rerun), the user's files or keys, the DS8 model decision, S7 faster-model OK, the one-click installer, the internal rename and pushing.
 
 ## 1. Waiting on you (your actions and decisions)
 Things only you can do or decide. Everything else below can be built without you.
