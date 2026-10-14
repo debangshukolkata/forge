@@ -57,7 +57,13 @@ concrete value to use (a Tailwind class, hex colour, px size, copy line). Do not
 WHAT WORKS: at most two lines.
 VERDICT: SHIP (when no BLOCKING fix remains, every relevant score is 4 or more and the audit has no problems) or VERDICT: REVISE."""
 
+BLOCKING_FIX = re.compile(r"^[ \t]*(?:[-*]|\d+[.)])?[ \t]*\**BLOCKING\b", re.IGNORECASE | re.MULTILINE)
 VERDICT = re.compile(r"VERDICT:\s*(SHIP|REVISE)", re.IGNORECASE)
+
+
+def has_blocking_fix(report: str) -> bool:
+    """A fix line that starts with BLOCKING (the format the critic is told to use); the word inside a sentence ("no blocking issues") does not count."""
+    return bool(BLOCKING_FIX.search(report))
 
 
 def critic_verdict(report: str) -> str | None:

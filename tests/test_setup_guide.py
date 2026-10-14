@@ -75,9 +75,12 @@ def test_it_names_what_forge_reads_and_what_is_required(isolated_forge_home: Pat
         "AZURE_FALLBACK_API_VERSION",
         "AZURE_FALLBACK_API_KEY",
         "AZURE_FALLBACK_DEPLOYMENT",
+        "AZURE_STRONG_DEPLOYMENT",  # the optional stronger model (D-359): listed, not required
     }
     # The fallback model's four values are optional: without them DebCraft works, it just has no fallback.
-    assert all(variables[n]["required"] == (not n.startswith("AZURE_FALLBACK")) for n in azure)
+    assert all(
+        variables[n]["required"] == (not n.startswith(("AZURE_FALLBACK", "AZURE_STRONG"))) for n in azure
+    )
     # Two databases, each with its own variable and its own words; both optional.
     assert (
         variables["LOCAL_PG_URL"]["group"] == "DebCraft database"

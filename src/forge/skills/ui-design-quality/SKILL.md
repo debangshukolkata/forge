@@ -339,3 +339,6 @@ Never ask the user which style to use: pick, say why in one line, build.
 
 ## Gotchas
 - The design critic judges against the brief: do not add forms, flows or pages the brief did not ask for (speed-1: six review rounds for a contact form nobody wanted).
+- **Speed (D-360).** One critic round is the default: a REVISE whose fixes are only suggestions (no fix line starting with BLOCKING) ends the review; apply the cheap
+  suggestions in your next step and list the rest in your verification. A BLOCKING fix gets a follow-up review of just those fixes. Start the verifier and the critic in the
+  same step (they run side by side). Write whole files in one step (HTML and CSS together) and keep the dev server running between screenshots.

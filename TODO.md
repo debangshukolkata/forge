@@ -41,7 +41,7 @@ How to take the work up in the best order. Each phase says what it needs and whe
 - Every asset meets the acceptance bar in `L12`. Done when: the library holds the target counts (20+ templates, 40+ effects, 40+ font families) and the retrieval test still passes.
 
 **Phase E, model effort and parallel work** (needs the Phase A measurements)
-- `L11` design role, best-of-N, gpt-4o critic; `S3` cache check, `S4` lean context, `S5` fewer round trips, `S6` faster tools.
+- `L11` design role, best-of-N, gpt-4o critic; `S3` cache check, `S4` lean context, `S5` fewer round trips (first part built 2026-10-15, D-360: batching rules, one critic round, stream idle limit), `S6` faster tools.
 - Parallel in this order: `X1` critic parallel (unique screenshot names first), `X3` run_parallel, `X4` verifier and critic together, `X5` background installs, then `X2` builder subagents, then `X7` automatic parallel planning; `X6` is low priority.
 - `C9` tests as the judge (after `X2` and `C1`), `C11` repository outline only if `C1` shows lost context.
 - `S7` and `S8` only with your OK and a benchmark. Done when: the speed benchmark improves without quality loss.

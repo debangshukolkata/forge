@@ -100,7 +100,7 @@ UI_LOOK_NOTE = (
 UI_CRITIC_NOTE = (
     "Not accepted: the design has not been reviewed by the independent critic since your last change. Aesthetics "
     "and ease of use are part of done, and you cannot grade your own work. Call spawn_subagent with agent "
-    "'design-critic' and a task that gives the URL(s) of the running app (start it first, with start_background "
+    "'design-critic' (and, in the same step, the 'verifier' when the task still needs one: they run side by side) and a task that gives the URL(s) of the running app (start it first, with start_background "
     "and its cwd), what the product is for, and the design brief you followed. If it answers VERDICT: REVISE, "
     "make every fix it lists (they are concrete), then call it again. After three REVISE rounds you may finish: "
     "say in the verification which points remain open. Then call task_update again."

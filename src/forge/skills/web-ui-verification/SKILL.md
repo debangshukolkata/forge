@@ -53,3 +53,7 @@ task that changes what a user sees, do this before task_update(done) or telling 
 ## Gotchas
 - A server that prints nothing is not a server that is down: check the port (`start_background` does), not the output line (speed-2: four 60-second waits).
 - Python buffers piped output: run servers with `PYTHONUNBUFFERED=1` (DebCraft sets it).
+
+## Gotchas
+- Verify in as few steps as you can: start the server once and leave it running, open the page and take the desktop and phone screenshots in the same step, and run the
+  verifier beside the design critic instead of after it.

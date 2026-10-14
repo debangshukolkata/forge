@@ -23,6 +23,7 @@ from forge.subagents.critic import (
     CRITIC_ROUND_LIMIT,
     critic_round_note,
     critic_verdict,
+    has_blocking_fix,
 )
 from forge.subagents.review import REVIEWER_PROMPT
 from forge.subagents.subagent import (
@@ -206,9 +207,17 @@ class SpawnSubagent(Tool):
             verdict = critic_verdict(report)
             if verdict == "SHIP":
                 context.critic_ship, context.critic_rounds = True, 0
+            elif not has_blocking_fix(report):
+                # One review by default (D-360): a REVISE with only suggestions does not need a second round. The builder applies the cheap ones
+                # in its closing step and reports the rest, as after the last allowed round.
+                context.critic_ship, context.critic_rounds = False, CRITIC_ROUND_LIMIT
+                report += (
+                    "\n[The review found nothing BLOCKING, so no second review is needed. Apply the cheap suggestions in your next step (together with "
+                    "anything else you have to do), say in your verification which suggestions remain open, then call task_update.]"
+                )
             else:
                 context.critic_ship, context.critic_rounds = False, context.critic_rounds + 1
-            report += critic_round_note(verdict, context.critic_rounds, CRITIC_ROUND_LIMIT)
+                report += critic_round_note(verdict, context.critic_rounds, CRITIC_ROUND_LIMIT)
         elif args.agent == "code-review":
             requirement = ""
             asker = getattr(context.interaction, "requirement_text", None)

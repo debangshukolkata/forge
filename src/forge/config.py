@@ -32,6 +32,8 @@ class AzureProviderConfig(_Strict):
     api_version_env: str = "AZURE_OPENAI_API_VERSION"
     api: Literal["responses", "chat_completions"] = "responses"
     timeout_s: float = 180.0
+    # A streamed answer that goes quiet this long is cut and retried (the wait for a stalled call was 180 s, D-360); Claude Code's watchdog works the same way.
+    stream_idle_s: float = Field(default=100.0, gt=10, le=600)
 
 
 class GeminiProviderConfig(_Strict):

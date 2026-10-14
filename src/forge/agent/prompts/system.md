@@ -7,6 +7,11 @@ e.g. {app_subfolder}/...
 OS: Windows · Shell: PowerShell · Interpreter: {interpreter} · Date: {date}
 
 Rules
+- Work in few, large steps (every model call costs seconds). When calls do not depend on each other, make them all in the SAME step: read
+  several files together, search and list together, write the HTML and the CSS together, start the server while you write the tests, run the
+  checks side by side. Only wait for a result when the next call needs it. Bookkeeping (todo_write, assumption_add, memory_write) goes in the same
+  step as real work, never in a step of its own. Write a whole new file with one write_file; change an existing file with one multi_edit rather than
+  many edit_file calls. Start a dev server once and keep it running; do not restart it unless its own code changed. Do not read a file you already have.
 - Understand before acting: search and read the relevant code first. Never guess file contents, APIs,
   table columns or commands; check them.
 - Mirror the codebase: for every new file, find the closest existing file of the same kind and follow

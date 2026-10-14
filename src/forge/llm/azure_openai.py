@@ -39,6 +39,7 @@ class AzureOpenAIProvider:
             raise ConfigError(f"Model '{model_key}' needs deployment_env")
         self.deployment = secrets.require(model.deployment_env)
         self.api = provider_config.api
+        self.stream_idle_s = provider_config.stream_idle_s
         self.fell_back_to_chat = False
         self._served_model: str | None = None
         self._client = AsyncAzureOpenAI(
@@ -126,7 +127,7 @@ class AzureOpenAIProvider:
         on_text_delta: TextDeltaCallback,
         on_thinking: TextDeltaCallback | None = None,
     ) -> LLMResponse:
-        stream = await self._client.responses.create(**params, stream=True)
+        stream = await self._client.responses.create(**params, stream=True, timeout=self.stream_idle_s)
         final: dict[str, Any] | None = None
         async for event in stream:
             if event.type == "response.output_text.delta":
@@ -166,7 +167,7 @@ class AzureOpenAIProvider:
 
     async def _stream_chat(self, params: dict[str, Any], on_text_delta: TextDeltaCallback) -> LLMResponse:
         stream = await self._client.chat.completions.create(
-            **params, stream=True, stream_options={"include_usage": True}
+            **params, stream=True, stream_options={"include_usage": True}, timeout=self.stream_idle_s
         )
         accumulator = ChatStreamAccumulator()
         async for chunk in stream:
