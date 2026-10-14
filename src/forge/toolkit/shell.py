@@ -8,6 +8,7 @@ from pathlib import Path
 from pydantic import Field
 
 from forge.config import SandboxMode
+from forge.net import system_certificates_wanted
 from forge.safety.paths import is_within, real_path
 from forge.safety.sandbox import SandboxUnavailableError, has_low_label, label_low
 from forge.safety.sandbox import is_supported as sandbox_supported
@@ -118,6 +119,10 @@ class ShellSession:
         variables.setdefault("npm_config_prefer_offline", "true")
         variables.setdefault("npm_config_audit", "false")
         variables.setdefault("npm_config_fund", "false")
+        # Behind company HTTPS inspection node tools (npx shadcn, node fetch) fail with "unable to get local issuer certificate" because
+        # Node ignores the Windows store; Python already uses it (forge.net). Older Node versions ignore this variable (D-363).
+        if system_certificates_wanted():
+            variables.setdefault("NODE_USE_SYSTEM_CA", "1")
         variables.setdefault(
             "PYTHONUNBUFFERED", "1"
         )  # a server's "Serving on ..." line must reach DebCraft at once, not when a buffer fills (S6)

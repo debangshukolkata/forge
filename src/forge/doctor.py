@@ -94,6 +94,28 @@ def check_certificates() -> CheckResult:
     )
 
 
+def check_node_certificates() -> CheckResult | None:
+    """Node tools (npx shadcn, npm create) need to trust the company certificate too; None when Node is not installed (D-363)."""
+    from forge.net import installed_node_version, node_supports_system_ca, system_certificates_wanted
+
+    version = installed_node_version()
+    if version is None:
+        return None
+    if system_certificates_wanted() and node_supports_system_ca(version):
+        return CheckResult(
+            "Node certificates",
+            "ok",
+            f"Node {version} reads the Windows certificate store for commands DebCraft runs",
+        )
+    return CheckResult(
+        "Node certificates",
+        "warn",
+        f"Node {version} cannot read the Windows certificate store (needs 22.15, 23.8 or 24+): behind company HTTPS inspection npx shadcn and "
+        "similar fail with 'unable to get local issuer certificate'. Update Node, or export the company root certificate and set "
+        "NODE_EXTRA_CA_CERTS to its path.",
+    )
+
+
 def check_forge_home(home: Path) -> CheckResult:
     try:
         home.mkdir(parents=True, exist_ok=True)
@@ -216,6 +238,9 @@ async def run_doctor(offline: bool = False) -> list[CheckResult]:
         check_certificates(),
         check_forge_home(home),
     ]
+    node_result = check_node_certificates()
+    if node_result is not None:
+        results.append(node_result)
     try:
         config = load_config(home)
     except ForgeError as error:

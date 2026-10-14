@@ -96,3 +96,15 @@ def test_sandboxed_node_tools_get_caches_inside_the_sandbox_folder(
         assert Path(environment[name]).is_relative_to(shell.sandbox_dir)
     shell.sandbox_active = False
     assert "npm_config_cache" not in shell.environment()
+
+
+def test_node_tools_may_use_the_system_certificate_store(
+    original_repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Company HTTPS inspection made `npx shadcn` fail with "unable to get local issuer certificate" (D-363).
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    shell = ShellSession(workspace, sandbox="off")
+    monkeypatch.delenv("FORGE_SYSTEM_CERTS", raising=False)
+    assert shell.environment()["NODE_USE_SYSTEM_CA"] == "1"
+    monkeypatch.setenv("FORGE_SYSTEM_CERTS", "0")
+    assert "NODE_USE_SYSTEM_CA" not in shell.environment()

@@ -9,6 +9,9 @@ trusts — no certificate files to export. Set FORGE_SYSTEM_CERTS=0 to keep Pyth
 from __future__ import annotations
 
 import os
+import re
+import shutil
+import subprocess
 
 _state = {"done": False, "active": False}
 
@@ -57,3 +60,27 @@ def root_cause(error: BaseException) -> str:
         last = current
         current = current.__cause__ or current.__context__
     return f"{type(last).__name__}: {last}"
+
+
+def system_certificates_wanted() -> bool:
+    return os.environ.get("FORGE_SYSTEM_CERTS", "1").strip().lower() not in {"0", "false", "no"}
+
+
+def node_supports_system_ca(version: str) -> bool:
+    """Node reads the operating system's certificate store with NODE_USE_SYSTEM_CA=1 from 22.15, 23.8 and 24 on (D-363)."""
+    match = re.match(r"v?(\d+)\.(\d+)", version.strip())
+    if not match:
+        return False
+    major, minor = int(match.group(1)), int(match.group(2))
+    return major >= 24 or (major == 23 and minor >= 8) or (major == 22 and minor >= 15)
+
+
+def installed_node_version() -> str | None:
+    node = shutil.which("node")
+    if not node:
+        return None
+    try:
+        done = subprocess.run([node, "--version"], capture_output=True, text=True, timeout=10, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return done.stdout.strip() or None
