@@ -60,3 +60,6 @@ fields: Word fills them when the file is opened (the user may be asked to press 
   project; put its path in `template`. Its styles, header and footer are kept and its sample text is removed.
 - The company look: `brand` in the outline, or `brand_file` (a JSON file with `accent`, `text`, `title_font`, `body_font`) on the build tool. Headings,
   table headers and fonts follow it; a colour that would be unreadable on white is darkened. The same file works for decks, workbooks and PDFs.
+
+## Gotchas
+- The outline's `title` is printed as the document's title for you. Start `blocks` with the first section heading: repeating the title as a heading shows it twice.

@@ -74,3 +74,7 @@ guessing and writes a clean workbook (an Excel table with a frozen header, real 
 pass that report on to the user. A date column that no value settles (01/02/2026) is read day first and reported as a guess; ask the user when it matters.
 Total lines are kept as data and flagged: replace them with a total row of formulas (`total_row`) in a later `build_workbook` from the saved outline
 (`outline_output`). Never clean in place: the original file stays untouched.
+
+## Gotchas
+- One chart per question. A chart's `data` range covers the header and the data rows, never the total row (a total towers over its parts and spoils the scale). Look at every
+  chart in `preview_file`: a series that shows one category, or two charts that answer the same question, is a mistake to fix before you finish.

@@ -48,3 +48,6 @@ header colours; fonts map to the closest standard PDF font (Helvetica, Times, Co
 For a scanned PDF (no text layer) `ocr_pdf` reads every page (up to 200) with Tesseract and saves the text with a section per page; pages that do have a text
 layer are read from it. It is offered only where Tesseract is installed. OCR misreads digits and names: say that the text came from OCR, and check the figures that
 matter against the page with `pdf_render` and `view_image`. Longer files: `split_pdf` first.
+
+## Gotchas
+- The outline's `title` is printed at the top of the first page for you. Start `blocks` with the first section heading: repeating the title as a heading shows it twice.
