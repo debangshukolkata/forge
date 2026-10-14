@@ -9,6 +9,7 @@ from forge.toolkit.shell import PythonRun, RunCommand
 from forge.tools.assets import AddAsset, FindAsset
 from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
+from forge.tools.design_md import design_md_tools
 from forge.tools.document import document_tools
 from forge.tools.document_preview import document_preview_tools
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
@@ -75,6 +76,7 @@ def default_tools() -> list[Tool]:
         *raw_tools(),
         *source_tools(),
         *workbook_tools(),
+        *design_md_tools(),
         *document_tools(),
         *document_preview_tools(),
         *pdf_toolkit_tools(),

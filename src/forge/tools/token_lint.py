@@ -57,6 +57,27 @@ def _normal_colour(text: str) -> str:
     return re.sub(r"\s+", "", text.lower())
 
 
+def _design_md_colours(root: Path) -> list[str]:
+    """The hex colours of the project's DESIGN.md when it uses the token format; empty otherwise (no file, or free text)."""
+    from forge.designsystem.colour import parse, to_hex
+    from forge.designsystem.spec import DesignMdError, parse_design_md
+
+    for relative in ("DESIGN.md", "design.md", "docs/DESIGN.md", "docs/design.md"):
+        path = root / relative
+        if path.is_file():
+            try:
+                system = parse_design_md(path.read_text(encoding="utf-8", errors="replace"))
+            except (DesignMdError, OSError):
+                return []
+            found = []
+            for value in system.colors.values():
+                parsed = parse(str(system.resolve(value)))
+                if parsed is not None and parsed[3] == 1.0:
+                    found.append("#" + to_hex(parsed).lower())
+            return list(dict.fromkeys(found))
+    return []
+
+
 def _project_sources(root: Path) -> list[Path]:
     found = []
     for path in root.rglob("*"):
@@ -91,7 +112,13 @@ def token_lint_problems(root: Path) -> list[str]:
     token_files = {
         path for path, text in texts.items() if path.suffix in STYLE_SUFFIXES and _is_token_file(text)
     }
+    design_colours = _design_md_colours(root)
     if not token_files:
+        if design_colours:
+            return [
+                "Tokens: DESIGN.md defines colours but the code has no theme tokens. Run design_md_export (css-tailwind) "
+                "and import the file once in the main stylesheet, then use its variables."
+            ]
         return []
     token_text = "\n".join(texts[path] for path in token_files)
     allowed_colours = _token_values(token_text)
@@ -131,6 +158,13 @@ def token_lint_problems(root: Path) -> list[str]:
         return ", ".join(names[:FILES_SHOWN]) + (", ..." if len(names) > FILES_SHOWN else "")
 
     problems = []
+    if design_colours:
+        in_code = {_normal_colour(c) for c in design_colours} & allowed_colours
+        if len(in_code) * 2 < len(design_colours):
+            problems.append(
+                f"Tokens: only {len(in_code)} of the {len(design_colours)} colours in DESIGN.md are theme tokens in the code. "
+                "Run design_md_export so the code and DESIGN.md agree (change DESIGN.md first when the design changes)."
+            )
     if colour_files:
         problems.append(
             f"Tokens: {len(colour_files)} file(s) hard-code three or more colours that are not design tokens "

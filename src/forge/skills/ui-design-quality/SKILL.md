@@ -77,11 +77,13 @@ kept in DebCraft's library, so the next project needs no network. If the user na
 an address and use `fetch_font` with `url` (a .ttf, .otf, .woff2 or a zip); say its licence was not checked. Never link a font from a CDN.
 
 ## 0c. Write the project's DESIGN.md first
-Before building any screen, write `DESIGN.md` in the project root from `recipes/design-md-template.md`: a one-line design
-read (who it is for, the feeling, what it must not look like), three dials (DESIGN_VARIANCE, MOTION_INTENSITY,
-VISUAL_DENSITY, 1-10), exact colours, type, spacing, shape, components, imagery, do's and don'ts, responsive rules. Build
-every screen from it and keep the CSS tokens identical to it. If the user or their company supplies a DESIGN.md or a
-brand guide, it is binding: use it as is. Give the path to the design critic; it scores the pages against it.
+Before building any screen, write `DESIGN.md` in the project root from `recipes/design-md-template.md`: the open DESIGN.md format, YAML
+tokens (exact colours, type, radii, spacing, components with `{colors.primary}` references) plus prose that says why (design read and the three
+dials, do's and don'ts, responsive rules, known gaps). The write result already lists lint findings; run `design_md_lint` until there are no errors
+(contrast of every text pair, references that exist, units) and warnings are dealt with. Then `design_md_export` (css-tailwind) writes the tokens as a
+theme file: import it once and build every screen from its variables, so the code cannot drift from DESIGN.md. Change DESIGN.md first when the design
+changes, then export again; `design_md_diff` shows what moved. If the user or their company supplies a DESIGN.md or a brand guide (even free text), it is
+binding: use it as is. Give the path to the design critic; it scores the pages against it.
 
 ## 0d. The token plan (write it before the markup, then argue with it)
 In `DESIGN.md` or your plan write, compactly: 4 to 6 named colours (background, surface, text, muted, accent, one signal colour) with

@@ -308,17 +308,25 @@ DESIGN_NOTE = (
 )
 
 
-def design_md_exists(workspace: object, relative: str) -> bool:
-    """A DESIGN.md in the file's folder or any folder above it up to the repository root (or docs/DESIGN.md at the root)."""
+def find_design_md(workspace: object, relative: str) -> Path | None:
+    """The DESIGN.md in the file's folder or any folder above it up to the repository root (or docs/DESIGN.md at the root)."""
     repo = workspace.repo_dir.resolve()  # type: ignore[attr-defined]
     folder = workspace.path_of(relative).resolve().parent  # type: ignore[attr-defined]
     while True:
-        if any((folder / name).is_file() for name in ("DESIGN.md", "design.md")):
-            return True
+        for name in ("DESIGN.md", "design.md"):
+            if (folder / name).is_file():
+                return Path(folder / name)
         if folder == repo or repo not in folder.parents:
             break
         folder = folder.parent
-    return any((repo / "docs" / name).is_file() for name in ("DESIGN.md", "design.md"))
+    return next(
+        ((repo / "docs" / name) for name in ("DESIGN.md", "design.md") if (repo / "docs" / name).is_file()),
+        None,
+    )
+
+
+def design_md_exists(workspace: object, relative: str) -> bool:
+    return find_design_md(workspace, relative) is not None
 
 
 def design_gate(context: ToolContext, relative: str) -> str:
@@ -327,10 +335,29 @@ def design_gate(context: ToolContext, relative: str) -> str:
     clean = relative.replace("\\", "/")
     if not clean.lower().endswith(UI_SUFFIXES) or context.design_gate_rounds >= DESIGN_GATE_ROUNDS:
         return ""
-    if design_md_exists(context.workspace, relative):
-        return ""
+    found = find_design_md(context.workspace, relative)
+    if found is not None:
+        broken = _design_md_errors(found)
+        if not broken:
+            return ""
+        context.design_gate_rounds += 1
+        return f"The project's DESIGN.md has errors that must be fixed before pages are built (design_md_lint shows them):\n{broken}"
     context.design_gate_rounds += 1
     return DESIGN_NOTE
+
+
+def _design_md_errors(path: Path) -> str:
+    """The lint errors of a DESIGN.md that uses the token format; a free-text file (a company brand guide) is accepted as it is."""
+    from forge.designsystem.lint import describe_findings, lint_text
+
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    if not text.lstrip().lstrip(chr(0xFEFF)).lstrip().startswith("---"):
+        return ""
+    errors = [f for f in lint_text(text) if f.severity == "error"]
+    return describe_findings(errors) if errors else ""
 
 
 async def _save(context: ToolContext, relative: str, text: str, reason: str, op: str) -> ToolResult:
@@ -371,6 +398,10 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
     )
     await context.emit("file_changed", {"path": relative, "op": "create" if created else op, "diff": diff})
     message = f"{'Created' if created else 'Updated'} {relative}."
+    if Path(relative).name.lower() == "design.md":
+        from forge.designsystem.lint import describe_findings, lint_text
+
+        message += "\n" + describe_findings([f for f in lint_text(text) if f.severity != "info"], 15)
     problem = await diagnose_file(workspace, relative)
     return ToolResult(
         ok=True, content=message + (f"\n{problem}" if problem else ""), meta={"diagnostics_ok": not problem}
