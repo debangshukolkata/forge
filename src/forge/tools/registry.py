@@ -12,6 +12,7 @@ from forge.tools.browser import browser_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.design_candidates import design_candidate_tools
 from forge.tools.design_inspire import design_inspire_tools
+from forge.tools.design_knowledge import design_knowledge_tools
 from forge.tools.design_md import design_md_tools
 from forge.tools.document import document_tools
 from forge.tools.document_preview import document_preview_tools
@@ -86,6 +87,7 @@ def default_tools() -> list[Tool]:
         *workbook_tools(),
         *design_md_tools(),
         *design_inspire_tools(),
+        *design_knowledge_tools(),
         *design_candidate_tools(),
         *document_tools(),
         *document_preview_tools(),

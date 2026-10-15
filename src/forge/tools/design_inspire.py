@@ -22,6 +22,7 @@ from forge.designsystem.reference import reference_note
 from forge.designsystem.spec import DesignMdError, parse_design_md
 from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.design_knowledge import record_use
 from forge.tools.vision import _relative, image_path
 from forge.tools.web_guard import WebPolicy, check_resolving
 from forge.tools.web_render import RenderUnavailable, _launch
@@ -327,6 +328,9 @@ class DesignMdImport(Tool):
                     content=f"{args.output} exists already: pass overwrite=true only if the user asked to replace it.",
                 )
             context.workspace.write_text(args.output, text, f"DESIGN.md imported from {source[:80]}")
+            if args.output.replace(chr(92), "/").rsplit("/", 1)[-1].lower() == "design.md":
+                with contextlib.suppress(OSError):  # the knowledge base is a convenience (D-426)
+                    record_use(text)
         except (ForgeError, OSError) as error:
             return ToolResult(ok=False, content=str(error))
         context.last_edit_step = context.step
