@@ -120,6 +120,26 @@ If the session usage limit is hit, resume at 4:30 AM IST (a one-time schedule wa
 30. [x] **(closed 2026-10-15: licence check D-387; built hero and ask-me-first decided against, D-396)** **DS3 and DS6 leftovers:** a built hero per candidate; the LICENSE re-check of the CC0 prompts (raw fetch); the optional ask-me-first setting. (licence check done 2026-10-15, D-387; the built hero per candidate and the ask-me-first setting remain)
 Not done at night on purpose: anything that needs the office laptop (Gemini probe, shadcn recheck, template probe, three-design rerun), the user's files or keys, the DS8 model decision, S7 faster-model OK, the one-click installer, the internal rename and pushing.
 
+## 0d. Design Intelligence Engine (agreed 2026-10-15 with the user; discussion in docs/DESIGN_INTELLIGENCE.md)
+
+Goal: pages that look intentionally designed for their brand, not like variations of one template. The user's seven steps (discover, analyse, blueprint, avoid the generic, translate, make decisions explicit,
+implement and validate) and three recommendations (a knowledge base, design separated from code, mandatory screenshot iteration). Where I differ: Dribbble and Behance are not crawled (terms, login, JavaScript);
+references come from live public sites (`design_inspire`, measured from the browser), from the user, and from our own curated base; the knowledge base holds principles and measurements, not copies; "distinctive"
+is advice from a cross-family critic and the user's eye, only what can be measured is a gate. unDraw is not used automatically (its licence bars scraping, packs, integrations and AI use, D-420).
+
+- [ ] `DIE1` **Discovery first.** The default flow starts with two or three references (from the user, else live public sites of the industry found by search), measured from the browser (computed styles, type scale,
+  spacing, colours) and read by the vision model; reusable principles are separated from brand-specific elements. Today this is step 3 of the ladder. Size M.
+- [ ] `DIE2` **Design blueprint.** Extend DESIGN.md with layout and section composition, imagery and illustration rules, motion and interaction states, responsive and accessibility requirements, and a stated purpose for
+  every major decision; lint for missing sections and decisions without a purpose. Size M.
+- [ ] `DIE3` **Design knowledge base.** Searchable by industry, mood and layout, in the user's profile: analysed references (principles, tokens, source links, a small local thumbnail), proven layout patterns and
+  reusable blueprints; retrieval tested like the asset catalogue; a memory across projects so the same palette, font pair and composition are not reused for the last few projects. Size M.
+- [ ] `DIE4` **Art-director role.** A separate subagent (the `planner`/critic family, Argon when available) that produces the blueprint from the references; the coding agent implements it; any agent can call it. Size M.
+- [ ] `DIE5` **Measured quality gate and benchmark.** Card density, pictures present, alignment and font hygiene (built, D-419), distance from our default recipes and from other projects in the knowledge base;
+  blind side-by-side comparisons with the user on the same four briefs. Size M.
+- [ ] `DIE6` **Imagery sources.** A project `brand assets` folder used first (the user's own photographs and illustrations, including files the user downloads from unDraw), then open illustration sets that allow
+  automated use after a licence check (Open Peeps, Humaaans, Open Doodles are candidates), `find_image` photographs, `generate_image` on the laptop, drawn SVG scenes; every source recorded in NOTICES.md. Size S to M.
+- [ ] `DIE7` **Less card-heavy references.** Editorial and denser variants of the app screens and compositions, and a card-density check in the audit, so our own recipes stop adding to the sameness. Size M.
+
 ## 1. Waiting on you (your actions and decisions)
 Things only you can do or decide. Everything else below can be built without you.
 
