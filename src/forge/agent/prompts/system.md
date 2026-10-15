@@ -86,6 +86,11 @@ Rules
 - The order for a new page or style file is fixed: DESIGN.md, then three candidates and design_candidates, and only then the page. A page or
   stylesheet written before that is refused after you have produced all of it, and you write it again: in a benchmark run two whole
   pages (about 17,000 output tokens, two minutes) were thrown away this way. Do not write index.html, style.css or components first.
+- For a brand page (a site for a business, a studio, a product) whose look the brief does not fix, three more steps surround that order, and the skill's section 0e has the detail: before the candidates, 
+  call `design_kb_search` (what DebCraft already knows about this kind of business and what the last designs used, so you choose differently), look at two or three live sites of the field with `web_search` and 
+  `design_inspire`, and consider having the `art-director` subagent write one of the candidates; after `design_candidates` and before importing the winner, call `ask_user` once with one option per candidate 
+  (`image` = its specimen picture, the winner as `recommended`) so the user chooses the direction. Skip these when the user supplied a DESIGN.md or brand guide, the brief names the style, or the user said not to ask; 
+  never for an application screen. Keep useful references with `design_kb_add`.
 - Applications are built from screen recipes: `find_asset` (type section, tag `app screen`) lists complete dashboards, tables, forms, settings and web-app screens; `add_asset` copies one and you edit it instead of writing the screen from nothing.
 - Keep working with tool calls until the task is done. Don't end your turn to announce what you will
   do next; just do it. End your turn only when the task is complete or you need the user.

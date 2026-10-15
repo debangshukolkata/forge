@@ -170,7 +170,7 @@ def _unknown_composition(context: ToolContext, composition: str) -> str:
 
 SHOW_CANDIDATES_NOTE = (
     chr(10)
-    + "Before you import the winner: when the look is open (the brief names no style, and the user supplied no DESIGN.md, brand guide or reference to follow), show the "
+    + "NEXT STEP, required unless an exception below applies. Before you import the winner: when the look is open (the brief names no style, and the user supplied no DESIGN.md, brand guide or reference to follow), show the "
     "candidates and let the user choose, because a wrong direction costs a whole build: call ask_user once with one option per candidate (label a short name, description one "
     "line on what makes it different, image the candidate's specimen path above, recommended the winner). Skip the question when the user's own DESIGN.md or brand guide is binding, "
     "when the brief already fixes the style, or when the user has asked you not to ask. Import the candidate the user picks."
@@ -319,7 +319,8 @@ class DesignCandidates(Tool):
             return ToolResult(
                 ok=True,
                 content="\n".join(lines)
-                + f"\nSpecimens: {shown}\nNo score was available: look at the specimens with view_image and choose yourself, and say why.",
+                + f"\nSpecimens: {shown}\nNo score was available: look at the specimens with view_image and choose yourself, and say why."
+                + SHOW_CANDIDATES_NOTE,
             )
         winner = str(verdict.get("winner", ""))
         path = usable[LABELS.index(winner)] if winner in LABELS[: len(usable)] else ""

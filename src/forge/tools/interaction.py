@@ -18,7 +18,10 @@ class OptionSpec(ToolArgs):
     pros: str = ""
     cons: str = ""
     risks: str = ""
-    image: str = Field(default="", description="A picture to show with the option: a PNG, JPG or WEBP path inside the project, e.g. .forge/candidates/specimen-a.png")
+    image: str = Field(
+        default="",
+        description="A picture to show with the option: a PNG, JPG or WEBP path inside the project, e.g. .forge/candidates/specimen-a.png",
+    )
 
 
 class TaskSpec(ToolArgs):

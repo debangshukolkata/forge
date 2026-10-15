@@ -101,7 +101,7 @@ one that comes from the product. Only then build.
   accenting one word of a headline.
 
 ## 0e. The design ladder and the style gate (how you reach a stunning design)
-**Step 1: design on your own, without asking.** Do not ask the user for references or links first.
+**Step 1: design on your own, without asking for references or links.** Do not ask the user for references or links first. The one question you do ask is the choice among your own candidates when the look is open (below).
 - *Ask what DebCraft already knows.* `design_kb_search` with the industry, mood and layout words of the brief returns references kept from earlier projects (principles, tokens, a source link, a small picture) and the palette, font pair and composition of the last few designs: choose differently from those unless the brief fixes them. After looking at new references, keep the useful ones with `design_kb_add` (principles only, never a brand's own words or images).
 - *Look at what the field already does (brand pages only: a site for a business, a studio, a product whose look the brief does not fix).* Not for an
   application screen, and not when the user's own DESIGN.md or brand guide is binding. `web_search` for two or three live sites of the same kind of

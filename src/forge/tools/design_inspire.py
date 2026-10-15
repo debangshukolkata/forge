@@ -239,7 +239,8 @@ class DesignInspire(Tool):
             content=(
                 "\n".join(lines)
                 + "\nLook at the pictures with view_image. These values were read from the pages, not designed: use them to understand structure and "
-                "patterns, then write your own DESIGN.md (design_md_lint it) and list these addresses under its Inspiration section."
+                "patterns, then fill the two lists of each .reference.md, keep the useful pages for later projects with design_kb_add (principles only), write your own DESIGN.md "
+                "(design_md_lint it) and list these addresses under its Inspiration section."
             ),
         )
 
