@@ -219,6 +219,11 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
     parser.add_argument("--tasks", default="")
+    parser.add_argument(
+        "--mini",
+        action="store_true",
+        help="run only the small briefs (one section or one screen, about 5 minutes each) for a quick check; without it the full briefs run",
+    )
     parser.add_argument("--env", action="append", default=[])
     parser.add_argument(
         "--all-roles",
@@ -250,8 +255,16 @@ def main() -> int:
         env[key] = value
     wanted = {t for t in args.tasks.split(",") if t}
     rows: list[dict[str, object]] = []
+
+    def is_mini(folder: Path) -> bool:
+        return bool(json.loads((folder / "task.json").read_text(encoding="utf-8")).get("mini"))
+
     for task in sorted(
-        p for p in TASKS.iterdir() if (p / "task.json").exists() and (not wanted or p.name in wanted)
+        p
+        for p in TASKS.iterdir()
+        if (p / "task.json").exists()
+        and (not wanted or p.name in wanted)
+        and (wanted or is_mini(p) == args.mini)
     ):
         print(f"[{args.name}] {task.name} ...", flush=True)
         rows.append(run_task(task, run_dir, env))
