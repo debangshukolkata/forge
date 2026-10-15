@@ -243,6 +243,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-gallery-mosaic` | original | authored for DebCraft (section library, D-432) |
 | `sec-hero-centered` | original | authored for DebCraft (section library, D-273) |
 | `sec-hero-editorial` | original | authored for DebCraft (section library, D-432) |
+| `sec-hero-photo` | original | authored for DebCraft (section library, D-435) |
 | `sec-hero-split` | original | authored for DebCraft (section library, D-273) |
 | `sec-info-strip` | original | authored for DebCraft (section library, D-433) |
 | `sec-logo-strip` | original | authored for DebCraft (section library, D-273) |
@@ -252,6 +253,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-product-trio` | original | authored for DebCraft (section library, D-434) |
 | `sec-schedule-list` | original | authored for DebCraft (section library, D-385) |
 | `sec-speaker-grid` | original | authored for DebCraft (section library, D-385) |
+| `sec-split-band` | original | authored for DebCraft (section library, D-435) |
 | `sec-stats-row` | original | authored for DebCraft (section library, D-273) |
 | `sec-steps-timeline` | original | authored for DebCraft (section library, D-273) |
 | `sec-testimonial-feature` | original | authored for DebCraft (section library, D-273) |

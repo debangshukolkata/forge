@@ -118,7 +118,17 @@ async def test_all_sections_together_and_the_form_validates() -> None:
 
 
 @pytest.mark.parametrize(
-    "section", ["HeroEditorial", "FeaturesRuled", "GalleryMosaic", "InfoStrip", "ProductTrio", "CraftBand"]
+    "section",
+    [
+        "HeroEditorial",
+        "HeroPhoto",
+        "FeaturesRuled",
+        "GalleryMosaic",
+        "InfoStrip",
+        "ProductTrio",
+        "CraftBand",
+        "SplitBand",
+    ],
 )
 async def test_the_editorial_sections_are_clean_on_their_own_page(section: str) -> None:
     """D-432: a page made of one of the card-free sections passes the audit alone (the gallery test mixes many sections, which hides a size or colour problem)."""
@@ -133,4 +143,4 @@ async def test_the_editorial_sections_are_clean_on_their_own_page(section: str) 
     dist = harness.build(f"alone-{section}", files, title=section)
     with harness.serve(dist) as url:
         result = await harness.audit(url, SHOTS, f"alone-{section}")
-    _check(result, () if section == "HeroEditorial" else ("No h1 on the page",))
+    _check(result, () if section in ("HeroEditorial", "HeroPhoto") else ("No h1 on the page",))

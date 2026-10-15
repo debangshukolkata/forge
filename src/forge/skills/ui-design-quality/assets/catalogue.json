@@ -9569,6 +9569,49 @@
    "size": 4590
   },
   {
+   "id": "sec-hero-photo",
+   "type": "section",
+   "title": "Photography-led hero",
+   "summary": "One large photograph runs to the edge of the page and fades into the page colour where the headline sits; light display type, a button and three trust points.",
+   "moods": [
+    "warm",
+    "appetising",
+    "editorial",
+    "calm"
+   ],
+   "products": [
+    "bakery",
+    "restaurant",
+    "cafe",
+    "shop",
+    "hotel",
+    "studio",
+    "farm"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "hero",
+    "photography",
+    "full-bleed"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/HeroPhoto.tsx",
+     "to": "src/sections/HeroPhoto.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-435)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-435)",
+   "preview": "assets/preview/sec-hero-photo.jpg",
+   "path": "assets/section/sec-hero-photo.md",
+   "size": 4180
+  },
+  {
    "id": "sec-hero-split",
    "type": "section",
    "title": "Hero: message and visual side by side",
@@ -9647,7 +9690,7 @@
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-433)",
    "preview": "assets/preview/sec-info-strip.jpg",
    "path": "assets/section/sec-info-strip.md",
-   "size": 2229
+   "size": 3230
   },
   {
    "id": "sec-logo-strip",
@@ -9900,6 +9943,48 @@
    "preview": "assets/preview/sec-speaker-grid.jpg",
    "path": "assets/section/sec-speaker-grid.md",
    "size": 3097
+  },
+  {
+   "id": "sec-split-band",
+   "type": "section",
+   "title": "Split band",
+   "summary": "A full-width band split in two halves that touch the page edges: a photograph on one side, a dark or cream panel with the words on the other.",
+   "moods": [
+    "dramatic",
+    "calm",
+    "crafted",
+    "warm"
+   ],
+   "products": [
+    "bakery",
+    "workshop",
+    "restaurant",
+    "shop",
+    "studio",
+    "brewery"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "story",
+    "band",
+    "photography"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/SplitBand.tsx",
+     "to": "src/sections/SplitBand.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-435)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-435)",
+   "preview": "assets/preview/sec-split-band.jpg",
+   "path": "assets/section/sec-split-band.md",
+   "size": 3769
   },
   {
    "id": "sec-stats-row",
