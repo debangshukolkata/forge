@@ -1,0 +1,15 @@
+{
+ "id": "sigcrop_strong",
+ "title": "Same signature task with gpt-5.4 as the coder",
+ "kind": "vision + coding, other model",
+ "timeout_min": 40,
+ "verify": "sigcrop",
+ "generate": "sigcrop",
+ "prompt_from": "sigcrop",
+ "roles": {
+  "coder": "gpt54"
+ },
+ "needs": [
+  "azure_strong"
+ ]
+}

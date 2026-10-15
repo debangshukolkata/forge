@@ -1,0 +1,1 @@
+The tests in tests/ for this small shop pricing module fail. Find out why and fix the code in shop/pricing.py. Do not change the tests. Explain the root cause of each failure in your final message and run the tests to show they pass.

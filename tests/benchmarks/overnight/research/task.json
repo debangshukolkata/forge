@@ -1,0 +1,7 @@
+{
+ "id": "research",
+ "title": "Web research report with sources on open-source OCR engines",
+ "kind": "research",
+ "timeout_min": 25,
+ "verify": "research"
+}

@@ -1,0 +1,7 @@
+{
+ "id": "invoice_app",
+ "title": "Invoice OCR web application: ingestion, list, side-by-side review, reports (large build)",
+ "kind": "application build",
+ "timeout_min": 150,
+ "verify": "invoice_app"
+}

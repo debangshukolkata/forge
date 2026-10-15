@@ -30,3 +30,6 @@ ui-react/node_modules/
 # Throwaway projects built by the asset tests
 ui-react/.asset-work/
 doctor-report.txt
+
+# overnight test runs (reports, logs, workspaces)
+overnight-results/

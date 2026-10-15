@@ -1,0 +1,7 @@
+{
+ "id": "bugfix",
+ "title": "Fix failing tests of a small pricing module (bug fix in existing code)",
+ "kind": "coding: bug fix",
+ "timeout_min": 25,
+ "verify": "bugfix"
+}

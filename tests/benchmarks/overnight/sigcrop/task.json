@@ -1,0 +1,8 @@
+{
+ "id": "sigcrop",
+ "title": "Signature extraction from a (synthetic) prescription photo (vision plus coding)",
+ "kind": "vision + coding",
+ "timeout_min": 40,
+ "verify": "sigcrop",
+ "generate": "sigcrop"
+}

@@ -1,0 +1,7 @@
+{
+ "id": "logstats",
+ "title": "Command-line access-log analyser with tests (new tool from scratch)",
+ "kind": "coding: new CLI",
+ "timeout_min": 30,
+ "verify": "logstats"
+}
