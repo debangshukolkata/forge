@@ -21,7 +21,7 @@ Work is in local commits (nothing pushed). The list was TODO.md section 0c. This
 | 20 prepared | Eight approach challenges and a time-boxed runner (`scripts/benchmark/run_challenges.py`), seeds checked by tests |
 
 ## Waiting on the benchmark runs (1 to 5 of the list)
-X8 (serial against parallel designs, 3 runs per arm) is running: `C:\Work\ForgeRuns\paralleldesigns\x8-1`. Results are added here and to docs/SPEED_BENCHMARK.md when it finishes.
+X8 is finished (parallel builders 46 percent faster, 18 percent cheaper, docs/SPEED_BENCHMARK.md, D-380). The design benchmark and the coding benchmark wait until the end (see Status).
 
 ## For you in the morning
 1. `git push` (say "push"). The work is on branch `night` in the worktree `../Forge-night` and is merged into `main` at the end of the night.
@@ -33,10 +33,15 @@ X8 (serial against parallel designs, 3 runs per arm) is running: `C:\Work\ForgeR
 - The verifier skips the script on a static page (D-368).
 - File writes that would add control characters are refused with the place and the fix (D-379).
 - The test-run gate of `task_update` counts code edits only: pages, stylesheets, notes, pictures and fonts do not trigger it (D-379).
+- `browser_screenshot` reloads the page when files changed since it was opened (D-391).
 - (more are listed here as the coding challenges add them)
 
 ## Not done / open
 - Items 1 to 5, 10, 13 (logo, font pairings), 16, 17, 18 (C14), 20: see Status.
 
-## Status
-Updated as the night goes on.
+## Status (2026-10-15, about 09:30 IST, machine restarted by the user)
+- `main` and `night` are the same commit (D-391); nothing is pushed since `c109109`. Nothing is running.
+- **Design benchmark:** `night-1` was stopped after d03 and 12 screenshots of d04, because the audit judged stale pages (D-391: `browser_screenshot` did not reload after edits, so a fixed font was still reported as a system-font blocker; d03 ended with 3 of 5 tasks blocked). A rerun `night-2` was started and stopped again by the user's choice: benchmarks and the coding challenges run **at the end**, on the final code, when nothing else needs the machine. Rerun d01 (museum), d03, d04, d05 on the fixed code; d02 passed its audit on the old code.
+- **Edge tests still failing** (run 2026-10-15 on main): `tests/test_micro_effects.py` reduced-motion test fails for about 40 effects ("transitions still run under reduced motion"; the test reads `1e-05s` as 5 s, a test bug in `longest_seconds`, and some effects may also need `transition: none` in `motion-micro.css`); `tests/test_motion_hooks.py::test_the_five_assets_are_in_the_catalogue`; `tests/test_motion_canvas.py::test_under_reduced_motion_they_are_drawn_once_and_stay_still`. Not yet investigated. `tests/test_sections.py` (3 new templates + `tpl-pricing-invoicing`) and `tests/test_app_screens_react.py` not yet run after the merge.
+- **Built since the last status:** brand-kit logo in Word and PDF headers (D-388), pricing page template (D-389, Vite build and audit pending), font pairings (D-390), reload after edits (D-391), `scripts/dev/night_status.py`, stale ticks D1, D2, L9 closed.
+- **Order for what is left:** fix the three failing Edge tests, run test_sections and test_app_screens_react, full suite, then benchmarks (design rerun, C1), then the coding challenges (command in `tests/benchmarks/challenges/README.md`), then the morning summary.
