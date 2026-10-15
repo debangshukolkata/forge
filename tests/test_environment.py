@@ -233,7 +233,7 @@ def test_the_gemini_row_tests_every_gemini_model_and_the_small_one(isolated_forg
     config = load_config(isolated_forge_home)
     tested = checks.gemini_models_to_test(config)
     keys = [key for key, _model in tested]
-    assert {"gemini31pro", "gemini3flash", "gemini38flash"} <= set(keys) and keys[-1] is None
+    assert {"gemini4argon", "gemini31pro", "gemini3flash", "gemini38flash"} <= set(keys) and keys[-1] is None
     assert tested[-1][1].model_name == checks.GEMINI_PROBE_MODEL
 
 
@@ -245,8 +245,18 @@ GEMINI_ANSWERED = {
 def test_a_gemini_test_that_passed_makes_gemini_3_the_default_for_the_builder_roles() -> None:
     config = default_config()
     plan = by_role(propose_plan(config, {**BOTH, **GEMINI_ANSWERED}, {}))
-    assert plan["coder"]["model"] == "gemini31pro" and "used by default" in plan["coder"]["reason"]
+    assert (
+        plan["coder"]["model"] == "gemini31pro" and "used by default" in plan["coder"]["reason"]
+    )  # Argon did not answer here
     assert plan["vision"]["model"] == "gemini31pro" and plan["kb_builder"]["model"] == "gemini31pro"
+    with_argon = {
+        "gemini": {"status": "ok", "models": {**GEMINI_ANSWERED["gemini"]["models"], "gemini4argon": True}}
+    }
+    argon = by_role(propose_plan(config, {**BOTH, **with_argon}, {}))
+    assert argon["coder"]["model"] == "gemini4argon" and argon["kb_builder"]["model"] == "gemini4argon"
+    assert (
+        argon["vision"]["model"] == "gemini31pro"
+    )  # the stronger picture model of the two until measured otherwise
     assert plan["summariser"]["model"] == "gemini3flash"
     assert (
         plan["reviewer"]["model"] == config.llm.roles.reviewer

@@ -20,9 +20,9 @@ class RoleRouter(Protocol):
 # When the user has said Gemini is enabled and the Gemini test passed, these roles are proposed on Gemini 3 (D-405). The reviewer and the judge stay on Azure on purpose: a reviewer from
 # the builder's own family is lenient, and the design benchmark's judge is only independent while it is not the builder's model.
 GEMINI_PREFERENCE: dict[str, tuple[str, ...]] = {
-    "coder": ("gemini31pro", "gemini38flash", "gemini3flash"),
-    "kb_builder": ("gemini31pro", "gemini38flash", "gemini3flash"),
-    "vision": ("gemini31pro", "gemini38flash", "gemini3flash"),
+    "coder": ("gemini4argon", "gemini31pro", "gemini38flash", "gemini3flash"),
+    "kb_builder": ("gemini4argon", "gemini31pro", "gemini38flash", "gemini3flash"),
+    "vision": ("gemini31pro", "gemini4argon", "gemini38flash", "gemini3flash"),
     "summariser": ("gemini3flash", "gemini38flash", "gemini31pro"),
 }
 
