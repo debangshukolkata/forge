@@ -316,7 +316,8 @@ async def test_when_nothing_answers_the_tool_says_so(
     assert (
         result.ok
         and "bundled:lucide:" in result.content
-        and result.content.count("could not be reached") == 4
+        and result.content.count("could not be reached")
+        == 6  # four keyless licensed sources and two sample sources that answer for any query (ImageMythos answers only for scenery)
     )  # the bundled icons answer offline
 
 

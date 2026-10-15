@@ -18,7 +18,7 @@ from urllib.parse import quote
 
 import httpx
 
-USER_AGENT = "DebCraft/1.0 (https://github.com/debangshukolkata/forge; open-licence image search) httpx"  # Wikimedia refuses anonymous agents
+USER_AGENT = "DebCraft/1.0 (https://github.com/debangshukolkata/forge; picture search)"  # Wikimedia refuses anonymous agents; OKSLOP refuses an agent string that names httpx
 TIMEOUT_S = 15.0
 ICONIFY = "https://api.iconify.design"
 OPENVERSE = "https://api.openverse.org/v1/images/"
@@ -93,7 +93,8 @@ class Candidate:
         size = f", {self.width}x{self.height}" if self.width else ""
         credit = f"; credit: {self.attribution}" if self.attribution else "; no credit needed"
         by = f" by {self.author}" if self.author else ""
-        return f"{self.id} - {self.kind}: {self.title}{by} ({self.licence}{size}){credit}"
+        sample = " [SAMPLE: replace before publishing]" if self.extra.get("sample") else ""
+        return f"{self.id} - {self.kind}: {self.title}{by} ({self.licence}{size}){credit}{sample}"
 
 
 class SourceError(Exception):
@@ -417,3 +418,13 @@ def make_client() -> httpx.AsyncClient:
 
     use_system_certificates()  # a company network that inspects HTTPS: trust what Windows trusts
     return httpx.AsyncClient(timeout=TIMEOUT_S, headers={"User-Agent": USER_AGENT}, follow_redirects=True)
+
+
+def _register_samples() -> None:
+    """The sample sources (D-436) register here, after Candidate exists, so sample_sources can import it."""
+    from forge.tools.sample_sources import SAMPLE_PROVIDERS
+
+    PROVIDERS.update(SAMPLE_PROVIDERS)
+
+
+_register_samples()

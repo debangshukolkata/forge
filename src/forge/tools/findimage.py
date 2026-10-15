@@ -25,6 +25,7 @@ from forge.tools.brand_pictures import project_candidates
 from forge.tools.illustration_set import FOLDER as DOODLE_FOLDER
 from forge.tools.illustration_set import HEX, doodle_candidates, recoloured
 from forge.tools.image_sources import PROVIDERS, Candidate, SourceError
+from forge.tools.sample_sources import OPTIONAL_KEY_NAMES, SAMPLE_SOURCES
 from forge.tools.web_guard import WebPolicy, check_resolving
 
 NOTICES = "NOTICES.md"
@@ -44,8 +45,8 @@ UNSAFE_SVG = re.compile(
 )
 KIND_SOURCES = {
     "icon": ("iconify",),
-    "photo": ("openverse", "wikimedia", "nasa", "pexels", "unsplash", "pixabay"),
-    "illustration": ("iconify", "openverse", "wikimedia", "pixabay"),
+    "photo": ("openverse", "wikimedia", "nasa", "pexels", "unsplash", "pixabay", *SAMPLE_SOURCES),
+    "illustration": ("iconify", "openverse", "wikimedia", "pixabay", *SAMPLE_SOURCES),
     "any": tuple(PROVIDERS),
 }
 
@@ -67,7 +68,8 @@ def available_sources(secrets: Any, kind: str, wanted: list[str]) -> tuple[list[
 async def _search_one(
     client: httpx.AsyncClient, name: str, query: str, limit: int, secrets: Any
 ) -> tuple[str, list[Candidate] | str]:
-    key = secrets.get(sources.KEY_NAMES[name]) if secrets is not None and name in sources.KEY_NAMES else ""
+    key_name = sources.KEY_NAMES.get(name) or OPTIONAL_KEY_NAMES.get(name)
+    key = secrets.get(key_name) if secrets is not None and key_name else ""
     try:
         found = await asyncio.wait_for(PROVIDERS[name](client, query, limit, key or ""), SEARCH_TIMEOUT_S)
         return name, found
@@ -178,9 +180,11 @@ class FindImage(Tool):
             results = await asyncio.gather(
                 *(_search_one(client, n, args.query, args.limit, context.secrets) for n in names)
             )
-        groups = [r for _, r in results if isinstance(r, list)]
+        groups = [r for n, r in results if isinstance(r, list) and n not in SAMPLE_SOURCES]
         problems = [r for _, r in results if isinstance(r, str)]
-        chosen = [*local, *_interleave(groups, args.limit)]
+        sample_groups = [r for n, r in results if isinstance(r, list) and n in SAMPLE_SOURCES]
+        # sample pictures (D-436) come after every licensed one, never mixed into them
+        chosen = [*local, *_interleave(groups, args.limit), *_interleave(sample_groups, 4)]
         for candidate in chosen:
             context.image_candidates[candidate.id] = candidate
         lines = [f"{i}. {c.describe()}" for i, c in enumerate(chosen, start=1)]
@@ -280,6 +284,13 @@ class FetchImage(Tool):
             lines.append(note)
         lines.append(f"Credit line to show with it: {credit}" if credit else "No credit line is required.")
         lines.append(f"Suggested alt text: {candidate.title[:120]}. Record in NOTICES.md: done.")
+        if candidate.extra.get("sample"):
+            lines.append(
+                "This is a SAMPLE picture (AI-generated, terms: "
+                + candidate.licence
+                + "): it makes the page feel real until the user supplies their own. "
+                "Say so in your final message, list every sample picture by file name, and say that their own pictures go in brand-assets/ to replace them."
+            )
         return ToolResult(ok=True, content="\n".join(lines))
 
 
@@ -429,6 +440,7 @@ def _record_notice(context: ToolContext, path: str, candidate: Candidate) -> Non
         + f", {candidate.licence}, from {candidate.source}"
         + (f" ({candidate.page_url})" if candidate.page_url else "")
         + (f". Credit: {candidate.attribution}" if candidate.attribution else "")
+        + (". SAMPLE PICTURE: replace before publishing" if candidate.extra.get("sample") else "")
         + "\n"
     )
     if f"`{path}`" not in existing:
