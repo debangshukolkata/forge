@@ -84,3 +84,26 @@ Notes on the baseline: total cost about $1.62 and about 21 minutes for 10 tasks;
 | t14_cron_next | calendar logic, many edge cases | 65/65 | 235s | 11 | $0.330 |
 
 Fully passed 3/4; hidden tests 174/175; total $1.17. The one miss: t13 did not trim a history longer than 20 steps when it is read from a file (the limit was only applied when saving). A small spec corner, not a design flaw. Conclusion: even this harder tier is mostly solved, so the coding side is strong; the next separators are bigger multi-file tasks and ambiguous requirements, not more algorithm puzzles.
+
+### Run `night-1` (2026-10-15 12:27)
+
+| Task | Tier | Hidden tests | Wall | Model calls | Tool s | Waited s | Tokens in/out | Cost |
+|---|---|---|---|---|---|---|---|---|
+| t01_slugify | single function | 17/17 | 352s | 15 | 73 | 0 | 547546/14985 | $0.388 |
+| t02_durations | single function | 32/32 | 154s | 7 | 7 | 0 | 208181/9451 | $0.186 |
+| t03_ttl_cache | small module | 10/10 | 216s | 4 | 10 | 0 | 130265/13187 | $0.230 |
+| t04_paginate_bug | bug fix in an existing repo | 11/11 | 240s | 9 | 63 | 0 | 266882/10451 | $0.184 |
+| t05_inventory_feature | feature in an existing repo | 7/7 | 145s | 9 | 13 | 0 | 264848/8288 | $0.207 |
+| t06_billing_refactor | refactor with tests kept green | 21/21 | 107s | 6 | 9 | 0 | 160323/4704 | $0.102 |
+| t07_wordstat_cli | CLI tool | 11/11 | 171s | 4 | 10 | 0 | 124176/11574 | $0.171 |
+| t08_dedupe_perf | performance fix | 4/4 | 119s | 5 | 10 | 0 | 132954/7279 | $0.129 |
+| t09_async_jobs | async worker | 9/9 | 229s | 7 | 10 | 0 | 243755/13985 | $0.250 |
+| t10_sales_pipeline | data pipeline | 13/13 | 499s | 14 | 165 | 0 | 570490/28772 | $0.532 |
+| t11_rate_limiter | precise spec, concurrency | 25/25 | 246s | 7 | 9 | 0 | 255238/15191 | $0.288 |
+| t12_expr_calc | parser with error positions | 69/69 | 418s | 7 | 14 | 0 | 265224/26758 | $0.394 |
+| t13_todo_undo | multi-file feature with a persisted format | 15/16 | 331s | 7 | 16 | 0 | 265353/19583 | $0.322 |
+| t14_cron_next | calendar logic, many edge cases | 65/65 | 433s | 8 | 12 | 0 | 367193/24678 | $0.352 |
+
+Tasks fully passed: 13/14; hidden tests passed: 309/310.
+
+Run on the final code of the night, three tasks at a time (`--parallel 3`, so the wall times are longer than the baseline's serial run: the model calls and the tokens are what compare). Total cost about $3.74 (the baseline's ten tasks cost $1.62; the four harder tasks $1.17 in code-hard-1). 13 of 14 tasks passed completely, 309 of 310 hidden tests; the one miss is the same corner as in code-hard-1: t13 does not trim a history longer than 20 steps when it reads it from a file. Nothing regressed against the 2026-10-13 runs.
