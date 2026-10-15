@@ -47,6 +47,9 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
   const touched = useRef<Set<string>>(new Set());
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  // The model lists are built from what answered, so they stay locked until every test that applies has finished in this session: the last saved results can be from an older
+  // version (they did not know gpt-5.4 or Gemini) and a list chosen from them would be wrong (D-415).
+  const [testedNow, setTestedNow] = useState<Record<string, boolean>>({});
 
   const adopt = useCallback((next: ModelPlan) => {
     setPlan(next);
@@ -64,10 +67,12 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
       try {
         const done = await api<{ result: CheckResultView; plan: ModelPlan }>(`/api/environment/check/${id}`, { method: "POST" });
         setRows((prev) => ({ ...prev, [id]: { result: done.result, running: false } }));
+        setTestedNow((prev) => ({ ...prev, [id]: true }));
         adopt(done.plan);
       } catch (failure) {
         const detail = (failure as Error).message;
         setRows((prev) => ({ ...prev, [id]: { result: { id, status: "fail", detail, hint: "Test again.", models: {} }, running: false } }));
+        setTestedNow((prev) => ({ ...prev, [id]: true }));
       }
     },
     [adopt],
@@ -108,7 +113,10 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
   const azure = rows["azure"];
   const testing = checks.some((c) => rows[c.id]?.running);
   const azureTested = azure?.result?.status === "ok" || azure?.result?.status === "warn";
-  const canSave = !testing && azureTested && Boolean(choice["coder"]) && plan !== null;
+  const required = checks.filter((c) => shouldRun(c, answers));
+  const finished = required.filter((c) => testedNow[c.id]).length;
+  const testsComplete = required.length > 0 && finished === required.length && !testing;
+  const canSave = testsComplete && azureTested && Boolean(choice["coder"]) && plan !== null;
   const testAll = () => checks.filter((c) => shouldRun(c, answers)).forEach((c) => void runCheck(c.id));
 
   const save = async () => {
@@ -169,10 +177,25 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
           ))}
         </div>
 
-        {plan && (
-          <div className="border-t border-border px-5 py-4">
+        {plan && !testsComplete && (
+          <div className="border-t border-border px-5 py-4" data-models="locked">
+            <h3 className="text-[15px] font-semibold">Models</h3>
+            <p className="mt-1 text-[12.5px] text-fg-muted">
+              {testing
+                ? `Testing: ${finished} of ${required.length} tests finished. The model lists appear when every test is done.`
+                : "The model lists appear when every test is done, so that they offer exactly the models that answer. Press Test all."}
+            </p>
+          </div>
+        )}
+        {plan && testsComplete && (
+          <div className="border-t border-border px-5 py-4" data-models="ready">
             <h3 className="text-[15px] font-semibold">Models</h3>
             <p className="text-[12.5px] text-fg-muted">Chosen from the models that answered. Change a row if you prefer another.</p>
+            {checks.some((c) => c.ask && answers[c.id] === undefined) && (
+              <p className="mt-1 text-[12px] text-fg-muted">
+                Not answered yet, so not tested and not offered: {checks.filter((c) => c.ask && answers[c.id] === undefined).map((c) => c.label).join(", ")}.
+              </p>
+            )}
             <div className="mt-3 space-y-3">
               {plan.roles.map((entry) => (
                 <div key={entry.role}>
@@ -228,7 +251,7 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
             Test all
           </Button>
         </div>
-        {!canSave && !testing && plan && <p className="mt-2 text-[12px] text-fg-muted">Test Azure OpenAI first: models can only be saved once it answers.</p>}
+        {!canSave && !testing && plan && testsComplete && <p className="mt-2 text-[12px] text-fg-muted">Azure OpenAI has to answer before the models can be saved.</p>}
       </div>
     </aside>
   );

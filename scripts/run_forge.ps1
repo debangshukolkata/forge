@@ -19,7 +19,8 @@
 param(
     [string]$PythonVersion = "3.13",
     [string]$Extras = "",
-    [string]$Wheelhouse = ""
+    [string]$Wheelhouse = "",
+    [switch]$SkipDoctor
 )
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -84,6 +85,27 @@ if ($Wheelhouse) {
     Invoke-Checked "Installing DebCraft from $root" {
         & $venvPython -m pip install -e $spec --disable-pip-version-check @pipVerbosity
     }
+}
+
+# DebCraft doctor runs on every start (D-415): Python, certificates, the .env, the models (Azure and Gemini), the databases and Node, one line each. The text is saved in
+# doctor-report.txt next to this script so it can be sent. A failing check never stops DebCraft from starting: the Environment panel explains each one. Skip it with -SkipDoctor
+# or by setting DEBCRAFT_SKIP_DOCTOR=1 (the model calls take about half a minute).
+if (-not $SkipDoctor -and $env:DEBCRAFT_SKIP_DOCTOR -ne "1") {
+    Write-Host "==> Checking this computer (DebCraft doctor)"
+    $report = Join-Path $root "doctor-report.txt"
+    $ErrorActionPreference = "Continue"
+    try {
+        $lines = @(& $venvPython -m forge doctor 2>&1 | ForEach-Object { "$_" })
+        $lines | ForEach-Object { Write-Host $_ }
+        $lines | Out-File -FilePath $report -Encoding utf8
+        if ($lines | Where-Object { $_ -match "^\s*FAIL" }) {
+            Write-Host ""
+            Write-Host "Some checks failed (see above; the same text is in $report). DebCraft starts anyway: its Environment panel explains each one."
+        }
+    } catch {
+        Write-Host "The doctor could not run: $($_.Exception.Message). Starting DebCraft anyway."
+    }
+    $ErrorActionPreference = "Stop"
 }
 
 Write-Host "==> Starting DebCraft UI"

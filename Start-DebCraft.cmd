@@ -3,6 +3,7 @@ rem Double-click to start DebCraft from this folder (D-230). First run: creates 
 rem inside this folder (.venv) and installs DebCraft into it, which needs internet for pip once. Later runs reuse
 rem it and just start DebCraft. After downloading a newer DebCraft, double-click this file in the new folder.
 rem The install step lists each package as pip fetches it (a few minutes the first time).
+rem Before DebCraft opens it runs the doctor (one line per check, saved in doctor-report.txt); set DEBCRAFT_SKIP_DOCTOR=1 to skip it.
 rem Needs Python 3.13 installed for your user (no admin rights). No data in %USERPROFILE%\.forge is touched.
 title DebCraft
 cd /d "%~dp0"

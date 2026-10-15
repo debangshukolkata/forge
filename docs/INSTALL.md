@@ -108,3 +108,5 @@ Remove the PATH entry.
 ## Check this computer: double-click Debcraft-Doctor.cmd
 
 Next to Start-DebCraft.cmd. It runs DebCraft's doctor (the same as .venv\Scripts\python -m forge doctor, or debcraft doctor in a terminal): Python and packages, certificates, your .env, the Azure and Gemini models (gpt-5.1, gpt-5.4, Gemini 3 and Argon when set up), the databases, web research and Node. One line per check, OK, WARN or FAIL, and the same text is saved to doctor-report.txt in the folder so you can send it. No key is printed.
+
+Start-DebCraft.cmd also runs the doctor before DebCraft opens (about half a minute for the model calls): the lines appear in the window and are saved in doctor-report.txt. A FAIL line does not stop DebCraft from starting. To skip it, set DEBCRAFT_SKIP_DOCTOR=1 before starting.

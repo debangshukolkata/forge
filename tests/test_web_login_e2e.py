@@ -218,6 +218,12 @@ def test_environment_screen_in_edge(
         page.wait_for_selector(
             "[data-check=azure] >> text=Not tested yet"
         )  # opening the drawer tests nothing
+        page.wait_for_selector(
+            "[data-models=locked]"
+        )  # and the model lists stay locked until a full test has finished (D-415)
+        page.locator("[data-models=locked]").scroll_into_view_if_needed()
+        page.screenshot(path=str(shots / "environment-models-locked-light.png"))
+        assert page.locator("select[aria-label='Model for reviewer']").count() == 0
         drawer.locator("button:has-text('Test all')").click()
         page.wait_for_selector("text=Azure OpenAI")
         page.wait_for_selector("text=no answer from the deployment")  # the azure row finished
@@ -236,8 +242,11 @@ def test_environment_screen_in_edge(
         assert saved["plan"]["reviewer"] == "gpt51" and saved["confirmed_at"]
         assert saved["results"]["azure"]["models"] == {"gpt41": False, "gpt51": True}
 
-        # Next time the saved plan is what the drawer shows.
+        # Next time the model lists stay locked until a full test has finished (D-415); then the saved plan is what they show.
         page.click("button:has-text('Environment')")
+        page.wait_for_selector("[data-models=locked] >> text=The model lists appear when every test is done")
+        assert page.locator("select[aria-label='Model for reviewer']").count() == 0
+        drawer.locator("button:has-text('Test all')").click()
         page.wait_for_selector("select[aria-label='Model for reviewer']")
         assert page.locator("select[aria-label='Model for reviewer']").input_value() == "gpt51"
         page.click("button[aria-label='Close']")
