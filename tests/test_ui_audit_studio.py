@@ -169,7 +169,9 @@ def _text_page(extra: str, sections: int) -> str:
 
 async def test_a_marketing_page_without_imagery_is_a_blocker_and_an_app_page_is_not() -> None:
     assert "BLOCKER: The page has no imagery" in await _audit(_text_page("", 12))
-    table = "<table><tr><th>A</th></tr><tr><td>1</td></tr></table>"
+    table = (
+        "<table>" + "".join("<tr><td>1</td></tr>" for _ in range(8)) + "</table>"
+    )  # a data table (six rows or more), not a price list
     report = await _audit(_text_page(table, 12))
     assert "no imagery at all" in report and "BLOCKER: The page has no imagery" not in report
 

@@ -6246,7 +6246,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-calendar.md",
-   "size": 20283
+   "size": 20392
   },
   {
    "id": "app-chat",
@@ -6289,7 +6289,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-chat.md",
-   "size": 20010
+   "size": 20059
   },
   {
    "id": "app-dashboard-analytics",
@@ -6333,7 +6333,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-dashboard-analytics.md",
-   "size": 24082
+   "size": 24131
   },
   {
    "id": "app-dashboard-kpi",
@@ -6376,7 +6376,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-dashboard-kpi.md",
-   "size": 24693
+   "size": 24742
   },
   {
    "id": "app-dashboard-ops",
@@ -6419,7 +6419,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-dashboard-ops.md",
-   "size": 20394
+   "size": 20443
   },
   {
    "id": "app-dashboard-personal",
@@ -6462,7 +6462,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-dashboard-personal.md",
-   "size": 21553
+   "size": 21602
   },
   {
    "id": "app-editor",
@@ -6505,7 +6505,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-editor.md",
-   "size": 19592
+   "size": 19641
   },
   {
    "id": "app-empty-states",
@@ -6548,7 +6548,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-empty-states.md",
-   "size": 20061
+   "size": 20110
   },
   {
    "id": "app-form-line-entry",
@@ -6592,7 +6592,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-line-entry.md",
-   "size": 20249
+   "size": 20307
   },
   {
    "id": "app-form-long",
@@ -6636,7 +6636,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-long.md",
-   "size": 19862
+   "size": 19911
   },
   {
    "id": "app-form-quick-capture",
@@ -6679,7 +6679,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-quick-capture.md",
-   "size": 18252
+   "size": 18301
   },
   {
    "id": "app-form-sign-in",
@@ -6722,7 +6722,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-sign-in.md",
-   "size": 17860
+   "size": 17909
   },
   {
    "id": "app-form-wizard",
@@ -6766,7 +6766,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-wizard.md",
-   "size": 20127
+   "size": 20176
   },
   {
    "id": "app-inbox",
@@ -6809,7 +6809,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-inbox.md",
-   "size": 22568
+   "size": 22617
   },
   {
    "id": "app-map-list",
@@ -6853,7 +6853,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-map-list.md",
-   "size": 21044
+   "size": 21093
   },
   {
    "id": "app-react-calendar",
@@ -6904,7 +6904,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-calendar.md",
-   "size": 20656
+   "size": 20765
   },
   {
    "id": "app-react-chat",
@@ -6955,7 +6955,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-chat.md",
-   "size": 20234
+   "size": 20283
   },
   {
    "id": "app-react-dashboard-analytics",
@@ -7007,7 +7007,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-dashboard-analytics.md",
-   "size": 24349
+   "size": 24398
   },
   {
    "id": "app-react-dashboard-kpi",
@@ -7058,7 +7058,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-dashboard-kpi.md",
-   "size": 25015
+   "size": 25064
   },
   {
    "id": "app-react-dashboard-ops",
@@ -7109,7 +7109,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-dashboard-ops.md",
-   "size": 20706
+   "size": 20755
   },
   {
    "id": "app-react-dashboard-personal",
@@ -7160,7 +7160,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-dashboard-personal.md",
-   "size": 21962
+   "size": 22011
   },
   {
    "id": "app-react-editor",
@@ -7211,7 +7211,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-editor.md",
-   "size": 19740
+   "size": 19789
   },
   {
    "id": "app-react-empty-states",
@@ -7262,7 +7262,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-empty-states.md",
-   "size": 19888
+   "size": 19937
   },
   {
    "id": "app-react-form-line-entry",
@@ -7314,7 +7314,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-line-entry.md",
-   "size": 20524
+   "size": 20582
   },
   {
    "id": "app-react-form-long",
@@ -7366,7 +7366,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-long.md",
-   "size": 19812
+   "size": 19861
   },
   {
    "id": "app-react-form-quick-capture",
@@ -7417,7 +7417,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-quick-capture.md",
-   "size": 18172
+   "size": 18221
   },
   {
    "id": "app-react-form-sign-in",
@@ -7468,7 +7468,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-sign-in.md",
-   "size": 17658
+   "size": 17707
   },
   {
    "id": "app-react-form-wizard",
@@ -7520,7 +7520,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-wizard.md",
-   "size": 20299
+   "size": 20348
   },
   {
    "id": "app-react-inbox",
@@ -7571,7 +7571,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-inbox.md",
-   "size": 23117
+   "size": 23166
   },
   {
    "id": "app-react-map-list",
@@ -7623,7 +7623,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-map-list.md",
-   "size": 21317
+   "size": 21366
   },
   {
    "id": "app-react-record",
@@ -7675,7 +7675,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-record.md",
-   "size": 20736
+   "size": 20785
   },
   {
    "id": "app-react-settings-account",
@@ -7726,7 +7726,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-settings-account.md",
-   "size": 21677
+   "size": 21726
   },
   {
    "id": "app-react-settings-billing",
@@ -7777,7 +7777,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-settings-billing.md",
-   "size": 20134
+   "size": 20183
   },
   {
    "id": "app-react-settings-notifications",
@@ -7827,7 +7827,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-settings-notifications.md",
-   "size": 20748
+   "size": 20797
   },
   {
    "id": "app-react-settings-roles",
@@ -7878,7 +7878,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-settings-roles.md",
-   "size": 22162
+   "size": 22211
   },
   {
    "id": "app-react-table-data",
@@ -7930,7 +7930,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-table-data.md",
-   "size": 21445
+   "size": 21494
   },
   {
    "id": "app-react-table-editable-grid",
@@ -7982,7 +7982,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-table-editable-grid.md",
-   "size": 20946
+   "size": 20995
   },
   {
    "id": "app-react-table-kanban",
@@ -8033,7 +8033,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-table-kanban.md",
-   "size": 26544
+   "size": 26595
   },
   {
    "id": "app-react-table-master-detail",
@@ -8085,7 +8085,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-table-master-detail.md",
-   "size": 22927
+   "size": 22976
   },
   {
    "id": "app-record",
@@ -8129,7 +8129,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-record.md",
-   "size": 20531
+   "size": 20580
   },
   {
    "id": "app-settings-account",
@@ -8172,7 +8172,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-settings-account.md",
-   "size": 21498
+   "size": 21547
   },
   {
    "id": "app-settings-billing",
@@ -8215,7 +8215,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-settings-billing.md",
-   "size": 20033
+   "size": 20082
   },
   {
    "id": "app-settings-notifications",
@@ -8257,7 +8257,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-settings-notifications.md",
-   "size": 20366
+   "size": 20415
   },
   {
    "id": "app-settings-roles",
@@ -8300,7 +8300,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-settings-roles.md",
-   "size": 21878
+   "size": 21927
   },
   {
    "id": "app-table-data",
@@ -8344,7 +8344,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-table-data.md",
-   "size": 21401
+   "size": 21450
   },
   {
    "id": "app-table-editable-grid",
@@ -8388,7 +8388,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-table-editable-grid.md",
-   "size": 20793
+   "size": 20842
   },
   {
    "id": "app-table-kanban",
@@ -8431,7 +8431,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-table-kanban.md",
-   "size": 25297
+   "size": 25348
   },
   {
    "id": "app-table-master-detail",
@@ -8475,7 +8475,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-table-master-detail.md",
-   "size": 22117
+   "size": 22166
   },
   {
    "id": "lay-editorial-split",

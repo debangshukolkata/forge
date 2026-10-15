@@ -170,7 +170,7 @@ def kanban() -> Screen:
         )
         cols += f'<section class="lane" aria-label="{title}"><header><h2>{title}</h2><span class="count">{count}</span></header><div class="stack">{items}</div><button class="btn btn--ghost btn--sm" style="justify-content:flex-start">{icon("plus")}Add a card</button></section>'
     css = (
-        ".board{display:grid;grid-template-columns:repeat(4,minmax(214px,1fr));gap:16px;align-items:start;overflow-x:auto;padding-bottom:8px}"
+        ".board{display:grid;grid-template-columns:repeat(4,minmax(214px,1fr));gap:16px;align-items:stretch;overflow-x:auto;padding-bottom:8px}"
         ".lane{background:color-mix(in srgb,var(--color-ink) 4%,var(--color-neutral));border:1px solid var(--color-border);border-radius:var(--radius);padding:12px;display:grid;gap:10px}"
         ".lane header{display:flex;align-items:center;gap:8px;padding:2px 4px}.lane header h2{font-size:.95rem}.lane .count{font-size:.8rem;color:var(--color-muted);background:var(--color-surface);border:1px solid var(--color-border);border-radius:999px;padding:0 8px}"
         ".stack{display:grid;gap:10px}"

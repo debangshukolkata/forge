@@ -166,7 +166,7 @@ def calendar() -> Screen:
         ".hours{padding-top:45px}.hour{height:var(--row);font-size:.75rem;color:var(--color-muted);text-align:right;padding-right:10px;transform:translateY(-8px)}.daycol{border-left:1px solid var(--color-border);min-width:0}"
         ".dayhead{height:45px;display:grid;place-items:center;font-weight:600;border-bottom:1px solid var(--color-border)}.dayhead[aria-current=date]{color:var(--color-primary)}.slots{position:relative;height:calc(8 * var(--row));background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--row) - 1px),var(--color-border) calc(var(--row) - 1px),var(--color-border) var(--row))}"
         ".ev{position:absolute;left:6px;right:6px;border-radius:var(--r);padding:6px 10px;background:color-mix(in srgb,var(--c) 14%,var(--color-surface));border-left:4px solid var(--c);display:grid;align-content:start;overflow:hidden}.ev b{font-size:.88rem;color:var(--color-ink)}.ev span{font-size:.78rem;color:var(--color-muted)}"
-        ".minical{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:.85rem}.minical span{padding:6px 0;border-radius:999px}.minical .dim{color:var(--color-muted)}.minical .on{background:var(--color-primary);color:var(--color-on-primary);font-weight:700}"
+        ".minical{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:.85rem}@media (max-width:480px){.minical{gap:4px;font-size:.75rem}}.minical span{padding:6px 0;border-radius:999px}.minical .dim{color:var(--color-muted)}.minical .on{background:var(--color-primary);color:var(--color-on-primary);font-weight:700}"
     )
     cells = (
         [(d, True) for d in range(24, 29)]

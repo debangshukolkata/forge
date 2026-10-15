@@ -176,6 +176,14 @@ The machine-made page is a centred column: a hero with a gradient, three identic
   your tokens (`design_md_export`). A React project uses the `section` assets of the templates the same way.
 - **The hero carries a picture that belongs to the product**: a drawn SVG scene or object (the recipes show how: a lantern, a sun over a harbour, a bowl
   with steam), a licensed photograph (`findimage`), or a generated image. Never a gradient and never a grey box. The audit reports a page with no imagery.
+- **Pictures are part of the first build, not a later polish** (the audit blocks a page with none, D-419). After DESIGN.md is chosen and before the page is written, get three to five:
+  one hero picture and two or three for the sections. Order of tries: `generate_image` when it works on this computer (one style sentence taken from DESIGN.md in every prompt, so the pictures
+  look like one set, landscape for the hero, never text in the picture), else `find_image` / `fetch_image` for a licensed photograph of the real subject, else a drawn SVG scene from the recipes.
+  A studio, a museum, a restaurant, a shop and a clinic each have a physical world: show it. Every picture is an `<img>` with real alt text and a fixed size or aspect ratio, so the layout does
+  not jump. A text-only page needs a line in DESIGN.md saying why.
+- **Alignment and fonts, checked by the audit:** the first rules of every stylesheet are `button, input, select, textarea, legend { font: inherit; }` and a styled `fieldset` (border, radius, padding
+  like the cards), so controls and group titles use the page font; every row of items has a `gap`, so a name and its price never run together (let the row wrap, or stack them on a phone); the cards of a
+  row use `align-items: stretch` and one height; no element sits a few pixels off its neighbours' edge: align to the grid of the layout, not by eye.
 - **Break the stack once:** one element at three times the size of its neighbours, a vertical or rotated word, an overlap, a full-bleed band, a cropped
   shape. Do it once and keep the rest calm.
 - **Rhythm over repetition:** neighbouring sections differ in width, alignment or background; never the same card grid twice in a row.

@@ -16,7 +16,8 @@ from forge.tools.token_lint import token_lint_problems
 
 # Runs in the page. Returns {"findings": [...], "stats": {...}}; kept dependency-free and read-only.
 AUDIT_SCRIPT = r"""
-() => {
+(options) => {
+  const brandPage = !!(options && options.brandPage);  // DESIGN.md names a page composition: a brand page needs its pictures even when it holds a form (D-419)
   const findings = [];
   const all = Array.from(document.body ? document.body.querySelectorAll('*') : []);
   const visible = (el) => {
@@ -311,10 +312,58 @@ AUDIT_SCRIPT = r"""
     || (el.tagName === 'svg' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 120 && el.querySelectorAll('path, circle, rect, polygon, ellipse, line').length >= 4)
     || (el.getAttribute('role') === 'img' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 80)  // a chart is the picture of a dashboard
     || /url\(/.test(getComputedStyle(el).backgroundImage)));
-  if (!hasPicture && !appLike && all.length >= 30 && (document.body.innerText || '').length > 600) {
-    const marketing = document.querySelectorAll('section, header, footer').length >= 3 && document.querySelectorAll('table').length === 0 && document.querySelectorAll('input, select, textarea').length < 4;
+  if (!hasPicture && (!appLike || brandPage) && all.length >= 30 && (document.body.innerText || '').length > 600) {
+    const marketing = brandPage || (document.querySelectorAll('section, header, footer').length >= 3 && document.querySelectorAll('table').length === 0 && document.querySelectorAll('input, select, textarea').length < 4);
     findings.push((marketing ? 'BLOCKER: ' : '') + 'The page has no imagery at all: no photograph, illustration, drawn SVG scene or video, only text and boxes. Designed pages carry visual content that belongs to the product (findimage for a licensed photograph, generate_image, or draw an SVG illustration), at least in the hero.');
   }
+  // Controls and legends that kept the browser's own font: the page is set in a designed font and the buttons, fields and group titles are not (D-419).
+  const familyOf = (el) => getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase();
+  const pageFonts = new Set(all.filter((el) => visible(el) && !/^(BUTTON|INPUT|SELECT|TEXTAREA|LEGEND|OPTION|LABEL)$/.test(el.tagName) && Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim().length > 0)).map(familyOf));
+  const bareFont = all.filter((el) => visible(el) && /^(BUTTON|INPUT|SELECT|TEXTAREA|LEGEND)$/.test(el.tagName)
+    && !(el.tagName === 'INPUT' && ['checkbox', 'radio', 'hidden', 'range', 'color', 'file'].includes(el.type))
+    && ((el.innerText || el.value || el.placeholder || '').trim().length > 0)
+    && !pageFonts.has(familyOf(el)));
+  if (pageFonts.size > 0 && bareFont.length >= 2) findings.push(bareFont.length + ' controls or group titles use the browser font instead of the page font (' + sample(bareFont) + '): add `font: inherit` to button, input, select, textarea and legend.');
+  // Text that runs into the text next to it: siblings in a flex or grid row with no space between them (a name and its price, a label and its value).
+  const runTogether = [];
+  for (const parent of all) {
+    if (!visible(parent) || !/flex|grid/.test(getComputedStyle(parent).display)) continue;
+    const kids = Array.from(parent.children).filter((k) => visible(k) && (k.innerText || '').trim().length > 0);
+    for (let i = 0; i + 1 < kids.length; i++) {
+      const a = kids[i].getBoundingClientRect(), b = kids[i + 1].getBoundingClientRect();
+      const sameRow = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 4;
+      const lines = (k) => {  // the rectangles of the text itself (one per line), taken from the text nodes: a block's own client rectangles are its boxes
+        const found = [], walker = document.createTreeWalker(k, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (!node.textContent.trim()) continue;
+          const range = document.createRange(); range.selectNodeContents(node);
+          for (const r of Array.from(range.getClientRects())) if (r.width > 2 && r.height > 4) found.push(r);
+        }
+        return found;
+      };
+      let textGap = 99;  // the smallest space between a text line of one item and a text line of the next that sit on the same line
+      for (const la of lines(kids[i])) for (const lb of lines(kids[i + 1])) if (Math.min(la.bottom, lb.bottom) - Math.max(la.top, lb.top) > 4) textGap = Math.min(textGap, lb.left - la.right);
+      const styled = (k) => { const s = getComputedStyle(k); return s.backgroundColor !== 'rgba(0, 0, 0, 0)' || parseFloat(s.borderLeftWidth) > 0 || parseFloat(s.borderRightWidth) > 0; };
+      if (sameRow && textGap < 3 && textGap > -60 && !styled(kids[i]) && !styled(kids[i + 1])) runTogether.push(kids[i + 1]);
+    }
+  }
+  if (runTogether.length > 0) findings.push('Text runs into its neighbour with no space (' + sample(runTogether) + '): add a gap between the items of the row (gap, margin or padding), or let the row wrap.');
+  // Cards of one row that are not the same height look misaligned.
+  const uneven = [];
+  for (const parent of all) {
+    if (!visible(parent) || !/flex|grid/.test(getComputedStyle(parent).display)) continue;
+    const cards = Array.from(parent.children).filter((k) => { if (!visible(k)) return false; const s = getComputedStyle(k); return (s.boxShadow !== 'none' || parseFloat(s.borderTopWidth) > 0 || s.backgroundColor !== 'rgba(0, 0, 0, 0)') && k.getBoundingClientRect().height > 60 && k.getBoundingClientRect().width > 120 && (k.innerText || '').trim().length > 20; });  // not the bars of a chart
+    if (cards.length < 3 || ['stretch', 'normal'].includes(getComputedStyle(parent).alignItems)) continue;
+    const rects = cards.map((k) => k.getBoundingClientRect());
+    const topSpread = Math.max(...rects.map((r) => r.top)) - Math.min(...rects.map((r) => r.top));
+    const heightSpread = Math.max(...rects.map((r) => r.height)) - Math.min(...rects.map((r) => r.height));
+    if (topSpread < 60 && (topSpread > 6 || heightSpread > 24)) uneven.push(parent);  // one row: staggered tops or different heights
+  }
+  if (uneven.length > 0) findings.push('The cards of a row are not aligned: their tops or heights differ (' + sample(uneven) + '): make the row stretch its items (align-items: stretch) or give the cards one height.');
+  // A fieldset that kept the browser's grooved border next to rounded cards.
+  const grooved = all.filter((el) => el.tagName === 'FIELDSET' && visible(el) && /groove|ridge|inset|outset/.test(getComputedStyle(el).borderTopStyle));
+  if (grooved.length > 0) findings.push(grooved.length + ' form groups keep the browser\'s default fieldset border (' + sample(grooved) + '): set border, padding and radius to match the cards, and style the legend.');
+
   const small = all.filter((el) => visible(el) && window.innerWidth >= 768 && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 24) && parseFloat(getComputedStyle(el).fontSize) < 13);
   if (small.length >= 3) findings.push(small.length + ' blocks of running text are under 13px at desktop width (' + sample(small) + '): body text should be 14px or larger.');
 
@@ -350,6 +399,23 @@ def _system_fonts_required(root: Path) -> bool:
     return False
 
 
+BRAND_COMPOSITION = re.compile(r"^composition:\s*(?!app-)(\S+)", re.IGNORECASE | re.MULTILINE)
+
+
+def _brand_page(root: Path | None) -> bool:
+    """DESIGN.md names a page composition that is not an application screen (`lay-...` or `custom ...`): the page is a brand page and needs its pictures (D-419)."""
+    if root is None:
+        return False
+    for name in ("DESIGN.md", "design.md", "docs/DESIGN.md"):
+        path = root / name
+        if path.is_file():
+            try:
+                return bool(BRAND_COMPOSITION.search(path.read_text(encoding="utf-8", errors="replace")))
+            except OSError:
+                return False
+    return False
+
+
 def _imagery_not_wanted(root: Path) -> bool:
     """A DESIGN.md that says imagery is not wanted (a text-only editorial or a utility page) lifts the blocker on a page with no pictures."""
     for name in ("DESIGN.md", "design.md", "docs/DESIGN.md"):
@@ -365,7 +431,7 @@ def _imagery_not_wanted(root: Path) -> bool:
 async def audit_page(page: Any, root: Path | None = None) -> str:
     """The audit as text for the model: numbered findings, or a clean line; never raises."""
     try:
-        result = await page.evaluate(AUDIT_SCRIPT)
+        result = await page.evaluate(AUDIT_SCRIPT, {"brandPage": _brand_page(root)})
     except (
         Exception
     ) as error:  # a page that blocks scripts or is mid-navigation must not break the screenshot

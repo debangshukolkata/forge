@@ -84,7 +84,7 @@ def line_entry() -> Screen:
         f'<td style="width:50px"><button class="btn btn--sm btn--ghost btn--icon" aria-label="Remove line">{icon("x")}</button></td></tr>'
         for d, q, p in lines
     )
-    css = ".entry td{padding:8px 10px}.entry thead th{padding:10px}.totals{display:grid;gap:8px;max-width:320px;margin-left:auto}.totals div{display:flex;justify-content:space-between}"
+    css = ".entry td{padding:8px 10px}.entry thead th{padding:10px}.totals{display:grid;gap:8px;max-width:320px;margin-left:auto}.totals div{display:flex;justify-content:space-between;gap:16px}"
     body = f"""
 <div class="app">
 {sidebar("Ledgerline", "L", [("home", "Overview", ""), ("file", "Invoices", "3"), ("users", "Clients", ""), ("card", "Payments", ""), ("chart", "Reports", "")], "Invoices", None, ("JR", "Jordan Reyes", "Studio owner"))}
