@@ -101,7 +101,13 @@ one that comes from the product. Only then build.
   accenting one word of a headline.
 
 ## 0e. The design ladder and the style gate (how you reach a stunning design)
-**Step 1: design on your own, without asking.** Do not ask the user for references or links first, and do not go to the web first.
+**Step 1: design on your own, without asking.** Do not ask the user for references or links first.
+- *Look at what the field already does (brand pages only: a site for a business, a studio, a product whose look the brief does not fix).* Not for an
+  application screen, and not when the user's own DESIGN.md or brand guide is binding. `web_search` for two or three live sites of the same kind of
+  business (or use the sites the user named), `design_inspire` on them, `view_image` each screenshot, and fill the two lists of each reference note in
+  `.forge/inspiration/`: the principles worth reusing, and what is that brand's own and must not be copied. This is for you to read, not a question to the
+  user, and it never replaces the candidates below: the references say what the field looks like so that the candidates do not repeat it, and a
+  principle you take goes into DESIGN.md with its source under Inspiration. If the search finds nothing usable, go on without it.
 - *Read the product before choosing.* Rate it on five dials from the brief, each with the evidence for the number (a quoted phrase, the audience, the
   context): energy, finish, density, weight, seriousness. Translate every mood word ("premium", "elegant", "modern") into values (a hue, a type
   contrast, a radius, a density) before it justifies anything. Fit comes before variety: if the evidence fixes the register, all candidates stay inside

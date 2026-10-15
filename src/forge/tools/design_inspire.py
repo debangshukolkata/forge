@@ -18,6 +18,7 @@ from pydantic import Field
 
 from forge.designsystem.extract import css_from_project, draft_design_md, from_computed
 from forge.designsystem.lint import describe_findings, lint_text
+from forge.designsystem.reference import reference_note
 from forge.designsystem.spec import DesignMdError, parse_design_md
 from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
@@ -63,7 +64,36 @@ COMPUTED_STYLES_SCRIPT = """
     if (!isNaN(width) && width > maxWidth && width < 3000) maxWidth = width;
   }
   const h1 = document.querySelector('h1');
+  const level = (selector) => {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+    const cs = getComputedStyle(el);
+    return { size: parseFloat(cs.fontSize), weight: cs.fontWeight, lineHeight: cs.lineHeight, letterSpacing: cs.letterSpacing, family: cs.fontFamily.split(',')[0].replace(/["']/g, '').trim() };
+  };
+  const scale = { h1: level('h1'), h2: level('h2'), h3: level('h3'), body: level('main p, article p, p') };
+  const holder = document.querySelector('main') || document.body;
+  const sections = [...holder.children].filter(el => {
+    const r = el.getBoundingClientRect();
+    return r.height > 120 && r.width > 600 && getComputedStyle(el).display !== 'none';
+  }).slice(0, 14).map(el => {
+    const cs = getComputedStyle(el), r = el.getBoundingClientRect();
+    let columns = 1;
+    for (const inner of [el, ...el.querySelectorAll(':scope > *, :scope > * > *')].slice(0, 40)) {
+      const ics = getComputedStyle(inner);
+      const count = ics.display.includes('grid') ? ics.gridTemplateColumns.split(' ').filter(Boolean).length
+        : (ics.display.includes('flex') && ics.flexDirection.startsWith('row') ? inner.children.length : 1);
+      if (count > columns && count <= 6) columns = count;
+    }
+    const heading = el.querySelector('h1, h2, h3');
+    return {
+      tag: el.tagName.toLowerCase(), heading: heading ? heading.innerText.trim().slice(0, 60) : '', height: Math.round(r.height),
+      paddingTop: Math.round(parseFloat(cs.paddingTop)), background: cs.backgroundColor, columns,
+      pictures: el.querySelectorAll('img, picture, video, svg:not([width="16"]):not([width="20"]):not([width="24"])').length,
+      buttons: el.querySelectorAll('a[class*=btn], a[class*=button], button').length,
+    };
+  });
   return {
+    scale, sections, links: document.querySelectorAll('a').length, images: document.querySelectorAll('img').length,
     backgrounds: top(backgrounds, 8), texts: top(texts, 8), accents: top(accents, 6),
     fonts: top(fonts, 4).map(x => x[0]), sizes: top(sizes, 12).map(x => x[0]), radii: top(radii, 6).map(x => x[0]),
     headingFont: h1 ? getComputedStyle(h1).fontFamily : '', maxWidth, gradients,
@@ -149,10 +179,13 @@ class DesignInspire(Tool):
     read_only = False
     description = (
         "Look at 1 to 5 public web pages as design references: opens each in a guarded, isolated browser, saves a screenshot and reads the computed "
-        "styles (colours, fonts, sizes, radii, widths), and writes a draft DESIGN.md for each in .forge/inspiration/. Use it only after the user did "
-        "not like your own design twice, or when the user gave sites to follow; find candidate pages first with web_search. Look at each picture with "
-        "view_image. Take structure, token patterns and principles; never copy logos, text, photographs or brand assets. Record the sources in the "
-        "DESIGN.md Inspiration section."
+        "styles (colours, fonts, the type scale per level, the section order with heights, columns and pictures, the spacing, radii, widths), and "
+        "writes a draft DESIGN.md and a reference note for each in .forge/inspiration/. Use it FIRST, before writing DESIGN.md, when the user gave "
+        "sites to follow, and for a brand page (a site for a business, a studio, a product) whose look the brief does not fix: find two or three "
+        "pages of the same kind of business with web_search. Skip it for an application screen and when the user's own DESIGN.md or brand guide is "
+        "binding. Look at each picture with view_image, then fill the two lists of its reference note: what to reuse as a principle, and what is "
+        "that brand's own and must not be copied. Never copy logos, text, photographs or brand assets. Record the sources in the DESIGN.md "
+        "Inspiration section."
     )
 
     class Args(ToolArgs):
@@ -191,6 +224,9 @@ class DesignInspire(Tool):
             draft_path = folder / f"{slug}.design.md"
             draft_path.write_text(draft, encoding="utf-8")
             (folder / f"{slug}.styles.json").write_text(json.dumps(data, indent=1), encoding="utf-8")
+            (folder / f"{slug}.reference.md").write_text(
+                reference_note(data, url, args.purpose), encoding="utf-8"
+            )
             lines.append(
                 describe_capture(url, data, _relative(context, picture), _relative(context, draft_path))
             )

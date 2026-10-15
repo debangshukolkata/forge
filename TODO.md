@@ -127,8 +127,8 @@ implement and validate) and three recommendations (a knowledge base, design sepa
 references come from live public sites (`design_inspire`, measured from the browser), from the user, and from our own curated base; the knowledge base holds principles and measurements, not copies; "distinctive"
 is advice from a cross-family critic and the user's eye, only what can be measured is a gate. unDraw is not used automatically (its licence bars scraping, packs, integrations and AI use, D-420).
 
-- [ ] `DIE1` **Discovery first.** The default flow starts with two or three references (from the user, else live public sites of the industry found by search), measured from the browser (computed styles, type scale,
-  spacing, colours) and read by the vision model; reusable principles are separated from brand-specific elements. Today this is step 3 of the ladder. Size M.
+- [~] `DIE1` **Discovery first.** The default flow starts with two or three references (from the user, else live public sites of the industry found by search), measured from the browser (computed styles, type scale,
+  spacing, colours) and read by the vision model; reusable principles are separated from brand-specific elements. Today this is step 3 of the ladder. Size M. **Built 2026-10-15 (D-422): richer browser read, reference notes, skill step 1; still to do: measure with and without it on the `--mini` briefs, then decide the default.**
 - [~] `DIE2` **Design blueprint.** Extend DESIGN.md with layout and section composition, imagery and illustration rules, motion and interaction states, responsive and accessibility requirements, and a stated purpose for
   every major decision; lint for missing sections and decisions without a purpose. Size M. **Started 2026-10-15 (D-421): the lint notes and the template are in; the inspire drafts still need to write the new sections.**
 - [ ] `DIE3` **Design knowledge base.** Searchable by industry, mood and layout, in the user's profile: analysed references (principles, tokens, source links, a small local thumbnail), proven layout patterns and
