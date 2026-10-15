@@ -41,3 +41,10 @@ def test_decisions_without_a_reason_are_found() -> None:
         + NL
     )
     assert "decision-without-purpose:Motion and Interaction" not in rules(reasoned)
+
+
+def test_a_drafted_design_md_has_every_blueprint_heading() -> None:
+    from forge.designsystem.extract import Extracted, draft_design_md
+
+    draft = draft_design_md(Extracted(colors={"primary": "#aa3300", "neutral": "#ffffff"}), "Kiln", "a page")
+    assert [f for f in lint_text(draft) if f.rule.startswith("blueprint")] == []
