@@ -69,3 +69,21 @@ async def test_a_saved_brand_is_used_by_builds_that_name_no_brand_file(
     assert not bad.ok and "not valid" in bad.content
     empty = await SaveBrand().run(SaveBrand.Args(), context)
     assert not empty.ok
+
+
+def test_every_font_pairing_uses_only_fonts_every_office_install_has() -> None:
+    from forge.slides.lint import SAFE_FONTS
+    from forge.slides.themes import FONT_PAIRINGS
+
+    assert len(FONT_PAIRINGS) >= 6
+    for name, (title_font, body_font) in FONT_PAIRINGS.items():
+        assert title_font.lower() in SAFE_FONTS and body_font.lower() in SAFE_FONTS, name
+    assert (
+        len({THEMES[n].title_font for n in THEMES}) >= 3
+    )  # the themes now differ in type, not only in colour
+
+
+def test_serif_pairings_print_as_a_serif_in_pdfs() -> None:
+    resolved = Resolved(theme_kit("forest"))
+    assert resolved.pdf_font(resolved.title_font) == "Times-Roman"
+    assert resolved.pdf_font("Arial") == "Helvetica"

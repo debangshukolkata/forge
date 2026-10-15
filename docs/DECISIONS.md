@@ -3908,3 +3908,6 @@ Checked 2026-10-15 (web search): no repository named `superdesign-prompts` could
 
 ### D-389 - Pricing page template (tonight's list, item 25)
 `tpl-pricing-invoicing`: Outfit and Manrope, burnt orange on slate, built from existing sections (NavBar, HeroCentered, LogoStrip, PricingTiers, StatsRow, FaqList, CtaBand, FooterColumns) so only the composition, tokens and copy are new. Added to the catalogue and to the template list of tests/test_sections.py; its entry says `tested: NOT YET BUILT` until that test has run (browser tests wait for the design benchmark). Chosen over a new PricingTiers variant: the section already covers three plans with one featured.
+
+### D-390 - Font pairings for themes (P2.1)
+`FONT_PAIRINGS` (modern, editorial, formal, plain, book, literary) holds only fonts every Office install has, so a pairing can never make a reader's computer substitute a font. Themes choose one with `fonts=`; forest and olive are now Cambria + Calibri, mono is Arial, the other serif themes keep Georgia + Calibri. PDFs map the serif fonts to Times (reportlab has three standard families). Options: web fonts embedded in the deck (rejected: pptx embedding is unreliable and the lint warns about unsafe fonts), or a bigger theme-specific list (later, if the user wants more). Test: tests/test_document_themes.py. The logo for decks and workbooks is still open.

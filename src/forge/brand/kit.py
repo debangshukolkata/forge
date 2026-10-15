@@ -15,6 +15,11 @@ SAFE_PDF_FONTS = {
     "arial": "Helvetica",
     "times": "Times-Roman",
     "times new roman": "Times-Roman",
+    "georgia": "Times-Roman",  # PDFs have only three standard families; the serif fonts of the pairings map to Times
+    "cambria": "Times-Roman",
+    "bookman old style": "Times-Roman",
+    "century schoolbook": "Times-Roman",
+    "courier new": "Courier",
     "courier": "Courier",
 }
 

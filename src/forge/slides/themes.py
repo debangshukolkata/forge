@@ -72,9 +72,29 @@ def _chart_colours(palette: list[str], background: str, text: str) -> tuple[str,
     return tuple(_toward_contrast(c, background, text, CHART_CONTRAST) for c in palette)
 
 
+# Title and body font pairs made only of fonts every Office install has (slides/lint.py SAFE_FONTS), so a pairing never makes a reader's computer substitute a font (D-390).
+FONT_PAIRINGS: dict[str, tuple[str, str]] = {
+    "modern": ("Calibri", "Calibri"),
+    "editorial": ("Georgia", "Calibri"),
+    "formal": ("Cambria", "Calibri"),
+    "plain": ("Arial", "Arial"),
+    "book": ("Bookman Old Style", "Calibri"),
+    "literary": ("Century Schoolbook", "Cambria"),
+}
+
+
 def _theme(
-    name: str, colours: str, palette: str, mood: str, topics: str, *, serif: bool = False, dark: bool = False
+    name: str,
+    colours: str,
+    palette: str,
+    mood: str,
+    topics: str,
+    *,
+    serif: bool = False,
+    dark: bool = False,
+    fonts: str | None = None,
 ) -> Theme:
+    title_font, body_font = FONT_PAIRINGS[fonts or ("editorial" if serif else "modern")]
     background, surface, text, muted, accent, accent_text = colours.split()
     return Theme(
         name=name,
@@ -85,7 +105,8 @@ def _theme(
         accent=accent,
         accent_text=accent_text,
         palette=_chart_colours(palette.split(), background, text),
-        title_font="Georgia" if serif else "Calibri",
+        title_font=title_font,
+        body_font=body_font,
         mood=mood,
         topics=tuple(topics.split()),
         dark=dark,
@@ -124,7 +145,7 @@ THEMES: dict[str, Theme] = {
             "2F6B3C D9A441 3E7C8C A4553A 7A6BB0 4F6354",
             "natural, calm, grounded",
             "sustainability nature agriculture environment green climate outdoors",
-            serif=True,
+            fonts="formal",
         ),
         _theme(
             "ocean",
@@ -191,6 +212,7 @@ THEMES: dict[str, Theme] = {
             "111111 767676 A8A8A8 C62828 1F5FBF D79A2B",
             "minimal, stark, modern",
             "minimal architecture design portfolio photography studio",
+            fonts="plain",
         ),
         _theme(
             "sky",
@@ -227,7 +249,7 @@ THEMES: dict[str, Theme] = {
             "5E6B1F B7662B 2F6B73 8A3B4E 6A5BA0 5E634A",
             "grounded, heritage, quiet",
             "heritage outdoors farming craft rural conservation",
-            serif=True,
+            fonts="formal",
         ),
         _theme(
             "indigo",
