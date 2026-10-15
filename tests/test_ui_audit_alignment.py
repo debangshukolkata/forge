@@ -92,3 +92,48 @@ def card_rows(rows: int, per_row: int) -> str:
 async def test_a_page_of_nothing_but_boxed_cards_is_found_and_a_calmer_one_is_not() -> None:
     assert "boxed cards in" in await audit(TEXT + PICTURE + card_rows(3, 3))
     assert "boxed cards in" not in await audit(TEXT + PICTURE + card_rows(2, 3))
+
+
+FEW_SHAPES = (
+    '<svg width="300" height="240" viewBox="0 0 300 240" role="img" aria-label="A loaf"><ellipse cx="150" cy="120" rx="100" ry="60" fill="#c9792b"/>'
+    '<path d="M70 110 Q150 80 230 110" stroke="#f5e1c8" fill="none"/><rect x="40" y="170" width="220" height="20" fill="#ddd"/></svg>'
+)
+
+
+RICH_SCENE = (
+    '<svg width="400" height="260" viewBox="0 0 400 260" role="img" aria-label="The street">'
+    + "".join(f'<rect x="{n * 30}" y="{200 - n * 12}" width="26" height="{60 + n * 12}" fill="#{n}a5a3a"/>' for n in range(11))
+    + "</svg>"
+)  # fmt: skip
+
+
+async def test_a_picture_that_is_only_a_few_drawn_shapes_is_called_a_placeholder() -> None:
+    assert "only picture is a drawn motif of 3 shapes" in await audit(TEXT + FEW_SHAPES)
+    assert "only picture is a drawn motif" not in await audit(
+        TEXT + RICH_SCENE
+    )  # a scene of eleven shapes is a designed picture
+
+
+async def audit_phone(body: str) -> str:
+    pytest.importorskip("playwright.async_api")
+    from playwright.async_api import async_playwright
+
+    from forge.tools.web_render import RenderUnavailable, _launch
+
+    async with async_playwright() as playwright:
+        try:
+            browser = await _launch(playwright)
+        except RenderUnavailable as error:
+            pytest.skip(str(error))
+        try:
+            page = await browser.new_page(viewport={"width": 375, "height": 800})
+            await page.set_content(HEAD + body + "</body></html>")
+            return await audit_page(page, None)
+        finally:
+            await browser.close()
+
+
+async def test_on_a_phone_the_headline_must_not_sit_below_a_tall_picture() -> None:
+    tall = '<div style="height:560px;background:#e9d8c4"></div>'
+    assert "On a phone the h1 starts" in await audit_phone(tall + TEXT + PICTURE)
+    assert "On a phone the h1 starts" not in await audit_phone(TEXT + tall + PICTURE)

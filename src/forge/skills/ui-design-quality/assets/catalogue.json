@@ -9570,6 +9570,46 @@
    "size": 4837
   },
   {
+   "id": "sec-info-strip",
+   "type": "section",
+   "title": "Info strip",
+   "summary": "A ruled strip of practical facts (hours, address, delivery) with a label above each value between hairlines, instead of three boxes.",
+   "moods": [
+    "calm",
+    "clear",
+    "editorial"
+   ],
+   "products": [
+    "bakery",
+    "restaurant",
+    "shop",
+    "studio",
+    "clinic",
+    "venue"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "facts",
+    "card-free"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/InfoStrip.tsx",
+     "to": "src/sections/InfoStrip.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-433)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-433)",
+   "preview": "assets/preview/sec-info-strip.jpg",
+   "path": "assets/section/sec-info-strip.md",
+   "size": 2229
+  },
+  {
    "id": "sec-logo-strip",
    "type": "section",
    "title": "Trusted-by strip",

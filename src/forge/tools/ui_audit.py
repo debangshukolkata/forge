@@ -316,6 +316,18 @@ AUDIT_SCRIPT = r"""
     const marketing = brandPage || (document.querySelectorAll('section, header, footer').length >= 3 && document.querySelectorAll('table').length === 0 && document.querySelectorAll('input, select, textarea').length < 4);
     findings.push((marketing ? 'BLOCKER: ' : '') + 'The page has no imagery at all: no photograph, illustration, drawn SVG scene or video, only text and boxes. Designed pages carry visual content that belongs to the product (findimage for a licensed photograph, generate_image, or draw an SVG illustration), at least in the hero.');
   }
+  // The message must come first on a phone (the Fernhill bakery review, 2026-10-15): a picture or a tall header above the h1 pushes it below the fold.
+  if (heading && window.innerWidth <= 480 && !appLike) {
+    const headingTop = heading.getBoundingClientRect().top + window.scrollY;
+    if (headingTop > window.innerHeight * 0.7) findings.push('On a phone the h1 starts ' + Math.round(headingTop) + 'px down, below the fold of ' + window.innerHeight + 'px: a picture or a tall header above it pushes the message away. Put the headline and the main action first and the picture after them, or make the picture short.');
+  }
+  // A drawn motif of a few shapes is a stand-in, not a picture: a business with a physical world (food, craft, a place) needs a real photograph.
+  if (hasPicture && (!appLike || brandPage)) {
+    const rasterPictures = all.filter((el) => visible(el) && ((el.tagName === 'IMG' && el.naturalWidth >= 200) || el.tagName === 'VIDEO' || el.tagName === 'PICTURE' || /url\(/.test(getComputedStyle(el).backgroundImage)));
+    const drawn = all.filter((el) => visible(el) && el.tagName === 'svg' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 120);
+    const richest = Math.max(0, ...drawn.map((el) => el.querySelectorAll('path, circle, rect, polygon, ellipse, line').length));
+    if (rasterPictures.length === 0 && drawn.length > 0 && richest < 10) findings.push('The only picture is a drawn motif of ' + richest + ' shapes (' + sample(drawn) + '): it reads as a placeholder. For a business with a physical world (food, craft, a studio, a shop, a place) use a licensed photograph (find_image, then fetch_image; try two or three queries) or the user\'s own pictures, and keep a drawn scene for a product with no physical subject.');
+  }
   // Controls and legends that kept the browser's own font: the page is set in a designed font and the buttons, fields and group titles are not (D-419).
   const familyOf = (el) => getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase();
   const pageFonts = new Set(all.filter((el) => visible(el) && !/^(BUTTON|INPUT|SELECT|TEXTAREA|LEGEND|OPTION|LABEL)$/.test(el.tagName) && Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim().length > 0)).map(familyOf));

@@ -48,3 +48,17 @@ def test_a_drafted_design_md_has_every_blueprint_heading() -> None:
 
     draft = draft_design_md(Extracted(colors={"primary": "#aa3300", "neutral": "#ffffff"}), "Kiln", "a page")
     assert [f for f in lint_text(draft) if f.rule.startswith("blueprint")] == []
+
+
+def test_a_brand_composition_gets_a_brand_specimen_and_an_application_gets_the_dashboard_one() -> None:
+    from forge.designsystem.spec import parse_design_md
+    from forge.designsystem.specimen import specimen_html
+
+    brand = parse_design_md(
+        FRONT.replace("name: Kestrel", "name: Kestrel" + NL + "composition: lay-editorial-split")
+    )
+    app = parse_design_md(
+        FRONT.replace("name: Kestrel", "name: Kestrel" + NL + "composition: app-form-wizard")
+    )
+    assert 'class="facts"' in specimen_html(brand, "A real headline") and "<table" not in specimen_html(brand)
+    assert "<table" in specimen_html(app) and 'class="facts"' not in specimen_html(app)

@@ -51,6 +51,73 @@ footer{{border-top:1px solid {border};padding:24px 0;color:{muted};font-size:13p
 <div class="sw">{swatches}</div><footer>{name} &middot; specimen of the design system &middot; {fonts}</footer></div></body></html>"""
 
 
+# A brand page (a business, a studio, a product) is judged on mood, type and one signature picture, not on a table and a form: this specimen
+
+# shows a hero with a picture area, a ruled facts strip, the type scale and the palette (found in the Fernhill bakery live check, 2026-10-15).
+
+PAGE_BRAND = """<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{title}</title><style>
+
+{font_faces}
+
+{tokens}
+
+*{{box-sizing:border-box}}
+
+body{{margin:0;background:{neutral};color:{ink};font-family:{body_font};font-size:{body_size};line-height:1.6}}
+
+h1,h2,h3,.big{{font-family:{display_font};margin:0;line-height:1.05;letter-spacing:{tracking}}}
+
+.wrap{{max-width:1180px;margin:0 auto;padding:0 32px}}
+
+nav{{display:flex;justify-content:space-between;align-items:baseline;padding:22px 0;border-bottom:1px solid {border}}}
+
+nav b{{font-family:{display_font};font-size:22px}} nav span{{margin-left:26px;color:{muted}}}
+
+.hero{{padding:56px 0 48px;display:grid;grid-template-columns:1.35fr 1fr;gap:56px;align-items:end}}
+
+.hero h1{{font-size:{display_size};font-weight:{display_weight}}} .hero p{{color:{muted};font-size:18px;max-width:34em;margin:22px 0 28px}}
+
+.btn{{display:inline-block;padding:12px 24px;border-radius:{radius_button};font-weight:600;text-decoration:none;margin-right:12px;border:1.5px solid {primary}}}
+
+.btn.p{{background:{primary};color:{on_primary}}} .btn.s{{background:transparent;color:{primary}}}
+
+.pic{{position:relative;aspect-ratio:4/5;background:{surface};border-radius:{radius_card};overflow:hidden}}
+
+.pic i{{position:absolute;display:block}} .pic .a{{left:14%;bottom:0;width:72%;height:62%;border-radius:999px 999px 0 0;background:{primary}}}
+
+.pic .b{{left:58%;top:10%;width:26%;aspect-ratio:1;border-radius:50%;background:{border}}} .pic .c{{left:0;bottom:0;width:100%;height:16%;background:{ink}}}
+
+.eyebrow{{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{primary};font-weight:700;margin-bottom:12px}}
+
+.facts{{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid {ink};margin-top:8px}}
+
+.facts div{{padding:16px 20px 18px 0}} .facts div+div{{padding-left:20px;border-left:1px solid {border}}}
+
+.facts dt{{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{muted};font-weight:700}} .facts dd{{margin:4px 0 0}}
+
+.scale{{display:grid;grid-template-columns:1fr 1fr;gap:56px;padding:56px 0 24px;border-bottom:1px solid {border}}}
+
+.scale .big{{font-size:56px;font-weight:{display_weight}}} .scale h2{{font-size:32px;margin:12px 0 8px}} .scale p{{margin:0;color:{muted};max-width:32em}}
+
+.sw{{display:flex;gap:10px;margin:28px 0 48px}} .sw div{{flex:1;height:56px;border-radius:{radius_card};border:1px solid {border};font-size:11px;padding:6px;color:#fff}}
+
+footer{{padding:0 0 28px;color:{muted};font-size:13px}}
+
+</style></head><body><div class="wrap">
+
+<nav><b>{name}</b><div><span>About</span><span>Visit</span><span>Contact</span><span style="color:{primary};font-weight:600">Book</span></div></nav>
+
+<section class="hero"><div><div class="eyebrow">{eyebrow}</div><h1>{headline}</h1><p>{lede}</p>
+
+<a class="btn p" href="#">Visit us</a><a class="btn s" href="#">Read more</a></div><div class="pic"><i class="b"></i><i class="a"></i><i class="c"></i></div></section>
+
+<dl class="facts"><div><dt>Hours</dt><dd>Tuesday to Saturday</dd></div><div><dt>Find us</dt><dd>12 High Street</dd></div><div><dt>Say hello</dt><dd>hello@example.com</dd></div></dl>
+
+<section class="scale"><div><div class="big">Aa</div></div><div><div class="eyebrow">Type</div><h2>{fonts}</h2><p>The quick brown fox jumps over the lazy dog. Body text sits at a comfortable measure, with plenty of room around it.</p></div></section>
+
+<div class="sw">{swatches}</div><footer>{name} &middot; specimen of the design system &middot; {fonts}</footer></div></body></html>"""
+
+
 def _tint(colour: str, base: str = "#FFFFFF", share: float = 0.88) -> str:
     """`colour` washed toward `base` (white on a light page, the page colour on a dark one) for a quiet status background."""
     from forge.designsystem.colour import parse
@@ -126,7 +193,8 @@ def specimen_html(system: DesignSystem, headline: str = "", lede: str = "", eyeb
         if isinstance(style, dict)
     ]
     font_faces, _ = font_css(wanted)
-    return PAGE.format(
+    brand_page = str(system.extra.get("composition", "")).strip().lower().startswith(("lay-", "custom"))
+    return (PAGE_BRAND if brand_page else PAGE).format(
         font_faces=font_faces,
         title=escape(system.name),
         name=escape(system.name),

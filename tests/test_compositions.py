@@ -45,8 +45,10 @@ def test_a_composition_has_no_sideways_scroll_and_a_clean_audit_at_both_widths(f
                 )
                 if width == 1280:
                     findings = [
-                        f for f in page.evaluate(AUDIT_SCRIPT)["findings"] if "system font stack" not in f
-                    ]  # the recipes name their fonts; fetch_font brings them in
+                        f
+                        for f in page.evaluate(AUDIT_SCRIPT)["findings"]
+                        if "system font stack" not in f and "only picture is a drawn motif" not in f
+                    ]  # the recipes name their fonts (fetch_font brings them in) and draw a stand-in motif for the product's own picture
                     assert findings == [], (file.stem, findings)
                 page.close()
         finally:

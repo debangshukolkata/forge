@@ -117,7 +117,7 @@ async def test_all_sections_together_and_the_form_validates() -> None:
     )  # twenty sections side by side use more colours and sizes than one page should
 
 
-@pytest.mark.parametrize("section", ["HeroEditorial", "FeaturesRuled", "GalleryMosaic"])
+@pytest.mark.parametrize("section", ["HeroEditorial", "FeaturesRuled", "GalleryMosaic", "InfoStrip"])
 async def test_the_editorial_sections_are_clean_on_their_own_page(section: str) -> None:
     """D-432: a page made of one of the card-free sections passes the audit alone (the gallery test mixes many sections, which hides a size or colour problem)."""
     files = _gallery()

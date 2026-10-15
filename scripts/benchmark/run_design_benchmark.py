@@ -65,12 +65,15 @@ def screenshots(page_file: Path, folder: Path) -> tuple[Path, Path, dict[str, ob
             facts[f"console_errors_{name}"] = len(
                 [e for e in errors if "favicon" not in e and "ERR_" not in e]
             )
-            if name == "desktop":
-                from forge.tools.ui_audit import AUDIT_SCRIPT
+            from forge.tools.ui_audit import AUDIT_SCRIPT
 
-                result = page.evaluate(AUDIT_SCRIPT)
+            result = page.evaluate(AUDIT_SCRIPT)
+            if name == "desktop":
                 facts["audit_findings"] = len(result.get("findings", []))
                 facts["audit_text"] = [f[:140] for f in result.get("findings", [])][:6]
+            else:  # the phone has its own findings (the message must come first, nothing sideways)
+                facts["audit_findings_phone"] = len(result.get("findings", []))
+                facts["audit_text_phone"] = [f[:140] for f in result.get("findings", [])][:4]
             page.screenshot(path=str(folder / f"{name}.png"), full_page=False)
             page.close()
         browser.close()
@@ -200,7 +203,7 @@ def markdown(name: str, rows: list[dict[str, object]]) -> str:
     lines = [
         f"### Run `{name}` ({time.strftime('%Y-%m-%d %H:%M')})",
         "",
-        "| Brief | Wall | Cost | Ladder | DESIGN.md lint (err/warn) | Differs from default in | Audit left | Sideways scroll | Judge (type/dist/hier/harm/fit/polish) |",
+        "| Brief | Wall | Cost | Ladder | DESIGN.md lint (err/warn) | Differs from default in | Audit left (desktop / phone) | Sideways scroll | Judge (type/dist/hier/harm/fit/polish) |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
@@ -219,7 +222,7 @@ def markdown(name: str, rows: list[dict[str, object]]) -> str:
         cost = format(float(r["cost_usd"]), ".2f") if r.get("cost_usd") is not None else ""  # type: ignore[arg-type]
         lines.append(
             f"| {r['id']} | {r.get('wall_s')}s{stall_note(r)} | {cost} | {'yes' if r.get('ladder_used') else 'no'} | "  # type: ignore[arg-type]
-            f"{r.get('lint_errors', '-')}/{r.get('lint_warnings', '-')} | {r.get('differs_from_default_in', '-')} | {r.get('audit_findings', '-')} | "
+            f"{r.get('lint_errors', '-')}/{r.get('lint_warnings', '-')} | {r.get('differs_from_default_in', '-')} | {r.get('audit_findings', '-')} / {r.get('audit_findings_phone', '-')} | "
             f"{'desktop ' if r.get('sideways_scroll_desktop') else ''}{'phone' if r.get('sideways_scroll_phone') else 'no'} | {scores} |"
         )
     lines.append("")
@@ -229,6 +232,8 @@ def markdown(name: str, rows: list[dict[str, object]]) -> str:
             lines.append(f"- {r['id']}: judge's worst problem: {judge_row['worst_problem']}")
         if r.get("audit_text"):
             lines.append(f"- {r['id']}: audit left: {r['audit_text']}")
+        if r.get("audit_text_phone"):
+            lines.append(f"- {r['id']}: audit left on the phone: {r['audit_text_phone']}")
     return "\n".join(lines)
 
 

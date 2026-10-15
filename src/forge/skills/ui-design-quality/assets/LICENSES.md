@@ -243,6 +243,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-hero-centered` | original | authored for DebCraft (section library, D-273) |
 | `sec-hero-editorial` | original | authored for DebCraft (section library, D-432) |
 | `sec-hero-split` | original | authored for DebCraft (section library, D-273) |
+| `sec-info-strip` | original | authored for DebCraft (section library, D-433) |
 | `sec-logo-strip` | original | authored for DebCraft (section library, D-273) |
 | `sec-nav-bar` | original | authored for DebCraft (section library, D-273) |
 | `sec-pricing-tiers` | original | authored for DebCraft (section library, D-273) |
