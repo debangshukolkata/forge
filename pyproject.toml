@@ -81,7 +81,7 @@ markers = [
 [tool.ruff]
 line-length = 110
 target-version = "py311"
-extend-exclude = ["tests/fixtures", ".venv314", "test-artifacts", "scripts/campaign", "tests/benchmarks/tasks"]
+extend-exclude = ["tests/fixtures", ".venv314", "test-artifacts", "scripts/campaign", "tests/benchmarks/tasks", "tests/benchmarks/challenges/*/seed"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
