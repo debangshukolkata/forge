@@ -139,11 +139,11 @@ is advice from a cross-family critic and the user's eye, only what can be measur
 - [~] `DIE6` **Imagery sources.** A project `brand assets` folder used first (the user's own photographs and illustrations, including files the user downloads from unDraw), then open illustration sets that allow
   automated use after a licence check (Open Peeps, Humaaans, Open Doodles are candidates), `find_image` photographs, `generate_image` on the laptop, drawn SVG scenes; every source recorded in NOTICES.md. Size S to M. **Started 2026-10-15 (D-423): the user's own brand folder is the first source in `find_image`, the skill orders the tries and asks for unDraw files by hand; still to do: bundle a CC0 illustration set after the licence check, an SVG recolour helper.**
 - [ ] `DIE7` **Less card-heavy references.** Editorial and denser variants of the app screens and compositions, and a card-density check in the audit, so our own recipes stop adding to the sameness. Size M.
-- [ ] `DIE8` **Sample pages to judge Gemini 4 Argon's design taste (the user's request, 2026-10-15).** Same four briefs, same recipes, skill and audit, three arms: **A** gpt-5.1 designs and codes (baseline);
+- [~] `DIE8` **Sample pages to judge Gemini 4 Argon's design taste (the user's request, 2026-10-15).** Same four briefs, same recipes, skill and audit, three arms: **A** gpt-5.1 designs and codes (baseline);
   **B** Argon writes DESIGN.md (direction, fonts, palette, composition, imagery rules, a reason for each decision) and gpt-5.1 codes from it; **C** Argon designs and codes. A against B shows whether Argon's design
   decisions are better (same coder); B against C shows what Argon's coding adds. Optional fourth arm: Gemini 3.1 Pro as designer, to tell Argon from Gemini in general. Argon runs on the office laptop (Google credentials);
   both runs use the same critic and Argon's critic role is off for this test. Pages are shown to the user without model names (a model favours its own family; no model scores). First read the code to see whether the
-  DESIGN.md step can be routed to the planner role (the router already supports per-role models); if B wins, add a designer-model setting. No new provider. Size S-M.
+  DESIGN.md step can be routed to the planner role (the router already supports per-role models); if B wins, add a designer-model setting. No new provider. Size S-M. **Prepared 2026-10-15: `--design-from` in the design benchmark (arm B reuses arm C's DESIGN.md, so no routing change was needed), `scripts/benchmark/blind_gallery.py`, runbook docs/DESIGN_TASTE_TEST.md; the Argon runs wait for the office laptop.**
 
 ## 1. Waiting on you (your actions and decisions)
 Things only you can do or decide. Everything else below can be built without you.

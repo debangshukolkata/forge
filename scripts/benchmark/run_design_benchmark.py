@@ -139,7 +139,7 @@ def design_facts(workspace: Path) -> dict[str, object]:
     return facts
 
 
-def run_task(task: Path, run_dir: Path, env: dict[str, str]) -> dict[str, object]:
+def run_task(task: Path, run_dir: Path, env: dict[str, str], design_from: str = "") -> dict[str, object]:
     meta = json.loads((task / "task.json").read_text(encoding="utf-8"))
     workspace = run_dir / meta["id"]
     shutil.rmtree(workspace, ignore_errors=True)
@@ -153,6 +153,21 @@ def run_task(task: Path, run_dir: Path, env: dict[str, str]) -> dict[str, object
             "error": f"workspace setup failed: {created.stdout[-300:]}{created.stderr[-300:]}",
         }
     brief = (task / "task.md").read_text(encoding="utf-8")
+    if (
+        design_from
+    ):  # arm B of the taste test (DIE8): another model's DESIGN.md is binding, this run only builds
+        supplied = RUNS / design_from / meta["id"] / "project" / "DESIGN.md"
+        if not supplied.is_file():
+            return {"id": meta["id"], "error": f"no DESIGN.md at {supplied} to build from"}
+        target = workspace / "project" / "DESIGN.md"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(supplied, target)
+        brief += (
+            chr(10)
+            * 2
+            + "A DESIGN.md is already in the project root. It is the user's binding design: build the page to it, "
+            "do not redesign, do not write candidate designs, and do not change its tokens."
+        )
     prompt_file = run_dir / f"{meta['id']}_prompt.txt"
     prompt_file.write_text(brief, encoding="utf-8")
     started = time.time()
@@ -247,6 +262,11 @@ def main() -> int:
         default="",
         help="a model key for the benchmark's own scoring judge, the same in every condition of an A/B (default: the machine's vision model); use a model that built nothing in the run",
     )
+    parser.add_argument(
+        "--design-from",
+        default="",
+        help="the name of an earlier run whose DESIGN.md of each brief is given to this run as binding, so only the builder differs (the taste test, DIE8, docs/DESIGN_TASTE_TEST.md)",
+    )
     args = parser.parse_args()
     if args.scorer_model:
         os.environ["FORGE_BENCH_SCORER"] = args.scorer_model
@@ -303,7 +323,7 @@ def main() -> int:
         and (wanted or is_mini(p) == args.mini)
     ):
         print(f"[{args.name}] {task.name} ...", flush=True)
-        rows.append(run_task(task, run_dir, env))
+        rows.append(run_task(task, run_dir, env, args.design_from))
         (run_dir / "results.json").write_text(json.dumps(rows, indent=1, default=str), encoding="utf-8")
     report = markdown(args.name, rows)
     (run_dir / "results.md").write_text(report, encoding="utf-8")
