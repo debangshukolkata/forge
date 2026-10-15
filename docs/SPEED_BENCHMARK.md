@@ -124,9 +124,14 @@ Brief: three designs of the home screen of a blood donation app (tests/benchmark
 
 **First attempt (x8-1, stopped after one pair).** Serial 2,788 s with 100 main-agent model calls; "parallel" 1,441 s with 64: the model never spawned a builder in either arm (it loaded the parallel-builders skill, then reasoned "treat this as a single-agent job to minimise coordination errors"), so the 1.9x difference was route variance, not parallelism. That is why the route became a tool (D-380). Lesson: one run per arm, with the arms behaving alike, shows nothing.
 
-**Second attempt (x8-2), interim after the first pair** (the main agent's model calls only; the builders' own calls are in their subagent logs):
-| Arm | Wall | Main-agent calls | Input tokens | Cost | Agents (peak at once) | 429 notices | Designs | Audit findings left | Sideways scroll |
-|---|---|---|---|---|---|---|---|---|---|
-| serial 1 | 1,914 s | 40 | 2.68 M | $2.44 | 4 (1) | 0 | 3, all different | 4 | 0 |
-| parallel 1 | 750 s | 17 | 0.74 M | $1.99 | 4 (3) | 0 | 3, all different | 0 | 0 |
-The parallel arm was 2.6x faster and 18 % cheaper with no 429s from Azure at three builders at once. One pair is one pair: the table is completed with runs 2 and 3 of each arm.
+**Final result of the second attempt (x8-2, three pairs, alternating, idle machine, commit `b030af7`).** Wall time is the whole run; model calls are the main agent's (the builders' own calls are in their subagent logs).
+| Arm | Run | Wall | Main-agent calls | Input tokens | Cost | Agents (peak at once) | 429 notices | Designs (all different) | Audit findings left | Sideways scroll |
+|---|---|---|---|---|---|---|---|---|---|---|
+| serial | 1 | 1,914 s | 40 | 2.68 M | $2.44 | 4 (1) | 0 | 3 | 4 | 0 |
+| parallel | 1 | 750 s | 17 | 0.74 M | $1.99 | 4 (3) | 0 | 3 | 0 | 0 |
+| serial | 2 | 2,208 s | 63 | 4.94 M | $3.41 | 7 (2) | 0 | 3 | 0 | 0 |
+| parallel | 2 | 1,468 s | 51 | 3.59 M | $3.10 | 4 (3) | 0 | 3 | 0 | 0 |
+| serial | 3 | 3,340 s | 70 | 6.82 M | $4.50 | 7 (2) | 2 | 3 | 0 | 0 |
+| parallel | 3 | 1,789 s | 40 | 2.45 M | $3.38 | 5 (3) | 0 | 3 | 3 | 0 |
+Means: serial 2,487 s and $3.45; parallel 1,336 s and $2.82. **Parallel was 46 % faster (a 1.9x speed-up) and 18 % cheaper**, and faster in every pair (2.6x, 1.5x, 1.9x). It never hit an Azure 429 with three builders at once (the serial arm saw two in its third run). Quality, as far as the checks measure it: three different designs in every run, no sideways scroll; audit findings left were 4, 0, 0 (serial) and 0, 0, 3 (parallel), so no difference. Why it is cheaper: each builder starts with a short brief, so the main agent's context stays small (input tokens 2.4 M to 3.6 M against 4.9 M to 6.8 M in the longer serial runs).
+Caveats: three pairs on one brief; the spread inside an arm is large (serial 1,914 to 3,340 s), so the size of the gain is uncertain (1.5x to 2.6x here); the quality of the pages was judged only by the audit and the distinctness check, not by a human look (the screenshots are in the run folders for that). The serial arm also used `build_variants`, run one builder at a time; a model working alone without builders (the first attempt) took 2,788 s in its one run.
