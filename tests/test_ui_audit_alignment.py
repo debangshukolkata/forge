@@ -80,3 +80,15 @@ async def test_cards_of_one_row_with_different_heights_are_found() -> None:
 async def test_a_fieldset_with_the_browser_border_is_found() -> None:
     grooved = "<form><fieldset style='margin:16px 24px'><legend>Space</legend><label>Name <input></label></fieldset></form>"
     assert "default fieldset border" in await audit(TEXT + PICTURE + grooved)
+
+
+def card_rows(rows: int, per_row: int) -> str:
+    one = "<div class='card'><h3>Plan</h3><p>Everything a small team needs to ship.</p></div>"
+    return "".join(
+        f"<div class='cards' style='align-items:stretch'>{one * per_row}</div>" for _ in range(rows)
+    )
+
+
+async def test_a_page_of_nothing_but_boxed_cards_is_found_and_a_calmer_one_is_not() -> None:
+    assert "boxed cards in" in await audit(TEXT + PICTURE + card_rows(3, 3))
+    assert "boxed cards in" not in await audit(TEXT + PICTURE + card_rows(2, 3))

@@ -360,6 +360,18 @@ AUDIT_SCRIPT = r"""
     if (topSpread < 60 && (topSpread > 6 || heightSpread > 24)) uneven.push(parent);  // one row: staggered tops or different heights
   }
   if (uneven.length > 0) findings.push('The cards of a row are not aligned: their tops or heights differ (' + sample(uneven) + '): make the row stretch its items (align-items: stretch) or give the cards one height.');
+  // A page that is only boxed cards in rows looks machine-made (DIE7): count the outermost rounded boxes of a page that is not an application.
+  if (!appLike) {
+    const boxed = all.filter((el) => {
+      if (!visible(el) || ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA', 'FIELDSET', 'LI', 'TR', 'TD'].includes(el.tagName)) return false;
+      const s = getComputedStyle(el), r = el.getBoundingClientRect();
+      return (s.boxShadow !== 'none' || parseFloat(s.borderTopWidth) > 0 || s.backgroundColor !== 'rgba(0, 0, 0, 0)') && parseFloat(s.borderTopLeftRadius) >= 6
+        && r.width > 160 && r.height > 80 && r.width < window.innerWidth * 0.9 && (el.innerText || '').trim().length > 20;
+    });
+    const outer = boxed.filter((el) => !boxed.some((other) => other !== el && other.contains(el)));
+    const holders = new Set(outer.map((el) => el.parentElement));
+    if (outer.length >= 9 && holders.size >= 3) findings.push(outer.length + ' boxed cards in ' + holders.size + ' rows (' + sample(outer) + '): a page made of rounded boxes looks machine-made. Keep boxes for things that are objects (a plan, a product, a person); set the rest as plain columns, a ruled list, a full-width band or a large number with a caption, and vary the row shapes.');
+  }
   // A fieldset that kept the browser's grooved border next to rounded cards.
   const grooved = all.filter((el) => el.tagName === 'FIELDSET' && visible(el) && /groove|ridge|inset|outset/.test(getComputedStyle(el).borderTopStyle));
   if (grooved.length > 0) findings.push(grooved.length + ' form groups keep the browser\'s default fieldset border (' + sample(grooved) + '): set border, padding and radius to match the cards, and style the legend.');
