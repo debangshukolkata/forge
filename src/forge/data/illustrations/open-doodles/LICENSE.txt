@@ -1,0 +1,4 @@
+Open Doodles by Pablo Stanley (https://www.opendoodles.com/).
+Released under CC0 1.0 (public domain dedication): free for personal and commercial use, no credit required, may be modified and redistributed.
+Licence statement read on the site on 2026-10-15 ("CC0 / Public Domain"). The 32 SVG files were downloaded from the site's own file store (opendoodles.s3-us-west-1.amazonaws.com) unchanged.
+Two colours: ink #000000 and the accent #FF5678 with its shade #CF536D (DebCraft can recolour the accent to the project's palette).

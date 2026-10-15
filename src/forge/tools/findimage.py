@@ -22,6 +22,8 @@ from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools import image_sources as sources
 from forge.tools import picture_library
 from forge.tools.brand_pictures import project_candidates
+from forge.tools.illustration_set import FOLDER as DOODLE_FOLDER
+from forge.tools.illustration_set import HEX, doodle_candidates, recoloured
 from forge.tools.image_sources import PROVIDERS, Candidate, SourceError
 from forge.tools.web_guard import WebPolicy, check_resolving
 
@@ -162,7 +164,12 @@ class FindImage(Tool):
         context.last_image_query = args.query
         names, skipped = available_sources(context.secrets, args.kind, args.sources)
         own = [] if args.sources else project_candidates(context.workspace.repo_dir, args.query, 6)
-        local = [] if args.sources else [*own, *local_candidates(args.query, args.kind, 4)]
+        doodles = (
+            doodle_candidates(args.query, 3)
+            if not args.sources and args.kind in ("illustration", "any")
+            else []
+        )
+        local = [] if args.sources else [*own, *local_candidates(args.query, args.kind, 4), *doodles]
         if not names and not local:
             return ToolResult(
                 ok=False, content="No source fits: " + "; ".join(skipped or ["unknown source names"])
@@ -212,6 +219,14 @@ class FetchImage(Tool):
         size: int = Field(
             default=24, ge=8, le=1024, description="For a bundled icon: width and height in pixels"
         )
+        accent: str = Field(
+            default="",
+            description="For an Open Doodles illustration (doodle:...): the project's accent colour, #RRGGBB, to replace its pink",
+        )
+        ink: str = Field(
+            default="",
+            description="For an Open Doodles illustration: replace its black outlines with this #RRGGBB",
+        )
 
     def summary(self, args: FetchImage.Args) -> str:
         return f"fetch image {args.id} to {args.path}"
@@ -223,7 +238,7 @@ class FetchImage(Tool):
                 ok=False,
                 content=f"{args.id} was not found in this session's results: search with find_image first.",
             )
-        if candidate.source in ("bundled", "library", "project"):
+        if candidate.source in ("bundled", "library", "project", "open-doodles"):
             return _save_local(context, candidate, args)
         policy = context.web_policy or WebPolicy()
         try:
@@ -364,6 +379,16 @@ def _save_local(context: ToolContext, candidate: Candidate, args: Any) -> ToolRe
         except IconError as error:
             return ToolResult(ok=False, content=str(error))
         extension = ".svg"
+    elif candidate.source == "open-doodles":
+        file = DOODLE_FOLDER / candidate.extra["file"]
+        if not file.is_file():
+            return ToolResult(
+                ok=False, content="The illustration file is missing from the install: search again."
+            )
+        accent, ink = getattr(args, "accent", ""), getattr(args, "ink", "")
+        if (accent and not HEX.match(accent)) or (ink and not HEX.match(ink)):
+            return ToolResult(ok=False, content="accent and ink must be colours written as #RRGGBB.")
+        data, extension = recoloured(file.read_text(encoding="utf-8"), accent, ink).encode("utf-8"), ".svg"
     elif candidate.source == "project":
         file = context.workspace.path_of(candidate.extra["file"])
         if not file.is_file():
