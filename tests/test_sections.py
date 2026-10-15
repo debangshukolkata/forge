@@ -15,7 +15,7 @@ from tests import vite_harness as harness
 
 RECIPES = Path(__file__).resolve().parents[1] / "src/forge/skills/ui-design-quality/recipes"
 SHOTS = Path(__file__).resolve().parents[1] / "test-artifacts" / "sections"
-TEMPLATES = ["tpl-landing-charity", "tpl-landing-saas", "tpl-landing-portfolio"]
+TEMPLATES = ["tpl-landing-charity", "tpl-landing-saas", "tpl-landing-portfolio", "tpl-shop-craft", "tpl-event-conference", "tpl-docs-product"]
 SECTION_NAMES = sorted(p.stem for p in (RECIPES / "sections").glob("*.tsx"))
 
 pytestmark = [

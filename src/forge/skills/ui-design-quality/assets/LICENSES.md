@@ -204,8 +204,10 @@ Generated from the assets' front-matter; do not edit by hand.
 | `lay-poster-hero` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-ticket-stub` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-vertical-type` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `sec-category-tiles` | original | authored for DebCraft (section library, D-385) |
 | `sec-contact-form` | original | authored for DebCraft (section library, D-273) |
 | `sec-cta-band` | original | authored for DebCraft (section library, D-273) |
+| `sec-docs-shell` | original | authored for DebCraft (section library, D-385) |
 | `sec-faq-list` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-alternating` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-bento` | original | authored for DebCraft (section library, D-273) |
@@ -215,9 +217,15 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-logo-strip` | original | authored for DebCraft (section library, D-273) |
 | `sec-nav-bar` | original | authored for DebCraft (section library, D-273) |
 | `sec-pricing-tiers` | original | authored for DebCraft (section library, D-273) |
+| `sec-product-grid` | original | authored for DebCraft (section library, D-385) |
+| `sec-schedule-list` | original | authored for DebCraft (section library, D-385) |
+| `sec-speaker-grid` | original | authored for DebCraft (section library, D-385) |
 | `sec-stats-row` | original | authored for DebCraft (section library, D-273) |
 | `sec-steps-timeline` | original | authored for DebCraft (section library, D-273) |
 | `sec-testimonial-feature` | original | authored for DebCraft (section library, D-273) |
+| `tpl-docs-product` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-event-conference` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-charity` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-portfolio` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-saas` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-shop-craft` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |

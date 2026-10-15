@@ -1,0 +1,43 @@
+/* Reference design tokens for Tailwind v4 (copy, then change the palette, fonts and radius to fit the product).
+   One accent scale, one warm neutral scale, one radius, one shadow. Every colour in the app comes from here. */
+@import "tailwindcss";
+@import "./fonts/playfair-display.css";
+@import "./fonts/plus-jakarta-sans.css";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display Variable", ui-serif, Georgia, serif;
+  --color-brand-50: #f1f6f2; --color-brand-100: #dcebe0; --color-brand-200: #bcd8c4; --color-brand-500: #4f8a63; --color-brand-600: #2f6b47; --color-brand-700: #245639; --color-brand-900: #12301f;
+  --color-ink-50: #faf8f3; --color-ink-100: #f2eee5; --color-ink-200: #e6dfd1; --color-ink-300: #d2c8b4; --color-ink-500: #6f6654; --color-ink-700: #433d30; --color-ink-900: #1f1c15;
+  --color-ok: #15803d; --color-warn: #b45309;
+  --color-danger: #b91c1c;
+  --radius-card: 1rem;
+  --shadow-soft: 0 1px 2px rgb(31 28 21 / 0.06), 0 12px 32px -12px rgb(31 28 21 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(31 28 21 / 0.06), 0 20px 40px -16px rgb(31 28 21 / 0.28);
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-ink-50 font-sans text-ink-700 antialiased; }
+  h1, h2, h3 { @apply font-display text-ink-900 tracking-tight; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-brand-600; }
+  ::selection { @apply bg-brand-100 text-brand-900; }
+}
+
+/* @utility (not @layer components) so these can also be used inside @apply and with variants like hover: */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold
+    transition duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-primary { @apply btn bg-brand-600 text-white shadow-soft hover:bg-brand-700 hover:shadow-lift; }
+@utility btn-secondary { @apply btn border border-ink-300 bg-white text-ink-900 hover:border-ink-500 hover:bg-ink-100; }
+@utility card { @apply rounded-card border border-ink-200 bg-white p-6 shadow-soft; }
+@utility eyebrow { @apply text-xs font-semibold uppercase tracking-[0.14em] text-brand-600; }
+@utility field {
+  @apply w-full rounded-xl border border-ink-300 bg-white px-4 py-3 text-ink-900 outline-none transition
+    placeholder:text-ink-500 focus:border-brand-600 focus:ring-4 focus:ring-brand-100;
+}
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fade-up 0.6s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .fade-up { animation: none; } html { scroll-behavior: auto; } }

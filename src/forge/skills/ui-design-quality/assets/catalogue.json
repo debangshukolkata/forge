@@ -7785,6 +7785,41 @@
    "size": 4884
   },
   {
+   "id": "sec-category-tiles",
+   "type": "section",
+   "title": "Category tiles",
+   "summary": "Three large tiles that lead to the parts of a shop or site; the first one filled with the brand colour.",
+   "moods": [
+    "clean",
+    "confident"
+   ],
+   "products": [
+    "shop",
+    "e-commerce",
+    "navigation"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "categories"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/CategoryTiles.tsx",
+     "to": "src/sections/CategoryTiles.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-385)",
+   "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
+   "preview": null,
+   "path": "assets/section/sec-category-tiles.md",
+   "size": 2476
+  },
+  {
    "id": "sec-contact-form",
    "type": "section",
    "title": "Contact or sign-up form",
@@ -7851,6 +7886,43 @@
    "preview": null,
    "path": "assets/section/sec-cta-band.md",
    "size": 1618
+  },
+  {
+   "id": "sec-docs-shell",
+   "type": "section",
+   "title": "Documentation shell",
+   "summary": "A documentation page: sticky navigation, article with code block and note, and an On this page list.",
+   "moods": [
+    "technical",
+    "calm"
+   ],
+   "products": [
+    "documentation",
+    "developer tools",
+    "help centre"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "docs",
+    "sidebar",
+    "code"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/DocsShell.tsx",
+     "to": "src/sections/DocsShell.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-385)",
+   "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
+   "preview": null,
+   "path": "assets/section/sec-docs-shell.md",
+   "size": 5332
   },
   {
    "id": "sec-faq-list",
@@ -8177,6 +8249,116 @@
    "size": 3449
   },
   {
+   "id": "sec-product-grid",
+   "type": "section",
+   "title": "Product grid",
+   "summary": "Products as a grid: picture, name, short text, price and an add button each, with optional tags.",
+   "moods": [
+    "clean",
+    "warm"
+   ],
+   "products": [
+    "shop",
+    "e-commerce",
+    "catalogue"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "shop",
+    "products"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/ProductGrid.tsx",
+     "to": "src/sections/ProductGrid.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-385)",
+   "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
+   "preview": null,
+   "path": "assets/section/sec-product-grid.md",
+   "size": 3485
+  },
+  {
+   "id": "sec-schedule-list",
+   "type": "section",
+   "title": "Schedule with day tabs",
+   "summary": "A programme with tabs for the days and a list of sessions with time, speaker and room.",
+   "moods": [
+    "clear",
+    "organised"
+   ],
+   "products": [
+    "events",
+    "conferences",
+    "festivals"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "schedule",
+    "tabs",
+    "programme"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/ScheduleList.tsx",
+     "to": "src/sections/ScheduleList.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-385)",
+   "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
+   "preview": null,
+   "path": "assets/section/sec-schedule-list.md",
+   "size": 4804
+  },
+  {
+   "id": "sec-speaker-grid",
+   "type": "section",
+   "title": "Speaker or team grid",
+   "summary": "People cards with an initials avatar, name, role and one line; two columns on a phone, four on desktop.",
+   "moods": [
+    "friendly",
+    "clean"
+   ],
+   "products": [
+    "events",
+    "teams",
+    "about pages"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "people",
+    "speakers",
+    "team"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/SpeakerGrid.tsx",
+     "to": "src/sections/SpeakerGrid.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-385)",
+   "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
+   "preview": null,
+   "path": "assets/section/sec-speaker-grid.md",
+   "size": 3097
+  },
+  {
    "id": "sec-stats-row",
    "type": "section",
    "title": "Stats row",
@@ -8281,6 +8463,184 @@
    "preview": null,
    "path": "assets/section/sec-testimonial-feature.md",
    "size": 2044
+  },
+  {
+   "id": "tpl-docs-product",
+   "type": "template",
+   "title": "Docs: product documentation",
+   "summary": "A documentation page: top bar, sticky navigation, article with a code block and a note, an On this page list, footer.",
+   "moods": [
+    "technical",
+    "calm",
+    "clear"
+   ],
+   "products": [
+    "documentation",
+    "developer tools",
+    "api",
+    "help centre"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/docs/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/docs/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/DocsShell.tsx",
+     "to": "src/sections/DocsShell.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    },
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono-latin-wght-normal.woff2",
+     "to": "public/fonts/jetbrains-mono-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono.css",
+     "to": "src/fonts/jetbrains-mono.css"
+    },
+    {
+     "from": "fonts/jetbrains-mono/jetbrains-mono-OFL.txt",
+     "to": "public/fonts/jetbrains-mono-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-385)",
+   "preview": null,
+   "path": "assets/template/tpl-docs-product.md",
+   "size": 107479
+  },
+  {
+   "id": "tpl-event-conference",
+   "type": "template",
+   "title": "Event: conference",
+   "summary": "A conference or festival page: hero, key numbers, a programme with day tabs, speakers, tickets, practical questions, closing band.",
+   "moods": [
+    "bold",
+    "organised",
+    "modern"
+   ],
+   "products": [
+    "events",
+    "conferences",
+    "festivals",
+    "meetups"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/event/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/event/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroCentered.tsx",
+     "to": "src/sections/HeroCentered.tsx"
+    },
+    {
+     "from": "recipes/sections/StatsRow.tsx",
+     "to": "src/sections/StatsRow.tsx"
+    },
+    {
+     "from": "recipes/sections/ScheduleList.tsx",
+     "to": "src/sections/ScheduleList.tsx"
+    },
+    {
+     "from": "recipes/sections/SpeakerGrid.tsx",
+     "to": "src/sections/SpeakerGrid.tsx"
+    },
+    {
+     "from": "recipes/sections/PricingTiers.tsx",
+     "to": "src/sections/PricingTiers.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/CtaBand.tsx",
+     "to": "src/sections/CtaBand.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
+     "to": "public/fonts/space-grotesk-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk.css",
+     "to": "src/fonts/space-grotesk.css"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-OFL.txt",
+     "to": "public/fonts/space-grotesk-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-385)",
+   "preview": null,
+   "path": "assets/template/tpl-event-conference.md",
+   "size": 103287
   },
   {
    "id": "tpl-landing-charity",
@@ -8590,6 +8950,111 @@
    "preview": null,
    "path": "assets/template/tpl-landing-saas.md",
    "size": 105987
+  },
+  {
+   "id": "tpl-shop-craft",
+   "type": "template",
+   "title": "Shop: craft goods",
+   "summary": "A small-shop storefront: hero, category tiles, product grid, facts, a customer quote, delivery questions, newsletter band, footer.",
+   "moods": [
+    "warm",
+    "crafted",
+    "trustworthy"
+   ],
+   "products": [
+    "shop",
+    "e-commerce",
+    "handmade",
+    "retail"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/shop/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/shop/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroSplit.tsx",
+     "to": "src/sections/HeroSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/ArtTile.tsx",
+     "to": "src/sections/ArtTile.tsx"
+    },
+    {
+     "from": "recipes/sections/CategoryTiles.tsx",
+     "to": "src/sections/CategoryTiles.tsx"
+    },
+    {
+     "from": "recipes/sections/ProductGrid.tsx",
+     "to": "src/sections/ProductGrid.tsx"
+    },
+    {
+     "from": "recipes/sections/StatsRow.tsx",
+     "to": "src/sections/StatsRow.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialFeature.tsx",
+     "to": "src/sections/TestimonialFeature.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/CtaBand.tsx",
+     "to": "src/sections/CtaBand.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display-latin-wght-normal.woff2",
+     "to": "public/fonts/playfair-display-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display.css",
+     "to": "src/fonts/playfair-display.css"
+    },
+    {
+     "from": "fonts/playfair-display/playfair-display-OFL.txt",
+     "to": "public/fonts/playfair-display-OFL.txt"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/plus-jakarta-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans.css",
+     "to": "src/fonts/plus-jakarta-sans.css"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-OFL.txt",
+     "to": "public/fonts/plus-jakarta-sans-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-385)",
+   "preview": null,
+   "path": "assets/template/tpl-shop-craft.md",
+   "size": 97884
   }
  ]
 }
