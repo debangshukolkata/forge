@@ -97,6 +97,10 @@ class ShadcnSetup(Tool):
             default="radix",
             description="The primitives under the components: Radix UI (most examples and documentation) or Base UI.",
         )
+        preset: Literal["nova", "vega", "maia", "lyra", "mira", "luma", "sera", "rhea"] = Field(
+            default="nova",
+            description="The look of the generated components (nova: Lucide icons and Geist; the others differ in radius, density and font).",
+        )
         components: list[str] = Field(
             default_factory=list,
             description="Components to add after init, e.g. ['button', 'card', 'input', 'dialog'].",
@@ -140,6 +144,8 @@ class ShadcnSetup(Tool):
                 + f".\nFailed at: {step}\n{result.content[-2500:]}",
             )
 
+        if folder != ".":  # the shell refuses a working folder that does not exist yet
+            context.workspace.jail.check(context.workspace.path_of(folder)).mkdir(parents=True, exist_ok=True)
         if self.read(context, prefix + "package.json") is None:
             created = await self.step(
                 context, "npm create vite@latest . -- --template react-ts --no-interactive", folder
@@ -196,11 +202,14 @@ class ShadcnSetup(Tool):
                 done.append(f"updated {relative}")
         context.last_edit_step = context.step
 
+        # Without -p the CLI asks which preset to use and, with no terminal, stops there and still exits 0 (found by running this tool for real, D-402).
         init = await self.step(
-            context, f"npx --yes shadcn@latest init -b {args.base} -y --no-monorepo", folder
+            context, f"npx --yes shadcn@latest init -b {args.base} -p {args.preset} -y --no-monorepo", folder
         )
         if not init.ok:
             return failure("shadcn init", init)
+        if self.read(context, prefix + "components.json") is None:
+            return failure("shadcn init (it ended without writing components.json)", init)
         done.append("shadcn init")
         if args.components:
             add = await self.step(
@@ -208,6 +217,16 @@ class ShadcnSetup(Tool):
             )
             if not add.ok:
                 return failure("shadcn add", add)
+            absent = [
+                n
+                for n in args.components
+                if not context.workspace.path_of(prefix + f"src/components/ui/{n}.tsx").exists()
+            ]
+            if absent:
+                return failure(
+                    f"shadcn add (no file for: {', '.join(absent)}; the registry may call them something else)",
+                    add,
+                )
             done.append("added " + ", ".join(args.components))
         return ToolResult(
             ok=True,

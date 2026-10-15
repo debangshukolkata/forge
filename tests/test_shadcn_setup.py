@@ -151,8 +151,12 @@ async def test_the_whole_setup_on_a_new_project(tmp_path: Path, original_repo: P
     result = await ShadcnSetup().run(ShadcnSetup.Args(project_dir="web", components=["button"]), context)
     assert result.ok, result.content
     web = workspace.repo_dir / "web"
+    listing = sorted(str(p.relative_to(web)) for p in web.rglob("*") if "node_modules" not in p.parts)[:60]
     assert (web / "components.json").is_file() and (
         web / "src" / "components" / "ui" / "button.tsx"
-    ).is_file()
+    ).is_file(), (
+        result.content,
+        listing,
+    )
     again = await ShadcnSetup().run(ShadcnSetup.Args(project_dir="web"), context)
     assert again.ok, again.content
