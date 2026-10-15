@@ -21,6 +21,7 @@ from forge.slides.icons import IconError, icon_svg, search_icons
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools import image_sources as sources
 from forge.tools import picture_library
+from forge.tools.brand_pictures import project_candidates
 from forge.tools.image_sources import PROVIDERS, Candidate, SourceError
 from forge.tools.web_guard import WebPolicy, check_resolving
 
@@ -134,7 +135,7 @@ class FindImage(Tool):
     name = "find_image"
     read_only = True
     description = (
-        "Search free, licensed pictures: icons and vector clip art (Iconify: Lucide, Tabler, Material and others), photos and drawings "
+        "Search pictures: the user's own files first (the project's brand-assets, assets/brand or brand folder; ids project:...), then free, licensed icons and vector clip art (Iconify: Lucide, Tabler, Material and others), photos and drawings "
         "(Openverse, Wikimedia Commons, NASA, and Pexels, Unsplash or Pixabay when their key is in the .env file). Only licences that "
         "allow commercial use and changes are listed (CC0, public domain, CC BY, MIT, ISC, Apache-2.0 and the photo sites' licences), "
         "each with the credit line it needs. Pictures that need no network come first: the bundled Lucide and Material icons (ids "
@@ -160,7 +161,8 @@ class FindImage(Tool):
             return ToolResult(ok=False, content="Not searched: the query contains a host-identifying term.")
         context.last_image_query = args.query
         names, skipped = available_sources(context.secrets, args.kind, args.sources)
-        local = [] if args.sources else local_candidates(args.query, args.kind, 4)
+        own = [] if args.sources else project_candidates(context.workspace.repo_dir, args.query, 6)
+        local = [] if args.sources else [*own, *local_candidates(args.query, args.kind, 4)]
         if not names and not local:
             return ToolResult(
                 ok=False, content="No source fits: " + "; ".join(skipped or ["unknown source names"])
@@ -221,7 +223,7 @@ class FetchImage(Tool):
                 ok=False,
                 content=f"{args.id} was not found in this session's results: search with find_image first.",
             )
-        if candidate.source in ("bundled", "library"):
+        if candidate.source in ("bundled", "library", "project"):
             return _save_local(context, candidate, args)
         policy = context.web_policy or WebPolicy()
         try:
@@ -362,6 +364,16 @@ def _save_local(context: ToolContext, candidate: Candidate, args: Any) -> ToolRe
         except IconError as error:
             return ToolResult(ok=False, content=str(error))
         extension = ".svg"
+    elif candidate.source == "project":
+        file = context.workspace.path_of(candidate.extra["file"])
+        if not file.is_file():
+            return ToolResult(ok=False, content="The file is gone from the project: search again.")
+        data, extension = file.read_bytes(), file.suffix.lower()
+        if extension == ".svg" and UNSAFE_SVG.search(data.decode("utf-8", "replace")):
+            return ToolResult(
+                ok=False,
+                content="The SVG holds a script or an outside link, so it was not used. Ask the user for another file.",
+            )
     else:
         file = picture_library.folder() / candidate.extra["file"]
         if not file.is_file():
