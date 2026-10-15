@@ -55,6 +55,19 @@ llm:
       vision: true
       price_per_mtok: { input: 2.5, cached_input: 0.25, output: 15.0 }   # USD; placeholder, confirm tenant pricing
 
+    gpt52:                        # optional (D-413): gpt-5.2 on the second Azure resource (deployment aicloud-gpt-5.2); the Azure model proposed for the critic, judge and reviewer when no Gemini model has answered
+      provider: azure
+      label: gpt-5.2
+      deployment_env: AZURE_GPT52_DEPLOYMENT
+      endpoint_env: AZURE_FALLBACK_ENDPOINT
+      api_key_env: AZURE_FALLBACK_API_KEY
+      api_version_env: AZURE_FALLBACK_API_VERSION
+      context_window: 400000      # input tokens (confirm for the tenant's deployment)
+      max_output: 32000
+      reasoning_effort: medium
+      vision: true
+      price_per_mtok: { input: 1.75, cached_input: 0.175, output: 14.0 }   # USD; placeholder, confirm tenant pricing
+
     gemini4argon:                 # optional (D-407): Google's frontier model for long coding and agent work (blog post 2026-10); answered text and pictures from `global` on the office laptop's project
       provider: gemini
       label: gemini-4-argon

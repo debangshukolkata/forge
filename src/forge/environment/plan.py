@@ -24,9 +24,9 @@ class RoleRouter(Protocol):
 PREFERENCE: dict[str, tuple[str, ...]] = {
     "coder": ("gpt54",),
     "planner": ("gemini4argon", "gemini31pro"),
-    "critic": ("gemini4argon", "gemini31pro"),
-    "judge": ("gemini4argon", "gemini31pro"),
-    "reviewer": ("gemini4argon", "gemini31pro"),
+    "critic": ("gemini4argon", "gemini31pro", "gpt52"),
+    "judge": ("gemini4argon", "gemini31pro", "gpt52"),
+    "reviewer": ("gemini4argon", "gemini31pro", "gpt52"),
     "fallback": ("gemini31pro", "gpt51"),
 }
 
