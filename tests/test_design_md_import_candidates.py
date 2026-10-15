@@ -55,3 +55,24 @@ async def test_the_winning_candidate_can_be_imported_from_the_candidates_folder(
         DesignMdImport.Args(source=".forge/secrets/DESIGN.md", output="X.md", overwrite=True), context
     )
     assert not elsewhere.ok  # other .forge folders stay closed
+
+
+async def test_a_candidate_without_a_composition_is_told_at_once_how_to_fix_it(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """D-386: design_candidates refuses a candidate that names no composition, and the model rewrote all three files; the write result now says it in one line."""
+    from forge.tools.files import WriteFile
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace, design_first=False)
+    bare = await WriteFile().run(
+        WriteFile.Args(path=".forge/candidates/a/DESIGN.md", content=DESIGN), context
+    )
+    assert (
+        bare.ok and "does not name its composition yet" in bare.content and "ONE small edit" in bare.content
+    )
+    named = DESIGN.replace("name: Pulse\n", "name: Pulse\ncomposition: lay-editorial-split\n", 1)
+    fine = await WriteFile().run(WriteFile.Args(path=".forge/candidates/b/DESIGN.md", content=named), context)
+    assert fine.ok and "composition yet" not in fine.content
+    elsewhere = await WriteFile().run(WriteFile.Args(path="docs/DESIGN.md", content=DESIGN), context)
+    assert elsewhere.ok and "composition yet" not in elsewhere.content  # only candidates are reminded

@@ -422,6 +422,23 @@ def control_character_problem(text: str, before: str = "") -> str | None:
     )
 
 
+def candidate_composition_note(text: str) -> str:
+    """A candidate DESIGN.md that does not name its composition is refused later by design_candidates, which made the model rewrite all three files (seen in the night-1 design run).
+    Said at once, the fix is one edit (D-386)."""
+    from forge.designsystem.spec import DesignMdError, parse_design_md
+
+    try:
+        system = parse_design_md(text)
+    except DesignMdError:
+        return ""
+    if str(system.extra.get("composition", "") or "").strip():
+        return ""
+    return (
+        "This candidate does not name its composition yet. Add `composition: lay-<name>` (marketing page), `composition: app-<name>` (application screen) or `composition: custom <one line>` "
+        "to its front matter with ONE small edit (multi_edit), not a rewrite: design_candidates refuses a candidate without it."
+    )
+
+
 async def _save(context: ToolContext, relative: str, text: str, reason: str, op: str) -> ToolResult:
     workspace = context.workspace
     if context.write_only_under is not None and not relative.replace("\\", "/").lstrip("./").startswith(
@@ -469,6 +486,10 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
         from forge.designsystem.lint import describe_findings, lint_text
 
         message += "\n" + describe_findings([f for f in lint_text(text) if f.severity != "info"], 15)
+        if ".forge/candidates/" in relative.replace("\\", "/"):
+            note = candidate_composition_note(text)
+            if note:
+                message += "\n" + note
     problem = await diagnose_file(workspace, relative)
     return ToolResult(
         ok=True, content=message + (f"\n{problem}" if problem else ""), meta={"diagnostics_ok": not problem}
