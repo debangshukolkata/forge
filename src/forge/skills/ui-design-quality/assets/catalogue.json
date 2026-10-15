@@ -5577,7 +5577,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Noto Sans Bengali and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-bengali.jpg",
    "path": "assets/font-pairing/pair-bengali.md",
    "size": 182846
   },
@@ -5634,7 +5634,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Space Grotesk and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-bold-poster.jpg",
    "path": "assets/font-pairing/pair-bold-poster.md",
    "size": 77307
   },
@@ -5690,7 +5690,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Plus Jakarta Sans and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-clean-saas.jpg",
    "path": "assets/font-pairing/pair-clean-saas.md",
    "size": 82293
   },
@@ -5746,7 +5746,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts JetBrains Mono and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-developer-mono.jpg",
    "path": "assets/font-pairing/pair-developer-mono.md",
    "size": 94588
   },
@@ -5803,7 +5803,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Playfair Display and DM Sans (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-elegant-serif.jpg",
    "path": "assets/font-pairing/pair-elegant-serif.md",
    "size": 82131
   },
@@ -5859,7 +5859,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Manrope and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-fintech-precise.jpg",
    "path": "assets/font-pairing/pair-fintech-precise.md",
    "size": 79631
   },
@@ -5915,7 +5915,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Outfit and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-geometric-modern.jpg",
    "path": "assets/font-pairing/pair-geometric-modern.md",
    "size": 86589
   },
@@ -5971,7 +5971,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Archivo and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-heavy-grotesque.jpg",
    "path": "assets/font-pairing/pair-heavy-grotesque.md",
    "size": 89300
   },
@@ -6031,7 +6031,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Noto Sans Devanagari and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-hindi.jpg",
    "path": "assets/font-pairing/pair-hindi.md",
    "size": 195508
   },
@@ -6087,7 +6087,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Lora and Plus Jakarta Sans (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-journal.jpg",
    "path": "assets/font-pairing/pair-journal.md",
    "size": 72507
   },
@@ -6144,7 +6144,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Nunito and DM Sans (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-playful-rounded.jpg",
    "path": "assets/font-pairing/pair-playful-rounded.md",
    "size": 82613
   },
@@ -6201,7 +6201,7 @@
    "licence": "OFL-1.1",
    "source": "bundled fonts Fraunces and Inter (Fontsource, 5.3.0)",
    "tested": "both fonts and their CSS checked by tests/test_fonts.py (D-268)",
-   "preview": null,
+   "preview": "assets/preview/pair-warm-editorial.jpg",
    "path": "assets/font-pairing/pair-warm-editorial.md",
    "size": 90948
   },

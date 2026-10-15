@@ -10,6 +10,7 @@ density: any
 dependencies: []
 licence: OFL-1.1
 source: "bundled fonts Plus Jakarta Sans and Inter (Fontsource, 5.3.0)"
+preview: assets/preview/pair-clean-saas.jpg
 tested: both fonts and their CSS checked by tests/test_fonts.py (D-268)
 files:
   - from: fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2

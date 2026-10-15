@@ -114,7 +114,7 @@ If the session usage limit is hit, resume at 4:30 AM IST (a one-time schedule wa
 24. [~] **L6: animated beam, particles-lite and globe-lite** (small canvas or SVG code of our own). (written 2026-10-15, D-384; build passes, the Edge test runs when the machine is free)
 25. [~] **L1: six more complete templates** (e-commerce, docs, event, onboarding, pricing, admin), Vite + Tailwind, built, type-checked, audit-clean at 1280 and 375 px, in new visual directions; catalogue entries with pictures. (three built 2026-10-15, D-385: shop, conference, docs; build passes, the Edge audit runs when the machine is free; pricing template written 2026-10-15, D-389, files and catalogue only: its Vite build and Edge audit run when the machine is free; onboarding and admin are covered by the React app screens form-wizard, dashboard-kpi and table-data, D-366/D-377, instead of separate templates)
 26. [ ] **L10: a reference picture per direction and per section** (a demo page per direction).
-27. [ ] **L3: Bengali and Devanagari pairing previews**, and close the item (reach is done by D-330).
+27. [x] **(done 2026-10-15, D-394)** **L3: Bengali and Devanagari pairing previews**, and close the item (reach is done by D-330).
 28. [ ] **DS8: A/B on the design benchmark with `--all-roles gpt54`**, then the decision which roles use it (a timing-exclusive run).
 29. [ ] **L11 best-of-N** only if the DS9 runs show real run-to-run variance; otherwise close it as not worth the cost.
 30. [~] **DS3 and DS6 leftovers:** a built hero per candidate; the LICENSE re-check of the CC0 prompts (raw fetch); the optional ask-me-first setting. (licence check done 2026-10-15, D-387; the built hero per candidate and the ask-me-first setting remain)

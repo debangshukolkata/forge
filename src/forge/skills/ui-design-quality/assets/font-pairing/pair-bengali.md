@@ -10,6 +10,7 @@ density: any
 dependencies: []
 licence: OFL-1.1
 source: "bundled fonts Noto Sans Bengali and Inter (Fontsource, 5.3.0)"
+preview: assets/preview/pair-bengali.jpg
 tested: both fonts and their CSS checked by tests/test_fonts.py (D-268)
 files:
   - from: fonts/noto-sans-bengali/noto-sans-bengali-bengali-wght-normal.woff2
