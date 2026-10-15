@@ -1,7 +1,7 @@
 # 2026-10-15: what was done, what was measured, what to do next
 
 Written for the person who owns DebCraft, not for a programmer. Everything below is pushed to `main` (the last push was `46a16a5`; later local commits are listed in `git log`). The list of work was TODO.md section 0c;
-every decision has a number in docs/DECISIONS.md (D-362 to D-418).
+every decision has a number in docs/DECISIONS.md (D-362 to D-429).
 
 ## What to do next (about 30 minutes, then the A/B when you have an hour free)
 
@@ -30,6 +30,19 @@ every decision has a number in docs/DECISIONS.md (D-362 to D-418).
 3. Before a turn ends, the loop asks once for the risks found in the files it read (unsafe loading, committed secrets, SQL built from strings, shell commands from strings, eval, certificate checks off) if the reply does not name them (D-410).
 4. `design_candidates` refuses a composition that is not a catalogue id (D-406).
 5. A control character in a file write is refused with the place and the fix (D-379).
+
+## Later the same day: the Design Intelligence Engine (D-415 to D-429)
+
+| Item | What it is now |
+|---|---|
+| Pages that looked machine-made (D-419) | The audit finds controls in the browser font, text running together, uneven cards, grooved fieldsets, and a booking page with no pictures; recipes fixed. |
+| DIE1 discovery (D-422) | `design_inspire` also measures the type scale and the sections; each page gets a reference note (principles to reuse, the brand's own not to copy); the design skill starts with a look at the field for brand pages. Not proven to help yet. |
+| DIE2 blueprint (D-421) | `design_md_lint` notes missing Page Composition, Imagery, Motion, Responsive and Accessibility sections and decisions with no reason; the template and the drafts carry the sections. |
+| DIE3 knowledge base (D-426) | `design_kb_add`, `design_kb_search`; references and the last designs' palette, fonts and composition live in your profile folder. |
+| DIE4 art director (D-427) | A read-only subagent on the planner role returns a complete DESIGN.md; it is one of the design candidates. |
+| DIE5 gate (D-425, D-428) | Card density in the audit; a note when a design resembles one of the last five. |
+| DIE6 imagery (D-423, D-429) | Your `brand-assets` folder first; the bundled CC0 Open Doodles recoloured to the accent; unDraw only as files you download by hand (D-420). |
+| DIE8 taste test (D-424) | Runbook docs/DESIGN_TASTE_TEST.md: Argon against gpt-5.1 in three arms, a blind gallery. Waits for the office laptop. |
 
 ## What is still open
 
