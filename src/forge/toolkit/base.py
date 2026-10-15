@@ -138,6 +138,9 @@ class ToolContext:
     require_baseline: bool = False  # a real session asks for a test run before the first edit of existing code (set by the session host, D-408)
     tests_pinned: bool = False  # a test file was written in this session (D-410)
     rewrite_asked: bool = False  # the one reminder about replacing most of a file in one step was given
+    model_switch_asked: bool = (
+        False  # the one offer to switch the coder to the stronger model for a picture task was made (D-440)
+    )
     baseline_checked: bool = False  # a test ran, a test file was written, or the first-edit reminder was given (tools/baseline_gate.py, D-408)
     todos: list[dict[str, str]] = field(default_factory=list)  # the model's own todo list (D-177)
     pin: Callable[[str, str | None], None] | None = None  # sets a pinned-context slot (set by the host)

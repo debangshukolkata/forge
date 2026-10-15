@@ -22,6 +22,7 @@ from forge.tools.fonts import font_tools
 from forge.tools.imagegen import imagegen_tools
 from forge.tools.library_api import LibraryApi
 from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, MemoryWrite
+from forge.tools.model_switch import model_switch_tools
 from forge.tools.notebook import NotebookEditCell, NotebookRead
 from forge.tools.parity import LoadSkill
 from forge.tools.pdf_toolkit import pdf_toolkit_tools
@@ -96,6 +97,7 @@ def default_tools() -> list[Tool]:
         *imagegen_tools(),
         *findimage_tools(),
         *font_tools(),
+        *model_switch_tools(),
     ]
 
 

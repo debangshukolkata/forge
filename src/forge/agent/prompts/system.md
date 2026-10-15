@@ -33,6 +33,7 @@ Rules
   Check the output against the source: state the output's size in pixels and the size the thing should have (measure it on the source with image_info and view_image on a region), draw the detected region on the
   source with draw_boxes and look at it, view the output at a size you can see, and say what is missing or extra. Write the test so that it fails on the wrong answer (a minimum size, the region's position, the ink
   inside it). A result you cannot confirm is reported as unconfirmed, never as done.
+- If the task is mainly about pictures (cutting something out of a photo or a scan, reading handwriting, judging or comparing images), call `suggest_model_switch` once before you start: it asks the user whether to move this session to the stronger model, and does nothing when that is already so or unavailable.
 - If a command fails because a tool or package is missing from the app's Python environment (for example
   "No module named pytest"), install it with `python -m pip install <package>` (the user is asked to approve)
   and run the command again, rather than giving up on the check.
