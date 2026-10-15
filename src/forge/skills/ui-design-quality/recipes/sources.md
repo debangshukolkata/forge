@@ -33,8 +33,10 @@ component that is explicitly meant to be copied, and keep its licence notice whe
 ## Use with care or avoid
 - **GSAP** (free "no charge" licence, not open source; barred for tools that compete with Webflow's visual builder): fine for
   a normal site; prefer CSS or Motion first; never ship it inside a no-code or template builder.
-- **React Bits** (MIT with Commons Clause) and **Aceternity UI** (custom per-component terms): look for ideas, do not copy
-  their code into deliverables unless the licence is confirmed for the use.
+- **React Bits** (MIT with Commons Clause): look for ideas, do not copy its code into deliverables unless the licence is confirmed for the use.
+- **Aceternity UI** (animated landing-page effects; its free components' terms are not stated on the site, its Pro licence allows end products for yourself or clients but not reselling the item or a template made from it) and **21st.dev** (a community catalogue: each
+  component carries its own author's licence, which the site does not state; its terms forbid scraping and bots and ask for visible credit to the author; the free plan copies two components a day): never picked by the model. When the **user** chooses a component there and sends its install link, `add_ui_component` installs
+  it with the shadcn CLI, records it in NOTICES.md, and you tell the user to check that author's licence and keep the credit before the site ships. Otherwise take the idea and write the effect with our own micro-effects (`find_asset` type effect).
 - **Hover.css** (reports differ on commercial use): write the 3-line hover effect yourself.
 - **Tailwind UI / Tailwind Plus, Pro kits, paid templates**: not open source. Do not reproduce.
 - **Stock photos**: only from clearly licensed sources (Unsplash and Pexels licences allow use; credit is polite). In a

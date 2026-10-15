@@ -235,3 +235,93 @@ class ShadcnSetup(Tool):
             + f".\nComponents are in {prefix}src/components/ui; import them as `@/components/ui/<name>`. "
             "Edit the colours in the project's src/index.css (the CSS variables), compose pages from the components, and screenshot the result: a shadcn page that still looks stock has not been designed.",
         )
+
+
+# What may be installed, and under whose terms (D-437). Magic UI is MIT and may be named; the others are chosen by the user on the site and given as a link they typed,
+# because their licences differ per component and per author and a model must not pick someone's component by itself.
+NAMED_REGISTRIES = {"@magicui/": "MIT (Magic UI)"}
+CHOSEN_HOSTS = {
+    "21st.dev": "the author's own licence, which the site does not state: open the component page and check it, keep the author's credit (21st.dev's terms ask for it)",
+    "ui.aceternity.com": "the Aceternity licence: end products for yourself or clients are allowed, reselling it as a theme or template is not; the terms of the free components are not stated on the site, so check the component page",
+    "magicui.design": "MIT (Magic UI)",
+    "ui.shadcn.com": "MIT (shadcn/ui)",
+}
+INSTALL_ADDRESS = re.compile(r"https://[^\s\"'`]+")
+
+
+def classify_source(source: str, typed: set[str]) -> tuple[str, str] | str:
+    """(the address or name to give the CLI, whose terms apply) or the reason it is refused."""
+    text = source.strip()
+    for prefix, terms in NAMED_REGISTRIES.items():
+        if text.startswith(prefix) and re.fullmatch(r"@[a-z0-9-]+/[a-z0-9][a-z0-9._/-]*", text):
+            return text, terms
+    found = INSTALL_ADDRESS.search(text)
+    if found is None:
+        return "Give a Magic UI name such as @magicui/marquee, or the install address of a component the user chose (https://21st.dev/r/...)."
+    address = found.group(0).rstrip(".,;)")
+    host = address.split("/")[2].lower()
+    if host not in CHOSEN_HOSTS:
+        return f"{host} is not one of the registries this tool installs from ({', '.join(sorted(CHOSEN_HOSTS))})."
+    if address not in typed:
+        return (
+            f"The user has not typed {address} in a message, so it is not installed: these components carry the licence of their author, and the user must choose them. "
+            "Ask them to send the install link of the component they want."
+        )
+    return address, CHOSEN_HOSTS[host]
+
+
+class AddUiComponent(Tool):
+    name = "add_ui_component"
+    read_only = False
+    description = (
+        "Add one component from a shadcn-compatible registry to a project that shadcn_setup has set up: a Magic UI component by name (`@magicui/marquee`, MIT), or the install address "
+        "of a component the USER chose on 21st.dev, Aceternity UI, Magic UI or shadcn (a link they typed in a message; you cannot use one you found yourself, because each author licenses "
+        "their own work). The component's files are copied into the project, it is recorded in NOTICES.md with whose terms apply, and you tell the user in your final message which "
+        "components came from where and that they must check the licence of a 21st.dev or Aceternity component before the site ships."
+    )
+
+    class Args(ToolArgs):
+        source: str = Field(
+            description="`@magicui/<name>`, or the install address (or the whole `npx shadcn add` line) the user sent"
+        )
+        project_dir: str = Field(default=".", description="The project folder (where components.json is)")
+        reason: str = ""
+
+    def summary(self, args: AddUiComponent.Args) -> str:
+        return f"add component {args.source[:70]}"
+
+    async def run(self, args: AddUiComponent.Args, context: ToolContext) -> ToolResult:
+        if context.shell is None:
+            return ToolResult(ok=False, content="No shell is available in this session.")
+        typed = context.user_urls() if context.user_urls is not None else set()
+        verdict = classify_source(args.source, typed)
+        if isinstance(verdict, str):
+            return ToolResult(ok=False, content=verdict)
+        target, terms = verdict
+        folder = args.project_dir.strip().strip("/\\") or "."
+        prefix = "" if folder == "." else folder + "/"
+        try:
+            context.workspace.read_text(prefix + "components.json")
+        except Exception:
+            return ToolResult(
+                ok=False, content=f"No components.json in {folder}: run shadcn_setup there first."
+            )
+        result = await execute(context, f'npx --yes shadcn@latest add "{target}" -y', STEP_TIMEOUT_S, folder)
+        if not result.ok:
+            return ToolResult(ok=False, content="The component was not added.\n" + result.content[-2500:])
+        line = f"- component `{target}`: terms: {terms}\n"
+        try:
+            existing = context.workspace.read_text(prefix + "NOTICES.md")[0]
+        except Exception:
+            existing = "# Notices\n\nThird-party code and pictures used in this project.\n"
+        if line not in existing:
+            context.workspace.write_text(
+                prefix + "NOTICES.md",
+                existing.rstrip("\n") + "\n" + line,
+                args.reason or "component recorded in NOTICES.md",
+            )
+        context.last_edit_step = context.step
+        return ToolResult(
+            ok=True,
+            content=f"Added {target}. Terms: {terms}. Recorded in NOTICES.md. Import it from the path the CLI printed, restyle it with the project's tokens, and screenshot the page.\n{result.content[-800:]}",
+        )

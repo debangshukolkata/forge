@@ -10,6 +10,7 @@ scratch. The price is a more generic look, so **decide the mode first** and writ
 | an app UI, internal tool, dashboard, admin, form-heavy flow on Tailwind | **daisyUI** (below) or **shadcn/ui** | fast, consistent, themeable, no extra styling engine |
 | a data-heavy business app that needs grids, date pickers, autocomplete, charts | **MUI** (below) | the richest ready-made components; theme it hard |
 | a Bootstrap codebase or an existing Tabler admin | **Tabler** (npm `@tabler/core`) | do not mix Bootstrap and Tailwind in one app |
+| a Bootstrap codebase, or the user asks for a conventional, quick interface | **Bootstrap 5.3** (MIT; `npm i bootstrap`) | fast and consistent, the most familiar look; re-theme it through its CSS variables (`--bs-primary`, `--bs-body-font-family`, `--bs-border-radius`) or Sass variables and `data-bs-theme`; never ship the default blue, and never mix it with Tailwind in one app |
 Whatever the mode: re-theme it (palette, type, radius, shadow), never ship a library's default look; run the audit and the
 critic as usual; keep to one library per app.
 
@@ -117,3 +118,13 @@ Icons: `npm i @tabler/icons-react` (MIT, about 5,000 icons, consistent stroke): 
 kit (`@tabler/core`, Bootstrap 5) is MIT: use its demo pages as layout references for dashboards and rebuild them in
 Tailwind; do not mix its Bootstrap CSS into a Tailwind app. Its bundled ApexCharts has revenue-threshold paid terms: use
 Recharts or Chart.js for charts.
+
+## What each library is best for (the user's list, D-437) and how DebCraft uses it
+| Library | Best use | In DebCraft |
+|---|---|---|
+| Bootstrap | fast, consistent, conventional interfaces | opt-in for internal tools or an existing Bootstrap codebase; the default look is the generic one, so re-theme it; not with Tailwind |
+| shadcn/ui | customizable React applications | `shadcn_setup` sets up Vite, Tailwind v4 and the registry in one call; the preset sets the starting look, DESIGN.md tokens replace it |
+| Aceternity UI | distinctive visual effects and animations | ideas, or a component the user chose and sent as a link (`add_ui_component`); free-component terms are not stated: check them |
+| Magic UI | animated components and interactions | MIT: `add_ui_component` with `@magicui/<name>` (for example `@magicui/marquee`; verified end to end on a new project) |
+| 21st.dev | discovering and reusing community components | the user browses and sends the install link; `add_ui_component` installs it; per-author licence and credit; no scraping or bots |
+Magic UI and 21st.dev components are Tailwind and Motion based: add the dependency the CLI names, restyle with the project's tokens, and keep one accent. An animated effect is the single bold move of a page, spent once; the audit and the critic still judge the result.
