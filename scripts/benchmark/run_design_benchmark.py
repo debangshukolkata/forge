@@ -28,6 +28,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run_code_benchmark import PYTHON, REPO
 from run_speed_benchmark import timing
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from awake import keep_awake, stall_note
+
 TASKS = REPO / "tests" / "benchmarks" / "design"
 RUNS = Path(os.environ.get("FORGE_BENCH_RUNS", r"C:\Work\ForgeRuns")) / "designbench"
 JUDGE_RUBRIC = (
@@ -198,7 +201,7 @@ def markdown(name: str, rows: list[dict[str, object]]) -> str:
         )
         cost = format(float(r["cost_usd"]), ".2f") if r.get("cost_usd") is not None else ""  # type: ignore[arg-type]
         lines.append(
-            f"| {r['id']} | {r.get('wall_s')}s | {cost} | {'yes' if r.get('ladder_used') else 'no'} | "  # type: ignore[arg-type]
+            f"| {r['id']} | {r.get('wall_s')}s{stall_note(r)} | {cost} | {'yes' if r.get('ladder_used') else 'no'} | "  # type: ignore[arg-type]
             f"{r.get('lint_errors', '-')}/{r.get('lint_warnings', '-')} | {r.get('differs_from_default_in', '-')} | {r.get('audit_findings', '-')} | "
             f"{'desktop ' if r.get('sideways_scroll_desktop') else ''}{'phone' if r.get('sideways_scroll_phone') else 'no'} | {scores} |"
         )
@@ -223,6 +226,7 @@ def main() -> int:
         help="a model key (for example gpt54) used for every role: the builder, the reviewer, the vision judge",
     )
     args = parser.parse_args()
+    keep_awake()
     run_dir = RUNS / args.name
     run_dir.mkdir(parents=True, exist_ok=True)
     home = run_dir / "home"

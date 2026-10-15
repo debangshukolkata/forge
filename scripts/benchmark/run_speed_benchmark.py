@@ -12,6 +12,7 @@ docs/SPEED_BENCHMARK.md with the date and what changed. This spends Azure tokens
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import os
 import shutil
@@ -24,6 +25,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run_code_benchmark import PYTHON, REPO, score
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from awake import keep_awake
+
 TASKS = REPO / "tests" / "benchmarks" / "speed"
 RUNS = Path(os.environ.get("FORGE_BENCH_RUNS", r"C:\Work\ForgeRuns")) / "speedbench"
 PAGE_PHRASES = [
@@ -34,6 +38,9 @@ DEPRECATED_TAGS = ("marquee", "blink", "font", "center")
 
 
 # --- timing from the event log ---
+
+
+STALL_LIMIT_S = 900.0  # no event and no model answer for 15 minutes: the machine slept or lost its network, the timing of that run says nothing (seen live 2026-10-15: one call took 6,700 s)
 
 
 def _seconds(stamp: str) -> float:
@@ -63,7 +70,13 @@ def timing(events_path: Path) -> dict[str, object]:
         by_tool[t["name"]] = by_tool.get(t["name"], 0.0) + t.get("duration_s", 0.0) - t.get("waited_s", 0.0)
     slowest = sorted(tools, key=lambda t: t.get("duration_s", 0.0) - t.get("waited_s", 0.0), reverse=True)[:3]
     costs = [e["payload"] for e in events if e["type"] == "cost_updated"]
+    longest_gap = max((b - a for a, b in itertools.pairwise(stamps)), default=0.0)
+    longest_call = max((e["payload"].get("latency_s", 0.0) for e in model), default=0.0)
+    stalled = max(longest_gap, longest_call)
     return {
+        "timing_valid": stalled < STALL_LIMIT_S,
+        "longest_gap_s": round(longest_gap),
+        "longest_model_call_s": round(longest_call),
         "wall_s": round(wall),
         "model_s": round(model_s),
         "tool_s": round(tool_s),
@@ -240,6 +253,7 @@ def main() -> int:
     parser.add_argument("--env", action="append", default=[], help="KEY=VALUE for the DebCraft process")
     parser.add_argument("--compare", nargs=2, metavar=("BEFORE", "AFTER"))
     args = parser.parse_args()
+    keep_awake()
     if args.compare:
         print(compare(*args.compare))
         return 0

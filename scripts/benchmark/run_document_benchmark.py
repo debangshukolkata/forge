@@ -27,6 +27,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run_code_benchmark import PYTHON, REPO
 from run_speed_benchmark import timing
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from awake import keep_awake
+
 TASKS = REPO / "tests" / "benchmarks" / "documents"
 RUNS = Path(os.environ.get("FORGE_BENCH_RUNS", r"C:\Work\ForgeRuns")) / "docbench"
 JUDGE_RUBRIC = (
@@ -284,6 +287,7 @@ def main() -> int:
     )
     parser.add_argument("--no-judge", action="store_true")
     args = parser.parse_args()
+    keep_awake()
     run_dir = RUNS / args.name
     run_dir.mkdir(parents=True, exist_ok=True)
     home = run_dir / "home"

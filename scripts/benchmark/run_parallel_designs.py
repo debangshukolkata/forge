@@ -22,6 +22,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run_code_benchmark import PYTHON, REPO
 from run_speed_benchmark import _seconds, timing
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from awake import keep_awake, stall_note
+
 BRIEF = REPO / "tests" / "benchmarks" / "parallel" / "three_designs.md"
 RUNS = Path(os.environ.get("FORGE_BENCH_RUNS", r"C:\Work\ForgeRuns")) / "paralleldesigns"
 ARMS = {"serial": 1, "parallel": 3}
@@ -158,7 +161,7 @@ def markdown(name: str, rows: list[dict[str, object]]) -> str:
             lines.append(f"| {r['arm']} | {r['run']} | ERROR {r['error']} |" + " |" * 9)
             continue
         lines.append(
-            f"| {r['arm']} | {r['run']} | {r.get('wall_s')} s | {r.get('model_calls')} | {r.get('in_tokens')} | ${r.get('cost_usd')} | "
+            f"| {r['arm']} | {r['run']} | {r.get('wall_s')} s{stall_note(r)} | {r.get('model_calls')} | {r.get('in_tokens')} | ${r.get('cost_usd')} | "
             f"{r.get('agents')} ({r.get('peak_agents')}) | {r.get('notices_429')} | {r.get('designs')} | {r.get('audit_findings')} | "
             f"{r.get('sideways_scroll_pages')} | {r.get('distinct_sources')} |"
         )
@@ -177,6 +180,7 @@ def main() -> int:
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--env", action="append", default=[])
     args = parser.parse_args()
+    keep_awake()
     env = {**os.environ, "FORGE_ENV_FILE": str(REPO / ".env"), "PYTHONIOENCODING": "utf-8"}
     for pair in args.env:
         key, _, value = pair.partition("=")

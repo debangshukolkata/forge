@@ -22,6 +22,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from run_code_benchmark import PYTHON, REPO
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from awake import keep_awake
+
 CHALLENGES = REPO / "tests" / "benchmarks" / "challenges"
 RUNS = Path(os.environ.get("FORGE_BENCH_RUNS", r"C:\Work\ForgeRuns")) / "challenges"
 READ_TOOLS = {"read_file", "grep", "glob", "list_dir", "search_files", "library_api", "lsp_symbols"}
@@ -264,6 +267,7 @@ def main() -> int:
     parser.add_argument("--max-tool-calls", type=int, default=20)
     parser.add_argument("--env", action="append", default=[])
     args = parser.parse_args()
+    keep_awake()
     run_dir = RUNS / args.name
     run_dir.mkdir(parents=True, exist_ok=True)
     home = run_dir / "home"

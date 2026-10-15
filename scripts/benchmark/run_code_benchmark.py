@@ -28,6 +28,9 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from awake import keep_awake
+
 REPO = Path(__file__).resolve().parents[2]
 TASKS = REPO / "tests" / "benchmarks" / "tasks"
 RUNS = Path(os.environ.get("FORGE_BENCH_RUNS", r"C:\Work\ForgeRuns")) / "codebench"
@@ -217,6 +220,7 @@ def main() -> int:
     )
     parser.add_argument("--env", action="append", default=[], help="KEY=VALUE for the DebCraft process")
     args = parser.parse_args()
+    keep_awake()
     run_dir = RUNS / args.name
     run_dir.mkdir(parents=True, exist_ok=True)
     home = run_dir / "home"
