@@ -7,6 +7,7 @@ from __future__ import annotations
 from forge.config import forge_home
 from forge.errors import LLMError
 from forge.parity.agents import load_agents
+from forge.subagents.art_director import ART_DIRECTOR_ITERATIONS, ART_DIRECTOR_PROMPT
 from forge.subagents.builder import (
     BUILDER_ITERATIONS,
     BUILDER_PROMPT,
@@ -39,7 +40,6 @@ from forge.subagents.subagent import (
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.folders import clean_folder
 from forge.toolkit.shell import RunCommand, ShellSession
-from forge.subagents.art_director import ART_DIRECTOR_ITERATIONS, ART_DIRECTOR_PROMPT
 from forge.tools.parity import BUILT_IN_TYPES
 from forge.tools.registry import ToolRegistry, default_tools
 
