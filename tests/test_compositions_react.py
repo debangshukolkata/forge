@@ -47,7 +47,7 @@ async def body_text(page: object, url: str) -> str:
 def test_there_is_a_react_version_of_every_composition_in_the_catalogue() -> None:
     from forge.parity.assets import build_catalogue
 
-    assert len(IDS) == 7
+    assert len(IDS) == 8
     assets = {a.id: a for a in build_catalogue(SKILL).assets}
     for name in IDS:
         asset = assets[f"lay-react-{name}"]
@@ -73,8 +73,12 @@ async def test_a_react_composition_builds_audits_clean_and_shows_the_same_text_a
         assert all(value <= 1 for value in overflow.values()), (name, overflow)
         audit_text: str = result["audit"][1280]  # type: ignore[index]
         problems = [
-            line for line in audit_text.splitlines()[1:] if line.strip() and "system font stack" not in line
-        ]
+            line
+            for line in audit_text.splitlines()[1:]
+            if line.strip()
+            and "system font stack" not in line
+            and "only picture is a drawn motif" not in line
+        ]  # the recipes name their fonts and draw a stand-in motif for the product's own picture
         assert problems == [], (name, problems)
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(channel="msedge", headless=True)

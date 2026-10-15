@@ -205,6 +205,40 @@ class FindImage(Tool):
         return ToolResult(ok=True, content="\n".join(out))
 
 
+SUBJECT_CHECK_PROMPT = (
+    "You check a stock picture against what was asked for. Reply with exactly one line: `YES: <six words on what it shows>` or `NO: <ten words on why not>`. "
+    "Answer NO when it shows a different subject than requested, when any lettering in it is garbled or unreadable, when it has a watermark, when a hand, a face or an object is visibly malformed, "
+    "or when it is a poster, a packaging mock-up or a drawing although a photograph of the subject was asked for."
+)
+
+
+async def subject_problem(context: ToolContext, data: bytes, subject: str) -> str | None:
+    """None when the picture fits the request (or cannot be checked here); otherwise why it does not. Pictures from the network, above all the AI-image samples, are
+    often not what their title says (a search for bread returned a lavender-field package with garbled lettering, found in the Fernhill live check, 2026-10-15)."""
+    if context.router is None or not subject:
+        return None
+    try:
+        import io
+
+        from PIL import Image
+
+        from forge.llm.base import ChatRequest, Message
+        from forge.vision import images
+
+        url, _ = images.for_model(Image.open(io.BytesIO(data)))
+        request = ChatRequest(
+            messages=[
+                Message.system(SUBJECT_CHECK_PROMPT),
+                Message(role="user", content=f"Requested: a picture of {subject}", images=[url]),
+            ]
+        )
+        response = await context.ask_model("vision", request, "checking the picture")
+    except Exception:  # a picture that cannot be checked is not refused for that
+        return None
+    answer = str(response.text).strip()
+    return answer[3:].strip(" :") if answer.upper().startswith("NO") else None
+
+
 class FetchImage(Tool):
     name = "fetch_image"
     read_only = False
@@ -269,6 +303,13 @@ class FetchImage(Tool):
                 ok=False,
                 content="The SVG holds a script or an outside link, so it was not saved. Pick another picture.",
             )
+        if candidate.kind in ("photo", "illustration"):
+            problem = await subject_problem(context, data, context.last_image_query)
+            if problem:
+                return ToolResult(
+                    ok=False,
+                    content=f"Not saved: the picture does not match '{context.last_image_query}' ({problem}). Take another candidate, or search again with other words.",
+                )
         path = re.sub(r"\.[A-Za-z0-9]{2,5}$", "", args.path) + extension
         context.workspace.write_bytes(path, data, f"picture from {candidate.source}: {candidate.title}")
         _record_notice(context, path, candidate)

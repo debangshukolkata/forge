@@ -15,7 +15,7 @@ FILES = sorted((SKILL / "recipes" / "compositions").glob("*.html"))
 def test_there_are_seven_compositions_each_in_the_catalogue_with_pictures() -> None:
     from forge.parity.assets import build_catalogue
 
-    assert len(FILES) == 7
+    assert len(FILES) == 8
     ids = {
         a.id
         for a in build_catalogue(SKILL).assets

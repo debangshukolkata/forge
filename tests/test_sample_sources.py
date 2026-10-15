@@ -121,3 +121,43 @@ def test_the_sample_sources_are_registered_and_the_agent_string_does_not_name_ht
     assert set(SAMPLE_SOURCES) <= set(image_sources.PROVIDERS)
     assert "httpx" not in image_sources.USER_AGENT.lower() and "github.com" in image_sources.USER_AGENT
     assert json.loads(json.dumps(KALEIDO_JSON))  # keep the fixtures valid JSON
+
+
+async def test_a_downloaded_picture_that_does_not_show_the_subject_is_not_saved(
+    original_repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-438: the vision model checks a fetched photo against the query; a lavender package is not a loaf of bread."""
+    import io
+    from types import SimpleNamespace
+
+    from PIL import Image
+
+    buffer = io.BytesIO()
+    Image.new("RGB", (64, 64), "#c9792b").save(buffer, "PNG")
+    real_png = buffer.getvalue()
+
+    def serve(request: httpx.Request) -> httpx.Response:
+        if "okslop.com/api/v1/search/photos" in str(request.url):
+            return httpx.Response(200, json=OKSLOP_JSON)
+        return httpx.Response(200, content=real_png, headers={"content-type": "image/png"})
+
+    _use(monkeypatch, serve)
+    context = _context(original_repo, tmp_path)
+    context.router = object()  # type: ignore[assignment]
+    answers = iter(["NO: a lavender field on a box, lettering garbled", "YES: a sourdough loaf on a board"])
+
+    async def fake_ask(role: str, request: object, what: str, beat_s: float = 4.0) -> object:
+        assert role == "vision"
+        return SimpleNamespace(text=next(answers))
+
+    monkeypatch.setattr(context, "ask_model", fake_ask)
+    await FindImage().run(FindImage.Args(query="sourdough loaf", kind="photo", sources=["okslop"]), context)
+    refused = await FetchImage().run(FetchImage.Args(id="okslop:abc1", path="public/loaf.png"), context)
+    assert (
+        not refused.ok
+        and "does not match 'sourdough loaf'" in refused.content
+        and "lavender" in refused.content
+    )
+    assert not context.workspace.path_of("public/loaf.png").exists()
+    saved = await FetchImage().run(FetchImage.Args(id="okslop:abc1", path="public/loaf.png"), context)
+    assert saved.ok and context.workspace.path_of("public/loaf.png").exists()

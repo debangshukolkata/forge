@@ -1,0 +1,6 @@
+:root{
+  --cream:#fbf6ee; --paper:#f4ecde; --ink:#2b211b; --muted:#65564a; --line:#e3d8c6;
+  --accent:#a84a24; --accent-ink:#ffffff; --deep:#1e3a2b; --deep-ink:#f4ecde; --deep-muted:#c9d3c8;
+  --display:"Fraunces","Iowan Old Style",Georgia,serif; --text:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --radius:10px; --pill:999px; --wrap:1180px;
+}

@@ -8640,6 +8640,52 @@
    "size": 5216
   },
   {
+   "id": "lay-photo-led-story",
+   "type": "section",
+   "title": "Composition: Photo-led story",
+   "summary": "A page told in bands: a hero photograph to the page edge with the headline on its fade, a ruled facts strip with line icons, three product photographs, a dark band beside a photograph, a light band beside the shop front.",
+   "moods": [
+    "warm",
+    "appetising",
+    "editorial",
+    "calm"
+   ],
+   "products": [
+    "bakery",
+    "restaurant",
+    "cafe",
+    "shop",
+    "studio",
+    "hotel",
+    "farm"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "photography",
+    "drawn svg stand-ins",
+    "no build step",
+    "light",
+    "dark band"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/photo-led-story.html",
+     "to": "compositions/photo-led-story.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-439, after the user's own Fernhill Bakery page)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing apart from the placeholder drawings, looked at (tests/test_compositions.py, D-439)",
+   "preview": null,
+   "path": "assets/section/lay-photo-led-story.md",
+   "size": 16949
+  },
+  {
    "id": "lay-poster-hero",
    "type": "section",
    "title": "Composition: Poster hero",
@@ -8868,6 +8914,57 @@
    "preview": null,
    "path": "assets/section/lay-react-notebook-grid.md",
    "size": 5304
+  },
+  {
+   "id": "lay-react-photo-led-story",
+   "type": "section",
+   "title": "React composition: Photo-led story page",
+   "summary": "A page told in bands: a hero photograph to the page edge with the headline on its fade, a ruled facts strip with line icons, three product photographs, a dark band beside a photograph, a light band beside the shop front. (React, TSX with plain CSS.)",
+   "moods": [
+    "warm",
+    "appetising",
+    "editorial",
+    "calm"
+   ],
+   "products": [
+    "bakery",
+    "restaurant",
+    "cafe",
+    "shop",
+    "studio",
+    "hotel",
+    "farm"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/photo-led-story/Composition.tsx",
+     "to": "src/compositions/photo-led-story/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/photo-led-story/composition.css",
+     "to": "src/compositions/photo-led-story/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/photo-led-story/tokens.css",
+     "to": "src/compositions/photo-led-story/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-photo-led-story.md",
+   "size": 16700
   },
   {
    "id": "lay-react-poster-hero",
