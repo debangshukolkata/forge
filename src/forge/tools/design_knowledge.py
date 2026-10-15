@@ -21,6 +21,7 @@ from pydantic import Field
 
 from forge.config import forge_home
 from forge.designsystem.extract import from_computed
+from forge.designsystem.novelty import MIN_DIFFERENT_DIMENSIONS, Fingerprint, differences, fingerprint
 from forge.designsystem.spec import DesignMdError, parse_design_md
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
@@ -125,6 +126,7 @@ def use_from_design_md(text: str) -> dict[str, Any] | None:
         "neutral": str(colours.get("neutral", "")),
         "fonts": families[:2],
         "composition": str(system.extra.get("composition", "")),
+        "fingerprint": list(fingerprint(system).values()),
         "added": time.strftime("%Y-%m-%d"),
     }
 
@@ -144,6 +146,25 @@ def record_use(text: str) -> dict[str, Any] | None:
     records.append(entry)
     _save(records)
     return entry
+
+
+def repeats_recent(text: str, count: int = RECENT_USES) -> list[str]:
+    """The recent designs this DESIGN.md resembles: fewer than three of the dimensions where both say something differ (DIE5). Empty when none, or when it cannot be read."""
+    mine = use_from_design_md(text)
+    if mine is None:
+        return []
+    found: list[str] = []
+    for use in recent_uses(count):
+        values = use.get("fingerprint")
+        if not isinstance(values, list) or len(values) != len(mine["fingerprint"]):
+            continue
+        different = differences(Fingerprint(*map(str, mine["fingerprint"])), Fingerprint(*map(str, values)))
+        if len(different) < MIN_DIFFERENT_DIMENSIONS:
+            found.append(
+                f"{use.get('added', '')}: "
+                + (f"differs only in {', '.join(different)}" if different else "the same on every dimension")
+            )
+    return found
 
 
 def describe_reference(record: dict[str, Any]) -> str:

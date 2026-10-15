@@ -111,3 +111,17 @@ async def test_the_tools_keep_a_looked_at_page_and_search_it(original_repo: Path
         and "https://kiln.example/" in searched.content
         and "kiln-1.png" in searched.content
     )
+
+
+def test_a_design_that_resembles_a_recent_one_is_reported_and_a_different_one_is_not() -> None:
+    kb.record_use(DESIGN)
+    similar = DESIGN.replace("#FAF6F0", "#FBF7F1")  # the same tone, accent hue, display font and composition
+    assert kb.repeats_recent(similar), (
+        "a light, orange, Fraunces design on the same composition repeats the last one"
+    )
+    different = (
+        "---" + NL + "name: Night" + NL + "composition: lay-vertical-type" + NL + "colors:" + NL + '  primary: "#2A6FDB"' + NL + '  neutral: "#0B0F1A"' + NL
+        + "typography:" + NL + "  display:" + NL + "    fontFamily: Space Grotesk, sans-serif" + NL + "---" + NL
+    )  # fmt: skip
+    assert kb.repeats_recent(different) == []
+    assert kb.repeats_recent("not a design") == []

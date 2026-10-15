@@ -10,6 +10,7 @@ from forge.designsystem.lint import describe_findings, lint_text
 from forge.designsystem.spec import DesignMdError, parse_design_md
 from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.design_knowledge import repeats_recent
 
 DEFAULT_PATH = "DESIGN.md"
 SUGGESTED_OUTPUT = {
@@ -49,7 +50,19 @@ class DesignMdLint(Tool):
             text = _read(context, args.path)
         except (ForgeError, OSError) as error:
             return ToolResult(ok=False, content=str(error))
-        return ToolResult(ok=True, content=describe_findings(lint_text(text)))
+        content = describe_findings(lint_text(text))
+        try:
+            repeats = repeats_recent(text)
+        except OSError:
+            repeats = []
+        if repeats:
+            content += (
+                chr(10)
+                + "This design resembles a recent one ("
+                + "; ".join(repeats)
+                + "): change at least three of tone, accent hue, display font, corner style, density, layout energy and composition, unless the brief fixes them."
+            )
+        return ToolResult(ok=True, content=content)
 
 
 class DesignMdExport(Tool):
