@@ -186,8 +186,8 @@ GEMINI_STEPS = [
     "Sign in once: gcloud auth application-default login (or set GOOGLE_APPLICATION_CREDENTIALS to a "
     "service-account file). DebCraft reads the Google credentials itself; no key goes in the .env file.",
     "Only if the message says no project was found: add GOOGLE_CLOUD_PROJECT to the .env file. "
-    "GOOGLE_CLOUD_LOCATION is optional (the default is us-central1).",
-    "Use a model your project can call: gemini-2.5-pro, gemini-2.5-flash or gemini-2.5-flash-lite. Others "
+    "GOOGLE_CLOUD_LOCATION is optional (the default is global, where Gemini 3 and 2.5 both answer).",
+    "Use a model your project can call: gemini-3.1-pro-preview, gemini-3-flash-preview, gemini-2.5-pro or gemini-2.5-flash (run scripts/dev/gemini_probe.py to see). Others "
     "can be listed yet answer 404 until your Google Cloud admin enables them.",
     "Test again here, or run scripts/dev/gemini_smoke.py to see which part fails.",
 ]

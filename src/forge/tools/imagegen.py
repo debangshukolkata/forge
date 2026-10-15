@@ -33,6 +33,11 @@ def model_name(secrets: Any) -> str:
     return (secrets.get(MODEL_ENV) if secrets is not None else None) or DEFAULT_MODEL
 
 
+def default_location(secrets: Any) -> str:
+    """The Gemini 3 image models are served only from `global`; the older ones and Imagen keep the region that worked before (D-403)."""
+    return "global" if model_name(secrets).startswith("gemini-3") else DEFAULT_LOCATION
+
+
 def make_client(secrets: Any) -> Any:
     """The Vertex AI client; tests replace this (the network is what they simulate, not the model)."""
     from google import genai
@@ -41,7 +46,7 @@ def make_client(secrets: Any) -> Any:
     return genai.Client(
         vertexai=True,
         project=secrets.get(PROJECT_ENV) if secrets is not None else None,
-        location=(secrets.get(LOCATION_ENV) if secrets is not None else None) or DEFAULT_LOCATION,
+        location=(secrets.get(LOCATION_ENV) if secrets is not None else None) or default_location(secrets),
         http_options=types.HttpOptions(timeout=TIMEOUT_MS, retry_options=types.HttpRetryOptions(attempts=1)),
     )
 

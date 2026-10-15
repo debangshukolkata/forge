@@ -75,6 +75,16 @@ llm:
       vision: true
       price_per_mtok: { input: 0.5, cached_input: 0.05, output: 3.0 }   # USD; placeholder, confirm
 
+    gemini38flash:                # optional (D-403): the newest Flash that answered the probe (3.5, 3.6, 3.7 and 3.8 Flash all did), also from `global`
+      provider: gemini
+      label: gemini-3.8-flash
+      model_name: gemini-3.8-flash
+      context_window: 1000000
+      max_output: 64000
+      reasoning_effort: null
+      vision: true
+      price_per_mtok: { input: 0.5, cached_input: 0.05, output: 3.0 }   # USD; placeholder, confirm
+
   roles:                          # DECISIONS D-024
     coder: gpt51
     kb_builder: gpt51

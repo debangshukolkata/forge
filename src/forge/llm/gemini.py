@@ -22,7 +22,7 @@ from forge.llm.translate_gemini import (
     to_gemini_tools,
 )
 
-DEFAULT_LOCATION = "us-central1"
+DEFAULT_LOCATION = "global"  # Gemini 3 is served only from here and the 2.5 family answers from here too (probe on the user's project, D-403)
 
 
 def function_calls(chunk: Any) -> list[tuple[str, int]]:

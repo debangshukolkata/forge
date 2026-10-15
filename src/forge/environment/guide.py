@@ -122,7 +122,13 @@ def _variables(config: ForgeConfig) -> tuple[list[Group], list[Variable]]:
             Variable(gemini.project_env, "Gemini", "<google cloud project id>", "Your project.", False)
         )
         variables.append(
-            Variable(gemini.location_env, "Gemini", "<region, e.g. us-central1>", "Your region.", False)
+            Variable(
+                gemini.location_env,
+                "Gemini",
+                "<region, usually global>",
+                "Your region (global serves Gemini 3).",
+                False,
+            )
         )
     return groups, variables
 
