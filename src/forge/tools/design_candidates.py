@@ -216,7 +216,9 @@ class DesignCandidates(Tool):
                 ok=False,
                 content="Not judged: the candidates are not different enough, so choosing among them would be choosing among copies."
                 + "\n".join(lines)
-                + "\nRewrite the similar candidates so that they differ in at least three dimensions (for example a dark candidate with a different accent hue and a different display font), then call design_candidates again.",
+                + "\nChange the similar candidates so that they differ in at least three dimensions (for example a dark candidate with a different accent hue and a different display font). "
+                "Change only the candidate(s) named above and only their front matter (colors, typography, rounded, dials), with one multi_edit each; do not rewrite the whole file. "
+                "Then call design_candidates again.",
             )
         if len(usable) < 2:
             return ToolResult(ok=False, content="Fewer than two usable candidates.\n" + "\n".join(lines))

@@ -110,7 +110,9 @@ one that comes from the product. Only then build.
   product: name, accent, fonts, radii, the single bold move. A catalogue system used unchanged is a template look.
 - *Write two or three candidate DESIGN.md files* (for example `.forge/candidates/a/DESIGN.md`, `b`, `c`) that differ on at least three of: tone (light or
   dark), accent hue, display font, corner style, density, layout energy. Put the dials in the front matter (`dials: {density: 5, variance: 4, motion: 3}`).
-  Never make the three differ only in colour.
+  Never make the three differ only in colour. Before writing any file, decide the directions in one line each (for example "a: light, green, serif display, round, airy;
+  b: dark, amber, grotesk, sharp, dense; c: warm grey, red, mono accents, pill, bold") and write each file from its line: writing three similar files and fixing them
+  afterwards costs two rewrites (seen in the night-1 design runs).
 - *Every candidate has a concept and a signature move.* Under Overview write the concept in one sentence, taken from the product's own world and
   not from a page template (a late-night ramen bar: the paper lantern and the shop sign at 3 am; a children's science museum: a lab notebook full of
   experiments), and name the one signature move that carries it (oversized vertical type, a ticket-stub layout, a hand-drawn diagram system, a full-bleed
