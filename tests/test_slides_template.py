@@ -111,3 +111,24 @@ def test_missing_layouts_fall_back_to_title_only() -> None:
     data = make_template(strip_layouts=("Two Content",))
     built, prs = build(data)
     assert len(prs.slides) == len(SLIDES) and not validate_package(built.data)
+
+
+def test_a_deck_whose_master_lists_a_missing_layout_is_reported_as_damaged() -> None:
+    """From the reference-deck sweep (D-399): python-pptx raises a bare KeyError while listing the layouts; the reader says what is wrong."""
+    from pptx import Presentation
+
+    from forge.slides.errors import BuildError
+    from forge.slides.template import analyze_template
+
+    real = Presentation()
+
+    class Broken:
+        @property
+        def slide_layouts(self) -> list[object]:
+            raise KeyError("no relationship with key 'rId1'")
+
+        def __getattr__(self, name: str) -> object:  # everything else comes from a normal deck
+            return getattr(real, name)
+
+    with pytest.raises(BuildError, match="damaged"):
+        analyze_template(Broken())

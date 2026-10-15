@@ -113,6 +113,19 @@ def _margin(places: Counter[float], slides: int) -> float:
 
 
 def read_design(prs: Any) -> Design:
+    try:
+        return _read_design(prs)
+    except (
+        KeyError
+    ) as error:  # a relationship points at a part that is not in the file (reference-deck sweep, D-399)
+        from forge.slides.errors import BuildError
+
+        raise BuildError(
+            "The presentation is damaged: a slide or layout refers to a part that is not in the file. Open it in PowerPoint and save it again (or use another file)."
+        ) from error
+
+
+def _read_design(prs: Any) -> Design:
     geo = Geometry()
     masters = read_masters(prs)
     first = masters[0] if masters else None

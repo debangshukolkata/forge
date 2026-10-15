@@ -20,3 +20,7 @@ Open government sources (NASA/JPL, the City of Philadelphia, the Indian governme
 ## How they are used
 
 `python scripts/dev/reference_deck_sweep.py C:\Work\ForgeSamples\reference-decks\_src --out sweep.md` opens every file with python-pptx and runs the template reader, the design reader and the sample reader, and lists every failure with its source line: a robustness test for the readers on files nobody wrote for us. The results and the fixes are in the DECISIONS entry D-399.
+
+## First sweep (2026-10-15)
+
+670 files (Apache POI 100, python-pptx 66, LibreOffice 504): 646 opened with python-pptx and ran through the template reader, the design reader and the sample reader. 24 did not open: deliberately corrupt fuzzer files (bad zip, bad CRC), strict-OOXML and password-protected files, `.ppsx` files that python-pptx rejects, and two packages with a media file that has no content type; they are python-pptx's limits, not ours. One real finding in our readers: `tdf169781.pptx` has a slide master that lists a layout missing from the file, and both readers died with a bare `KeyError`; they now raise a `BuildError` that says the deck is damaged and what to do (D-399, test in tests/test_slides_template.py). Everything else, about 640 real decks, read without an error; the slowest file took 2.9 s.

@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from xml.etree import ElementTree as ET
 
+from forge.slides.errors import BuildError
 from forge.slides.themes import Theme, mix, readable_on
 
 EMU = 914400
@@ -216,7 +217,13 @@ def analyze_template(prs: Any) -> TemplateInfo:
     theme, heading, body = theme_from_template(prs)
     layouts: list[LayoutInfo] = []
     roles: dict[str, int] = {}
-    for index, layout in enumerate(prs.slide_layouts):
+    try:
+        slide_layouts = list(prs.slide_layouts)
+    except KeyError as error:  # a master lists a layout whose part is missing: seen in a LibreOffice regression file (the reference-deck sweep, D-399)
+        raise BuildError(
+            "The presentation is damaged: its slide master lists a layout that is not in the file. Open it in PowerPoint and save it again (or use another file)."
+        ) from error
+    for index, layout in enumerate(slide_layouts):
         role, holders = classify_layout(layout)
         layouts.append(LayoutInfo(index, layout.name, role, holders))
         roles.setdefault(role, index)
