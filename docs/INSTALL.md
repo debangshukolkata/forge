@@ -104,3 +104,7 @@ Remove the PATH entry.
 | You forgot the DebCraft password | Delete `%USERPROFILE%\.forge\account.json` and start `forge ui` again: it offers to create a new account. Your projects and settings are kept |
 | The setup guide says a name is missing but you filled it in | Press "Check the file" after saving; check the path shown on the page (it may come from the `FORGE_ENV_FILE` variable) |
 | Edits to `.env` do not seem to apply | A project that is already open keeps the keys it started with: open the project again (or restart `forge ui`). The Environment panel's tests always read the file fresh |
+
+## Check this computer: double-click Debcraft-Doctor.cmd
+
+Next to Start-DebCraft.cmd. It runs DebCraft's doctor (the same as .venv\Scripts\python -m forge doctor, or debcraft doctor in a terminal): Python and packages, certificates, your .env, the Azure and Gemini models (gpt-5.1, gpt-5.4, Gemini 3 and Argon when set up), the databases, web research and Node. One line per check, OK, WARN or FAIL, and the same text is saved to doctor-report.txt in the folder so you can send it. No key is printed.
