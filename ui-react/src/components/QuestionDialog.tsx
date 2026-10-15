@@ -84,6 +84,14 @@ export function QuestionForm({ itemKey, p, forge }: { itemKey: string; p: P; for
                   {recommended && <Badge tone="accent">Recommended</Badge>}
                 </span>
                 {option.description && <span className="mt-0.5 block text-[12.5px] text-fg-muted">{option.description}</span>}
+                {option.image && (
+                  <img
+                    src={`/api/image?path=${encodeURIComponent(option.image)}`}
+                    alt={`Picture of ${option.label}`}
+                    loading="lazy"
+                    className="mt-2 block max-h-64 w-full rounded-md border border-border bg-surface object-contain object-left"
+                  />
+                )}
                 {(option.pros || option.cons || option.risks) && (
                   <span className="mt-1 block space-y-0.5 text-[12px]">
                     {option.pros && <span className="block text-ok">Pros: {option.pros}</span>}

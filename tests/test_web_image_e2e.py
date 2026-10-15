@@ -128,3 +128,45 @@ def test_the_image_route_only_serves_images_inside_the_workspace(
     ]:
         reply = client.get("/api/image", params={"path": path, **token})
         assert reply.status_code == status, (path, reply.status_code)
+
+
+def test_a_question_option_shows_its_picture(
+    live_server: LiveServer,  # noqa: F811
+    workspace: Workspace,  # noqa: F811
+) -> None:
+    """Showing candidate designs before building (D-430): an option of the question card carries a picture."""
+    folder = workspace.forge_dir / "candidates"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "specimen-a.png").write_bytes(tiny_png(480, 300))
+    (folder / "specimen-b.png").write_bytes(tiny_png(480, 300))
+    artifacts = REPO_ROOT / "test-artifacts" / "react-ui"
+    artifacts.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        browser, page = open_in_edge(p, live_server, workspace)
+        live_server.publish(
+            EventType.QUESTION_ASKED,
+            {
+                "id": "Q-designs",
+                "question": "Which direction should the studio site take?",
+                "context": "Two looks drawn from your brief.",
+                "options": [
+                    {
+                        "label": "Warm and handmade",
+                        "description": "Serif, terracotta.",
+                        "image": ".forge/candidates/specimen-a.png",
+                    },
+                    {
+                        "label": "Dark and bold",
+                        "description": "Grotesk, amber.",
+                        "image": ".forge/candidates/specimen-b.png",
+                    },
+                ],
+                "recommended": "Warm and handmade",
+            },
+        )
+        page.wait_for_selector("text=Which direction should the studio site take?")
+        page.wait_for_function(
+            "document.querySelectorAll('[role=radio] img').length === 2 && [...document.querySelectorAll('[role=radio] img')].every(i => i.naturalWidth === 480)"
+        )
+        page.screenshot(path=str(artifacts / "question-with-pictures.png"))
+        browser.close()

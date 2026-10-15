@@ -168,6 +168,15 @@ def _unknown_composition(context: ToolContext, composition: str) -> str:
     )
 
 
+SHOW_CANDIDATES_NOTE = (
+    chr(10)
+    + "Before you import the winner: when the look is open (the brief names no style, and the user supplied no DESIGN.md, brand guide or reference to follow), show the "
+    "candidates and let the user choose, because a wrong direction costs a whole build: call ask_user once with one option per candidate (label a short name, description one "
+    "line on what makes it different, image the candidate's specimen path above, recommended the winner). Skip the question when the user's own DESIGN.md or brand guide is binding, "
+    "when the brief already fixes the style, or when the user has asked you not to ask. Import the candidate the user picks."
+)
+
+
 def _composition_next_step(system: DesignSystem | None) -> str:
     """After the vote: copy the winner's composition instead of writing the page from a blank file (AS1)."""
     if system is None:
@@ -319,6 +328,7 @@ class DesignCandidates(Tool):
             content="\n".join(lines)
             + f"\nSpecimens: {shown}\nWinner: {winner} ({path})\n"
             + json.dumps({k: verdict.get(k) for k in ("scores", "reasons", "fixes")}, indent=1)[:3500]
+            + SHOW_CANDIDATES_NOTE
             + "\nApply the winner's fixes to its DESIGN.md, then design_md_import it as the project's DESIGN.md (overwrite) and record the other candidates in its Overview."
             + _composition_next_step(loaded[path][0] if path else None),
         )

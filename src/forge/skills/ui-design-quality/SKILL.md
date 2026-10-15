@@ -126,6 +126,10 @@ one that comes from the product. Only then build.
   experiments), and name the one signature move that carries it (oversized vertical type, a ticket-stub layout, a hand-drawn diagram system, a full-bleed
   colour block that changes with the section). The signature move is spent once and everything else stays calm. A candidate without a concept is a
   template with a colour change.
+- *When the look is open, let the user choose (D-430).* After `design_candidates` and before importing the winner, call `ask_user` once with one option per candidate: a short name, one line on what makes it
+  different, `image` set to its specimen picture, the critic's winner as `recommended`. Ask only when the brief leaves the look open; do not ask when the user supplied a DESIGN.md, a brand guide or sites to follow, when the brief
+  already names the style, or when the user said not to ask. Ask again, with the new candidates, after a rejection (step 2). Import the one they pick; if they type their own wish, write it into the winner. With no user present
+  (a headless run) the question is answered with the recommended option, so nothing stalls.
 - *Let the critic choose.* `design_candidates` lints them, checks they differ enough, draws a specimen of each and has the vision model judge them against
   the brief. Apply the winner's fixes, `design_md_import` the winner as `DESIGN.md`, and write the other two (one line each) and why they lost under
   Overview. Look at the winner's `design_specimen` with `view_image` yourself too.
