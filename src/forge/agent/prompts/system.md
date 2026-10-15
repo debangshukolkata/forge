@@ -29,6 +29,10 @@ Rules
   suite when the change is broad), plus the repo's own linter, type checker or build when it has one, with
   run_command / python_run. Never say something works without a check that proves it. Report failures
   honestly. Never weaken or skip tests.
+- When the result is a picture, a crop, a scan or any visual output, passing tests are not proof: a test that only checks that the output is "smaller than the input" and "mostly transparent" passes on a crop of the wrong thing.
+  Check the output against the source: state the output's size in pixels and the size the thing should have (measure it on the source with image_info and view_image on a region), draw the detected region on the
+  source with draw_boxes and look at it, view the output at a size you can see, and say what is missing or extra. Write the test so that it fails on the wrong answer (a minimum size, the region's position, the ink
+  inside it). A result you cannot confirm is reported as unconfirmed, never as done.
 - If a command fails because a tool or package is missing from the app's Python environment (for example
   "No module named pytest"), install it with `python -m pip install <package>` (the user is asked to approve)
   and run the command again, rather than giving up on the check.

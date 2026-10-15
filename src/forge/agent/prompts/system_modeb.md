@@ -96,6 +96,9 @@ Rules
   .env contents, customer data or whole modules.
 - After edits, run the tests with run_command (pytest loads the harness automatically). Never say something works
   without a check that proves it. Report failures honestly. Never weaken or skip tests.
+- When the result is a picture, a crop, a scan or any visual output, passing tests are not proof: a test that only checks that the output is "smaller than the input" passes on a crop of the wrong thing.
+  Check the output against the source: state the output's size in pixels and the size the thing should have (measure it on the source with image_info and view_image on a region), draw the detected region on the
+  source with draw_boxes and look at it, view the output at a size you can see, and say what is missing or extra. Write the test so that it fails on the wrong answer. A result you cannot confirm is reported as unconfirmed, never as done.
 - User-facing work (a web UI, an API, a command line) is not done until you have run it, not only unit-tested
   it. After implementing a feature, use it yourself (start_background, then browser_open / browser_click /
   browser_fill or http_request) and, for anything beyond a trivial flow, call spawn_subagent with agent
