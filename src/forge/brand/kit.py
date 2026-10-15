@@ -36,6 +36,9 @@ class BrandKit(BaseModel):
     accent_text: HexColour | None = None
     title_font: str | None = None
     body_font: str | None = None
+    logo: str | None = (
+        None  # a PNG or JPEG in the project (for example assets/logo.png): in the header of Word documents and PDFs (D-388)
+    )
 
 
 def clean(colour: str) -> str:
@@ -100,6 +103,7 @@ class Resolved:
         self.header_fill = self.accent
         self.header_text = readable_on(self.accent) if self.accent else None
         self.title_font = kit.title_font
+        self.logo = kit.logo
         self.body_font = kit.body_font or kit.title_font
 
     def pdf_font(self, name: str | None, bold: bool = False) -> str:

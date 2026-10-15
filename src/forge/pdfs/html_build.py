@@ -183,6 +183,18 @@ def build_pdf_html(spec: object, load: Callable[[str], bytes], scripts: list[str
         '<div style="width:100%;font-size:8pt;color:#666;padding:0 1in;display:flex;justify-content:space-between">'
         f'<span>{footer}</span><span>Page <span class="pageNumber"></span></span></div>'
     )
+    header = "<span></span>"
+    logo_path = Resolved(spec.brand).logo
+    if logo_path:
+        try:
+            logo_bytes = load(logo_path)
+        except Exception as error:
+            raise PdfError(f"The brand logo {logo_path!r} could not be read: {error}") from error
+        kind = "png" if logo_bytes[:4] == b"PNG" else "jpeg"
+        header = (
+            f'<div style="width:100%;padding:0 1in"><img style="height:1cm" '
+            f'src="data:image/{kind};base64,{base64.b64encode(logo_bytes).decode("ascii")}"></div>'
+        )
     with sync_playwright() as playwright:
         browser = None
         for channel in ("msedge", "chrome"):
@@ -201,7 +213,7 @@ def build_pdf_html(spec: object, load: Callable[[str], bytes], scripts: list[str
                 format="A4" if spec.page_size == "A4" else "Letter",
                 print_background=True,
                 display_header_footer=True,
-                header_template="<span></span>",
+                header_template=header,
                 footer_template=template,
                 margin={"top": "1in", "bottom": "0.9in", "left": "1in", "right": "1in"},
             )

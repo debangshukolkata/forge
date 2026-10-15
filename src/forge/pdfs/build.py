@@ -183,9 +183,29 @@ def build_pdf(spec: PdfSpec, load: Callable[[str], bytes]) -> bytes:
         raise PdfError(f"The PDF could not be built: {type(error).__name__}: {str(error)[:300]}") from error
 
     footer = _safe_footer(spec.footer)
+    logo_reader: Any = None
+    if brand.logo:
+        try:
+            logo_reader = importlib.import_module("reportlab.lib.utils").ImageReader(
+                io.BytesIO(load(brand.logo))
+            )
+        except Exception as error:
+            raise PdfError(f"The brand logo {brand.logo!r} could not be read: {error}") from error
 
     def decorate(canvas: Any, document: Any) -> None:
         canvas.saveState()
+        if logo_reader is not None:
+            # About one centimetre high, in the top margin, keeping the picture's proportions (D-388).
+            width, height = logo_reader.getSize()
+            drawn_height = 28.0
+            canvas.drawImage(
+                logo_reader,
+                units.inch,
+                document.pagesize[1] - 0.45 * units.inch - drawn_height,
+                width=drawn_height * width / height,
+                height=drawn_height,
+                mask="auto",
+            )
         canvas.setFont("Helvetica", 9)
         canvas.drawString(units.inch, 0.5 * units.inch, footer)
         canvas.drawRightString(document.pagesize[0] - units.inch, 0.5 * units.inch, f"Page {document.page}")

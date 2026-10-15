@@ -32,7 +32,7 @@ def test_a_light_accent_is_darkened_until_headings_are_readable_and_text_on_it_i
     with pytest.raises(BrandError):
         parse_brand('{"accent": "red"}')
     with pytest.raises(BrandError):
-        parse_brand('{"logo": "x.png"}')
+        parse_brand('{"watermark": "x.png"}')
 
 
 def test_the_same_brand_reaches_a_word_document_a_workbook_and_a_pdf() -> None:

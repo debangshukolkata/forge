@@ -200,6 +200,17 @@ def _image(document: Any, block: Image, load: Callable[[str], bytes]) -> None:
         document.add_paragraph(block.caption, style="Caption").alignment = 1
 
 
+def _logo_in_header(section: Any, load: Callable[[str], bytes], path: str) -> None:
+    """The brand logo, about one centimetre high, at the start of the header (D-388)."""
+    from docx.shared import Cm
+
+    try:
+        data = load(path)
+    except Exception as error:  # the loader raises its own jail and not-found errors
+        raise DocumentError(f"The brand logo {path!r} could not be read: {error}") from error
+    section.header.paragraphs[0].add_run().add_picture(io.BytesIO(data), height=Cm(1.0))
+
+
 def build_document(spec: DocumentSpec, load: Callable[[str], bytes], template: bytes | None = None) -> bytes:
     docx = load_docx()
     from docx.oxml.ns import qn
@@ -229,8 +240,13 @@ def build_document(spec: DocumentSpec, load: Callable[[str], bytes], template: b
         language.set(qn("w:val"), spec.language)
         run_properties.append(language)
         section = document.sections[0]
+        if brand.logo:
+            _logo_in_header(section, load, brand.logo)
         if spec.header:
-            section.header.paragraphs[0].text = spec.header
+            if brand.logo:
+                section.header.paragraphs[0].add_run("    " + spec.header)
+            else:
+                section.header.paragraphs[0].text = spec.header
         footer = section.footer.paragraphs[0]
         if spec.footer:
             footer.text = spec.footer + ("    " if spec.page_numbers else "")
