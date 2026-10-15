@@ -45,6 +45,10 @@ class LLMRouter:
         if role not in self.role_models:
             raise ConfigError(f"Unknown role '{role}'. Roles: {', '.join(ROLES)}")
         model_key = self.role_models[role]
+        if model_key is None and role == "critic":
+            model_key = self.role_models[
+                "coder"
+            ]  # no separate critic chosen: the builder's own model, as before D-409
         if model_key is None:
             raise ConfigError(f"No model is configured for role '{role}'")
         return model_key

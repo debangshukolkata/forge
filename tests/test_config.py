@@ -113,3 +113,13 @@ def test_own_resource_names_go_together() -> None:
 
     with pytest.raises(ValidationError):
         ModelConfig(label="x", deployment_env="D", endpoint_env="E", context_window=1, max_output=1)
+
+
+def test_the_critic_role_uses_the_coders_model_until_one_is_chosen() -> None:
+    from tests.helpers import default_config, mocked_router
+
+    router = mocked_router(default_config(), [])
+    assert router.config.llm.roles.critic is None
+    assert router.model_for_role("critic") == router.model_for_role("coder")
+    router.set_role_model("critic", "gpt41")
+    assert router.model_for_role("critic") == "gpt41"

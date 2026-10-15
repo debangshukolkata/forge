@@ -242,31 +242,34 @@ GEMINI_ANSWERED = {
 }
 
 
-def test_a_gemini_test_that_passed_makes_gemini_3_the_default_for_the_builder_roles() -> None:
+def test_a_gemini_test_that_passed_makes_gemini_the_critic_and_the_judge_and_leaves_the_builder_on_azure() -> (
+    None
+):
     config = default_config()
-    plan = by_role(propose_plan(config, {**BOTH, **GEMINI_ANSWERED}, {}))
-    assert (
-        plan["coder"]["model"] == "gemini31pro" and "used by default" in plan["coder"]["reason"]
-    )  # Argon did not answer here
-    assert plan["vision"]["model"] == "gemini31pro" and plan["kb_builder"]["model"] == "gemini31pro"
     with_argon = {
         "gemini": {"status": "ok", "models": {**GEMINI_ANSWERED["gemini"]["models"], "gemini4argon": True}}
     }
-    argon = by_role(propose_plan(config, {**BOTH, **with_argon}, {}))
-    assert argon["coder"]["model"] == "gemini4argon" and argon["kb_builder"]["model"] == "gemini4argon"
-    assert (
-        argon["vision"]["model"] == "gemini31pro"
-    )  # the stronger picture model of the two until measured otherwise
-    assert plan["summariser"]["model"] == "gemini3flash"
-    assert (
-        plan["reviewer"]["model"] == config.llm.roles.reviewer
-    )  # the reviewer and the judge stay independent
-    assert plan["judge"]["model"] == config.llm.roles.judge
+    plan = by_role(propose_plan(config, {**BOTH, **with_argon}, {}))
+    for role in ("critic", "judge", "reviewer"):
+        assert plan[role]["model"] == "gemini4argon" and "used by default" in plan[role]["reason"]
+    for role in ("coder", "kb_builder", "summariser", "vision"):
+        assert plan[role]["model"] == getattr(
+            config.llm.roles, role
+        )  # the builder side keeps its Azure model
+    no_argon = by_role(propose_plan(config, {**BOTH, **GEMINI_ANSWERED}, {}))
+    assert no_argon["critic"]["model"] == "gemini31pro"  # Argon did not answer: the next one in line
+
+
+def test_the_critic_is_the_coders_model_until_a_critic_is_chosen() -> None:
+    config = default_config()
+    assert config.llm.roles.critic is None
+    plan = by_role(propose_plan(config, BOTH, {}))
+    assert plan["critic"]["model"] == config.llm.roles.coder
 
 
 def test_no_gemini_test_or_a_failed_one_keeps_the_azure_defaults() -> None:
     config = default_config()
-    assert by_role(propose_plan(config, BOTH, {}))["coder"]["model"] == config.llm.roles.coder
+    assert by_role(propose_plan(config, BOTH, {}))["judge"]["model"] == config.llm.roles.judge
     failed = {
         "gemini": {
             "status": "fail",
@@ -286,8 +289,8 @@ def test_the_model_lists_offer_every_model_with_its_state() -> None:
 
 
 def test_an_earlier_choice_beats_the_gemini_default() -> None:
-    plan = by_role(propose_plan(default_config(), {**BOTH, **GEMINI_ANSWERED}, {"coder": "gpt51"}))
-    assert plan["coder"]["model"] == "gpt51" and plan["coder"]["reason"] == "Your earlier choice"
+    plan = by_role(propose_plan(default_config(), {**BOTH, **GEMINI_ANSWERED}, {"judge": "gpt51"}))
+    assert plan["judge"]["model"] == "gpt51" and plan["judge"]["reason"] == "Your earlier choice"
 
 
 def test_the_node_row_reports_a_missing_node_and_a_certificate_failure(

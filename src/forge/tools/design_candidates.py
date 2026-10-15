@@ -286,7 +286,7 @@ class DesignCandidates(Tool):
             if args.rejected:
                 asked += f"\nThe user rejected earlier designs ({', '.join(args.rejected)}) because: {args.rejected_reason or 'they did not like it'}."
             response = await context.ask_model(
-                "vision",
+                "critic",
                 ChatRequest(
                     messages=[Message.system(RUBRIC), Message(role="user", content=asked, images=urls)]
                 ),

@@ -17,13 +17,13 @@ class RoleRouter(Protocol):
     def set_role_model(self, role: str, model_key: str) -> None: ...
 
 
-# When the user has said Gemini is enabled and the Gemini test passed, these roles are proposed on Gemini 3 (D-405). The reviewer and the judge stay on Azure on purpose: a reviewer from
-# the builder's own family is lenient, and the design benchmark's judge is only independent while it is not the builder's model.
+# When the user has said Gemini is enabled and the Gemini test passed, the critic roles are proposed on Gemini (D-405, D-409). The user's decision of 2026-10-15: Gemini 4 Argon judges, the
+# Azure models build. The builder stays on Azure and the critic, the judge and the code reviewer are another model family, so none of them is lenient toward its own work. The builder
+# roles (coder, knowledge builder, summariser, vision) have no Gemini preference until a benchmark on the user's laptop says Gemini builds better.
 GEMINI_PREFERENCE: dict[str, tuple[str, ...]] = {
-    "coder": ("gemini4argon", "gemini31pro", "gemini38flash", "gemini3flash"),
-    "kb_builder": ("gemini4argon", "gemini31pro", "gemini38flash", "gemini3flash"),
-    "vision": ("gemini31pro", "gemini4argon", "gemini38flash", "gemini3flash"),
-    "summariser": ("gemini3flash", "gemini38flash", "gemini31pro"),
+    "critic": ("gemini4argon", "gemini31pro"),
+    "judge": ("gemini4argon", "gemini31pro"),
+    "reviewer": ("gemini4argon", "gemini31pro"),
 }
 
 
@@ -47,7 +47,7 @@ def _usable(key: str, answered: dict[str, bool] | None) -> bool:
 
 
 def _fits(config: ForgeConfig, role: str, key: str) -> bool:
-    return config.llm.models[key].vision if role == "vision" else True
+    return config.llm.models[key].vision if role in ("vision", "critic") else True
 
 
 def _state(key: str, provider: str, answered: dict[str, bool] | None) -> str:
@@ -64,7 +64,7 @@ def propose_plan(config: ForgeConfig, results: dict[str, Any], saved: dict[str, 
     models = config.llm.models
     roles = []
     for role in ROLES:
-        default = getattr(config.llm.roles, role)
+        default = getattr(config.llm.roles, role) or (config.llm.roles.coder if role == "critic" else None)
         wanted, why = default, "Default for this role"
         liked = next(
             (

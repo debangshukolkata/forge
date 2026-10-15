@@ -201,7 +201,7 @@ class SpawnSubagent(Tool):
                 CRITIC_PROMPT,
                 args.task,
                 CRITIC_ITERATIONS,
-                "coder",
+                "critic",
             )
             context.last_critic_step = context.step
             verdict = critic_verdict(report)

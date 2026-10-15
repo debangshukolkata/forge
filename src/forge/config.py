@@ -16,7 +16,7 @@ from forge.errors import ConfigError
 from forge.safety.permissions import PermissionRules
 from forge.safety.redact import Redactor, default_redactor
 
-ROLES = ("coder", "kb_builder", "reviewer", "summariser", "vision", "judge", "fallback")
+ROLES = ("coder", "kb_builder", "reviewer", "summariser", "vision", "judge", "critic", "fallback")
 ReasoningEffort = Literal["minimal", "low", "medium", "high"]
 _SECRET_NAME = re.compile(r"(KEY|SECRET|PASSWORD|TOKEN)", re.IGNORECASE)
 _URL_PASSWORD = re.compile(r"://[^:/\s@]+:([^@\s]+)@")
@@ -98,6 +98,9 @@ class RolesConfig(_Strict):
     summariser: str
     vision: str
     judge: str
+    critic: str | None = (
+        None  # the independent design critic and the vote between design candidates; unset means the coder's model (D-409)
+    )
     fallback: str | None = None
 
 
