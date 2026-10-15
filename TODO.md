@@ -3,14 +3,14 @@
 Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task lives in this file and nowhere else** (consolidated 2026-10-12 from this file, `docs/PPT_PARITY.md` and `docs/TODO_LATER.md`). Add new tasks here, in the group they belong to. The other two files keep only background, decisions and sizing, and point back here. Finished work is in the history at the end.
 
 ## Contents (open items per group)
-- 0. Build order (read this first): **21 open**
+- 0. Build order (read this first): **23 open**
 - 1. Waiting on you (your actions and decisions): **7 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **20 open**
-- 3. Parallel work and speed: **6 open**
+- 3. Parallel work and speed: **5 open**
 - 4. Presentations (match Claude's PowerPoint abilities): **11 open**
-- 5. Platform, runtime and coding competency: **19 open**
+- 5. Platform, runtime and coding competency: **18 open**
 - 6. Parked (not started; your choice when): **3 open**
-- **Total open: 87** (counted by script 2026-10-15: items marked `[ ]` or `[~]`; `[~]` are partly done; section 0 includes tonight's 20)
+- **Total open: 87** (counted by script 2026-10-15: items marked `[ ]` or `[~]`; `[~]` are partly done; section 0 includes tonight's 30)
 
 ## 0. Build order (read this first)
 How to take the work up in the best order. Each phase says what it needs and when it is done. IDs refer to the items below (`D` design, `L` libraries, `X` parallel, `S` speed, `C` coding competency, `W` documents, `P0.x/P1.x/P2.x/P3.x` presentations). Do not start a later phase's big items before the earlier phase's measurements exist.
@@ -107,6 +107,17 @@ Everything below can be finished without the user: no office laptop, no files or
 **Part 4, coding challenges (agreed with the user 2026-10-15; only after items 1 to 19 are finished):**
 20. [ ] **Approach challenges for Forge.** About 8 small tasks, each with one deliberate trap (a bug whose symptom is not its cause; an ambiguous spec that should be noticed and stated; an off-by-one or time-zone edge; a concurrency race; SQL built by string concatenation; a feature that must follow an existing repository's conventions in Mode A; a library API the model may misremember; a refactor that must not change behaviour). Run each with a time box (about 5 minutes or the first 20 tool calls), stop the run, and judge only the approach from `.forge/transcripts/events.jsonl` against a per-challenge checklist: reads the existing code and tests first, states assumptions, finds the root cause before editing, writes a failing test or check before the fix, small edits, runs the checks, does not invent APIs. If the approach is wrong, fix Forge (expect gates and required steps rather than advice, which this model ignores) and run the same challenge again; then give NEW challenges until the approach is right. Do not trade quality or speed for fewer tokens (D-161). List every new gate in the morning summary for the user's review. Record in docs/CODE_BENCHMARK.md (section "Approach challenges") and DECISIONS.
 If the session usage limit is hit, resume at 4:30 AM IST (a one-time schedule was set 2026-10-15 for 04:33; if it did not fire, the user's next message restarts the work from this list).
+**Part 5, design growth (section 2; added at the user's request 2026-10-15). Authoring and writing can start at once, anything that needs Edge is run when no timing run is going:**
+21. [ ] **Close the stale ticks of section 2** (D1, D2, L9 are done: D-368 to D-370) and recount.
+22. [ ] **L4(b) + L2: forty micro-interactions** (loaders, toggles, buttons, inputs, cards) written by us as pure CSS in `motion-micro.css`, restyled with tokens, each a catalogue effect with a demo-page test in Edge (reduced motion off).
+23. [ ] **L2: React hooks** for split text, scramble, magnetic button, number ticker and pinned steps, with tests; the per-intensity effect budget table.
+24. [ ] **L6: animated beam, particles-lite and globe-lite** (small canvas or SVG code of our own).
+25. [ ] **L1: six more complete templates** (e-commerce, docs, event, onboarding, pricing, admin), Vite + Tailwind, built, type-checked, audit-clean at 1280 and 375 px, in new visual directions; catalogue entries with pictures.
+26. [ ] **L10: a reference picture per direction and per section** (a demo page per direction).
+27. [ ] **L3: Bengali and Devanagari pairing previews**, and close the item (reach is done by D-330).
+28. [ ] **DS8: A/B on the design benchmark with `--all-roles gpt54`**, then the decision which roles use it (a timing-exclusive run).
+29. [ ] **L11 best-of-N** only if the DS9 runs show real run-to-run variance; otherwise close it as not worth the cost.
+30. [ ] **DS3 and DS6 leftovers:** a built hero per candidate; the LICENSE re-check of the CC0 prompts (raw fetch); the optional ask-me-first setting.
 Not done at night on purpose: anything that needs the office laptop (Gemini probe, shadcn recheck, template probe, three-design rerun), the user's files or keys, the DS8 model decision, S7 faster-model OK, the one-click installer, the internal rename and pushing.
 
 ## 1. Waiting on you (your actions and decisions)
