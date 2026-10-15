@@ -6,6 +6,7 @@ http_request calls the local app's API directly (smoke tests)."""
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import re
@@ -70,7 +71,8 @@ class BrowserSession:
             await self._playwright.stop()
             self._playwright = None
             raise RuntimeError("No browser could be started (" + "; ".join(errors) + ")")
-        self.page = await self._browser.new_page()
+        # an explicit context: the pages of a several-widths screenshot (X6) open in the same one, so they share cookies and local storage
+        self.page = await (await self._browser.new_context()).new_page()
         self.page.on("console", lambda m: self._log(self.console, f"[{m.type}] {m.text}"))
         self.page.on("pageerror", lambda e: self._log(self.console, f"[pageerror] {e}"))
         self.page.on(
@@ -258,11 +260,22 @@ class BrowserScreenshot(Tool):
             default=None, ge=240, le=3840, description="Viewport width, e.g. 375 for a phone"
         )
         height: int | None = Field(default=None, ge=240, le=4000)
+        widths: list[int] = Field(
+            default_factory=list,
+            max_length=4,
+            description=(
+                "Several viewport widths at once, e.g. [1280, 375]: each is shot on its own page, side by side, instead of one call per width. "
+                "Every page is loaded fresh from the current address (cookies and local storage are shared, a menu you opened or text you typed is not). "
+                "Use it for the desktop and phone look of a finished page; use width for one size, or when the page must be in a state first."
+            ),
+        )
 
     async def run(self, args: BrowserScreenshot.Args, context: ToolContext) -> ToolResult:
         session = _session(context)
         if session.page is None:
             return ToolResult(ok=False, content="No page is open: use browser_open first.")
+        if args.widths:
+            return await self._run_widths(session, args, context)
         reloaded = False
         if context.last_edit_step > session.loaded_step:
             # A static server does not push changes: without a reload the audit judges the page as it was when it was opened, and a font or style the
@@ -307,6 +320,65 @@ class BrowserScreenshot(Tool):
         if reloaded:
             lines.append("The page was reloaded first: files changed since it was opened.")
         return ToolResult(ok=True, content="\n".join([*lines, audit, DESIGN_REMINDER]))
+
+    async def _shoot_one(
+        self, session: BrowserSession, context: ToolContext, url: str, width: int, full_page: bool
+    ) -> tuple[str, str]:
+        """One width on its own page of the same browser context: (the saved path relative to the project, the audit text)."""
+        page = await session.page.context.new_page()
+        try:
+            await page.set_viewport_size({"width": width, "height": 800})
+            await page.goto(url, wait_until="load", timeout=30_000)
+            with contextlib.suppress(Exception):  # a page that keeps polling is photographed as it is
+                await page.wait_for_load_state("networkidle", timeout=5_000)
+            folder = context.workspace.jail.check(context.workspace.forge_dir / "screenshots")
+            folder.mkdir(parents=True, exist_ok=True)
+            path = context.workspace.jail.check(folder / f"shot-{unique_stamp()}-w{width}.png")
+            if full_page:
+                await _scroll_through(page)
+            await page.screenshot(path=str(path), full_page=full_page)
+            audit = await audit_page(page, context.workspace.root)
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            session.shots[digest] = f"{url}@{width}"
+            return path.relative_to(context.workspace.root).as_posix(), audit
+        finally:
+            await page.close()
+
+    async def _run_widths(
+        self, session: BrowserSession, args: BrowserScreenshot.Args, context: ToolContext
+    ) -> ToolResult:
+        import asyncio
+
+        url = session.page.url
+        widths = list(dict.fromkeys(args.widths))
+        if any(w < 240 or w > 3840 for w in widths):
+            return ToolResult(ok=False, content="Each width must be between 240 and 3840.")
+        results = await asyncio.gather(
+            *(self._shoot_one(session, context, url, w, args.full_page) for w in widths),
+            return_exceptions=True,
+        )
+        lines: list[str] = []
+        blocked = False
+        for width, result in zip(widths, results, strict=True):
+            if isinstance(result, BaseException):
+                lines.append(
+                    f"--- {width}px: could not be shot ({str(result).splitlines()[0][:160] if str(result) else type(result).__name__})"
+                )
+                continue
+            saved, audit = result
+            blocked = blocked or "BLOCKER" in audit
+            await context.emit(
+                "notice",
+                {
+                    "kind": "screenshot",
+                    "text": f"Screenshot saved: {saved.rsplit('/', 1)[-1]}",
+                    "path": saved,
+                },
+            )
+            lines += [f"--- {width}px: saved {saved}", audit]
+        context.last_screenshot_step = context.step
+        context.ui_audit_blocked = blocked
+        return ToolResult(ok=True, content=chr(10).join([*lines, DESIGN_REMINDER]))
 
 
 class BrowserConsole(Tool):

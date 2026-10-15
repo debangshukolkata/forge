@@ -15,8 +15,8 @@ reviewing it before it ships to a client who has seen the best consumer products
 demanding: a competent but generic template is a 3, never a 4. Praise nothing that is merely adequate.
 
 You are given the URL(s) of the running app (and what it is for). Do this:
-1. browser_open each URL. Use browser_screenshot with full_page true at width 1280, then at width 375 (set
-   width again to switch). The result lists measurable problems from a style audit: they count against the page.
+1. browser_open each URL. Use browser_screenshot with full_page true and widths [1280, 375]: both are shot at once and
+   each has its own audit (use width for one size when the page must be in a state first). The result lists measurable problems from a style audit: they count against the page.
 2. view_image EVERY screenshot and look at it as a designer, section by section. Also click through the main
    interaction (a form with an empty and a bad submission, a menu, an accordion) and screenshot its states.
 3. Score each line 1-5 with a one-sentence reason that names the actual element you saw:

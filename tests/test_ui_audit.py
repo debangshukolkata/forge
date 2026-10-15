@@ -334,3 +334,27 @@ async def test_the_audit_reads_oklch_and_color_mix_colours(tmp_path: Path, origi
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
         server.shutdown()
+
+
+@pytest.mark.e2e
+async def test_several_widths_are_shot_at_once_on_separate_pages(
+    site: str, tmp_path: Path, original_repo: Path
+) -> None:
+    """X6: [1280, 375] in one call gives two pictures, one audit per width, and leaves the open page as it was."""
+    pytest.importorskip("playwright.async_api")
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    context.step = 4
+    try:
+        assert (await BrowserOpen().run(BrowserOpen.Args(url=f"{site}/styled.html"), context)).ok
+        shot = await BrowserScreenshot().run(BrowserScreenshot.Args(widths=[1280, 375]), context)
+        assert shot.ok and "--- 1280px: saved" in shot.content and "--- 375px: saved" in shot.content
+        saved = [line.split("saved ")[1] for line in shot.content.splitlines() if line.startswith("--- ")]
+        sizes = [(context.workspace.root / path).read_bytes() for path in saved]
+        assert len(saved) == 2 and sizes[0] != sizes[1] and all(s.startswith(b"\x89PNG") for s in sizes)
+        assert context.last_screenshot_step == 4 and "view_image" in shot.content
+        again = await BrowserScreenshot().run(
+            BrowserScreenshot.Args(), context
+        )  # the opened page still works
+        assert again.ok and "Saved " in again.content
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)
