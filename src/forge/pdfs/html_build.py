@@ -190,9 +190,9 @@ def build_pdf_html(spec: object, load: Callable[[str], bytes], scripts: list[str
             logo_bytes = load(logo_path)
         except Exception as error:
             raise PdfError(f"The brand logo {logo_path!r} could not be read: {error}") from error
-        kind = "png" if logo_bytes[:4] == b"PNG" else "jpeg"
+        kind = "png" if logo_bytes.startswith(bytes([0x89]) + b"PNG") else "jpeg"
         header = (
-            f'<div style="width:100%;padding:0 1in"><img style="height:1cm" '
+            '<div style="width:100%;padding:0 1in"><img style="height:1cm" '
             f'src="data:image/{kind};base64,{base64.b64encode(logo_bytes).decode("ascii")}"></div>'
         )
     with sync_playwright() as playwright:
