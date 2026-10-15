@@ -86,6 +86,8 @@ async def judge(brief: str, desktop: Path, phone: Path) -> dict[str, object]:
 
     config, secrets = load_config(), load_secrets()
     router = router_for(config, secrets)
+    if os.environ.get("FORGE_BENCH_SCORER"):  # the same scorer in every condition of an A/B (D-418)
+        router.set_role_model("vision", os.environ["FORGE_BENCH_SCORER"])
     urls = [images.for_model(images.open_image(p))[0] for p in (desktop, phone)]
     response = await router.chat(
         "vision",
@@ -235,7 +237,19 @@ def main() -> int:
         default="",
         help="a model key (for example gemini31pro) for the builder roles only (coder, kb_builder, summariser); the reviewer, the vision check and the judge keep their models, so the judge is not the builder's own family",
     )
+    parser.add_argument(
+        "--critic-model",
+        default="",
+        help="a model key (for example gemini4argon) for the critic, judge and reviewer roles of the run: the independent design critic and the vote between candidates run on it (D-409, D-418)",
+    )
+    parser.add_argument(
+        "--scorer-model",
+        default="",
+        help="a model key for the benchmark's own scoring judge, the same in every condition of an A/B (default: the machine's vision model); use a model that built nothing in the run",
+    )
     args = parser.parse_args()
+    if args.scorer_model:
+        os.environ["FORGE_BENCH_SCORER"] = args.scorer_model
     keep_awake()
     run_dir = RUNS / args.name
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -248,6 +262,16 @@ def main() -> int:
 
         roles = {role: args.coder_model for role in ("coder", "kb_builder", "summariser")}
         (home / "config.yaml").write_text(yaml.safe_dump({"llm": {"roles": roles}}), encoding="utf-8")
+    if args.critic_model and not args.all_roles:  # an A/B on the critic: only the checking roles change
+        import yaml
+
+        roles = {role: args.critic_model for role in ("critic", "judge", "reviewer")}
+        existing = (
+            (home / "config.yaml").read_text(encoding="utf-8") if (home / "config.yaml").exists() else ""
+        )
+        merged = yaml.safe_load(existing) or {}
+        merged.setdefault("llm", {}).setdefault("roles", {}).update(roles)
+        (home / "config.yaml").write_text(yaml.safe_dump(merged), encoding="utf-8")
     if args.all_roles:  # an A/B on the model: every role names the same model in the run's own config.yaml
         import yaml
 
