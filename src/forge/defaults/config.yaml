@@ -55,6 +55,26 @@ llm:
       vision: true
       price_per_mtok: { input: 2.5, cached_input: 0.25, output: 15.0 }   # USD; placeholder, confirm tenant pricing
 
+    gemini31pro:                  # optional (D-403): Gemini 3.1 Pro on Vertex AI; answers from the `global` endpoint on the office laptop's project (probe 2026-10-15). Set GOOGLE_CLOUD_LOCATION=global in .env. Not used until a role names it.
+      provider: gemini
+      label: gemini-3.1-pro
+      model_name: gemini-3.1-pro-preview
+      context_window: 1000000     # input tokens (confirm)
+      max_output: 64000
+      reasoning_effort: null      # the model decides how long to think; set low/medium/high to cap it
+      vision: true
+      price_per_mtok: { input: 2.0, cached_input: 0.2, output: 12.0 }   # USD; placeholder from public list prices, confirm for the project
+
+    gemini3flash:                 # optional (D-403): the fast Gemini 3 model, also from `global`
+      provider: gemini
+      label: gemini-3-flash
+      model_name: gemini-3-flash-preview
+      context_window: 1000000
+      max_output: 64000
+      reasoning_effort: null
+      vision: true
+      price_per_mtok: { input: 0.5, cached_input: 0.05, output: 3.0 }   # USD; placeholder, confirm
+
   roles:                          # DECISIONS D-024
     coder: gpt51
     kb_builder: gpt51

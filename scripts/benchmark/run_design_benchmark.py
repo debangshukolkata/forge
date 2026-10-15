@@ -230,12 +230,24 @@ def main() -> int:
         default="",
         help="a model key (for example gpt54) used for every role: the builder, the reviewer, the vision judge",
     )
+    parser.add_argument(
+        "--coder-model",
+        default="",
+        help="a model key (for example gemini31pro) for the builder roles only (coder, kb_builder, summariser); the reviewer, the vision check and the judge keep their models, so the judge is not the builder's own family",
+    )
     args = parser.parse_args()
     keep_awake()
     run_dir = RUNS / args.name
     run_dir.mkdir(parents=True, exist_ok=True)
     home = run_dir / "home"
     home.mkdir(exist_ok=True)
+    if (
+        args.coder_model and not args.all_roles
+    ):  # an A/B on the designer: only the builder roles change (D-403)
+        import yaml
+
+        roles = {role: args.coder_model for role in ("coder", "kb_builder", "summariser")}
+        (home / "config.yaml").write_text(yaml.safe_dump({"llm": {"roles": roles}}), encoding="utf-8")
     if args.all_roles:  # an A/B on the model: every role names the same model in the run's own config.yaml
         import yaml
 
