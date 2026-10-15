@@ -101,7 +101,7 @@ Everything below can be finished without the user: no office laptop, no files or
 
 **Part 3, uncertain value (last; report honestly if there is no gain):**
 16. [ ] **L11 best-of-N design candidates** without Gemini (ranked by audit score and critic), measured on the design benchmark.
-17. [ ] **L4 / L5 shadcn quickstart** built and tested here (it does not prove the office laptop works: certificate issue, D-363).
+17. [~] **L4 / L5 shadcn quickstart** (the office laptop run is verified, D-401: certificate fix works on Node 24; open: put the Tailwind and alias prerequisites into the skill's quickstart after the night-2 benchmark, and test it here; the sandbox certificate-store check from inside Forge is still the user's).
 18. [~] **C14 skill A/B loop and C15 server-lifecycle helper** (lowest priority). (C15 done 2026-10-15, D-376; C14 open)
 19. [ ] **Housekeeping at the end:** full test run, tick TODO.md, D-notes, memory notes, `docs/OVERNIGHT_2026-10-15.md` (what was built, what to pull, what to run on the laptop, what failed).
 **Part 4, coding challenges (agreed with the user 2026-10-15; only after items 1 to 19 are finished):**
