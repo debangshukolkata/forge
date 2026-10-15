@@ -29,6 +29,7 @@ from forge.subagents.review import REVIEWER_PROMPT
 from forge.subagents.subagent import (
     DEBUGGER_PROMPT,
     EXPLORE_PROMPT,
+    PLANNER_PROMPT,
     RESEARCHER_ITERATIONS,
     RESEARCHER_PROMPT,
     VERIFIER_ITERATIONS,
@@ -84,7 +85,8 @@ class SpawnSubagent(Tool):
     read_only = True  # the subagent's own tools are restricted; only its report comes back
     description = (
         "Delegate a self-contained job to a subagent with its own fresh context: 'explore' "
-        "(read-only search), "
+        "(read-only search), 'planner' (read-only: studies the code and returns the approach, the assumptions, the task breakdown with a check for each, and the risks; use it for a "
+        "large, ambiguous or many-file task before you start, not for a small change), "
         "'researcher' (digs into a question on the web, cross-checks sources, reports with URLs), "
         "'reviewer' (second opinion on a change), 'debugger' (root cause of a failure), 'verifier' "
         "(independently derives acceptance checks from the requirement, writes and runs its own "
@@ -129,6 +131,10 @@ class SpawnSubagent(Tool):
         if args.agent == "explore":
             report = await _run_subagent(
                 router, context, ToolRegistry(read_only), EXPLORE_PROMPT, args.task, 25, "coder"
+            )
+        elif args.agent == "planner":
+            report = await _run_subagent(
+                router, context, ToolRegistry(read_only), PLANNER_PROMPT, args.task, 25, "planner"
             )
         elif args.agent == "researcher":
             try:

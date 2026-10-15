@@ -251,7 +251,7 @@ def test_a_gemini_test_that_passed_makes_gemini_the_critic_and_the_judge_and_lea
     }
     plan = by_role(propose_plan(config, {**BOTH, **with_argon}, {}))
     for role in ("critic", "judge", "reviewer"):
-        assert plan[role]["model"] == "gemini4argon" and "used by default" in plan[role]["reason"]
+        assert plan[role]["model"] == "gemini4argon" and "proposed by default" in plan[role]["reason"]
     for role in ("coder", "kb_builder", "summariser", "vision"):
         assert plan[role]["model"] == getattr(
             config.llm.roles, role
@@ -319,3 +319,27 @@ def test_the_node_row_reports_a_missing_node_and_a_certificate_failure(
         and "4.21.5" in working.detail
         and "Windows certificate store" in working.detail
     )
+
+
+def test_the_planner_is_proposed_on_gemini_once_it_answered_and_follows_the_coder_otherwise() -> None:
+    config = default_config()
+    with_argon = {"gemini": {"status": "ok", "models": {"gemini4argon": True, "gemini31pro": True}}}
+    assert by_role(propose_plan(config, {**BOTH, **with_argon}, {}))["planner"]["model"] == "gemini4argon"
+    assert by_role(propose_plan(config, BOTH, {}))["planner"]["model"] == config.llm.roles.coder
+
+
+def test_the_coder_is_gpt_5_4_once_its_resource_answers_and_the_fallback_is_another_family() -> None:
+    config = default_config()
+    both_54 = {"azure": {"status": "ok", "models": {**BOTH["azure"]["models"], "gpt54": True}}}
+    gemini = {"gemini": {"status": "ok", "models": {"gemini4argon": True, "gemini31pro": True}}}
+    plan = by_role(propose_plan(config, {**both_54, **gemini}, {}))
+    assert plan["coder"]["model"] == "gpt54" and plan["fallback"]["model"] == "gemini31pro"
+    for role in ("kb_builder", "summariser", "vision"):
+        assert plan[role]["model"] == getattr(
+            config.llm.roles, role
+        )  # the high-volume reading work stays on gpt-5.1
+    azure_only = by_role(propose_plan(config, both_54, {}))
+    assert azure_only["coder"]["model"] == "gpt54" and azure_only["fallback"]["model"] == "gpt51"
+    assert (
+        by_role(propose_plan(config, BOTH, {}))["coder"]["model"] == config.llm.roles.coder
+    )  # no second resource: unchanged

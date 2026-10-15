@@ -219,6 +219,11 @@ def main() -> int:
         "--parallel", type=int, default=1, help="how many tasks to run at the same time (4 is a good start)"
     )
     parser.add_argument("--env", action="append", default=[], help="KEY=VALUE for the DebCraft process")
+    parser.add_argument(
+        "--coder-model",
+        default="",
+        help="a model key (for example gpt54) for the builder roles only (coder, kb_builder, summariser); the reviewer, vision and judge keep theirs (D-411)",
+    )
     args = parser.parse_args()
     keep_awake()
     run_dir = RUNS / args.name
@@ -241,6 +246,13 @@ def main() -> int:
         print(f"[{args.name}] {task.name} ...", flush=True)
         task_home = home / task.name  # an own DebCraft home per task: parallel runs never share files
         task_home.mkdir(exist_ok=True)
+        if args.coder_model:
+            import yaml
+
+            roles = {role: args.coder_model for role in ("coder", "kb_builder", "summariser")}
+            (task_home / "config.yaml").write_text(
+                yaml.safe_dump({"llm": {"roles": roles}}), encoding="utf-8"
+            )
         row = run_task(task, run_dir, {**env, "FORGE_HOME": str(task_home)})
         print(
             f"[{args.name}] {task.name}: {row.get('hidden_passed')}/{row.get('hidden_total')} in {row.get('wall_s')}s",

@@ -52,6 +52,7 @@ def baseline_gate(context: ToolContext, relative: str, existing: bool) -> str:
     """The refusal text for the first edit of an existing source file before any test run, else an empty string. Also notes a test file being written."""
     if is_test_file(relative):
         context.baseline_checked = True
+        context.tests_pinned = True
         return ""
     if (
         not context.require_baseline
@@ -64,3 +65,35 @@ def baseline_gate(context: ToolContext, relative: str, existing: bool) -> str:
         return ""
     context.baseline_checked = True  # one refusal at most
     return MESSAGE if project_has_tests(context) else ""
+
+
+REWRITE_MESSAGE = (
+    "Not saved yet: this replaces most of an existing file in one step and no test has been written in this session. When behaviour must not change, pin it first: write tests with one case "
+    "per branch (expected values from running the current code, odd corners included) or keep the old function under another name beside the new one and compare them on many inputs; then change the "
+    "code in steps with multi_edit and run the tests after each. Then repeat this write; it will be accepted."
+)
+REWRITE_SHARE = 0.5  # lines kept below this share count as a rewrite
+
+
+def rewrite_gate(context: ToolContext, relative: str, before: str, after: str) -> str:
+    """The refusal text, once per session, for a write_file that replaces most of an existing source file before any test was written; else an empty string (D-410)."""
+    import difflib
+
+    if (
+        not context.require_baseline
+        or context.tests_pinned
+        or context.rewrite_asked
+        or context.write_only_under is not None
+    ):
+        return ""
+    if not before.strip() or is_test_file(relative) or not relative.lower().endswith(SOURCE_SUFFIXES):
+        return ""
+    if (
+        len(before.splitlines()) < 30
+    ):  # a short file is cheap to redo; the reminder is for logic that has grown
+        return ""
+    kept = difflib.SequenceMatcher(None, before.splitlines(), after.splitlines(), autojunk=False).ratio()
+    if kept >= REWRITE_SHARE:
+        return ""
+    context.rewrite_asked = True
+    return REWRITE_MESSAGE

@@ -165,7 +165,15 @@ def check_secrets(config: ForgeConfig, secrets: Secrets, home: Path) -> CheckRes
 async def check_models(config: ForgeConfig, secrets: Secrets) -> list[CheckResult]:
     router = LLMRouter(config, secrets)
     results = []
-    for model_key in _models_in_use(config):
+    # The Azure models no role uses (for example gpt54 on the second resource) are tested too when their .env values are set, so the model plan can offer them (D-411).
+    unused = [
+        key
+        for key, model in sorted(config.llm.models.items())
+        if model.provider == "azure"
+        and key not in _models_in_use(config)
+        and _all_set(model_secret_names(config, model), secrets)
+    ]
+    for model_key in [*_models_in_use(config), *unused]:
         model = config.llm.models[model_key]
         if model_key in optional_models(config) and not _all_set(model_secret_names(config, model), secrets):
             continue  # an optional fallback that was never set up is not a failure

@@ -45,10 +45,9 @@ class LLMRouter:
         if role not in self.role_models:
             raise ConfigError(f"Unknown role '{role}'. Roles: {', '.join(ROLES)}")
         model_key = self.role_models[role]
-        if model_key is None and role == "critic":
-            model_key = self.role_models[
-                "coder"
-            ]  # no separate critic chosen: the builder's own model, as before D-409
+        if model_key is None and role in ("critic", "planner"):
+            # no separate critic or planner chosen: the builder's own model (D-409, D-411)
+            model_key = self.role_models["coder"]
         if model_key is None:
             raise ConfigError(f"No model is configured for role '{role}'")
         return model_key
@@ -86,6 +85,21 @@ class LLMRouter:
             return GeminiProvider(model_key, model, self.config.llm.providers.gemini, self._secrets)
         return AzureOpenAIProvider(model_key, model, self.config.llm.providers.azure, self._secrets)
 
+    def _fallback_for(self, failing_key: str) -> str | None:
+        """The model to switch to when `failing_key` is rate limited or down after its retries (D-411): the fallback role first, then the coder's model, and one of another
+        provider (another model family) whenever there is one, because a rate limit or an outage usually hits one provider and not the other."""
+        failing = self.config.llm.models[failing_key]
+        candidates: list[str] = []
+        for key in (
+            self.role_models.get("fallback"),
+            self.role_models.get("coder"),
+            *self.config.llm.fallback_also,
+        ):
+            if key and key != failing_key and key not in candidates and self._configured(key):
+                candidates.append(key)
+        other_family = [key for key in candidates if self.config.llm.models[key].provider != failing.provider]
+        return (other_family or candidates or [None])[0]
+
     # --- calls ---
 
     async def chat(
@@ -96,13 +110,8 @@ class LLMRouter:
         try:
             response = await self._call_with_retries(role, model_key, request, on_text_delta)
         except LLMError as error:
-            fallback = self.role_models.get("fallback")
-            if (
-                not error.retryable
-                or fallback is None
-                or fallback == model_key
-                or not self._configured(fallback)
-            ):
+            fallback = self._fallback_for(model_key) if error.retryable else None
+            if fallback is None:
                 raise
             await self._notice(
                 "fallback",

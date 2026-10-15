@@ -84,6 +84,10 @@ def system_prompt(workspace: Workspace) -> str:
 
 MAX_QUESTION_NUDGES = 1
 MAX_TODO_NUDGES = 2
+RISK_NOTE = (
+    "Before you finish: the code you worked with has risks you have not told the user about. Add a short 'Noticed, not changed' list to your final reply (file and line, what could go "
+    "wrong, a one-line suggestion) and do not fix them unless the user asked. What the scan found:\n"
+)
 OPEN_TODOS_NOTE = "You ended your turn, but your todo list still has open items: "
 OPEN_TODOS_NOTE_END = (
     ". Carry on with the next one now. Stop only if you need the user's decision or information (then use "
@@ -122,7 +126,7 @@ def is_test_path(path: str) -> bool:
 # These tools return only when the person answers, so their whole duration is waiting, not work (S1).
 USER_WAIT_TOOLS = frozenset({"ask_user", "propose_requirements", "propose_plan", "request_user_action"})
 PARALLEL_SUBAGENT_TYPES = frozenset(
-    {"explore", "reviewer", "design-critic"}
+    {"explore", "planner", "reviewer", "design-critic"}
 )  # only look, read or screenshot (unique file names); may run side by side
 MAX_PARALLEL_SUBAGENTS = 4
 REWORK_EDITS = (
@@ -182,6 +186,7 @@ class AgentLoop:
         continuations = 0
         question_nudges = 0
         todo_nudges = 0
+        risk_nudges = 0
         self.hit_iteration_limit = False
         for _ in range(self.max_iterations):
             # After a cut-off reply, think less so the answer fits in the output limit (D-060).
@@ -190,7 +195,7 @@ class AgentLoop:
                 on_text_delta,
                 "low" if continuations else (self.turn_effort or self.effort or self._adaptive_effort()),
             )
-            model_key = self.router.model_for_role(self.role)
+            model_key = self.router.model_for_role(self.active_role)
             history.append(response.to_message(model_key))
             if response.text or not response.tool_calls:
                 await self.bus.publish(
@@ -245,6 +250,20 @@ class AgentLoop:
                         },
                     )
                     continue
+                if risk_nudges < 1:
+                    risks = self._unreported_risks(response.text)
+                    if risks:
+                        risk_nudges += 1
+                        listing = "\n".join(f"- {risk}" for risk in risks)
+                        history.append(Message.system(RISK_NOTE + listing))
+                        await self.bus.publish(
+                            EventType.NOTICE,
+                            {
+                                "kind": "risk_notes",
+                                "text": "Asking for the risks in the code to be named before finishing.",
+                            },
+                        )
+                        continue
                 return
             continuations = 0
             results: dict[str, Message] = {}
@@ -273,6 +292,28 @@ class AgentLoop:
                 "Say 'continue' to go on.",
             },
         )
+
+    @property
+    def active_role(self) -> str:
+        """The role whose model answers now: in plan mode (read-only analysis) the planner, otherwise the loop's own role (D-411)."""
+        return "planner" if self.role == "coder" and self.gate.mode == "plan" else self.role
+
+    def _unreported_risks(self, reply: str) -> list[str]:
+        """Risks in the source files read in this session (the model changed something) that the final reply does not name (D-410)."""
+        from forge.safety.risk_scan import MAX_FINDINGS, mentioned, scan_text, scannable
+
+        if self.context.last_edit_step == 0:
+            return []
+        found = []
+        for path in self.context.reads.paths():
+            if not scannable(path):
+                continue
+            try:
+                text = self.context.workspace.read_text(path)[0]
+            except Exception:  # a file that cannot be read now is not worth a note
+                continue
+            found.extend(risk for risk in scan_text(path, text) if not mentioned(risk, reply))
+        return [risk.sentence() for risk in found[:MAX_FINDINGS]]
 
     def _open_todos(self) -> list[str]:
         return [
@@ -323,7 +364,7 @@ class AgentLoop:
             on_progress=self.on_progress,
         )
         try:
-            response = await self.router.chat(self.role, request, timed_delta)
+            response = await self.router.chat(self.active_role, request, timed_delta)
         except LLMContextLengthError:
             # The estimate was too optimistic: trim hard and try once more (spec §10.4 tier 3).
             await self.context_manager.emergency(history)
@@ -332,15 +373,15 @@ class AgentLoop:
                 tools=tools,
                 reasoning_effort=reasoning_effort,
             )
-            response = await self.router.chat(self.role, request, timed_delta)
+            response = await self.router.chat(self.active_role, request, timed_delta)
         except LLMContentFilterError:
             response = await self._rephrase(request, timed_delta)
         self.context_manager.record_usage(response.usage)
         await self.bus.publish(
             EventType.LLM_CALL,
             {
-                "role": self.role,
-                "model": self.router.model_for_role(self.role),
+                "role": self.active_role,
+                "model": self.router.model_for_role(self.active_role),
                 "served_model": response.served_model,
                 "latency_s": round(time.perf_counter() - started, 2),
                 "first_token_s": round(first_token_s[0], 2) if first_token_s else None,

@@ -17,13 +17,17 @@ class RoleRouter(Protocol):
     def set_role_model(self, role: str, model_key: str) -> None: ...
 
 
-# When the user has said Gemini is enabled and the Gemini test passed, the critic roles are proposed on Gemini (D-405, D-409). The user's decision of 2026-10-15: Gemini 4 Argon judges, the
-# Azure models build. The builder stays on Azure and the critic, the judge and the code reviewer are another model family, so none of them is lenient toward its own work. The builder
-# roles (coder, knowledge builder, summariser, vision) have no Gemini preference until a benchmark on the user's laptop says Gemini builds better.
-GEMINI_PREFERENCE: dict[str, tuple[str, ...]] = {
+# The proposed model for a role is the first of these that has answered its test (D-405, D-407, D-409, D-411); a role without an entry keeps its configured default. The roles follow the research
+# and the user's decisions of 2026-10-15: the coder is gpt-5.4 (ahead of gpt-5.1 on coding and agent benchmarks, larger context, trained for long agent runs) when its resource is set up; the planner, the
+# critic, the judge and the reviewer are another family than the builder (Gemini 4 Argon, else Gemini 3.1 Pro), because a judge from the builder's own family is lenient toward it; the fallback is another
+# family too (a rate limit usually hits one provider), else gpt-5.1 from the first resource. The summariser, the knowledge builder and vision keep gpt-5.1: high-volume reading work where speed counts.
+PREFERENCE: dict[str, tuple[str, ...]] = {
+    "coder": ("gpt54",),
+    "planner": ("gemini4argon", "gemini31pro"),
     "critic": ("gemini4argon", "gemini31pro"),
     "judge": ("gemini4argon", "gemini31pro"),
     "reviewer": ("gemini4argon", "gemini31pro"),
+    "fallback": ("gemini31pro", "gpt51"),
 }
 
 
@@ -63,21 +67,30 @@ def propose_plan(config: ForgeConfig, results: dict[str, Any], saved: dict[str, 
     answered = _answers(config, results)
     models = config.llm.models
     roles = []
+    chosen: dict[str, str | None] = {}
     for role in ROLES:
-        default = getattr(config.llm.roles, role) or (config.llm.roles.coder if role == "critic" else None)
+        # a critic or planner nobody chose is the coder's model, whichever the plan gave the coder
+        default = getattr(config.llm.roles, role) or (
+            chosen.get("coder") or config.llm.roles.coder if role in ("critic", "planner") else None
+        )
         wanted, why = default, "Default for this role"
         liked = next(
             (
                 k
-                for k in GEMINI_PREFERENCE.get(role, ())
-                if k in models and answered is not None and answered.get(k, False)
+                for k in PREFERENCE.get(role, ())
+                if k in models
+                and answered is not None
+                and answered.get(k, False)
+                and not (
+                    role == "fallback" and k == chosen.get("coder")
+                )  # a fallback that is the coder fails with it
             ),
             None,
         )
         if liked is not None:
             wanted, why = (
                 liked,
-                f"{models[liked].label} answered the Gemini test: used by default for this role",
+                f"{models[liked].label} answered its test: proposed by default for this role",
             )
         if saved.get(role) in models and _fits(config, role, saved[role]):
             wanted, why = saved[role], "Your earlier choice"
@@ -95,6 +108,7 @@ def propose_plan(config: ForgeConfig, results: dict[str, Any], saved: dict[str, 
             else:
                 why = f"{wanted or 'The default'} is not answering; using {stand_in} instead"
                 wanted = stand_in
+        chosen[role] = wanted
         roles.append({"role": role, "model": wanted, "reason": why, "default": default})
     options = [
         {

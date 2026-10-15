@@ -254,3 +254,22 @@ async def test_a_ui_file_changed_again_and_again_gets_a_note_to_fix_the_cause_on
         loop._note_ui_evidence("edit_file", {"path": "tests/test_page.py"}, ok) is None
     )  # tests and other files are not counted
     assert loop._note_ui_evidence("edit_file", {"path": "notes.md"}, ok) is None
+
+
+async def test_plan_mode_asks_the_planner_role_and_normal_mode_the_coder(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """D-411: read-only analysis in plan mode runs on the planner's model (the Claude Code 'plan with the stronger model' idea)."""
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return reply(request, responses_body([text_output("ok")]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace)
+    loop = host.agent
+    assert loop is not None
+    assert loop.active_role == "coder"
+    loop.gate.mode = "plan"
+    assert loop.active_role == "planner"
+    loop.role = "reviewer"  # a subagent keeps its own role in any mode
+    assert loop.active_role == "reviewer"

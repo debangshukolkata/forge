@@ -10,7 +10,7 @@ from pydantic import Field
 
 from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.baseline_gate import baseline_gate
+from forge.tools.baseline_gate import baseline_gate, rewrite_gate
 from forge.tools.diagnostics import diagnose_file
 from forge.workspace.text_format import detect_format
 
@@ -465,6 +465,10 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
         if asked:
             return ToolResult(ok=False, content=asked)
     before = workspace.read_text(relative)[0] if path.is_file() else ""
+    if op == "write" and context.write_only_under is None:
+        refused = rewrite_gate(context, relative, before, text)
+        if refused:
+            return ToolResult(ok=False, content=refused)
     if text.count("[REDACTED:") > before.count("[REDACTED:"):
         # Seen live: the model copied masked text it had been shown back into test files.
         return ToolResult(

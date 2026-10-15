@@ -9,7 +9,7 @@ from forge.tools.browser import unique_stamp
 
 
 def test_design_critic_is_parallel_safe_and_writers_are_not() -> None:
-    assert {"explore", "reviewer", "design-critic"} <= PARALLEL_SUBAGENT_TYPES
+    assert {"explore", "planner", "reviewer", "design-critic"} <= PARALLEL_SUBAGENT_TYPES
     assert "verifier" not in PARALLEL_SUBAGENT_TYPES
     assert "debugger" not in PARALLEL_SUBAGENT_TYPES
 

@@ -16,7 +16,7 @@ from forge.errors import ConfigError
 from forge.safety.permissions import PermissionRules
 from forge.safety.redact import Redactor, default_redactor
 
-ROLES = ("coder", "kb_builder", "reviewer", "summariser", "vision", "judge", "critic", "fallback")
+ROLES = ("coder", "kb_builder", "reviewer", "summariser", "vision", "judge", "critic", "planner", "fallback")
 ReasoningEffort = Literal["minimal", "low", "medium", "high"]
 _SECRET_NAME = re.compile(r"(KEY|SECRET|PASSWORD|TOKEN)", re.IGNORECASE)
 _URL_PASSWORD = re.compile(r"://[^:/\s@]+:([^@\s]+)@")
@@ -98,6 +98,9 @@ class RolesConfig(_Strict):
     summariser: str
     vision: str
     judge: str
+    planner: str | None = (
+        None  # plan mode and the planner subagent: analysis, decisions and the task breakdown; unset means the coder's model (D-411)
+    )
     critic: str | None = (
         None  # the independent design critic and the vote between design candidates; unset means the coder's model (D-409)
     )
@@ -115,6 +118,9 @@ class LLMConfig(_Strict):
     models: dict[str, ModelConfig]
     roles: RolesConfig
     role_reasoning_effort: dict[str, ReasoningEffort] = {}
+    fallback_also: list[
+        str
+    ] = []  # more models to switch to when a call is rate limited or fails after its retries; one of another provider is preferred (D-411)
     retry: RetryConfig = RetryConfig()
 
     @model_validator(mode="after")
@@ -125,6 +131,9 @@ class LLMConfig(_Strict):
                 raise ValueError(
                     f"role '{role}' uses unknown model '{model_key}'; known: {sorted(self.models)}"
                 )
+        for key in self.fallback_also:
+            if key not in self.models:
+                raise ValueError(f"fallback_also names unknown model '{key}'; known: {sorted(self.models)}")
         unknown = set(self.role_reasoning_effort) - set(ROLES)
         if unknown:
             raise ValueError(f"role_reasoning_effort has unknown roles: {sorted(unknown)}")

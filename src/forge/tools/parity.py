@@ -13,6 +13,7 @@ from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 BUILT_IN_TYPES = {
     "explore": "Read-only exploration of the codebase for a question; returns relevant files and conventions.",
+    "planner": "Read-only analysis for a large or ambiguous task (the planner model): approach, assumptions, ordered tasks with a check each, risks.",
     "reviewer": "A second opinion on a change (reviewer model); returns findings.",
     "code-review": "Two independent reviewers at once, one for the project's standards and one for what was asked; returns both reports and a SHIP/REVISE verdict.",
     "debugger": "Fresh-context root-cause analysis of a failure (can run tests); returns a diagnosis and fix.",

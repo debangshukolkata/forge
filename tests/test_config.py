@@ -123,3 +123,31 @@ def test_the_critic_role_uses_the_coders_model_until_one_is_chosen() -> None:
     assert router.model_for_role("critic") == router.model_for_role("coder")
     router.set_role_model("critic", "gpt41")
     assert router.model_for_role("critic") == "gpt41"
+
+
+def test_a_rate_limited_model_falls_back_to_another_model_family_when_there_is_one() -> None:
+    """D-411: a rate limit or an outage usually hits one provider, so the switch prefers the other provider."""
+    from tests.helpers import mocked_router, reply, responses_body, text_output
+
+    router = mocked_router(lambda request: reply(request, responses_body([text_output("ok")])))
+    router.set_role_model("coder", "gpt54")
+    router.set_role_model("fallback", "gemini31pro")
+    assert router._fallback_for("gpt54") == "gemini31pro"  # Azure fails: Gemini answers
+    assert router._fallback_for("gemini4argon") == "gpt54"  # Gemini fails: back to the coder's Azure model
+    router.set_role_model("fallback", "gpt4o")
+    assert (
+        router._fallback_for("gpt51") == "gpt4o"
+    )  # no other family configured: the same provider's fallback
+    router.role_models["fallback"] = None
+    router.role_models["coder"] = "gpt51"
+    assert router._fallback_for("gpt51") is None  # nothing else to switch to: the error stands
+
+
+def test_the_planner_role_uses_the_coders_model_until_one_is_chosen() -> None:
+    from tests.helpers import mocked_router, reply, responses_body, text_output
+
+    router = mocked_router(lambda request: reply(request, responses_body([text_output("ok")])))
+    assert router.config.llm.roles.planner is None
+    assert router.model_for_role("planner") == router.model_for_role("coder")
+    router.set_role_model("planner", "gemini4argon")
+    assert router.model_for_role("planner") == "gemini4argon"
