@@ -12,6 +12,7 @@ import os
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
 _state = {"done": False, "active": False}
 
@@ -84,3 +85,44 @@ def installed_node_version() -> str | None:
     except (OSError, subprocess.SubprocessError):
         return None
     return done.stdout.strip() or None
+
+
+# What Node, npm and curl-like tools print when a company's HTTPS inspection certificate is not trusted (D-402).
+CERTIFICATE_ERROR = re.compile(
+    r"unable to get local issuer certificate|self[- ]signed certificate|UNABLE_TO_VERIFY_LEAF_SIGNATURE|"
+    r"unable to verify the first certificate|SELF_SIGNED_CERT_IN_CHAIN|CERT_UNTRUSTED|SSL certificate problem",
+    re.IGNORECASE,
+)
+
+
+def looks_like_certificate_error(output: str) -> bool:
+    return bool(CERTIFICATE_ERROR.search(output))
+
+
+def windows_certificate_bundle(target: Path) -> Path | None:
+    """Writes the certificates Windows trusts (the Root and Intermediate stores of the current user and the machine) as one PEM file and returns its path.
+
+    Node ignores the Windows store before version 22.15, and even a new Node can be run with FORGE_SYSTEM_CERTS=0; `NODE_EXTRA_CA_CERTS` pointing at this file gives
+    every Node tool the company's inspection root without anyone exporting a certificate by hand. Needs no administrator rights. None off Windows or when nothing could be read."""
+    import ssl
+    import sys
+
+    if sys.platform != "win32":
+        return None
+    pems: list[str] = []
+    seen: set[bytes] = set()
+    for store in ("ROOT", "CA"):
+        try:
+            entries = ssl.enum_certificates(store)  # type: ignore[attr-defined]
+        except (OSError, AttributeError):
+            continue
+        for der, encoding, _trust in entries:
+            if encoding != "x509_asn" or der in seen:
+                continue
+            seen.add(der)
+            pems.append(ssl.DER_cert_to_PEM_cert(der))
+    if not pems:
+        return None
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("".join(pems), encoding="ascii", newline=chr(10))
+    return target

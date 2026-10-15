@@ -88,8 +88,14 @@ tier is MIT, the Pro and Premium tiers are paid: use only the community componen
 Material's default look (blue, Roboto, big shadows) is exactly what to remove with the theme above.
 
 ## shadcn/ui (copy-in components on Radix, MIT)
-`npx shadcn@latest init` then `npx shadcn@latest add button card dialog tabs input form`. Components land in the project
-and are yours to restyle; theme through the CSS variables it writes. Needs the network once; keep to `components-native.tsx` when offline.
+**Call `shadcn_setup`** (project_dir, components such as `["button", "card", "input", "dialog"]`, base `radix` or `base`). It makes a Vite + React + TypeScript project if the
+folder has none, installs Tailwind v4 and its Vite plugin, adds the `@/` alias to vite.config.ts and both tsconfig files, imports Tailwind in `src/index.css`, runs
+`npx shadcn@latest init` and adds the components. Do not run `init` by hand in a fresh Vite project: it stops with "No Tailwind CSS configuration found" and "Could not find
+valid path aliases" until those steps are done. It is safe to run again, and for a Next.js project run `npx shadcn@latest init` yourself. Later components:
+`npx shadcn@latest add button card dialog tabs input form`. Components land in the project and are yours to restyle; theme through the CSS variables it writes.
+Needs the network once; keep to `components-native.tsx` when offline. On a company network that inspects HTTPS the tool repeats a step that failed on a certificate
+after DebCraft has exported the Windows certificates for Node; if a command still reports a certificate error, tell the user (their company root certificate is not in
+the Windows store) and never turn certificate checking off.
 
 Rules that keep a shadcn project clean (our own words, from the library's habits; they apply when the project already uses it):
 - Use an existing component before writing custom markup: look in `components/ui` first, add the missing one with the CLI (`npx shadcn@latest add <name>`), and compose
@@ -101,8 +107,8 @@ Rules that keep a shadcn project clean (our own words, from the library's habits
   and errors are connected to the inputs.
 - Edit the project's existing global CSS file for tokens; do not create a second one. Preview what a registry change would do with `npx shadcn@latest add <name> --dry-run`
   (or `--diff`) and never overwrite a component the project changed without saying so.
-- Never guess a registry: a third-party registry (`@name/component`) is used only when the user named it. Behind the company network the CLI may fail on certificates:
-  see the Node certificate note in `forge doctor`; fall back to `components-native.tsx`.
+- Never guess a registry: a third-party registry (`@name/component`) is used only when the user named it. If a certificate error remains after the automatic retry, tell the user
+  what to do (see D-402 and the Node certificate line of `forge doctor`) and fall back to `components-native.tsx`.
 - Re-theme before the first screen: the default zinc, neutral look is the generic default. Set the radius, the primary and the font from DESIGN.md, then check the page
   with `browser_screenshot`; a shadcn page that still looks stock has not been designed.
 

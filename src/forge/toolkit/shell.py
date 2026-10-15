@@ -8,7 +8,13 @@ from pathlib import Path
 from pydantic import Field
 
 from forge.config import SandboxMode
-from forge.net import system_certificates_wanted
+from forge.net import (
+    installed_node_version,
+    looks_like_certificate_error,
+    node_supports_system_ca,
+    system_certificates_wanted,
+    windows_certificate_bundle,
+)
 from forge.safety.paths import is_within, real_path
 from forge.safety.sandbox import SandboxUnavailableError, has_low_label, label_low
 from forge.safety.sandbox import is_supported as sandbox_supported
@@ -62,6 +68,8 @@ class ShellSession:
         self.sandbox_active: bool | None = None  # None until the first command prepares it
         self.pending_notice: str | None = None  # told to the model and the user once
         self.extra_env: dict[str, str] = {}  # e.g. PGOPTIONS for the scratch schema (M7)
+        self.ca_bundle: Path | None = None  # the Windows certificates as one PEM file for Node tools (D-402)
+        self.ca_checked = False
 
     @property
     def python(self) -> str | None:
@@ -109,6 +117,20 @@ class ShellSession:
         self.sandbox_active = False
         self.pending_notice = f"Sandbox unavailable, commands now run without it: {reason}"
 
+    def prepare_ca_bundle(self, force: bool = False) -> bool:
+        """Makes the Windows certificate bundle for Node when the installed Node cannot read the store itself (before 22.15), or when a command has just failed on a
+        certificate (`force`). Returns whether a bundle is in use (D-402)."""
+        if self.ca_bundle is not None:
+            return True
+        if self.ca_checked and not force:
+            return False
+        self.ca_checked = True
+        version = installed_node_version()
+        if not force and (version is None or node_supports_system_ca(version)):
+            return False
+        self.ca_bundle = windows_certificate_bundle(self.sandbox_dir / "certs" / "windows-roots.pem")
+        return self.ca_bundle is not None
+
     def environment(self) -> dict[str, str]:
         env = self.workspace.info.python_env
         variables = without_private(env.command_env() if env else dict(os.environ))  # D-202
@@ -123,6 +145,9 @@ class ShellSession:
         # Node ignores the Windows store; Python already uses it (forge.net). Older Node versions ignore this variable (D-363).
         if system_certificates_wanted():
             variables.setdefault("NODE_USE_SYSTEM_CA", "1")
+            self.prepare_ca_bundle()
+            if self.ca_bundle is not None:
+                variables.setdefault("NODE_EXTRA_CA_CERTS", str(self.ca_bundle))
         variables.setdefault(
             "PYTHONUNBUFFERED", "1"
         )  # a server's "Serving on ..." line must reach DebCraft at once, not when a buffer fills (S6)
@@ -218,6 +243,28 @@ class PythonRun(Tool):
         return await execute(context, self.command(args, context), args.timeout_s, args.cwd)
 
 
+def certificate_advice(shell: ShellSession) -> str:
+    """What the model does after a certificate failure: Forge switches to the Windows certificate bundle itself, so the retry usually works (D-402)."""
+    already = shell.ca_bundle is not None
+    if not already:
+        shell.prepare_ca_bundle(force=True)
+        if shell.ca_bundle is not None:
+            return (
+                "[Certificate error: this network inspects HTTPS with a company certificate that this tool did not trust. DebCraft has now exported the certificates "
+                "Windows trusts and passes them to every command (NODE_EXTRA_CA_CERTS): run the same command again. Do not switch certificate checking off.]"
+            )
+    return (
+        "[Certificate error that DebCraft cannot fix by itself: "
+        + (
+            "the Windows certificate bundle is already in use, so the company root certificate is probably not in the Windows store. "
+            if already
+            else ""
+        )
+        + "Tell the user: the company's root certificate must be installed in Windows or exported as a PEM file and named in NODE_EXTRA_CA_CERTS. "
+        "Do not set NODE_TLS_REJECT_UNAUTHORIZED=0 or any 'strict-ssl false' option.]"
+    )
+
+
 async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str | None) -> ToolResult:
     shell = context.shell
     assert shell is not None
@@ -271,6 +318,8 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
     else:
         lines.append(f"[exit code {outcome.exit_code}]")
     lines.append(f"[cwd: {shell.display(outcome.cwd)}]")
+    if not passed and looks_like_certificate_error(outcome.output):
+        lines.append(certificate_advice(shell))
     text, full_path = context.cap_output("\n".join(line for line in lines if line), "shell")
     return ToolResult(
         ok=not outcome.timed_out and outcome.exit_code == 0,
