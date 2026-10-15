@@ -130,3 +130,26 @@ Run on the final code of the night, three tasks at a time (`--parallel 3`, so th
 Tasks fully passed: 13/14; hidden tests passed: 309/310.
 
 Same fourteen tasks as `night-1`, three at a time, with gpt-5.4 as the coder, knowledge builder and summariser (`--coder-model gpt54`; reviewer, vision and judge unchanged). 13 of 14 tasks and 309 of 310 hidden tests, the same as gpt-5.1 and the same single miss (t13 does not trim a history read from a file). Against `night-1`: wall time about 5,100 s against 3,660 s (39 percent slower), 158 model calls against 109, cost $10.66 against $3.74 (2.9 times). On these tasks gpt-5.4 shows no correctness gain; they are easy (both models are near the ceiling), so this says nothing about much harder work.
+
+## Approach challenges (TODO item 20, 2026-10-15)
+
+Ten small tasks with one trap each (tests/benchmarks/challenges, run with `scripts/benchmark/run_challenges.py`, stopped at 5 minutes or 20 tool calls); only the approach is judged, from the
+event log. Rounds: `night-1` (c01 to c08), `night-2` (c05, c08, c09, c10 after the first fixes), `night-3` (c08, c09, c10 after the second fixes).
+
+| Challenge | First verdict | Fix | Verdict after the fix |
+|---|---|---|---|
+| c01 month boundary | right: reads the code path, failing test first, fix in `timeutil` | none | right |
+| c02 loyalty discount | right: records the assumption, named constants | none | right |
+| c03 event buckets | right: assumptions recorded, width validated, tests | none | right |
+| c04 lost counts | right: reproduces with threads, names the race, lock | none | right |
+| c05 product search | partly: parameterized, but did not tell the user about the injectable old function, LIKE wildcards not escaped | prompt rule: report what you notice, escape LIKE (D-408) | LIKE escaped; the notice is covered by the risk scan (D-410) |
+| c06 CSV export | right: read `Result`, `format_money` and the fixtures first | none | right |
+| c07 settings model | right: checked the installed pydantic with `library_api` first | none | right |
+| c08 price refactor | wrong: rewrote the whole function in one step, no test run first | baseline gate (D-408), rewrite gate and refactor section in test-first (D-410) | better: runs the tests, probes the old numbers, is made to write a test before replacing the file; the pinning is still thin (one test edit) |
+| c09 timeout helper (new) | wrong: never mentioned the pickle loader and the committed token | risk scan and one reminder before the turn ends (D-410) | right: the reply lists both as 'Noticed, not changed' |
+| c10 shipping refactor (new) | wrong: rewrote the function before pinning anything | rewrite gate (D-410) | right: tests run first, a regression test written, then a small edit |
+
+New gates for review (all are one reminder, never a trap, and only in real sessions): the first edit of existing source code is refused once until the tests have run or a test has been written
+(`tools/baseline_gate.py`); a `write_file` that replaces most of an existing source file of 30 lines or more is refused once until a test has been written; before a turn ends the loop asks once for
+the risks the scan found in the files it read (`safety/risk_scan.py`) if the reply does not name them; `design_candidates` refuses a composition that is not a catalogue id (D-406).
+Limits: c08 shows that a gate asks for a test but cannot judge how complete the pinning is; one run per challenge is a hint, not a measurement.
