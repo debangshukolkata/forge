@@ -7,7 +7,7 @@
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
-  --color-brand-50: #fff4ed; --color-brand-100: #ffe3d0; --color-brand-200: #ffc7a1; --color-brand-500: #ec6a1e; --color-brand-600: #c2500d; --color-brand-700: #9a3d0b; --color-brand-900: #4a1c05;
+  --color-brand-50: #fff4ed; --color-brand-100: #ffe3d0; --color-brand-200: #ffc7a1; --color-brand-500: #ec6a1e; --color-brand-600: #b84c0c; --color-brand-700: #9a3d0b; --color-brand-900: #4a1c05;
   --color-ink-50: #f6f7f9; --color-ink-100: #eceef2; --color-ink-200: #dde0e7; --color-ink-300: #c3c8d3; --color-ink-500: #646b7c; --color-ink-700: #3a4052; --color-ink-900: #14171f;
   --color-ok: #15803d; --color-warn: #b45309;
   --color-danger: #b91c1c;

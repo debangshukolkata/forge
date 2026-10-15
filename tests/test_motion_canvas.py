@@ -72,6 +72,10 @@ async def run(site: str, reduced: bool) -> dict[str, object]:
         out["aria"] = await page.evaluate(
             "[...document.querySelectorAll('svg.beam, canvas')].every(e => e.getAttribute('aria-hidden') === 'true')"
         )
+        # The first read of a canvas makes the browser move it from the graphics card to the CPU, and the pixels read afterwards differ by rounding: read once and
+        # throw that away, so that two real reads of a still canvas are equal.
+        for k in ("particles", "globe-lite"):
+            await page.evaluate(PIXELS, f"canvas.{k}")
         first = {k: await page.evaluate(PIXELS, f"canvas.{k}") for k in ("particles", "globe-lite")}
         await page.wait_for_timeout(500)
         second = {k: await page.evaluate(PIXELS, f"canvas.{k}") for k in ("particles", "globe-lite")}

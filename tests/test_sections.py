@@ -32,14 +32,14 @@ pytestmark = [
 ]
 
 
-def _check(result: dict[str, object]) -> None:
+def _check(result: dict[str, object], extra_allowed: tuple[str, ...] = ()) -> None:
     assert result["errors"] == []
     for width in (1280, 375):
         audit = str(result["audit"][width])  # type: ignore[index]
         # the scaffolds carry placeholders for the product's own pictures and name their fonts without always shipping the files in a
         # test build: those are the only findings allowed
         problems = [line for line in audit.splitlines()[1:] if line.strip()]
-        allowed = ("no imagery at all", "system font stack")
+        allowed = ("no imagery at all", "system font stack", *extra_allowed)
         assert "no measurable problems" in audit or all(
             any(a in line for a in allowed) for line in problems
         ), audit
@@ -112,4 +112,6 @@ async def test_all_sections_together_and_the_form_validates() -> None:
             await page.click("summary:has-text('Who can donate?')")
             assert await page.locator("details[open]").count() == 1
             await browser.close()
-    _check(result)
+    _check(
+        result, ("different text colours",)
+    )  # twenty sections side by side use more colours than one page should

@@ -10,7 +10,7 @@ density: balanced
 dependencies: []
 licence: "original (fonts: OFL-1.1)"
 source: "authored for DebCraft (templates, D-389); fonts from Fontsource, see the OFL texts copied with them"
-tested: "NOT YET BUILT: add to tests/test_sections.py TEMPLATES and run it (Vite + Tailwind v4, tsc, audit at 1280 and 375 px)"
+tested: "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-389)"
 files:
   - from: recipes/templates/pricing/App.tsx
     to: src/App.tsx

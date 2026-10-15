@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import json
 
 import pytest
 
@@ -77,7 +78,7 @@ def test_a_deck_puts_the_logo_at_the_top_right_of_every_slide() -> None:
             {"layout": "bullets", "title": "We shipped three things", "bullets": ["SSO", "Search"]},
         ],
     }
-    built = build_deck(parse_deck(outline), _load)
+    built = build_deck(parse_deck(json.dumps(outline)), _load)
     presentation = Presentation(io.BytesIO(built.data))
     for slide in presentation.slides:
         logos = [shape for shape in slide.shapes if shape.name == "Brand logo"]

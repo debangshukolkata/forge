@@ -427,11 +427,15 @@ A documentation page: top bar, sticky navigation, article with a code block and 
 
 *moods: technical, calm, clear; density: balanced; for: documentation, developer tools, api, help centre*
 
+[![tpl-docs-product desktop](../src/forge/skills/ui-design-quality/assets/preview/tpl-docs-product-desktop.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-docs-product-desktop.jpg) [![tpl-docs-product phone](../src/forge/skills/ui-design-quality/assets/preview/tpl-docs-product-mobile.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-docs-product-mobile.jpg)
+
 ### `tpl-event-conference`: conference
 
 A conference or festival page: hero, key numbers, a programme with day tabs, speakers, tickets, practical questions, closing band.
 
 *moods: bold, organised, modern; density: balanced; for: events, conferences, festivals, meetups*
+
+[![tpl-event-conference desktop](../src/forge/skills/ui-design-quality/assets/preview/tpl-event-conference-desktop.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-event-conference-desktop.jpg) [![tpl-event-conference phone](../src/forge/skills/ui-design-quality/assets/preview/tpl-event-conference-mobile.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-event-conference-mobile.jpg)
 
 ### `tpl-landing-charity`: charity or community drive
 
@@ -463,8 +467,12 @@ A pricing page: top bar, centred hero, customer names, three plan cards with one
 
 *moods: clear, confident, warm; density: balanced; for: pricing page, subscription, invoicing, saas plans*
 
+[![tpl-pricing-invoicing desktop](../src/forge/skills/ui-design-quality/assets/preview/tpl-pricing-invoicing-desktop.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-pricing-invoicing-desktop.jpg) [![tpl-pricing-invoicing phone](../src/forge/skills/ui-design-quality/assets/preview/tpl-pricing-invoicing-mobile.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-pricing-invoicing-mobile.jpg)
+
 ### `tpl-shop-craft`: craft goods
 
 A small-shop storefront: hero, category tiles, product grid, facts, a customer quote, delivery questions, newsletter band, footer.
 
 *moods: warm, crafted, trustworthy; density: balanced; for: shop, e-commerce, handmade, retail*
+
+[![tpl-shop-craft desktop](../src/forge/skills/ui-design-quality/assets/preview/tpl-shop-craft-desktop.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-shop-craft-desktop.jpg) [![tpl-shop-craft phone](../src/forge/skills/ui-design-quality/assets/preview/tpl-shop-craft-mobile.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-shop-craft-mobile.jpg)

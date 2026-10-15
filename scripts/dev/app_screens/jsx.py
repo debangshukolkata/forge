@@ -26,6 +26,32 @@ RENAME = {
     "viewbox": "viewBox",
     "preserveaspectratio": "preserveAspectRatio",
     "xmlns:xlink": "xmlnsXlink",
+    "gradientunits": "gradientUnits",
+    "gradienttransform": "gradientTransform",
+    "spreadmethod": "spreadMethod",
+    "patternunits": "patternUnits",
+    "clippathunits": "clipPathUnits",
+    "stddeviation": "stdDeviation",
+}
+# The HTML parser lowercases every tag; these SVG elements are camel-case in JSX.
+SVG_TAGS = {
+    name.lower(): name
+    for name in (
+        "radialGradient",
+        "linearGradient",
+        "clipPath",
+        "textPath",
+        "foreignObject",
+        "feGaussianBlur",
+        "feOffset",
+        "feMerge",
+        "feMergeNode",
+        "feColorMatrix",
+        "feBlend",
+        "feComposite",
+        "feFlood",
+        "feDropShadow",
+    )
 }
 BOOLEAN = {"checked", "disabled", "selected", "readonly", "autofocus", "required", "hidden", "multiple"}
 
@@ -79,7 +105,7 @@ class Converter(HTMLParser):
         return f"{key}={json.dumps(value)}"
 
     def tag_text(self, tag: str, attrs: list[tuple[str, str | None]], close: bool) -> str:
-        parts = [tag] + [self.attribute(tag, n, v) for n, v in attrs]
+        parts = [SVG_TAGS.get(tag, tag)] + [self.attribute(tag, n, v) for n, v in attrs]
         return "<" + " ".join(parts) + (" />" if close else ">")
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
@@ -101,7 +127,7 @@ class Converter(HTMLParser):
             self.textarea = None
             return
         if tag not in VOID:
-            self.out.append(f"</{tag}>")
+            self.out.append(f"</{SVG_TAGS.get(tag, tag)}>")
 
     def handle_data(self, data: str) -> None:
         if self.textarea is not None:

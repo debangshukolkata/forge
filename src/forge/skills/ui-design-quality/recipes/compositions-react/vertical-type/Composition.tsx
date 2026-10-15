@@ -22,7 +22,7 @@ export default function Composition() {
           <ellipse cx="100" cy="150" rx="78" ry="100" fill="#d9382c" />
           <g fill="none" stroke="#8f2018" strokeWidth="3"><path d="M24 150h152M34 100h132M34 200h132M60 62h80M60 238h80" /></g>
           <ellipse cx="100" cy="150" rx="78" ry="100" fill="url(#glow)" />
-          <defs><radialgradient id="glow" cx=".4" cy=".35" r=".7"><stop offset="0" stopColor="#ffd79a" stopOpacity=".55" /><stop offset="1" stopColor="#d9382c" stopOpacity="0" /></radialgradient></defs>
+          <defs><radialGradient id="glow" cx=".4" cy=".35" r=".7"><stop offset="0" stopColor="#ffd79a" stopOpacity=".55" /><stop offset="1" stopColor="#d9382c" stopOpacity="0" /></radialGradient></defs>
           <rect x="70" y="248" width="60" height="14" rx="3" fill="#3a302a" /><path d="M100 262v40M88 302h24" stroke="#b9aa98" strokeWidth="3" />
           <text x="100" y="165" textAnchor="middle" fontSize="64" fill="#f4ece1" fontFamily="serif" lang="ja">黒</text>
         </svg>
