@@ -1,7 +1,7 @@
 # 2026-10-15: what was done, what was measured, what to do next
 
 Written for the person who owns DebCraft, not for a programmer. Everything below is pushed to `main` (the last push was `46a16a5`; later local commits are listed in `git log`). The list of work was TODO.md section 0c;
-every decision has a number in docs/DECISIONS.md (D-362 to D-429).
+every decision has a number in docs/DECISIONS.md (D-362 to D-430).
 
 ## What to do next (about 30 minutes, then the A/B when you have an hour free)
 
@@ -43,6 +43,8 @@ every decision has a number in docs/DECISIONS.md (D-362 to D-429).
 | DIE5 gate (D-425, D-428) | Card density in the audit; a note when a design resembles one of the last five. |
 | DIE6 imagery (D-423, D-429) | Your `brand-assets` folder first; the bundled CC0 Open Doodles recoloured to the accent; unDraw only as files you download by hand (D-420). |
 | DIE8 taste test (D-424) | Runbook docs/DESIGN_TASTE_TEST.md: Argon against gpt-5.1 in three arms, a blind gallery. Waits for the office laptop. |
+| Candidates shown to you (D-430) | When the look is open, DebCraft asks which candidate design you want, with each specimen picture in the question card. Skipped when you supplied a DESIGN.md or brand guide, the brief names the style, or you said not to ask. |
+| Live check (DIE9) | Two `--mini` briefs on the new code: both delivered, 0 audit findings. The model ignored the knowledge base, art director and candidate question at first; the steps were then moved into the system prompt and tool results and re-checked (`live-check-2`). |
 
 ## What is still open
 
