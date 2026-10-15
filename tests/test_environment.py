@@ -138,6 +138,7 @@ def test_environment_endpoints(
         "postgres_local",
         "postgres_dev",
         "gemini",
+        "node",
         "tavily",
         "tesseract",
     ]
@@ -197,7 +198,7 @@ def test_azure_check_names_the_missing_values_without_calling_the_network(
 
 def test_the_overview_says_which_checks_ask_a_question(client: TestClient) -> None:
     asked = {c["id"]: c["ask"] for c in client.get("/api/environment").json()["checks"] if c["ask"]}
-    assert set(asked) == {"gemini", "tavily", "tesseract"} and "installed" in asked["tesseract"]
+    assert set(asked) == {"gemini", "tavily", "tesseract", "node"} and "installed" in asked["tesseract"]
 
 
 WINDOWS_TESSERACT = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
@@ -224,3 +225,42 @@ def test_a_tesseract_that_cannot_read_is_a_warning(monkeypatch: pytest.MonkeyPat
     outcome = checks.check_tesseract()
     assert outcome.status == "warn" and "could not read a test image" in outcome.detail
     assert "Error opening data file" in outcome.detail and "eng.traineddata" in outcome.hint
+
+
+def test_the_gemini_row_tests_the_model_in_use_and_the_small_one(isolated_forge_home: Path) -> None:
+    from forge.config import load_config
+
+    config = load_config(isolated_forge_home)
+    names = [m.model_name for m in checks.gemini_models_to_test(config)]
+    assert names[-1] == checks.GEMINI_PROBE_MODEL and len(names) == len(set(names))
+    assert (
+        names[0] == "gemini-3.1-pro-preview"
+    )  # no role uses a Gemini model, so the first one in the config is tried
+
+
+def test_the_node_row_reports_a_missing_node_and_a_certificate_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import subprocess
+
+    monkeypatch.setattr("forge.net.installed_node_version", lambda: None)
+    missing = checks.check_node()
+    assert missing.status == "fail" and "Node.js was not found" in missing.detail and missing.steps
+
+    monkeypatch.setattr("forge.net.installed_node_version", lambda: "v24.7.0")
+    monkeypatch.setattr("shutil.which", lambda name: "npm")
+
+    def fake_run(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(args, 1, "", "npm error unable to get local issuer certificate")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    blocked = checks.check_node()
+    assert blocked.status == "fail" and "certificate is not trusted" in blocked.detail and blocked.steps
+
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: subprocess.CompletedProcess(a, 0, "4.21.5", ""))
+    working = checks.check_node()
+    assert (
+        working.status == "ok"
+        and "4.21.5" in working.detail
+        and "Windows certificate store" in working.detail
+    )

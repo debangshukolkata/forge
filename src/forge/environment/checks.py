@@ -64,6 +64,13 @@ CHECKS = (
         ask="Is Gemini enabled for you?",
     ),
     CheckInfo(
+        "node",
+        "Node.js and npm",
+        True,
+        "What building a React app or running shadcn/ui needs: Node, npm and a trusted connection to the npm registry",
+        ask="Will you build web apps with Node (npm, React, shadcn/ui)?",
+    ),
+    CheckInfo(
         "tavily",
         "Tavily web search",
         True,
@@ -199,27 +206,46 @@ def _gemini_failed(detail: str) -> Outcome:
     )
 
 
-def check_gemini(config: ForgeConfig) -> Outcome:
-    """Only run when the user said Gemini is enabled (D-201): one short real call."""
+def gemini_models_to_test(config: ForgeConfig) -> list[Any]:
+    """The Gemini model a role uses, else the first one in the config, and always the small 2.5 model that answers everywhere: the row then says which generation works (D-403)."""
     from forge.config import ModelConfig
-    from forge.errors import LLMError
-    from forge.llm.base import ChatRequest, Message
 
-    provider_config = config.llm.providers.gemini
-    secrets = load_secrets(forge_home())
-    try:
-        from forge.llm.gemini import GeminiProvider
-    except ImportError:
-        return _gemini_failed("The google-genai package is not installed.")
-    model = next((m for m in config.llm.models.values() if m.provider == "gemini"), None) or ModelConfig(
+    models: list[Any] = []
+    roles = config.llm.roles.model_dump()
+    for key in dict.fromkeys(str(v) for v in roles.values() if v):
+        model = config.llm.models.get(key)
+        if model is not None and model.provider == "gemini":
+            models.append(model)
+    if not models:
+        first = next((m for m in config.llm.models.values() if m.provider == "gemini"), None)
+        if first is not None:
+            models.append(first)
+    probe = ModelConfig(
         provider="gemini",
         label="Gemini",
         model_name=GEMINI_PROBE_MODEL,
         context_window=1_000_000,
         max_output=500,
     )
+    if all(m.model_name != GEMINI_PROBE_MODEL for m in models):
+        models.append(probe)
+    return models
 
-    async def probe() -> str:
+
+def check_gemini(config: ForgeConfig) -> Outcome:
+    """Only run when the user said Gemini is enabled (D-201): one short real call per model (the one in use or the newest in the config, and the small 2.5 model)."""
+    from forge.errors import LLMError
+    from forge.llm.base import ChatRequest, Message
+
+    provider_config = config.llm.providers.gemini
+    secrets = load_secrets(forge_home())
+    try:
+        from forge.llm.gemini import DEFAULT_LOCATION, GeminiProvider
+    except ImportError:
+        return _gemini_failed("The google-genai package is not installed.")
+    region = secrets.get(provider_config.location_env) or DEFAULT_LOCATION
+
+    async def probe(model: Any) -> str:
         gemini = GeminiProvider("gemini_check", model, provider_config, secrets)
         try:
             # Room for the model's own thinking, which can use up a tight limit and leave no text.
@@ -230,11 +256,111 @@ def check_gemini(config: ForgeConfig) -> Outcome:
         finally:
             await gemini.close()
 
+    answered: list[str] = []
+    failed: list[str] = []
+    for model in gemini_models_to_test(config):
+        try:
+            answer = asyncio.run(probe(model))
+        except LLMError as error:
+            failed.append(f"{model.model_name}: {str(error)[:160]}")
+            continue
+        answered.append(f"{model.model_name} answered: {answer or '(no text)'}")
+    where = f"region {region}"
+    if not answered:
+        return _gemini_failed(f"No Gemini model answered ({where}). " + " | ".join(failed))
+    if failed:
+        return Outcome(
+            "gemini",
+            "warn",
+            f"{'; '.join(answered)} ({where}). Did not answer: {' | '.join(failed)}",
+            "Gemini 3 models are served only from the `global` region: set GOOGLE_CLOUD_LOCATION=global in the .env file (or remove the line), then test again.",
+            steps=GEMINI_STEPS,
+        )
+    return Outcome("gemini", "ok", f"{'; '.join(answered)} ({where})")
+
+
+NODE_STEPS = [
+    "Install Node.js 22.15 or later (24 is best): from nodejs.org, or ask your IT team. npm comes with it.",
+    "Behind a company network that inspects HTTPS, Node 22.15 and later read the Windows certificate store by themselves (DebCraft turns that on for its commands). "
+    "With an older Node, DebCraft passes the Windows certificates to Node for you.",
+    "If the registry test says 'unable to get local issuer certificate', the company's root certificate is missing from the Windows certificate store: ask IT to install it, "
+    "or export it as a .pem file and put its path in NODE_EXTRA_CA_CERTS in the .env file. Never switch certificate checking off.",
+    "Without Node, DebCraft still works; only web apps that need npm packages (React, shadcn/ui) cannot be built.",
+]
+
+
+def check_node() -> Outcome:
+    """Node, npm and the certificates for the npm registry: what building a React app or running shadcn/ui needs (D-402)."""
+    import os
+    import shutil
+
+    from forge.net import installed_node_version, node_supports_system_ca, windows_certificate_bundle
+
+    version = installed_node_version()
+    if version is None:
+        return Outcome(
+            "node",
+            "fail",
+            "Node.js was not found on PATH.",
+            "Install Node.js (see the steps).",
+            steps=NODE_STEPS,
+        )
+    npm = shutil.which("npm")
+    if npm is None:
+        return Outcome(
+            "node",
+            "fail",
+            f"Node {version} is installed but npm was not found.",
+            "Reinstall Node.js with npm.",
+            steps=NODE_STEPS,
+        )
+    environment = dict(os.environ)
+    certificates = (
+        "Node reads the Windows certificate store"
+        if node_supports_system_ca(version)
+        else "an older Node: DebCraft passes the Windows certificates to it"
+    )
+    if node_supports_system_ca(version):
+        environment["NODE_USE_SYSTEM_CA"] = "1"
+    else:
+        bundle = windows_certificate_bundle(forge_home() / "certs" / "windows-roots.pem")
+        if bundle is not None:
+            environment["NODE_EXTRA_CA_CERTS"] = str(bundle)
     try:
-        answer = asyncio.run(probe())
-    except LLMError as error:
-        return _gemini_failed(str(error)[:300])
-    return Outcome("gemini", "ok", f"{model.model_name} answered: {answer or '(no text)'}")
+        done = subprocess.run(
+            [npm, "view", "shadcn", "version"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+            env=environment,
+            shell=os.name == "nt",
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        return Outcome(
+            "node",
+            "warn",
+            f"Node {version}; the npm registry test did not run: {error}",
+            "Check the network and retry.",
+            steps=NODE_STEPS,
+        )
+    text = (done.stdout + done.stderr).strip()
+    if done.returncode != 0:
+        from forge.net import looks_like_certificate_error
+
+        why = "the company certificate is not trusted" if looks_like_certificate_error(text) else text[-160:]
+        return Outcome(
+            "node",
+            "fail",
+            f"Node {version}: {certificates}; the npm registry could not be reached: {why}",
+            "See the steps.",
+            steps=NODE_STEPS,
+        )
+    return Outcome(
+        "node",
+        "ok",
+        f"Node {version}, npm and the npm registry work ({certificates}); shadcn {text.splitlines()[-1] if text else '?'} is available.",
+    )
 
 
 TAVILY_STEPS = [
@@ -343,6 +469,7 @@ async def run_check(check_id: str) -> Outcome:
             "postgres_dev": lambda: check_postgres(config, "dev"),
             "gemini": lambda: check_gemini(config),
             "tavily": lambda: check_tavily(config),
+            "node": check_node,
             "tesseract": check_tesseract,
         }[check_id]
         return await asyncio.wait_for(asyncio.to_thread(blocking), CHECK_TIMEOUT_S)
