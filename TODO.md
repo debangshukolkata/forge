@@ -117,7 +117,7 @@ If the session usage limit is hit, resume at 4:30 AM IST (a one-time schedule wa
 27. [x] **(done 2026-10-15, D-394)** **L3: Bengali and Devanagari pairing previews**, and close the item (reach is done by D-330).
 28. [ ] **DS8: A/B on the design benchmark with `--all-roles gpt54`**, then the decision which roles use it (a timing-exclusive run).
 29. [ ] **L11 best-of-N** only if the DS9 runs show real run-to-run variance; otherwise close it as not worth the cost.
-30. [~] **DS3 and DS6 leftovers:** a built hero per candidate; the LICENSE re-check of the CC0 prompts (raw fetch); the optional ask-me-first setting. (licence check done 2026-10-15, D-387; the built hero per candidate and the ask-me-first setting remain)
+30. [x] **(closed 2026-10-15: licence check D-387; built hero and ask-me-first decided against, D-396)** **DS3 and DS6 leftovers:** a built hero per candidate; the LICENSE re-check of the CC0 prompts (raw fetch); the optional ask-me-first setting. (licence check done 2026-10-15, D-387; the built hero per candidate and the ask-me-first setting remain)
 Not done at night on purpose: anything that needs the office laptop (Gemini probe, shadcn recheck, template probe, three-design rerun), the user's files or keys, the DS8 model decision, S7 faster-model OK, the one-click installer, the internal rename and pushing.
 
 ## 1. Waiting on you (your actions and decisions)
