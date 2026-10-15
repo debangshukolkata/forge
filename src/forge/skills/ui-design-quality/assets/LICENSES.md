@@ -232,6 +232,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `lay-vertical-type` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `sec-category-tiles` | original | authored for DebCraft (section library, D-385) |
 | `sec-contact-form` | original | authored for DebCraft (section library, D-273) |
+| `sec-craft-band` | original | authored for DebCraft (section library, D-434) |
 | `sec-cta-band` | original | authored for DebCraft (section library, D-273) |
 | `sec-docs-shell` | original | authored for DebCraft (section library, D-385) |
 | `sec-faq-list` | original | authored for DebCraft (section library, D-273) |
@@ -248,6 +249,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-nav-bar` | original | authored for DebCraft (section library, D-273) |
 | `sec-pricing-tiers` | original | authored for DebCraft (section library, D-273) |
 | `sec-product-grid` | original | authored for DebCraft (section library, D-385) |
+| `sec-product-trio` | original | authored for DebCraft (section library, D-434) |
 | `sec-schedule-list` | original | authored for DebCraft (section library, D-385) |
 | `sec-speaker-grid` | original | authored for DebCraft (section library, D-385) |
 | `sec-stats-row` | original | authored for DebCraft (section library, D-273) |

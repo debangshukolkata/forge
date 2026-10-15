@@ -62,3 +62,23 @@ def test_a_brand_composition_gets_a_brand_specimen_and_an_application_gets_the_d
     )
     assert 'class="facts"' in specimen_html(brand, "A real headline") and "<table" not in specimen_html(brand)
     assert "<table" in specimen_html(app) and 'class="facts"' not in specimen_html(app)
+
+
+def test_experience_and_story_are_noted_when_missing_and_the_story_needs_rhythm() -> None:
+    found = rules("# K" + NL + "## Overview" + NL + "Calm." + NL)
+    assert found["blueprint-missing:Experience"] == "info" and found["blueprint-missing:Story"] == "info"
+    flat = "## Story" + NL + "1. Hero, rich" + NL + "2. Facts, rich" + NL + "3. Menu, rich" + NL
+    assert "story-without-rhythm:Story" in rules(flat)  # three steps but one density level
+    good = (
+        "## Story"
+        + NL
+        + "1. Desire: the loaf, rich"
+        + NL
+        + "2. Trust: hours, quiet"
+        + NL
+        + "3. Craft: the hands, dramatic"
+        + NL
+    )
+    assert "story-without-rhythm:Story" not in rules(good)
+    app = FRONT.replace("name: Kestrel", "name: Kestrel" + NL + "composition: app-form-wizard")
+    assert "blueprint-missing:Story" not in {f.rule + ":" + f.path for f in lint_text(app + "# K" + NL)}

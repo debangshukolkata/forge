@@ -12,6 +12,16 @@ from forge.designsystem.spec import DesignSystem, Section
 
 # blueprint part -> (label, headings that answer it, hint for the author)
 BLUEPRINT_PARTS: dict[str, tuple[str, tuple[str, ...], str]] = {
+    "experience": (
+        "Experience",
+        ("experience",),
+        "who it is for, the feeling in a few words and what it must not feel like, the reaction wanted, or for an application the people, tasks and outcomes (written before any token, D-434)",
+    ),
+    "story": (
+        "Story",
+        ("story", "page story", "journey"),
+        "the journey of a visitor as an ordered list: each section's job, its density (quiet, rich or dramatic) and the picture it needs",
+    ),
     "composition": (
         "Page Composition",
         ("page composition", "section composition"),
@@ -58,11 +68,20 @@ def _section_for(system: DesignSystem, headings: tuple[str, ...]) -> Section | N
     return None
 
 
+DENSITY_WORDS = ("quiet", "rich", "dramatic")
+
+
+def _is_application(system: DesignSystem) -> bool:
+    return str(system.extra.get("composition", "")).strip().lower().startswith("app-")
+
+
 def check_blueprint(system: DesignSystem) -> list[tuple[str, str, str, str]]:
     """(severity, rule, path, message) for each missing blueprint part and each part whose decisions lack a stated purpose."""
     findings: list[tuple[str, str, str, str]] = []
     omitted = {item.lower() for item in system.omitted}
     for key, (label, headings, hint) in BLUEPRINT_PARTS.items():
+        if key == "story" and _is_application(system):
+            continue  # an application's journey is its tasks, written under Experience
         section = _section_for(system, headings)
         if section is None:
             if key in omitted or label.lower() in omitted:
@@ -77,6 +96,18 @@ def check_blueprint(system: DesignSystem) -> list[tuple[str, str, str, str]]:
             )
             continue
         bullets = _bullets(section)
+        if key == "story":
+            densities = {word for word in DENSITY_WORDS if word in section.body.lower()}
+            if len(bullets) < 3 or len(densities) < 2:
+                findings.append(
+                    (
+                        "info",
+                        "story-without-rhythm",
+                        section.heading,
+                        f"the story has {len(bullets)} step(s) and names {len(densities)} density level(s): write at least three sections and let neighbours differ (quiet, rich, dramatic)",
+                    )
+                )
+            continue
         without = [b for b in bullets if not PURPOSE.search(b)]
         if len(bullets) >= 2 and len(without) * 2 > len(bullets):
             findings.append(

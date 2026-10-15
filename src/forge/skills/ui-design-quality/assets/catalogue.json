@@ -9161,6 +9161,46 @@
    "size": 4342
   },
   {
+   "id": "sec-craft-band",
+   "type": "section",
+   "title": "Craft band",
+   "summary": "A dark full-width band that turns from what is sold to how it is made: the maker's picture on one side, the story and three short steps on the other.",
+   "moods": [
+    "dramatic",
+    "crafted",
+    "warm"
+   ],
+   "products": [
+    "bakery",
+    "workshop",
+    "studio",
+    "restaurant",
+    "brewery"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "story",
+    "process",
+    "dark band"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/CraftBand.tsx",
+     "to": "src/sections/CraftBand.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-434)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-434)",
+   "preview": "assets/preview/sec-craft-band.jpg",
+   "path": "assets/section/sec-craft-band.md",
+   "size": 3778
+  },
+  {
    "id": "sec-cta-band",
    "type": "section",
    "title": "Closing call-to-action band",
@@ -9746,6 +9786,46 @@
    "preview": "assets/preview/sec-product-grid.jpg",
    "path": "assets/section/sec-product-grid.md",
    "size": 3485
+  },
+  {
+   "id": "sec-product-trio",
+   "type": "section",
+   "title": "Product trio",
+   "summary": "A text block beside three tall product pictures with a name and a line beneath, the middle one set lower; no card frames.",
+   "moods": [
+    "warm",
+    "crafted",
+    "editorial"
+   ],
+   "products": [
+    "bakery",
+    "shop",
+    "restaurant",
+    "studio",
+    "florist"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "products",
+    "imagery",
+    "card-free"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/ProductTrio.tsx",
+     "to": "src/sections/ProductTrio.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-434)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-434)",
+   "preview": "assets/preview/sec-product-trio.jpg",
+   "path": "assets/section/sec-product-trio.md",
+   "size": 4291
   },
   {
    "id": "sec-schedule-list",

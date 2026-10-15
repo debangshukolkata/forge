@@ -88,6 +88,12 @@ components:
 
 # <Product> design system
 
+## Experience
+Written first, before any token. Who it is for and the context they arrive in (for an application: the people, what each must get done, in how many steps, and what must never go wrong). The feeling in three or four words and what it must NOT feel like. The reaction wanted, in the visitor's words ("This bakery looks special. I want to visit."). One line of creative direction ("the warmth of a neighbourhood bakery, the refinement of an editorial food magazine"). Say what you inferred from the brief.
+
+## Story
+The journey, one numbered line per section of the page: its job, its density (quiet, rich or dramatic) and the picture it needs with its source (brand folder, find_image query, generate_image). Example for a bakery: 1. Desire: the loaf and one promise, rich, large photograph of the bread. 2. Trust: hours, place, delivery, quiet, no picture. 3. Exploration: what is sold, rich, three product photographs. 4. Craft: the hands and the process, dramatic, a dark band with a photograph of the baker. 5. Invitation: the shop and one visit action, quiet, a photograph of the shop front. Neighbouring sections differ in density; a screen holds one dramatic moment. For an application, leave this out and write the tasks under Experience.
+
 ## Overview
 Who this is for, what it must make them feel, what it must NOT look like. Dials 1-10 (they gate the choices below):
 DESIGN_VARIANCE (1 centred and calm ... 10 asymmetric and editorial), MOTION_INTENSITY (1 hover states only ... 10 scroll-driven),

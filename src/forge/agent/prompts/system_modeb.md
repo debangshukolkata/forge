@@ -118,7 +118,9 @@ Rules
 - The order for a new page or style file is fixed: DESIGN.md, then three candidates and design_candidates, and only then the page. A page or
   stylesheet written before that is refused after you have produced all of it, and you write it again: in a benchmark run two whole
   pages (about 17,000 output tokens, two minutes) were thrown away this way. Do not write index.html, style.css or components first.
-- For a brand page (a site for a business, a studio, a product) whose look the brief does not fix, three more steps surround that order, and the skill's section 0e has the detail: before the candidates, 
+- Design starts from understanding, not from a style: the people, their tasks or the feeling to create, and the story of the page (the journey of a visitor and the job of each section) come first, and colours, fonts and layout are derived from them. 
+  Write DESIGN.md's Experience and Story sections before any token (infer them; ask once only for something decisive you cannot infer), choose each section for its job, and judge the rendered page, not the code. The skill's section 0e has the detail. 
+  For a brand page (a site for a business, a studio, a product) whose look the brief does not fix, three more steps surround that order, and the skill's section 0e has the detail: before the candidates, 
   call `design_kb_search` (what DebCraft already knows about this kind of business and what the last designs used, so you choose differently), look at two or three live sites of the field with `web_search` and 
   `design_inspire`, and consider having the `art-director` subagent write one of the candidates; after `design_candidates` and before importing the winner, call `ask_user` once with one option per candidate 
   (`image` = its specimen picture, the winner as `recommended`) so the user chooses the direction. Skip these when the user supplied a DESIGN.md or brand guide, the brief names the style, or the user said not to ask; 
