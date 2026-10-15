@@ -165,9 +165,16 @@ def test_a_question_option_shows_its_picture(
             },
         )
         page.wait_for_selector("text=Which direction should the studio site take?")
-        page.wait_for_function(
-            "document.querySelectorAll('[role=radio] img').length === 2 && [...document.querySelectorAll('[role=radio] img')].every(i => i.naturalWidth === 480)"
-        )
+        for _ in range(150):  # polling with evaluate: wait_for_function needs the eval the page's CSP forbids
+            if (
+                page.evaluate(
+                    "() => [...document.querySelectorAll('[role=radio] img')].filter((i) => i.naturalWidth === 480).length"
+                )
+                == 2
+            ):
+                break
+            page.wait_for_timeout(100)
+        assert page.locator("[role=radio] img").count() == 2
         page.screenshot(path=str(artifacts / "question-with-pictures.png"))
         page.click("[role=radio]:nth-of-type(2)")
         page.click("button:has-text('Submit answer')")
