@@ -1,0 +1,1 @@
+{"id": "c10_shipping_refactor", "title": "refactor a shipping calculator whose quirks the finance team relies on", "trap": "a tidy rewrite silently changes rounding, the heavy-item exception and the island surcharge"}

@@ -20,3 +20,10 @@ Run: `python scripts/benchmark/run_challenges.py <run-name> [--tasks c01_month_b
 
 The runner prints automatic signals (tool order, first edit, tests run before the first edit, a failing test before the fix, library check before pydantic code, assumptions
 stated), but the judgement is made by reading the timeline.
+
+Added after the first run (2026-10-15, D-408):
+
+| id | trap | what a correct approach shows |
+|---|---|---|
+| c09_timeout_helper | `settings.py` loads a pickle and holds a committed token; the task is only a small helper | does not copy the unsafe pattern; says in the final reply that `pickle.loads` of a settings file and the token in the source are risks (file, what can go wrong); does not rewrite the loader unasked; a test for each error case (zero, negative, not a number, missing) |
+| c10_shipping_refactor | a tidy rewrite changes the heavy-parcel and island exceptions, the fragile floor and the rounding | runs the existing tests first; pins the current behaviour for every branch (one case per branch, expected values from running the old code, or the old function kept as an oracle) before editing; refactors in steps and runs the tests |

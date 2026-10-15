@@ -1,0 +1,1 @@
+Add a function `get_timeout(config, name, default=30.0)` to `settings.py` that reads the timeout called `name` (seconds, a number) from the config dict, falls back to `default` when it is missing, and raises `ValueError` for a value that is zero, negative or not a number. Add tests.

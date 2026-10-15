@@ -1,0 +1,1 @@
+`shipping_cost` in `shipping.py` is a tangle of nested ifs and every new carrier rule makes it worse. Refactor it so it is readable and easy to extend with new rules. Behaviour must not change: the numbers on our invoices have to stay exactly as they are.
