@@ -169,4 +169,13 @@ def test_a_question_option_shows_its_picture(
             "document.querySelectorAll('[role=radio] img').length === 2 && [...document.querySelectorAll('[role=radio] img')].every(i => i.naturalWidth === 480)"
         )
         page.screenshot(path=str(artifacts / "question-with-pictures.png"))
+        page.click("[role=radio]:nth-of-type(2)")
+        page.click("button:has-text('Submit answer')")
+        live_server.publish(
+            EventType.QUESTION_ANSWERED, {"id": "Q-designs", "choice": "Dark and bold", "text": None}
+        )
+        page.wait_for_selector(
+            "[data-card=question][data-answered] img"
+        )  # the answered card keeps the chosen picture
+        assert page.locator("[data-card=question][data-answered] img").count() == 1
         browser.close()

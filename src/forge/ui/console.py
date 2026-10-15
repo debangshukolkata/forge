@@ -149,7 +149,7 @@ def render_question(payload: dict[str, Any], console: Console, state: ConsoleSta
     for number, option in enumerate(options, start=1):
         star = "  (recommended)" if option.get("label") == payload.get("recommended") else ""
         console.print(Text(f"  {number}. {option.get('label')}{star}", style="bold"))
-        for field in ("description", "pros", "cons", "risks"):
+        for field in ("description", "image", "pros", "cons", "risks"):
             if option.get(field):
                 console.print(Text(f"       {field}: {option[field]}", style="dim"))
     console.print(Text("  Answer with a number, or type your own answer.", style="bold cyan"))

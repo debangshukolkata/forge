@@ -409,6 +409,9 @@ function AnsweredQuestion({ p, given }: { p: P; given: { choice: string | null; 
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">{option.label}</span>
                     {option.description && <span className="mt-0.5 block text-[12.5px] text-fg-muted">{option.description}</span>}
+                    {chosen && option.image && (
+                      <img src={`/api/image?path=${encodeURIComponent(option.image)}`} alt={`Picture of ${option.label}`} loading="lazy" className="mt-2 block max-h-40 rounded-md border border-border object-contain object-left" />
+                    )}
                     {chosen && given.text && <span className="mt-1 block text-[12.5px]">Your note: {given.text}</span>}
                   </span>
                 </li>
