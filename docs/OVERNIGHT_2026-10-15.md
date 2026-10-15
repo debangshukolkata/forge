@@ -1,47 +1,46 @@
-# Overnight 2026-10-15: what was done, what to do in the morning
+# 2026-10-15: what was done, what was measured, what to do next
 
-Work is in local commits (nothing pushed). The list was TODO.md section 0c. This file is updated as items finish; the section "Status" at the end says where it stopped.
+Written for the person who owns DebCraft, not for a programmer. Everything below is pushed to `main` (the last push was `46a16a5`; later local commits are listed in `git log`). The list of work was TODO.md section 0c;
+every decision has a number in docs/DECISIONS.md (D-362 to D-418).
 
-## Done (each with tests and a D-note)
-| Item | Result |
+## What to do next (about 30 minutes, then the A/B when you have an hour free)
+
+1. **Update the laptop:** `git pull` in `C:\Work\LocalDevelopment\forge-main` (or copy the folder over), then double-click `Start-DebCraft.cmd`. It now runs the doctor first (one line per check, saved in `doctor-report.txt`).
+2. **Check the `.env`** (`C:\Users\211258\.forge\.env`): the second Azure resource needs `AZURE_FALLBACK_ENDPOINT`, `AZURE_FALLBACK_API_KEY`, `AZURE_FALLBACK_API_VERSION`, `AZURE_FALLBACK_DEPLOYMENT`, `AZURE_STRONG_DEPLOYMENT="aicloud-gpt-5.4"` and `AZURE_GPT52_DEPLOYMENT="aicloud-gpt-5.2"`. You did this; the doctor showed all models OK.
+3. **Environment panel:** answer Yes to Gemini, press **Test all** (the model lists stay locked until every test has finished), look at the proposals and press **Save models**. The proposals are: coder gpt-5.1, knowledge builder, summariser and vision gpt-5.1; planner, design critic, judge and reviewer Gemini 4 Argon (else Gemini 3.1 Pro, else gpt-5.2); fallback Gemini 3.1 Pro (else gpt-5.4, gpt-5.2). Rows you change by hand are remembered; the others follow later proposals.
+4. **The Gemini A/B** (docs/LAPTOP_AB.md): two small briefs first, about 25 minutes. It tells whether Argon as critic and judge makes the pages better. Send me the two `results.md` files and say which pages you like more.
+
+## What was built and measured
+
+| Area | Result |
 |---|---|
-| 6 Progress for tool-made model calls and Gemini | `ToolContext.ask_model` heartbeat for view_image, design_candidates, critique_document; Gemini stream progress (D-367) |
-| 7 S6 rest | Measured: tools are not the bottleneck (browser_screenshot 2.2 s, run_command 1.4 s); `spawn_subagent` is 34 % of the wall time; the verifier no longer scripts a static page (D-368) |
-| 8 L9 | Audit findings name what sticks out (with the cause) and which images lack alt text (D-369) |
-| 9 D1, D2 | A note when one UI file is changed 6, 10, 14 ... times (D-370); D2 closed with measurements |
-| 12 Document extras | True PDF redaction `redact_pdf` (D-373); PDFs in Bengali, Devanagari and other scripts through the browser engine (D-374); document themes shared with decks `theme:<name>` (D-375) |
-| 13 (part) | `save_brand`: the company look saved once in `brand.json` (D-378) |
-| 14 Platform housekeeping | `browser` test marker for a fast run; parallel pytest prompt line (D-371) |
-| 15 C8 | `library_api`: the installed library's real names, signatures, nearest matches (D-372) |
-| 11 AS1 React | Five app screens as React with an HTML-to-JSX converter (D-377); build and type-check pass |
-| 18 C15 | `with_servers.py` helper for the verifier's browser scripts (D-376) |
-| 1/3 findings | From the log of the first X8 serial run: control characters in file writes refused with the fix (a mangled en dash made a page 'binary'), no test-run gate for tasks that only changed pages, `.forge/candidates` importable by `design_md_import` (D-379) |
-| 10 (part) | Design gallery `docs/DESIGN_GALLERY.md` (every composition, screen, design system, template with pictures) |
-| 17 (part) | shadcn/ui rules and re-theme notes in our own words (L5 b, c, d) |
-| 20 prepared | Eight approach challenges and a time-boxed runner (`scripts/benchmark/run_challenges.py`), seeds checked by tests |
+| **Speed** | Parallel design builders (`build_variants`): three throwaway designs 46 percent faster and 18 percent cheaper than one after the other (D-380). Where time goes was measured: subagents are 34 percent of the wall time. |
+| **Benchmarks** | Design: all four briefs complete on the final code with 0 or 1 audit findings (docs/DESIGN_BENCHMARK.md); a bug found on the way (the audit judged a stale page) is fixed (D-391). Coding: 13 of 14 tasks, 309 of 310 tests, no regression; gpt-5.4 as coder gave the same results, 39 percent slower and 2.9 times the cost (D-414). Approach challenges: ten, three rounds (docs/CODE_BENCHMARK.md). |
+| **Design material** | 24 application screens, each also as React; 7 page compositions, also as React; 40 small animations, 5 React effects, 3 canvas effects; shop, conference, docs and pricing templates with pictures; a picture for every section and direction; font pairings with Bengali and Hindi pictures; the gallery `docs/DESIGN_GALLERY.md`. |
+| **Documents and decks** | True PDF redaction; PDFs in Bengali, Devanagari and other scripts; company look saved with the project (`brand.json`), logo in Word, PDF and decks; six font pairings; 670 real decks from open repositories swept through the readers (one defect fixed, D-399). |
+| **Models** | Gemini 3 models and Gemini 4 Argon answer on your project from the `global` region (the earlier failure was a certificate error plus the wrong region). New roles: design critic and planner. The "independent" design critic had been running on the builder's own model; now it is a separate role (D-409). A rate limit or outage falls back to a model of another provider (D-411). gpt-5.2 added (D-413). |
+| **shadcn and certificates** | `shadcn_setup` does the whole setup (Tailwind, alias, init, components) and was run against the real network; a certificate failure is recovered by exporting the Windows certificates for Node (D-401, D-402). Verified on your laptop. |
+| **Environment panel and start-up** | Models list every model with its state; the lists unlock only after a full test (D-415); saved choices no longer freeze old proposals (D-416); a Node row; the doctor runs at every start; `Debcraft-Doctor.cmd`. |
+| **Everyday tools** | `scripts/dev/quick_check.py` (lint plus only the tests that touch what changed), `--mini` design briefs, `night_status.py`, the skill A/B loop `run_skill_ab.py` (D-417), the reference-deck sweep. |
 
-## Waiting on the benchmark runs (1 to 5 of the list)
-X8 is finished (parallel builders 46 percent faster, 18 percent cheaper, docs/SPEED_BENCHMARK.md, D-380). The design benchmark and the coding benchmark wait until the end (see Status).
+## Gates added (for your review): each is one reminder, never a trap, only in real sessions
 
-## For you in the morning
-1. `git push` (say "push"). The work is on branch `night` in the worktree `../Forge-night` and is merged into `main` at the end of the night.
-2. On the office laptop: `git pull`, then `.venv\Scripts\python scripts\dev\gemini_probe.py --out gemini2.txt` (the Gemini 3 decision, TODO section 1).
-3. The new gates and behaviour changes to review are listed under "Gates added" below.
+1. Before the first edit of existing code the tests must have run (or a test been written): refused once, with the reason (D-408).
+2. Replacing most of an existing file of 30 lines or more in one write is refused once until a test has been written (D-410).
+3. Before a turn ends, the loop asks once for the risks found in the files it read (unsafe loading, committed secrets, SQL built from strings, shell commands from strings, eval, certificate checks off) if the reply does not name them (D-410).
+4. `design_candidates` refuses a composition that is not a catalogue id (D-406).
+5. A control character in a file write is refused with the place and the fix (D-379).
 
-## Gates added (for your review)
-- D1 note (not a refusal) after 6 edits of one UI file (D-370).
-- The verifier skips the script on a static page (D-368).
-- File writes that would add control characters are refused with the place and the fix (D-379).
-- The test-run gate of `task_update` counts code edits only: pages, stylesheets, notes, pictures and fonts do not trigger it (D-379).
-- `browser_screenshot` reloads the page when files changed since it was opened (D-391).
-- (more are listed here as the coding challenges add them)
+## What is still open
 
-## Not done / open
-- Items 1 to 5, 10, 13 (logo, font pairings), 16, 17, 18 (C14), 20: see Status.
+- **Measuring Gemini on your laptop** (docs/LAPTOP_AB.md): Argon as critic and judge, and as planner. This machine has no Google credentials. Nothing about Gemini inside a long agent session has been verified, only short calls.
+- **Prices in the config** for Gemini and gpt-5.2/5.4 are placeholders; replace them with your contract prices for correct cost numbers.
+- **The skill A/B** (C14) is built; its first measurements (for example `test-first` on the four hard coding tasks) are cheap and not run yet.
+- **A real company template** would still test the template mode better than 670 public test decks; only if you want it.
+- **Not built on purpose:** best-of-N design candidates (no run-to-run variance seen), per-task routing between gpt-5.1 and gpt-5.4 (loses the cache and the reasoning thread; the benchmark gave no reason), a built hero per candidate, the ask-me-first setting, a logo for workbooks.
 
-## Status (2026-10-15, about 09:30 IST, machine restarted by the user)
-- `main` and `night` are the same commit (D-391); nothing is pushed since `c109109`. Nothing is running.
-- **Design benchmark:** `night-1` was stopped after d03 and 12 screenshots of d04, because the audit judged stale pages (D-391: `browser_screenshot` did not reload after edits, so a fixed font was still reported as a system-font blocker; d03 ended with 3 of 5 tasks blocked). A rerun `night-2` was started and stopped again by the user's choice: benchmarks and the coding challenges run **at the end**, on the final code, when nothing else needs the machine. Rerun d01 (museum), d03, d04, d05 on the fixed code; d02 passed its audit on the old code.
-- **Edge tests still failing** (run 2026-10-15 on main): `tests/test_micro_effects.py` reduced-motion test fails for about 40 effects ("transitions still run under reduced motion"; the test reads `1e-05s` as 5 s, a test bug in `longest_seconds`, and some effects may also need `transition: none` in `motion-micro.css`); `tests/test_motion_hooks.py::test_the_five_assets_are_in_the_catalogue`; `tests/test_motion_canvas.py::test_under_reduced_motion_they_are_drawn_once_and_stay_still`. Not yet investigated. `tests/test_sections.py` (3 new templates + `tpl-pricing-invoicing`) and `tests/test_app_screens_react.py` not yet run after the merge.
-- **Built since the last status:** brand-kit logo in Word and PDF headers (D-388), pricing page template (D-389, Vite build and audit pending), font pairings (D-390), reload after edits (D-391), `scripts/dev/night_status.py`, stale ticks D1, D2, L9 closed.
-- **Order for what is left:** fix the three failing Edge tests, run test_sections and test_app_screens_react, full suite, then benchmarks (design rerun, C1), then the coding challenges (command in `tests/benchmarks/challenges/README.md`), then the morning summary.
+## Mistakes worth knowing
+
+- I stopped every Python process once (it killed your `forge ui` on port 8765). I stop only the processes I started now.
+- The first design benchmark judged stale pages (fixed, D-391) and was rerun.
+- The gpt-5.4 benchmark first failed in seconds because the deployment name was not passed in; fixed and rerun.
