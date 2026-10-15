@@ -218,3 +218,36 @@ async def test_a_candidate_without_a_composition_is_not_usable(original_repo: Pa
         context,
     )
     assert not refused.ok and "NOT USABLE until it names its composition" in refused.content
+
+
+async def test_a_composition_that_is_not_in_the_catalogue_is_refused_with_the_nearest_real_ones(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace)
+    invented = BLUE.replace("composition: lay-editorial-split", "composition: app-northline-bright-logistics")
+    workspace.write_text(".forge/candidates/a/DESIGN.md", invented, "x")
+    workspace.write_text(".forge/candidates/b/DESIGN.md", AMBER, "x")
+    refused = await DesignCandidates().run(
+        DesignCandidates.Args(
+            brief="x", candidates=[".forge/candidates/a/DESIGN.md", ".forge/candidates/b/DESIGN.md"]
+        ),
+        context,
+    )
+    assert not refused.ok and "is not in the catalogue" in refused.content and "app-" in refused.content
+    assert "composition: custom" in refused.content  # the way out when nothing fits
+
+
+async def test_a_real_composition_and_a_custom_one_are_accepted(original_repo: Path, tmp_path: Path) -> None:
+    from forge.tools.design_candidates import _composition_next_step, _unknown_composition
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace)
+    assert _unknown_composition(context, "lay-editorial-split") == ""
+    assert _unknown_composition(context, "app-dashboard-ops (adapted for freight)") == ""
+    assert _unknown_composition(context, "custom a ticket-stub layout") == ""
+    assert "lay-nonsense" in _unknown_composition(context, "lay-nonsense")
+    assert _composition_next_step(parse_design_md(BLUE)).startswith(
+        "\nThe winner's composition is lay-editorial-split"
+    )
+    assert _composition_next_step(None) == ""

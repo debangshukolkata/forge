@@ -48,6 +48,22 @@ machine-made look. Calibration: a deliberately dated bakery page scored 2-3, so 
    (measured in the browser), otherwise the page is treated as set in the system stack. The judge's worst problems are now about identity, not craft:
    "a generic dark-theme digital product aesthetic", "a generic modern museum page, lacking imagery and visual cues about experiments".
 
+## Run night-2 (2026-10-15, final code of the night, one run per brief)
+
+| Brief | Wall | Cost | Audit left | Sideways scroll | Judge (type/dist/hier/harm/fit/polish) | App screen copied |
+|---|---|---|---|---|---|---|
+| d01_science_museum | 2,727 s | $2.82 | 1 | no | 4/4/4/4/5/4 | no (ds-playful-friendly only) |
+| d03_ops_dashboard | 985 s | $1.79 | 1 | phone | 4/4/4/4/4/4 | **no** |
+| d04_member_table | 1,160 s | $1.65 | 0 | no | 4/3/4/4/4/4 | yes (app-table-data) |
+| d05_booking_wizard | 1,380 s | $1.89 | 0 | no | 4/3/4/4/4/4 | **no** (ds-clean-product only) |
+
+What it showed:
+- The first attempt (`night-1`) judged stale pages: `browser_screenshot` did not reload after edits, so the audit kept reporting a system-font blocker after the fonts were linked and d03 ended with 3 of 5 tasks blocked (D-391). With the reload every brief completes with 0 or 1 audit finding left.
+- The dashboard brief took 985 s and $1.79 against 2,658 s and $3.24 in speed-6 (different brief version, same kind of page; 66k output tokens against 95k).
+- Candidate refusals are down to a patch, not a rewrite: the three DESIGN.md candidates were changed with one `multi_edit` each (D-393). Writes still repeated: index.html twice in d03 and d04.
+- AS1 did not work in two of three application briefs: the model named invented compositions (`app-northline-bright-logistics`, `app-kestrel-booking-wizard`, `lay-admin-table`) that are not in the catalogue, so the real screens (`app-dashboard-ops`, `app-form-wizard`) were never copied and the pages were written from a blank file. Fix: `design_candidates` now refuses a composition that is not a catalogue id (naming the nearest real ones) and tells the winner to `add_asset` it (D-406). The effect is measured in the next benchmark run.
+- The judge's worst problem in d04 and d05 is the same in each: "generic SaaS" look that does not reflect the product's world; d01 "generic rounded cards and gradients". The pipeline makes pages competent, not yet characterful.
+
 ## Limits of this measurement
 Two briefs, one run each, a vision model as judge (the same family as the builder, calibrated only at the bottom of the scale). Do not read small
 differences as signal; read the tool-use facts (ladder used, fonts loaded) and the worst problem the judge names.

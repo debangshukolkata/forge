@@ -143,6 +143,44 @@ class DesignSpecimen(Tool):
         )
 
 
+def _unknown_composition(context: ToolContext, composition: str) -> str:
+    """A composition that is not a catalogue id. The night-1 and night-2 design runs invented names such as `app-northline-bright-logistics` and `lay-admin-table`, so the real
+    screens (`app-dashboard-ops`, `app-table-data`, `app-form-wizard`) were never copied and the pages were written from a blank file (D-406). Empty string when it is fine."""
+    import difflib
+
+    from forge.tools.assets import _catalogues
+
+    words = composition.split()
+    if not words or words[0].lower() == "custom":
+        return ""
+    wanted = words[0].strip("`'\",.;")
+    known = {asset.id for _skill, asset in _catalogues(context) if asset.type == "section"}
+    if wanted in known:
+        return ""
+    layouts = sorted(
+        i for i in known if i.startswith(("lay-", "app-")) and not i.startswith(("lay-react-", "app-react-"))
+    )
+    close = difflib.get_close_matches(wanted, layouts, n=4, cutoff=0.25)
+    near = ", ".join(close or layouts[:6])
+    return (
+        f"`composition: {wanted}` is not in the catalogue. Pick a real one (closest: {near}; find_asset with the tag 'composition' or 'app screen' lists them all), then add_asset copies it, "
+        "or write `composition: custom <one line describing the layout idea>` when none fits."
+    )
+
+
+def _composition_next_step(system: DesignSystem | None) -> str:
+    """After the vote: copy the winner's composition instead of writing the page from a blank file (AS1)."""
+    if system is None:
+        return ""
+    words = str(system.extra.get("composition", "") or "").split()
+    if not words or words[0].lower() == "custom":
+        return ""
+    return (
+        f"\nThe winner's composition is {words[0]}: add_asset it now and build the page from its files (change the words, the art and the tokens), "
+        "not from a blank file: a copied screen is tested at both widths and costs a fraction of the output."
+    )
+
+
 class DesignCandidates(Tool):
     name = "design_candidates"
     read_only = False
@@ -189,6 +227,10 @@ class DesignCandidates(Tool):
                     "composition lists seven complete page layouts with drawn art; for an application use `composition: app-...` from the tag 'app screen'; add_asset copies one and shows its pictures), or `composition: custom <one line "
                     "describing the layout idea>` when none fits the product."
                 )
+                continue
+            unknown = _unknown_composition(context, str(loaded[path][0].extra.get("composition", "")))
+            if unknown:
+                lines.append(f"{path}: NOT USABLE until fixed\n{unknown}")
                 continue
             if errors:
                 lines.append(f"{path}: NOT USABLE until fixed\n{describe_findings(errors, 6)}")
@@ -277,7 +319,8 @@ class DesignCandidates(Tool):
             content="\n".join(lines)
             + f"\nSpecimens: {shown}\nWinner: {winner} ({path})\n"
             + json.dumps({k: verdict.get(k) for k in ("scores", "reasons", "fixes")}, indent=1)[:3500]
-            + "\nApply the winner's fixes to its DESIGN.md, then design_md_import it as the project's DESIGN.md (overwrite) and record the other candidates in its Overview.",
+            + "\nApply the winner's fixes to its DESIGN.md, then design_md_import it as the project's DESIGN.md (overwrite) and record the other candidates in its Overview."
+            + _composition_next_step(loaded[path][0] if path else None),
         )
 
     @staticmethod
