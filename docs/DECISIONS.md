@@ -3905,3 +3905,6 @@ Checked 2026-10-15 (web search): no repository named `superdesign-prompts` could
 
 ### D-388 - The brand kit has a logo (TODO P2.1)
 `BrandKit.logo` names a PNG or JPEG in the project. Word documents put it (1 cm high) at the start of the header; PDFs draw it in the top margin (reportlab) or in the browser header template (the non-Latin path). A logo that cannot be read is a clear error, not a silent skip. Options: header only (chosen: it needs no layout change in the body), a cover-page logo (later, with cover pages), or a watermark (rejected: lowers legibility). The old test that rejected a `logo` key now uses another unknown key. Decks and workbooks do not use it yet.
+
+### D-389 - Pricing page template (tonight's list, item 25)
+`tpl-pricing-invoicing`: Outfit and Manrope, burnt orange on slate, built from existing sections (NavBar, HeroCentered, LogoStrip, PricingTiers, StatsRow, FaqList, CtaBand, FooterColumns) so only the composition, tokens and copy are new. Added to the catalogue and to the template list of tests/test_sections.py; its entry says `tested: NOT YET BUILT` until that test has run (browser tests wait for the design benchmark). Chosen over a new PricingTiers variant: the section already covers three plans with one featured.

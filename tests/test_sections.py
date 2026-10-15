@@ -22,6 +22,7 @@ TEMPLATES = [
     "tpl-shop-craft",
     "tpl-event-conference",
     "tpl-docs-product",
+    "tpl-pricing-invoicing",
 ]
 SECTION_NAMES = sorted(p.stem for p in (RECIPES / "sections").glob("*.tsx"))
 

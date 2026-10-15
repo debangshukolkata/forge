@@ -228,4 +228,5 @@ Generated from the assets' front-matter; do not edit by hand.
 | `tpl-landing-charity` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-portfolio` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-saas` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-pricing-invoicing` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-389); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-shop-craft` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |
