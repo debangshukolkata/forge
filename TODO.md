@@ -111,7 +111,7 @@ If the session usage limit is hit, resume at 4:30 AM IST (a one-time schedule wa
 21. [ ] **Close the stale ticks of section 2** (D1, D2, L9 are done: D-368 to D-370) and recount.
 22. [~] **L4(b) + L2: forty micro-interactions** (loaders, toggles, buttons, inputs, cards) written by us as pure CSS in `motion-micro.css`, restyled with tokens, each a catalogue effect with a demo-page test in Edge (reduced motion off). (written 2026-10-15, D-382; the Edge test runs when no timing run is going)
 23. [~] **L2: React hooks** for split text, scramble, magnetic button, number ticker and pinned steps, with tests; the per-intensity effect budget table. (written 2026-10-15, D-383; build passes, the Edge test runs when the machine is free)
-24. [ ] **L6: animated beam, particles-lite and globe-lite** (small canvas or SVG code of our own).
+24. [~] **L6: animated beam, particles-lite and globe-lite** (small canvas or SVG code of our own). (written 2026-10-15, D-384; build passes, the Edge test runs when the machine is free)
 25. [ ] **L1: six more complete templates** (e-commerce, docs, event, onboarding, pricing, admin), Vite + Tailwind, built, type-checked, audit-clean at 1280 and 375 px, in new visual directions; catalogue entries with pictures.
 26. [ ] **L10: a reference picture per direction and per section** (a demo page per direction).
 27. [ ] **L3: Bengali and Devanagari pairing previews**, and close the item (reach is done by D-330).

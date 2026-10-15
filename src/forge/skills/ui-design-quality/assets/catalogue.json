@@ -2477,6 +2477,81 @@
    "size": 6921
   },
   {
+   "id": "fx-react-animated-beam",
+   "type": "effect",
+   "title": "Animated beam (React)",
+   "summary": "A light travels along a curve between two elements: integrations, data flow, how things connect.",
+   "moods": [
+    "technical",
+    "modern"
+   ],
+   "products": [
+    "integrations",
+    "developer tools",
+    "saas"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "svg",
+    "connection",
+    "beam"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-canvas.tsx",
+     "to": "src/motion-canvas.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (canvas and SVG showpiece effects, D-384)",
+   "tested": "built with Vite and React (type-checked); in Edge the beam draws a path with a moving light, the canvases paint and keep changing, and under reduced motion they are drawn once (tests/test_motion_canvas.py, D-384)",
+   "preview": null,
+   "path": "assets/effect/fx-react-animated-beam.md",
+   "size": 9017
+  },
+  {
+   "id": "fx-react-globe-lite",
+   "type": "effect",
+   "title": "Globe (React)",
+   "summary": "A slowly turning sphere of dots: a world without map data.",
+   "moods": [
+    "global",
+    "modern"
+   ],
+   "products": [
+    "travel",
+    "logistics",
+    "nonprofit",
+    "saas"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "canvas",
+    "globe",
+    "hero"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-canvas.tsx",
+     "to": "src/motion-canvas.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (canvas and SVG showpiece effects, D-384)",
+   "tested": "built with Vite and React (type-checked); in Edge the beam draws a path with a moving light, the canvases paint and keep changing, and under reduced motion they are drawn once (tests/test_motion_canvas.py, D-384)",
+   "preview": null,
+   "path": "assets/effect/fx-react-globe-lite.md",
+   "size": 8940
+  },
+  {
    "id": "fx-react-magnetic",
    "type": "effect",
    "title": "Magnetic hover (React)",
@@ -2557,6 +2632,43 @@
    "preview": null,
    "path": "assets/effect/fx-react-parallax.md",
    "size": 10960
+  },
+  {
+   "id": "fx-react-particles",
+   "type": "effect",
+   "title": "Particles (React)",
+   "summary": "Drifting dots with faint links behind a hero; pauses when the tab is hidden or the canvas is off screen.",
+   "moods": [
+    "technical",
+    "calm"
+   ],
+   "products": [
+    "hero",
+    "saas",
+    "ai"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "canvas",
+    "particles",
+    "background"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-canvas.tsx",
+     "to": "src/motion-canvas.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (canvas and SVG showpiece effects, D-384)",
+   "tested": "built with Vite and React (type-checked); in Edge the beam draws a path with a moving light, the canvases paint and keep changing, and under reduced motion they are drawn once (tests/test_motion_canvas.py, D-384)",
+   "preview": null,
+   "path": "assets/effect/fx-react-particles.md",
+   "size": 8995
   },
   {
    "id": "fx-react-pinned-steps",
