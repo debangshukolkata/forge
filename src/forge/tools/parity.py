@@ -41,6 +41,7 @@ BULK_FOLDERS = (
     "fonts/",
     "templates/",
     "recipes/sections/",
+    "recipes/compositions-react/",
     "recipes/templates/",
     "recipes/app-screens/",  # D-366, D-377: found with find_asset; listed one by one they pushed the reference files out of the 60 shown
     "recipes/app-react/",

@@ -16,7 +16,11 @@ def test_there_are_seven_compositions_each_in_the_catalogue_with_pictures() -> N
     from forge.parity.assets import build_catalogue
 
     assert len(FILES) == 7
-    ids = {a.id for a in build_catalogue(SKILL).assets if a.type == "section" and a.id.startswith("lay-")}
+    ids = {
+        a.id
+        for a in build_catalogue(SKILL).assets
+        if a.type == "section" and a.id.startswith("lay-") and not a.id.startswith("lay-react-")
+    }
     assert ids == {f"lay-{f.stem}" for f in FILES}
     for file in FILES:
         assert (SKILL / "assets" / "preview" / f"lay-{file.stem}-desktop.jpg").is_file()

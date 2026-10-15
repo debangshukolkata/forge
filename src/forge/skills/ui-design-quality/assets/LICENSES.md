@@ -221,6 +221,13 @@ Generated from the assets' front-matter; do not edit by hand.
 | `lay-menu-list` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-notebook-grid` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-poster-hero` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-react-editorial-split` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-fullbleed-blocks` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-menu-list` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-notebook-grid` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-poster-hero` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-ticket-stub` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-vertical-type` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-ticket-stub` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-vertical-type` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `sec-category-tiles` | original | authored for DebCraft (section library, D-385) |
