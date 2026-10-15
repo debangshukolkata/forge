@@ -6,6 +6,7 @@ the model loads a full skill with load_skill(name) when a task matches."""
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from importlib import resources
@@ -40,6 +41,11 @@ def _parse(path: Path) -> Skill | None:
     return Skill(name, description, path) if name else None
 
 
+def disabled_names() -> set[str]:
+    """Skills switched off for this process (`FORGE_DISABLED_SKILLS=name1,name2`): the A/B runs that measure what a skill is worth use it (C14, D-417)."""
+    return {name.strip() for name in os.environ.get("FORGE_DISABLED_SKILLS", "").split(",") if name.strip()}
+
+
 def discover(*roots: Path | None) -> dict[str, Skill]:
     builtin = Path(str(resources.files("forge") / "skills"))
     skills: dict[str, Skill] = {}
@@ -50,6 +56,8 @@ def discover(*roots: Path | None) -> dict[str, Skill]:
             skill = _parse(skill_file)
             if skill is not None:
                 skills[skill.name] = skill
+    for name in disabled_names():
+        skills.pop(name, None)
     return skills
 
 
