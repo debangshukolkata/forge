@@ -9343,6 +9343,45 @@
    "size": 5513
   },
   {
+   "id": "sec-features-ruled",
+   "type": "section",
+   "title": "Ruled feature list",
+   "summary": "A ruled list instead of a row of cards: a large numeral, a title, a sentence and a small label on each row between hairlines.",
+   "moods": [
+    "editorial",
+    "calm",
+    "precise"
+   ],
+   "products": [
+    "course",
+    "programme",
+    "service",
+    "agency",
+    "principles"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "features",
+    "card-free"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FeaturesRuled.tsx",
+     "to": "src/sections/FeaturesRuled.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-432)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-432)",
+   "preview": "assets/preview/sec-features-ruled.jpg",
+   "path": "assets/section/sec-features-ruled.md",
+   "size": 3293
+  },
+  {
    "id": "sec-footer-columns",
    "type": "section",
    "title": "Footer with link columns",
@@ -9374,6 +9413,45 @@
    "preview": "assets/preview/sec-footer-columns.jpg",
    "path": "assets/section/sec-footer-columns.md",
    "size": 2581
+  },
+  {
+   "id": "sec-gallery-mosaic",
+   "type": "section",
+   "title": "Gallery mosaic",
+   "summary": "Six captioned tiles of different sizes (one large, tall and wide ones) with drawn shapes or your photographs, instead of a grid of identical squares.",
+   "moods": [
+    "editorial",
+    "playful",
+    "crafted"
+   ],
+   "products": [
+    "studio",
+    "portfolio",
+    "restaurant",
+    "shop",
+    "event"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "gallery",
+    "imagery"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/GalleryMosaic.tsx",
+     "to": "src/sections/GalleryMosaic.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-432)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-432)",
+   "preview": "assets/preview/sec-gallery-mosaic.jpg",
+   "path": "assets/section/sec-gallery-mosaic.md",
+   "size": 4417
   },
   {
    "id": "sec-hero-centered",
@@ -9410,6 +9488,45 @@
    "preview": "assets/preview/sec-hero-centered.jpg",
    "path": "assets/section/sec-hero-centered.md",
    "size": 2524
+  },
+  {
+   "id": "sec-hero-editorial",
+   "type": "section",
+   "title": "Editorial hero",
+   "summary": "An oversized headline across the page, a small tall picture pushed to the right and a ruled strip of facts; asymmetric, not a split or a centred column.",
+   "moods": [
+    "editorial",
+    "calm",
+    "crafted"
+   ],
+   "products": [
+    "studio",
+    "workshop",
+    "magazine",
+    "portfolio",
+    "restaurant"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "hero",
+    "asymmetric"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/HeroEditorial.tsx",
+     "to": "src/sections/HeroEditorial.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-432)",
+   "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-432)",
+   "preview": "assets/preview/sec-hero-editorial.jpg",
+   "path": "assets/section/sec-hero-editorial.md",
+   "size": 4590
   },
   {
    "id": "sec-hero-split",

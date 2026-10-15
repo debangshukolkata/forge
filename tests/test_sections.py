@@ -113,5 +113,22 @@ async def test_all_sections_together_and_the_form_validates() -> None:
             assert await page.locator("details[open]").count() == 1
             await browser.close()
     _check(
-        result, ("different text colours",)
-    )  # twenty sections side by side use more colours than one page should
+        result, ("different text colours", "different text sizes")
+    )  # twenty sections side by side use more colours and sizes than one page should
+
+
+@pytest.mark.parametrize("section", ["HeroEditorial", "FeaturesRuled", "GalleryMosaic"])
+async def test_the_editorial_sections_are_clean_on_their_own_page(section: str) -> None:
+    """D-432: a page made of one of the card-free sections passes the audit alone (the gallery test mixes many sections, which hides a size or colour problem)."""
+    files = _gallery()
+    for name in list(files):
+        if name.startswith("src/sections/") and not name.endswith(f"/{section}.tsx"):
+            del files[name]
+    files["src/App.tsx"] = (
+        f'import {section} from "./sections/{section}";' + chr(10) + chr(10)
+        + f"export default function App() {{ return <main><{section} /></main>; }}" + chr(10)
+    )  # fmt: skip
+    dist = harness.build(f"alone-{section}", files, title=section)
+    with harness.serve(dist) as url:
+        result = await harness.audit(url, SHOTS, f"alone-{section}")
+    _check(result, () if section == "HeroEditorial" else ("No h1 on the page",))

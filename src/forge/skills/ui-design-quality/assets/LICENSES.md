@@ -237,8 +237,11 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-faq-list` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-alternating` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-bento` | original | authored for DebCraft (section library, D-273) |
+| `sec-features-ruled` | original | authored for DebCraft (section library, D-432) |
 | `sec-footer-columns` | original | authored for DebCraft (section library, D-273) |
+| `sec-gallery-mosaic` | original | authored for DebCraft (section library, D-432) |
 | `sec-hero-centered` | original | authored for DebCraft (section library, D-273) |
+| `sec-hero-editorial` | original | authored for DebCraft (section library, D-432) |
 | `sec-hero-split` | original | authored for DebCraft (section library, D-273) |
 | `sec-logo-strip` | original | authored for DebCraft (section library, D-273) |
 | `sec-nav-bar` | original | authored for DebCraft (section library, D-273) |
