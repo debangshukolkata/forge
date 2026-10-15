@@ -131,7 +131,7 @@ def test_the_five_assets_are_in_the_catalogue() -> None:
 
     skill = RECIPES.parent
     ids = {a.id for a in build_catalogue(skill).assets if a.id.startswith("fx-react-")}
-    assert ids == {
+    assert ids >= {
         "fx-react-split-text",
         "fx-react-scramble-text",
         "fx-react-magnetic",

@@ -61,3 +61,25 @@ def test_the_pdf_draws_the_logo() -> None:
     assert b"/Subtype /Image" in data or b"/Image" in data
     with pytest.raises(PdfError, match="logo"):
         build_pdf(spec.model_copy(update={"brand": BrandKit(logo="assets/none.png")}), _load)
+
+
+def test_a_deck_puts_the_logo_at_the_top_right_of_every_slide() -> None:
+    from pptx import Presentation
+
+    from forge.slides.build import build_deck
+    from forge.slides.spec import parse_deck
+
+    outline = {
+        "title": "Q3",
+        "brand": {"logo": "assets/logo.png"},
+        "slides": [
+            {"layout": "title", "title": "Q3", "subtitle": "What shipped"},
+            {"layout": "bullets", "title": "We shipped three things", "bullets": ["SSO", "Search"]},
+        ],
+    }
+    built = build_deck(parse_deck(outline), _load)
+    presentation = Presentation(io.BytesIO(built.data))
+    for slide in presentation.slides:
+        logos = [shape for shape in slide.shapes if shape.name == "Brand logo"]
+        assert len(logos) == 1
+        assert logos[0].top < 914400 // 2 and logos[0].left + logos[0].width <= presentation.slide_width

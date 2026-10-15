@@ -129,7 +129,7 @@ class _Builder:
         if self.deck.brand is not None:
             kit = {
                 key: value.lstrip("#").upper() if key not in ("title_font", "body_font") else value
-                for key, value in self.deck.brand.model_dump(exclude_none=True).items()
+                for key, value in self.deck.brand.model_dump(exclude_none=True, exclude={"logo"}).items()
             }
             theme, self.brand_problems = apply_brand(theme, Brand(**kit))
         return theme
@@ -431,6 +431,22 @@ class _Builder:
             slide, self.bullet_items(column.bullets), x, top, width, self.body_bottom - top, 24
         )
 
+    def place_logo(self, slide: Any) -> None:
+        """The brand logo, 0.34 in high, in the top margin at the right edge of the content area, above the title box (D-392)."""
+        from PIL import Image
+
+        if self.deck.brand is None or not self.deck.brand.logo:
+            return
+        data = self.read_image(self.deck.brand.logo)
+        with Image.open(io.BytesIO(data)) as picture:
+            ratio = picture.width / picture.height
+        height = 0.34
+        width = min(height * ratio, 2.4)
+        shape = self.add_picture(
+            slide, data, self.margin + self.content_width - width, 0.1, width, width / ratio, "Logo"
+        )
+        shape.name = "Brand logo"
+
     def add_picture(self, slide: Any, data: bytes, x: float, y: float, w: float, h: float, alt: str) -> Any:
         shape = slide.shapes.add_picture(io.BytesIO(data), *(self.m["inches"](v) for v in (x, y, w, h)))
         shape._element.nvPicPr.cNvPr.set("descr", alt)
@@ -602,6 +618,8 @@ def build_deck(deck: Deck, read_image: ReadImage) -> BuiltDeck:
             build_freeform(builder, slide_spec)
         else:
             builder.stats_slide(slide_spec)
+        if not deck.template:
+            builder.place_logo(builder.prs.slides[-1])
         apply_slide_features(builder.prs, builder.prs.slides[-1], slide_spec, deck.transition, sections)
         del index
     builder.finish()

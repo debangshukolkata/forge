@@ -24,8 +24,10 @@ PAGE = (
 
 
 def longest_seconds(value: str) -> float:
-    """The longest duration in a computed transition-duration or animation-duration list such as '0.01ms, 0.2s'."""
-    found = [float(n) * (0.001 if unit == "ms" else 1) for n, unit in re.findall(r"([\d.]+)(ms|s)", value)]
+    """The longest duration in a computed transition-duration or animation-duration list such as '0.01ms, 0.2s'.
+    The browser may print a tiny value in exponent form ('1e-05s' for 0.01ms), so the number pattern allows it."""
+    pattern = r"(\d*\.?\d+(?:e-?\d+)?)(ms|s)"
+    found = [float(n) * (0.001 if unit == "ms" else 1) for n, unit in re.findall(pattern, value)]
     return max(found, default=0.0)
 
 

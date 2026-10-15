@@ -483,6 +483,10 @@ class BrandKit(_Model):
     accent_text: HexColour | None = None
     title_font: str | None = None
     body_font: str | None = None
+    logo: str | None = Field(
+        default=None,
+        description="A PNG or JPEG in the project: placed small at the top right of every slide (D-392)",
+    )
 
 
 class Deck(_Model):
