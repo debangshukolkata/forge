@@ -45,6 +45,9 @@ class BrowserSession:
         self.channel: str | None = None
         self.console: list[str] = []
         self.network: list[str] = []
+        self.loaded_step = (
+            0  # the step at which the page was last loaded: files edited after it are not in the page yet
+        )
         self.shots: dict[
             str, str
         ] = {}  # screenshot hash -> page URL, to catch two "different" pages that look the same
@@ -134,6 +137,7 @@ class BrowserOpen(Tool):
         try:
             page = await _session(context).ensure()
             response = await page.goto(args.url, wait_until="networkidle", timeout=30_000)
+            _session(context).loaded_step = context.step
             if args.wait_for:
                 selector = (
                     args.wait_for
@@ -259,6 +263,16 @@ class BrowserScreenshot(Tool):
         session = _session(context)
         if session.page is None:
             return ToolResult(ok=False, content="No page is open: use browser_open first.")
+        reloaded = False
+        if context.last_edit_step > session.loaded_step:
+            # A static server does not push changes: without a reload the audit judges the page as it was when it was opened, and a font or style the
+            # model just added is reported as missing (found in the night-1 dashboard run, D-391).
+            try:
+                await session.page.reload(wait_until="networkidle", timeout=30_000)
+                reloaded = True
+            except Exception:  # a page that cannot reload is audited as it is
+                pass
+            session.loaded_step = context.step
         if args.width:
             await session.page.set_viewport_size({"width": args.width, "height": args.height or 800})
         folder = context.workspace.jail.check(context.workspace.forge_dir / "screenshots")
@@ -289,7 +303,10 @@ class BrowserScreenshot(Tool):
         context.last_screenshot_step = context.step
         context.ui_audit_blocked = "BLOCKER" in audit
         saved = path.relative_to(context.workspace.root).as_posix()
-        return ToolResult(ok=True, content="\n".join([f"Saved {saved}", audit, DESIGN_REMINDER]))
+        lines = [f"Saved {saved}"]
+        if reloaded:
+            lines.append("The page was reloaded first: files changed since it was opened.")
+        return ToolResult(ok=True, content="\n".join([*lines, audit, DESIGN_REMINDER]))
 
 
 class BrowserConsole(Tool):
