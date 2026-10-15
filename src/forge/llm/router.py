@@ -98,7 +98,8 @@ class LLMRouter:
             if key and key != failing_key and key not in candidates and self._configured(key):
                 candidates.append(key)
         other_family = [key for key in candidates if self.config.llm.models[key].provider != failing.provider]
-        return (other_family or candidates or [None])[0]
+        chosen = other_family or candidates
+        return chosen[0] if chosen else None
 
     # --- calls ---
 

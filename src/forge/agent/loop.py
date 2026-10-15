@@ -300,11 +300,11 @@ class AgentLoop:
 
     def _unreported_risks(self, reply: str) -> list[str]:
         """Risks in the source files read in this session (the model changed something) that the final reply does not name (D-410)."""
-        from forge.safety.risk_scan import MAX_FINDINGS, mentioned, scan_text, scannable
+        from forge.safety.risk_scan import MAX_FINDINGS, Risk, mentioned, scan_text, scannable
 
         if self.context.last_edit_step == 0:
             return []
-        found = []
+        found: list[Risk] = []
         for path in self.context.reads.paths():
             if not scannable(path):
                 continue

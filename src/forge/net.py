@@ -113,7 +113,7 @@ def windows_certificate_bundle(target: Path) -> Path | None:
     seen: set[bytes] = set()
     for store in ("ROOT", "CA"):
         try:
-            entries = ssl.enum_certificates(store)  # type: ignore[attr-defined]
+            entries = ssl.enum_certificates(store)
         except (OSError, AttributeError):
             continue
         for der, encoding, _trust in entries:
