@@ -94,6 +94,46 @@ Generated from the assets' front-matter; do not edit by hand.
 | `fx-type-writer` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-warp-background` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
 | `fx-words-rise` | original | authored for DebCraft (motion kit part 2, D-269) |
+| `mi-btn-arrow-slide` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-border-draw` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-fill-sweep` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-glow-pulse` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-icon-spin` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-lift-shadow` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-loading` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-press-3d` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-ripple` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-btn-shine` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-card-border-gradient` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-card-corner-fold` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-card-flip` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-card-image-zoom` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-card-lift` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-card-reveal-overlay` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-card-stack-fan` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-card-tilt` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-checkbox-draw` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-chip-toggle` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-input-float-label` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-input-glow` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-input-invalid-shake` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-input-prefix-focus` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-input-ring` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-input-search-expand` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-input-underline-grow` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-loader-bars` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-loader-bounce` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-loader-flip` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-loader-heartbeat` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-loader-orbit` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-loader-ring` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-loader-ripple` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-loader-stripes` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-radio-pop` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-segmented-slide` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-select-arrow` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-toggle-slide` | original | authored for DebCraft (micro-interaction kit, D-382) |
+| `mi-toggle-sunmoon` | original | authored for DebCraft (micro-interaction kit, D-382) |
 | `font-archivo` | OFL-1.1 | Fontsource @fontsource-variable/archivo 5.3.0 (copyright holders in the OFL text) |
 | `font-dm-sans` | OFL-1.1 | Fontsource @fontsource-variable/dm-sans 5.3.0 (copyright holders in the OFL text) |
 | `font-fraunces` | OFL-1.1 | Fontsource @fontsource-variable/fraunces 5.3.0 (copyright holders in the OFL text) |

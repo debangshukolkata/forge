@@ -5,7 +5,7 @@ title: Spotlight card
 summary: A soft glow follows the pointer across a card.
 moods: [modern, premium, dark]
 products: [saas, features, bento]
-tags: [animation, motion]
+tags: [animation, motion, glow, glows, following, follows, mouse, cursor, pointer, hover]
 density: any
 dependencies: []
 licence: original

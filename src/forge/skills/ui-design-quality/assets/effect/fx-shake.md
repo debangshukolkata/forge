@@ -5,7 +5,7 @@ title: Error shake
 summary: A short horizontal shake for invalid input.
 moods: [robust, clear]
 products: [forms, login]
-tags: [animation, motion, feedback]
+tags: [animation, motion, feedback, form, validation, fails, invalid, error, shake]
 density: any
 dependencies: []
 licence: original

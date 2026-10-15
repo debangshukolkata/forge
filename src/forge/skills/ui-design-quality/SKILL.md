@@ -341,6 +341,7 @@ logo, name, imagery or exact identity: the result must still be this product, wi
 Never ask the user which style to use: pick, say why in one line, build.
 
 ## 9. Motion and effects: restraint wins
+Small controls (loaders, switches, buttons, inputs, cards) come ready-made: `find_asset` with the tag `micro-interaction` lists forty `mi-*` effects in one stylesheet (`motion-micro.css`).
 - Choose the effect budget from the MOTION_INTENSITY dial in DESIGN.md: 1-3 hover and focus only; 4-6 plus scroll reveals
   and one signature effect; 7-10 plus scroll-driven or pinned sequences. One signature effect per page (a beam, an
   aurora, a marquee, a count-up row), not all of them.

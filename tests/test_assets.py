@@ -235,6 +235,12 @@ RETRIEVAL_PROMPTS = [
     ("pricing section with three plans", "sec-pricing-tiers"),
     ("faq accordion section", "sec-faq-list"),
     ("sign up form with validation and success message", "sec-contact-form"),
+    ("heartbeat loader for a health app", "mi-loader-heartbeat"),
+    ("sun and moon dark mode switch", "mi-toggle-sunmoon"),
+    ("button whose arrow slides right on hover", "mi-btn-arrow-slide"),
+    ("label that floats above the input when focused", "mi-input-float-label"),
+    ("card that flips over on hover", "mi-card-flip"),
+    ("checkbox with a drawn checkmark", "mi-checkbox-draw"),
 ]
 
 

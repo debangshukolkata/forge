@@ -5,7 +5,7 @@ title: Typewriter text
 summary: A line of text types out letter by letter with a blinking caret.
 moods: [retro, technical, playful]
 products: [developer tools, hero, terminal]
-tags: [animation, motion, text]
+tags: [animation, motion, text, typing, effect, caret, blinking, cursor, typewriter]
 density: any
 dependencies: []
 licence: original

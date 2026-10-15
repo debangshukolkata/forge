@@ -2564,7 +2564,13 @@
    "tags": [
     "animation",
     "motion",
-    "feedback"
+    "feedback",
+    "form",
+    "validation",
+    "fails",
+    "invalid",
+    "error",
+    "shake"
    ],
    "density": "any",
    "dependencies": [],
@@ -2766,7 +2772,15 @@
    ],
    "tags": [
     "animation",
-    "motion"
+    "motion",
+    "glow",
+    "glows",
+    "following",
+    "follows",
+    "mouse",
+    "cursor",
+    "pointer",
+    "hover"
    ],
    "density": "any",
    "dependencies": [],
@@ -2976,7 +2990,13 @@
    "tags": [
     "animation",
     "motion",
-    "text"
+    "text",
+    "typing",
+    "effect",
+    "caret",
+    "blinking",
+    "cursor",
+    "typewriter"
    ],
    "density": "any",
    "dependencies": [],
@@ -3061,6 +3081,1486 @@
    "preview": null,
    "path": "assets/effect/fx-words-rise.md",
    "size": 12397
+  },
+  {
+   "id": "mi-btn-arrow-slide",
+   "type": "effect",
+   "title": "Arrow slide",
+   "summary": "A button whose arrow slides to the right on hover.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-arrow-slide.md",
+   "size": 28461
+  },
+  {
+   "id": "mi-btn-border-draw",
+   "type": "effect",
+   "title": "Drawn border",
+   "summary": "Two lines draw along the top and bottom edges on hover.",
+   "moods": [
+    "editorial",
+    "calm"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-border-draw.md",
+   "size": 28451
+  },
+  {
+   "id": "mi-btn-fill-sweep",
+   "type": "effect",
+   "title": "Fill sweep",
+   "summary": "An outlined button whose fill sweeps in from the left on hover.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-fill-sweep.md",
+   "size": 28483
+  },
+  {
+   "id": "mi-btn-glow-pulse",
+   "type": "effect",
+   "title": "Glow pulse",
+   "summary": "A slow pulse of light around a call to action that needs attention.",
+   "moods": [
+    "urgent",
+    "warm"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-glow-pulse.md",
+   "size": 28463
+  },
+  {
+   "id": "mi-btn-icon-spin",
+   "type": "effect",
+   "title": "Icon turn",
+   "summary": "The icon in a button turns a quarter on hover.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-icon-spin.md",
+   "size": 28515
+  },
+  {
+   "id": "mi-btn-lift-shadow",
+   "type": "effect",
+   "title": "Lift and shadow",
+   "summary": "A button that rises and gets a softer, wider shadow on hover.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-lift-shadow.md",
+   "size": 28433
+  },
+  {
+   "id": "mi-btn-loading",
+   "type": "effect",
+   "title": "Busy button",
+   "summary": "A button that shows a spinner and dims its label while aria-busy is true.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-loading.md",
+   "size": 28574
+  },
+  {
+   "id": "mi-btn-press-3d",
+   "type": "effect",
+   "title": "Raised and pressed",
+   "summary": "A button with a solid shadow that lifts on hover and sinks when pressed.",
+   "moods": [
+    "playful",
+    "warm"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-press-3d.md",
+   "size": 28473
+  },
+  {
+   "id": "mi-btn-ripple",
+   "type": "effect",
+   "title": "Press ripple",
+   "summary": "A light ripple grows from the centre while the button is pressed.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-ripple.md",
+   "size": 28470
+  },
+  {
+   "id": "mi-btn-shine",
+   "type": "effect",
+   "title": "Shine",
+   "summary": "A band of light crosses the button once on hover.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "button",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-btn-shine.md",
+   "size": 28418
+  },
+  {
+   "id": "mi-card-border-gradient",
+   "type": "effect",
+   "title": "Moving gradient border",
+   "summary": "A two-colour gradient border that slides around the card on hover.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "card",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-card-border-gradient.md",
+   "size": 28532
+  },
+  {
+   "id": "mi-card-corner-fold",
+   "type": "effect",
+   "title": "Folding corner",
+   "summary": "A card with a corner that folds open a little on hover.",
+   "moods": [
+    "editorial",
+    "calm"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "card",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-card-corner-fold.md",
+   "size": 28482
+  },
+  {
+   "id": "mi-card-flip",
+   "type": "effect",
+   "title": "Flip card",
+   "summary": "A card that turns over to show its back on hover or focus.",
+   "moods": [
+    "playful",
+    "friendly"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "card",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-card-flip.md",
+   "size": 28591
+  },
+  {
+   "id": "mi-card-image-zoom",
+   "type": "effect",
+   "title": "Image zoom",
+   "summary": "A card whose picture zooms slowly inside its frame on hover.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "card",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-card-image-zoom.md",
+   "size": 28753
+  },
+  {
+   "id": "mi-card-lift",
+   "type": "effect",
+   "title": "Lift",
+   "summary": "A card that rises and gains a deeper shadow on hover.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "card",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-card-lift.md",
+   "size": 28532
+  },
+  {
+   "id": "mi-card-reveal-overlay",
+   "type": "effect",
+   "title": "Slide-up details",
+   "summary": "A picture card whose details slide up from the bottom on hover or focus.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "card",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-card-reveal-overlay.md",
+   "size": 28589
+  },
+  {
+   "id": "mi-card-stack-fan",
+   "type": "effect",
+   "title": "Fanning stack",
+   "summary": "A stack of sheets behind a card that fan out when the card is hovered.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "card",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-card-stack-fan.md",
+   "size": 28510
+  },
+  {
+   "id": "mi-card-tilt",
+   "type": "effect",
+   "title": "Gentle tilt",
+   "summary": "A card that tilts a few degrees in 3D as if lifted at one corner.",
+   "moods": [
+    "playful",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "card",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-card-tilt.md",
+   "size": 28510
+  },
+  {
+   "id": "mi-checkbox-draw",
+   "type": "effect",
+   "title": "Drawn checkmark",
+   "summary": "A checkbox whose tick is drawn stroke by stroke.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "toggle",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-checkbox-draw.md",
+   "size": 28549
+  },
+  {
+   "id": "mi-chip-toggle",
+   "type": "effect",
+   "title": "Selectable chip",
+   "summary": "A filter chip that fills and shows a tick when selected.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "toggle",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-chip-toggle.md",
+   "size": 28515
+  },
+  {
+   "id": "mi-input-float-label",
+   "type": "effect",
+   "title": "Floating label",
+   "summary": "A label that sits in the field and floats above it when the field is focused or filled.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "input",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-input-float-label.md",
+   "size": 28550
+  },
+  {
+   "id": "mi-input-glow",
+   "type": "effect",
+   "title": "Glow focus",
+   "summary": "A coloured glow and a stronger border on focus: for dark interfaces.",
+   "moods": [
+    "technical",
+    "dark"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "input",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-input-glow.md",
+   "size": 28482
+  },
+  {
+   "id": "mi-input-invalid-shake",
+   "type": "effect",
+   "title": "Invalid shake",
+   "summary": "A field that shakes once and shows a red border when its value is invalid after the person leaves it.",
+   "moods": [
+    "clear",
+    "robust"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "input",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-input-invalid-shake.md",
+   "size": 28613
+  },
+  {
+   "id": "mi-input-prefix-focus",
+   "type": "effect",
+   "title": "Prefix that lights up",
+   "summary": "A field with a currency or unit prefix that takes the accent colour when the field is focused.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "input",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-input-prefix-focus.md",
+   "size": 28577
+  },
+  {
+   "id": "mi-input-ring",
+   "type": "effect",
+   "title": "Focus ring",
+   "summary": "A soft ring that grows around a field when it is focused.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "input",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-input-ring.md",
+   "size": 28458
+  },
+  {
+   "id": "mi-input-search-expand",
+   "type": "effect",
+   "title": "Expanding search",
+   "summary": "A search field that is an icon button until focused, then opens wide.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "input",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-input-search-expand.md",
+   "size": 28625
+  },
+  {
+   "id": "mi-input-underline-grow",
+   "type": "effect",
+   "title": "Growing underline",
+   "summary": "A minimal field whose underline grows from the centre when focused.",
+   "moods": [
+    "editorial",
+    "calm"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "input",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-input-underline-grow.md",
+   "size": 28554
+  },
+  {
+   "id": "mi-loader-bars",
+   "type": "effect",
+   "title": "Wave bars",
+   "summary": "Four bars that grow and shrink in a wave, like an equaliser.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "loader",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-loader-bars.md",
+   "size": 28480
+  },
+  {
+   "id": "mi-loader-bounce",
+   "type": "effect",
+   "title": "Bouncing dots",
+   "summary": "Three dots that bounce in turn: a small, friendly wait indicator.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "loader",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-loader-bounce.md",
+   "size": 28530
+  },
+  {
+   "id": "mi-loader-flip",
+   "type": "effect",
+   "title": "Flipping tile",
+   "summary": "A square tile that flips around its vertical axis.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "loader",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-loader-flip.md",
+   "size": 28459
+  },
+  {
+   "id": "mi-loader-heartbeat",
+   "type": "effect",
+   "title": "Heartbeat",
+   "summary": "A heart-shaped pulse: two quick beats and a rest.",
+   "moods": [
+    "warm",
+    "caring"
+   ],
+   "products": [
+    "health",
+    "charity",
+    "care"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "loader",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-loader-heartbeat.md",
+   "size": 28677
+  },
+  {
+   "id": "mi-loader-orbit",
+   "type": "effect",
+   "title": "Orbiting dot",
+   "summary": "A dot that circles a fixed centre dot.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "loader",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-loader-orbit.md",
+   "size": 28477
+  },
+  {
+   "id": "mi-loader-ring",
+   "type": "effect",
+   "title": "Spinning ring",
+   "summary": "A thin ring with one coloured arc, spinning.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "loader",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-loader-ring.md",
+   "size": 28446
+  },
+  {
+   "id": "mi-loader-ripple",
+   "type": "effect",
+   "title": "Ripple",
+   "summary": "Two rings that expand and fade from a centre point.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "loader",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-loader-ripple.md",
+   "size": 28467
+  },
+  {
+   "id": "mi-loader-stripes",
+   "type": "effect",
+   "title": "Moving stripes bar",
+   "summary": "An indeterminate progress bar with diagonal stripes moving along.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "loader",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-loader-stripes.md",
+   "size": 28537
+  },
+  {
+   "id": "mi-radio-pop",
+   "type": "effect",
+   "title": "Popping radio",
+   "summary": "A radio whose centre dot pops in with a small overshoot.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "toggle",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-radio-pop.md",
+   "size": 28502
+  },
+  {
+   "id": "mi-segmented-slide",
+   "type": "effect",
+   "title": "Sliding segmented control",
+   "summary": "A segmented control whose highlight slides to the chosen option.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "toggle",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-segmented-slide.md",
+   "size": 28751
+  },
+  {
+   "id": "mi-select-arrow",
+   "type": "effect",
+   "title": "Turning select arrow",
+   "summary": "A select whose chevron turns over when the field is focused or open.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "input",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-select-arrow.md",
+   "size": 28552
+  },
+  {
+   "id": "mi-toggle-slide",
+   "type": "effect",
+   "title": "Sliding switch",
+   "summary": "A switch whose knob slides and whose track changes colour.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "toggle",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-toggle-slide.md",
+   "size": 28554
+  },
+  {
+   "id": "mi-toggle-sunmoon",
+   "type": "effect",
+   "title": "Sun and moon switch",
+   "summary": "A day and night switch whose knob turns from a sun into a moon.",
+   "moods": [
+    "clear",
+    "modern"
+   ],
+   "products": [
+    "apps",
+    "forms",
+    "marketing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "micro-interaction",
+    "toggle",
+    "css",
+    "no build step"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-micro.css",
+     "to": "src/motion-micro.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (micro-interaction kit, D-382)",
+   "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
+   "preview": null,
+   "path": "assets/effect/mi-toggle-sunmoon.md",
+   "size": 28535
   },
   {
    "id": "font-archivo",
