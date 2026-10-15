@@ -328,21 +328,24 @@ def test_the_planner_is_proposed_on_gemini_once_it_answered_and_follows_the_code
     assert by_role(propose_plan(config, BOTH, {}))["planner"]["model"] == config.llm.roles.coder
 
 
-def test_the_coder_is_gpt_5_4_once_its_resource_answers_and_the_fallback_is_another_family() -> None:
+def test_the_coder_stays_on_gpt_5_1_and_the_fallback_is_another_family_or_the_second_resource() -> None:
     config = default_config()
     both_54 = {"azure": {"status": "ok", "models": {**BOTH["azure"]["models"], "gpt54": True}}}
     gemini = {"gemini": {"status": "ok", "models": {"gemini4argon": True, "gemini31pro": True}}}
     plan = by_role(propose_plan(config, {**both_54, **gemini}, {}))
-    assert plan["coder"]["model"] == "gpt54" and plan["fallback"]["model"] == "gemini31pro"
-    for role in ("kb_builder", "summariser", "vision"):
-        assert plan[role]["model"] == getattr(
-            config.llm.roles, role
-        )  # the high-volume reading work stays on gpt-5.1
-    azure_only = by_role(propose_plan(config, both_54, {}))
-    assert azure_only["coder"]["model"] == "gpt54" and azure_only["fallback"]["model"] == "gpt51"
     assert (
-        by_role(propose_plan(config, BOTH, {}))["coder"]["model"] == config.llm.roles.coder
-    )  # no second resource: unchanged
+        plan["coder"]["model"] == config.llm.roles.coder
+    )  # gpt-5.4 was slower and dearer for the same results (D-414)
+    assert plan["fallback"]["model"] == "gemini31pro"
+    for role in ("kb_builder", "summariser", "vision"):
+        assert plan[role]["model"] == getattr(config.llm.roles, role)
+    azure_only = by_role(propose_plan(config, both_54, {}))
+    assert (
+        azure_only["fallback"]["model"] == "gpt54"
+    )  # the second resource has its own quota and outage domain
+    assert (
+        by_role(propose_plan(config, BOTH, {}))["fallback"]["model"] == config.llm.roles.fallback
+    )  # nothing else answered: unchanged
 
 
 def test_without_gemini_the_azure_critic_judge_and_reviewer_are_gpt_5_2_when_it_answers() -> None:
@@ -352,7 +355,7 @@ def test_without_gemini_the_azure_critic_judge_and_reviewer_are_gpt_5_2_when_it_
     for role in ("critic", "judge", "reviewer"):
         assert plan[role]["model"] == "gpt52"
     assert (
-        plan["planner"]["model"] == "gpt54"
+        plan["planner"]["model"] == config.llm.roles.coder
     )  # a planner weaker than the coder would be pointless: it follows the coder
     with_gemini = {"gemini": {"status": "ok", "models": {"gemini4argon": True}}}
     assert by_role(propose_plan(config, {**azure, **with_gemini}, {}))["judge"]["model"] == "gemini4argon"

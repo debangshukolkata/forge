@@ -18,16 +18,15 @@ class RoleRouter(Protocol):
 
 
 # The proposed model for a role is the first of these that has answered its test (D-405, D-407, D-409, D-411); a role without an entry keeps its configured default. The roles follow the research
-# and the user's decisions of 2026-10-15: the coder is gpt-5.4 (ahead of gpt-5.1 on coding and agent benchmarks, larger context, trained for long agent runs) when its resource is set up; the planner, the
+# and the user's decisions of 2026-10-15: the coder stays gpt-5.1 (gpt-5.4 passed the same 13 of 14 coding tasks, 39 percent slower and 2.9 times the cost, D-414); the planner, the
 # critic, the judge and the reviewer are another family than the builder (Gemini 4 Argon, else Gemini 3.1 Pro), because a judge from the builder's own family is lenient toward it; the fallback is another
 # family too (a rate limit usually hits one provider), else gpt-5.1 from the first resource. The summariser, the knowledge builder and vision keep gpt-5.1: high-volume reading work where speed counts.
 PREFERENCE: dict[str, tuple[str, ...]] = {
-    "coder": ("gpt54",),
     "planner": ("gemini4argon", "gemini31pro"),
     "critic": ("gemini4argon", "gemini31pro", "gpt52"),
     "judge": ("gemini4argon", "gemini31pro", "gpt52"),
     "reviewer": ("gemini4argon", "gemini31pro", "gpt52"),
-    "fallback": ("gemini31pro", "gpt51"),
+    "fallback": ("gemini31pro", "gpt54", "gpt52", "gpt51"),
 }
 
 

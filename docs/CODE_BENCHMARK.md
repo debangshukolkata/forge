@@ -107,3 +107,26 @@ Fully passed 3/4; hidden tests 174/175; total $1.17. The one miss: t13 did not t
 Tasks fully passed: 13/14; hidden tests passed: 309/310.
 
 Run on the final code of the night, three tasks at a time (`--parallel 3`, so the wall times are longer than the baseline's serial run: the model calls and the tokens are what compare). Total cost about $3.74 (the baseline's ten tasks cost $1.62; the four harder tasks $1.17 in code-hard-1). 13 of 14 tasks passed completely, 309 of 310 hidden tests; the one miss is the same corner as in code-hard-1: t13 does not trim a history longer than 20 steps when it reads it from a file. Nothing regressed against the 2026-10-13 runs.
+
+### Run `night-gpt54` (2026-10-15 14:26)
+
+| Task | Tier | Hidden tests | Wall | Model calls | Tool s | Waited s | Tokens in/out | Cost |
+|---|---|---|---|---|---|---|---|---|
+| t01_slugify | single function | 17/17 | 346s | 10 | 149 | 0 | 309823/10420 | $0.634 |
+| t02_durations | single function | 32/32 | 380s | 15 | 164 | 0 | 474715/13055 | $0.731 |
+| t03_ttl_cache | small module | 10/10 | 262s | 8 | 182 | 0 | 230493/7034 | $0.590 |
+| t04_paginate_bug | bug fix in an existing repo | 11/11 | 121s | 5 | 48 | 0 | 131810/3601 | $0.328 |
+| t05_inventory_feature | feature in an existing repo | 7/7 | 176s | 9 | 60 | 0 | 245416/5454 | $0.494 |
+| t06_billing_refactor | refactor with tests kept green | 21/21 | 199s | 10 | 51 | 0 | 268048/5169 | $0.549 |
+| t07_wordstat_cli | CLI tool | 11/11 | 512s | 14 | 213 | 0 | 521938/17834 | $0.995 |
+| t08_dedupe_perf | performance fix | 4/4 | 325s | 10 | 208 | 0 | 278029/8818 | $0.651 |
+| t09_async_jobs | async worker | 9/9 | 456s | 13 | 366 | 0 | 404864/11068 | $0.754 |
+| t10_sales_pipeline | data pipeline | 13/13 | 359s | 10 | 136 | 0 | 300499/9903 | $0.603 |
+| t11_rate_limiter | precise spec, concurrency | 25/25 | 427s | 16 | 127 | 0 | 564777/14202 | $1.170 |
+| t12_expr_calc | parser with error positions | 69/69 | 754s | 15 | 272 | 0 | 695624/34899 | $1.503 |
+| t13_todo_undo | multi-file feature with a persisted format | 15/16 | 275s | 9 | 128 | 0 | 280441/8679 | $0.741 |
+| t14_cron_next | calendar logic, many edge cases | 65/65 | 504s | 14 | 209 | 0 | 474183/19785 | $0.921 |
+
+Tasks fully passed: 13/14; hidden tests passed: 309/310.
+
+Same fourteen tasks as `night-1`, three at a time, with gpt-5.4 as the coder, knowledge builder and summariser (`--coder-model gpt54`; reviewer, vision and judge unchanged). 13 of 14 tasks and 309 of 310 hidden tests, the same as gpt-5.1 and the same single miss (t13 does not trim a history read from a file). Against `night-1`: wall time about 5,100 s against 3,660 s (39 percent slower), 158 model calls against 109, cost $10.66 against $3.74 (2.9 times). On these tasks gpt-5.4 shows no correctness gain; they are easy (both models are near the ceiling), so this says nothing about much harder work.
