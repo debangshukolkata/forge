@@ -16,7 +16,7 @@ def _path(home: Path) -> Path:
 
 def load(home: Path) -> dict[str, Any]:
     """Always a dict with `results`, `plan`, `confirmed_at`; a missing or damaged file means nothing saved."""
-    empty: dict[str, Any] = {"results": {}, "plan": {}, "confirmed_at": None, "answers": {}}
+    empty: dict[str, Any] = {"results": {}, "plan": {}, "manual": [], "confirmed_at": None, "answers": {}}
     try:
         data = json.loads(_path(home).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -26,6 +26,10 @@ def load(home: Path) -> dict[str, Any]:
     return {
         "results": data.get("results") if isinstance(data.get("results"), dict) else {},
         "plan": data.get("plan") if isinstance(data.get("plan"), dict) else {},
+        # The roles the user chose by hand when the plan was saved (D-416): only these keep their value when the proposals change; the others follow the new proposal.
+        "manual": [r for r in data.get("manual", []) if isinstance(r, str)]
+        if isinstance(data.get("manual"), list)
+        else [],
         "confirmed_at": data.get("confirmed_at") if isinstance(data.get("confirmed_at"), str) else None,
         # What the user said about optional tools ("is Tesseract installed?"): check id -> yes/no.
         "answers": {k: v for k, v in (data.get("answers") or {}).items() if isinstance(v, bool)}
@@ -69,8 +73,9 @@ def tavily_declined(home: Path) -> bool:
     return load(home)["answers"].get("tavily") is False
 
 
-def save_plan(home: Path, plan: dict[str, str]) -> None:
+def save_plan(home: Path, plan: dict[str, str], manual: list[str] | None = None) -> None:
     data = load(home)
     data["plan"] = dict(plan)
+    data["manual"] = list(manual or [])
     data["confirmed_at"] = now()
     _write(home, data)

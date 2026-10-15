@@ -29,7 +29,13 @@ def by_role(plan: dict[str, object]) -> dict[str, dict[str, str]]:
 
 
 def test_store_round_trip_and_damaged_file(tmp_path: Path) -> None:
-    assert store.load(tmp_path) == {"results": {}, "plan": {}, "confirmed_at": None, "answers": {}}
+    assert store.load(tmp_path) == {
+        "results": {},
+        "plan": {},
+        "manual": [],
+        "confirmed_at": None,
+        "answers": {},
+    }
     store.save_result(tmp_path, "azure", {"status": "ok"})
     store.save_plan(tmp_path, {"coder": "gpt51"})
     data = store.load(tmp_path)
@@ -359,3 +365,34 @@ def test_without_gemini_the_azure_critic_judge_and_reviewer_are_gpt_5_2_when_it_
     )  # a planner weaker than the coder would be pointless: it follows the coder
     with_gemini = {"gemini": {"status": "ok", "models": {"gemini4argon": True}}}
     assert by_role(propose_plan(config, {**azure, **with_gemini}, {}))["judge"]["model"] == "gemini4argon"
+
+
+def test_a_saved_role_keeps_its_value_only_when_the_user_changed_it_by_hand(
+    client: TestClient, isolated_forge_home: Path
+) -> None:
+    """D-416: a plan saved as proposed follows later proposals; a role the user changed by hand stays as chosen."""
+    origin = {"origin": "http://127.0.0.1:8797"}
+    results = {
+        "azure": {"status": "ok", "models": {"gpt41": True, "gpt51": True, "gpt4o": True, "gpt52": True}},
+        "gemini": {"status": "ok", "models": {"gemini4argon": True, "gemini31pro": True}},
+    }
+    for check_id, result in results.items():
+        store.save_result(isolated_forge_home, check_id, result)
+    proposed = {r["role"]: r["model"] for r in client.get("/api/environment").json()["plan"]["roles"]}
+    assert proposed["reviewer"] == "gemini4argon" and proposed["fallback"] == "gemini31pro"
+
+    # An old save (nothing recorded as chosen by hand) with stale values: the proposals win again.
+    store.save_plan(isolated_forge_home, {**proposed, "reviewer": "gpt41", "fallback": "gpt41"})
+    plan = {r["role"]: r for r in client.get("/api/environment").json()["plan"]["roles"]}
+    assert plan["reviewer"]["model"] == "gemini4argon" and plan["fallback"]["model"] == "gemini31pro"
+
+    # Saving through the panel records what differs from the proposal as the user's own choice.
+    confirmed = client.post(
+        "/api/environment/confirm", json={"roles": {**proposed, "reviewer": "gpt52"}}, headers=origin
+    ).json()
+    assert store.load(isolated_forge_home)["manual"] == ["reviewer"]
+    shown = {r["role"]: r for r in confirmed["plan"]["roles"]}
+    assert shown["reviewer"]["model"] == "gpt52" and shown["reviewer"]["reason"] == "Your earlier choice"
+    assert (
+        shown["fallback"]["model"] == "gemini31pro" and shown["fallback"]["reason"] != "Your earlier choice"
+    )

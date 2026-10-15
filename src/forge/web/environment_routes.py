@@ -48,12 +48,16 @@ def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
         except ForgeError as error:
             raise HTTPException(400, str(error)) from error
 
+    def manual_choices(saved: dict[str, Any]) -> dict[str, str]:
+        """Only the roles the user chose by hand count as 'your earlier choice'; a role left on the proposal follows the new proposal (D-416)."""
+        return {role: key for role, key in saved["plan"].items() if role in saved["manual"]}
+
     def overview() -> dict[str, Any]:
         saved = store.load(manager.home)
         return {
             "checks": [asdict(check) for check in CHECKS],
             "saved": saved,
-            "plan": propose_plan(config(), saved["results"], saved["plan"]),
+            "plan": propose_plan(config(), saved["results"], manual_choices(saved)),
         }
 
     @app.get("/api/environment")
@@ -93,7 +97,13 @@ def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
             roles = validate_plan(config(), body.roles)
         except ValueError as error:
             raise HTTPException(400, str(error)) from error
-        store.save_plan(manager.home, roles)
+        saved = store.load(manager.home)
+        proposed = {
+            entry["role"]: entry["model"] for entry in propose_plan(config(), saved["results"], {})["roles"]
+        }
+        store.save_plan(
+            manager.home, roles, [role for role, key in roles.items() if proposed.get(role) != key]
+        )
         host = manager.host  # a session is already open for the new project: switch its roles now
         if host is not None:
             for role, key in roles.items():
