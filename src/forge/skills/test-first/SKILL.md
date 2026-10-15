@@ -22,6 +22,13 @@ the next behaviour. Each new test is chosen from what the last step taught you. 
 New functions and every bug fix get a failing test first. A bug fix starts with a test that reproduces the bug; if it passes at once, it
 is not testing the bug.
 
+## 2b. A refactor, or any change to code that already works
+Behaviour-preserving changes (a refactor, a cleanup, a rewrite for readability) start from a measurement, not from the new code. In this order: run the existing tests and note
+that they pass; write tests that pin the current behaviour for every branch you will touch (the characterization tests: one case per branch, numbers taken from running the old code,
+including its odd corners such as rounding, caps and special cases); only then change the code, in small steps with the tests run after each. When the logic has many branches, keep
+the old function under a different name inside the test module as an oracle and compare old and new on a wide range of inputs. A rewrite of the whole file in one step, with the
+tests run afterwards, proves nothing about the numbers that must not change.
+
 ## 3. Tests that prove something
 - Test behaviour through the public interface (what a caller sees), not private helpers or mocks of your own internals; the tests should
   still pass after a refactor.

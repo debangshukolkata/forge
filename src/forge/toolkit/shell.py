@@ -297,6 +297,8 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
     passed = not outcome.timed_out and outcome.exit_code == 0
     if passed and "playwright" in command.lower():
         context.last_browser_step = context.step  # a Playwright script ran and passed (D-167)
+    if is_test_command(command):
+        context.baseline_checked = True  # any run, green or red, tells the model where it stands (D-408)
     if passed and is_test_command(command):
         context.last_verified_step = context.step  # evidence for task_update (spec §8)
     elif looks_like_write(command):

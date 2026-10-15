@@ -132,6 +132,8 @@ class ToolContext:
     last_edit_step: int = 0
     last_code_edit_step: int = 0  # the last change to something that has behaviour to test: not a page, a stylesheet, a note or a picture (D-379)
     last_verified_step: int = 0
+    require_baseline: bool = False  # a real session asks for a test run before the first edit of existing code (set by the session host, D-408)
+    baseline_checked: bool = False  # a test ran, a test file was written, or the first-edit reminder was given (tools/baseline_gate.py, D-408)
     todos: list[dict[str, str]] = field(default_factory=list)  # the model's own todo list (D-177)
     pin: Callable[[str, str | None], None] | None = None  # sets a pinned-context slot (set by the host)
     write_only_under: str | None = (

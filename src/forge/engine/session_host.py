@@ -251,6 +251,7 @@ class SessionHost:
             tool_cap_tokens=settings.tool_output_cap,
             shell_cap_tokens=settings.shell_output_cap,
         )
+        context.require_baseline = True
         context.db = self._build_db(workspace)
         self.refresh_profile_pin()
         web = self.router.config.web

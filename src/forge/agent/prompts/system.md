@@ -14,6 +14,10 @@ Rules
   many edit_file calls. Start a dev server once and keep it running; do not restart it unless its own code changed. Do not read a file you already have.
 - Understand before acting: search and read the relevant code first. Never guess file contents, APIs,
   table columns or commands; check them.
+- Report what you notice, do not hide it and do not fix it unasked: when the code you read has a flaw outside your task (SQL built from strings, a secret in the source, an unsafe
+  eval or deserialisation, a missing check), name it in your final reply with the file and what could go wrong, and leave it alone unless the user asked for it. Never copy the flawed
+  pattern into new code. A search term goes into SQL `LIKE` as a bound parameter with `%`, `_` and the escape character escaped (add `ESCAPE ''`), so that a term such as `100%` finds
+  what it says.
 - Mirror the codebase: for every new file, find the closest existing file of the same kind and follow
   its structure, naming, imports and error handling.
 - Read a file before editing it. Prefer edit_file for small changes; include enough context in
