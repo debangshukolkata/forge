@@ -206,34 +206,28 @@ def _gemini_failed(detail: str) -> Outcome:
     )
 
 
-def gemini_models_to_test(config: ForgeConfig) -> list[Any]:
-    """The Gemini model a role uses, else the first one in the config, and always the small 2.5 model that answers everywhere: the row then says which generation works (D-403)."""
+def gemini_models_to_test(config: ForgeConfig) -> list[tuple[str | None, Any]]:
+    """Every Gemini model in the config (with its key, so the plan can offer the ones that answered) and the small 2.5 model that answers in every region (key None)."""
     from forge.config import ModelConfig
 
-    models: list[Any] = []
-    roles = config.llm.roles.model_dump()
-    for key in dict.fromkeys(str(v) for v in roles.values() if v):
-        model = config.llm.models.get(key)
-        if model is not None and model.provider == "gemini":
-            models.append(model)
-    if not models:
-        first = next((m for m in config.llm.models.values() if m.provider == "gemini"), None)
-        if first is not None:
-            models.append(first)
-    probe = ModelConfig(
-        provider="gemini",
-        label="Gemini",
-        model_name=GEMINI_PROBE_MODEL,
-        context_window=1_000_000,
-        max_output=500,
-    )
-    if all(m.model_name != GEMINI_PROBE_MODEL for m in models):
-        models.append(probe)
+    models: list[tuple[str | None, Any]] = [
+        (key, m) for key, m in config.llm.models.items() if m.provider == "gemini"
+    ]
+    if all(m.model_name != GEMINI_PROBE_MODEL for _key, m in models):
+        probe = ModelConfig(
+            provider="gemini",
+            label="Gemini",
+            model_name=GEMINI_PROBE_MODEL,
+            context_window=1_000_000,
+            max_output=500,
+        )
+        models.append((None, probe))
     return models
 
 
 def check_gemini(config: ForgeConfig) -> Outcome:
-    """Only run when the user said Gemini is enabled (D-201): one short real call per model (the one in use or the newest in the config, and the small 2.5 model)."""
+    """Only run when the user said Gemini is enabled (D-201): one short real call per Gemini model of the config and one for the small 2.5 model. The result says which models answered
+    (`models`, by config key), so the model lists of the panel offer exactly those (D-405)."""
     from forge.errors import LLMError
     from forge.llm.base import ChatRequest, Message
 
@@ -258,25 +252,33 @@ def check_gemini(config: ForgeConfig) -> Outcome:
 
     answered: list[str] = []
     failed: list[str] = []
-    for model in gemini_models_to_test(config):
+    by_key: dict[str, bool] = {}
+    for key, model in gemini_models_to_test(config):
         try:
             answer = asyncio.run(probe(model))
         except LLMError as error:
-            failed.append(f"{model.model_name}: {str(error)[:160]}")
+            failed.append(f"{model.model_name}: {str(error)[:120]}")
+            if key is not None:
+                by_key[key] = False
             continue
         answered.append(f"{model.model_name} answered: {answer or '(no text)'}")
+        if key is not None:
+            by_key[key] = True
     where = f"region {region}"
     if not answered:
-        return _gemini_failed(f"No Gemini model answered ({where}). " + " | ".join(failed))
+        outcome = _gemini_failed(f"No Gemini model answered ({where}). " + " | ".join(failed))
+        outcome.models = by_key
+        return outcome
     if failed:
         return Outcome(
             "gemini",
             "warn",
             f"{'; '.join(answered)} ({where}). Did not answer: {' | '.join(failed)}",
             "Gemini 3 models are served only from the `global` region: set GOOGLE_CLOUD_LOCATION=global in the .env file (or remove the line), then test again.",
+            models=by_key,
             steps=GEMINI_STEPS,
         )
-    return Outcome("gemini", "ok", f"{'; '.join(answered)} ({where})")
+    return Outcome("gemini", "ok", f"{'; '.join(answered)} ({where})", models=by_key)
 
 
 NODE_STEPS = [

@@ -197,7 +197,7 @@ export interface CheckResultView {
 
 export interface ModelPlan {
   roles: { role: string; model: string | null; reason: string; default: string | null }[];
-  options: { key: string; label: string; vision: boolean; usable: boolean }[];
+  options: { key: string; label: string; vision: boolean; usable: boolean; provider: string; state: "ok" | "failed" | "untested" }[];
   notes: string[];
 }
 

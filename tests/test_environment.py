@@ -227,15 +227,57 @@ def test_a_tesseract_that_cannot_read_is_a_warning(monkeypatch: pytest.MonkeyPat
     assert "Error opening data file" in outcome.detail and "eng.traineddata" in outcome.hint
 
 
-def test_the_gemini_row_tests_the_model_in_use_and_the_small_one(isolated_forge_home: Path) -> None:
+def test_the_gemini_row_tests_every_gemini_model_and_the_small_one(isolated_forge_home: Path) -> None:
     from forge.config import load_config
 
     config = load_config(isolated_forge_home)
-    names = [m.model_name for m in checks.gemini_models_to_test(config)]
-    assert names[-1] == checks.GEMINI_PROBE_MODEL and len(names) == len(set(names))
+    tested = checks.gemini_models_to_test(config)
+    keys = [key for key, _model in tested]
+    assert {"gemini31pro", "gemini3flash", "gemini38flash"} <= set(keys) and keys[-1] is None
+    assert tested[-1][1].model_name == checks.GEMINI_PROBE_MODEL
+
+
+GEMINI_ANSWERED = {
+    "gemini": {"status": "ok", "models": {"gemini31pro": True, "gemini3flash": True, "gemini38flash": False}}
+}
+
+
+def test_a_gemini_test_that_passed_makes_gemini_3_the_default_for_the_builder_roles() -> None:
+    config = default_config()
+    plan = by_role(propose_plan(config, {**BOTH, **GEMINI_ANSWERED}, {}))
+    assert plan["coder"]["model"] == "gemini31pro" and "used by default" in plan["coder"]["reason"]
+    assert plan["vision"]["model"] == "gemini31pro" and plan["kb_builder"]["model"] == "gemini31pro"
+    assert plan["summariser"]["model"] == "gemini3flash"
     assert (
-        names[0] == "gemini-3.1-pro-preview"
-    )  # no role uses a Gemini model, so the first one in the config is tried
+        plan["reviewer"]["model"] == config.llm.roles.reviewer
+    )  # the reviewer and the judge stay independent
+    assert plan["judge"]["model"] == config.llm.roles.judge
+
+
+def test_no_gemini_test_or_a_failed_one_keeps_the_azure_defaults() -> None:
+    config = default_config()
+    assert by_role(propose_plan(config, BOTH, {}))["coder"]["model"] == config.llm.roles.coder
+    failed = {
+        "gemini": {
+            "status": "fail",
+            "models": {"gemini31pro": False, "gemini3flash": False, "gemini38flash": False},
+        }
+    }
+    assert by_role(propose_plan(config, {**BOTH, **failed}, {}))["coder"]["model"] == config.llm.roles.coder
+
+
+def test_the_model_lists_offer_every_model_with_its_state() -> None:
+    config = default_config()
+    options = {o["key"]: o for o in propose_plan(config, {**BOTH, **GEMINI_ANSWERED}, {})["options"]}  # type: ignore[index, union-attr]
+    assert {"gpt51", "gpt41", "gpt4o", "gemini31pro", "gemini3flash", "gemini38flash"} <= set(options)
+    assert options["gemini31pro"]["state"] == "ok" and options["gemini38flash"]["state"] == "failed"
+    untested = {o["key"]: o for o in propose_plan(config, BOTH, {})["options"]}  # type: ignore[index, union-attr]
+    assert untested["gemini31pro"]["state"] == "untested" and untested["gpt51"]["state"] == "ok"
+
+
+def test_an_earlier_choice_beats_the_gemini_default() -> None:
+    plan = by_role(propose_plan(default_config(), {**BOTH, **GEMINI_ANSWERED}, {"coder": "gpt51"}))
+    assert plan["coder"]["model"] == "gpt51" and plan["coder"]["reason"] == "Your earlier choice"
 
 
 def test_the_node_row_reports_a_missing_node_and_a_certificate_failure(

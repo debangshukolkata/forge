@@ -189,10 +189,11 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
                     >
                       {!choice[entry.role] && <option value="">No model available</option>}
                       {plan.options
-                        .filter((option) => (entry.role !== "vision" || option.vision) && (option.usable || option.key === choice[entry.role]))
+                        .filter((option) => entry.role !== "vision" || option.vision)
                         .map((option) => (
                           <option key={option.key} value={option.key}>
                             {option.label}
+                            {option.state === "failed" ? " (did not answer)" : option.state === "untested" ? " (not tested yet)" : ""}
                           </option>
                         ))}
                     </Select>
