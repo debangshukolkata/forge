@@ -4,7 +4,6 @@ Reads TODO.md section 0c (items marked [x] done, [~] partly, [ ] open) and the d
 
 from __future__ import annotations
 
-import json
 import re
 import sys
 import time
@@ -12,7 +11,13 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 RUNS = Path(r"C:\Work\ForgeRuns\designbench")
-BRIEFS = ["d01_science_museum", "d02_ramen_bar", "d03_ops_dashboard", "d04_member_table", "d05_booking_wizard"]
+BRIEFS = [
+    "d01_science_museum",
+    "d02_ramen_bar",
+    "d03_ops_dashboard",
+    "d04_member_table",
+    "d05_booking_wizard",
+]
 
 
 def todo_counts() -> tuple[dict[str, list[str]], int]:
@@ -37,24 +42,27 @@ def benchmark(name: str) -> None:
         if run_file.exists():
             print(f"  [done]    {brief}")
         elif events.exists():
-            calls = sum(1 for line in events.open(encoding="utf-8", errors="replace") if '"tool_call_started"' in line)
+            calls = sum(
+                1 for line in events.open(encoding="utf-8", errors="replace") if '"tool_call_started"' in line
+            )
             minutes = (time.time() - (folder / f"{brief}_prompt.txt").stat().st_mtime) / 60
             print(f"  [RUNNING] {brief}: {calls} tool calls, {minutes:.0f} min in")
             running_seen = True
         else:
             print(f"  [waiting] {brief}")
-    print("  results.md written" if (folder / "results.md").exists() else "  results.md: not yet" + ("" if running_seen else " (nothing running?)"))
-    if (folder / "results.json").exists():
-        try:
-            json.loads((folder / "results.json").read_text(encoding="utf-8"))
-        except ValueError:
-            pass
+    print(
+        "  results.md written"
+        if (folder / "results.md").exists()
+        else "  results.md: not yet" + ("" if running_seen else " (nothing running?)")
+    )
 
 
 def main() -> None:
     name = sys.argv[1] if len(sys.argv) > 1 else "night-1"
     groups, total = todo_counts()
-    print(f"TONIGHT'S LIST (TODO 0c): {len(groups['x'])} done, {len(groups['~'])} partly, {len(groups[' '])} open of {total}")
+    print(
+        f"TONIGHT'S LIST (TODO 0c): {len(groups['x'])} done, {len(groups['~'])} partly, {len(groups[' '])} open of {total}"
+    )
     for key, label in (("~", "partly"), (" ", "open")):
         for item in groups[key]:
             print(f"  [{label}] {item}")

@@ -12,7 +12,7 @@ from tests import vite_harness as harness
 
 SKILL = Path(__file__).resolve().parent.parent / "src" / "forge" / "skills" / "ui-design-quality"
 REACT = SKILL / "recipes" / "app-react"
-IDS = ["dashboard-kpi", "table-data", "form-wizard", "settings-account", "inbox"]
+IDS = sorted(folder.name for folder in REACT.iterdir() if folder.is_dir())  # all 24 screens (D-397)
 SHOTS = Path(__file__).resolve().parent.parent / "test-artifacts" / "app-screens-react"
 
 pytestmark = [

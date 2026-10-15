@@ -6856,6 +6856,160 @@
    "size": 21044
   },
   {
+   "id": "app-react-calendar",
+   "type": "section",
+   "title": "React app screen: Calendar: week view",
+   "summary": "A week calendar: a mini month and calendar toggles on the side, a time grid with positioned, colour-coded events, today's column marked and a Day, Week, Month switch. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "organised",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "scheduling",
+    "booking",
+    "planning",
+    "team calendar",
+    "appointments"
+   ],
+   "tags": [
+    "calendar",
+    "week view",
+    "schedule",
+    "side panel",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/calendar/Screen.tsx",
+     "to": "src/screens/calendar/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/calendar/screen.css",
+     "to": "src/screens/calendar/screen.css"
+    },
+    {
+     "from": "recipes/app-react/calendar/tokens.css",
+     "to": "src/screens/calendar/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-calendar.md",
+   "size": 20656
+  },
+  {
+   "id": "app-react-chat",
+   "type": "section",
+   "title": "React app screen: Chat: conversations and thread",
+   "summary": "A team chat: a conversation list with previews and times, a thread with grouped bubbles, a day marker and your own messages in the accent, and a composer pinned to the bottom. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "quick",
+    "informal",
+    "dark"
+   ],
+   "products": [
+    "messaging",
+    "collaboration",
+    "community",
+    "support chat",
+    "assistant"
+   ],
+   "tags": [
+    "chat",
+    "messages",
+    "composer",
+    "dark",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "dark"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/chat/Screen.tsx",
+     "to": "src/screens/chat/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/chat/screen.css",
+     "to": "src/screens/chat/screen.css"
+    },
+    {
+     "from": "recipes/app-react/chat/tokens.css",
+     "to": "src/screens/chat/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-chat.md",
+   "size": 20234
+  },
+  {
+   "id": "app-react-dashboard-analytics",
+   "type": "section",
+   "title": "React app screen: Dashboard: analytics (dark)",
+   "summary": "A dark analytics screen: range selector, three metrics with sparklines, a two-line chart, a top-pages table with trends and a funnel. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "technical",
+    "focused",
+    "dark"
+   ],
+   "products": [
+    "analytics",
+    "growth",
+    "developer tools",
+    "saas",
+    "marketing"
+   ],
+   "tags": [
+    "dashboard",
+    "analytics",
+    "dark",
+    "chart",
+    "funnel",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "dark"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/dashboard-analytics/Screen.tsx",
+     "to": "src/screens/dashboard-analytics/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/dashboard-analytics/screen.css",
+     "to": "src/screens/dashboard-analytics/screen.css"
+    },
+    {
+     "from": "recipes/app-react/dashboard-analytics/tokens.css",
+     "to": "src/screens/dashboard-analytics/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-dashboard-analytics.md",
+   "size": 24349
+  },
+  {
    "id": "app-react-dashboard-kpi",
    "type": "section",
    "title": "React app screen: Dashboard: sales KPIs",
@@ -6905,6 +7059,416 @@
    "preview": null,
    "path": "assets/section/app-react-dashboard-kpi.md",
    "size": 25015
+  },
+  {
+   "id": "app-react-dashboard-ops",
+   "type": "section",
+   "title": "React app screen: Dashboard: operations board",
+   "summary": "A top-navigation operations board: status counters, a shipments table with progress meters, on-time bars and an exceptions list. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "practical",
+    "calm",
+    "teal"
+   ],
+   "products": [
+    "logistics",
+    "operations",
+    "fleet",
+    "support",
+    "field service"
+   ],
+   "tags": [
+    "dashboard",
+    "status",
+    "table",
+    "top navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/dashboard-ops/Screen.tsx",
+     "to": "src/screens/dashboard-ops/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/dashboard-ops/screen.css",
+     "to": "src/screens/dashboard-ops/screen.css"
+    },
+    {
+     "from": "recipes/app-react/dashboard-ops/tokens.css",
+     "to": "src/screens/dashboard-ops/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-dashboard-ops.md",
+   "size": 20706
+  },
+  {
+   "id": "app-react-dashboard-personal",
+   "type": "section",
+   "title": "React app screen: Dashboard: personal day view",
+   "summary": "A friendly personal overview: a greeting, today's schedule, progress rings for weekly goals and a focus-time chart. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "warm",
+    "friendly",
+    "light"
+   ],
+   "products": [
+    "productivity",
+    "personal",
+    "wellbeing",
+    "education",
+    "customer success"
+   ],
+   "tags": [
+    "dashboard",
+    "personal",
+    "goals",
+    "calendar",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/dashboard-personal/Screen.tsx",
+     "to": "src/screens/dashboard-personal/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/dashboard-personal/screen.css",
+     "to": "src/screens/dashboard-personal/screen.css"
+    },
+    {
+     "from": "recipes/app-react/dashboard-personal/tokens.css",
+     "to": "src/screens/dashboard-personal/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-dashboard-personal.md",
+   "size": 21962
+  },
+  {
+   "id": "app-react-editor",
+   "type": "section",
+   "title": "React app screen: Editor: document with outline and comments",
+   "summary": "A writing surface: a page tree and an on-this-page outline, a formatting bar, a large editable title, checklist items, and a comments column with open threads. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "quiet",
+    "focused",
+    "light"
+   ],
+   "products": [
+    "documents",
+    "wiki",
+    "notes",
+    "knowledge base",
+    "handbook"
+   ],
+   "tags": [
+    "editor",
+    "document",
+    "comments",
+    "outline",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/editor/Screen.tsx",
+     "to": "src/screens/editor/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/editor/screen.css",
+     "to": "src/screens/editor/screen.css"
+    },
+    {
+     "from": "recipes/app-react/editor/tokens.css",
+     "to": "src/screens/editor/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-editor.md",
+   "size": 19740
+  },
+  {
+   "id": "app-react-empty-states",
+   "type": "section",
+   "title": "React app screen: States: empty, no results, error, offline, loading and first run",
+   "summary": "Six state cards (empty list, no search results, load error, offline, skeleton loading, all caught up) and a first-run checklist with progress, so every moment without data has a next step. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "helpful",
+    "plain",
+    "light"
+   ],
+   "products": [
+    "any app",
+    "saas",
+    "onboarding",
+    "error handling"
+   ],
+   "tags": [
+    "empty state",
+    "error",
+    "loading",
+    "skeleton",
+    "onboarding",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/empty-states/Screen.tsx",
+     "to": "src/screens/empty-states/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/empty-states/screen.css",
+     "to": "src/screens/empty-states/screen.css"
+    },
+    {
+     "from": "recipes/app-react/empty-states/tokens.css",
+     "to": "src/screens/empty-states/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-empty-states.md",
+   "size": 19888
+  },
+  {
+   "id": "app-react-form-line-entry",
+   "type": "section",
+   "title": "React app screen: Form: invoice with line items",
+   "summary": "A document-style data entry screen: header fields, an editable lines table with live amounts, notes and a totals block, with save, preview and send actions. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "efficient",
+    "light"
+   ],
+   "products": [
+    "invoicing",
+    "quotes",
+    "orders",
+    "expenses",
+    "timesheets"
+   ],
+   "tags": [
+    "form",
+    "data entry",
+    "line items",
+    "totals",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/form-line-entry/Screen.tsx",
+     "to": "src/screens/form-line-entry/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/form-line-entry/screen.css",
+     "to": "src/screens/form-line-entry/screen.css"
+    },
+    {
+     "from": "recipes/app-react/form-line-entry/tokens.css",
+     "to": "src/screens/form-line-entry/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-form-line-entry.md",
+   "size": 20524
+  },
+  {
+   "id": "app-react-form-long",
+   "type": "section",
+   "title": "React app screen: Form: long page form with validation",
+   "summary": "A long single-page form in titled sections (the heading and help on the left, the fields on the right), an error summary that links to each field, inline errors and a sticky action bar. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "clear",
+    "trustworthy",
+    "light"
+   ],
+   "products": [
+    "healthcare",
+    "registration",
+    "applications",
+    "hr",
+    "government"
+   ],
+   "tags": [
+    "form",
+    "validation",
+    "error summary",
+    "sections",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/form-long/Screen.tsx",
+     "to": "src/screens/form-long/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/form-long/screen.css",
+     "to": "src/screens/form-long/screen.css"
+    },
+    {
+     "from": "recipes/app-react/form-long/tokens.css",
+     "to": "src/screens/form-long/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-form-long.md",
+   "size": 19812
+  },
+  {
+   "id": "app-react-form-quick-capture",
+   "type": "section",
+   "title": "React app screen: Form: quick capture",
+   "summary": "A fast entry form for frequent small records: one big text box, category chips, two short fields, a keyboard hint, and today's earlier entries beside it. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "friendly",
+    "quick",
+    "light"
+   ],
+   "products": [
+    "field work",
+    "logs",
+    "hospitality",
+    "operations",
+    "notes"
+   ],
+   "tags": [
+    "form",
+    "data entry",
+    "chips",
+    "top navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/form-quick-capture/Screen.tsx",
+     "to": "src/screens/form-quick-capture/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/form-quick-capture/screen.css",
+     "to": "src/screens/form-quick-capture/screen.css"
+    },
+    {
+     "from": "recipes/app-react/form-quick-capture/tokens.css",
+     "to": "src/screens/form-quick-capture/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-form-quick-capture.md",
+   "size": 18172
+  },
+  {
+   "id": "app-react-form-sign-in",
+   "type": "section",
+   "title": "React app screen: Form: sign-in split screen",
+   "summary": "A sign-in page split in two: the form (single sign-on, email, password, remember me) beside a colour panel with drawn contour art and a customer quote. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "welcoming",
+    "confident",
+    "teal"
+   ],
+   "products": [
+    "authentication",
+    "saas",
+    "marketplace",
+    "booking",
+    "portal"
+   ],
+   "tags": [
+    "form",
+    "authentication",
+    "split screen",
+    "drawn art",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/form-sign-in/Screen.tsx",
+     "to": "src/screens/form-sign-in/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/form-sign-in/screen.css",
+     "to": "src/screens/form-sign-in/screen.css"
+    },
+    {
+     "from": "recipes/app-react/form-sign-in/tokens.css",
+     "to": "src/screens/form-sign-in/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-form-sign-in.md",
+   "size": 17658
   },
   {
    "id": "app-react-form-wizard",
@@ -7010,6 +7574,110 @@
    "size": 23117
   },
   {
+   "id": "app-react-map-list",
+   "type": "section",
+   "title": "React app screen: Map: list and map side by side",
+   "summary": "A locator: a result list with status pills beside a drawn map with numbered pins, zoom controls and a detail card for the selected place. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "clear",
+    "practical",
+    "light"
+   ],
+   "products": [
+    "logistics",
+    "store locator",
+    "delivery",
+    "real estate",
+    "field service"
+   ],
+   "tags": [
+    "map",
+    "list",
+    "locator",
+    "drawn svg map",
+    "top navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/map-list/Screen.tsx",
+     "to": "src/screens/map-list/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/map-list/screen.css",
+     "to": "src/screens/map-list/screen.css"
+    },
+    {
+     "from": "recipes/app-react/map-list/tokens.css",
+     "to": "src/screens/map-list/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-map-list.md",
+   "size": 21317
+  },
+  {
+   "id": "app-react-record",
+   "type": "section",
+   "title": "React app screen: Record: customer profile",
+   "summary": "A record page: identity header with status pills and actions, tabs, an activity timeline with a note box, and a side card of key details and account health. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "considered",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "crm",
+    "customers",
+    "patients",
+    "accounts",
+    "candidates"
+   ],
+   "tags": [
+    "record",
+    "profile",
+    "timeline",
+    "tabs",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/record/Screen.tsx",
+     "to": "src/screens/record/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/record/screen.css",
+     "to": "src/screens/record/screen.css"
+    },
+    {
+     "from": "recipes/app-react/record/tokens.css",
+     "to": "src/screens/record/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-record.md",
+   "size": 20736
+  },
+  {
    "id": "app-react-settings-account",
    "type": "section",
    "title": "React app screen: Settings: account, security and API keys",
@@ -7059,6 +7727,158 @@
    "preview": null,
    "path": "assets/section/app-react-settings-account.md",
    "size": 21677
+  },
+  {
+   "id": "app-react-settings-billing",
+   "type": "section",
+   "title": "React app screen: Settings: plan, usage and invoices",
+   "summary": "A billing page with the current plan, usage meters against limits, a payment method card, a billing contact and an invoice table. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "trustworthy",
+    "plain",
+    "light"
+   ],
+   "products": [
+    "saas",
+    "subscriptions",
+    "billing",
+    "membership"
+   ],
+   "tags": [
+    "settings",
+    "billing",
+    "usage meters",
+    "table",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/settings-billing/Screen.tsx",
+     "to": "src/screens/settings-billing/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/settings-billing/screen.css",
+     "to": "src/screens/settings-billing/screen.css"
+    },
+    {
+     "from": "recipes/app-react/settings-billing/tokens.css",
+     "to": "src/screens/settings-billing/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-settings-billing.md",
+   "size": 20134
+  },
+  {
+   "id": "app-react-settings-notifications",
+   "type": "section",
+   "title": "React app screen: Settings: notification preferences",
+   "summary": "A preference matrix of events against channels with switches, plus quiet hours with time fields and a digest schedule. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "calm",
+    "considerate",
+    "light"
+   ],
+   "products": [
+    "productivity",
+    "communication",
+    "collaboration",
+    "mobile app"
+   ],
+   "tags": [
+    "settings",
+    "matrix",
+    "toggles",
+    "top navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/settings-notifications/Screen.tsx",
+     "to": "src/screens/settings-notifications/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/settings-notifications/screen.css",
+     "to": "src/screens/settings-notifications/screen.css"
+    },
+    {
+     "from": "recipes/app-react/settings-notifications/tokens.css",
+     "to": "src/screens/settings-notifications/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-settings-notifications.md",
+   "size": 20748
+  },
+  {
+   "id": "app-react-settings-roles",
+   "type": "section",
+   "title": "React app screen: Settings: roles and permissions grid",
+   "summary": "A permission matrix of rights against roles with checkboxes (the owner column fixed), beside a member list where each person's role is a select. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "technical",
+    "precise",
+    "dark"
+   ],
+   "products": [
+    "admin",
+    "security",
+    "enterprise",
+    "developer tools"
+   ],
+   "tags": [
+    "settings",
+    "permissions",
+    "matrix",
+    "checkboxes",
+    "dark",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "dark"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/settings-roles/Screen.tsx",
+     "to": "src/screens/settings-roles/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/settings-roles/screen.css",
+     "to": "src/screens/settings-roles/screen.css"
+    },
+    {
+     "from": "recipes/app-react/settings-roles/tokens.css",
+     "to": "src/screens/settings-roles/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-settings-roles.md",
+   "size": 22162
   },
   {
    "id": "app-react-table-data",
@@ -7111,6 +7931,161 @@
    "preview": null,
    "path": "assets/section/app-react-table-data.md",
    "size": 21445
+  },
+  {
+   "id": "app-react-table-editable-grid",
+   "type": "section",
+   "title": "React app screen: Table: editable grid for fast entry",
+   "summary": "A grid whose number cells are inputs: scan or type a SKU, tab through counts, low-stock status, and a sticky save bar that says how many cells changed. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "practical",
+    "fast",
+    "light"
+   ],
+   "products": [
+    "inventory",
+    "warehouse",
+    "data entry",
+    "spreadsheet",
+    "back office"
+   ],
+   "tags": [
+    "table",
+    "editable",
+    "data entry",
+    "inputs",
+    "sticky save bar",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/table-editable-grid/Screen.tsx",
+     "to": "src/screens/table-editable-grid/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/table-editable-grid/screen.css",
+     "to": "src/screens/table-editable-grid/screen.css"
+    },
+    {
+     "from": "recipes/app-react/table-editable-grid/tokens.css",
+     "to": "src/screens/table-editable-grid/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-table-editable-grid.md",
+   "size": 20946
+  },
+  {
+   "id": "app-react-table-kanban",
+   "type": "section",
+   "title": "React app screen: Board: kanban lanes",
+   "summary": "A kanban board with four lanes, labelled cards with due dates and assignees, lane counts and add-card buttons; the lanes scroll sideways inside their frame on a phone. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "warm",
+    "organised",
+    "light"
+   ],
+   "products": [
+    "project management",
+    "tasks",
+    "workflow",
+    "recruiting",
+    "support"
+   ],
+   "tags": [
+    "board",
+    "kanban",
+    "cards",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/table-kanban/Screen.tsx",
+     "to": "src/screens/table-kanban/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/table-kanban/screen.css",
+     "to": "src/screens/table-kanban/screen.css"
+    },
+    {
+     "from": "recipes/app-react/table-kanban/tokens.css",
+     "to": "src/screens/table-kanban/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-table-kanban.md",
+   "size": 26544
+  },
+  {
+   "id": "app-react-table-master-detail",
+   "type": "section",
+   "title": "React app screen: Table: master and detail",
+   "summary": "A list on the left and the selected record on the right: header, tabs, key figures, line items, activity and decision buttons. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "procurement",
+    "approvals",
+    "support",
+    "crm",
+    "orders"
+   ],
+   "tags": [
+    "list",
+    "detail",
+    "tabs",
+    "side navigation",
+    "line items",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/table-master-detail/Screen.tsx",
+     "to": "src/screens/table-master-detail/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/table-master-detail/screen.css",
+     "to": "src/screens/table-master-detail/screen.css"
+    },
+    {
+     "from": "recipes/app-react/table-master-detail/tokens.css",
+     "to": "src/screens/table-master-detail/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-table-master-detail.md",
+   "size": 22927
   },
   {
    "id": "app-record",

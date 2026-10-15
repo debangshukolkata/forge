@@ -28,13 +28,8 @@ from app_screens.screen import Screen  # noqa: E402
 MODULES = [screens_dashboards, screens_tables, screens_forms, screens_settings, screens_apps]
 SKILL = REPO / "src" / "forge" / "skills" / "ui-design-quality"
 PREVIEW = SKILL / "assets" / "preview"
-REACT_IDS = [
-    "dashboard-kpi",
-    "table-data",
-    "form-wizard",
-    "settings-account",
-    "inbox",
-]  # the screens that also exist as React (D-377)
+# Every screen also exists as React (D-377 for the first five, D-397 for the rest); the screens have no scripts, so the markup converts as it is.
+REACT_IDS: list[str] | None = None  # None means all; a list limits the conversion
 SOURCE = "authored for DebCraft (D-366, application screens for plain HTML apps)"
 TESTED = "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)"
 
@@ -180,7 +175,7 @@ def main(argv: list[str]) -> int:
             )
             written.append(target)
             print("wrote", target.name)
-            if screen.id in REACT_IDS:
+            if REACT_IDS is None or screen.id in REACT_IDS:
                 react_folder = SKILL / "recipes" / "app-react" / screen.id
                 react_folder.mkdir(parents=True, exist_ok=True)
                 for name, text in react_files(screen).items():
