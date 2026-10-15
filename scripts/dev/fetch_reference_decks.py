@@ -1,6 +1,6 @@
 """Collect real-world .pptx files for testing the presentation readers (TODO P2.24, D-399).
 
-    python scripts/dev/fetch_reference_decks.py [target-folder]      (default C:\Work\ForgeSamples\reference-decks)
+    python scripts/dev/fetch_reference_decks.py [target-folder]      (default C:\\Work\\ForgeSamples\reference-decks)
 
 Shallow, sparse git clones of three open-licence repositories whose test data holds hundreds of real PowerPoint files, kept OUTSIDE this repository: Apache POI (Apache-2.0),
 python-pptx (MIT) and LibreOffice core (MPL-2.0). See docs/REFERENCE_DECKS.md for what each is good for and why designed marketing templates are not collected."""
