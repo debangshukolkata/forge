@@ -118,6 +118,16 @@ skeleton. States for each: hover, focus-visible, active, disabled, loading, succ
 ## Imagery and Icons
 Where visuals come from (drawn SVG, photos, illustrations), one icon set and stroke width, avatar style. Never a grey placeholder box.
 
+## Page Composition
+The sections of each page in order, what each is for, and the layout recipe it comes from. One bullet per decision, each with its reason
+("Hero is a split with a photograph on the right, because the visitor must see the studio before reading about it").
+
+## Motion and Interaction
+What moves and what stays still, durations and easing, the hover, focus, pressed and loading states, and the reduced-motion rule. Each choice with its reason.
+
+## Accessibility
+Contrast pairs, focus order and visible focus, touch targets, reading order, labels and error text. Each choice with its reason.
+
 ## Do's and Don'ts
 Four to eight project-specific rules a reviewer could check by looking at the page, for example "never more than one accent colour per
 section", "buttons are always pills", "numbers always use tabular figures".
@@ -131,5 +141,5 @@ than invented values.
 ```
 
 The order of the first eight headings follows the format (Overview, Colors, Typography, Layout, Elevation & Depth, Shapes, Components,
-Do's and Don'ts); Imagery, Responsive Behavior and Known Gaps are allowed extras. Section 'Do's and Don'ts' is where the product's
+Do's and Don'ts); Imagery, Page Composition, Motion and Interaction, Accessibility, Responsive Behavior and Known Gaps are allowed extras (`design_md_lint` notes a missing one and any list of decisions that gives no reason). Section 'Do's and Don'ts' is where the product's
 personality lives.

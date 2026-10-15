@@ -129,8 +129,8 @@ is advice from a cross-family critic and the user's eye, only what can be measur
 
 - [ ] `DIE1` **Discovery first.** The default flow starts with two or three references (from the user, else live public sites of the industry found by search), measured from the browser (computed styles, type scale,
   spacing, colours) and read by the vision model; reusable principles are separated from brand-specific elements. Today this is step 3 of the ladder. Size M.
-- [ ] `DIE2` **Design blueprint.** Extend DESIGN.md with layout and section composition, imagery and illustration rules, motion and interaction states, responsive and accessibility requirements, and a stated purpose for
-  every major decision; lint for missing sections and decisions without a purpose. Size M.
+- [~] `DIE2` **Design blueprint.** Extend DESIGN.md with layout and section composition, imagery and illustration rules, motion and interaction states, responsive and accessibility requirements, and a stated purpose for
+  every major decision; lint for missing sections and decisions without a purpose. Size M. **Started 2026-10-15 (D-421): the lint notes and the template are in; the inspire drafts still need to write the new sections.**
 - [ ] `DIE3` **Design knowledge base.** Searchable by industry, mood and layout, in the user's profile: analysed references (principles, tokens, source links, a small local thumbnail), proven layout patterns and
   reusable blueprints; retrieval tested like the asset catalogue; a memory across projects so the same palette, font pair and composition are not reused for the last few projects. Size M.
 - [ ] `DIE4` **Art-director role.** A separate subagent (the `planner`/critic family, Argon when available) that produces the blueprint from the references; the coding agent implements it; any agent can call it. Size M.
@@ -139,6 +139,11 @@ is advice from a cross-family critic and the user's eye, only what can be measur
 - [ ] `DIE6` **Imagery sources.** A project `brand assets` folder used first (the user's own photographs and illustrations, including files the user downloads from unDraw), then open illustration sets that allow
   automated use after a licence check (Open Peeps, Humaaans, Open Doodles are candidates), `find_image` photographs, `generate_image` on the laptop, drawn SVG scenes; every source recorded in NOTICES.md. Size S to M.
 - [ ] `DIE7` **Less card-heavy references.** Editorial and denser variants of the app screens and compositions, and a card-density check in the audit, so our own recipes stop adding to the sameness. Size M.
+- [ ] `DIE8` **Sample pages to judge Gemini 4 Argon's design taste (the user's request, 2026-10-15).** Same four briefs, same recipes, skill and audit, three arms: **A** gpt-5.1 designs and codes (baseline);
+  **B** Argon writes DESIGN.md (direction, fonts, palette, composition, imagery rules, a reason for each decision) and gpt-5.1 codes from it; **C** Argon designs and codes. A against B shows whether Argon's design
+  decisions are better (same coder); B against C shows what Argon's coding adds. Optional fourth arm: Gemini 3.1 Pro as designer, to tell Argon from Gemini in general. Argon runs on the office laptop (Google credentials);
+  both runs use the same critic and Argon's critic role is off for this test. Pages are shown to the user without model names (a model favours its own family; no model scores). First read the code to see whether the
+  DESIGN.md step can be routed to the planner role (the router already supports per-role models); if B wins, add a designer-model setting. No new provider. Size S-M.
 
 ## 1. Waiting on you (your actions and decisions)
 Things only you can do or decide. Everything else below can be built without you.

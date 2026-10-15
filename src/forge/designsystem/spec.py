@@ -57,6 +57,11 @@ KNOWN_EXTRAS = {
     "design read",
     "imagery and icons",
     "inspiration",
+    "page composition",
+    "section composition",
+    "motion and interaction",
+    "motion",
+    "accessibility",
 }
 
 

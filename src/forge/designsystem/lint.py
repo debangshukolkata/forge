@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from forge.designsystem.blueprint import check_blueprint
 from forge.designsystem.colour import contrast, hue_and_saturation, parse
 from forge.designsystem.spec import (
     KNOWN_EXTRAS,
@@ -401,6 +402,7 @@ def lint_system(system: DesignSystem) -> list[Finding]:
     _check_values(system, findings)
     _check_contrast(system, findings)
     _check_palette(system, findings)
+    findings.extend(Finding(*item) for item in check_blueprint(system))
     return findings
 
 
