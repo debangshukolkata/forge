@@ -39,6 +39,7 @@ from forge.subagents.subagent import (
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.folders import clean_folder
 from forge.toolkit.shell import RunCommand, ShellSession
+from forge.subagents.art_director import ART_DIRECTOR_ITERATIONS, ART_DIRECTOR_PROMPT
 from forge.tools.parity import BUILT_IN_TYPES
 from forge.tools.registry import ToolRegistry, default_tools
 
@@ -87,6 +88,8 @@ class SpawnSubagent(Tool):
         "Delegate a self-contained job to a subagent with its own fresh context: 'explore' "
         "(read-only search), 'planner' (read-only: studies the code and returns the approach, the assumptions, the task breakdown with a check for each, and the risks; use it for a "
         "large, ambiguous or many-file task before you start, not for a small change), "
+        "'art-director' (read-only designer: reads the brief, the reference notes and the design knowledge base and returns a complete DESIGN.md with a reason for every decision, "
+        "which you then save and build to; use it for a brand page whose look the brief does not fix), "
         "'researcher' (digs into a question on the web, cross-checks sources, reports with URLs), "
         "'reviewer' (second opinion on a change), 'debugger' (root cause of a failure), 'verifier' "
         "(independently derives acceptance checks from the requirement, writes and runs its own "
@@ -135,6 +138,18 @@ class SpawnSubagent(Tool):
         elif args.agent == "planner":
             report = await _run_subagent(
                 router, context, ToolRegistry(read_only), PLANNER_PROMPT, args.task, 25, "planner"
+            )
+        elif args.agent == "art-director":
+            everything = {t.name: t for t in default_tools()}
+            looking = [everything["view_image"]]
+            report = await _run_subagent(
+                router,
+                context,
+                ToolRegistry([*read_only, *(t for t in looking if t not in read_only)]),
+                ART_DIRECTOR_PROMPT,
+                args.task,
+                ART_DIRECTOR_ITERATIONS,
+                "planner",
             )
         elif args.agent == "researcher":
             try:

@@ -120,6 +120,7 @@ one that comes from the product. Only then build.
   Never make the three differ only in colour. Before writing any file, decide the directions in one line each (for example "a: light, green, serif display, round, airy;
   b: dark, amber, grotesk, sharp, dense; c: warm grey, red, mono accents, pill, bold") and write each file from its line: writing three similar files and fixing them
   afterwards costs two rewrites (seen in the night-1 design runs).
+- *An art director can write a candidate.* For a brand page, `spawn_subagent` with agent `art-director` and the brief (and the paths of the reference notes) returns a complete DESIGN.md with a reason for every decision; it runs on the planner role, which may be a stronger or different model. Save its file as one of the candidates (for example `.forge/candidates/c/DESIGN.md`) next to the ones you wrote: `design_candidates` chooses, and a candidate from another mind keeps the three from being one habit. It can run beside the other read-only helpers.
 - *Every candidate has a concept and a signature move.* Under Overview write the concept in one sentence, taken from the product's own world and
   not from a page template (a late-night ramen bar: the paper lantern and the shop sign at 3 am; a children's science museum: a lab notebook full of
   experiments), and name the one signature move that carries it (oversized vertical type, a ticket-stub layout, a hand-drawn diagram system, a full-bleed

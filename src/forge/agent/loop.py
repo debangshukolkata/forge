@@ -126,7 +126,7 @@ def is_test_path(path: str) -> bool:
 # These tools return only when the person answers, so their whole duration is waiting, not work (S1).
 USER_WAIT_TOOLS = frozenset({"ask_user", "propose_requirements", "propose_plan", "request_user_action"})
 PARALLEL_SUBAGENT_TYPES = frozenset(
-    {"explore", "planner", "reviewer", "design-critic"}
+    {"explore", "planner", "reviewer", "design-critic", "art-director"}
 )  # only look, read or screenshot (unique file names); may run side by side
 MAX_PARALLEL_SUBAGENTS = 4
 REWORK_EDITS = (
