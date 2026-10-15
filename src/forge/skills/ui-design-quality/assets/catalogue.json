@@ -2477,6 +2477,211 @@
    "size": 6921
   },
   {
+   "id": "fx-react-magnetic",
+   "type": "effect",
+   "title": "Magnetic hover (React)",
+   "summary": "A button or icon leans a few pixels toward the pointer and springs back.",
+   "moods": [
+    "playful",
+    "modern"
+   ],
+   "products": [
+    "marketing",
+    "creative",
+    "portfolio"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "hover",
+    "pointer",
+    "button"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-hooks.tsx",
+     "to": "src/motion-hooks.tsx"
+    },
+    {
+     "from": "recipes/motion-hooks.css",
+     "to": "src/motion-hooks.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (React motion hooks, D-383)",
+   "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
+   "preview": null,
+   "path": "assets/effect/fx-react-magnetic.md",
+   "size": 10925
+  },
+  {
+   "id": "fx-react-parallax",
+   "type": "effect",
+   "title": "Parallax layer (React)",
+   "summary": "A decorative layer that moves slower or faster than the page while it crosses the viewport.",
+   "moods": [
+    "calm",
+    "cinematic"
+   ],
+   "products": [
+    "marketing",
+    "storytelling",
+    "portfolio"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "scroll",
+    "parallax",
+    "depth"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-hooks.tsx",
+     "to": "src/motion-hooks.tsx"
+    },
+    {
+     "from": "recipes/motion-hooks.css",
+     "to": "src/motion-hooks.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (React motion hooks, D-383)",
+   "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
+   "preview": null,
+   "path": "assets/effect/fx-react-parallax.md",
+   "size": 10960
+  },
+  {
+   "id": "fx-react-pinned-steps",
+   "type": "effect",
+   "title": "Pinned steps (React)",
+   "summary": "A list of steps beside a panel that stays pinned while the active step follows the scroll.",
+   "moods": [
+    "clear",
+    "editorial"
+   ],
+   "products": [
+    "onboarding",
+    "how it works",
+    "product story"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "scroll",
+    "steps",
+    "sticky"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-hooks.tsx",
+     "to": "src/motion-hooks.tsx"
+    },
+    {
+     "from": "recipes/motion-hooks.css",
+     "to": "src/motion-hooks.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (React motion hooks, D-383)",
+   "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
+   "preview": null,
+   "path": "assets/effect/fx-react-pinned-steps.md",
+   "size": 10973
+  },
+  {
+   "id": "fx-react-scramble-text",
+   "type": "effect",
+   "title": "Scramble text (React)",
+   "summary": "Letters flicker through noise and settle left to right into the real text, once.",
+   "moods": [
+    "technical",
+    "playful"
+   ],
+   "products": [
+    "developer tools",
+    "games",
+    "dashboards"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "text",
+    "scramble",
+    "decode"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-hooks.tsx",
+     "to": "src/motion-hooks.tsx"
+    },
+    {
+     "from": "recipes/motion-hooks.css",
+     "to": "src/motion-hooks.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (React motion hooks, D-383)",
+   "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
+   "preview": null,
+   "path": "assets/effect/fx-react-scramble-text.md",
+   "size": 10948
+  },
+  {
+   "id": "fx-react-split-text",
+   "type": "effect",
+   "title": "Split text (React)",
+   "summary": "Words or letters of a heading rise in one after another when scrolled into view.",
+   "moods": [
+    "editorial",
+    "confident"
+   ],
+   "products": [
+    "marketing",
+    "headlines",
+    "landing"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "text",
+    "entrance",
+    "stagger"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-hooks.tsx",
+     "to": "src/motion-hooks.tsx"
+    },
+    {
+     "from": "recipes/motion-hooks.css",
+     "to": "src/motion-hooks.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (React motion hooks, D-383)",
+   "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
+   "preview": null,
+   "path": "assets/effect/fx-react-split-text.md",
+   "size": 10987
+  },
+  {
    "id": "fx-scroll-progress",
    "type": "effect",
    "title": "Scroll progress bar",

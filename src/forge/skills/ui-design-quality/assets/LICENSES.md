@@ -77,6 +77,11 @@ Generated from the assets' front-matter; do not edit by hand.
 | `fx-progress-ring` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-pulse-ring` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-rainbow-border-button` | original | authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270) |
+| `fx-react-magnetic` | original | authored for DebCraft (React motion hooks, D-383) |
+| `fx-react-parallax` | original | authored for DebCraft (React motion hooks, D-383) |
+| `fx-react-pinned-steps` | original | authored for DebCraft (React motion hooks, D-383) |
+| `fx-react-scramble-text` | original | authored for DebCraft (React motion hooks, D-383) |
+| `fx-react-split-text` | original | authored for DebCraft (React motion hooks, D-383) |
 | `fx-scroll-progress` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-scroll-reveal` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-shake` | original | authored for DebCraft (motion kit part 2, D-269) |

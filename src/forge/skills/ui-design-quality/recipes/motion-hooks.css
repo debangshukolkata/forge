@@ -1,0 +1,108 @@
+/* Styles for motion-hooks.tsx (D-383). Reads the project's tokens with fallbacks; everything is final and still under prefers-reduced-motion. */
+.split-piece {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.6em);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 45ms);
+}
+.split-text.is-visible .split-piece {
+  opacity: 1;
+  transform: none;
+}
+
+.scramble-text {
+  font-variant-numeric: tabular-nums;
+}
+
+.magnetic {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+.parallax {
+  will-change: transform;
+}
+
+.pinned-steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 5vw, 72px);
+  align-items: start;
+}
+.pinned-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pinned-list li {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+}
+.pinned-list li.is-active {
+  opacity: 1;
+}
+.pinned-list h3 {
+  margin: 0 0 0.4rem;
+  font: 600 1.4rem/1.2 var(--font-display, system-ui);
+  color: var(--color-ink, #111827);
+}
+.pinned-list p {
+  margin: 0;
+  max-width: 38ch;
+  color: var(--color-muted, #4b5563);
+  line-height: 1.6;
+}
+.pinned-panel {
+  position: sticky;
+  top: 18vh;
+  display: grid;
+  place-content: center;
+  gap: 0.4rem;
+  min-height: 46vh;
+  padding: 2rem;
+  border-radius: var(--radius, 14px);
+  background: var(--color-primary, #4f46e5);
+  color: var(--color-on-primary, #fff);
+  text-align: center;
+}
+.pinned-number {
+  font: 700 clamp(3rem, 9vw, 6rem) / 1 var(--font-display, system-ui);
+  letter-spacing: -0.03em;
+}
+.pinned-label {
+  font: 600 1rem var(--font-body-md, system-ui);
+  opacity: 0.9;
+}
+@media (max-width: 760px) {
+  .pinned-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pinned-list li {
+    min-height: 40vh;
+  }
+  .pinned-panel {
+    position: static;
+    min-height: 0;
+    order: -1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .split-piece {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .magnetic,
+  .pinned-list li {
+    transition: none;
+  }
+  .pinned-list li {
+    opacity: 1;
+  }
+}

@@ -341,6 +341,10 @@ logo, name, imagery or exact identity: the result must still be this product, wi
 Never ask the user which style to use: pick, say why in one line, build.
 
 ## 9. Motion and effects: restraint wins
+Effect budget by the MOTION_INTENSITY dial (hover and focus effects are free; count only what moves on its own or on scroll): **1 to 2** none beyond a focus ring and one press state;
+**3 to 4** one entrance style for headings (`SplitText` or `Reveal`) and hover lifts; **5 to 6** plus one scroll effect (a progress bar or `PinnedSteps`) and one ambient background; **7 to 8**
+plus `Magnetic` on the main call to action, `ScrambleText` on one label, a parallax layer; **9 to 10** the page is an experience: several scroll effects, but every one still stops under
+`prefers-reduced-motion` and none carries text a person needs. React hooks for these live in `recipes/motion-hooks.tsx` (`find_asset` tag `react`, ids `fx-react-*`).
 Small controls (loaders, switches, buttons, inputs, cards) come ready-made: `find_asset` with the tag `micro-interaction` lists forty `mi-*` effects in one stylesheet (`motion-micro.css`).
 - Choose the effect budget from the MOTION_INTENSITY dial in DESIGN.md: 1-3 hover and focus only; 4-6 plus scroll reveals
   and one signature effect; 7-10 plus scroll-driven or pinned sequences. One signature effect per page (a beam, an
