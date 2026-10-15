@@ -10,6 +10,7 @@ density: airy
 dependencies: []
 licence: original
 source: authored for DebCraft (style-directions.md, D-251)
+preview: assets/preview/ds-playful-friendly-specimen.jpg
 tested: "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview"
 ---
 

@@ -10,6 +10,7 @@ density: balanced
 dependencies: []
 licence: original
 source: "authored for DebCraft (section library, D-273)"
+preview: assets/preview/sec-hero-centered.jpg
 tested: "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)"
 files:
   - from: recipes/sections/HeroCentered.tsx

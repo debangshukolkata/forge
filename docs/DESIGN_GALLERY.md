@@ -375,9 +375,21 @@ The palette and type of the SaaS landing template: cool slate, one indigo accent
 
 [![ds-tpl-saas desktop](../src/forge/skills/ui-design-quality/assets/preview/ds-tpl-saas-specimen.jpg)](../src/forge/skills/ui-design-quality/assets/preview/ds-tpl-saas-specimen.jpg)
 
-## Templates (3)
+## Templates (7)
 
 Complete landing-page templates (Vite, React, Tailwind) with their own palettes and offline fonts.
+
+### `tpl-docs-product`: product documentation
+
+A documentation page: top bar, sticky navigation, article with a code block and a note, an On this page list, footer.
+
+*moods: technical, calm, clear; density: balanced; for: documentation, developer tools, api, help centre*
+
+### `tpl-event-conference`: conference
+
+A conference or festival page: hero, key numbers, a programme with day tabs, speakers, tickets, practical questions, closing band.
+
+*moods: bold, organised, modern; density: balanced; for: events, conferences, festivals, meetups*
 
 ### `tpl-landing-charity`: charity or community drive
 
@@ -402,3 +414,15 @@ Clean light product site: centred hero with a visual, logo strip, bento features
 *moods: clean, modern, polished; density: balanced; for: saas, startups, apps, b2b, fintech*
 
 [![tpl-landing-saas desktop](../src/forge/skills/ui-design-quality/assets/preview/tpl-landing-saas-desktop.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-landing-saas-desktop.jpg) [![tpl-landing-saas phone](../src/forge/skills/ui-design-quality/assets/preview/tpl-landing-saas-mobile.jpg)](../src/forge/skills/ui-design-quality/assets/preview/tpl-landing-saas-mobile.jpg)
+
+### `tpl-pricing-invoicing`: plans, proof and billing questions
+
+A pricing page: top bar, centred hero, customer names, three plan cards with one featured, key numbers, billing FAQ, closing band, footer.
+
+*moods: clear, confident, warm; density: balanced; for: pricing page, subscription, invoicing, saas plans*
+
+### `tpl-shop-craft`: craft goods
+
+A small-shop storefront: hero, category tiles, product grid, facts, a customer quote, delivery questions, newsletter band, footer.
+
+*moods: warm, crafted, trustworthy; density: balanced; for: shop, e-commerce, handmade, retail*

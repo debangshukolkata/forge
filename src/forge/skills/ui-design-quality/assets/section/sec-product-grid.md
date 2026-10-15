@@ -10,6 +10,7 @@ density: balanced
 dependencies: []
 licence: original
 source: "authored for DebCraft (section library, D-385)"
+preview: assets/preview/sec-product-grid.jpg
 tested: "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)"
 files:
   - from: recipes/sections/ProductGrid.tsx

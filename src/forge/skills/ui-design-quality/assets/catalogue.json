@@ -742,7 +742,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-bento-specimen.jpg",
    "path": "assets/direction/dir-bento.md",
    "size": 677
   },
@@ -773,7 +773,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-bold-poster-specimen.jpg",
    "path": "assets/direction/dir-bold-poster.md",
    "size": 696
   },
@@ -802,7 +802,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-claymorphism-specimen.jpg",
    "path": "assets/direction/dir-claymorphism.md",
    "size": 281
   },
@@ -832,7 +832,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-clean-product-specimen.jpg",
    "path": "assets/direction/dir-clean-product.md",
    "size": 427
   },
@@ -862,7 +862,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-dark-dashboard-specimen.jpg",
    "path": "assets/direction/dir-dark-dashboard.md",
    "size": 438
   },
@@ -892,7 +892,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-glass-aurora-specimen.jpg",
    "path": "assets/direction/dir-glass-aurora.md",
    "size": 761
   },
@@ -922,7 +922,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-minimal-monochrome-specimen.jpg",
    "path": "assets/direction/dir-minimal-monochrome.md",
    "size": 330
   },
@@ -951,7 +951,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-neo-brutalist-specimen.jpg",
    "path": "assets/direction/dir-neo-brutalist.md",
    "size": 347
   },
@@ -981,7 +981,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-playful-friendly-specimen.jpg",
    "path": "assets/direction/dir-playful-friendly.md",
    "size": 372
   },
@@ -1010,7 +1010,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-retro-terminal-specimen.jpg",
    "path": "assets/direction/dir-retro-terminal.md",
    "size": 248
   },
@@ -1041,7 +1041,7 @@
    "licence": "original",
    "source": "authored for DebCraft (style-directions.md, D-251)",
    "tested": "text direction used in the three-design task (D-251, D-252); not yet rendered as its own preview",
-   "preview": null,
+   "preview": "assets/preview/ds-soft-editorial-specimen.jpg",
    "path": "assets/direction/dir-soft-editorial.md",
    "size": 487
   },
@@ -7815,7 +7815,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-385)",
    "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
-   "preview": null,
+   "preview": "assets/preview/sec-category-tiles.jpg",
    "path": "assets/section/sec-category-tiles.md",
    "size": 2476
   },
@@ -7850,7 +7850,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-contact-form.jpg",
    "path": "assets/section/sec-contact-form.md",
    "size": 4342
   },
@@ -7883,7 +7883,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-cta-band.jpg",
    "path": "assets/section/sec-cta-band.md",
    "size": 1618
   },
@@ -7920,7 +7920,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-385)",
    "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
-   "preview": null,
+   "preview": "assets/preview/sec-docs-shell.jpg",
    "path": "assets/section/sec-docs-shell.md",
    "size": 5332
   },
@@ -7953,7 +7953,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-faq-list.jpg",
    "path": "assets/section/sec-faq-list.md",
    "size": 2685
   },
@@ -7993,7 +7993,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-features-alternating.jpg",
    "path": "assets/section/sec-features-alternating.md",
    "size": 5689
   },
@@ -8032,7 +8032,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-features-bento.jpg",
    "path": "assets/section/sec-features-bento.md",
    "size": 5513
   },
@@ -8065,7 +8065,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-footer-columns.jpg",
    "path": "assets/section/sec-footer-columns.md",
    "size": 2581
   },
@@ -8101,7 +8101,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-hero-centered.jpg",
    "path": "assets/section/sec-hero-centered.md",
    "size": 2524
   },
@@ -8142,7 +8142,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-hero-split.jpg",
    "path": "assets/section/sec-hero-split.md",
    "size": 4837
   },
@@ -8177,7 +8177,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-logo-strip.jpg",
    "path": "assets/section/sec-logo-strip.md",
    "size": 1472
   },
@@ -8210,7 +8210,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-nav-bar.jpg",
    "path": "assets/section/sec-nav-bar.md",
    "size": 2781
   },
@@ -8244,7 +8244,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-pricing-tiers.jpg",
    "path": "assets/section/sec-pricing-tiers.md",
    "size": 3449
   },
@@ -8280,7 +8280,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-385)",
    "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
-   "preview": null,
+   "preview": "assets/preview/sec-product-grid.jpg",
    "path": "assets/section/sec-product-grid.md",
    "size": 3485
   },
@@ -8317,7 +8317,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-385)",
    "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
-   "preview": null,
+   "preview": "assets/preview/sec-schedule-list.jpg",
    "path": "assets/section/sec-schedule-list.md",
    "size": 4804
   },
@@ -8354,7 +8354,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-385)",
    "tested": "built with Vite + Tailwind v4 with the template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px (tests/test_sections.py, D-385)",
-   "preview": null,
+   "preview": "assets/preview/sec-speaker-grid.jpg",
    "path": "assets/section/sec-speaker-grid.md",
    "size": 3097
   },
@@ -8389,7 +8389,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-stats-row.jpg",
    "path": "assets/section/sec-stats-row.md",
    "size": 1754
   },
@@ -8424,7 +8424,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-steps-timeline.jpg",
    "path": "assets/section/sec-steps-timeline.md",
    "size": 2645
   },
@@ -8460,7 +8460,7 @@
    "licence": "original",
    "source": "authored for DebCraft (section library, D-273)",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/sec-testimonial-feature.jpg",
    "path": "assets/section/sec-testimonial-feature.md",
    "size": 2044
   },
