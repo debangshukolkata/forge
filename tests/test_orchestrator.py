@@ -672,3 +672,43 @@ async def test_a_task_that_only_changed_a_page_is_not_asked_for_a_test_run(host:
     context.note_edit("app.py")  # code is different: it needs a passing test run
     again = await orch.task_update("T1", "done", "", "looked at it", "", context)
     assert not again.ok and "no passing test run since your last edit" in again.content
+
+
+async def test_the_last_task_is_not_closed_before_the_plans_acceptance_criteria_were_walked(
+    host: SessionHost,
+) -> None:
+    # D-456: a passing build is not a finished application; the verifier walks the criteria as each role.
+    from forge.subagents.criteria import parse_criteria
+    from forge.toolkit.base import ToolContext
+
+    orch = orchestrator(host)
+    orch.workspace.write_text("app/new_module.py", "VALUE = 1\n", "code")
+    (orch.workspace.forge_dir / "REQUIREMENTS.md").write_text(
+        "# App\n\n## Acceptance criteria\n1. A manager sees who else is away\n2. Nobody approves their own request\n",
+        encoding="utf-8",
+    )
+    orch.state.tasks = [Task(id="T1", title="build", status="done"), Task(id="T2", title="verify")]
+    orch._start_task(orch.state.tasks[1])
+    context = host.agent.context  # type: ignore[union-attr]
+    assert isinstance(context, ToolContext)
+    context.step = context.last_code_edit_step = 5
+    context.last_verified_step = 6  # tests passed
+    unchecked = await orch.task_update("T2", "done", "", "tests pass", "", context)
+    assert (
+        not unchecked.ok
+        and "have not been checked" in unchecked.content
+        and "Nobody approves" in unchecked.content
+    )
+    context.criteria_checked_step = 9
+    context.criteria_result = parse_criteria(
+        "1. MET: seen\n2. NOT MET: the HR screen lets a manager approve their own request"
+    )
+    context.criteria_rounds = 1
+    not_met = await orch.task_update("T2", "done", "", "tests pass", "", context)
+    assert not not_met.ok and "not met" in not_met.content and "approve their own" in not_met.content
+    context.criteria_rounds = 3  # three checks and one is still open: the model may finish and say so
+    assert (
+        await orch.task_update(
+            "T2", "done", "", "criterion 2 left open: needs a policy decision", "", context
+        )
+    ).ok

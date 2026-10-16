@@ -18,6 +18,7 @@ from forge.subagents.builder import (
     safe_name,
 )
 from forge.subagents.code_review import run_code_review
+from forge.subagents.criteria import has_criteria_lines, parse_criteria
 from forge.subagents.critic import (
     CRITIC_ITERATIONS,
     CRITIC_PROMPT,
@@ -210,6 +211,11 @@ class SpawnSubagent(Tool):
             )
             if "VERDICT: PASS" in report:
                 context.last_browser_step = context.step  # an independent browser check passed (D-167/D-168)
+            parsed_criteria = parse_criteria(report)
+            if has_criteria_lines(parsed_criteria):  # the plan's acceptance criteria were walked (D-456)
+                context.criteria_checked_step = context.step
+                context.criteria_result = parsed_criteria
+                context.criteria_rounds = context.criteria_rounds + 1 if parsed_criteria["not_met"] else 0
         elif args.agent == "design-critic":
             everything = {t.name: t for t in default_tools()}
             looking = [everything[n] for n in everything if n.startswith("browser_")] + [

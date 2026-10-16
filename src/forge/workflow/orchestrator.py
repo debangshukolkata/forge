@@ -23,6 +23,7 @@ from forge.parity.history import History
 from forge.parity.mentions import grant_from_message
 from forge.protocol.events import EventType
 from forge.subagents.builder import result_text
+from forge.subagents.criteria import criteria_refusal, project_criteria
 from forge.subagents.critic import CRITIC_ROUND_LIMIT
 from forge.subagents.spawn_tool import SpawnSubagent, run_builder
 from forge.subagents.variants_tool import BuildVariants
@@ -649,6 +650,15 @@ class Orchestrator:
             return ToolResult(ok=False, content=UI_AUDIT_BLOCKED_NOTE + self._also_missing(context, "audit"))
         if status == "done" and ui_edited and not critic_cleared(context):
             return ToolResult(ok=False, content=UI_CRITIC_NOTE + self._also_missing(context, "critic"))
+        if status == "done" and self._is_last_open_task(task) and self._wrote_code():
+            criteria = project_criteria(self.workspace.forge_dir)
+            if criteria:  # D-456: a passing build is not a finished application: the plan's criteria are walked in the running app
+                checked = context.criteria_checked_step > context.last_code_edit_step
+                refusal = criteria_refusal(
+                    criteria, context.criteria_result if checked else None, context.criteria_rounds
+                )
+                if refusal:
+                    return ToolResult(ok=False, content=refusal)
         task.status = "done" if status == "done" else "blocked"
         task.handoff_note, task.verification, task.blocked_reason = handoff_note, verification, blocked_reason
         if task.status == "done":  # local history (spec §13B): one commit per completed task
@@ -664,6 +674,10 @@ class Orchestrator:
             "task", f"{task.id} {task.status}: {task.title}" + (f" — {verification}" if verification else "")
         )
         return ToolResult(ok=True, content=f"Task {task.id} recorded as {task.status}.")
+
+    def _is_last_open_task(self, task: Any) -> bool:
+        """Every other task is done or blocked: this is the one that closes the work."""
+        return all(other.id == task.id or other.status in ("done", "blocked") for other in self.state.tasks)
 
     def _also_missing(self, context: ToolContext, refused_for: str) -> str:
         """What else a done task still lacks, so one refusal names every check and the model does them in one step instead of

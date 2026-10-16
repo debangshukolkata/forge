@@ -171,6 +171,13 @@ class ToolContext:
     critic_rounds: int = (
         0  # REVISE verdicts in a row; after three the model may finish with the open points listed
     )
+    criteria_checked_step: int = (
+        0  # the verifier last walked the plan's acceptance criteria in the running app (D-456)
+    )
+    criteria_result: dict[str, list[tuple[int, str]]] | None = (
+        None  # and what it found: met, not_met, unchecked
+    )
+    criteria_rounds: int = 0  # checks in a row that still showed a criterion not met; after three the model may finish and say so
     ui_audit_blocked: bool = False  # that audit found a blocker (e.g. the CSS framework produces no styles)
     reads: ReadTracker = field(default_factory=ReadTracker)
     publish: PublishCallback | None = None  # engine event publisher (file diffs, etc.)

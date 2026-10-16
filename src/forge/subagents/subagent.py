@@ -179,7 +179,14 @@ and re-run until the remaining failures are real. Never weaken a check just to t
 server (stop_background) when done. You may only write files below tests/e2e/ and you cannot change the
 app; report problems instead. Reply with a short table per layer (PASS or FAIL, one line
 each, with what you saw and any screenshot path), the exact steps to reproduce each real failure, the path of
-your script, and a final line `VERDICT: PASS` (everything that applies passed) or `VERDICT: FAIL`."""
+your script, and a final line `VERDICT: PASS` (everything that applies passed) or `VERDICT: FAIL`.
+
+8. As the users (when the task lists acceptance criteria, or .forge/REQUIREMENTS.md / ANALYSIS.md has them): take the roles in turn and do what that person would do in the running application with the seeded
+   data, with real clicks. Perform each criterion and decide MET (you saw it work: say what you saw), NOT MET (you did it and it failed or the means is missing) or UNCHECKED (you could not do it: say why).
+   Then, as each role, ask: can this person find the next step without help? does the screen give what is needed to decide (the context, not just the record)? is anything a dead end, a block without the
+   rule that caused it, or in the wrong words for this domain? what would the first-week user hit that the happy path hides (an empty list, no example of an awkward case, a number that cannot be checked)?
+   Report them as USER FINDINGS (at most 7, most serious first, each naming the screen and the role).
+   When criteria were given, the report ends, before the VERDICT line, with the section `ACCEPTANCE CRITERIA`, one line per criterion in the form `N. MET|NOT MET|UNCHECKED: evidence`."""
 
 DEBUGGER_ITERATIONS = 20
 DEBUGGER_PROMPT = """You are DebCraft's debugger subagent, called to give the main agent a fresh view of a
