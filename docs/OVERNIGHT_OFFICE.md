@@ -71,7 +71,7 @@ Notes: a job that was stopped starts again from its beginning, so a long job (th
 
 ## The second night: run again only what did not pass
 
-After a fix (new code, Gemini sign-in), do not start from nothing: run the same folder with `--retry`. Jobs that PASSED are kept; failed, problem, timeout, stalled and skipped jobs run again (and the preflight is run again, so a Gemini that now answers is found):
+After a fix (new code, Gemini sign-in), do not start from nothing. **Double-click `Retry-Overnight.cmd`** (a double-click cannot add `--retry` to `Resume-Overnight.cmd`), or run the same folder with `--retry`. Jobs that PASSED are kept; failed, problem, timeout, stalled and skipped jobs run again (and the preflight is run again, so a Gemini that now answers is found):
 
 ```
 Start-Overnight.cmd --out overnight-results\<the same date-time folder> --retry
