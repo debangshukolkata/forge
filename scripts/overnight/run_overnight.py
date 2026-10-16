@@ -129,11 +129,13 @@ def preflight(ctx: Ctx) -> tuple[dict[str, bool], str]:
         )  # and so is the noise some libraries print after it when the process ends
     except ValueError:
         notes.append("model probe failed: " + text[-300:])
+    models.pop("_azure_seconds", None)
     for key, result in sorted(models.items()):
+        said = result.get("detail") if result.get("ok") else result.get("error")
         notes.append(
-            f"model {key}: {'answers' if result.get('ok') else 'NO ANSWER'} ({result.get('seconds', '')} s) {str(result.get('error', ''))[:160]}"
+            f"model {key}: {'answers' if result.get('ok') else 'NO ANSWER'}: {str(said or '')[:300]}"
         )
-    caps["azure"] = any(models.get(k, {}).get("ok") for k in ("gpt51", "gpt41", "gpt4o"))
+    caps["azure"] = any(models.get(k, {}).get("ok") for k in ("gpt51", "gpt41", "gpt4o", "gpt54", "gpt52"))
     caps["azure_strong"] = bool(models.get("gpt54", {}).get("ok"))
     caps["gemini"] = any(r.get("ok") for k, r in models.items() if k.startswith("gemini"))
     caps["gemini_argon"] = bool(models.get("gemini4argon", {}).get("ok"))

@@ -9,6 +9,13 @@ if not exist ".venv\Scripts\python.exe" (
     pause
     exit /b 1
 )
+rem The test tools (pytest, xdist, document libraries) are not part of a plain install: add them once, here, so the night does not depend on a manual step.
+".venv\Scripts\python.exe" -c "import pytest, xdist, docx, openpyxl" 2>nul
+if errorlevel 1 (
+    echo Adding the test tools to the private Python environment ^(once, needs the internet^)...
+    ".venv\Scripts\python.exe" -m pip install -e ".[dev,docs,webtext]"
+    if errorlevel 1 echo WARNING: the test tools could not be installed; the test jobs will be skipped. Check the internet or proxy and start again.
+)
 set PYTHONIOENCODING=utf-8
 ".venv\Scripts\python.exe" scripts\overnight\run_overnight.py --env-file "%USERPROFILE%\.forge\.env" %*
 echo.

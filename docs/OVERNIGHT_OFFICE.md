@@ -14,7 +14,7 @@ It is built so that it does not get stuck:
 
 1. **Plug the laptop in and stop it sleeping.** Settings, System, Power: set "Screen turn off" to anything, and **Sleep to Never** while plugged in. If you will close the lid, also set "Closing the lid" to **Do nothing** (Control Panel, Power Options, "Choose what closing the lid does"). Locking the screen (Windows key and L) is fine. Do not shut down, sign out or let it restart for updates.
 2. **Get the newest code.** Download it (or pull it) into a folder, for example `C:\Work\LocalDevelopment\forge-main`, and double-click `Start-DebCraft.cmd` once. When DebCraft opens, close it. This makes the private Python environment (`.venv`) that the night uses.
-3. **Add the test tools.** Open PowerShell in that folder and run (needs the internet once):
+3. **Test tools.** `Start-Overnight.cmd` adds them by itself the first time (needs the internet). To do it by hand, open PowerShell in that folder and run:
 
    ```
    .\.venv\Scripts\python -m pip install -e ".[dev,docs,webtext]"
