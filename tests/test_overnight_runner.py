@@ -308,3 +308,20 @@ def test_python_is_launchable_for_the_helpers() -> None:
         ).returncode
         == 0
     )
+
+
+def test_test_jobs_do_not_get_the_env_file_override_except_the_live_ones(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fast: None
+) -> None:
+    """The first night failed two DebCraft tests only because FORGE_ENV_FILE replaced the tests' isolated home (D-443)."""
+    seen: dict[str, str] = {}
+    code = "import os, json; print(json.dumps({'env_file': os.environ.get('FORGE_ENV_FILE', ''), 'ci': os.environ.get('CI', '')}))"
+    for job_id in ("tests_fast", "tests_live", "smoke_gemini"):
+        spec = next(j for j in catalogue() if j.id == job_id)
+        spec.argv = lambda ctx: [sys.executable, "-c", code]
+        ctx = Ctx(repo=REPO, out=tmp_path / job_id, env_file="C:/x/.env")
+        run_overnight.run_job(spec, ctx, __import__("time").time() + 60, {"id": job_id}, lambda: None)
+        seen[job_id] = (ctx.out / "jobs" / job_id / "console.log").read_text(encoding="utf-8")
+    assert '"env_file": ""' in seen["tests_fast"] and '"ci": ""' in seen["tests_fast"]
+    assert "C:/x/.env" in seen["tests_live"]
+    assert "C:/x/.env" in seen["smoke_gemini"]

@@ -381,8 +381,10 @@ def run_job(job: Job, ctx: Ctx, deadline: float, entry: dict[str, Any], save: An
         "FORGE_ENV_FILE": ctx.env_file,
         **job.env,
     }
-    if not ctx.env_file:
+    if not ctx.env_file or not job.uses_env_file:
         env.pop("FORGE_ENV_FILE", None)
+    if job.kind == "pytest":
+        env.pop("CI", None)  # CI changes how some tools behave; the tests are written for a person's machine
     limit = min(job.timeout_min * 60, max(60, deadline - time.time()))
     stall = job.stall_min * 60
     watch = [ctx.runs / job.run_root] if job.run_root else []

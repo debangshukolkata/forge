@@ -46,6 +46,7 @@ class Job:
     run_root: str = ""  # a folder under out/runs where the job's own results are kept (watched for activity and searched for evidence)
     results_glob: str = ""  # results.md of a benchmark, relative to out/runs
     kind: str = "command"  # command, benchmark, tasks, pytest
+    uses_env_file: bool = True  # a test job must NOT see FORGE_ENV_FILE: DebCraft's tests build their own isolated home and the override would replace it (found in the first night, D-443)
 
 
 def script(ctx: Ctx, *parts: str) -> str:
@@ -87,7 +88,7 @@ def pytest_job(
     env: dict[str, str] | None = None,
 ) -> Job:
     return Job(
-        id=job_id, title=title, group="tests", est_min=est, timeout_min=timeout, needs=needs, env=env or {}, kind="pytest",
+        id=job_id, title=title, group="tests", est_min=est, timeout_min=timeout, needs=needs, env=env or {}, kind="pytest", uses_env_file=job_id == "tests_live",
         argv=lambda ctx: [ctx.python, "-m", "pytest", "-q", "-p", "no:cacheprovider", *args],
     )  # fmt: skip
 
