@@ -31,12 +31,12 @@ Reading: the large gain came with v2 (23 to 45). More wording (v3, v4) gave noth
 Does well: names each role with what hurts them today; states observable acceptance criteria; separates Essential, High-value and Optional and says what leaving out costs; finds the controls a reviewer would look for (self-approval, authority by amount, duplicate checks, tolerances, audit with before and after values); plans vertical slices; asks only about the visual direction.
 Still missing in places: domain depth the model does not volunteer (lending: affordability, pricing, offer expiry, co-applicant, regulatory disclosures; supply chain: PO amendments, transfers between the two warehouses, negative stock; HR: pro-rata joiners, notice periods; plant: the asset register, contractors, handover). The planner sometimes shrinks its own analysis to "demo level" because the brief says fictional data.
 
-## 5. Not yet done
-- Small tasks: a check that simple tasks are not slowed or loaded with ceremony (section 6).
-- A "user" reviewer that walks the built application in a browser as each role and reports where the real user would be stuck; a gate that a large task cannot be marked done without its acceptance criteria checked (path C of D-454). Not built: the benchmark stops before building, so it could not be measured here.
-- Domain playbooks: the results show the model knows the structure but not always the depth. Whether curated playbooks pay for themselves depends on which domains the user builds; not started.
-- The office laptop: the planner can run on a stronger model there (Gemini); not measured.
-- Full builds: whether the better plan produces a better application was not measured (the runs stop when building begins, on purpose).
+## 5. Status of the open items
+- Done after the first write-up: the verifier walks the plan's acceptance criteria as each role and the last task is gated on it (D-456; tests added). A full HR build with the new plan and the gate was started to see it work on a real model (section 7).
+- Small tasks: checked, no added ceremony (section 6).
+- Domain playbooks: not built, on purpose (D-456): a playbook for the same three domains as the reference lists would raise our own score without proving general value. Revisit when the user names the domains they build often, or when a stronger planner model on the office laptop still leaves a measured gap.
+- The office laptop: the planner can run on a stronger model there (Gemini); not measured. The user's first large task there is the test.
+- Whether the better plan makes a better finished application: section 7.
 
 ## 6. Small-task check (the log-analyser task of the overnight kit, hidden checks, gpt-5.4)
 | | Old code | New code |
@@ -48,3 +48,6 @@ Still missing in places: domain depth the model does not volunteer (lending: aff
 | Questions | 0 | 1 (at the end: "one useful follow-up?", recommended "Stop here"; the existing follow-up offer) |
 
 A small, clear task is handled directly, with no planner and no analysis, as intended: the proportionality rule works (one run each; the time difference is probably noise, but there is no sign of added ceremony). The final question is the existing offer of optional follow-ups, which fits the principle that optional ideas are listed and not silently built.
+
+## 7. Full build with the new plan and the gate
+Filled in when the run finishes.
