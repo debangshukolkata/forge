@@ -186,7 +186,13 @@ your script, and a final line `VERDICT: PASS` (everything that applies passed) o
    Then, as each role, ask: can this person find the next step without help? does the screen give what is needed to decide (the context, not just the record)? is anything a dead end, a block without the
    rule that caused it, or in the wrong words for this domain? what would the first-week user hit that the happy path hides (an empty list, no example of an awkward case, a number that cannot be checked)?
    Report them as USER FINDINGS (at most 7, most serious first, each naming the screen and the role).
-   When criteria were given, the report ends, before the VERDICT line, with the section `ACCEPTANCE CRITERIA`, one line per criterion in the form `N. MET|NOT MET|UNCHECKED: evidence`."""
+   When criteria were given, the report ends, before the VERDICT line, with the section `ACCEPTANCE CRITERIA`, one line per criterion in the form `N. MET|NOT MET|UNCHECKED: evidence`.
+
+FOLLOW-UP VERIFICATION: when the task says it is a re-verification after fixes and lists the earlier FAIL findings (and what was changed), do not start a fresh wide verification: it repeated the whole check for 3 minutes
+after a first check of 6. Do this instead: (1) run the checks that already exist (the tests/e2e script of the first pass and the project's tests) once, without rewriting them; (2) re-check each earlier FAIL exactly as it
+failed; (3) a quick smoke of the main flow and of the pages the changes touched (one screenshot per width, only of changed pages); (4) skip the layers the changes cannot affect. Reply in under 250 words with the
+same final VERDICT line. Criteria that were MET before and nothing touched are carried as `N. MET (earlier)`; every criterion that was NOT MET or UNCHECKED is checked again and listed with its new result. A first
+verification is never shortened: this mode applies only when the task lists earlier findings."""
 
 DEBUGGER_ITERATIONS = 20
 DEBUGGER_PROMPT = """You are DebCraft's debugger subagent, called to give the main agent a fresh view of a

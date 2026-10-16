@@ -50,3 +50,16 @@ def test_the_gate_refuses_unchecked_then_not_met_and_lets_go_after_three_rounds(
     assert "2. self-approval" in criteria_refusal(criteria, parsed, 1)
     assert criteria_refusal(criteria, parsed, CRITERIA_ROUND_LIMIT) == ""
     assert criteria_refusal(criteria, parse_criteria("1. MET: ok"), 0) == ""
+
+
+def test_the_verifier_has_a_follow_up_mode_and_the_builder_is_told_to_ask_for_it() -> None:
+    # A second full verification after fixes cost about 3 minutes after a first check of 6 (office laptop, 2026-10-16, D-459).
+    from pathlib import Path
+
+    from forge.subagents.subagent import VERIFIER_PROMPT
+
+    assert "FOLLOW-UP VERIFICATION" in VERIFIER_PROMPT and "A first" in VERIFIER_PROMPT
+    prompt = (
+        Path(__file__).resolve().parents[1] / "src" / "forge" / "agent" / "prompts" / "system.md"
+    ).read_text(encoding="utf-8")
+    assert "Re-verification after fixes" in prompt
