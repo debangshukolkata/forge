@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 from pydantic import Field
@@ -267,6 +268,14 @@ def certificate_advice(shell: ShellSession) -> str:
     )
 
 
+_PYTEST_SUMMARY = re.compile(r"\d+ (?:passed|failed|errors?|skipped|deselected)")
+
+
+def hung_after_last_test(output: str) -> bool:
+    """A pytest progress line reached 100% and no summary line followed: the run hangs in its teardown (office laptop, 2026-10-16: the same command was run four times and lost two minutes each time)."""
+    return "[100%]" in output and not _PYTEST_SUMMARY.search(output)
+
+
 async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str | None) -> ToolResult:
     shell = context.shell
     assert shell is not None
@@ -318,6 +327,12 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
         if outcome.waiting_for_input:
             lines.append(
                 "[it looked like it was waiting for input; pass answers as arguments or flags instead]"
+            )
+        if hung_after_last_test(outcome.output):
+            lines.append(
+                "[the tests reached 100% but the run never printed its summary: something in the teardown hangs (a fixture that stops a server or closes a browser, a thread that never ends). "
+                "Running the same command again will hang the same way: find what the tests start and make it stop (daemon threads, a timeout on the server shutdown, close the browser in a finalizer), "
+                "or run the checks that matter without that fixture]"
             )
     else:
         lines.append(f"[exit code {outcome.exit_code}]")
