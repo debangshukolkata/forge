@@ -1,0 +1,5 @@
+We are a distributor of industrial spare parts with two warehouses and about 400 stocked items. Buying is done by email and Excel: buyers raise purchase orders by hand, the warehouse notes what arrives on a delivery slip, and accounts payable matches the supplier's invoice against both when they get around to it. We run out of fast-moving items, we pay invoices that do not match what we received, and nobody can tell quickly what is late.
+
+Build a web application for the process from deciding to buy something until the supplier is paid for it.
+
+It should run on a Windows laptop and be easy to start: Python 3.13 with FastAPI and Jinja2 templates, SQLite for storage, plain JavaScript and CSS in the pages, no Node and no build step; install what you need into this project's own environment. One command starts it and the README says how. Use fictional people, companies and numbers only. Say clearly in the README what works for real and what is only a stand-in. Look at the screens in a browser before you finish and fix what you see.

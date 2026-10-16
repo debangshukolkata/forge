@@ -1,0 +1,5 @@
+We are an engineering services company with about 250 employees in Pune, Bengaluru and Manchester. Leave is tracked in an Excel sheet kept by HR and approvals happen over email. People do not know their balance, managers approve without seeing who else is away, HR spends the last week of every month reconciling leave for payroll, and nobody is confident the numbers are right.
+
+Build a web application that replaces this: one place where people ask for time off, managers approve, HR keeps the rules, and payroll gets what it needs.
+
+It should run on a Windows laptop and be easy to start: Python 3.13 with FastAPI and Jinja2 templates, SQLite for storage, plain JavaScript and CSS in the pages, no Node and no build step; install what you need into this project's own environment. One command starts it and the README says how. Use fictional people, companies and numbers only. Say clearly in the README what works for real and what is only a stand-in. Look at the screens in a browser before you finish and fix what you see.

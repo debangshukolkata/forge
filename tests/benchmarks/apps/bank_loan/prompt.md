@@ -1,0 +1,5 @@
+I work for a retail bank with six branches. Personal loans are taken on paper at the branch, the file travels between the loan officer, the credit analyst, an approver and operations, and the status of an application lives in people's heads and in an Excel sheet. Customers call to ask where their application is and nobody can say quickly. Audit asks us every quarter to show who approved what and why, and that takes days.
+
+Build a web application for the personal loan process from the moment a customer applies until the money is disbursed. We have no integration with any bureau or core banking system yet; show where those would plug in without pretending they exist.
+
+It should run on a Windows laptop and be easy to start: Python 3.13 with FastAPI and Jinja2 templates, SQLite for storage, plain JavaScript and CSS in the pages, no Node and no build step; install what you need into this project's own environment. One command starts it and the README says how. Use fictional people, companies and numbers only. Say clearly in the README what works for real and what is only a stand-in. Look at the screens in a browser before you finish and fix what you see.
