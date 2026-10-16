@@ -185,6 +185,7 @@ class Orchestrator:
         self.context.interaction = self
         self._publishing: set[asyncio.Task[Any]] = set()
         self._background_tasks: set[asyncio.Task[Any]] = set()
+        self.wrap_up_mode = False  # the time box is closing the run (D-460): one more turn for the wrap-up, no further tasks are started
         self._task_start_step = 0
         self._gate_rounds: dict[str, int] = {}
         self._review_rounds: dict[str, int] = {}
@@ -266,6 +267,8 @@ class Orchestrator:
             text = self._format(kind or "requirement")
             self.host.history.append(Message.system(text))
         await self._run_agent(self._tools())
+        if self.wrap_up_mode:
+            return  # the wrap-up turn was the last one: nothing is exported or nudged after it
         if self._stopped_at_the_step_cap():
             return  # not finished: nothing is delivered; the user (or a headless nudge) continues
         if self._ui_changed_without_a_browser_check():
@@ -323,6 +326,8 @@ class Orchestrator:
                 if task is not None and (self.state.current_task != task.id or task.status != "in_progress"):
                     self._start_task(task)
                 await agent.run(self.host.history, self.host.stream_delta)
+                if self.wrap_up_mode:
+                    return True  # the wrap-up is done: do not start the next task (D-460)
                 if not self.context.end_turn:
                     return False  # a plain answer: the user's turn
                 self.context.end_turn = False
@@ -659,14 +664,21 @@ class Orchestrator:
                 )
                 if refusal:
                     return ToolResult(ok=False, content=refusal)
-        task.status = "done" if status == "done" else "blocked"
+        if status != "done" and self.wrap_up_mode:
+            # The time box is closing the run: the task is paused, not blocked. A blocked task is skipped on resume and holds back every task that depends on it (D-460).
+            task.status = "pending"
+            handoff_note = f"[paused by the time box] {handoff_note}".strip()
+            blocked_reason = ""
+        else:
+            task.status = "done" if status == "done" else "blocked"
         task.handoff_note, task.verification, task.blocked_reason = handoff_note, verification, blocked_reason
         if task.status == "done":  # local history (spec §13B): one commit per completed task
             await asyncio.to_thread(History(self.workspace).commit, f"{task.id}: {task.title}")
         if self.state.current_task == task.id:
             self.state.current_task = None
         self.store.append_log(
-            "PROGRESS.md", f"{task.id} {task.title}: {task.status}. {verification}\n{handoff_note}"
+            "PROGRESS.md",
+            f"{task.id} {task.title}: {'paused by the time box' if self.wrap_up_mode and task.status == 'pending' else task.status}. {verification}\n{handoff_note}",
         )
         self.context.end_turn = True
         self._save()

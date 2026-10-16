@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
 
 from forge.engine.session_host import SessionHost
+from forge.engine.timebox import TimeBox
 from forge.protocol.events import Event, EventType
-from forge.protocol.inputs import Answer, Approve, Reject, SendMessage, UserInput
+from forge.protocol.inputs import Answer, Approve, Interrupt, Reject, SendMessage, UserInput
 
 HEADLESS_REFUSAL = (
     "Running headless: this action is on the always-ask list and nobody is here to approve it. "
@@ -28,6 +31,7 @@ PROCEED = (
 )
 MAX_PROCEED_NUDGES = 2
 EXIT_OK, EXIT_FAILED, EXIT_BLOCKED = 0, 1, 2
+EXIT_TIMEBOX = 3  # the time box ended the run (wrapped up, or stopped at the hard limit) and the work is not finished (D-460)
 
 
 @dataclass
@@ -53,9 +57,65 @@ def auto_reply(event: Event, auto_approve: bool) -> UserInput | None:
     return None
 
 
-async def run_headless(host: SessionHost, requirement: str | None, auto_approve: bool) -> HeadlessResult:
+@dataclass
+class BoxState:
+    """What the deadline watcher has done, read by the main loop."""
+
+    wrapping: bool = False  # the wrap-up has been decided: the loop must wait for its message
+    wrap_sent: asyncio.Event = field(default_factory=asyncio.Event)
+    hard_stopped: bool = False
+
+
+POLL_SECONDS = 30  # how often the deadline watcher looks at the clock (tests make it small)
+
+
+async def _sleep_until(moment: datetime, now: Callable[[], datetime]) -> None:
+    while (left := (moment - now()).total_seconds()) > 0:
+        await asyncio.sleep(min(left, POLL_SECONDS))
+
+
+async def _watch_deadline(
+    host: SessionHost, box: TimeBox, state: BoxState, now: Callable[[], datetime]
+) -> None:
+    """Soft deadline: interrupt the running turn (a queued message would wait behind it, perhaps for an hour) and send the wrap-up. Hard deadline: interrupt again and let the run end."""
+    assert box.wrap_starts is not None and box.hard_stop is not None
+    await _sleep_until(box.wrap_starts, now)
+    state.wrapping = True
+    await host.bus.publish(
+        EventType.NOTICE,
+        {"kind": "timebox", "text": f"Time box: wrapping up now (the run ends at {box.until:%H:%M})."},
+    )
+    if host.orchestrator is not None:
+        host.orchestrator.wrap_up_mode = (
+            True  # the wrap-up turn is the last: no next task is started after it
+        )
+    await host.submit(Interrupt())
+    await asyncio.sleep(0.5)  # the cancelled turn unwinds before the next one starts
+    await host.submit(SendMessage(text=box.wrap_message(now())))
+    state.wrap_sent.set()
+    await _sleep_until(box.hard_stop, now)
+    state.hard_stopped = True
+    await host.bus.publish(
+        EventType.NOTICE, {"kind": "timebox", "text": f"Time box: stopped at {box.hard_stop:%H:%M}."}
+    )
+    await host.submit(Interrupt())
+
+
+async def run_headless(
+    host: SessionHost,
+    requirement: str | None,
+    auto_approve: bool,
+    timebox: TimeBox | None = None,
+    now: Callable[[], datetime] = datetime.now,
+) -> HeadlessResult:
     assert host.orchestrator is not None
     errors: list[str] = []
+    box_state = BoxState()
+    watcher = (
+        asyncio.create_task(_watch_deadline(host, timebox, box_state, now))
+        if timebox is not None and timebox.until is not None
+        else None
+    )
     subscription = host.bus.subscribe(since_seq=host.bus.last_seq)
     if auto_approve:  # --auto-approve is the free-hand cadence (D-130) for the whole run
         host.orchestrator.set_cadence("free_hand")
@@ -75,13 +135,28 @@ async def run_headless(host: SessionHost, requirement: str | None, auto_approve:
             await host.submit(SendMessage(text=requirement))
         for nudge in range(MAX_PROCEED_NUDGES + 1):
             await _wait_until_idle(host)
+            if box_state.wrapping and not box_state.wrap_sent.is_set():
+                await (
+                    box_state.wrap_sent.wait()
+                )  # the interrupt just ended a turn; the wrap-up message is on its way
+                await _wait_until_idle(host)
+            if box_state.wrap_sent.is_set() or box_state.hard_stopped:
+                break  # the time box decided
             if host.orchestrator.state.exported or errors or nudge == MAX_PROCEED_NUDGES:
                 break
             await host.submit(SendMessage(text=PROCEED))  # the model asked something in plain text
         # Background work started by the orchestrator never blocks the user's turn; wait for it explicitly
         # here so a caller sees the settled state instead of racing it at close().
-        await host.orchestrator.wait_idle()
+        if box_state.hard_stopped:
+            with contextlib.suppress(TimeoutError):  # background work may not hold up a deadline
+                await asyncio.wait_for(host.orchestrator.wait_idle(), 60)
+        else:
+            await host.orchestrator.wait_idle()
     finally:
+        if watcher is not None:
+            watcher.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await watcher
         subscription.close()
         await host.close()
         for task in (responder, engine):
@@ -95,7 +170,12 @@ async def run_headless(host: SessionHost, requirement: str | None, auto_approve:
     ]
     blocked = any(t.status == "blocked" for t in state.tasks)
     code = EXIT_FAILED if errors else EXIT_OK if state.exported and not blocked else EXIT_BLOCKED
-    return HeadlessResult(code, state.resume_summary(), tasks, errors)
+    summary = state.resume_summary()
+    if (box_state.wrap_sent.is_set() or box_state.hard_stopped) and not errors and not state.exported:
+        code = EXIT_TIMEBOX
+        ended = "stopped at the hard limit" if box_state.hard_stopped else "wrapped up"
+        summary = f"Time box: {ended}; the work is not finished. {summary}"
+    return HeadlessResult(code, summary, tasks, errors)
 
 
 async def _wait_until_idle(host: SessionHost) -> None:

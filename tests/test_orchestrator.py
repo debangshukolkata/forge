@@ -712,3 +712,60 @@ async def test_the_last_task_is_not_closed_before_the_plans_acceptance_criteria_
             "T2", "done", "", "criterion 2 left open: needs a policy decision", "", context
         )
     ).ok
+
+
+async def test_in_wrap_up_mode_no_further_task_is_started_after_the_wrap_up_turn(
+    host: SessionHost, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # D-460: the live time-box run kept building for four more minutes after the wrap-up because the orchestrator started the next pending task.
+    orch = orchestrator(host)
+    orch.state.tasks = [
+        Task(id="T1", title="first"),
+        Task(id="T2", title="second"),
+        Task(id="T3", title="third"),
+    ]
+    calls: list[str] = []
+
+    async def one_turn(history: object, delta: object) -> None:
+        current = orch.state.current_task
+        calls.append(str(current))
+        task = orch.state.task(str(current))
+        assert task is not None
+        task.status = "done"  # the task_update of this turn
+        orch.context.end_turn = True
+
+    assert host.agent is not None
+    monkeypatch.setattr(host.agent, "run", one_turn)
+    orch.wrap_up_mode = True
+    await orch._run_agent(orch._tools())
+    assert calls == ["T1"]  # one turn, then it stops although T2 and T3 are open
+    calls.clear()
+    orch.wrap_up_mode = False
+    await orch._run_agent(orch._tools())
+    assert calls == ["T2", "T3"]  # without the mode the loop carries on as before
+
+
+async def test_a_task_the_model_stops_in_wrap_up_mode_is_paused_and_found_again_on_resume(
+    host: SessionHost,
+) -> None:
+    # D-460: "blocked" tasks are skipped on resume and hold back their dependants; a task paused by the time box must go back to pending.
+    from forge.toolkit.base import ToolContext
+
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="scaffold"), Task(id="T2", title="build", depends_on=["T1"])]
+    orch._start_task(orch.state.tasks[0])
+    context = host.agent.context  # type: ignore[union-attr]
+    assert isinstance(context, ToolContext)
+    orch.wrap_up_mode = True
+    result = await orch.task_update(
+        "T1", "blocked", "Fix the long line in cli.py, then re-run pytest.", "", "time is up", context
+    )
+    assert result.ok
+    task = orch.state.tasks[0]
+    assert (
+        task.status == "pending"
+        and task.blocked_reason == ""
+        and "paused by the time box" in task.handoff_note
+    )
+    nxt = orch.state.next_task()
+    assert nxt is not None and nxt.id == "T1"  # resume starts here, and T2 is not held back for ever

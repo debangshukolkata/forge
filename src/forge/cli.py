@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 from pathlib import Path
+from typing import Any
 
 from rich.console import Console
 
@@ -46,6 +47,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="approve requirements/plan and ordinary commands (never the always-ask list)",
     )
     run.add_argument("--output-format", choices=["text", "json"], default="text")
+    run.add_argument(
+        "--start-at", help="wait until this time before starting: 14:00 (the next 14:00) or 2026-10-17 14:00"
+    )
+    run.add_argument(
+        "--until",
+        help="work until this time, then wrap up: 17:00 or 2026-10-17 17:00 (stopped at the latest 10 minutes later)",
+    )
+    run.add_argument(
+        "--wrap-up",
+        help="what to do in the last minutes (default: update memory and the progress notes and say what is left)",
+    )
+    run.add_argument(
+        "--wrap-minutes", type=int, default=10, help="how long before --until the wrap-up starts"
+    )
+    run.add_argument(
+        "--grace-minutes", type=int, default=10, help="how long after --until before the run is stopped"
+    )
     resume = subcommands.add_parser("resume", help="resume a workspace session where it stopped")
     resume.add_argument("--workspace", type=Path, required=True, dest="resume_workspace")
     cleanup = subcommands.add_parser(
@@ -150,7 +168,18 @@ def main(argv: list[str] | None = None) -> int:
         text = args.run_prompt or (
             args.requirement_file.read_text(encoding="utf-8") if args.requirement_file else None
         )
-        return asyncio.run(_run(args.run_workspace, text, args.auto_approve, args.output_format))
+        from datetime import datetime
+
+        from forge.engine.timebox import TimeBoxError, build_timebox
+
+        try:
+            timebox = build_timebox(
+                args.start_at, args.until, args.wrap_up, datetime.now(), args.wrap_minutes, args.grace_minutes
+            )
+        except TimeBoxError as problem:
+            Console().print(f"Cannot start: {problem}", markup=False)
+            return 1
+        return asyncio.run(_run(args.run_workspace, text, args.auto_approve, args.output_format, timebox))
     if args.command == "resume":
         return _interactive(args.resume_workspace, direct=False)
     if args.command == "diagnose":
@@ -234,7 +263,13 @@ async def _doctor(offline: bool) -> int:
     return 1 if any(result.status == "fail" for result in results) else 0
 
 
-async def _run(workspace_path: Path, requirement: str | None, auto_approve: bool, output_format: str) -> int:
+async def _run(
+    workspace_path: Path,
+    requirement: str | None,
+    auto_approve: bool,
+    output_format: str,
+    timebox: Any = None,
+) -> int:
     import json
 
     from forge.engine.headless import EXIT_FAILED, run_headless
@@ -253,7 +288,19 @@ async def _run(workspace_path: Path, requirement: str | None, auto_approve: bool
             "Nothing to do: give --requirement-file/-p, or a workspace with an unfinished run.", markup=False
         )
         return EXIT_FAILED
-    result = await run_headless(host, requirement, auto_approve)
+    if timebox is not None:
+        from datetime import datetime
+
+        if timebox.start_at is not None and timebox.start_at > datetime.now():
+            console.print(f"Waiting until {timebox.start_at:%Y-%m-%d %H:%M} to start.", markup=False)
+            while (left := (timebox.start_at - datetime.now()).total_seconds()) > 0:
+                await asyncio.sleep(min(left, 30))
+        if timebox.until is not None:
+            console.print(
+                f"Time box: wrap-up from {timebox.wrap_starts:%H:%M}, run ends {timebox.until:%H:%M}, stopped at the latest {timebox.hard_stop:%H:%M}.",
+                markup=False,
+            )
+    result = await run_headless(host, requirement, auto_approve, timebox)
     if output_format == "json":
         print(
             json.dumps(
