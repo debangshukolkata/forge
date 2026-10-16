@@ -73,6 +73,11 @@ Fraunces, Playfair Display, Lora, Nunito, JetBrains Mono, Noto Sans Bengali, Not
 ship in this skill. `find_asset` with type `font-pairing` (for example "warm editorial charity") then `add_asset` copies the
 font files into `public/fonts/`, the CSS into `src/fonts/` and the licence text; nothing is fetched from the internet. Prefer
 a bundled pairing over an unbundled font from a CDN.
+**Plain HTML pages (no build step): relative addresses only.** The bundled CSS says `url(/fonts/...)`, which is right for a React/Vite app (the
+public folder is served at the site root) and wrong for a static page: `/fonts/...` or `/public/fonts/...` breaks when the user opens the
+delivered `index.html` from disk, so the page silently shows Times and Arial. For a static page put the font files in `fonts/` next to the page,
+and write the `@font-face` with `url(./fonts/<file>.woff2)` (the audit reports an address that starts with a slash). Do not change the family
+name the CSS declares without changing it everywhere it is used.
 **Any other open font, on request:** `find_font` searches about 2,100 families (name, look, script such as Hindi or Bengali); `fetch_font` downloads the
 weights asked for into `fonts/` with a ready `@font-face` CSS file (`font-display: swap`) and records the licence in NOTICES.md; fetched fonts are
 kept in DebCraft's library, so the next project needs no network. If the user names a font that is not open (a company font), ask for the file or

@@ -358,3 +358,34 @@ async def test_several_widths_are_shot_at_once_on_separate_pages(
         assert again.ok and "Saved " in again.content
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
+
+
+ROOT_ADDRESS = """<!doctype html><html><head><meta charset="utf-8"><title>Bakery</title><style>
+@font-face{font-family:"Fraunces";src:url("/public/fonts/fraunces.woff2") format("woff2")}
+body{margin:0;font:18px "Fraunces",serif;padding:24px}h1{font-size:44px}</style></head>
+<body><h1>Crusty country loaves</h1><p>Baked on your corner every morning.</p></body></html>"""
+
+
+@pytest.mark.e2e
+async def test_the_audit_flags_addresses_that_break_when_the_page_is_opened_from_disk(
+    tmp_path: Path, original_repo: Path
+) -> None:
+    # Office laptop, 2026-10-16: the font CSS said /public/fonts/..., the checks ran on a local server and passed, and the user's double-click showed Times and Arial.
+    pytest.importorskip("playwright.async_api")
+    root = tmp_path / "site3"
+    root.mkdir()
+    (root / "index.html").write_text(ROOT_ADDRESS, encoding="utf-8")
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(root))
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    workspace = create_workspace(original_repo, tmp_path / "ws3", "backend")
+    context = ToolContext(workspace=workspace)
+    try:
+        await BrowserOpen().run(
+            BrowserOpen.Args(url=f"http://127.0.0.1:{server.server_address[1]}/index.html"), context
+        )
+        shot = await BrowserScreenshot().run(BrowserScreenshot.Args(), context)
+        assert "start with a slash" in shot.content and "/public/fonts/fraunces.woff2" in shot.content
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)
+        server.shutdown()

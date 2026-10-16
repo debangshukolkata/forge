@@ -308,6 +308,13 @@ AUDIT_SCRIPT = r"""
     const names = [...usedFamilies.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map((x) => x[0]).join(', ');
     findings.push('BLOCKER: All the text is set in the system font stack (' + names + '): the page has no designed typography, which is the first thing that makes a page look machine-made. Choose a display font and a text font that suit the product, its mood and its language (find_font, or find_asset type font-pairing; fetch_font saves the files), load them (fetch_font writes a ready @font-face CSS file in fonts/: link it from the page or import it), and use them from the DESIGN.md typography tokens; then screenshot again.');
   }
+  // A static page's addresses must be relative: /fonts/x.woff2 works on a local server and breaks when index.html is opened from disk or put in a sub-folder (the user double-clicks the delivered page: fallback fonts, missing pictures).
+  if (!document.querySelector('script[type=module]')) {
+    const rootFromCss = (cssText.match(/url\(\s*["']?\/(?!\/)[^)"']+/g) || []).map((m) => m.replace(/^url\(\s*["']?/, ''));
+    const rootFromMarkup = [...document.querySelectorAll('link[rel=stylesheet][href^="/"], script[src^="/"], img[src^="/"], source[src^="/"]')].map((n) => n.getAttribute('href') || n.getAttribute('src')).filter((u) => !u.startsWith('//'));
+    const rootUrls = [...new Set([...rootFromCss, ...rootFromMarkup])];
+    if (rootUrls.length) findings.push('Addresses that start with a slash (' + rootUrls.slice(0, 3).join(', ') + '): they work on a local server but break when the page is opened from disk (double-click) or placed in a sub-folder, so fonts and pictures silently fall back or vanish. Use relative addresses (./fonts/..., ./images/...) and keep the files next to the page.');
+  }
   const hasPicture = all.some((el) => visible(el) && ((el.tagName === 'IMG' && el.naturalWidth >= 200) || el.tagName === 'VIDEO' || el.tagName === 'CANVAS' || el.tagName === 'PICTURE'
     || (el.tagName === 'svg' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 120 && el.querySelectorAll('path, circle, rect, polygon, ellipse, line').length >= 4)
     || (el.getAttribute('role') === 'img' && el.getBoundingClientRect().width >= 150 && el.getBoundingClientRect().height >= 80)  // a chart is the picture of a dashboard
