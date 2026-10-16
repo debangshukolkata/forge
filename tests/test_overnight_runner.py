@@ -507,3 +507,18 @@ def test_remove_tree_deletes_read_only_files(tmp_path: Path) -> None:
     locked.chmod(stat.S_IREAD)
     remove_tree(tmp_path / "ws")
     assert not (tmp_path / "ws").exists()
+
+
+def test_the_checker_labels_its_folder_low_so_the_workspaces_python_can_write(tmp_path: Path) -> None:
+    # D-457: the workspace's python carries a Low label and then runs at Low integrity; it may write only into Low-labelled folders.
+    if sys.platform != "win32":
+        pytest.skip("Windows integrity labels")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "overnight"))
+    from verify_tasks import allow_low_integrity_writes
+
+    from forge.safety.sandbox import has_low_label
+
+    folder = tmp_path / "eval-7"
+    folder.mkdir()
+    allow_low_integrity_writes(folder)
+    assert has_low_label(folder)

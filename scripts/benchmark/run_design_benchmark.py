@@ -164,9 +164,19 @@ def run_task(task: Path, run_dir: Path, env: dict[str, str], design_from: str = 
     if (
         design_from
     ):  # arm B of the taste test (DIE8): another model's DESIGN.md is binding, this run only builds
-        supplied = RUNS / design_from / meta["id"] / "project" / "DESIGN.md"
+        earlier = RUNS / design_from / meta["id"]
+        # The designer may have left DESIGN.md in project/, in the delivered output/ or in the workspace root (office laptop: Argon's was in output/).
+        candidates = [
+            earlier / "project" / "DESIGN.md",
+            earlier / "output" / "DESIGN.md",
+            earlier / "DESIGN.md",
+        ]
+        supplied = next((path for path in candidates if path.is_file()), candidates[0])
         if not supplied.is_file():
-            return {"id": meta["id"], "error": f"no DESIGN.md at {supplied} to build from"}
+            return {
+                "id": meta["id"],
+                "error": f"no DESIGN.md in {earlier} (looked in project/, output/ and the root) to build from",
+            }
         target = workspace / "project" / "DESIGN.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(supplied, target)
@@ -198,7 +208,9 @@ def run_task(task: Path, run_dir: Path, env: dict[str, str], design_from: str = 
         "outer_wall_s": round(time.time() - started),
     }
     row.update(timing(workspace / ".forge" / "transcripts" / "events.jsonl"))
-    page = next(iter(sorted((workspace / "project").rglob("index.html"))), None)
+    page = next(iter(sorted((workspace / "project").rglob("index.html"))), None) or next(
+        iter(sorted((workspace / "output").rglob("index.html"))), None
+    )  # the page may have been written only into the delivered output/ folder
     row["delivered"] = page is not None
     row.update(design_facts(workspace))
     if page is None and not timed_out:  # not a pass: say why, from the run's own result file and console

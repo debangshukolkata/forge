@@ -216,6 +216,20 @@ def on_white(source: Path, target: Path) -> None:
     base.resize((image.width * scale, image.height * scale)).save(target)
 
 
+def allow_low_integrity_writes(folder: Path) -> None:
+    """The workspace's python environment carries a Low integrity label (DebCraft's sandbox, safety/sandbox.py), and Windows starts a program whose file is labelled Low at Low integrity, which may write only into
+    Low-labelled folders: the checker's run of the model's script in a fresh folder was refused ("Permission denied: signature.png", office laptop, 2026-10-16, D-457; reproduced with a Low-labelled copy of cmd.exe).
+    Labelling the folder Low as well lets the project's own python write there, as it does in the workspace. No effect off Windows or when the label cannot be set."""
+    if sys.platform != "win32":
+        return
+    try:
+        from forge.safety.sandbox import label_low
+
+        label_low(folder)
+    except Exception:  # the fallback below (the runner's python) still tells whether the script is right
+        return
+
+
 def permission_diagnosis(python: str, script: Path, folder: Path) -> str:
     """Why can the script not write in the folder? Access rights of the folder, then the same script writing to the system temp folder instead (told apart: the folder, or the script)."""
     import tempfile
@@ -273,6 +287,7 @@ def verify_sigcrop(workspace: Path, run_dir: Path, task: dict[str, Any], repo: P
     ):  # the photo Forge saw (seed 7) and two others: the script must not be tuned to one picture
         folder = run_dir / f"eval-{seed}"
         truth = make_signature_sample(folder, seed)
+        allow_low_integrity_writes(folder)
         for item in script.parent.glob("*.py"):
             shutil.copy(item, folder / item.name)
         label = "the photo it was given" if seed == 7 else f"another photo (seed {seed})"
@@ -284,7 +299,9 @@ def verify_sigcrop(workspace: Path, run_dir: Path, task: dict[str, Any], repo: P
         output = folder / "signature.png"
         if done.returncode != 0 or not output.is_file():
             detail = (done.stderr or done.stdout)[-300:]
-            if "PermissionError" in detail:  # office laptop, 2026-10-16: say where the refusal comes from
+            if re.search(
+                r"permission ?denied|permissionerror|errno 13|access is denied|winerror 5", detail, re.I
+            ):  # office laptop, 2026-10-16: say where the refusal comes from
                 detail += permission_diagnosis(python, script, folder)
                 done = run_with_runners_python(
                     script, workspace, folder
