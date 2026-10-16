@@ -21,7 +21,7 @@ from forge.safety.sandbox import is_supported as sandbox_supported
 from forge.safety.shell_classifier import ShellScope
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.powershell import ps_quote, run_powershell
-from forge.toolkit.private_env import without_private
+from forge.toolkit.private_env import without_private, without_store_aliases
 from forge.workspace.stub_packages import ensure_shared_stub_packages
 from forge.workspace.workspace import Workspace
 
@@ -133,7 +133,9 @@ class ShellSession:
 
     def environment(self) -> dict[str, str]:
         env = self.workspace.info.python_env
-        variables = without_private(env.command_env() if env else dict(os.environ))  # D-202
+        variables = without_store_aliases(
+            without_private(env.command_env() if env else dict(os.environ))
+        )  # D-202, D-444
         variables.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         variables.setdefault("PYTHONUTF8", "1")
         # npm uses its cache for packages it already has and goes to the network only for new ones; the audit and funding

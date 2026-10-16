@@ -26,11 +26,12 @@ async def probe(key: str, router: object, timeout: float) -> dict[str, object]:
                 Message.system("Reply with the single word OK."),
                 Message(role="user", content="Say OK."),
             ],
-            max_output_tokens=300,
+            max_output_tokens=3000,
         )
         response = await asyncio.wait_for(provider.chat(request), timeout=timeout)
         return {
-            "ok": bool(str(response.text).strip()),
+            "ok": True,  # no error: the endpoint answered (a reasoning model may spend a small budget on thinking and say nothing)
+            "said": str(response.text).strip()[:20],
             "seconds": round(time.time() - started, 1),
             "served": str(getattr(response, "served_model", "")),
         }

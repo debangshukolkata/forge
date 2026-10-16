@@ -35,6 +35,9 @@ from jobs import Ctx, Job, catalogue  # noqa: E402
 from report import redact, write_report  # noqa: E402
 from verify_tasks import kill_tree  # noqa: E402
 
+sys.path.insert(0, str(REPO / "src"))
+from forge.toolkit.private_env import without_store_aliases  # noqa: E402
+
 POLL_S = 10
 DONE = {"PASS", "PROBLEMS", "FAILED", "TIMEOUT", "STALLED"}
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg")
@@ -384,6 +387,7 @@ def run_job(job: Job, ctx: Ctx, deadline: float, entry: dict[str, Any], save: An
     }
     if not ctx.env_file or not job.uses_env_file:
         env.pop("FORGE_ENV_FILE", None)
+    env = without_store_aliases(env)  # a bare `python3` must fail at once, not open the Microsoft Store
     if job.kind == "pytest":
         env.pop("CI", None)  # CI changes how some tools behave; the tests are written for a person's machine
     limit = min(job.timeout_min * 60, max(60, deadline - time.time()))

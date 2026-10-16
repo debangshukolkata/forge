@@ -108,3 +108,17 @@ def test_node_tools_may_use_the_system_certificate_store(
     assert shell.environment()["NODE_USE_SYSTEM_CA"] == "1"
     monkeypatch.setenv("FORGE_SYSTEM_CERTS", "0")
     assert "NODE_USE_SYSTEM_CA" not in shell.environment()
+
+
+def test_the_microsoft_store_aliases_are_taken_off_path(monkeypatch: pytest.MonkeyPatch) -> None:
+    """D-444: a bare `python3` opened the Store and an installer that asked for an administrator password on the office laptop."""
+    from forge.toolkit.private_env import without_store_aliases
+
+    store = r"C:\Users\x\AppData\Local\Microsoft\WindowsApps"
+    path = os.pathsep.join([r"C:\ws\.venv\Scripts", store, r"C:\Windows\system32", store.replace("\\", "/")])
+    cleaned = without_store_aliases({"Path": path, "OTHER": "keep"})
+    assert (
+        cleaned["Path"] == os.pathsep.join([r"C:\ws\.venv\Scripts", r"C:\Windows\system32"])
+        and cleaned["OTHER"] == "keep"
+    )
+    assert without_store_aliases({"A": "b"}) == {"A": "b"}

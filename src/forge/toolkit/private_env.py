@@ -8,6 +8,7 @@ are added afterwards and are not touched."""
 
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -55,3 +56,21 @@ def without_private(variables: Mapping[str, str]) -> dict[str, str]:
     """`variables` minus DebCraft's own names (Windows variable names are not case-sensitive)."""
     hidden = private_names()
     return {name: value for name, value in variables.items() if name.upper() not in hidden}
+
+
+def without_store_aliases(variables: Mapping[str, str]) -> dict[str, str]:
+    """`variables` with the Microsoft Store app aliases (the `Microsoft/WindowsApps` folder) taken off PATH (D-444).
+
+    On Windows 11 the folder holds stubs named python.exe, python3.exe and pip3.exe: a command that says `python3` (a Linux habit of a model) opens the Store and the Python installer, and
+    on a company laptop asks for an administrator password, while the command waits for it (found on the office laptop's first overnight run). Without the folder such a command fails at once
+    with "not found", which the model can read and correct. DebCraft's own commands name the workspace's python first on PATH, so nothing that works is lost."""
+    result = dict(variables)
+    for name, value in variables.items():
+        if name.upper() == "PATH":
+            kept = [
+                part
+                for part in value.split(os.pathsep)
+                if part and "microsoft\\windowsapps" not in part.replace("/", "\\").lower()
+            ]
+            result[name] = os.pathsep.join(kept)
+    return result
