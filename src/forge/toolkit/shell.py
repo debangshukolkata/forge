@@ -169,6 +169,11 @@ class ShellSession:
             existing = variables.get("PYTEST_ADDOPTS", "")
             if "harness_conftest" not in existing:
                 variables["PYTEST_ADDOPTS"] = f"{existing} -p harness_conftest".strip()
+        # Every pytest run the model starts goes without pytest's cache plugin, as DebCraft's own gate commands already do: on the office laptop plain `pytest` printed [100%] and then hung for 2 to 10 minutes
+        # (four runs, 16 of 30 minutes of one job, D-458) while `-p no:cacheprovider` finished in under two seconds. DebCraft never needs `--lf`/`--ff`.
+        existing = variables.get("PYTEST_ADDOPTS", "")
+        if "cacheprovider" not in existing:
+            variables["PYTEST_ADDOPTS"] = f"{existing} -p no:cacheprovider".strip()
         variables.update(self.extra_env)
         return variables
 
