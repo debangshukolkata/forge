@@ -8,6 +8,7 @@ Scoring is a separate step (scripts/dev/score_app.py). Nothing here touches the 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import subprocess
@@ -17,10 +18,54 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts" / "overnight"))
+
 from fsutil import remove_tree  # noqa: E402
 
+PLANNING_WRITES = ("DESIGN.md", "NOTICES.md", "ASSUMPTIONS.md", "ANALYSIS.md", "PRODUCT.md")
 
-def run_one(app_id: str, out: Path, coder: str, timeout_min: int, env_file: str) -> dict[str, object]:
+
+def building_started(events: Path) -> str:
+    """The first write of a real project file (not DESIGN.md, notes or the design candidates): from here on DebCraft is building, and the analysis, questions, plan and decisions are already in the log."""
+    if not events.is_file():
+        return ""
+    for line in events.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        payload = event.get("payload", {})
+        if event.get("type") != "tool_call_started" or payload.get("name") not in (
+            "write_file",
+            "multi_edit",
+            "run_command",
+        ):
+            continue
+        path = str((payload.get("arguments") or {}).get("path") or "").replace("\\", "/")
+        if payload.get("name") == "run_command":
+            command = str((payload.get("arguments") or {}).get("command") or "").lower()
+            if "pip install" in command or "uv " in command:
+                return f"run_command at {event['ts'][11:19]}"
+            continue
+        if path and not path.startswith(".forge") and path.split("/")[-1] not in PLANNING_WRITES:
+            return f"{payload['name']} {path} at {event['ts'][11:19]}"
+    return ""
+
+
+def kill_tree(pid: int) -> None:
+    import psutil
+
+    try:
+        parent = psutil.Process(pid)
+    except psutil.NoSuchProcess:
+        return
+    for process in [*parent.children(recursive=True), parent]:
+        with contextlib.suppress(psutil.NoSuchProcess):
+            process.kill()
+
+
+def run_one(
+    app_id: str, out: Path, coder: str, timeout_min: int, env_file: str, stop_at_build: bool
+) -> dict[str, object]:
     run_dir = out / app_id
     remove_tree(run_dir)
     run_dir.mkdir(parents=True)
@@ -42,20 +87,36 @@ def run_one(app_id: str, out: Path, coder: str, timeout_min: int, env_file: str)
     prompt = REPO / "tests" / "benchmarks" / "apps" / app_id / "prompt.md"
     started = time.time()
     timed_out = False
+    command = [
+        sys.executable,
+        str(REPO / "scripts" / "campaign" / "drive_forge.py"),
+        str(workspace),
+        str(prompt),
+        str(run_dir / "run.json"),
+    ]
+    log = (run_dir / "drive.log").open("wb")
+    process = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT)
+    stopped_at = ""
+    events = workspace / ".forge" / "transcripts" / "events.jsonl"
     try:
-        driven = subprocess.run(
-            [sys.executable, str(REPO / "scripts" / "campaign" / "drive_forge.py"), str(workspace), str(prompt), str(run_dir / "run.json")],
-            env=env, capture_output=True, timeout=timeout_min * 60, check=False,
-        )  # fmt: skip
-        (run_dir / "drive.log").write_text(
-            (driven.stdout + driven.stderr).decode("utf-8", errors="replace")[-20000:], encoding="utf-8"
-        )
-    except subprocess.TimeoutExpired:
-        timed_out = True
+        while process.poll() is None:
+            if time.time() - started > timeout_min * 60:
+                timed_out = True
+                break
+            if stop_at_build and (hit := building_started(events)):
+                time.sleep(10)  # let the planning events and the first writes reach the log
+                stopped_at = hit
+                break
+            time.sleep(4)
+    finally:
+        if process.poll() is None:
+            kill_tree(process.pid)
+        log.close()
     row = {
         "id": app_id,
         "seconds": round(time.time() - started),
         "timed_out": timed_out,
+        "stopped_when_building_began": stopped_at,
         "workspace": str(workspace),
     }
     (run_dir / "result.json").write_text(json.dumps(row, indent=1), encoding="utf-8")
@@ -68,13 +129,18 @@ def main() -> int:
     parser.add_argument("--out", default=r"C:\Work\ForgeRuns\forge-apps")
     parser.add_argument("--coder", default="gpt54")
     parser.add_argument("--timeout-min", type=int, default=150)
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="let DebCraft build the whole application (default: stop when building begins, the planning layer is what is judged)",
+    )
     parser.add_argument("--env-file", default=os.environ.get("FORGE_ENV_FILE", ""))
     args = parser.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     for app_id in args.apps:
         print(f"[{time.strftime('%H:%M:%S')}] START {app_id}", flush=True)
-        row = run_one(app_id, out, args.coder, args.timeout_min, args.env_file)
+        row = run_one(app_id, out, args.coder, args.timeout_min, args.env_file, not args.full)
         print(f"[{time.strftime('%H:%M:%S')}] END   {app_id}: {row}", flush=True)
     return 0
 
