@@ -84,11 +84,14 @@ async def judge(brief: str, desktop: Path, phone: Path) -> dict[str, object]:
     sys.path.insert(0, str(REPO))
     from forge.config import load_config, load_secrets
     from forge.llm.base import ChatRequest, Message
+    from forge.llm.router import LLMRouter
+    from forge.net import use_system_certificates
     from forge.vision import images
-    from tests.test_live_llm import router_for
 
+    use_system_certificates()  # company HTTPS inspection, as the app does at start
     config, secrets = load_config(), load_secrets()
-    router = router_for(config, secrets)
+    # The router's own provider factory builds Azure or Gemini by model: the test helper builds Azure only, which made a Gemini scorer fail ("needs deployment_env", first overnight night, 2026-10-16).
+    router = LLMRouter(config, secrets)
     if os.environ.get("FORGE_BENCH_SCORER"):  # the same scorer in every condition of an A/B (D-418)
         router.set_role_model("vision", os.environ["FORGE_BENCH_SCORER"])
     urls = [images.for_model(images.open_image(p))[0] for p in (desktop, phone)]
@@ -175,11 +178,15 @@ def run_task(task: Path, run_dir: Path, env: dict[str, str], design_from: str = 
     prompt_file.write_text(brief, encoding="utf-8")
     started = time.time()
     try:
-        subprocess.run(
+        driven = subprocess.run(
             [str(PYTHON), str(REPO / "scripts" / "campaign" / "drive_forge.py"), str(workspace), str(prompt_file), str(run_dir / f"{meta['id']}_run.json")],
             env=env, capture_output=True, timeout=3600,
         )  # fmt: skip
         timed_out = False
+        # Kept, because a run that ends in seconds (a model that cannot be called) leaves nothing else to read.
+        (run_dir / f"{meta['id']}_drive.log").write_text(
+            (driven.stdout + driven.stderr).decode("utf-8", errors="replace")[-20000:], encoding="utf-8"
+        )
     except subprocess.TimeoutExpired:
         timed_out = True
     row: dict[str, object] = {
@@ -192,6 +199,14 @@ def run_task(task: Path, run_dir: Path, env: dict[str, str], design_from: str = 
     page = next(iter(sorted((workspace / "project").rglob("index.html"))), None)
     row["delivered"] = page is not None
     row.update(design_facts(workspace))
+    if page is None and not timed_out:  # not a pass: say why, from the run's own result file and console
+        result_file = run_dir / f"{meta['id']}_run.json"
+        reason = (
+            result_file.read_text(encoding="utf-8", errors="replace")[:300] if result_file.is_file() else ""
+        )
+        log_file = run_dir / f"{meta['id']}_drive.log"
+        tail = log_file.read_text(encoding="utf-8", errors="replace")[-300:] if log_file.is_file() else ""
+        row["error"] = f"no page was delivered. {reason} {tail}".replace(chr(10), " ")
     if page is not None:
         desktop, phone, facts = screenshots(page, run_dir / f"{meta['id']}_shots")
         row.update(facts)
