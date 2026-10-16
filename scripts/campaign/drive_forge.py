@@ -11,10 +11,13 @@ import sys
 from pathlib import Path
 
 from forge.engine import headless
+from forge.net import use_system_certificates
 from forge.protocol.inputs import Approve
 from forge.session import build_session
 from forge.workspace.workspace import Workspace
 
+# The command line does this at start; this script goes around it, and Vertex AI (Gemini) fails with CERTIFICATE_VERIFY_FAILED on a company network without it (Fernhill arm C, 2026-10-16).
+use_system_certificates()
 WORKSPACE, PROMPT, RESULT = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
 GRANTED = WORKSPACE.parent / f"{WORKSPACE.name}_approvals.log"
 original = headless.auto_reply
