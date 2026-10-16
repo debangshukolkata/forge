@@ -70,7 +70,13 @@ def to_gemini_request(messages: list[Message], model_key: str) -> tuple[str | No
                 parts.append(types.Part.from_bytes(data=data, mime_type=mime_type))
             contents.append(types.Content(role="user", parts=parts or [types.Part(text="")]))
     flush_results()
-    return ("\n\n".join(system_parts) or None), contents
+    system_text = "\n\n".join(system_parts) or None
+    if not contents:
+        # Gemini refuses a request without conversation ("contents are required"); Azure accepts a system-only one. A call
+        # that holds only instructions (found on the office laptop, Argon as builder, 2026-10-16) sends them as the user turn.
+        contents.append(types.Content(role="user", parts=[types.Part(text=system_text or "Begin.")]))
+        system_text = None
+    return system_text, contents
 
 
 def _assistant_content(message: Message, model_key: str) -> types.Content:

@@ -120,3 +120,11 @@ def test_every_effort_has_a_thinking_budget(effort: str) -> None:
     from forge.llm.translate_gemini import THINKING_BUDGETS
 
     assert THINKING_BUDGETS[effort] >= 128
+
+
+def test_a_request_with_only_instructions_still_has_a_user_turn() -> None:
+    # Gemini answers "contents are required" to an empty conversation (Argon as builder, office laptop, 2026-10-16).
+    system, contents = to_gemini_request([Message.system("Write one short sentence.")], "gemini4argon")
+    assert system is None
+    assert len(contents) == 1 and contents[0].role == "user"
+    assert contents[0].parts is not None and contents[0].parts[0].text == "Write one short sentence."
