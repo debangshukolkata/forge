@@ -64,16 +64,26 @@ def kill_tree(pid: int) -> None:
 
 
 def run_one(
-    app_id: str, out: Path, coder: str, timeout_min: int, env_file: str, stop_at_build: bool
+    app_id: str,
+    out: Path,
+    coder: str,
+    timeout_min: int,
+    env_file: str,
+    stop_at_build: bool,
+    planner_effort: str = "",
 ) -> dict[str, object]:
     run_dir = out / app_id
     remove_tree(run_dir)
     run_dir.mkdir(parents=True)
     home, workspace = run_dir / "home", run_dir / "ws"
     home.mkdir()
+    lines = ["llm:"]
     if coder:
         roles = ["coder", "kb_builder", "summariser", "vision"]
-        lines = ["llm:", "  roles:", *[f"    {role}: {coder}" for role in roles]]
+        lines += ["  roles:", *[f"    {role}: {coder}" for role in roles]]
+    if planner_effort:
+        lines += ["  role_reasoning_effort:", f"    planner: {planner_effort}"]
+    if len(lines) > 1:
         (home / "config.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")
     env = {**os.environ, "FORGE_HOME": str(home), "PYTHONIOENCODING": "utf-8"}
     if env_file:
@@ -128,6 +138,9 @@ def main() -> int:
     parser.add_argument("apps", nargs="+")
     parser.add_argument("--out", default=r"C:\Work\ForgeRuns\forge-apps")
     parser.add_argument("--coder", default="gpt54")
+    parser.add_argument(
+        "--planner-effort", default="", help="reasoning effort for the planner role only: low, medium, high"
+    )
     parser.add_argument("--timeout-min", type=int, default=150)
     parser.add_argument(
         "--full",
@@ -140,7 +153,9 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     for app_id in args.apps:
         print(f"[{time.strftime('%H:%M:%S')}] START {app_id}", flush=True)
-        row = run_one(app_id, out, args.coder, args.timeout_min, args.env_file, not args.full)
+        row = run_one(
+            app_id, out, args.coder, args.timeout_min, args.env_file, not args.full, args.planner_effort
+        )
         print(f"[{time.strftime('%H:%M:%S')}] END   {app_id}: {row}", flush=True)
     return 0
 

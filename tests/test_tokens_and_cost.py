@@ -58,7 +58,7 @@ def test_budget_cap_blocks_until_raised() -> None:
 
 def test_a_zero_budget_means_no_cap_and_is_the_default() -> None:
     config = default_config()
-    assert config.limits.session_budget_usd == 0 and config.llm.role_reasoning_effort == {}
+    assert config.limits.session_budget_usd == 0 and config.llm.role_reasoning_effort == {"planner": "high"}
     tracker = CostTracker(config.llm.models, budget_usd=0)
     tracker.record("gpt51", "coder", Usage(output_tokens=50_000_000))  # $500
     tracker.check_budget()  # accuracy and speed come before token cost (D-161)

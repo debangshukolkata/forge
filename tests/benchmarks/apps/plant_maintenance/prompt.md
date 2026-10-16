@@ -1,0 +1,5 @@
+We run a plant that makes automotive brake components, with about 120 machines across three production lines and a small maintenance team of fourteen technicians working in shifts. Maintenance requests are shouted across the floor or written on whiteboards, preventive maintenance lives in a calendar that nobody trusts, spare parts run out at the wrong moment, and management cannot tell why a line was down last month or what maintenance really costs.
+
+Build a web application to run maintenance in the plant.
+
+It should run on a Windows laptop and be easy to start: Python 3.13 with FastAPI and Jinja2 templates, SQLite for storage, plain JavaScript and CSS in the pages, no Node and no build step; install what you need into this project's own environment. One command starts it and the README says how. Use fictional people, machines and numbers only. Say clearly in the README what works for real and what is only a stand-in. Look at the screens in a browser before you finish and fix what you see.

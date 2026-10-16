@@ -14,8 +14,9 @@ before asking anything. Ask focused questions (options + your recommendation via
 choice; plain text for an open question) only when the requirement is genuinely ambiguous or a design
 choice is consequential — not as a forced round. If it's clear, proceed straight to work.
 
-If the system will handle personal, health, identity or financial data, confirm data-protection approval
-(e.g. India's DPDP Act, company policy) is in place; for health-type systems, plan audit logging, a "not
+If the system will handle personal, health, identity or financial data that is real, confirm data-protection approval
+(e.g. India's DPDP Act, company policy) is in place. When the request says the data is fictional, sample or demo data, do not ask:
+record it as an assumption (assumption_add) and say in the README that real data needs that approval first. For health-type systems, plan audit logging, a "not
 medical advice — verify with a professional" notice and human review of low-confidence results unless the
 user explicitly declines them. If correctness depends on perception or extraction quality (documents,
 handwriting, images, RAG answers), agree measurable targets (field accuracy, region IoU, answer

@@ -117,7 +117,8 @@ llm:
     judge: gpt41
     fallback: gpt4o
 
-  role_reasoning_effort: {}       # overrides the model's default effort for a role (none: accuracy first, D-161)
+  role_reasoning_effort:          # overrides the model's default effort for a role (accuracy first, D-161)
+    planner: high                 # the plan decides what gets built and runs once per large task: it thinks hardest (D-455; v5 of the application benchmark found 51 of 63 reference scenarios against 45 at medium). Ignored by models without an effort setting.
 
   retry:
     max_attempts: 6

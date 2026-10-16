@@ -62,3 +62,8 @@ A 15th line is not scored but written down for every run: **what a real user wou
 ## 4. Results and changes to DebCraft
 
 Filled in after the runs (see `docs/APP_BENCHMARK_RESULTS.md`).
+
+### 3.4 Plant maintenance (the fourth, unseen domain: generalisation check, brief `plant_maintenance`; written before it was run)
+**Roles:** machine operator (raises requests), maintenance planner, technician, shift supervisor, stores/spares keeper, plant manager, safety officer.
+**Process:** request -> triage and priority -> work order -> assignment by skill and shift -> (permit to work / lockout for risky jobs) -> parts reserved -> work done -> checklist and sign-off -> closed with failure cause and downtime; preventive work orders generated from schedules (time- or meter-based); costly repairs need approval; contractor jobs follow the same path.
+**Scenarios (checklist, as in the scorer):** asset register and hierarchy; criticality; preventive schedules by time or meter; breakdown / preventive / inspection types; priority and response targets; skills, shifts and assignment; lockout and permits; spare parts stock and reservation; reorder of critical spares; downtime with cause codes; MTBF / MTTR / availability; backlog and overdue PMs; approval for costly repairs; contractors; shift handover; completion checklists; repeat-failure detection; labour and parts cost; warranty and service history; requests by operators; audit trail.
