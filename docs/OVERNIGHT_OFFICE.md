@@ -57,6 +57,18 @@ Start-Overnight.cmd --out overnight-results\<the same date-time folder>
 
 Jobs that were running when it stopped are run again.
 
+## Travelling: pause, switch the laptop off, continue later
+
+The run can be stopped at any point and continued when the laptop is back. Three double-click files in the DebCraft folder:
+
+- **`Pause-Overnight.cmd`** asks the run to stop **after the job that is running now has finished** (jobs take 3 minutes to 2 hours). The run window closes by itself when it has paused. Nothing is lost.
+- **`Pause-Overnight-Now.cmd`** stops it **now** (wait about 30 seconds until the run window says it has paused). The job that was running starts again from its beginning when you continue. Use this when you have to shut the laptop in a few minutes.
+- **`Resume-Overnight.cmd`** continues the newest run where it stopped: the jobs that finished are kept, the report keeps growing, and the job that was cut short starts again from its beginning. It also works after a power cut, a restart or Ctrl+C, without any earlier pause. Nothing else has to be done on the laptop: it starts a new preflight-free continuation with a fresh time budget (11 hours).
+
+So: before you leave, double-click `Pause-Overnight-Now.cmd`, wait for the window to say paused, shut the laptop down. When you are back, switch it on, wait until it is on the network, double-click `Resume-Overnight.cmd`, and leave it. `MORNING_REPORT.html` shows "Not finished" and how many jobs are still to run while the run is paused.
+
+Notes: a job that was stopped starts again from its beginning, so a long job (the coding benchmark takes about an hour) loses its progress; stop between jobs with `Pause-Overnight.cmd` when you can. If you connect through a VPN, connect it before you resume.
+
 ## The second night: run again only what did not pass
 
 After a fix (new code, Gemini sign-in), do not start from nothing: run the same folder with `--retry`. Jobs that PASSED are kept; failed, problem, timeout, stalled and skipped jobs run again (and the preflight is run again, so a Gemini that now answers is found):

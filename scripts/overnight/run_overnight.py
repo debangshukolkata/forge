@@ -39,6 +39,10 @@ sys.path.insert(0, str(REPO / "src"))
 from forge.toolkit.private_env import without_store_aliases  # noqa: E402
 
 POLL_S = 10
+STOP_AFTER_JOB = (
+    "STOP"  # a file in the run folder: finish the job that is running, then stop (Pause-Overnight.cmd)
+)
+STOP_NOW = "STOP_NOW"  # a file in the run folder: stop the running job now; it runs again from its start on resume (Pause-Overnight-Now.cmd)
 DONE = {"PASS", "PROBLEMS", "FAILED", "TIMEOUT", "STALLED"}
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg")
 
@@ -209,6 +213,8 @@ def analyse(job: Job, code: int | None, ended: str, job_dir: Path, ctx: Ctx) -> 
     """(status, a one-line finding, the details for failure.md) from how the job ended and what it wrote."""
     console = tail(job_dir / "console.log", 400)
     details: list[str] = []
+    if ended == "INTERRUPTED":
+        return "INTERRUPTED", "stopped on request; it runs again from its start when you resume", details
     if ended in ("STALLED", "TIMEOUT"):
         return (
             ended,
@@ -369,6 +375,15 @@ def strip_xdist(argv: list[str]) -> list[str]:
 
 def run_job(job: Job, ctx: Ctx, deadline: float, entry: dict[str, Any], save: Any) -> None:
     job_dir = ctx.out / "jobs" / job.id
+    if job_dir.exists():  # an earlier attempt (stopped, or failed and run again): keep its small files as <id>-previous, start the job clean
+        previous = ctx.out / "jobs" / f"{job.id}-previous"
+        shutil.rmtree(previous, ignore_errors=True)
+        with contextlib.suppress(OSError):
+            job_dir.rename(previous)
+    if job.run_root and (ctx.runs / job.run_root).exists():
+        shutil.rmtree(
+            ctx.runs / job.run_root, ignore_errors=True
+        )  # the workspaces of the earlier attempt are large and of no use now
     job_dir.mkdir(parents=True, exist_ok=True)
     argv = job.argv(ctx)
     if job.kind == "pytest" and not ctx.caps.get("xdist"):
@@ -411,7 +426,11 @@ def run_job(job: Job, ctx: Ctx, deadline: float, entry: dict[str, Any], save: An
     last_change = time.time()
     ended = "done"
     while process.poll() is None:
-        time.sleep(POLL_S)
+        try:
+            time.sleep(POLL_S)
+        except KeyboardInterrupt:  # Ctrl+C in the run window: the job has its own process group and would go on alone, so stop it too
+            kill_tree(process)
+            raise
         keep_awake()
         now = time.time()
         (ctx.out / "HEARTBEAT.txt").write_text(
@@ -421,7 +440,9 @@ def run_job(job: Job, ctx: Ctx, deadline: float, entry: dict[str, Any], save: An
         current = activity(watch, console)
         if current != marker:
             marker, last_change = current, now
-        if now - started > limit:
+        if (ctx.out / STOP_NOW).exists():
+            ended = "INTERRUPTED"
+        elif now - started > limit:
             ended = "TIMEOUT"
         elif now - last_change > stall:
             ended = "STALLED"
@@ -436,7 +457,7 @@ def run_job(job: Job, ctx: Ctx, deadline: float, entry: dict[str, Any], save: An
     code = process.returncode
     status, finding, details = analyse(job, code, ended, job_dir, ctx)
     evidence = collect_evidence(job, job_dir, ctx)
-    if status != "PASS":
+    if status not in ("PASS", "INTERRUPTED"):
         write_failure(job, status, finding, details, code, seconds, argv, job_dir, ctx, evidence)
     entry.update(status=status, seconds=round(seconds), finding=finding, evidence=evidence, exit_code=code)
     save()
@@ -509,6 +530,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
     out = Path(args.out) if args.out else REPO / "overnight-results" / time.strftime("%Y%m%d-%H%M")
+    if args.out == "latest":  # Resume-Overnight.cmd: the newest run folder that has a state file
+        folders = sorted(
+            (p for p in (REPO / "overnight-results").glob("*") if (p / "state.json").is_file()),
+            key=lambda p: p.stat().st_mtime,
+        )
+        if not folders:
+            print(
+                "There is no earlier run to resume in overnight-results. Start a new one with Start-Overnight.cmd."
+            )
+            return 2
+        out = folders[-1]
+        print(f"Resuming {out}")
     ctx = Ctx(repo=REPO, out=out, env_file=args.env_file)
     wanted = {part for part in args.only.split(",") if part}
     skipped_ids = {part for part in args.skip.split(",") if part}
@@ -534,6 +567,9 @@ def main(argv: list[str] | None = None) -> int:
         log("another overnight run is using this folder; stop it first or choose another --out")
         return 2
     keep_awake()
+    for name in (STOP_AFTER_JOB, STOP_NOW):  # a pause asked for in the last session ends when this one starts
+        with contextlib.suppress(OSError):
+            (out / name).unlink()
     state_file = out / "state.json"
     state: dict[str, Any] = {
         "started": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -605,6 +641,12 @@ def main(argv: list[str] | None = None) -> int:
         for job, entry in zip(selected, entries[1:], strict=True):
             if entry["status"] in DONE:
                 continue
+            if (out / STOP_AFTER_JOB).exists() or (out / STOP_NOW).exists():
+                state["paused"] = True
+                log(
+                    "paused on request: the report so far is saved; double-click Resume-Overnight.cmd to continue"
+                )
+                break
             missing = [need for need in job.needs if not ctx.caps.get(need)]
             remaining = deadline - time.time()
             if missing:
@@ -625,15 +667,23 @@ def main(argv: list[str] | None = None) -> int:
                 except Exception as error:  # the runner's own bug on one job must not end the night
                     entry.update(status="FAILED", finding=f"runner error: {type(error).__name__}: {error}")
                     log(f"runner error in {job.id}: {error}")
+                if entry["status"] == "INTERRUPTED":
+                    state["paused"] = True
+                    save()
+                    break
             save()
     except KeyboardInterrupt:
         log("interrupted: the report so far is saved; run again with the same --out to continue")
     finally:
         for entry in entries:
-            if entry["status"] == "RUNNING":
-                entry["status"] = "FAILED"
-                entry["finding"] = "the run was cut short while this job was running"
-        state["finished"] = all(entry["status"] != "PENDING" for entry in entries)
+            if (
+                entry["status"] == "RUNNING"
+            ):  # Ctrl+C or a shutdown while a job ran: it is run again from its start on resume
+                entry["status"] = "INTERRUPTED"
+                entry["finding"] = (
+                    "the run was cut short while this job was running; it runs again when you resume"
+                )
+        state["finished"] = all(entry["status"] not in ("PENDING", "INTERRUPTED") for entry in entries)
         save()
         with contextlib.suppress(Exception):
             make_bundle(out)

@@ -34,6 +34,7 @@ BADGE = {
     "SKIPPED": "#6b7280",
     "RUNNING": "#2b6cb0",
     "PENDING": "#6b7280",
+    "INTERRUPTED": "#6b7280",
 }
 
 
@@ -79,6 +80,12 @@ def write_report(out: Path, state: dict[str, Any]) -> None:
     for index, job in enumerate(jobs, start=1):
         lines.append(
             f"| {index} | {job['title']} | **{job['status']}** | {minutes(job.get('seconds', 0)) if job.get('seconds') else ''} | {redact(str(job.get('finding', '')))[:200].replace('|', '/')} |"
+        )
+    left = [job for job in jobs if job["status"] in ("PENDING", "INTERRUPTED")]
+    if left:
+        lines.insert(
+            3,
+            f"**Not finished: {len(left)} job(s) are still to run (paused or stopped).** Double-click Resume-Overnight.cmd to continue where it stopped.",
         )
     failures = [job for job in jobs if job["status"] in ("FAILED", "PROBLEMS", "TIMEOUT", "STALLED")]
     lines += ["", "## What to send back", ""]

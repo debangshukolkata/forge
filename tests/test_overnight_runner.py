@@ -385,3 +385,108 @@ def test_retry_runs_again_what_did_not_pass(tmp_path: Path, monkeypatch: pytest.
         == 0
     )
     assert ran == ["task_bugfix"]
+
+
+def test_stop_now_ends_the_running_job_without_a_failure_report(tmp_path: Path, fast: None) -> None:
+    """Pause-Overnight-Now.cmd writes STOP_NOW: the job stops, is marked INTERRUPTED and is not a failure."""
+    import threading
+    import time
+
+    spec = job(
+        "long", "import time\nwhile True:\n    print('tick', flush=True); time.sleep(0.1)", timeout_min=60
+    )
+    threading.Timer(1.5, lambda: (tmp_path / "STOP_NOW").write_text("stop")).start()
+    started = time.time()
+    entry = run_one(tmp_path, spec, 120)
+    assert entry["status"] == "INTERRUPTED" and time.time() - started < 30
+    assert not (tmp_path / "jobs" / "long" / "failure.md").exists()
+
+
+def test_a_pause_between_jobs_and_a_resume_continue_where_it_stopped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The traveller's case: stop after one job, shut the laptop, start again with --out latest: only the rest runs."""
+    ran: list[str] = []
+
+    def fake_run_job(spec: Job, ctx: Ctx, deadline: float, entry: dict[str, object], save: object) -> None:
+        ran.append(spec.id)
+        entry.update(status="PASS", seconds=1, finding="ok", evidence=[])
+        if len(ran) == 1:
+            (ctx.out / "STOP").write_text("pause")  # Pause-Overnight.cmd, pressed while the first job ran
+
+    monkeypatch.setattr(run_overnight, "run_job", fake_run_job)
+    monkeypatch.setattr(
+        run_overnight,
+        "preflight",
+        lambda ctx: ({"pytest": True, "azure": True, "node": True, "edge": True, "xdist": True}, "env"),
+    )
+    monkeypatch.setattr(run_overnight, "REPO", tmp_path)
+    out = tmp_path / "overnight-results" / "20260101-0000"
+    first = [
+        "--out",
+        str(out),
+        "--env-file",
+        "",
+        "--only",
+        "tests_fast,task_bugfix,task_logstats",
+        "--max-hours",
+        "1",
+    ]
+    assert run_overnight.main(first) == 0
+    assert ran == ["tests_fast"]
+    state = json.loads((out / "state.json").read_text(encoding="utf-8"))
+    assert state["finished"] is False and [j["status"] for j in state["jobs"]][-2:] == ["PENDING", "PENDING"]
+    assert "Not finished" in (out / "MORNING_REPORT.md").read_text(encoding="utf-8")
+    assert (
+        run_overnight.main(
+            [
+                "--out",
+                "latest",
+                "--env-file",
+                "",
+                "--only",
+                "tests_fast,task_bugfix,task_logstats",
+                "--max-hours",
+                "1",
+            ]
+        )
+        == 0
+    )
+    assert ran == [
+        "tests_fast",
+        "task_bugfix",
+        "task_logstats",
+    ]  # the pause file was cleared at the start, the finished job was not run again
+    assert json.loads((out / "state.json").read_text(encoding="utf-8"))["finished"] is True
+
+
+def test_a_job_cut_short_by_a_shutdown_runs_again_from_its_start(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ran: list[str] = []
+
+    def fake_run_job(spec: Job, ctx: Ctx, deadline: float, entry: dict[str, object], save: object) -> None:
+        ran.append(spec.id)
+        entry.update(status="PASS", seconds=1, finding="ok", evidence=[])
+
+    monkeypatch.setattr(run_overnight, "run_job", fake_run_job)
+    monkeypatch.setattr(
+        run_overnight, "preflight", lambda ctx: ({"pytest": True, "azure": True, "xdist": True}, "env")
+    )
+    base = {"title": "t", "group": "g", "seconds": 0, "finding": "", "evidence": []}
+    states = [
+        {"id": "preflight", "status": "PASS", **base},
+        {"id": "task_bugfix", "status": "RUNNING", **base},
+    ]  # the laptop was switched off while it ran
+    (tmp_path / "state.json").write_text(
+        json.dumps({"started": "x", "profile": "core", "finished": False, "jobs": states}), encoding="utf-8"
+    )
+    (tmp_path / "preflight.json").write_text(json.dumps({"caps": {"pytest": True}}), encoding="utf-8")
+    (tmp_path / ".lock").write_text("999999")  # the dead process of the night before
+    assert (
+        run_overnight.main(
+            ["--out", str(tmp_path), "--env-file", "", "--only", "task_bugfix", "--max-hours", "1"]
+        )
+        == 0
+    )
+    assert ran == ["task_bugfix"]
