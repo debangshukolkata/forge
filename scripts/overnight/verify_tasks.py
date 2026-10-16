@@ -6,6 +6,7 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -215,6 +216,29 @@ def on_white(source: Path, target: Path) -> None:
     base.resize((image.width * scale, image.height * scale)).save(target)
 
 
+def permission_diagnosis(python: str, script: Path, folder: Path) -> str:
+    """Why can the script not write in the folder? Access rights of the folder, then the same script writing to the system temp folder instead (told apart: the folder, or the script)."""
+    import tempfile
+
+    lines = [
+        f"[diagnosis] folder writable by this program: {os.access(folder, os.W_OK)}; files: {sorted(p.name for p in folder.iterdir())[:12]}"
+    ]
+    try:
+        rights = subprocess.run(["icacls", str(folder)], capture_output=True, text=True, timeout=30).stdout
+        lines.append("[diagnosis] icacls: " + " ".join(rights.split())[:400])
+    except (OSError, subprocess.SubprocessError) as error:
+        lines.append(f"[diagnosis] icacls not available: {error}")
+    target = Path(tempfile.mkdtemp(prefix="sigdiag-")) / "signature.png"
+    try:
+        retry = run([python, "extract_signature.py", "prescription.jpg", str(target)], folder, 180)
+        lines.append(
+            f"[diagnosis] writing to the temp folder instead: exit {retry.returncode}, file made: {target.is_file()} {(retry.stderr or '')[-150:]}"
+        )
+    except subprocess.TimeoutExpired:
+        lines.append("[diagnosis] the retry timed out")
+    return " ".join(lines)
+
+
 def verify_sigcrop(workspace: Path, run_dir: Path, task: dict[str, Any], repo: Path) -> dict[str, Any]:
     script = find_file(workspace, "extract_signature.py")
     checks = [check("extract_signature.py exists", script is not None)]
@@ -239,9 +263,10 @@ def verify_sigcrop(workspace: Path, run_dir: Path, task: dict[str, Any], repo: P
             continue
         output = folder / "signature.png"
         if done.returncode != 0 or not output.is_file():
-            checks.append(
-                check(f"{label}: produces signature.png", False, (done.stderr or done.stdout)[-300:])
-            )
+            detail = (done.stderr or done.stdout)[-300:]
+            if "PermissionError" in detail:  # office laptop, 2026-10-16: say where the refusal comes from
+                detail += permission_diagnosis(python, script, folder)
+            checks.append(check(f"{label}: produces signature.png", False, detail))
             continue
         for item in score_signature(output, truth):
             checks.append({**item, "name": f"{label}: {item['name']}"})
