@@ -63,18 +63,37 @@ def report(path: Path) -> str:
             f"  {clock(float(p.get('latency_s') or 0)):>8} {p.get('role')}/{p.get('model')} out {usage.get('output_tokens')} reasoning {usage.get('reasoning_tokens')} in {usage.get('input_tokens')} -> {p.get('tool_calls') or p.get('finish_reason')}"
         )
 
-    started: dict[str, tuple[str, datetime]] = {}
+    started: dict[str, tuple[str, datetime, str]] = {}
     spent: dict[str, list[float]] = defaultdict(list)
+    single: list[tuple[float, str, str, bool, str]] = []
     for event in events:
         payload = event.get("payload", {})
         if event["type"] == "tool_call_started":
-            started[payload.get("id", "")] = (payload.get("name", "?"), when(event["ts"]))
+            started[payload.get("id", "")] = (
+                payload.get("name", "?"),
+                when(event["ts"]),
+                str(payload.get("summary") or payload.get("arguments") or "")[:110],
+            )
         elif event["type"] == "tool_call_finished" and payload.get("id") in started:
-            name, begun = started.pop(payload["id"])
-            spent[name].append((when(event["ts"]) - begun).total_seconds())
+            name, begun, summary = started.pop(payload["id"])
+            seconds = (when(event["ts"]) - begun).total_seconds()
+            spent[name].append(seconds)
+            single.append(
+                (
+                    seconds,
+                    name,
+                    summary,
+                    bool(payload.get("ok")),
+                    " ".join(str(payload.get("preview") or "").split())[:110],
+                )
+            )
     out.append("\ntools (name: count, total, longest)")
     for name, times in sorted(spent.items(), key=lambda item: -sum(item[1]))[:10]:
         out.append(f"  {name:22} {len(times):4}  total {clock(sum(times)):>8}  longest {clock(max(times))}")
+
+    out.append("slowest single tool calls (time, tool, what, ok?, start of the answer)")
+    for seconds, name, summary, ok, preview in sorted(single, reverse=True)[:8]:
+        out.append(f"  {clock(seconds):>8} {name} | {summary} | {'ok' if ok else 'FAILED'} | {preview}")
 
     agents = [e["payload"] for e in events if e["type"] == "agent_finished"]
     if agents:
