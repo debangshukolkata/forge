@@ -18,10 +18,15 @@ class RoleRouter(Protocol):
 
 
 # The proposed model for a role is the first of these that has answered its test (D-405, D-407, D-409, D-411); a role without an entry keeps its configured default. The roles follow the research
-# and the user's decisions of 2026-10-15: the coder stays gpt-5.1 (gpt-5.4 passed the same 13 of 14 coding tasks, 39 percent slower and 2.9 times the cost, D-414); the planner, the
+# and the user's decisions of 2026-10-15: the coder was gpt-5.1 (gpt-5.4 passed the same 13 of 14 coding tasks, 39 percent slower and 2.9 times the cost, D-414) until the user chose gpt-5.4 for every role that builds or reads on 2026-10-16 (D-446); the planner, the
 # critic, the judge and the reviewer are another family than the builder (Gemini 4 Argon, else Gemini 3.1 Pro), because a judge from the builder's own family is lenient toward it; the fallback is another
-# family too (a rate limit usually hits one provider), else gpt-5.1 from the first resource. The summariser, the knowledge builder and vision keep gpt-5.1: high-volume reading work where speed counts.
+# family too (a rate limit usually hits one provider), else gpt-5.1 from the first resource. The summariser, the knowledge builder and vision follow the coder (D-446).
 PREFERENCE: dict[str, tuple[str, ...]] = {
+    # the models that build and read: gpt-5.4 once it has answered its test (the user's choice of 2026-10-16, D-446; it measured better on pictures and on checking its own result), else the configured default gpt-5.1
+    "coder": ("gpt54",),
+    "kb_builder": ("gpt54",),
+    "summariser": ("gpt54",),
+    "vision": ("gpt54",),
     "planner": ("gemini4argon", "gemini31pro"),
     "critic": ("gemini4argon", "gemini31pro", "gpt52"),
     "judge": ("gemini4argon", "gemini31pro", "gpt52"),
@@ -146,7 +151,17 @@ def validate_plan(config: ForgeConfig, roles: dict[str, str]) -> dict[str, str]:
 
 
 def apply_saved_plan(router: RoleRouter, home: Path) -> None:
-    """Called when a session starts. A key that no longer exists in config.yaml is skipped, never fatal."""
-    for role, key in store.load(home)["plan"].items():
+    """Called when a session starts. A key that no longer exists in config.yaml is skipped, never fatal.
+
+    The roles the user changed by hand keep their saved model; every other role follows the proposal made from the last environment tests (D-446), so a model that has answered since the plan was
+    saved (gpt-5.4, or Gemini on another machine) is used without a second visit to the Environment panel. Without test results the saved plan applies as it was saved."""
+    saved = store.load(home)
+    plan = dict(saved["plan"])
+    if saved["results"]:
+        manual = {role: plan[role] for role in saved["manual"] if role in plan}
+        for entry in propose_plan(router.config, saved["results"], manual)["roles"]:
+            if entry["role"] not in manual and entry["model"]:
+                plan[entry["role"]] = entry["model"]
+    for role, key in plan.items():
         if role in ROLES and key in router.config.llm.models:
             router.set_role_model(role, key)

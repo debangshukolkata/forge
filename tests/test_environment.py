@@ -334,24 +334,23 @@ def test_the_planner_is_proposed_on_gemini_once_it_answered_and_follows_the_code
     assert by_role(propose_plan(config, BOTH, {}))["planner"]["model"] == config.llm.roles.coder
 
 
-def test_the_coder_stays_on_gpt_5_1_and_the_fallback_is_another_family_or_the_second_resource() -> None:
+def test_gpt_5_4_builds_and_reads_once_it_answers_and_the_fallback_is_another_family_or_gpt_5_2() -> None:
+    """D-446: the user chose gpt-5.4 for the coder, the knowledge builder, the summariser and vision; without it they keep the configured default."""
     config = default_config()
-    both_54 = {"azure": {"status": "ok", "models": {**BOTH["azure"]["models"], "gpt54": True}}}
+    both_54 = {"azure": {"status": "ok", "models": {**BOTH["azure"]["models"], "gpt54": True, "gpt52": True}}}
     gemini = {"gemini": {"status": "ok", "models": {"gemini4argon": True, "gemini31pro": True}}}
     plan = by_role(propose_plan(config, {**both_54, **gemini}, {}))
-    assert (
-        plan["coder"]["model"] == config.llm.roles.coder
-    )  # gpt-5.4 was slower and dearer for the same results (D-414)
-    assert plan["fallback"]["model"] == "gemini31pro"
-    for role in ("kb_builder", "summariser", "vision"):
-        assert plan[role]["model"] == getattr(config.llm.roles, role)
+    for role in ("coder", "kb_builder", "summariser", "vision"):
+        assert plan[role]["model"] == "gpt54", role
+    assert plan["fallback"]["model"] == "gemini31pro"  # another family first (D-411)
     azure_only = by_role(propose_plan(config, both_54, {}))
-    assert (
-        azure_only["fallback"]["model"] == "gpt54"
-    )  # the second resource has its own quota and outage domain
-    assert (
-        by_role(propose_plan(config, BOTH, {}))["fallback"]["model"] == config.llm.roles.fallback
-    )  # nothing else answered: unchanged
+    assert azure_only["fallback"]["model"] == "gpt52"  # gpt-5.4 is the coder: the fallback is gpt-5.2
+    without_54 = by_role(propose_plan(config, BOTH, {}))
+    for role in ("coder", "kb_builder", "summariser", "vision"):
+        assert without_54[role]["model"] == getattr(
+            config.llm.roles, role
+        )  # it did not answer: the configured default
+    assert without_54["fallback"]["model"] == config.llm.roles.fallback  # nothing else answered: unchanged
 
 
 def test_without_gemini_the_azure_critic_judge_and_reviewer_are_gpt_5_2_when_it_answers() -> None:
@@ -361,7 +360,7 @@ def test_without_gemini_the_azure_critic_judge_and_reviewer_are_gpt_5_2_when_it_
     for role in ("critic", "judge", "reviewer"):
         assert plan[role]["model"] == "gpt52"
     assert (
-        plan["planner"]["model"] == config.llm.roles.coder
+        plan["planner"]["model"] == plan["coder"]["model"]
     )  # a planner weaker than the coder would be pointless: it follows the coder
     with_gemini = {"gemini": {"status": "ok", "models": {"gemini4argon": True}}}
     assert by_role(propose_plan(config, {**azure, **with_gemini}, {}))["judge"]["model"] == "gemini4argon"
@@ -396,3 +395,25 @@ def test_a_saved_role_keeps_its_value_only_when_the_user_changed_it_by_hand(
     assert (
         shown["fallback"]["model"] == "gemini31pro" and shown["fallback"]["reason"] != "Your earlier choice"
     )
+
+
+def test_a_session_follows_the_latest_proposals_except_for_the_roles_the_user_changed(tmp_path: Path) -> None:
+    """D-446: a plan saved before gpt-5.4 answered must not keep the coder on gpt-5.1; a role chosen by hand stays."""
+    config = default_config()
+    chosen: dict[str, str] = {}
+
+    class StubRouter:
+        def __init__(self) -> None:
+            self.config = config
+
+        def set_role_model(self, role: str, model_key: str) -> None:
+            chosen[role] = model_key
+
+    results = {"azure": {"status": "ok", "models": {**BOTH["azure"]["models"], "gpt54": True}}}
+    for check_id, result in results.items():
+        store.save_result(tmp_path, check_id, result)
+    store.save_plan(tmp_path, {"coder": "gpt51", "vision": "gpt51", "reviewer": "gpt41"}, manual=["vision"])
+    apply_saved_plan(StubRouter(), tmp_path)  # type: ignore[arg-type]
+    assert chosen["coder"] == "gpt54"  # saved as proposed, so it follows the new proposal
+    assert chosen["vision"] == "gpt51"  # chosen by hand, so it stays
+    assert chosen["reviewer"] == "gpt41"

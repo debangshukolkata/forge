@@ -26,6 +26,10 @@ class Ctx:
     def env_arg(self) -> list[str]:
         return ["--env", f"FORGE_ENV_FILE={self.env_file}"] if self.env_file else []
 
+    def default_coder(self) -> str:
+        """The builder model of the "A" arms: gpt-5.4 when the preflight found it answering (the default since D-446), else gpt-5.1."""
+        return "gpt54" if self.caps.get("azure_strong") else "gpt51"
+
     def gemini_flags(self, model: str = "gemini31pro") -> list[str]:
         """The neutral critic and scorer for the design runs when Gemini answers; without it the runs use the Azure models (and say so in the report)."""
         return ["--critic-model", model, "--scorer-model", model] if self.caps.get("gemini") else []
@@ -74,7 +78,7 @@ def benchmark(
 def task(task_id: str, est: int, timeout: int, needs: tuple[str, ...] = ()) -> Job:
     return Job(
         id=f"task_{task_id}", title=f"Forge task: {task_id}", group="tasks", est_min=est, timeout_min=timeout + 10, needs=needs, kind="tasks", run_root=f"tasks/{task_id}",
-        argv=lambda ctx: [ctx.python, script(ctx, "scripts", "overnight", "tasks_runner.py"), task_id, "--out", str(ctx.runs / "tasks"), *(["--env-file", ctx.env_file] if ctx.env_file else [])],
+        argv=lambda ctx: [ctx.python, script(ctx, "scripts", "overnight", "tasks_runner.py"), task_id, "--out", str(ctx.runs / "tasks"), *(["--env-file", ctx.env_file] if ctx.env_file else []), "--default-coder", ctx.default_coder()],
     )  # fmt: skip
 
 
@@ -102,7 +106,7 @@ def gallery(job_id: str, title: str, name: str, arms: list[str]) -> Job:
 
 def catalogue() -> list[Job]:
     cheap = lambda ctx: []  # noqa: E731
-    coder_gpt51 = lambda ctx: ["--coder-model", "gpt51", *ctx.gemini_flags()]  # noqa: E731
+    coder_gpt51 = lambda ctx: ["--coder-model", ctx.default_coder(), *ctx.gemini_flags()]  # noqa: E731  (the name is old: since D-446 the default builder is gpt-5.4 where it answers)
     jobs: list[Job] = [
         pytest_job(
             "tests_fast",
@@ -129,7 +133,7 @@ def catalogue() -> list[Job]:
             needs=("gemini",),
             argv=lambda ctx: [ctx.python, script(ctx, "scripts", "dev", "image_smoke.py")],
         ),
-        # the Fernhill bakery page: three arms, the same brief; A is gpt-5.1 designing and building, C is Argon doing both, B is gpt-5.1 building from Argon's DESIGN.md
+        # the Fernhill bakery page: three arms, the same brief; A is the default model (gpt-5.4 where it answers, else gpt-5.1) designing and building, C is Argon doing both, B is the default model building from Argon's DESIGN.md
         benchmark(
             "fernhill_a",
             "run_design_benchmark.py",
@@ -139,7 +143,7 @@ def catalogue() -> list[Job]:
             30,
             90,
             group="design taste",
-            title="Fernhill page, arm A (gpt-5.1 designs and builds)",
+            title="Fernhill page, arm A (the default model designs and builds)",
         ),
         benchmark(
             "fernhill_c",
@@ -169,7 +173,7 @@ def catalogue() -> list[Job]:
             90,
             needs=("gemini",),
             group="design taste",
-            title="Fernhill page, arm B (gpt-5.1 builds from Argon's DESIGN.md)",
+            title="Fernhill page, arm B (the default model builds from Argon's DESIGN.md)",
         ),
         gallery(
             "fernhill_gallery",

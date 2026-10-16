@@ -31,13 +31,22 @@ def load_task(task_id: str) -> tuple[dict[str, object], Path]:
     return json.loads((folder / "task.json").read_text(encoding="utf-8")), folder
 
 
-def prepare(task: dict[str, object], folder: Path, run_dir: Path, env: dict[str, str]) -> Path:
+def prepare(
+    task: dict[str, object], folder: Path, run_dir: Path, env: dict[str, str], default_coder: str = ""
+) -> Path:
     """The workspace with the seed files (and the generated sample) in place."""
     workspace = run_dir / "ws"
     home = run_dir / "home"
     home.mkdir(parents=True, exist_ok=True)
-    roles = task.get("roles")
-    if isinstance(roles, dict) and roles:
+    roles: dict[str, str] = {}
+    if (
+        default_coder and default_coder != "gpt51"
+    ):  # the isolated home has no saved plan: give the builder roles the model the user's own plan would (D-446)
+        roles = {role: default_coder for role in ("coder", "kb_builder", "summariser", "vision")}
+    given = task.get("roles")
+    if isinstance(given, dict):
+        roles.update({str(role): str(model) for role, model in given.items()})
+    if roles:
         lines = ["llm:", "  roles:", *[f"    {role}: {model}" for role, model in roles.items()]]
         (home / "config.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")
     created = subprocess.run(
@@ -65,6 +74,7 @@ def main() -> int:
     parser.add_argument("--out", required=True)
     parser.add_argument("--env-file", default="")
     parser.add_argument("--timeout-min", type=int, default=0)
+    parser.add_argument("--default-coder", default="")
     args = parser.parse_args()
     task, folder = load_task(args.task)
     run_dir = Path(args.out) / str(task["id"])
@@ -81,7 +91,7 @@ def main() -> int:
     started = time.time()
     status = "finished"
     try:
-        workspace = prepare(task, folder, run_dir, env)
+        workspace = prepare(task, folder, run_dir, env, args.default_coder)
         prompt = run_dir / "prompt.txt"
         prompt.write_text((folder / "prompt.md").read_text(encoding="utf-8"), encoding="utf-8")
         timeout = (args.timeout_min or int(str(task.get("timeout_min", 40)))) * 60

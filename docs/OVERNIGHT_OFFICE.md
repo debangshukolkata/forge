@@ -90,7 +90,7 @@ Click Cancel and never type an administrator password. Nothing in the night may 
 | Preflight | tools, every model, picture generation, `forge doctor` | 10 min |
 | Test suite, then browser tests, live model tests, network tests | the code itself on this laptop, and a real shadcn and Magic UI install | 55 min |
 | Gemini and image smoke tests | the Gemini provider and `generate_image` | 8 min |
-| Fernhill bakery page, three ways | A: gpt-5.1 designs and builds. C: Gemini 4 Argon designs and builds. B: gpt-5.1 builds from Argon's design. With a blind gallery. Real photographs come from `generate_image` here | 95 min |
+| Fernhill bakery page, three ways | A: the default model (gpt-5.4) designs and builds. C: Gemini 4 Argon designs and builds. B: gpt-5.4 builds from Argon's design. With a blind gallery. Real photographs come from `generate_image` here | 95 min |
 | Small tasks | fix failing tests; a log-analyser tool; a signature cut out of a made-up prescription photo (three times: default model, Argon, gpt-5.4); a web research report with sources | 90 min |
 | Two small design briefs, three ways, with a gallery | a quick second look at Argon's taste | 40 min |
 | Gemini critic test | does Argon as the checking model make the pages better | 25 min |

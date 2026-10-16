@@ -1,4 +1,4 @@
-# The design taste test: Gemini 4 Argon against gpt-5.1 (TODO DIE8)
+# The design taste test: Gemini 4 Argon against the default model, gpt-5.4 (TODO DIE8; the arms below say gpt-5.1 where this was written before D-446: read it as gpt-5.4)
 
 Why it exists: Argon is planned only as critic, judge and planner. This test shows whether it should also **design**. Argon is not available on the build machine, so the Argon runs happen on the office laptop; everything
 else is already in the repo. Models are not asked to score the pages (a model prefers its own family): you choose, blind.
