@@ -268,7 +268,7 @@ def certificate_advice(shell: ShellSession) -> str:
     )
 
 
-_PYTEST_SUMMARY = re.compile(r"\d+ (?:passed|failed|errors?|skipped|deselected)")
+_PYTEST_SUMMARY = re.compile(r"\b\d+ (?:passed|failed|errors?|skipped|deselected)\b")
 
 
 def hung_after_last_test(output: str) -> bool:
