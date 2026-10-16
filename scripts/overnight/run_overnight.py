@@ -501,6 +501,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--only", default="")
     parser.add_argument("--skip", default="")
     parser.add_argument("--no-resume", action="store_true")
+    parser.add_argument(
+        "--retry",
+        action="store_true",
+        help="in a folder that already has results: run again every job that did not PASS (failed, problems, timeout, stalled, skipped)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
     out = Path(args.out) if args.out else REPO / "overnight-results" / time.strftime("%Y%m%d-%H%M")
@@ -551,7 +556,7 @@ def main(argv: list[str] | None = None) -> int:
         old = previous.get(job_id)
         entries.append(
             old
-            if old and old.get("status") in DONE
+            if old and old.get("status") in ({"PASS"} if args.retry else DONE)
             else {
                 "id": job_id,
                 "title": title,
@@ -575,7 +580,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         pre = entries[0]
         caps_file = out / "preflight.json"
-        if pre["status"] in DONE and caps_file.is_file():
+        if pre["status"] in DONE and caps_file.is_file() and not args.retry:
             ctx.caps = json.loads(caps_file.read_text(encoding="utf-8")).get("caps", {})
         else:
             pre.update(status="RUNNING")

@@ -57,6 +57,20 @@ Start-Overnight.cmd --out overnight-results\<the same date-time folder>
 
 Jobs that were running when it stopped are run again.
 
+## The second night: run again only what did not pass
+
+After a fix (new code, Gemini sign-in), do not start from nothing: run the same folder with `--retry`. Jobs that PASSED are kept; failed, problem, timeout, stalled and skipped jobs run again (and the preflight is run again, so a Gemini that now answers is found):
+
+```
+Start-Overnight.cmd --out overnight-results\<the same date-time folder> --retry
+```
+
+To run only some of them add `--only fernhill_c,fernhill_b,fernhill_gallery` (the names are in the plan printed by `--dry-run`).
+
+## If a dialog asks to install Python
+
+Click Cancel and never type an administrator password. Nothing in the night may install anything; the runner and DebCraft now remove the Microsoft Store app-alias folder from the commands' PATH, so a command that says `python3` fails at once instead of opening the Store. If a dialog still appears, take a picture of it (its title and the program name matter) and send it with the report.
+
 ## What runs, in order (the core night)
 
 | Job | What it tests | About |

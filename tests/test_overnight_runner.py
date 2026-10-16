@@ -325,3 +325,63 @@ def test_test_jobs_do_not_get_the_env_file_override_except_the_live_ones(
     assert '"env_file": ""' in seen["tests_fast"] and '"ci": ""' in seen["tests_fast"]
     assert "C:/x/.env" in seen["tests_live"]
     assert "C:/x/.env" in seen["smoke_gemini"]
+
+
+def test_retry_runs_again_what_did_not_pass(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """--retry in an old folder keeps the jobs that passed and runs the rest again (the second night after a fix)."""
+    ran: list[str] = []
+
+    def fake_run_job(spec: Job, ctx: Ctx, deadline: float, entry: dict[str, object], save: object) -> None:
+        ran.append(spec.id)
+        entry.update(status="PASS", seconds=1, finding="ok", evidence=[])
+
+    monkeypatch.setattr(run_overnight, "run_job", fake_run_job)
+    monkeypatch.setattr(
+        run_overnight,
+        "preflight",
+        lambda ctx: ({"pytest": True, "azure": True, "node": True, "edge": True, "xdist": True}, "env"),
+    )
+    states = [
+        {
+            "id": "preflight",
+            "title": "p",
+            "group": "p",
+            "status": "PASS",
+            "seconds": 1,
+            "finding": "",
+            "evidence": [],
+        }
+    ]
+    states += [
+        {
+            "id": "bugfix_x",
+            "title": "x",
+            "group": "g",
+            "status": "PASS",
+            "seconds": 1,
+            "finding": "",
+            "evidence": [],
+        }
+    ]
+    states += [
+        {
+            "id": "task_bugfix",
+            "title": "b",
+            "group": "g",
+            "status": "TIMEOUT",
+            "seconds": 1,
+            "finding": "",
+            "evidence": [],
+        }
+    ]
+    (tmp_path / "state.json").write_text(
+        json.dumps({"started": "x", "profile": "core", "finished": True, "jobs": states}), encoding="utf-8"
+    )
+    (tmp_path / "preflight.json").write_text(json.dumps({"caps": {"pytest": True}}), encoding="utf-8")
+    assert (
+        run_overnight.main(
+            ["--out", str(tmp_path), "--env-file", "", "--only", "task_bugfix", "--retry", "--max-hours", "1"]
+        )
+        == 0
+    )
+    assert ran == ["task_bugfix"]
