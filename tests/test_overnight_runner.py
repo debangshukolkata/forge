@@ -490,3 +490,20 @@ def test_a_job_cut_short_by_a_shutdown_runs_again_from_its_start(
         == 0
     )
     assert ran == ["task_bugfix"]
+
+
+def test_remove_tree_deletes_read_only_files(tmp_path: Path) -> None:
+    # The old `rmtree(..., ignore_errors=True)` left such a folder behind and the job's second run refused to start (D-450).
+    import stat
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "overnight"))
+    from fsutil import remove_tree
+
+    folder = tmp_path / "ws" / ".forge" / "objects"
+    folder.mkdir(parents=True)
+    locked = folder / "pack.idx"
+    locked.write_text("x", encoding="utf-8")
+    locked.chmod(stat.S_IREAD)
+    remove_tree(tmp_path / "ws")
+    assert not (tmp_path / "ws").exists()

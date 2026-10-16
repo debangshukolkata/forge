@@ -31,6 +31,7 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE))
+from fsutil import remove_tree  # noqa: E402
 from jobs import Ctx, Job, catalogue  # noqa: E402
 from report import redact, write_report  # noqa: E402
 from verify_tasks import kill_tree  # noqa: E402
@@ -379,13 +380,13 @@ def run_job(job: Job, ctx: Ctx, deadline: float, entry: dict[str, Any], save: An
     job_dir = ctx.out / "jobs" / job.id
     if job_dir.exists():  # an earlier attempt (stopped, or failed and run again): keep its small files as <id>-previous, start the job clean
         previous = ctx.out / "jobs" / f"{job.id}-previous"
-        shutil.rmtree(previous, ignore_errors=True)
+        remove_tree(previous)
         with contextlib.suppress(OSError):
             job_dir.rename(previous)
     if job.run_root and (ctx.runs / job.run_root).exists():
-        shutil.rmtree(
-            ctx.runs / job.run_root, ignore_errors=True
-        )  # the workspaces of the earlier attempt are large and of no use now
+        remove_tree(
+            ctx.runs / job.run_root
+        )  # the workspaces of the earlier attempt are large and of no use now (D-450: a folder that cannot be deleted is moved aside)
     job_dir.mkdir(parents=True, exist_ok=True)
     argv = job.argv(ctx)
     if job.kind == "pytest" and not ctx.caps.get("xdist"):

@@ -20,6 +20,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE))
+from fsutil import remove_tree  # noqa: E402
 from make_signature_sample import make as make_signature_sample  # noqa: E402
 from verify_tasks import kill_tree, verify  # noqa: E402
 
@@ -36,6 +37,7 @@ def prepare(
 ) -> Path:
     """The workspace with the seed files (and the generated sample) in place."""
     workspace = run_dir / "ws"
+    remove_tree(workspace)  # a run that is repeated starts clean (D-450)
     home = run_dir / "home"
     home.mkdir(parents=True, exist_ok=True)
     roles: dict[str, str] = {}

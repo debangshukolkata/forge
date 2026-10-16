@@ -25,6 +25,8 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "overnight"))
+from fsutil import remove_tree
 from run_code_benchmark import PYTHON, REPO
 from run_speed_benchmark import timing
 
@@ -148,7 +150,7 @@ def design_facts(workspace: Path) -> dict[str, object]:
 def run_task(task: Path, run_dir: Path, env: dict[str, str], design_from: str = "") -> dict[str, object]:
     meta = json.loads((task / "task.json").read_text(encoding="utf-8"))
     workspace = run_dir / meta["id"]
-    shutil.rmtree(workspace, ignore_errors=True)
+    remove_tree(workspace)
     created = subprocess.run(
         [str(PYTHON), "-m", "forge.cli", "new", "--standalone", "--project", f"design-{meta['id']}", "--workspace", str(workspace)],
         env=env, capture_output=True, text=True,
