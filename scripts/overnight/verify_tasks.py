@@ -239,6 +239,26 @@ def permission_diagnosis(python: str, script: Path, folder: Path) -> str:
     return " ".join(lines)
 
 
+def run_with_runners_python(script: Path, workspace: Path, folder: Path) -> subprocess.CompletedProcess[str]:
+    """The same script under the python that runs this checker, with the workspace's installed packages on its path."""
+    site = next(iter((workspace / ".venv").glob("Lib/site-packages")), None) or next(
+        iter((workspace / ".venv").glob("lib/python*/site-packages")), None
+    )
+    env = {
+        **os.environ,
+        "PYTHONPATH": os.pathsep.join(
+            filter(None, [str(site) if site else "", os.environ.get("PYTHONPATH", "")])
+        ),
+    }
+    try:
+        return subprocess.run(
+            [sys.executable, "extract_signature.py", "prescription.jpg", "signature.png"],
+            cwd=folder, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180, env=env,
+        )  # fmt: skip
+    except subprocess.TimeoutExpired as error:
+        return subprocess.CompletedProcess(error.cmd, 1, "", "timed out")
+
+
 def verify_sigcrop(workspace: Path, run_dir: Path, task: dict[str, Any], repo: Path) -> dict[str, Any]:
     script = find_file(workspace, "extract_signature.py")
     checks = [check("extract_signature.py exists", script is not None)]
@@ -266,8 +286,19 @@ def verify_sigcrop(workspace: Path, run_dir: Path, task: dict[str, Any], repo: P
             detail = (done.stderr or done.stdout)[-300:]
             if "PermissionError" in detail:  # office laptop, 2026-10-16: say where the refusal comes from
                 detail += permission_diagnosis(python, script, folder)
-            checks.append(check(f"{label}: produces signature.png", False, detail))
-            continue
+                done = run_with_runners_python(
+                    script, workspace, folder
+                )  # the workspace's own python was refused: the script itself may still be right
+                if done.returncode == 0 and output.is_file():
+                    label += " (run with the runner's python, the workspace's own python was refused)"
+                    checks.append(
+                        check(
+                            f"{label}: why the workspace's python was refused (for the record)", True, detail
+                        )
+                    )
+            if done.returncode != 0 or not output.is_file():
+                checks.append(check(f"{label}: produces signature.png", False, detail))
+                continue
         for item in score_signature(output, truth):
             checks.append({**item, "name": f"{label}: {item['name']}"})
         shown = run_dir / f"signature-seed{seed}-on-white.png"

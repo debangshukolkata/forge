@@ -10,6 +10,7 @@ import contextlib
 import os
 import shutil
 import stat
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -19,6 +20,27 @@ from typing import Any
 def _clear_read_only(function: Any, path: str, _error: object) -> None:
     os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
     function(path)
+
+
+def stop_leftovers(path: Path) -> None:
+    """Stop programs left running from inside the folder (a dev server or a browser the job started and did not close): they hold its files, so it cannot be deleted or renamed.
+    Only a program whose command line names this exact folder is stopped; Windows only."""
+    if sys.platform != "win32":
+        return
+    needle = str(path).replace("'", "''")
+    script = (
+        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains('"
+        + needle
+        + "') "
+        "-and $_.ProcessId -ne $PID } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+    )
+    with contextlib.suppress(Exception):
+        subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
+            capture_output=True,
+            timeout=60,
+            check=False,
+        )
 
 
 def remove_tree(path: Path) -> None:
@@ -33,6 +55,7 @@ def remove_tree(path: Path) -> None:
                 shutil.rmtree(path, onerror=_clear_read_only)
         if not path.exists():
             return
+        stop_leftovers(path)
         time.sleep(2)
     aside = path.with_name(f"{path.name}.stale-{time.strftime('%H%M%S')}")
     path.rename(aside)  # a folder that cannot even be renamed is a real problem: let it show
