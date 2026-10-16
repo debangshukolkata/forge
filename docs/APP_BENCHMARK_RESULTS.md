@@ -38,5 +38,13 @@ Still missing in places: domain depth the model does not volunteer (lending: aff
 - The office laptop: the planner can run on a stronger model there (Gemini); not measured.
 - Full builds: whether the better plan produces a better application was not measured (the runs stop when building begins, on purpose).
 
-## 6. Small-task check
-Filled in when the run finishes.
+## 6. Small-task check (the log-analyser task of the overnight kit, hidden checks, gpt-5.4)
+| | Old code | New code |
+|---|---|---|
+| Time | 525 s | 289 s |
+| Hidden checks | 10 of 10 | 10 of 10 |
+| Tool calls | 38 | 28 |
+| Planner called / solution-thinking loaded | no / no | no / no |
+| Questions | 0 | 1 (at the end: "one useful follow-up?", recommended "Stop here"; the existing follow-up offer) |
+
+A small, clear task is handled directly, with no planner and no analysis, as intended: the proportionality rule works (one run each; the time difference is probably noise, but there is no sign of added ceremony). The final question is the existing offer of optional follow-ups, which fits the principle that optional ideas are listed and not silently built.
