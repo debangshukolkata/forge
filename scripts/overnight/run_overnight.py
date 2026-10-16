@@ -378,6 +378,7 @@ def run_job(job: Job, ctx: Ctx, deadline: float, entry: dict[str, Any], save: An
         "CI": "1",
         "NO_COLOR": "1",
         "npm_config_yes": "true",
+        "PYTHON_MANAGER_AUTOMATIC_INSTALL": "0",  # the Python install manager must never ask to install anything during an unattended night
         "FORGE_ENV_FILE": ctx.env_file,
         **job.env,
     }
