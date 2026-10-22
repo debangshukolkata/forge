@@ -121,6 +121,10 @@ class LLMConfig(_Strict):
     fallback_also: list[
         str
     ] = []  # more models to switch to when a call is rate limited or fails after its retries; one of another provider is preferred (D-411)
+    # Models to rotate through when a call is rate limited or down (D-465): the order is the preference. The failing model
+    # rests for rotation_cooldown_s (or the server's Retry-After, if longer) and calls go to the next one meanwhile.
+    rotation: list[str] = []
+    rotation_cooldown_s: float = Field(default=120.0, ge=0)
     retry: RetryConfig = RetryConfig()
 
     @model_validator(mode="after")
@@ -131,9 +135,11 @@ class LLMConfig(_Strict):
                 raise ValueError(
                     f"role '{role}' uses unknown model '{model_key}'; known: {sorted(self.models)}"
                 )
-        for key in self.fallback_also:
+        for key in [*self.rotation, *self.fallback_also]:
             if key not in self.models:
-                raise ValueError(f"fallback_also names unknown model '{key}'; known: {sorted(self.models)}")
+                raise ValueError(
+                    f"rotation/fallback_also names unknown model '{key}'; known: {sorted(self.models)}"
+                )
         unknown = set(self.role_reasoning_effort) - set(ROLES)
         if unknown:
             raise ValueError(f"role_reasoning_effort has unknown roles: {sorted(unknown)}")

@@ -7,7 +7,7 @@ import json
 import httpx2
 import pytest
 
-from forge.errors import LLMAuthError, LLMContextLengthError
+from forge.errors import LLMAuthError, LLMContextLengthError, LLMServerError
 from forge.llm.azure_openai import AzureOpenAIProvider
 from forge.llm.base import ChatRequest, Message
 from forge.llm.tool_args import parse_error_result
@@ -75,12 +75,91 @@ async def test_server_errors_back_off_then_fall_back_to_the_fallback_model() -> 
         notices.append((kind, data))
 
     sleeps: list[float] = []
-    response = await mocked_router(handler, sleeps, on_notice=on_notice).chat("coder", HELLO)
+    router = mocked_router(handler, sleeps, on_notice=on_notice)
+    router.config.llm.rotation = ["gpt51", "gpt41"]  # the test's secrets only cover these two deployments
+    response = await router.chat("coder", HELLO)
 
     assert response.text == "from fallback"
-    assert deployments.count("primary-deployment") == 6  # max_attempts
-    assert len(sleeps) == 5 and sleeps == sorted(sleeps)  # exponential backoff
+    assert deployments.count("primary-deployment") == 2  # one wait, then the next model (D-465)
+    assert len(sleeps) == 1
     assert [kind for kind, _ in notices].count("fallback") == 1
+
+
+async def test_without_anywhere_to_switch_every_retry_is_used() -> None:
+    deployments: list[str] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        deployments.append(json.loads(request.content)["model"])
+        return json_response(503, error_body("503", "Service unavailable"))
+
+    router = mocked_router(handler, [])
+    router.config.llm.rotation = []
+    router.config.llm.fallback_also = []
+    router.role_models["fallback"] = None
+    router.role_models["coder"] = "gpt51"
+    with pytest.raises(LLMServerError):
+        await router.chat("coder", HELLO)
+    assert deployments.count("primary-deployment") == 6  # max_attempts
+
+
+async def test_a_rate_limited_model_rests_two_minutes_then_comes_back() -> None:
+    """D-465: after a 429 the next calls go to the next model; once the rest is over the first one is tried again."""
+    now = [1000.0]
+    served: list[str] = []
+    notices: list[dict[str, object]] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        deployment = json.loads(request.content)["model"]
+        served.append(deployment)
+        if deployment == "primary-deployment":
+            return json_response(429, error_body("429", "token rate limit"), headers={"retry-after": "3"})
+        return json_response(200, responses_body([text_output("from the next model")]))
+
+    async def on_notice(kind: str, data: dict[str, object]) -> None:
+        if kind == "fallback":
+            notices.append(data)
+
+    router = mocked_router(handler, [], on_notice=on_notice, clock=lambda: now[0])
+    router.config.llm.rotation = ["gpt51", "gpt41"]
+    first = await router.chat("coder", HELLO)
+    assert first.text == "from the next model"
+    assert served == ["primary-deployment", "primary-deployment", "secondary-deployment"]
+    assert len(notices) == 1 and notices[0]["to_model"] == "gpt41" and notices[0]["rest_s"] == 120
+
+    served.clear()
+    await router.chat("coder", HELLO)  # still resting: straight to the next model, no retries on the busy one
+    assert served == ["secondary-deployment"]
+
+    now[0] += 121
+    served.clear()
+    await router.chat("coder", HELLO)  # rested: the preferred model is tried again (and is still limited)
+    assert served[0] == "primary-deployment"
+
+
+async def test_the_rest_lasts_as_long_as_the_server_asks_when_that_is_longer() -> None:
+    now = [0.0]
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        if json.loads(request.content)["model"] == "primary-deployment":
+            return json_response(429, error_body("429", "limit"), headers={"retry-after": "200"})
+        return json_response(200, responses_body([text_output("ok")]))
+
+    router = mocked_router(handler, [], clock=lambda: now[0])
+    router.config.llm.rotation = ["gpt51", "gpt41"]
+    await router.chat("coder", HELLO)
+    assert router._resting("gpt51")
+    now[0] = 150
+    assert router._resting("gpt51")  # 200 s asked for, more than the 120 s default
+    now[0] = 201
+    assert not router._resting("gpt51")
+
+
+def test_a_model_whose_context_window_is_too_small_is_not_switched_to() -> None:
+    router = mocked_router(lambda request: json_response(200, responses_body([text_output("x")])))
+    router.config.llm.rotation = ["gpt51", "gpt4o"]
+    big = ChatRequest(messages=[Message.user("word " * 140_000)])  # about 140k tokens: more than gpt-4o holds
+    assert router._fallback_for("gpt51", big) != "gpt4o"
+    assert router._fallback_for("gpt51", HELLO) in ("gpt4o", "gpt41", "gpt54", "gpt52")
 
 
 async def test_context_length_error_is_not_retried() -> None:

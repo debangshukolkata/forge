@@ -130,6 +130,7 @@ def test_a_rate_limited_model_falls_back_to_another_model_family_when_there_is_o
     from tests.helpers import mocked_router, reply, responses_body, text_output
 
     router = mocked_router(lambda request: reply(request, responses_body([text_output("ok")])))
+    router.config.llm.rotation = []  # with a rotation list the Azure models go first (D-465, tests/test_llm_failures.py)
     router.set_role_model("coder", "gpt54")
     router.set_role_model("fallback", "gemini31pro")
     assert router._fallback_for("gpt54") == "gemini31pro"  # Azure fails: Gemini answers

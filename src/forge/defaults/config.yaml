@@ -120,6 +120,9 @@ llm:
   role_reasoning_effort:          # overrides the model's default effort for a role (accuracy first, D-161)
     planner: high                 # the plan decides what gets built and runs once per large task: it thinks hardest (D-455; v5 of the application benchmark found 51 of 63 reference scenarios against 45 at medium). Ignored by models without an effort setting.
 
+  rotation: [gpt54, gpt52, gpt51, gpt41, gpt4o]   # D-465: on a rate limit, switch to the next configured model and let the busy one rest
+  rotation_cooldown_s: 120
+
   retry:
     max_attempts: 6
     base_delay_s: 1.0
