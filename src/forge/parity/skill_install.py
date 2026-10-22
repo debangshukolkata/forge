@@ -20,7 +20,10 @@ import httpx
 from forge.errors import ForgeError
 from forge.parity.skills import FRONT
 
-MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024
+MAX_DOWNLOAD_BYTES = (
+    150 * 1024 * 1024
+)  # the whole repository zip: GitHub offers no smaller download (archify: 53 MB)
+MAX_EXTRACT_BYTES = 200 * 1024 * 1024  # of the files kept: the skill folders, not the whole repository
 MAX_FILES = 5000
 MAX_DEPTH = 8
 SCRIPT_SUFFIXES = {".py", ".sh", ".ps1", ".bat", ".cmd", ".js", ".mjs", ".ts", ".rb", ".pl", ".exe"}
@@ -87,7 +90,7 @@ def fetch(source: str, destination: Path, client: httpx.Client | None = None) ->
         if owns_client:
             client.close()
     extracted = destination / "archive"
-    _extract(data, extracted)
+    _extract(data, extracted, subfolder)
     roots = [path for path in extracted.iterdir() if path.is_dir()]
     root = roots[0] if len(roots) == 1 else extracted  # GitHub wraps everything in <repo>-<branch>/
     target = root / subfolder if subfolder else root
@@ -110,7 +113,7 @@ def _download(client: httpx.Client, url: str) -> bytes:
                 total += len(chunk)
                 if total > MAX_DOWNLOAD_BYTES:
                     raise SkillInstallError(
-                        "The repository is larger than 50 MB; install from a smaller folder."
+                        f"The repository is larger than {MAX_DOWNLOAD_BYTES // (1024 * 1024)} MB; install from a smaller one."
                     )
                 chunks.append(chunk)
             return b"".join(chunks)
@@ -118,7 +121,40 @@ def _download(client: httpx.Client, url: str) -> bytes:
         raise SkillInstallError(f"Could not download it: {error}") from error
 
 
-def _extract(data: bytes, destination: Path) -> None:
+def _wanted_members(members: list[zipfile.ZipInfo], subfolder: str) -> list[zipfile.ZipInfo]:
+    """Only what a skill install needs: the requested folder, or else every folder that holds a SKILL.md with
+    everything under it. A repository is mostly other things (a website, benchmarks, screenshots): leaving them
+    out keeps the size and file limits about the skill, not the project around it."""
+    prefix = members[0].filename.split("/", 1)[0] + "/" if members else ""
+
+    def relative(member: zipfile.ZipInfo) -> str:
+        name = member.filename
+        return name[len(prefix) :] if name.startswith(prefix) else name
+
+    usable = [m for m in members if not any(part in SKIPPED_FOLDERS for part in relative(m).split("/"))]
+    if subfolder:
+        folder = subfolder.strip("/")
+        return [m for m in usable if relative(m).strip("/") == folder or relative(m).startswith(folder + "/")]
+    roots = sorted(
+        {
+            "/".join(parts[:-1])
+            for m in usable
+            if (parts := relative(m).split("/"))[-1] == "SKILL.md" and len(parts) <= MAX_DEPTH
+        }
+    )
+    if not roots:
+        return usable  # no skill found: keep the old behaviour, the caller reports "No SKILL.md"
+    return [
+        m
+        for m in usable
+        if any(
+            root == "" or relative(m).startswith(root + "/") or relative(m).strip("/") == root
+            for root in roots
+        )
+    ]
+
+
+def _extract(data: bytes, destination: Path, subfolder: str = "") -> None:
     """Unzips with every name checked: no path may leave the destination, and links are never created."""
     destination.mkdir(parents=True, exist_ok=True)
     root = destination.resolve()
@@ -127,9 +163,9 @@ def _extract(data: bytes, destination: Path) -> None:
     except zipfile.BadZipFile as error:
         raise SkillInstallError("The download is not a zip archive.") from error
     with archive:
-        members = archive.infolist()
-        if len(members) > MAX_FILES or sum(m.file_size for m in members) > MAX_DOWNLOAD_BYTES * 2:
-            raise SkillInstallError("The archive holds too many or too large files.")
+        members = _wanted_members(archive.infolist(), subfolder)
+        if len(members) > MAX_FILES or sum(m.file_size for m in members) > MAX_EXTRACT_BYTES:
+            raise SkillInstallError("The skill holds too many or too large files.")
         for member in members:
             if (member.external_attr >> 16) & 0o170000 == 0o120000:
                 continue  # a symbolic link: never recreated
