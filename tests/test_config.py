@@ -152,3 +152,17 @@ def test_the_planner_role_uses_the_coders_model_until_one_is_chosen() -> None:
     assert router.model_for_role("planner") == router.model_for_role("coder")
     router.set_role_model("planner", "gemini4argon")
     assert router.model_for_role("planner") == "gemini4argon"
+
+
+def test_an_older_config_that_still_names_the_knowledge_builder_role_loads(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-470: the kb_builder role is gone (the knowledge base was removed in D-160); a user's config.yaml may still have it."""
+    from forge.config import ROLES, load_config
+
+    assert "kb_builder" not in ROLES
+    (tmp_path / "config.yaml").write_text(
+        "llm:\n  roles:\n    kb_builder: gpt51\n    coder: gpt41\n", encoding="utf-8"
+    )
+    config = load_config(tmp_path)
+    assert config.llm.roles.coder == "gpt41" and not hasattr(config.llm.roles, "kb_builder")

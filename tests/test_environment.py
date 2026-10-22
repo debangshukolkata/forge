@@ -258,7 +258,7 @@ def test_a_gemini_test_that_passed_makes_gemini_the_critic_and_the_judge_and_lea
     plan = by_role(propose_plan(config, {**BOTH, **with_argon}, {}))
     for role in ("critic", "judge", "reviewer"):
         assert plan[role]["model"] == "gemini4argon" and "proposed by default" in plan[role]["reason"]
-    for role in ("coder", "kb_builder", "summariser", "vision"):
+    for role in ("coder", "summariser", "vision"):
         assert plan[role]["model"] == getattr(
             config.llm.roles, role
         )  # the builder side keeps its Azure model
@@ -340,13 +340,13 @@ def test_gpt_5_4_builds_and_reads_once_it_answers_and_the_fallback_is_another_fa
     both_54 = {"azure": {"status": "ok", "models": {**BOTH["azure"]["models"], "gpt54": True, "gpt52": True}}}
     gemini = {"gemini": {"status": "ok", "models": {"gemini4argon": True, "gemini31pro": True}}}
     plan = by_role(propose_plan(config, {**both_54, **gemini}, {}))
-    for role in ("coder", "kb_builder", "summariser", "vision"):
+    for role in ("coder", "summariser", "vision"):
         assert plan[role]["model"] == "gpt54", role
     assert plan["fallback"]["model"] == "gemini31pro"  # another family first (D-411)
     azure_only = by_role(propose_plan(config, both_54, {}))
     assert azure_only["fallback"]["model"] == "gpt52"  # gpt-5.4 is the coder: the fallback is gpt-5.2
     without_54 = by_role(propose_plan(config, BOTH, {}))
-    for role in ("coder", "kb_builder", "summariser", "vision"):
+    for role in ("coder", "summariser", "vision"):
         assert without_54[role]["model"] == getattr(
             config.llm.roles, role
         )  # it did not answer: the configured default

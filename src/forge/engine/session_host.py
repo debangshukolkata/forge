@@ -58,6 +58,7 @@ from forge.toolkit.shell import ShellSession, execute
 from forge.tools.interaction import AskUser
 from forge.tools.modeb import modeb_tools
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
+from forge.tools.test_quality import recover_interrupted_mutation
 from forge.tools.todo import PIN_SLOT as TODO_PIN_SLOT
 from forge.tools.todo import TodoItem
 from forge.tools.todo import render as render_todos
@@ -387,6 +388,18 @@ class SessionHost:
 
     async def run(self) -> None:
         await self._publish_status("idle")
+        if (
+            self.workspace is not None
+        ):  # a mutation check that was cut short left a changed source file (D-470)
+            restored = recover_interrupted_mutation(self.workspace)
+            if restored is not None:
+                await self.bus.publish(
+                    EventType.NOTICE,
+                    {
+                        "kind": "mutation_recovered",
+                        "text": f"Put {restored.name} back as it was: a mutation check was interrupted.",
+                    },
+                )
         # A reopened project shows what it has cost so far before any new call (D-463). Only when there is something
         # to show: a fresh project has no total yet, and COST_UPDATED doubles as the "a turn ended" signal.
         project = self.router.cost.summary().get("project")

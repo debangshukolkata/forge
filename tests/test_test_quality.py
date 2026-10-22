@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 import textwrap
 from pathlib import Path
@@ -153,3 +154,49 @@ async def test_the_tool_reports_survivors_and_refuses_test_files(original_repo: 
     refused = await tool.run(tool.Args(path=f"{relative}/test_mathx.py"), context)
     assert not refused.ok and "not a test file" in refused.content
     _ = pytest
+
+
+def test_a_check_cut_short_is_put_right_at_the_next_start(original_repo: Path, tmp_path: Path) -> None:
+    """D-470: a mutant written into the user's file must not survive a killed process and be delivered as a change."""
+    from forge.tools.test_quality import backup_path, recover_interrupted_mutation
+    from forge.workspace.create import create_workspace
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    source = workspace.repo_dir / "mathx.py"
+    source.write_text(SOURCE, encoding="utf-8")
+    assert recover_interrupted_mutation(workspace) is None  # nothing to put right
+    # What a killed run leaves behind: the backup, and the file holding a mutant.
+    backup = backup_path(workspace)
+    backup.parent.mkdir(parents=True, exist_ok=True)
+    backup.write_text(json.dumps({"path": str(source), "original": SOURCE}), encoding="utf-8")
+    source.write_text(make_mutants(SOURCE)[0].source, encoding="utf-8")
+    assert source.read_text(encoding="utf-8") != SOURCE
+    assert recover_interrupted_mutation(workspace) == source.resolve()
+    assert source.read_text(encoding="utf-8") == SOURCE and not backup.exists()
+
+
+def test_a_backup_pointing_outside_the_workspace_is_not_followed(original_repo: Path, tmp_path: Path) -> None:
+    from forge.tools.test_quality import backup_path, recover_interrupted_mutation
+    from forge.workspace.create import create_workspace
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    outside = tmp_path / "elsewhere.py"
+    outside.write_text("keep\n", encoding="utf-8")
+    backup = backup_path(workspace)
+    backup.parent.mkdir(parents=True, exist_ok=True)
+    backup.write_text(json.dumps({"path": str(outside), "original": "overwritten"}), encoding="utf-8")
+    assert (
+        recover_interrupted_mutation(workspace) is None
+    )  # the write jail refuses a path outside the workspace
+    assert outside.read_text(encoding="utf-8") == "keep\n" and not backup.exists()
+
+
+def test_a_finished_check_leaves_no_backup(tmp_path: Path) -> None:
+    module = tmp_path / "mathx.py"
+    module.write_text(SOURCE, encoding="utf-8")
+    (tmp_path / "test_mathx.py").write_text(
+        "from mathx import clamp\n\ndef test_x():\n    assert clamp(5, 0, 10) == 5\n", encoding="utf-8"
+    )
+    backup = tmp_path / "state" / "backup.json"
+    run_mutation_check(module, tmp_path, sys.executable, [], None, backup)
+    assert not backup.exists() and module.read_text(encoding="utf-8") == SOURCE

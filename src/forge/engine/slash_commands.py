@@ -24,7 +24,7 @@ HELP_TEXT = """Available commands:
   /model                    show which model each role uses
   /model <model>            use <model> for the coder role
   /model <role> <model>     use <model> for <role>
-                            roles: coder, kb_builder, reviewer, summariser, vision, judge, fallback
+                            roles: coder, reviewer, summariser, vision, judge, critic, planner, fallback
   /cost                     cost and token usage so far
   /clear                    start a fresh conversation
   /context                  how full the context window is

@@ -48,7 +48,7 @@ The rules below still describe what goes into briefs and summaries.
   project looks the same as a live one. Browser tests (`tests/test_web_e2e.py`, headless Edge) take screenshots
   to `test-artifacts/react-ui/` — look at them before reporting UI work done.
 - Plain Python agent loop. **No LangChain/LangGraph inside Forge** (the fixture repo uses them; Forge doesn't).
-- Modules stay under ~500 lines; split by responsibility, not by line count alone.
+- Modules aim for about 500 lines; split by responsibility, not by line count alone. A file that is one cohesive responsibility stays whole even when longer (15 files are, the largest `workflow/orchestrator.py` at 952 lines; D-472): do not split a file only to meet the number, and split a new one before it grows into several jobs.
 - Pydantic v2 models for tool args, config and events; JSON schemas generated from them.
 - Every write goes through `workspace/baseline.py` + `safety/paths.py` (write jail). No direct `open(..., "w")`
   on user-facing paths anywhere else.

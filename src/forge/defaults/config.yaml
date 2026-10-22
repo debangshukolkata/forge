@@ -110,7 +110,6 @@ llm:
 
   roles:                          # DECISIONS D-024
     coder: gpt51
-    kb_builder: gpt51
     summariser: gpt51
     vision: gpt51
     reviewer: gpt41

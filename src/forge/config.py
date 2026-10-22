@@ -16,7 +16,7 @@ from forge.errors import ConfigError
 from forge.safety.permissions import PermissionRules
 from forge.safety.redact import Redactor, default_redactor
 
-ROLES = ("coder", "kb_builder", "reviewer", "summariser", "vision", "judge", "critic", "planner", "fallback")
+ROLES = ("coder", "reviewer", "summariser", "vision", "judge", "critic", "planner", "fallback")
 ReasoningEffort = Literal["minimal", "low", "medium", "high"]
 _SECRET_NAME = re.compile(r"(KEY|SECRET|PASSWORD|TOKEN)", re.IGNORECASE)
 _URL_PASSWORD = re.compile(r"://[^:/\s@]+:([^@\s]+)@")
@@ -92,8 +92,15 @@ class ModelConfig(_Strict):
 
 
 class RolesConfig(_Strict):
+    @model_validator(mode="before")
+    @classmethod
+    def drop_removed_roles(cls, data: object) -> object:
+        """The knowledge-builder role went with the knowledge base (D-160, D-470); an older config.yaml may still name it."""
+        if isinstance(data, dict) and "kb_builder" in data:
+            return {key: value for key, value in data.items() if key != "kb_builder"}
+        return data
+
     coder: str
-    kb_builder: str
     reviewer: str
     summariser: str
     vision: str

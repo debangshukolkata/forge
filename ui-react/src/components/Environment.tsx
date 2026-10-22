@@ -12,7 +12,7 @@ import { YesNo } from "./YesNo";
 
 type Row = { result: CheckResultView | null; running: boolean };
 
-const ROLE_LABEL: Record<string, string> = { kb_builder: "Knowledge builder", judge: "Judge (evals)", critic: "Design critic", planner: "Planner (plan mode)", fallback: "Fallback" };
+const ROLE_LABEL: Record<string, string> = { judge: "Judge (evals)", critic: "Design critic", planner: "Planner (plan mode)", fallback: "Fallback" };
 
 /** Tools the user may not have (Tesseract, Gemini) are tested only after a yes (D-201). */
 const shouldRun = (check: CheckInfo, answers: Record<string, boolean>) => !check.ask || answers[check.id] === true;

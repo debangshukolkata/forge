@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import ast
+import json
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,7 +18,9 @@ from typing import Any
 
 from pydantic import Field
 
+from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.workspace.workspace import Workspace
 
 MAX_MUTANTS = 8
 TEST_TIMEOUT_S = 90
@@ -191,13 +194,49 @@ def make_mutants(source: str, limit: int = MAX_MUTANTS) -> list[Mutant]:
     return mutants
 
 
+BACKUP_FILE = "mutation-backup.json"
+
+
+def backup_path(workspace: Workspace) -> Path:
+    return workspace.forge_dir / "tmp" / BACKUP_FILE
+
+
+def recover_interrupted_mutation(workspace: Workspace) -> Path | None:
+    """If a mutation check was cut short (Forge closed or killed while a mutant was written into the user's
+    source file), puts the original text back and returns that file (D-470). Without this the mutated file would
+    be delivered as a change."""
+    backup = backup_path(workspace)
+    if not backup.is_file():
+        return None
+    try:
+        data = json.loads(backup.read_text(encoding="utf-8"))
+        target = workspace.jail.check(Path(data["path"]))
+        target.write_text(str(data["original"]), encoding="utf-8")
+    except ForgeError:  # a path outside the workspace: not ours, never followed
+        backup.unlink(missing_ok=True)
+        return None
+    except (OSError, ValueError, KeyError):
+        return None
+    backup.unlink(missing_ok=True)
+    return target
+
+
 def run_mutation_check(
-    path: Path, root: Path, python: str, test_args: list[str], env: dict[str, str] | None = None
+    path: Path,
+    root: Path,
+    python: str,
+    test_args: list[str],
+    env: dict[str, str] | None = None,
+    backup: Path | None = None,
 ) -> tuple[int, list[Mutant]]:
-    """(mutants tried, the ones the tests did not catch). The file is restored whatever happens."""
+    """(mutants tried, the ones the tests did not catch). The file is restored whatever happens; `backup` also
+    keeps the original on disk while the check runs, so a killed process can be put right at the next start."""
     original = path.read_text(encoding="utf-8")
     mutants = make_mutants(original)
     survivors: list[Mutant] = []
+    if backup is not None and mutants:
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        backup.write_text(json.dumps({"path": str(path), "original": original}), encoding="utf-8")
     try:
         for mutant in mutants:
             path.write_text(mutant.source, encoding="utf-8")
@@ -216,6 +255,8 @@ def run_mutation_check(
                 survivors.append(mutant)
     finally:
         path.write_text(original, encoding="utf-8")
+        if backup is not None:
+            backup.unlink(missing_ok=True)
     return len(mutants), survivors
 
 
@@ -253,8 +294,15 @@ class MutationCheck(Tool):
         if not python:
             return ToolResult(ok=False, content="No Python environment is set up for this workspace yet.")
         root = Path(env.app_dir) if env is not None and env.app_dir else context.workspace.root
+        recover_interrupted_mutation(context.workspace)  # a check that was cut short earlier
         tried, survivors = await asyncio.to_thread(
-            run_mutation_check, file, root, python, shlex.split(args.tests)
+            run_mutation_check,
+            file,
+            root,
+            python,
+            shlex.split(args.tests),
+            None,
+            backup_path(context.workspace),
         )
         if tried == 0:
             return ToolResult(
