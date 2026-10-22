@@ -74,11 +74,11 @@ The rules below still describe what goes into briefs and summaries.
 - Postgres tests (`pg` marker, run by default) use the local Postgres (`LOCAL_PG_URL` in `.env`); skipped when
   unset or unreachable. They only create `forge_*` schemas/roles and drop them afterwards.
 - Tests never touch the real `%USERPROFILE%\.forge`; they set `FORGE_HOME` to a tmp dir.
-- Run (parallel, ~6 min for everything since ~20 browser tests each start Edge): `.venv\Scripts\python -m pytest -q -n 6 --dist loadfile`
+- Run (parallel; the ~1700 non-browser tests take about 3 minutes, and the ~250 browser tests, which start Edge per test file, add several more): `.venv\Scripts\python -m pytest -q -n 6 --dist loadfile`
   (`pytest-xdist`, dev only; `loadfile` keeps each test file on one worker; with `-n 12` the load can make the local-Postgres
   tests time out and skip). One module: `pytest tests/test_<module>*.py`. Browser-test fixtures take a free port from the OS
   (`free_port(0)`); a test that waits on something a page re-does in the background must poll for it, not assert at once.
-  Fast run without the ~145 browser tests (marker `browser`, set by tests/conftest.py): `.venv\Scripts\python -m pytest -q -n 6 --dist loadfile -m "not browser and not live"`.
+  Fast run without the ~250 browser tests (marker `browser`, set by tests/conftest.py): `.venv\Scripts\python -m pytest -q -n 6 --dist loadfile -m "not browser and not live"`.
   **While working, run `.venv\Scripts\python scripts\dev\quick_check.py`** (D-400): lint plus only the tests that mention the changed files, no browser tests, seconds instead of minutes; the full run is for the end of a batch. Benchmarks have small versions too: `run_design_benchmark.py <name> --mini` (two small briefs, about 5 minutes each) and `run_challenges.py` (time-boxed).
   Sequential: `.venv\Scripts\python -m pytest -q` (3.13) and `.venv314\Scripts\python -m pytest -q` (3.14);
   `-m live` for live tests. Also `ruff check .`, `ruff format --check .`, `mypy`, `scripts/check_secrets.py`.

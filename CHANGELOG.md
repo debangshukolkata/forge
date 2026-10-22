@@ -2,6 +2,14 @@
 
 Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
 
+## Unreleased — 2026-10-05 to 2026-10-22 (D-205 to D-469)
+- **Models and limits:** a second Azure resource as the fallback (D-206); Gemini 3 and Gemini 4 Argon next to the Azure models (D-403, D-407); a model plan per role that the user confirms, with gpt-5.4 proposed for building and reading (D-446); on a rate limit Forge switches to the next model in `llm.rotation` and lets the busy one rest two minutes, saying so in the chat (D-465); no request carries more than the 128 tools Azure accepts (D-462); the project cost in the top bar moves with every model call (D-463).
+- **Skills, research and tools:** skills installed from a GitHub link, also by the model after the user's click, now including large repositories such as archify (D-207, D-224, D-237, D-468); a web research chain that never ends in nothing (D-209); the company Tavily tool (D-210); read grants for files outside the project (D-208); an `archive` tool for zip and tar attachments (D-461); the app being built can use an Azure model the user picks, `request_app_keys` and `/app-keys` (D-466).
+- **Context and attachments:** a summary written in code when the model's fails, and "Assumptions to verify" in every summary (D-467); an attached file that is cut says so, and `read_file` can open attachments and the saved full text of long tool results (D-469).
+- **Apps Forge builds:** style audit on every screenshot, the design critic, component libraries and recipes, DESIGN.md tools, design candidates and application screen recipes (D-245 to D-254, D-348 to D-366, D-422 to D-437).
+- **Documents:** presentations (D-240 to D-336), Excel workbooks (D-339), Word documents (D-342), PDF tools (D-343), a shared document engine (D-345), image generation and the picture ladder (D-326, D-329).
+- **Runtime and speed:** speed changes modelled on Claude Code (D-360), parallel builders (D-305), quality gates before a task is done (D-295), a time box for headless runs, `forge run --start-at --until` (D-460), fixes found on the office laptop's overnight runs (D-442 to D-459).
+
 ## Unreleased — web UI redesign (2026-10-03 / 2026-10-04)
 - **Login and landing (D-184, D-197):** a local account (user ID + password kept as a salted scrypt hash in
   `<forge home>\account.json`; "forgot password" = delete the file), a home screen (new project / open an existing

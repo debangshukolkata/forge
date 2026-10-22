@@ -9,3 +9,4 @@ Claude Code parity features: skills (incl. `skill_install.py`: `forge skill add`
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
 - **Path-scoped rules (D-297):** `path_rules.py`: `rules/*.md` files with a `paths:` list load only when a matching file is read or edited (home `rules/`, the repository-level folder's `rules/`, `<workspace>/.forge/rules/`); delivered once per session with the tool result. Tests: test_path_rules.py.
+- **Skill install (D-468):** `skill_install.py` downloads the repository zip (limit 150 MB) and unpacks only the requested folder or the folders holding a SKILL.md.

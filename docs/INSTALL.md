@@ -77,6 +77,21 @@ forge run --workspace C:\forge-ws\req1 -p "the requirement text"                
 forge doctor                               # check the setup any time
 ```
 
+Other commands (`forge --help` lists them):
+
+| Command | What it does |
+|---|---|
+| `forge export --workspace <ws>` | rebuild the `output\` folder of a workspace |
+| `forge resume --workspace <ws>` | resume a workspace session where it stopped |
+| `forge cleanup --workspace <ws>` | drop the database objects DebCraft created in the workspace's scratch schema |
+| `forge diagnose` | after copying `output\` into your repo: check it and run its tests on a fresh copy |
+| `forge log-summary --workspace <ws>` | one page on where the time and tokens of a run went |
+| `forge run-report --workspace <ws>` | a scrubbed report of a run you can send for analysis: no source code, no secrets |
+| `forge skill add <github link>` / `list` / `remove` | add, list or remove skills (instruction packs) |
+| `forge profile ...`, `forge sessions`, `forge label`, `forge template-probe` | Mode B host profiles; recent sessions; labelling eval samples; trying a company PowerPoint template |
+
+In the chat, type `/help` for the slash commands (for example `/model`, `/compact`, `/skill add`, `/allow-read`, `/app-keys`, `/bg`).
+
 DebCraft works in a per-requirement workspace (the folder you pass to `--workspace`; your repository is only
 read, never written) and delivers the changed files plus `COPY_INSTRUCTIONS.md` in the workspace's
 `output\` folder. You copy them into your repository yourself.
@@ -107,6 +122,6 @@ Remove the PATH entry.
 
 ## Check this computer: double-click Debcraft-Doctor.cmd
 
-Next to Start-DebCraft.cmd. It runs DebCraft's doctor (the same as .venv\Scripts\python -m forge doctor, or debcraft doctor in a terminal): Python and packages, certificates, your .env, the Azure and Gemini models (gpt-5.1, gpt-5.4, Gemini 3 and Argon when set up), the databases, web research and Node. One line per check, OK, WARN or FAIL, and the same text is saved to doctor-report.txt in the folder so you can send it. No key is printed.
+Next to Start-DebCraft.cmd. It runs DebCraft's doctor (the same as .venv\Scripts\python -m forge doctor, or debcraft doctor in a terminal): Python and packages, certificates, your .env, the Azure and Gemini models your roles use (by default gpt-5.1, gpt-4.1 and the fallback gpt-4o; gpt-5.2, gpt-5.4 and the Gemini models when you choose them in the Environment panel), the databases, web research and Node. One line per check, OK, WARN or FAIL, and the same text is saved to doctor-report.txt in the folder so you can send it. No key is printed.
 
 Start-DebCraft.cmd also runs the doctor before DebCraft opens (about half a minute for the model calls): the lines appear in the window and are saved in doctor-report.txt. A FAIL line does not stop DebCraft from starting. To skip it, set DEBCRAFT_SKIP_DOCTOR=1 before starting.
