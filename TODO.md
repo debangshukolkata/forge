@@ -4,13 +4,13 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task 
 
 ## Contents (open items per group)
 - 0. Build order (read this first): **23 open**
-- 1. Waiting on you (your actions and decisions): **7 open**
+- 1. Waiting on you (your actions and decisions): **6 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **20 open**
 - 3. Parallel work and speed: **5 open**
 - 4. Presentations (match Claude's PowerPoint abilities): **11 open**
 - 5. Platform, runtime and coding competency: **18 open**
 - 6. Parked (not started; your choice when): **3 open**
-- **Total open: 87** (counted by script 2026-10-15: items marked `[ ]` or `[~]`; `[~]` are partly done; section 0 includes tonight's 30)
+- **Total open: 86** (counted by script 2026-10-15: items marked `[ ]` or `[~]`; `[~]` are partly done; section 0 includes tonight's 30)
 
 ## 0. Build order (read this first)
 How to take the work up in the best order. Each phase says what it needs and when it is done. IDs refer to the items below (`D` design, `L` libraries, `X` parallel, `S` speed, `C` coding competency, `W` documents, `P0.x/P1.x/P2.x/P3.x` presentations). Do not start a later phase's big items before the earlier phase's measurements exist.
@@ -158,7 +158,6 @@ is advice from a cross-family critic and the user's eye, only what can be measur
 ## 1. Waiting on you (your actions and decisions)
 Things only you can do or decide. Everything else below can be built without you.
 
-- [ ] **Run `scripts/dev/import_orchestrix_azure.py`** to fill the Azure values in `.env` (D-019)
 - [x] **Gemini live check on the office laptop** (confirmed working by the user, 2026-10-13) (D-150, D-205): run `scripts/dev/gemini_smoke.py` and the drawer's Gemini test (never called live from the build machine); `view_video` waits for the video probe. Code and unit tests are done and pushed.
 - [~] (2026-10-15: D-403 and D-407 to D-411: Gemini 3 and Argon answer from `global`; roles decided, docs/MODEL_ROLES.md; open: the laptop A/B in docs/LAPTOP_AB.md) **(2026-10-15 D-403: RESOLVED that Gemini 3 works through `global`; optional models and `--coder-model` added; open: the A/B on the office laptop and the decision which roles use it)** **DECIDE: Gemini 3 as the design model (DS8): resolve it or leave it out.** Status 2026-10-14: the office laptop's project lists Gemini 3, 3.1, 3.5, 3.6, 3.7 and 3.8 models and two Gemini 3 image models, but the probe could not call any of them (certificate error on the `global` endpoint, fixed in the script, commit 7f4b9fe); only Gemini 2.5 answered. To resolve: `git pull`, then on the office laptop run `.venv\Scripts\python scripts\dev\gemini_probe.py --out gemini2.txt` and send the top lines and the summary. If a Gemini 3 model answers: build a `designer` role on it and test it on the design benchmark (about half a day, mine). If none answers, or you do not want a second provider for design: leave it out, close DS8 and keep gpt-5.1 (with the optional gpt-5.4). Recommendation: run the probe once; do not spend more time if it fails again.
 - [ ] Re-run the three-design task (`designs/design-a..c`, ports 5171-5173) on the office laptop and score the result with the seven-line rubric; tune the critic's SHIP bar from real runs (too lenient / too harsh)

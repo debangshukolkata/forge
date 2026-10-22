@@ -51,7 +51,7 @@ settings. Default: the Azure OpenAI deployment for all roles. Gemini adapter opt
 exist. Azure API: Responses API default, Chat Completions fallback. Model names only in config. → A-7.
 
 ### D-008 — Testing without a FakeLLM · Agreed (2026-09-26)
-User instruction: don't use a fake LLM; use the real Azure key (Orchestrix's).
+User instruction: don't use a fake LLM; use the real Azure key the user already has.
 Interpretation (user asked for a leak check on top — see D-016):
 - Agent-behaviour tests run against real Azure, marked `live`.
 - Deterministic logic (jail, redaction, context budgeting, compaction pairing, manifests, parsers) is
@@ -119,9 +119,9 @@ Created database `forge_dev` on the local PostgreSQL 18 (`localhost:5432`, user 
 `.env` as `LOCAL_PG_URL` / `FORGE_PG_URL`. Tests create and drop only their own schemas inside it.
 
 ### D-019 — Azure credentials source · Agreed (2026-09-26)
-User chose option B (copy from Orchestrix's DB). The auto-mode safety classifier blocked Claude from
-running the extraction, so the user runs `scripts/dev/import_orchestrix_azure.py` themselves (it prints
-only presence/lengths/host). The user ran it on 2026-09-26; values are in `.env`.
+User chose option B (copy the values from the database where the key was stored). The auto-mode safety
+classifier blocked Claude from running the extraction, so the user did it themselves on 2026-09-26 (nothing
+was printed but presence, lengths and the host); the values are in `.env`. The one-off script was deleted later.
 **Verified live (2026-09-26):** the deployment serves **`gpt-4.1-2025-04-14`**, not GPT-5. The stored
 API version `2023-08-01-preview` supports Chat Completions only; the Responses API (incl. function
 calls) works with `2025-04-01-preview`. GPT-4.1 has no `reasoning_effort`; context ~1M, max output 32k.
@@ -4186,3 +4186,6 @@ The user said yes to taking the open audit items (D-470). (1) Invariant 5 (DebCr
 
 ### D-472 - The 500-line rule in CLAUDE.md is a guide, not a limit (2026-10-22, the user chose option C)
 The audit (D-470) found 15 files over about 500 lines, the largest `workflow/orchestrator.py` (952), `tools/presentation.py` (743), `engine/session_host.py` (712), `engine/slash_commands.py` (706) and `agent/loop.py` (684). Options: A split the worst three or four, B split all 15, C change the rule. Chosen: C, because splitting the core loop only to meet a number adds risk (many moved functions, imports and tests) and no behaviour. The line in CLAUDE.md now says the number is a guide, that a cohesive file stays whole, and that a new file should be split before it grows into several jobs. Nothing in the code moved.
+
+### D-473 - The one-off credentials import script and every mention of the other application it read from are removed (2026-10-22, the user's request)
+`scripts/dev/import_<other application>_azure.py` was a one-off from 2026-09-26 (D-019); the values have been in `.env` since then, and its TODO item was never ticked. The script is deleted; D-019, risk R13, the TODO list, the `.env` comment line and the project's memory note no longer name the other application. The git history before this commit still holds the script and the name; removing it would mean rewriting pushed history, which was not asked for.

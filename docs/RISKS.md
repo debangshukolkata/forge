@@ -16,7 +16,7 @@ L = likelihood, I = impact (H/M/L). Status: Open / Mitigating / Closed.
 | R10 | Data governance: code, schemas, snippets, images sent to Azure. | M | H | Enterprise endpoints only; Mode B sensitive terms; sensitive-sample rules. | Open |
 | R11 | PowerShell 5.1 quirks (encoding, exit codes, output framing in a persistent session). | H | M | Sentinel-framed session, UTF-8 console, Windows-specific test set in M3. | Open |
 | R12 | Live, non-deterministic acceptance tests (consequence of D-008) can flake. | H | M | Judge on outcomes; run twice; keep deterministic tests for every invariant. | Open |
-| R13 | Azure credentials for development are only stored encrypted inside Orchestrix's database. | H | M | User runs `scripts/dev/import_orchestrix_azure.py` (D-019); leak checks per D-016. | Mitigating |
+| R13 | The Azure credentials used for development live in the user's `.env` file only. | L | M | Never committed (`.env` is ignored); leak checks per D-016 and `scripts/check_secrets.py`. | Mitigating |
 | R14 | Build machine lacks Python 3.13 (target version). | H | M | Installed 3.13.15 per-user (D-006). | Closed |
 | R15 | Pointing the app's config-table bootstrap at the local DB may need app-specific handling. | M | M | Design with the user in M7 (libpq env overrides vs repo test config). | Open |
 | R16 | Built and tested against gpt-5.1 (+ gpt-4.1), deployed against the office GPT-5 deployment: prompts/tool behaviour tuned on one model may behave differently on the other. | M | M | gpt-5.1 dev deployment found (D-024), so build and target are the same model family. Capabilities from config; `forge doctor` reports the served model; re-run the live suite on the office deployment at M11. | Mitigating |
