@@ -1,4 +1,4 @@
-"""Archive tools (D-461): list_archive and extract_archive for .zip, .tar, .tar.gz/.tgz, .tar.bz2 and .tar.xz.
+"""Archive tool (D-461): `archive` (list or extract) for .zip, .tar, .tar.gz/.tgz, .tar.bz2 and .tar.xz.
 
 An uploaded archive lands in .forge/inputs/ like any attachment. These tools open it without a shell: every
 entry name is checked (no absolute paths, no `..`, no drive letters, no links), the number of entries and the
@@ -14,7 +14,7 @@ import tarfile
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import IO
+from typing import IO, Literal
 
 from pydantic import Field
 
@@ -269,53 +269,35 @@ def _copy_limited(reader: _Reader, raw_name: str, target: Path, limit: int) -> i
     return copied
 
 
-class ListArchive(Tool):
-    name = "list_archive"
-    read_only = True
-    description = (
-        "List what is inside a .zip, .tar, .tar.gz/.tgz, .tar.bz2 or .tar.xz file (an uploaded attachment such as "
-        "@.forge/inputs/<file>, or a file in the workspace) without unpacking it: names, sizes, and entries that "
-        "would be skipped as unsafe. Look at this first, then call extract_archive."
-    )
-
-    class Args(ToolArgs):
-        path: str
-        password: str = Field(default="", description="Only a password the user gave for this file")
-
-    def summary(self, args: ListArchive.Args) -> str:
-        return f"list archive {args.path}"
-
-    async def run(self, args: ListArchive.Args, context: ToolContext) -> ToolResult:
-        try:
-            entries = await asyncio.to_thread(list_entries, context, args.path, args.password)
-        except (ForgeError, OSError) as error:
-            return ToolResult(ok=False, content=str(error))
-        return ToolResult(ok=True, content=describe_entries(entries))
-
-
-class ExtractArchive(Tool):
-    name = "extract_archive"
+class Archive(Tool):
+    name = "archive"
     read_only = False
     description = (
-        "Unpack a .zip, .tar, .tar.gz/.tgz, .tar.bz2 or .tar.xz file into a folder. Default folder: "
-        ".forge/inputs/<archive name>/, where read_pdf, read_document, read_file and the other readers can open the "
-        "files; give `destination` (a folder inside the workspace) to put them elsewhere, for example when they are "
-        "to become part of the delivered work. Unsafe paths, links and secret files are skipped and reported; "
-        "size and entry-count limits apply."
+        "Open a .zip, .tar, .tar.gz/.tgz, .tar.bz2 or .tar.xz file (an uploaded attachment such as "
+        "@.forge/inputs/<file>, or a file in the workspace). action=list shows names, sizes and the entries that would "
+        "be skipped as unsafe, without unpacking: do this first. action=extract unpacks into .forge/inputs/<archive name>/ "
+        "by default, where read_pdf, read_document, read_file and the other readers can open the files; give `destination` "
+        "(a folder inside the workspace) to put them elsewhere, for example when they are to become part of the delivered "
+        "work. Unsafe paths, links and secret files are skipped and reported; size and entry-count limits apply."
     )
 
     class Args(ToolArgs):
+        action: Literal["list", "extract"]
         path: str = Field(description="The archive, e.g. .forge/inputs/<file>.zip")
         destination: str = Field(
-            default="", description="Workspace folder to unpack into; empty = .forge/inputs/<archive name>"
+            default="",
+            description="extract only: workspace folder to unpack into; empty = .forge/inputs/<archive name>",
         )
         password: str = Field(default="", description="Only a password the user gave for this file")
 
-    def summary(self, args: ExtractArchive.Args) -> str:
-        return f"extract archive {args.path}"
+    def summary(self, args: Archive.Args) -> str:
+        return f"{args.action} archive {args.path}"
 
-    async def run(self, args: ExtractArchive.Args, context: ToolContext) -> ToolResult:
+    async def run(self, args: Archive.Args, context: ToolContext) -> ToolResult:
         try:
+            if args.action == "list":
+                entries = await asyncio.to_thread(list_entries, context, args.path, args.password)
+                return ToolResult(ok=True, content=describe_entries(entries))
             written, skipped = await asyncio.to_thread(
                 extract, context, args.path, args.destination, args.password
             )
@@ -334,4 +316,4 @@ class ExtractArchive(Tool):
 
 
 def archive_tools() -> list[Tool]:
-    return [ListArchive(), ExtractArchive()]
+    return [Archive()]

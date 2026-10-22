@@ -240,10 +240,12 @@ def _resolve_input(name: str, workspace: Workspace, result: Expanded) -> str | N
         result.notes.append(f"file attached: {relative}")
         return f"[@{relative}]\n```\n{body}\n```"
     result.notes.append(f"file attached: {relative}")
-    if path.name.lower().endswith((".zip", ".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tbz2", ".tar.xz", ".txz")):
+    if path.name.lower().endswith(
+        (".zip", ".tar", ".tar.gz", ".tgz", ".tar.bz2", ".tbz2", ".tar.xz", ".txz")
+    ):
         return (
-            f"[archive attached: {relative} ({path.stat().st_size} bytes) — look inside with list_archive, "
-            "then unpack it with extract_archive and read the files]"
+            f"[archive attached: {relative} ({path.stat().st_size} bytes) — look inside with the archive tool (action list), "
+            "then unpack it (action extract) and read the files]"
         )
     return (
         f"[file attached: {relative} ({path.stat().st_size} bytes) — DebCraft can't read this format directly; "

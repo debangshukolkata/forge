@@ -341,3 +341,22 @@ async def test_a_server_whose_expected_line_never_appears_is_still_ready_when_it
         assert elapsed < 20 and port_open(port)
     finally:
         await call(StopBackground(), context, name="static")
+
+
+def test_a_session_with_too_many_tools_is_cut_to_the_provider_limit() -> None:
+    """D-462: Azure refuses more than 128 tools in one request; the rarely needed ones go first, the core ones stay."""
+    from forge.tools.registry import MAX_TOOLS_PER_REQUEST, ToolRegistry, default_tools
+
+    class Extra(default_tools()[0].__class__):  # type: ignore[misc]
+        pass
+
+    extras = []
+    for number in range(30):
+        extra = Extra()
+        extra.name = f"extra_{number}"
+        extras.append(extra)
+    registry = ToolRegistry([*default_tools(), *extras])
+    names = [spec.name for spec in registry.specs()]
+    assert len(names) == MAX_TOOLS_PER_REQUEST
+    assert {"read_file", "write_file", "run_command", "archive"} <= set(names)
+    assert "synth_samples" not in names  # first on the leave-out list

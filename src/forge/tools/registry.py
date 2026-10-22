@@ -41,6 +41,27 @@ from forge.tools.visual_diff import CompareDesigns, VisualBaseline, VisualCheck
 from forge.tools.web import WebFetch, WebSearch
 from forge.tools.workbook import workbook_tools
 
+MAX_TOOLS_PER_REQUEST = 128
+# Rarely needed or overlapping tools, first to go when a session has more than the provider's limit.
+LEAVE_OUT_FIRST = (
+    "synth_samples",
+    "run_eval",
+    "design_md_diff",
+    "design_kb_add",
+    "compare_designs",
+    "visual_baseline",
+    "mutation_check",
+    "merge_presentations",
+    "split_presentation",
+    "unpack_presentation",
+    "pack_presentation",
+    "notebook_edit_cell",
+    "notebook_read",
+    "design_md_export",
+    "split_pdf",
+    "extract_pdf_images",
+)
+
 
 def default_tools() -> list[Tool]:
     return [
@@ -125,4 +146,18 @@ class ToolRegistry:
         return sorted(self._tools)
 
     def specs(self, read_only_only: bool = False) -> list[ToolSpec]:
-        return [tool.spec() for tool in self._tools.values() if tool.read_only or not read_only_only]
+        tools = [tool for tool in self._tools.values() if tool.read_only or not read_only_only]
+        return [tool.spec() for tool in self.fit_request_limit(tools)]
+
+    @staticmethod
+    def fit_request_limit(tools: list[Tool]) -> list[Tool]:
+        """Azure OpenAI rejects a request with more than 128 tools (a 400 that ended the whole turn, D-462).
+        Over the limit, the tools least likely to be needed go first, in LEAVE_OUT_FIRST order; the rest stay."""
+        excess = len(tools) - MAX_TOOLS_PER_REQUEST
+        if excess <= 0:
+            return tools
+        present = {tool.name for tool in tools}
+        dropped = {name for name in LEAVE_OUT_FIRST if name in present}
+        dropped = set(sorted(dropped, key=LEAVE_OUT_FIRST.index)[:excess])
+        kept = [tool for tool in tools if tool.name not in dropped]
+        return kept[:MAX_TOOLS_PER_REQUEST]  # a hard stop if even the whole list was not enough
