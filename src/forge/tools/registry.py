@@ -6,6 +6,7 @@ from forge.llm.base import ToolSpec
 from forge.toolkit.background import Monitor, ReadBackground, StartBackground, StopBackground
 from forge.toolkit.base import Tool
 from forge.toolkit.shell import PythonRun, RunCommand
+from forge.tools.archive import archive_tools
 from forge.tools.assets import AddAsset, FindAsset
 from forge.tools.brand_file import SaveBrand
 from forge.tools.browser import browser_tools
@@ -94,6 +95,7 @@ def default_tools() -> list[Tool]:
         *document_tools(),
         *document_preview_tools(),
         *pdf_toolkit_tools(),
+        *archive_tools(),
         *imagegen_tools(),
         *findimage_tools(),
         *font_tools(),
