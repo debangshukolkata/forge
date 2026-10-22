@@ -28,8 +28,8 @@ SLOT_TITLES = {
     "phase_and_tasks": "Phase and tasks",
     "todos": "Your todo list (keep it current with todo_write)",
     "compaction_summary": (
-        "Summary of earlier conversation (continue the task from its current state and next step "
-        "directly, with tool calls; do not stop to announce it)"
+        "Summary of earlier conversation (check the items under 'Assumptions to verify' before relying on "
+        "them, then continue the task from its current state and next step directly, with tool calls; do not stop to announce it)"
     ),
     "database": "Databases (what DebCraft may do; DB-backed tests use the scratch schema via PGOPTIONS)",
     "kb_essentials": "Codebase essentials",

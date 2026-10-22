@@ -50,11 +50,16 @@ async def test_small_window_forces_compaction_and_the_task_still_completes(
         pytest.skip("AZURE_OPENAI_* not configured in .env")
     config = load_config(isolated_forge_home)
     config.llm.models["gpt51"] = config.llm.models["gpt51"].model_copy(
-        update={"context_window": 20_000, "max_output": 3_000}  # small, but not starved
+        update={
+            "context_window": 60_000,
+            "max_output": 3_000,
+        }  # small, but not starved: the system prompt and the tool list alone take about 25k, so 20k was over 140% before the first message
     )
     config.context.keep_recent_turns = 4
-    config.context.micro_compact_at = 0.2  # low thresholds make the automatic summary happen mid-task
-    config.context.auto_compact_at = 0.25
+    config.context.micro_compact_at = (
+        0.03  # the share is of the history only, not the fixed prompt and tools;
+    )
+    config.context.auto_compact_at = 0.05  # low thresholds make the automatic summary happen mid-task
     workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
     host = SessionHost(
         LLMRouter(config, secrets), EventBus(workspace.forge_dir / "events.jsonl"), workspace=workspace

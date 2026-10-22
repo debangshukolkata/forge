@@ -16,6 +16,7 @@ REQUIRED_SECTIONS = [
     "## Codebase findings",
     "## Errors and fixes",
     "## Current state and exact next step",
+    "## Assumptions to verify",
     "## Open questions",
 ]
 STUB_PREFIX = "[Output of "
@@ -160,6 +161,61 @@ def summary_prompt(transcript: str, previous_summary: str | None, focus: str | N
         ),
         transcript=transcript,
     )
+
+
+FALLBACK_NOTE = (
+    "(Written by DebCraft's code, not by the model, because the model's summary was incomplete twice. It holds facts "
+    "only: treat all of it as unverified and check before relying on it. The full record is in the transcript.)"
+)
+NOT_CAPTURED = "Not captured (no model summary). Re-check by reading the files or running the tests again."
+FALLBACK_USER_MESSAGES = 12
+FALLBACK_MESSAGE_CHARS = 600
+FALLBACK_STATE_CHARS = 1500
+FALLBACK_MAX_CHARS = 14_000
+FALLBACK_EARLIER_CHARS = 12_000
+
+
+def fallback_summary(
+    older: list[Message],
+    previous_summary: str | None,
+    files: list[str],
+    phase_and_tasks: str | None,
+    todos: str | None,
+) -> str:
+    """A summary made without the model, for when it fails twice (D-467): what the user asked, which files
+    changed, the plan and todo list, the last thing said. Always has every required heading, so a later
+    compaction can merge it like any other summary, and an earlier summary is kept whole."""
+
+    def cut(text: str, limit: int) -> str:
+        text = text.strip()
+        return text if len(text) <= limit else text[:limit] + " [cut]"
+
+    asked = [m.content for m in older if m.role == "user" and m.content.strip()][-FALLBACK_USER_MESSAGES:]
+    last_said = next((m.content for m in reversed(older) if m.role == "assistant" and m.content.strip()), "")
+    state = [cut(last_said, FALLBACK_STATE_CHARS)] if last_said else []
+    if todos:
+        state.append("Todo list:\n" + todos)
+    asked_lines = "\n".join(f"- {cut(text, FALLBACK_MESSAGE_CHARS)}" for text in asked)
+    file_lines = "\n".join(f"- {path}" for path in files)
+    sections = {
+        "## User instructions and preferences": asked_lines or "None.",
+        "## Goal, phase, task and definition of done": phase_and_tasks or "See the pinned phase and tasks.",
+        "## Decisions and rationale": NOT_CAPTURED,
+        "## Files touched": file_lines or "None.",
+        "## Codebase findings": NOT_CAPTURED,
+        "## Errors and fixes": NOT_CAPTURED,
+        "## Current state and exact next step": "\n\n".join(state)
+        or "Not captured. Read the todo list and the latest files, then continue.",
+        "## Assumptions to verify": "Everything in this summary: it was not written by the model.",
+        "## Open questions": "None captured.",
+    }
+    body = "\n\n".join(f"{heading}\n{text}" for heading, text in sections.items())
+    fresh = cut(f"{FALLBACK_NOTE}\n\n{body}", FALLBACK_MAX_CHARS)
+    kept = (previous_summary or "")[
+        :FALLBACK_EARLIER_CHARS
+    ]  # a second fallback in a row must not grow without limit
+    earlier = f"\n\n## Earlier summary (kept as it was)\n{kept}" if kept else ""
+    return fresh + earlier
 
 
 def summary_is_valid(summary: str) -> bool:

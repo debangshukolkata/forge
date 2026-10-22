@@ -20,6 +20,7 @@ from forge.context.budget import Breakdown, ContextBudget
 from forge.context.compaction import (
     chunk_transcript,
     emergency_trim,
+    fallback_summary,
     latest_user_index,
     micro_compact,
     split_for_summary,
@@ -157,14 +158,22 @@ class ContextManager:
             )
         summary = await self._summary_for(older, focus)
         if summary is None:
+            # The model could not write a complete summary: keep the facts DebCraft knows itself rather than the whole
+            # history, which the last-resort trimming would then cut without looking (D-467).
+            summary = fallback_summary(
+                older,
+                self.pinned.get("compaction_summary"),
+                self._files_modified() if self._files_modified is not None else [],
+                self.pinned.get("phase_and_tasks"),
+                self.pinned.get("todos"),
+            )
             await self._emit(
                 "notice",
                 {
-                    "kind": "compaction_failed",
-                    "text": "The summary was incomplete twice; keeping the history as it is.",
+                    "kind": "compaction_fallback",
+                    "text": "The summary was incomplete twice; kept a facts-only summary written by DebCraft instead.",
                 },
             )
-            return False
         history[:] = [history[0], *recent]
         self.pinned.set("compaction_summary", summary)
         self.compactions += 1

@@ -16,12 +16,15 @@ Use exactly these section headings, in this order, and keep every section (write
 
 ## Codebase findings
 (Facts learned from files and command output that the next steps need — names, signatures,
-values, test results — so nothing has to be read again.)
+values, test results. They are a starting point: later edits may have changed them.)
 
 ## Errors and fixes
 (Including approaches that failed and must NOT be retried, and why.)
 
 ## Current state and exact next step
+
+## Assumptions to verify
+(One line each: "<claim> — verify with: <exact command or file to re-read>". Only what files, tests or the running app may have changed since you saw it. "None." if nothing.)
 
 ## Open questions
 

@@ -216,22 +216,58 @@ async def test_stress_200_tool_calls_never_exceed_the_window() -> None:
     assert worst > budget.usable * 0.5  # the test really pushed the window
 
 
-async def test_invalid_summary_twice_keeps_history(tmp_path: Path) -> None:
+async def test_invalid_summary_twice_falls_back_to_a_facts_only_summary(tmp_path: Path) -> None:
+    """D-467: before, the whole history was kept and the last-resort trimming cut it blindly."""
     calls: list[str] = []
+    notices: list[str] = []
 
     async def bad(prompt: str) -> str:
         calls.append(prompt)
         return "## Goal, phase, task and definition of done\nPartial."
 
-    manager = manager_with(small_window_config(), bad)
-    history = [Message.system("s")] + [
-        m for t in range(10) for m in (Message.user(f"u{t}"), *tool_turn(t, 20))
-    ]
-    before = list(history)
+    async def on_event(kind: str, payload: dict) -> None:  # type: ignore[type-arg]
+        notices.append(str(payload.get("kind")))
 
-    assert await manager.compact(history) is False
-    assert history == before and len(calls) == 2
-    assert "Include EVERY heading" in calls[1]
+    manager = manager_with(small_window_config(), bad)
+    manager._on_event = on_event  # type: ignore[assignment]
+    manager._files_modified = lambda: ["app/routes.py", "tests/test_routes.py"]
+    manager.pinned.set("todos", "- [x] routes\n- [ ] tests")
+    history = [Message.system("s")] + [
+        m for t in range(10) for m in (Message.user(f"request {t}"), *tool_turn(t, 20))
+    ]
+    last_request = history[-3].content
+
+    assert await manager.compact(history) is True
+    assert len(calls) == 2 and "Include EVERY heading" in calls[1]
+    summary = manager.pinned.get("compaction_summary") or ""
+    assert summary_is_valid(summary)  # every required heading, so the next compaction can merge it
+    assert "not by the model" in summary
+    assert "request 0" in summary and "app/routes.py" in summary and "- [ ] tests" in summary
+    assert history[0].content == "s" and len(history) < 31  # the older part is gone, the recent turns stay
+    assert any(m.content == last_request for m in history)  # the latest request stays verbatim
+    assert "compaction_fallback" in notices
+
+
+def test_the_facts_only_summary_keeps_an_earlier_summary_and_stays_bounded() -> None:
+    from forge.context.compaction import FALLBACK_EARLIER_CHARS, FALLBACK_MAX_CHARS, fallback_summary
+
+    older = [Message.user("x" * 5000)] * 40 + [Message(role="assistant", content="done with the routes")]
+    summary = fallback_summary(older, VALID_SUMMARY, ["a.py"], None, None)
+    assert summary_is_valid(summary)
+    assert "## Earlier summary (kept as it was)" in summary and VALID_SUMMARY in summary
+    assert "done with the routes" in summary
+    huge = fallback_summary(older, "y" * 100_000, [], None, None)
+    assert len(huge) < FALLBACK_MAX_CHARS + FALLBACK_EARLIER_CHARS + 500
+
+
+def test_the_summary_asks_for_assumptions_to_verify() -> None:
+    from forge.context.compaction import summary_prompt
+    from forge.context.pinned import SLOT_TITLES
+
+    assert "## Assumptions to verify" in REQUIRED_SECTIONS
+    assert "## Assumptions to verify" in summary_prompt("transcript", None, None)
+    assert "Assumptions to verify" in SLOT_TITLES["compaction_summary"]
+    assert not summary_is_valid(VALID_SUMMARY.replace("## Assumptions to verify", "## Other"))
 
 
 async def test_large_older_history_is_summarised_in_chunks() -> None:
