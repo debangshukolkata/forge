@@ -153,6 +153,22 @@ class Workspace:
             )
         return resolve_inside(self.repo_dir, relative)
 
+    READABLE_FORGE_FOLDERS = ("inputs", "tool_outputs")
+
+    def input_path(self, relative: str) -> Path | None:
+        """A file the user attached or pasted (.forge/inputs/...) or the saved full text of a long tool result
+        (.forge/tool_outputs/..., redacted when saved): for reading only. None for any other path. The model reads
+        these with read_file; nothing here lets it write there (D-469)."""
+        normalised = relative.replace("\\", "/").removeprefix("./")
+        for folder in self.READABLE_FORGE_FOLDERS:
+            prefix = f".forge/{folder}/"
+            if normalised.startswith(prefix):
+                base = self.forge_dir / folder
+                rest = normalised.removeprefix(prefix)
+                # Confined to that folder itself, not to .forge/: "inputs/../x" must not reach the rest of .forge
+                return resolve_inside(base, rest) if rest else base
+        return None
+
     def is_secret(self, relative: str) -> bool:
         external = self.resolve_readable(relative)
         if external is not None:  # judged by its own name: .env, keys and certificates show names only

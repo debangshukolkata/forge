@@ -12,7 +12,7 @@ from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.baseline_gate import baseline_gate, rewrite_gate
 from forge.tools.diagnostics import diagnose_file
-from forge.workspace.text_format import detect_format
+from forge.workspace.text_format import decode_text, detect_format
 
 DEFAULT_READ_LIMIT = 2000
 MAX_LINE_CHARS = 2000
@@ -41,7 +41,7 @@ class ReadFile(Tool):
 
     async def run(self, args: ReadFile.Args, context: ToolContext) -> ToolResult:
         workspace = context.workspace
-        path = workspace.path_of(args.path)
+        path = workspace.input_path(args.path) or workspace.path_of(args.path)
         if not path.is_file():
             return ToolResult(
                 ok=False, content=f"{args.path} does not exist.{_similar_hint(context, args.path)}"
@@ -62,7 +62,7 @@ class ReadFile(Tool):
         file_format = detect_format(data)
         if file_format.binary:
             return ToolResult(ok=True, content=f"{args.path} is a binary file ({len(data)} bytes).")
-        text, _ = workspace.read_text(args.path)
+        text = decode_text(data, file_format)  # the bytes already read: the path may be an attachment (D-469)
         lines = text.splitlines()
         if not lines:
             return ToolResult(ok=True, content=f"{args.path} is empty.")

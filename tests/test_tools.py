@@ -360,3 +360,65 @@ def test_a_session_with_too_many_tools_is_cut_to_the_provider_limit() -> None:
     assert len(names) == MAX_TOOLS_PER_REQUEST
     assert {"read_file", "write_file", "run_command", "archive"} <= set(names)
     assert "synth_samples" not in names  # first on the leave-out list
+
+
+async def test_read_file_opens_what_the_user_attached_and_the_cut_text_says_how_to_get_the_rest(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """D-469: an attached file over the inline limit was cut silently and read_file said it does not exist."""
+    from forge.parity.mentions import MAX_FILE_CHARS, expand, store_input
+    from forge.tools.files import ReadFile
+    from forge.tools.search import ListDir
+    from forge.workspace.create import create_workspace
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    lines = [f"line {number} " + "x" * 60 for number in range(1, 1001)]
+    stored = store_input(workspace, "react_handler.py", "\n".join(lines).encode())
+    expanded = expand(f"look at @{stored['path']}", workspace)
+    assert "CUT HERE" in expanded.text and f"read_file path={stored['path']}" in expanded.text
+    assert len(expanded.text) < MAX_FILE_CHARS + 1500
+
+    context = ToolContext(workspace=workspace)
+    first = await ReadFile().run(ReadFile.Args(path=stored["path"], offset=1, limit=3), context)
+    assert first.ok and "line 1 " in first.content and "[997 more lines" in first.content
+    last = await ReadFile().run(ReadFile.Args(path=stored["path"], offset=1000, limit=5), context)
+    assert last.ok and "line 1000 " in last.content  # the end of the file, which the message never showed
+    listed = await ListDir().run(ListDir.Args(path=".forge/inputs"), context)
+    assert listed.ok and "react_handler.py" in listed.content
+
+
+async def test_the_attachment_folder_cannot_be_used_to_reach_other_files(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    import pytest
+
+    from forge.errors import ForgeError
+    from forge.tools.files import ReadFile
+    from forge.workspace.create import create_workspace
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    (workspace.forge_dir / "secret.txt").write_text("not an attachment", encoding="utf-8")
+    context = ToolContext(workspace=workspace)
+    with pytest.raises(ForgeError):
+        await ReadFile().run(ReadFile.Args(path=".forge/inputs/../secret.txt"), context)
+    assert workspace.input_path("src/app.py") is None
+    assert workspace.input_path("./.forge/inputs/a.txt") is not None
+    write_target = workspace.input_path(".forge/inputs/x.txt")
+    assert write_target is not None and write_target.parent == (workspace.forge_dir / "inputs").resolve()
+
+
+async def test_the_saved_full_text_of_a_long_tool_result_can_be_read_in_ranges(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """The omitted-tokens marker names .forge/tool_outputs/...; read_file could not open it (D-469)."""
+    from forge.tools.files import ReadFile
+    from forge.workspace.create import create_workspace
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    context = ToolContext(workspace=workspace)
+    text = "\n".join(f"row {n} " + "y" * 80 for n in range(1, 3001))
+    capped, saved = context.cap_output(text)
+    assert saved is not None and ".forge/tool_outputs/" in capped
+    relative = Path(saved).relative_to(workspace.root).as_posix()
+    part = await ReadFile().run(ReadFile.Args(path=relative, offset=1500, limit=3), context)
+    assert part.ok and "row 1500 " in part.content

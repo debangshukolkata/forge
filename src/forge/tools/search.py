@@ -126,15 +126,19 @@ class ListDir(Tool):
 
     async def run(self, args: ListDir.Args, context: ToolContext) -> ToolResult:
         workspace = context.workspace
-        folder = workspace.path_of(args.path) if args.path not in (".", "") else workspace.repo_dir
+        attached = workspace.input_path(args.path.rstrip("/") + "/") if args.path not in (".", "") else None
+        folder = attached or (
+            workspace.path_of(args.path) if args.path not in (".", "") else workspace.repo_dir
+        )
         if not folder.is_dir():
             return ToolResult(ok=False, content=f"{args.path} is not a folder.")
         rules = workspace.ignore_rules()
         entries = []
         for child in sorted(folder.iterdir(), key=lambda p: (p.is_file(), p.name.lower())):
-            relative = child.relative_to(_root_for(workspace, folder)).as_posix()
-            if rules.is_ignored(relative, is_dir=child.is_dir()):
-                continue
+            if attached is None:  # attachments are the user's own files: no ignore rules
+                relative = child.relative_to(_root_for(workspace, folder)).as_posix()
+                if rules.is_ignored(relative, is_dir=child.is_dir()):
+                    continue
             entries.append(
                 f"{child.name}/" if child.is_dir() else f"{child.name}  ({child.stat().st_size} bytes)"
             )

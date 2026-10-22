@@ -236,8 +236,17 @@ def _resolve_input(name: str, workspace: Workspace, result: Expanded) -> str | N
         result.notes.append(f"PDF attached: {relative}")
         return f"[PDF attached: {relative} — render its pages with pdf_render, then view_image them]"
     if kind == "text":
-        body = path.read_text(encoding="utf-8", errors="replace")[:MAX_FILE_CHARS]
+        text = path.read_text(encoding="utf-8", errors="replace")
+        body = text[:MAX_FILE_CHARS]
         result.notes.append(f"file attached: {relative}")
+        if len(text) > MAX_FILE_CHARS:
+            # Said plainly, with the way to the rest: a silent cut made the model think the user's file ended there (D-469).
+            shown = body.count("\n") + 1
+            body += (
+                f"\n[… CUT HERE: {len(text) - MAX_FILE_CHARS} more characters; the file has {len(text.splitlines())} lines "
+                f"and {shown} are shown. Read the rest with read_file path={relative} offset={shown + 1} limit=200 "
+                "(a few hundred lines at a time) before relying on this file.]"
+            )
         return f"[@{relative}]\n```\n{body}\n```"
     result.notes.append(f"file attached: {relative}")
     if path.name.lower().endswith(
