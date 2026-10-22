@@ -92,7 +92,7 @@ The rules below still describe what goes into briefs and summaries.
    @-mentioned; D-208). The model cannot grant; writes are never opened up.
 3. Secrets never reach the LLM, transcripts, memory files, events or the browser. Nothing in the web app can write the `.env`
    file or show a key (D-204); commands the model runs do not inherit Forge's own variables (D-202) and a read of the `.env`
-   by variable or quoted name always asks (D-187); saved tool outputs are redacted (D-195).
+   by variable or quoted name always asks (D-187); saved tool outputs are redacted (D-195). The app being built may use an Azure model the user picked for it (`request_app_keys`, `/app-keys`; the values go into that app's commands only, never to the model, D-466).
 4. DB writes only happen in the scratch schema for the current requirement.
 5. Forge cannot modify its own install folder or `config.yaml`.
 6. Actions Forge can't or mustn't do are handed to the user; if the user can't either, Forge proposes a

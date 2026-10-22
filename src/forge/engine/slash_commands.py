@@ -59,6 +59,7 @@ HELP_TEXT = """Available commands:
   /allow-read [path]        let DebCraft read a file or folder (and everything under it) outside the project,
                             read only, kept for this project; without a path: list what is allowed
   /revoke-read <path>       take that permission back
+  /app-keys [model|off]     let the app being built use one of your Azure OpenAI models while it is tested (off = take it back)
   /bg [kill <name>]         background processes (dev servers...) with the tail of their output
   /log | /diff <task|hash>  the workspace's local history: one commit per completed task
   /rename <name>            name this session/workspace
@@ -120,6 +121,7 @@ class SlashCommandHandler:
             "/skill": self._skill,
             "/allow-read": self._allow_read,
             "/revoke-read": self._revoke_read,
+            "/app-keys": self._app_keys,
             "/agents": self._agents,
             "/bg": self._bg,
             "/log": self._log,
@@ -515,6 +517,42 @@ class SlashCommandHandler:
         await self._say(
             f"DebCraft may now read {granted_path} (and everything under it) in this project; read only. "
             f"/revoke-read {granted_path} undoes it."
+        )
+
+    async def _app_keys(self, args: list[str]) -> None:
+        """The user lets the app under development use an Azure OpenAI model for testing (D-466)."""
+        from forge.toolkit.app_keys import apply_grant, available_models, granted_model, save_grant
+
+        workspace = self.host.workspace
+        agent = self.host.agent
+        if workspace is None or agent is None:
+            await self._say("No project is open.")
+            return
+        config, secrets = self.host.router.config, self.host.secrets
+        choice = self._rest.strip()
+        if not choice:
+            current = granted_model(workspace)
+            models = available_models(config, secrets) if secrets is not None else []
+            lines = [f"The app may use: {current}." if current else "The app may not use any of your models."]
+            lines += [f"  /app-keys {model.key}   {model.label} ({model.resource})" for model in models]
+            lines.append("  /app-keys off   take it back")
+            await self._say("\n".join(lines))
+            return
+        if choice.lower() == "off":
+            save_grant(workspace, None)
+            apply_grant(agent.context.shell, workspace, config, secrets)
+            await self._say("Taken back: the app no longer gets a model's keys.")
+            return
+        if secrets is None or choice not in {model.key for model in available_models(config, secrets)}:
+            await self._say(
+                f"'{choice}' is not an Azure OpenAI model that is fully set up in your .env file."
+            )
+            return
+        save_grant(workspace, choice)
+        apply_grant(agent.context.shell, workspace, config, secrets)
+        await self._say(
+            f"The app may use {choice} while it is tested here. Commands have AZURE_OPENAI_* set; DebCraft (the model) "
+            "never sees the values. /app-keys off takes it back."
         )
 
     async def _revoke_read(self, args: list[str]) -> None:

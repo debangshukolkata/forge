@@ -69,6 +69,7 @@ class ShellSession:
         self.sandbox_active: bool | None = None  # None until the first command prepares it
         self.pending_notice: str | None = None  # told to the model and the user once
         self.extra_env: dict[str, str] = {}  # e.g. PGOPTIONS for the scratch schema (M7)
+        self.app_env: dict[str, str] = {}  # AZURE_OPENAI_* of the model the user granted to the app (D-466)
         self.ca_bundle: Path | None = None  # the Windows certificates as one PEM file for Node tools (D-402)
         self.ca_checked = False
 
@@ -175,6 +176,7 @@ class ShellSession:
         if "cacheprovider" not in existing:
             variables["PYTEST_ADDOPTS"] = f"{existing} -p no:cacheprovider".strip()
         variables.update(self.extra_env)
+        variables.update(self.app_env)  # the model the user let the app use for testing (D-466)
         return variables
 
     def scope(self) -> ShellScope:

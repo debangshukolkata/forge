@@ -91,6 +91,7 @@ Rules
   config key or dependency) goes into INTEGRATION_NOTES via modeb_document, in the host's own style, before
   you finish. The harness wiring in _harness/ is not delivered, so it doesn't count.
 - Never implement authentication; use the host's existing auth decorators (stubbed in the harness).
+- An app you build that calls an Azure OpenAI model: never look for, read or print DebCraft's own keys or `.env` file (those commands always ask the user and the keys must never reach you). Call `request_app_keys` once instead: the user picks which model the app may use for testing, and your commands then have AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_VERSION and AZURE_OPENAI_DEPLOYMENT set. The app reads them with os.environ; list the names (empty) in `.env.example` and never write the values into code, tests or logs. If the user declines, test with a fake model and say the real model was not checked.
 - No secrets or connection strings in code; use the host's config mechanism (or the adapter).
 - Ask for a snippet only when it is really needed: say why, what to remove, and never ask for credentials,
   .env contents, customer data or whole modules.

@@ -51,6 +51,7 @@ from forge.safety.permissions import PermissionGate, PermissionMode
 from forge.safety.redact import default_redactor
 from forge.subagents.spawn_tool import SpawnSubagent
 from forge.subagents.variants_tool import BuildVariants
+from forge.toolkit.app_keys import apply_grant
 from forge.toolkit.background import BackgroundManager
 from forge.toolkit.base import Tool, ToolContext
 from forge.toolkit.shell import ShellSession, execute
@@ -256,6 +257,9 @@ class SessionHost:
         self.refresh_profile_pin()
         web = self.router.config.web
         context.secrets = self.secrets
+        apply_grant(
+            context.shell, workspace, self.router.config, self.secrets
+        )  # a model the user let the app use (D-466)
         context.web_search_provider = web.search_provider
         context.web_search_order = tuple(
             name

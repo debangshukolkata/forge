@@ -54,6 +54,7 @@ Rules
   dict is enough because the work is a genuine one-off with no stated intention of becoming real. Ask the user
   if it's unclear which they want.
 - Tests you write must not call real LLMs; use fakes following the repo's pattern.
+- An app you build that calls an Azure OpenAI model: never look for, read or print DebCraft's own keys or `.env` file (those commands always ask the user and the keys must never reach you). Call `request_app_keys` once instead: the user picks which model the app may use for testing, and your commands then have AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_VERSION and AZURE_OPENAI_DEPLOYMENT set. The app reads them with os.environ; list the names (empty) in `.env.example` and never write the values into code, tests or logs. If the user declines, test with a fake model and say the real model was not checked.
 - Commands run in a fresh PowerShell each time; only the working directory carries over. Stdin is
   closed. Use start_background for servers, and stop them when done.
 - Commands run in a sandbox that can write only inside the workspace copy. "Access denied" when writing
