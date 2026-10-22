@@ -115,9 +115,13 @@ async def test_a_rate_limited_model_rests_two_minutes_then_comes_back() -> None:
             return json_response(429, error_body("429", "token rate limit"), headers={"retry-after": "3"})
         return json_response(200, responses_body([text_output("from the next model")]))
 
+    back: list[dict[str, object]] = []
+
     async def on_notice(kind: str, data: dict[str, object]) -> None:
         if kind == "fallback":
             notices.append(data)
+        elif kind == "switch_back":
+            back.append(data)
 
     router = mocked_router(handler, [], on_notice=on_notice, clock=lambda: now[0])
     router.config.llm.rotation = ["gpt51", "gpt41"]
@@ -130,10 +134,12 @@ async def test_a_rate_limited_model_rests_two_minutes_then_comes_back() -> None:
     await router.chat("coder", HELLO)  # still resting: straight to the next model, no retries on the busy one
     assert served == ["secondary-deployment"]
 
+    assert not back  # nothing said while it rests
     now[0] += 121
     served.clear()
     await router.chat("coder", HELLO)  # rested: the preferred model is tried again (and is still limited)
     assert served[0] == "primary-deployment"
+    assert [data["model"] for data in back] == ["gpt51"] and "rested" in str(back[0]["text"])
 
 
 async def test_the_rest_lasts_as_long_as_the_server_asks_when_that_is_longer() -> None:

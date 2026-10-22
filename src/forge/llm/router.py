@@ -41,6 +41,7 @@ class LLMRouter:
         self._on_notice = on_notice
         self._clock = clock
         self._resting_until: dict[str, float] = {}  # model key -> clock time its rest ends (D-465)
+        self._back_unannounced: set[str] = set()  # models whose rest is over but the chat was not told yet
         self.role_models: dict[str, str | None] = {role: getattr(config.llm.roles, role) for role in ROLES}
         self.cost = CostTracker(config.llm.models, config.limits.session_budget_usd)
 
@@ -99,6 +100,7 @@ class LLMRouter:
         if isinstance(error, LLMRateLimitError) and error.retry_after_s:
             seconds = max(seconds, min(error.retry_after_s, MAX_HONOURED_RETRY_AFTER_S))
         self._resting_until[model_key] = self._clock() + seconds
+        self._back_unannounced.add(model_key)
         return seconds
 
     def _fits(self, model_key: str, request: ChatRequest | None) -> bool:
@@ -149,6 +151,12 @@ class LLMRouter:
     ) -> LLMResponse:
         self.cost.check_budget()
         model_key = self.model_for_role(role)
+        if model_key in self._back_unannounced and not self._resting(model_key):
+            self._back_unannounced.discard(model_key)  # said once, on the first call after the rest
+            await self._notice(
+                "switch_back",
+                {"role": role, "model": model_key, "text": f"{model_key} has rested; using it again"},
+            )
         if self._resting(model_key):  # rate limited a moment ago: use the next model until its rest is over
             model_key = self._fallback_for(model_key, request) or model_key
         has_alternative = self._fallback_for(model_key, request) is not None
