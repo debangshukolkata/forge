@@ -216,8 +216,7 @@ def extract(
                 target.mkdir(parents=True, exist_ok=True)
                 continue
             inside_forge = target_root.is_relative_to(real_path(context.workspace.forge_dir))
-            base = real_path(context.workspace.root if inside_forge else context.workspace.repo_dir)
-            relative = target.relative_to(base).as_posix()  # the form write_bytes and the readers expect
+            relative = _workspace_relative(context, target, inside_forge)
             if context.workspace.is_secret(relative if not inside_forge else entry.name):
                 skipped.append(f"{entry.name}: secret file (skipped)")
                 continue
@@ -233,6 +232,19 @@ def extract(
         return written, skipped
     finally:
         reader.close()
+
+
+def _workspace_relative(context: ToolContext, target: Path, inside_forge: bool) -> str:
+    """The path form write_bytes and the readers expect. In Mode B a folder outside project/ lives in _harness/
+    (found by a live run: the relative_to on repo_dir raised a ValueError)."""
+    workspace = context.workspace
+    if inside_forge:
+        return target.relative_to(real_path(workspace.root)).as_posix()
+    for folder, prefix in ((workspace.repo_dir, ""), (workspace.harness_dir, "_harness/")):
+        resolved = real_path(folder)
+        if target.is_relative_to(resolved):
+            return prefix + target.relative_to(resolved).as_posix()
+    raise ArchiveError(f"{target} is not inside the workspace.")
 
 
 def _read_limited(reader: _Reader, raw_name: str, limit: int) -> bytes:
@@ -278,7 +290,7 @@ class Archive(Tool):
         "be skipped as unsafe, without unpacking: do this first. action=extract unpacks into .forge/inputs/<archive name>/ "
         "by default, where read_pdf, read_document, read_file and the other readers can open the files; give `destination` "
         "(a folder inside the workspace) to put them elsewhere, for example when they are to become part of the delivered "
-        "work. Unsafe paths, links and secret files are skipped and reported; size and entry-count limits apply."
+        "work (not for reference material you only need to read: leave `destination` empty then). Unsafe paths, links and secret files are skipped and reported; size and entry-count limits apply."
     )
 
     class Args(ToolArgs):

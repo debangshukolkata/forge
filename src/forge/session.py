@@ -37,8 +37,11 @@ def build_session(
     bus = EventBus(log_path)
 
     async def on_notice(kind: str, data: dict[str, Any]) -> None:
-        # Per-call usage is summarised by COST_UPDATED after each turn; retries/fallbacks are shown.
-        if kind != "usage":
+        # Every model call moves the cost counter live: a long autonomous run is one turn that can last hours, and
+        # the project total must not wait for it to end (D-463). Retries and fallbacks are shown as notices.
+        if kind == "usage":
+            await bus.publish(EventType.COST_UPDATED, data["summary"])
+        else:
             await bus.publish(EventType.NOTICE, {"kind": kind, **data})
 
     router = LLMRouter(config, secrets, on_notice=on_notice)

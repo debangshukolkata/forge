@@ -383,6 +383,11 @@ class SessionHost:
 
     async def run(self) -> None:
         await self._publish_status("idle")
+        # A reopened project shows what it has cost so far before any new call (D-463). Only when there is something
+        # to show: a fresh project has no total yet, and COST_UPDATED doubles as the "a turn ended" signal.
+        project = self.router.cost.summary().get("project")
+        if isinstance(project, dict) and project["total"]["cost_usd"] > 0:
+            await self.publish_cost()
         if self.workspace is not None:  # local history baseline (spec §13B); runs beside the input loop
             self._history_baseline = asyncio.create_task(asyncio.to_thread(History(self.workspace).ensure))
         await self.start_mcp()

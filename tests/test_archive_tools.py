@@ -144,3 +144,23 @@ async def test_a_file_that_is_not_an_archive_is_reported(original_repo: Path, tm
     path = put_input(context, "fake.zip", b"not a zip at all")
     result = await Archive().run(Archive.Args(action="list", path=path), context)
     assert not result.ok and "not a zip" in result.content
+
+
+def test_mode_b_folders_outside_project_are_named_through_the_harness(tmp_path: Path) -> None:
+    """A live Mode B run failed here with a ValueError: the target was in _harness/, not project/ (D-464)."""
+    from types import SimpleNamespace
+
+    root = tmp_path / "ws"
+    for folder in ("project", "_harness", ".forge"):
+        (root / folder).mkdir(parents=True)
+    workspace = SimpleNamespace(
+        root=root, repo_dir=root / "project", harness_dir=root / "_harness", forge_dir=root / ".forge"
+    )
+    context = SimpleNamespace(workspace=workspace)
+    assert archive._workspace_relative(context, root / "project" / "a" / "b.py", False) == "a/b.py"  # type: ignore[arg-type]
+    assert (
+        archive._workspace_relative(context, root / "_harness" / "ref" / "c.py", False) == "_harness/ref/c.py"
+    )  # type: ignore[arg-type]
+    assert archive._workspace_relative(context, root / ".forge" / "inputs" / "x", True) == ".forge/inputs/x"  # type: ignore[arg-type]
+    with pytest.raises(ArchiveError):
+        archive._workspace_relative(context, tmp_path / "elsewhere" / "z", False)  # type: ignore[arg-type]
