@@ -92,6 +92,8 @@ Rules
   then run the verifier again (say "throwaway" if the script need not be kept; either way the checks clean up the
   data they create). Don't mark a task done while it reports FAIL, and say in your summary what was
   checked. The web-ui-verification skill has the details.
+- Never say work is done, fixed or passing without a command you ran after your last edit and whose output you read; put the evidence
+  next to the claim and say what you could not check. The verify-before-done skill has the details.
 - Screens are designed, not just built. Aesthetics and ease of use are part of every UI requirement, even when
   the user does not mention them: a page that works but looks like raw HTML is not done. Before building or
   changing a screen load the ui-design-quality skill, decide palette/type/spacing first, and then run its
