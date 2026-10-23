@@ -64,7 +64,7 @@ How to take the work up in the best order. Each phase says what it needs and whe
 - Anything that trades quality for speed or cost is rejected (D-161).
 
 ## 0b. Overnight plan, 2026-10-14 (autonomous: nothing here needs the user)
-Prioritised by value to the user's real needs (the TCS template, then design quality, then new capabilities). Rules for the night: commit locally with tests and a D-note, never push (the user pushes in the morning), no spending beyond the one measured benchmark run, stop an item and move on after the same failure 3 times, write the morning summary to `docs/OVERNIGHT_2026-10-14.md`.
+Prioritised by value to the user's real needs (the TCS template, then design quality, then new capabilities). Rules for the night: commit locally with tests and a D-note, never push (the user pushes in the morning), no spending beyond the one measured benchmark run, stop an item and move on after the same failure 3 times, write the morning summary to `docs/HISTORY.md`.
 1. [x] **Merge the `web-design` branch** (DESIGN.md gate, visual diff tool, reference shots; quality-2 showed the coding changes are neutral): resolve DECISIONS and TODO conflicts keeping both, full test run, then ONE speed rerun of the page-redesign task to measure the DESIGN.md gate (`run_speed_benchmark.py`, alone) and record it in docs/SPEED_BENCHMARK.md. (done 2026-10-14, D-312, D-313)
 2. [x] **Imitation of the real template for tests** (`tests/slide_templates.py::make_infographic_template`): 10 x 5.625 in, nine masters sharing one palette, dark and light layouts of the same families, most samples as shape-drawn infographics on 'Title Only' (percentage circles, process rings, icon chains, a five-pillar slide), a chart sample, a table sample, a round picture frame, corner logos, a footer, 'Delete before using' notes. Everything in P2.23 is tested against it. (done 2026-10-14, D-334, D-335)
 3. [x] **P2.23 engine work that does not depend on the probe output:** (a) choose a variant by mood: `Deck.mood` (dark or light) and per-sample darkness read from the sample's layout and fills (rendered brightness when PowerPoint is there); (b) fill samples that hold a chart (data replaced, series and categories) or a table (rows, columns); (c) put a picture into a round or odd-shaped frame (picture fill of the shape, crop to cover) and into picture placeholders; (d) keep logos, footers and transitions on copied samples; (e) scale canvas handling for 10 x 5.625 in. (done 2026-10-14, D-331 to D-335)
@@ -74,11 +74,11 @@ Prioritised by value to the user's real needs (the TCS template, then design qua
 7. [x] **Document track start (W0, then W2 Excel; done 2026-10-14, D-339):** `docs/DOCUMENTS_CLEAN_ROOM.md` rules, then `build_workbook` / `read_workbook` / `edit_workbook` with real formulas, number formats, tables and charts, a validator and tests (Excel first, as the user ordered).
 8. [~] **S6 faster tools:** downscale pictures before `view_image` (one call took 17 s), `npm install --prefer-offline` with the shared cache, audit only changed pages. (part done D-340; open: audit only changed pages, sandbox start-up measure)
 9. [x] **(done 2026-10-14, D-341; D6 was already built, D-312)** **C17 download button** for the scrubbed run report in the web UI, and **D6 visual regression** on top of the merged visual diff tool.
-10. [x] **Housekeeping:** full test run at the end, update TODO.md ticks, DECISIONS, the memory notes and `docs/OVERNIGHT_2026-10-14.md` (what was built, what to pull, what to run on the laptop, what failed). (done: docs/OVERNIGHT_2026-10-14.md)
+10. [x] **Housekeeping:** full test run at the end, update TODO.md ticks, DECISIONS, the memory notes and `docs/HISTORY.md` (what was built, what to pull, what to run on the laptop, what failed). (done: docs/HISTORY.md)
 Not done at night on purpose: anything that needs the office laptop (probe results, three-design rerun, shadcn command), the user's keys or documents, spending on repeated benchmarks, and pushing.
 
 ## 0c. Tonight, 2026-10-15 (autonomous: nothing here needs the user)
-Everything below can be finished without the user: no office laptop, no files or keys from the user, no decision. Rules for the night: commit locally with tests and a D-note, never push (the user pushes in the morning), stop an item and move on after the same failure 3 times, report honestly when a measurement shows no gain. **Timing runs never overlap**: while one runs, only edit code and run small unit tests (no browser tests, no full suite). Azure spend is allowed for the measuring runs in part 1 (estimate $30 to $40 in all, the keys are already on this machine). Morning summary goes to `docs/OVERNIGHT_2026-10-15.md`.
+Everything below can be finished without the user: no office laptop, no files or keys from the user, no decision. Rules for the night: commit locally with tests and a D-note, never push (the user pushes in the morning), stop an item and move on after the same failure 3 times, report honestly when a measurement shows no gain. **Timing runs never overlap**: while one runs, only edit code and run small unit tests (no browser tests, no full suite). Azure spend is allowed for the measuring runs in part 1 (estimate $30 to $40 in all, the keys are already on this machine). Morning summary goes to `docs/HISTORY.md`.
 
 **Part 1, measuring runs (idle machine, one at a time, first):**
 1. [x] **X8 serial vs parallel designs.** New brief "three throwaway designs" in `tests/benchmarks/design`; arm A with `limits.max_parallel_builders: 1`, arm B with 3 (config in the run's own home); 3 runs per arm, one after the other. Record wall time, model calls, tokens, Azure 429s and the ladder cost per builder in docs/SPEED_BENCHMARK.md; if each builder's own candidates ladder is too heavy, change the builder brief to skip it and measure again. (done 2026-10-15, D-380: parallel 46 % faster and 18 % cheaper over three pairs; docs/SPEED_BENCHMARK.md)
@@ -103,7 +103,7 @@ Everything below can be finished without the user: no office laptop, no files or
 16. [x] **(closed 2026-10-15, not built: night-2 shows no run-to-run variance worth three builds per brief; reopen if the laptop A/B in docs/LAPTOP_AB.md says candidate choice matters)** **L11 best-of-N design candidates** without Gemini (ranked by audit score and critic), measured on the design benchmark.
 17. [x] **(done 2026-10-15: shadcn verified on the office laptop and here, D-401, D-402; the `shadcn_setup` tool, automatic certificate recovery and the Node row of the panel)** **L4 / L5 shadcn quickstart** (the office laptop run is verified, D-401: certificate fix works on Node 24; open: put the Tailwind and alias prerequisites into the skill's quickstart after the night-2 benchmark, and test it here; the sandbox check from inside Forge is verified too).
 18. [x] **(done 2026-10-15: C15 D-376, C14 D-417 with scripts/benchmark/run_skill_ab.py; the first measurements are still to run)** **C14 skill A/B loop and C15 server-lifecycle helper** (lowest priority). (C15 done 2026-10-15, D-376; C14 built 2026-10-15, D-417: scripts/benchmark/run_skill_ab.py; the first measurements are still to run)
-19. [ ] **Housekeeping at the end:** full test run, tick TODO.md, D-notes, memory notes, `docs/OVERNIGHT_2026-10-15.md` (what was built, what to pull, what to run on the laptop, what failed).
+19. [ ] **Housekeeping at the end:** full test run, tick TODO.md, D-notes, memory notes, `docs/HISTORY.md` (what was built, what to pull, what to run on the laptop, what failed).
 **Part 4, coding challenges (agreed with the user 2026-10-15; only after items 1 to 19 are finished):**
 20. [x] **(done 2026-10-15: ten challenges, three rounds, docs/CODE_BENCHMARK.md 'Approach challenges'; gates D-406, D-408, D-410)** **Approach challenges for Forge.** About 8 small tasks, each with one deliberate trap (a bug whose symptom is not its cause; an ambiguous spec that should be noticed and stated; an off-by-one or time-zone edge; a concurrency race; SQL built by string concatenation; a feature that must follow an existing repository's conventions in Mode A; a library API the model may misremember; a refactor that must not change behaviour). Run each with a time box (about 5 minutes or the first 20 tool calls), stop the run, and judge only the approach from `.forge/transcripts/events.jsonl` against a per-challenge checklist: reads the existing code and tests first, states assumptions, finds the root cause before editing, writes a failing test or check before the fix, small edits, runs the checks, does not invent APIs. If the approach is wrong, fix Forge (expect gates and required steps rather than advice, which this model ignores) and run the same challenge again; then give NEW challenges until the approach is right. Do not trade quality or speed for fewer tokens (D-161). List every new gate in the morning summary for the user's review. Record in docs/CODE_BENCHMARK.md (section "Approach challenges") and DECISIONS.
 If the session usage limit is hit, resume at 4:30 AM IST (a one-time schedule was set 2026-10-15 for 04:33; if it did not fire, the user's next message restarts the work from this list).
@@ -338,7 +338,7 @@ Anthropic's `docx`, `pdf`, `pptx` and `xlsx` skills are source-available, not op
 
 ### 5a. Older open items (platform, runtime, build quality)
 - [ ] MCP review and security design (Mode B) before extending; LSP design
-- [x] (done repeatedly; the last full run 2026-10-15 is in docs/OVERNIGHT_2026-10-15.md) Full test run after the revamp code steps; commit in logical parts
+- [x] (done repeatedly; the last full run 2026-10-15 is in docs/HISTORY.md) Full test run after the revamp code steps; commit in logical parts
 - [ ] Next campaign ideas: a project with a database and a REST API (verifier on an API), a CLI tool, a Mode A repo; watch whether the verifier is called on larger features
 - [ ] Unattended runs: decide how a headless run may install dependencies (today always-ask)
 - [ ] G3 Compaction robustness (summariser-failure fallback, image budget) — only if real runs need it
@@ -407,7 +407,7 @@ Kept for reference. Open items were moved up into sections 1-6.
 - [x] **M9W** Web UI core
 - [x] **M9** Diagnose mode
 - [x] **M10** Web, browser, memory, UX
-- [x] **M10B** Mode B standalone — done 2026-09-28 (D-096, D-102, D-105; live acceptance 1–3, see REMAINING_TASKS)
+- [x] **M10B** Mode B standalone — done 2026-09-28 (D-096, D-102, D-105; live acceptance 1–3, see docs/HISTORY.md)
 - [x] **M10C** Learning & self-improvement — done 2026-09-28 (D-089..D-094; live acceptance passed)
 - [x] **M10E** Claude Code parity — done 2026-09-28 (D-095; offline gate 10 pass)
 - [x] **M10D** Multimodal & evals (general) — done 2026-09-28 (D-097)
@@ -619,7 +619,7 @@ Kept for reference. Open items were moved up into sections 1-6.
 - [x] Run map (D-193): the D-133 redesign was already built; its two skipped tests are rewritten (`test_web_runmap_e2e.py`) and per-agent cost added
 - [x] **DROPPED (D-161)**: role-specific toolsets, lazy tool schemas, prompt fragments. Forge does not optimise token cost at runtime; accuracy and speed first
 
-- [x] First Mode B end-to-end campaign (2026-10-03): attendance, bakery, invoice projects; D-162..D-170; report in docs/E2E_CAMPAIGN_2026-10-03.md
+- [x] First Mode B end-to-end campaign (2026-10-03): attendance, bakery, invoice projects; D-162..D-170; report in docs/HISTORY.md
 
 ### Codex comparison gaps (2026-10-03) — spec in docs/SPEC_CODEX_GAPS.md
 - [x] G1 Parallel subagents: first test whether concurrent `spawn_subagent` calls already run in parallel; parallel only for read-only agents; cap; subagent id in events
