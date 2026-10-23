@@ -769,3 +769,18 @@ async def test_a_task_the_model_stops_in_wrap_up_mode_is_paused_and_found_again_
     )
     nxt = orch.state.next_task()
     assert nxt is not None and nxt.id == "T1"  # resume starts here, and T2 is not held back for ever
+
+
+def test_weakened_bar_gate_sees_a_deleted_test_and_a_new_suppression_in_a_real_workspace(
+    host: SessionHost,
+) -> None:
+    """The baseline copy lives in .forge/baseline/<path>: a skipped test and a new `noqa` against it must be found."""
+    workspace = host.workspace
+    assert workspace is not None
+    path = "backend/tests/test_bootstrap.py"
+    original, _ = workspace.read_text(path)
+    workspace.write_text(path, "import pytest\n\n\n@pytest.mark.skip\n" + original, "skip a test")
+    workspace.write_text("backend/claims_app/new_module.py", "import os  # noqa\n", "new file")
+    found = orchestrator(host)._weakened_bar_findings()
+    assert any("test_bootstrap.py" in line and "skipped" in line for line in found), found
+    assert any("new_module.py" in line and "suppression" in line for line in found), found

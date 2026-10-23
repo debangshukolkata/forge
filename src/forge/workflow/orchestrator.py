@@ -49,6 +49,7 @@ from forge.tools.interaction import (
 from forge.tools.quality_gates import gate_findings, gate_note, load_config
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
 from forge.tools.ui_audit import tailwind_setup_problem
+from forge.tools.weakened_bar import weakened_bar_findings
 from forge.workflow.reports import closing_message, final_report
 from forge.workflow.scheduler import explain, plan_batch
 from forge.workflow.state import Cadence, StateStore, Task
@@ -725,18 +726,31 @@ class Orchestrator:
 
     def _gate_findings(self) -> list[str]:
         """C2: ruff, mypy (when configured) and bandit (when installed) on the Python files DebCraft wrote."""
+        config = load_config(self.workspace.forge_dir)
+        found = self._weakened_bar_findings() if config.enabled and config.bar else []
         env = self.workspace.info.python_env
         if env is None or not env.python:
-            return []
+            return found
         root = Path(env.app_dir) if env.app_dir else self.workspace.root
         written = {
             (self.workspace.repo_dir / change.path).resolve()
             for change in self.workspace.changes()
             if change.op in ("write", "move") and change.path.endswith(".py")
         }
-        config = load_config(self.workspace.forge_dir)
-        return gate_findings(
+        return found + gate_findings(
             written, root, env.python, env.command_env(without_private(dict(os.environ))), config
+        )
+
+    def _weakened_bar_findings(self) -> list[str]:
+        """A check turned off to get to green: compares each changed source file with the baseline copy of the original."""
+        paths = dict.fromkeys(
+            change.path for change in self.workspace.changes() if change.op in ("write", "move", "delete")
+        )
+        return weakened_bar_findings(
+            [
+                (path, self.workspace.repo_dir / path, self.workspace.forge_dir / "baseline" / path)
+                for path in paths
+            ]
         )
 
     def _unresolved_imports(self) -> list[str]:

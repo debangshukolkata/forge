@@ -28,6 +28,7 @@ from forge.subagents.critic import (
     has_blocking_fix,
 )
 from forge.subagents.review import REVIEWER_PROMPT
+from forge.subagents.security import SECURITY_AUDITOR_PROMPT
 from forge.subagents.subagent import (
     DEBUGGER_PROMPT,
     EXPLORE_PROMPT,
@@ -92,7 +93,7 @@ class SpawnSubagent(Tool):
         "'art-director' (read-only designer: reads the brief, the reference notes and the design knowledge base and returns a complete DESIGN.md with a reason for every decision, "
         "which you then save and build to; use it for a brand page whose look the brief does not fix), "
         "'researcher' (digs into a question on the web, cross-checks sources, reports with URLs), "
-        "'reviewer' (second opinion on a change), 'debugger' (root cause of a failure), 'verifier' "
+        "'reviewer' (second opinion on a change), 'security-auditor' (read-only: looks only for exploitable problems such as injection, secrets, missing access checks and unsafe file or network use, with evidence; use it for code that handles logins, user input, files, SQL or secrets), 'debugger' (root cause of a failure), 'verifier' "
         "(independently derives acceptance checks from the requirement, writes and runs its own "
         "Playwright or test scripts against the running app and reports PASS/FAIL), 'design-critic' "
         "(an independent designer who looks at the running page at desktop and phone width and scores "
@@ -253,6 +254,10 @@ class SpawnSubagent(Tool):
             report = await run_code_review(router, context, requirement or args.task)
             context.last_review_step = context.step
             context.review_ship = "VERDICT: SHIP" in report
+        elif args.agent == "security-auditor":
+            report = await _run_subagent(
+                router, context, ToolRegistry(read_only), SECURITY_AUDITOR_PROMPT, args.task, 20, "reviewer"
+            )
         elif args.agent == "reviewer":
             report = await _run_subagent(
                 router, context, ToolRegistry(read_only), REVIEWER_PROMPT, args.task, 20, "reviewer"

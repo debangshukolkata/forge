@@ -16,6 +16,7 @@ BUILT_IN_TYPES = {
     "planner": "Read-only analysis for a large or ambiguous task (the planner model): approach, assumptions, ordered tasks with a check each, risks.",
     "art-director": "Read-only designer (the planner model): from the brief, the reference notes and the design knowledge base returns a complete DESIGN.md with a reason for every decision.",
     "reviewer": "A second opinion on a change (reviewer model); returns findings.",
+    "security-auditor": "Read-only security review (reviewer model): injection, secrets, missing access checks, unsafe file and network use; findings with evidence and a verdict.",
     "code-review": "Two independent reviewers at once, one for the project's standards and one for what was asked; returns both reports and a SHIP/REVISE verdict.",
     "debugger": "Fresh-context root-cause analysis of a failure (can run tests); returns a diagnosis and fix.",
     "researcher": "Digs into a question on the web: searches, reads several sources, cross-checks, and "

@@ -55,3 +55,17 @@ not cause. A task is done when the full run passes, or you say exactly what stil
 - Time, randomness, the network and the file system make tests flaky: inject a clock, seed the generator, use `tmp_path`, never sleep
   for a fixed time.
 - A test that only mirrors the implementation (same loop, same formula) passes even when the code is wrong.
+
+## Excuses that mean you are about to cut a corner
+(Adapted from addyosmani/agent-skills, MIT.)
+
+| You think | Reality |
+|---|---|
+| "I'll add the tests after it works" | After-the-fact tests copy the implementation and pass by construction. |
+| "It is too simple to test" | Simple code grows; the test records what it was meant to do. |
+| "I checked it by hand" | A manual check leaves nothing behind for the next change. |
+| "This test is flaky / wrong, I'll skip it" | A failing test is information. Fix the code or the cause of the flakiness; the gate reports new skips and deleted tests. |
+| "I'll silence this lint / type error for now" | The gate reports new `noqa`, `type: ignore`, `ts-ignore`, `eslint-disable`. Fix the cause. |
+| "Run the suite once more to be sure" | Without a code change since the last green run, it adds nothing. |
+
+Red flags: a skipped or deleted test, an assertion loosened, a threshold lowered, a suppression added, "works now" without knowing why.

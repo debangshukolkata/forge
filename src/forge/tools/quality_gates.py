@@ -32,6 +32,7 @@ class GateConfig:
     mypy: bool = True
     bandit: bool = True
     tests: bool = True  # tests that cannot fail (no assertion, assert True, only mocks)
+    bar: bool = True  # a check turned off to get to green (new suppression, skipped or deleted tests)
     max_complexity: int = MAX_COMPLEXITY
 
 
@@ -48,6 +49,7 @@ def load_config(forge_dir: Path) -> GateConfig:
             mypy=bool(data.get("mypy", defaults.mypy)),
             bandit=bool(data.get("bandit", defaults.bandit)),
             tests=bool(data.get("tests", defaults.tests)),
+            bar=bool(data.get("bar", defaults.bar)),
             max_complexity=int(data.get("max_complexity", defaults.max_complexity)),
         )
     except (OSError, ValueError, TypeError):
