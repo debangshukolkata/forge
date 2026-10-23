@@ -20,6 +20,18 @@ NO_DB = ToolResult(
 )
 
 
+async def _ensure_checked(context: ToolContext) -> None:
+    """The access check normally runs when a requirement starts; a chat question, a standalone (Mode B) project or a reopened one
+    reaches these tools before that, and "not checked yet" then looks like "unreachable" although the drawer's test says connected."""
+    db = context.db
+    if db is None or db.reports:
+        return
+    try:
+        await asyncio.to_thread(db.detect)
+    except (psycopg.Error, OSError, ValueError):
+        return  # the status line then still says what is wrong
+
+
 def _readable_target(context: ToolContext, requested: str | None) -> str | None:
     db = context.db
     if db is None:
@@ -42,6 +54,7 @@ class DbSchema(Tool):
         table: str | None = None
 
     async def run(self, args: DbSchema.Args, context: ToolContext) -> ToolResult:
+        await _ensure_checked(context)
         name = _readable_target(context, args.target)
         if context.db is None or name is None:
             return (
@@ -75,6 +88,7 @@ class DbQuery(Tool):
         return f"db query: {' '.join(args.sql.split())[:100]}"
 
     async def run(self, args: DbQuery.Args, context: ToolContext) -> ToolResult:
+        await _ensure_checked(context)
         name = _readable_target(context, args.target)
         if context.db is None or name is None:
             return NO_DB if context.db is None else ToolResult(ok=False, content="No reachable database.")

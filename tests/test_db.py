@@ -493,3 +493,17 @@ def test_credential_tables_come_from_the_apps_bootstrap_code(original_repo: Path
 
     assert credential_tables(original_repo, "backend") == ["app_config"]
     assert credential_tables(original_repo / "missing", "backend") == []
+
+
+@pytest.mark.pg
+async def test_read_tools_check_the_databases_themselves_when_the_session_has_not(
+    workspace: Workspace, local_secrets: Secrets, cleanup_schemas: list[str], tmp_path: Path
+) -> None:
+    """A chat question or a standalone project reaches db_query before any access check ran: it must not say "not checked yet"."""
+    db = DbSession(PostgresConfig(), local_secrets, workspace, tmp_path / "home", deny_tables=[])
+    cleanup_schemas.append(db.scratch_schema_name)
+    assert not db.reports
+    context = ToolContext(workspace=workspace, db=db)
+    read = await DbQuery().run(DbQuery.Args(sql="SELECT 1 AS one"), context)
+    assert read.ok and "1" in read.content, read.content
+    assert db.reports and db.reports["local"].level != AccessLevel.NONE
