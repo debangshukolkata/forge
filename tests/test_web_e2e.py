@@ -318,7 +318,9 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
             browser = p.chromium.launch(channel="msedge", headless=True)
         except Exception as error:
             pytest.skip(f"headless Edge not available: {error}")
-        page = browser.new_context(viewport={"width": 1440, "height": 1000}).new_page()
+        context = browser.new_context(viewport={"width": 1440, "height": 1000})
+        context.grant_permissions(["clipboard-read", "clipboard-write"], origin=server.url())
+        page = context.new_page()
         problems: list[str] = []
         page.on("console", lambda m: problems.append(m.text) if m.type == "error" else None)
         page.on("pageerror", lambda e: problems.append(str(e)))
@@ -332,6 +334,11 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
         page.wait_for_selector("text=Approve the plan?")
         page.wait_for_selector("text=Should masking keep the first 6 digits (BIN)?")
         page.wait_for_selector("td:has-text('masking.py')")  # markdown table rendered (sanitised)
+        # Every code block has a copy button beside it, and it copies the block's text (not the button's).
+        block = page.locator(".md-code:has(pre:has-text('def mask_pan'))")
+        block.locator(".md-copy").click()
+        assert page.evaluate("() => navigator.clipboard.readText()").startswith("def mask_pan(pan: str")
+        assert page.locator(".md-code").count() == page.locator(".md pre").count() >= 2
         # A failed call opens by itself: no click needed to see what went wrong.
         page.wait_for_selector("text=python -m pytest tests/ -q")  # the IN block
         assert not page.locator("pre:has-text('1 failed')").count()  # long output is folded

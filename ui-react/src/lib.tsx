@@ -48,10 +48,45 @@ export function Markdown({ text, className }: { text: string; className?: string
     [text],
   );
   useEffect(() => {
-    ref.current?.querySelectorAll("pre code").forEach((block) => hljs.highlightElement(block as HTMLElement));
+    const root = ref.current;
+    if (!root) return;
+    root.querySelectorAll("pre code").forEach((block) => hljs.highlightElement(block as HTMLElement));
+    // A copy button beside every code block. The wrapper (not the scrolling <pre>) holds it, so it stays put while a long line scrolls.
+    root.querySelectorAll("pre").forEach((pre) => {
+      if (pre.parentElement?.classList.contains("md-code")) return;
+      const wrapper = document.createElement("div");
+      wrapper.className = "md-code";
+      pre.replaceWith(wrapper);
+      wrapper.appendChild(pre);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "md-copy";
+      button.title = "Copy";
+      button.setAttribute("aria-label", "Copy code");
+      button.innerHTML = COPY_ICON;
+      wrapper.appendChild(button);
+    });
   }, [html]);
-  return <div ref={ref} className={cx("md", className)} dangerouslySetInnerHTML={{ __html: html }} />;
+  const onClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(".md-copy");
+    if (!button) return;
+    const text = button.parentElement?.querySelector("pre")?.textContent ?? "";
+    void navigator.clipboard.writeText(text.trimEnd()).then(() => {
+      button.innerHTML = CHECK_ICON;
+      button.title = "Copied";
+      window.setTimeout(() => {
+        button.innerHTML = COPY_ICON;
+        button.title = "Copy";
+      }, 1200);
+    });
+  };
+  return <div ref={ref} onClick={onClick} className={cx("md", className)} dangerouslySetInnerHTML={{ __html: html }} />;
 }
+
+// The lucide "copy" and "check" icons as fixed strings: the buttons live inside Markdown HTML that React does not render.
+const ICON_ATTRIBUTES = 'width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+const COPY_ICON = `<svg ${ICON_ATTRIBUTES}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+const CHECK_ICON = `<svg ${ICON_ATTRIBUTES}><path d="M20 6 9 17l-5-5"/></svg>`;
 
 /** A code block; highlighted when the language is known. */
 export function Code({ text, language, className }: { text: string; language?: string; className?: string }) {

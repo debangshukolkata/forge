@@ -226,6 +226,21 @@ textarea:focus-visible {
 .md pre {
   @apply rounded-lg border border-border bg-bg p-3 overflow-x-auto;
 }
+.md-code {
+  @apply relative;
+}
+.md-code > pre {
+  @apply pr-10;
+}
+.md-copy {
+  @apply absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-surface text-fg-muted cursor-pointer;
+}
+.md-copy:hover {
+  @apply text-fg border-border-strong;
+}
+.md-copy:focus-visible {
+  @apply outline-2 outline-accent;
+}
 .md pre code {
   @apply bg-transparent p-0;
 }
