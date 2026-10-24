@@ -8,7 +8,7 @@ from typing import Any
 
 from forge.config import forge_home
 from forge.memory.scope import repo_level_dir
-from forge.parity.skills import Skill, discover
+from forge.parity.skills import Skill, discover, pack_listing, packs
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 BUILT_IN_TYPES = {
@@ -112,6 +112,8 @@ class LoadSkill(Tool):
     async def run(self, args: LoadSkill.Args, context: ToolContext) -> ToolResult:
         skills = discover(*skill_roots(context))
         skill = skills.get(args.name.strip())
+        if skill is None and not args.file and args.name.strip() in (grouped := packs(skills)):
+            return ToolResult(ok=True, content=pack_listing(args.name.strip(), grouped[args.name.strip()]))
         if skill is None:
             return ToolResult(
                 ok=False,

@@ -131,6 +131,11 @@ def build_parser() -> argparse.ArgumentParser:
     skill_add.add_argument("--yes", action="store_true", help="install without asking (you trust the source)")
     skill_add.add_argument("--force", action="store_true", help="replace a skill of the same name")
     skill_commands.add_parser("list", help="list the skills DebCraft can load")
+    skill_pack = skill_commands.add_parser(
+        "pack", help="group installed skills into a pack (one line in the skills index)"
+    )
+    skill_pack.add_argument("pack", help="the pack name; '' takes the skills out of any pack")
+    skill_pack.add_argument("names", nargs="+")
     skill_remove = skill_commands.add_parser("remove", help="remove an installed skill")
     skill_remove.add_argument("name")
     ui = subcommands.add_parser("ui", help="start the local web UI (opens Edge)")
@@ -231,6 +236,12 @@ def _skill(args: argparse.Namespace) -> int:
         for skill in sorted(discover(skills_root).values(), key=lambda s: s.name):
             console.print(_printable(console, f"{skill.name}: {skill.description}"), markup=False)
         return 0
+    if args.skill_command == "pack":
+        missing = skill_install.group(args.names, args.pack, skills_root)
+        console.print(
+            "Grouped." if not missing else f"No installed skill named: {', '.join(missing)}.", markup=False
+        )
+        return 1 if missing else 0
     if args.skill_command == "remove":
         removed = skill_install.remove(args.name, skills_root)
         console.print("Removed." if removed else f"No installed skill named {args.name!r}.", markup=False)

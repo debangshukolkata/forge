@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 import httpx
 
 from forge.errors import ForgeError
-from forge.parity.skills import FRONT
+from forge.parity.skills import FRONT, set_pack
 
 MAX_DOWNLOAD_BYTES = (
     150 * 1024 * 1024
@@ -247,7 +247,15 @@ def summary(candidate: Candidate) -> str:
     return "\n".join(lines)
 
 
-def install(candidate: Candidate, skills_root: Path, force: bool = False) -> Path:
+def pack_name(source: str) -> str:
+    """The pack a source's skills belong to: the repository name, or the folder name for a local folder."""
+    local = Path(source).expanduser()
+    if local.is_dir():
+        return _clean_name(local.resolve().name)
+    return _clean_name(repo_key(source).split("/", 1)[1])
+
+
+def install(candidate: Candidate, skills_root: Path, force: bool = False, pack: str = "") -> Path:
     destination = skills_root / candidate.name
     if destination.exists():
         if not force:
@@ -259,6 +267,7 @@ def install(candidate: Candidate, skills_root: Path, force: bool = False) -> Pat
     _copy_tree(candidate.folder, destination)
     if candidate.name != candidate.folder.name:
         _write_name(destination / "SKILL.md", candidate.name)
+    set_pack(destination, pack)
     return destination
 
 
@@ -279,6 +288,18 @@ def remove(name: str, skills_root: Path) -> bool:
     return True
 
 
+def group(names: list[str], pack: str, skills_root: Path) -> list[str]:
+    """Puts already installed skills into a pack (an empty pack name takes them out); returns the names not found."""
+    missing = []
+    for name in names:
+        folder = skills_root / _clean_name(name)
+        if folder.is_dir() and (folder / "SKILL.md").is_file():
+            set_pack(folder, _clean_name(pack) if pack else "")
+        else:
+            missing.append(name)
+    return missing
+
+
 def add_from_source(
     source: str,
     skills_root: Path,
@@ -293,6 +314,7 @@ def add_from_source(
         if not candidates:
             raise SkillInstallError("No SKILL.md was found there.")
         lines = []
+        pack = pack_name(source)
         seen: set[str] = set()
         for candidate in candidates:
             if candidate.name in seen:  # the same skill is often copied to several folders of one repo
@@ -301,5 +323,5 @@ def add_from_source(
             if not confirm(candidate):
                 lines.append(f"{candidate.name}: not installed")
                 continue
-            lines.append(f"{candidate.name}: installed in {install(candidate, skills_root, force)}")
+            lines.append(f"{candidate.name}: installed in {install(candidate, skills_root, force, pack)}")
         return lines

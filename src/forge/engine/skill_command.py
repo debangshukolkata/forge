@@ -40,6 +40,10 @@ async def run_skill_command(rest: str, skills_root: Path, say: Callable[[str], A
         removed = skill_install.remove(values[0], skills_root)
         await say("Removed." if removed else f"No installed skill named {values[0]!r}.")
         return removed
+    if action == "pack" and len(values) >= 2:
+        missing = skill_install.group(values[1:], values[0], skills_root)
+        await say("Grouped." if not missing else f"No installed skill named: {', '.join(missing)}.")
+        return len(missing) < len(values) - 1
     if action != "add" or len(values) != 1:
         await say(USAGE)
         return False
