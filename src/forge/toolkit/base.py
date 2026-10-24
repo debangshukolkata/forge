@@ -158,6 +158,7 @@ class ToolContext:
     )
     design_similar_refusals: int = 0
     design_gate_rounds: int = 0  # how many times that was asked for in this session
+    design_exempt: bool = False  # a loaded skill sets its own look (`own_design: true` in its header), so the DESIGN.md gate stands aside (D-483)
     write_only_is_builder: bool = (
         False  # selects the wording of the refusal (builders build, verifiers only verify)
     )

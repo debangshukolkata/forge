@@ -77,3 +77,29 @@ def test_install_summary_warns_about_a_description_that_would_route_badly(tmp_pa
     assert description_warnings(good) == []
     assert "Description check" not in summary(good)
     assert description_warnings(Candidate("z", "", tmp_path))
+
+
+async def test_a_skill_with_its_own_style_guide_lifts_the_page_design_gate_once_loaded(
+    original_repo: Path, tmp_path: Path, isolated_forge_home: Path
+) -> None:
+    from forge.toolkit.base import ToolContext
+    from forge.tools.files import design_gate
+    from forge.tools.parity import LoadSkill
+    from forge.workspace.create import create_workspace
+
+    folder = make_skill(isolated_forge_home / "skills", "drawer")
+    text = (
+        (folder / "SKILL.md")
+        .read_text(encoding="utf-8")
+        .replace("description:", "own_design: true\ndescription:")
+    )
+    (folder / "SKILL.md").write_text(text, encoding="utf-8")
+    make_skill(isolated_forge_home / "skills", "plain")
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    assert discover(isolated_forge_home / "skills")["drawer"].own_design
+
+    await LoadSkill().run(LoadSkill.Args(name="plain"), context)
+    assert "DESIGN.md" in design_gate(context, "diagram.html")  # an ordinary skill changes nothing
+    context.design_gate_rounds = 0
+    await LoadSkill().run(LoadSkill.Args(name="drawer"), context)
+    assert design_gate(context, "diagram.html") == ""

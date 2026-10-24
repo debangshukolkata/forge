@@ -4,6 +4,8 @@ description: Make every screen look and feel professionally designed, and prove 
 ---
 # Designing screens that look good, and checking them
 
+**Not for diagrams, charts or slide decks made with an installed skill that brings its own style guide** (for example a diagram-design skill): load that skill and follow its references; this page process (DESIGN.md, candidates) does not apply to the diagram.
+
 Working code is not a finished screen. A page that works but looks like a raw HTML document is a failed task.
 Aesthetics and ease of use are part of the requirement even when the user did not mention them.
 

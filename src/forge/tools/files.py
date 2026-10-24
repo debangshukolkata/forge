@@ -354,7 +354,7 @@ def design_gate(context: ToolContext, relative: str) -> str:
     model wrote itself must also have been compared with candidates once (D-352: the first design benchmark run skipped the whole
     design ladder, so it is a gate and not only advice); a file the user supplied is never questioned."""
     clean = relative.replace("\\", "/")
-    if not clean.lower().endswith(UI_SUFFIXES):
+    if context.design_exempt or not clean.lower().endswith(UI_SUFFIXES):
         return ""
     found = find_design_md(context.workspace, relative)
     if (

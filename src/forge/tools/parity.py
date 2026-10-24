@@ -126,4 +126,6 @@ class LoadSkill(Tool):
             )
         if args.file:
             return read_skill_file(skill, args.file)
+        if skill.own_design:
+            context.design_exempt = True
         return ToolResult(ok=True, content=skill.body() + skill_files_note(skill))
