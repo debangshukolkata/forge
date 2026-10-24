@@ -5,6 +5,8 @@ Needs the skills in ~/.forge/skills; skipped when there are none."""
 from __future__ import annotations
 
 import asyncio
+import json
+import os
 import shutil
 from pathlib import Path
 
@@ -18,8 +20,23 @@ from tests.test_live_agent import make_host  # noqa: F401  (a fixture)
 
 pytestmark = pytest.mark.live
 
+RUNS = int(os.environ.get("SKILL_LOADING_RUNS", "2"))
+
 # Reading around and planning come before the skill in some runs; the first tool that changes or builds something ends the run.
-LOOKING_TOOLS = ("ask_user", "todo_write", "list_dir", "read_file", "search", "grep", "glob", "find_asset")
+LOOKING_TOOLS = (
+    "ask_user",
+    "todo_write",
+    "list_dir",
+    "read_file",
+    "search",
+    "grep",
+    "glob",
+    "find_asset",
+    "design_kb_search",
+    "library_api",
+    "memory_write",
+    "spawn_subagent",  # its inner tool calls are not on the event bus, so the run goes on to see whether the main agent loads the skill afterwards
+)
 
 # (request, skill names that count as a good choice; empty = the model should load nothing)
 SCENARIOS = {
@@ -44,11 +61,20 @@ SCENARIOS = {
         "Here is a screenshot of a page I like. Turn it into code, use the image-to-code skill.",
         {"image-to-code", "design-extras"},
     ),
+    "premium": ("Make the homepage feel more premium.", {"ui-design-quality", "design-extras"}),
+    "portfolio": (
+        "Build a portfolio site for a photographer, it has to stand out.",
+        {"ui-design-quality", "design-extras"},
+    ),
+    "redesign": (
+        "Redesign the existing pages, they look generic and templated.",
+        {"ui-design-quality", "design-extras"},
+    ),
     "typo": ("Fix the typo 'recieve' in the README.", set()),
 }
 
 
-@pytest.mark.parametrize("run", [1, 2])
+@pytest.mark.parametrize("run", range(1, RUNS + 1))
 @pytest.mark.parametrize("scenario", list(SCENARIOS))
 async def test_skill_choice(scenario: str, run: int, make_host) -> None:  # type: ignore[no-untyped-def]  # noqa: F811
     request, good = SCENARIOS[scenario]
@@ -58,19 +84,22 @@ async def test_skill_choice(scenario: str, run: int, make_host) -> None:  # type
     shutil.copytree(real, forge_home() / "skills", dirs_exist_ok=True)
     host = make_host("auto")
     loaded: list[str] = []
+    spawned: list[str] = []
     other_tool = ""
     said = ""
     runner = asyncio.create_task(host.run())
     subscription = host.bus.subscribe(since_seq=host.bus.last_seq)
     await host.submit(SendMessage(text=request))
     try:
-        async with asyncio.timeout(240):
+        async with asyncio.timeout(420):
             async for event in subscription:
                 if (reply := auto_reply(event, auto_approve=False)) is not None:
                     await host.submit(
                         reply
                     )  # a question the model asks first is answered with its own recommendation
                 if event.type == EventType.TOOL_CALL_STARTED:
+                    if event.payload["name"] == "spawn_subagent":
+                        spawned.append(str(event.payload["arguments"])[:60])
                     if event.payload["name"] == "load_skill":
                         loaded.append(str(event.payload["arguments"]))
                     elif event.payload["name"] not in LOOKING_TOOLS:
@@ -84,6 +113,22 @@ async def test_skill_choice(scenario: str, run: int, make_host) -> None:  # type
         subscription.close()
         runner.cancel()
         await host.close()
+    log = os.environ.get("SKILL_LOADING_LOG")
+    if log:  # with parallel workers the printed lines are not shown, so each run also appends one line here
+        with open(log, "a", encoding="utf-8") as handle:
+            handle.write(
+                json.dumps(
+                    {
+                        "scenario": scenario,
+                        "run": run,
+                        "loaded": loaded,
+                        "tool": other_tool,
+                        "spawned": spawned,
+                        "said": said[:120],
+                    }
+                )
+                + "\n"
+            )
     print(
         f"\nSCENARIO {scenario} run={run}: loaded={loaded} first_other_tool={other_tool!r} said={said.encode('ascii', 'replace').decode()!r}"
     )
