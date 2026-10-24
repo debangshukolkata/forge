@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from forge.tools.token_lint import token_lint_problems
+from forge.tools.ui_audit_svg import svg_findings
 
 # Runs in the page. Returns {"findings": [...], "stats": {...}}; kept dependency-free and read-only.
 AUDIT_SCRIPT = r"""
@@ -468,6 +469,7 @@ async def audit_page(page: Any, root: Path | None = None) -> str:
     ) as error:  # a page that blocks scripts or is mid-navigation must not break the screenshot
         return f"Style audit could not run: {str(error).splitlines()[0]}"
     findings: list[str] = list(result.get("findings", []))
+    findings.extend(await svg_findings(page))
     if root is not None and _system_fonts_required(root):
         findings = [f for f in findings if "All the text is set in the system font stack" not in f]
     if root is not None and _imagery_not_wanted(root):
