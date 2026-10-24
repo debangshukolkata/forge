@@ -226,6 +226,33 @@ def _clean_name(raw: str) -> str:
     return name or "skill"
 
 
+MAX_GOOD_DESCRIPTION = 300
+_TRIGGER = re.compile(
+    r"\b(use (when|for|only|if|this)|when (the|a|you|building|creating|asked)|activate|triggers? (on|when)|should be used)\b",
+    re.I,
+)
+_PERSONA = re.compile(r"^(elite|world[- ]class|expert|teaches the ai|you are)\b", re.I)
+
+
+def description_warnings(candidate: Candidate) -> list[str]:
+    """Why the skill's description may route badly (D-482). The description is the only thing the model sees
+    before it loads a skill, so a vague or very long one makes it load the wrong skill or none, and a long one
+    is also paid for on every turn. Advice only: the skill is the user's to install."""
+    description = candidate.description
+    if not description:
+        return ["it has no description, so the model cannot tell when to use it"]
+    found = []
+    if len(description) > MAX_GOOD_DESCRIPTION:
+        found.append(
+            f"it is {len(description)} characters long (aim for under {MAX_GOOD_DESCRIPTION}); the index is sent every turn"
+        )
+    if not _TRIGGER.search(description):
+        found.append('it never says when to use the skill (start with what it does, then "Use when ...")')
+    if _PERSONA.match(description):
+        found.append("it opens with a job title instead of what the skill does")
+    return found
+
+
 def summary(candidate: Candidate) -> str:
     """What the user sees before deciding to trust a skill."""
     lines = [
@@ -240,6 +267,12 @@ def summary(candidate: Candidate) -> str:
         lines.append(
             f"It asks for these tools without approval: {candidate.allowed_tools} "
             "(DebCraft ignores this: commands still ask)"
+        )
+    warnings = description_warnings(candidate)
+    if warnings:
+        lines.append(
+            "Description check: " + "; ".join(warnings) + ". Edit the description line in its SKILL.md after "
+            "installing so it does not crowd out your other skills."
         )
     lines.append(
         "A skill is instructions DebCraft follows. Install only skills you trust; read SKILL.md first if unsure."

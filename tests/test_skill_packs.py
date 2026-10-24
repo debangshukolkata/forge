@@ -63,3 +63,17 @@ def test_install_writes_the_pack_from_the_folder_name(tmp_path: Path) -> None:
         make_skill(source, name)
     skill_install.add_from_source(str(source), tmp_path / "home", lambda candidate: True)
     assert {s.pack for s in discover(tmp_path / "home").values() if s.name in "abc"} == {"taste-skill"}
+
+
+def test_install_summary_warns_about_a_description_that_would_route_badly(tmp_path: Path) -> None:
+    from forge.parity.skill_install import Candidate, description_warnings, summary
+
+    vague = Candidate("x", "Elite UX engineer. " + "Very fancy. " * 30, tmp_path)
+    assert len(description_warnings(vague)) == 3
+    assert "Description check" in summary(vague)
+    good = Candidate(
+        "y", "Restyle a page in a minimalist look. Use when the user asks for a clean, flat design.", tmp_path
+    )
+    assert description_warnings(good) == []
+    assert "Description check" not in summary(good)
+    assert description_warnings(Candidate("z", "", tmp_path))
