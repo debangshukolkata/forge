@@ -304,7 +304,7 @@ class BrowserScreenshot(Tool):
                 "path": path.resolve().relative_to(context.workspace.root.resolve()).as_posix(),
             },
         )
-        audit = await audit_page(session.page, context.workspace.root)
+        audit = await audit_page(session.page, context.workspace.repo_dir)
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         twin = session.shots.get(digest)
         if twin is not None and twin != session.page.url:
@@ -337,7 +337,7 @@ class BrowserScreenshot(Tool):
             if full_page:
                 await _scroll_through(page)
             await page.screenshot(path=str(path), full_page=full_page)
-            audit = await audit_page(page, context.workspace.root)
+            audit = await audit_page(page, context.workspace.repo_dir)
             digest = hashlib.sha256(path.read_bytes()).hexdigest()
             session.shots[digest] = f"{url}@{width}"
             return path.relative_to(context.workspace.root).as_posix(), audit

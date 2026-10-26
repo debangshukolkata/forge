@@ -207,8 +207,8 @@ async def test_the_audit_flags_generic_tells(tmp_path: Path, original_repo: Path
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
-    (workspace.root / "src").mkdir(exist_ok=True)
-    (workspace.root / "src" / "app.js").write_text("window.alert('hi');\n", encoding="utf-8")
+    (workspace.repo_dir / "src").mkdir(exist_ok=True)
+    (workspace.repo_dir / "src" / "app.js").write_text("window.alert('hi');\n", encoding="utf-8")
     context = ToolContext(workspace=workspace)
     try:
         await BrowserOpen().run(
@@ -386,6 +386,55 @@ async def test_the_audit_flags_addresses_that_break_when_the_page_is_opened_from
         )
         shot = await BrowserScreenshot().run(BrowserScreenshot.Args(), context)
         assert "start with a slash" in shot.content and "/public/fonts/fraunces.woff2" in shot.content
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)
+        server.shutdown()
+
+
+LANDING_WITH_FORM = (
+    "<!doctype html><html><head><style>body{margin:0;font-family:Georgia,serif;color:#222;background:#fafaf5}"
+    "section,header,footer{padding:48px 80px}h1{font-size:56px}input,select,textarea,button{font:inherit;padding:8px}</style></head><body>"
+    "<header><nav><a href='#a'>Classes</a> <a href='#b'>Book</a></nav><h1>Slow down in Lisbon</h1>"
+    "<p>A small studio with ten mats and teachers who learn your name. "
+    + "Classes run every morning and evening. "
+    * 12
+    + "</p></header>"
+    "<section id='a'><h2>Classes</h2><p>"
+    + "Gentle flows for every level. " * 10
+    + "</p><ul>"
+    + "<li>Morning flow</li>" * 14
+    + "</ul></section>"
+    "<section id='b'><h2>Book</h2><form><input aria-label='Name'><input aria-label='Email'><select><option>Morning</option></select>"
+    "<textarea></textarea><button>Send</button></form></section><footer><p>Lisbon</p></footer></body></html>"
+)
+
+
+@pytest.mark.e2e
+async def test_the_audit_asks_a_brand_page_with_a_booking_form_for_its_pictures(
+    tmp_path: Path, original_repo: Path
+) -> None:
+    """The workspace root holds repo/ (and .forge/); DESIGN.md is in repo/. The audit used to look for it in the root, so a landing page with a
+    form counted as an application and was never asked for imagery (the seven-skill comparison: none of the pages had a picture)."""
+    pytest.importorskip("playwright.async_api")
+    site_root = tmp_path / "landing"
+    site_root.mkdir()
+    (site_root / "index.html").write_text(LANDING_WITH_FORM, encoding="utf-8")
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(site_root))
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    (workspace.repo_dir / "DESIGN.md").write_text(
+        "---\nname: Stillwater\ncomposition: lay-editorial\n---\n", encoding="utf-8"
+    )
+    context = ToolContext(workspace=workspace)
+    try:
+        assert (
+            await BrowserOpen().run(
+                BrowserOpen.Args(url=f"http://127.0.0.1:{server.server_address[1]}/index.html"), context
+            )
+        ).ok
+        shot = await BrowserScreenshot().run(BrowserScreenshot.Args(), context)
+        assert "no imagery at all" in shot.content, shot.content
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
         server.shutdown()
