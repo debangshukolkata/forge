@@ -6206,6 +6206,100 @@
    "size": 90948
   },
   {
+   "id": "app-approval-queue",
+   "type": "section",
+   "title": "App screen: Approvals: queue with decision panel",
+   "summary": "A queue of requests with deadline pills, a bulk-decision bar and a decision panel: policy checks, what changed since the last version, a note and approve, ask or reject.",
+   "moods": [
+    "businesslike",
+    "precise",
+    "light"
+   ],
+   "products": [
+    "approvals",
+    "expenses",
+    "purchasing",
+    "finance",
+    "workflow",
+    "back office"
+   ],
+   "tags": [
+    "queue",
+    "approval",
+    "decision panel",
+    "deadline",
+    "bulk actions",
+    "diff",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/approval-queue.html",
+     "to": "screens/approval-queue.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-approval-queue.md",
+   "size": 23422
+  },
+  {
+   "id": "app-audit-log",
+   "type": "section",
+   "title": "App screen: Audit log: events with before and after",
+   "summary": "A filterable stream of who did what: actor, action pill, resource, origin, an expanded entry with a before and after comparison, and the retention and integrity of the log.",
+   "moods": [
+    "precise",
+    "serious",
+    "light"
+   ],
+   "products": [
+    "audit",
+    "security",
+    "compliance",
+    "admin",
+    "activity log",
+    "back office"
+   ],
+   "tags": [
+    "log",
+    "audit",
+    "filters",
+    "diff",
+    "expandable rows",
+    "retention",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/audit-log.html",
+     "to": "screens/audit-log.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-audit-log.md",
+   "size": 23934
+  },
+  {
    "id": "app-calendar",
    "type": "section",
    "title": "App screen: Calendar: week view",
@@ -6290,6 +6384,53 @@
    "preview": null,
    "path": "assets/section/app-chat.md",
    "size": 20059
+  },
+  {
+   "id": "app-csv-import",
+   "type": "section",
+   "title": "App screen: Import: map columns and check rows",
+   "summary": "A four-step import: file summary, a column-to-field mapping table with sample values and match status, a validation summary with the first errors, and a footer that says exactly what will be imported.",
+   "moods": [
+    "practical",
+    "careful",
+    "light"
+   ],
+   "products": [
+    "import",
+    "csv",
+    "data migration",
+    "onboarding",
+    "hr",
+    "back office"
+   ],
+   "tags": [
+    "import",
+    "csv",
+    "mapping",
+    "validation",
+    "stepper",
+    "errors",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/csv-import.html",
+     "to": "screens/csv-import.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-csv-import.md",
+   "size": 21590
   },
   {
    "id": "app-dashboard-analytics",
@@ -6769,6 +6910,53 @@
    "size": 20176
   },
   {
+   "id": "app-helpdesk-queue",
+   "type": "section",
+   "title": "App screen: Support queue: tickets with reply deadlines",
+   "summary": "A ticket queue sorted by what is due: priority and reply-by pills that turn red as the deadline nears, assignee avatars, status tabs with counts, team workload meters and quick replies.",
+   "moods": [
+    "practical",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "support",
+    "tickets",
+    "helpdesk",
+    "customer service",
+    "sla",
+    "back office"
+   ],
+   "tags": [
+    "queue",
+    "tickets",
+    "deadline",
+    "workload",
+    "tabs",
+    "quick replies",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/helpdesk-queue.html",
+     "to": "screens/helpdesk-queue.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-helpdesk-queue.md",
+   "size": 20909
+  },
+  {
    "id": "app-inbox",
    "type": "section",
    "title": "App screen: Inbox: three panes",
@@ -6810,6 +6998,149 @@
    "preview": null,
    "path": "assets/section/app-inbox.md",
    "size": 22617
+  },
+  {
+   "id": "app-inventory-levels",
+   "type": "section",
+   "title": "App screen: Stock levels: alerts, level bars and reorder",
+   "summary": "Stock by location with a level bar against the minimum, status pills (healthy, low, below minimum, out), a warning banner and a suggested purchase order for the items to reorder.",
+   "moods": [
+    "practical",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "inventory",
+    "stock",
+    "kitchen",
+    "retail",
+    "purchasing",
+    "back office"
+   ],
+   "tags": [
+    "stock",
+    "levels",
+    "alerts",
+    "reorder",
+    "meters",
+    "tabs",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/inventory-levels.html",
+     "to": "screens/inventory-levels.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-inventory-levels.md",
+   "size": 21218
+  },
+  {
+   "id": "app-invoice-ageing",
+   "type": "section",
+   "title": "App screen: Receivables: ageing buckets and reminders",
+   "summary": "Outstanding and overdue totals, a bar chart of balances by age with the 61 to 90 bucket highlighted, the reminder sequence and a customer table with a balance per bucket and a remind action.",
+   "moods": [
+    "businesslike",
+    "precise",
+    "light"
+   ],
+   "products": [
+    "accounting",
+    "receivables",
+    "invoices",
+    "credit control",
+    "finance",
+    "back office"
+   ],
+   "tags": [
+    "finance",
+    "ageing",
+    "bar chart",
+    "table",
+    "reminders",
+    "kpi",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/invoice-ageing.html",
+     "to": "screens/invoice-ageing.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-invoice-ageing.md",
+   "size": 21636
+  },
+  {
+   "id": "app-jobs-monitor",
+   "type": "section",
+   "title": "App screen: Jobs monitor: queues and a failed run",
+   "summary": "Queue health cards with a throughput sparkline, a table of recent job runs (duration, attempt, status) and the detail of a failed run with its error text, attempts and retry or discard.",
+   "moods": [
+    "technical",
+    "calm",
+    "dark"
+   ],
+   "products": [
+    "operations",
+    "jobs",
+    "queues",
+    "devops",
+    "monitoring",
+    "integrations",
+    "back office"
+   ],
+   "tags": [
+    "monitoring",
+    "queues",
+    "jobs",
+    "sparkline",
+    "error detail",
+    "retry",
+    "dark",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "dark"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/jobs-monitor.html",
+     "to": "screens/jobs-monitor.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-jobs-monitor.md",
+   "size": 22263
   },
   {
    "id": "app-map-list",
@@ -6854,6 +7185,162 @@
    "preview": null,
    "path": "assets/section/app-map-list.md",
    "size": 21093
+  },
+  {
+   "id": "app-order-fulfilment",
+   "type": "section",
+   "title": "App screen: Orders: fulfilment pipeline with order panel",
+   "summary": "Stage counters across the top, an order list with a four-step progress bar and stage pill, and the selected order's pick list, address, carrier and box size with a mark-as-packed action.",
+   "moods": [
+    "practical",
+    "fast",
+    "light"
+   ],
+   "products": [
+    "orders",
+    "fulfilment",
+    "warehouse",
+    "shipping",
+    "ecommerce",
+    "back office"
+   ],
+   "tags": [
+    "orders",
+    "pipeline",
+    "progress",
+    "pick list",
+    "detail panel",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/order-fulfilment.html",
+     "to": "screens/order-fulfilment.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-order-fulfilment.md",
+   "size": 22965
+  },
+  {
+   "id": "app-react-approval-queue",
+   "type": "section",
+   "title": "React app screen: Approvals: queue with decision panel",
+   "summary": "A queue of requests with deadline pills, a bulk-decision bar and a decision panel: policy checks, what changed since the last version, a note and approve, ask or reject. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "precise",
+    "light"
+   ],
+   "products": [
+    "approvals",
+    "expenses",
+    "purchasing",
+    "finance",
+    "workflow",
+    "back office"
+   ],
+   "tags": [
+    "queue",
+    "approval",
+    "decision panel",
+    "deadline",
+    "bulk actions",
+    "diff",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/approval-queue/Screen.tsx",
+     "to": "src/screens/approval-queue/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/approval-queue/screen.css",
+     "to": "src/screens/approval-queue/screen.css"
+    },
+    {
+     "from": "recipes/app-react/approval-queue/tokens.css",
+     "to": "src/screens/approval-queue/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-approval-queue.md",
+   "size": 23679
+  },
+  {
+   "id": "app-react-audit-log",
+   "type": "section",
+   "title": "React app screen: Audit log: events with before and after",
+   "summary": "A filterable stream of who did what: actor, action pill, resource, origin, an expanded entry with a before and after comparison, and the retention and integrity of the log. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "precise",
+    "serious",
+    "light"
+   ],
+   "products": [
+    "audit",
+    "security",
+    "compliance",
+    "admin",
+    "activity log",
+    "back office"
+   ],
+   "tags": [
+    "log",
+    "audit",
+    "filters",
+    "diff",
+    "expandable rows",
+    "retention",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/audit-log/Screen.tsx",
+     "to": "src/screens/audit-log/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/audit-log/screen.css",
+     "to": "src/screens/audit-log/screen.css"
+    },
+    {
+     "from": "recipes/app-react/audit-log/tokens.css",
+     "to": "src/screens/audit-log/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-audit-log.md",
+   "size": 24317
   },
   {
    "id": "app-react-calendar",
@@ -6956,6 +7443,61 @@
    "preview": null,
    "path": "assets/section/app-react-chat.md",
    "size": 20283
+  },
+  {
+   "id": "app-react-csv-import",
+   "type": "section",
+   "title": "React app screen: Import: map columns and check rows",
+   "summary": "A four-step import: file summary, a column-to-field mapping table with sample values and match status, a validation summary with the first errors, and a footer that says exactly what will be imported. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "practical",
+    "careful",
+    "light"
+   ],
+   "products": [
+    "import",
+    "csv",
+    "data migration",
+    "onboarding",
+    "hr",
+    "back office"
+   ],
+   "tags": [
+    "import",
+    "csv",
+    "mapping",
+    "validation",
+    "stepper",
+    "errors",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/csv-import/Screen.tsx",
+     "to": "src/screens/csv-import/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/csv-import/screen.css",
+     "to": "src/screens/csv-import/screen.css"
+    },
+    {
+     "from": "recipes/app-react/csv-import/tokens.css",
+     "to": "src/screens/csv-import/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-csv-import.md",
+   "size": 21734
   },
   {
    "id": "app-react-dashboard-analytics",
@@ -7523,6 +8065,61 @@
    "size": 20348
   },
   {
+   "id": "app-react-helpdesk-queue",
+   "type": "section",
+   "title": "React app screen: Support queue: tickets with reply deadlines",
+   "summary": "A ticket queue sorted by what is due: priority and reply-by pills that turn red as the deadline nears, assignee avatars, status tabs with counts, team workload meters and quick replies. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "practical",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "support",
+    "tickets",
+    "helpdesk",
+    "customer service",
+    "sla",
+    "back office"
+   ],
+   "tags": [
+    "queue",
+    "tickets",
+    "deadline",
+    "workload",
+    "tabs",
+    "quick replies",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/helpdesk-queue/Screen.tsx",
+     "to": "src/screens/helpdesk-queue/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/helpdesk-queue/screen.css",
+     "to": "src/screens/helpdesk-queue/screen.css"
+    },
+    {
+     "from": "recipes/app-react/helpdesk-queue/tokens.css",
+     "to": "src/screens/helpdesk-queue/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-helpdesk-queue.md",
+   "size": 20979
+  },
+  {
    "id": "app-react-inbox",
    "type": "section",
    "title": "React app screen: Inbox: three panes",
@@ -7572,6 +8169,173 @@
    "preview": null,
    "path": "assets/section/app-react-inbox.md",
    "size": 23166
+  },
+  {
+   "id": "app-react-inventory-levels",
+   "type": "section",
+   "title": "React app screen: Stock levels: alerts, level bars and reorder",
+   "summary": "Stock by location with a level bar against the minimum, status pills (healthy, low, below minimum, out), a warning banner and a suggested purchase order for the items to reorder. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "practical",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "inventory",
+    "stock",
+    "kitchen",
+    "retail",
+    "purchasing",
+    "back office"
+   ],
+   "tags": [
+    "stock",
+    "levels",
+    "alerts",
+    "reorder",
+    "meters",
+    "tabs",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/inventory-levels/Screen.tsx",
+     "to": "src/screens/inventory-levels/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/inventory-levels/screen.css",
+     "to": "src/screens/inventory-levels/screen.css"
+    },
+    {
+     "from": "recipes/app-react/inventory-levels/tokens.css",
+     "to": "src/screens/inventory-levels/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-inventory-levels.md",
+   "size": 21442
+  },
+  {
+   "id": "app-react-invoice-ageing",
+   "type": "section",
+   "title": "React app screen: Receivables: ageing buckets and reminders",
+   "summary": "Outstanding and overdue totals, a bar chart of balances by age with the 61 to 90 bucket highlighted, the reminder sequence and a customer table with a balance per bucket and a remind action. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "precise",
+    "light"
+   ],
+   "products": [
+    "accounting",
+    "receivables",
+    "invoices",
+    "credit control",
+    "finance",
+    "back office"
+   ],
+   "tags": [
+    "finance",
+    "ageing",
+    "bar chart",
+    "table",
+    "reminders",
+    "kpi",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/invoice-ageing/Screen.tsx",
+     "to": "src/screens/invoice-ageing/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/invoice-ageing/screen.css",
+     "to": "src/screens/invoice-ageing/screen.css"
+    },
+    {
+     "from": "recipes/app-react/invoice-ageing/tokens.css",
+     "to": "src/screens/invoice-ageing/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-invoice-ageing.md",
+   "size": 21787
+  },
+  {
+   "id": "app-react-jobs-monitor",
+   "type": "section",
+   "title": "React app screen: Jobs monitor: queues and a failed run",
+   "summary": "Queue health cards with a throughput sparkline, a table of recent job runs (duration, attempt, status) and the detail of a failed run with its error text, attempts and retry or discard. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "technical",
+    "calm",
+    "dark"
+   ],
+   "products": [
+    "operations",
+    "jobs",
+    "queues",
+    "devops",
+    "monitoring",
+    "integrations",
+    "back office"
+   ],
+   "tags": [
+    "monitoring",
+    "queues",
+    "jobs",
+    "sparkline",
+    "error detail",
+    "retry",
+    "dark",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "dark"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/jobs-monitor/Screen.tsx",
+     "to": "src/screens/jobs-monitor/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/jobs-monitor/screen.css",
+     "to": "src/screens/jobs-monitor/screen.css"
+    },
+    {
+     "from": "recipes/app-react/jobs-monitor/tokens.css",
+     "to": "src/screens/jobs-monitor/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-jobs-monitor.md",
+   "size": 22436
   },
   {
    "id": "app-react-map-list",
@@ -7626,6 +8390,60 @@
    "size": 21366
   },
   {
+   "id": "app-react-order-fulfilment",
+   "type": "section",
+   "title": "React app screen: Orders: fulfilment pipeline with order panel",
+   "summary": "Stage counters across the top, an order list with a four-step progress bar and stage pill, and the selected order's pick list, address, carrier and box size with a mark-as-packed action. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "practical",
+    "fast",
+    "light"
+   ],
+   "products": [
+    "orders",
+    "fulfilment",
+    "warehouse",
+    "shipping",
+    "ecommerce",
+    "back office"
+   ],
+   "tags": [
+    "orders",
+    "pipeline",
+    "progress",
+    "pick list",
+    "detail panel",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/order-fulfilment/Screen.tsx",
+     "to": "src/screens/order-fulfilment/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/order-fulfilment/screen.css",
+     "to": "src/screens/order-fulfilment/screen.css"
+    },
+    {
+     "from": "recipes/app-react/order-fulfilment/tokens.css",
+     "to": "src/screens/order-fulfilment/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-order-fulfilment.md",
+   "size": 23695
+  },
+  {
    "id": "app-react-record",
    "type": "section",
    "title": "React app screen: Record: customer profile",
@@ -7676,6 +8494,118 @@
    "preview": null,
    "path": "assets/section/app-react-record.md",
    "size": 20785
+  },
+  {
+   "id": "app-react-report-builder",
+   "type": "section",
+   "title": "React app screen: Report builder: filters, preview and schedule",
+   "summary": "An editable report name, a filter panel (date range, regions, category, group by), a live chart and table preview, and the schedule that sends it by email. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "precise",
+    "focused",
+    "dark"
+   ],
+   "products": [
+    "reports",
+    "analytics",
+    "bi",
+    "finance",
+    "export",
+    "scheduled reports",
+    "back office"
+   ],
+   "tags": [
+    "report",
+    "filters",
+    "preview",
+    "chart",
+    "table",
+    "schedule",
+    "export",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "dark"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/report-builder/Screen.tsx",
+     "to": "src/screens/report-builder/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/report-builder/screen.css",
+     "to": "src/screens/report-builder/screen.css"
+    },
+    {
+     "from": "recipes/app-react/report-builder/tokens.css",
+     "to": "src/screens/report-builder/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-report-builder.md",
+   "size": 20892
+  },
+  {
+   "id": "app-react-resource-timeline",
+   "type": "section",
+   "title": "React app screen: Scheduling: resource timeline with conflicts",
+   "summary": "A day timeline with one row per resource (rooms, staff, vehicles), booking blocks coloured by state, a clear conflict card with two ways out and a list of requests waiting for a slot. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "clear",
+    "light"
+   ],
+   "products": [
+    "scheduling",
+    "bookings",
+    "rooms",
+    "staff rota",
+    "fleet",
+    "resource planning",
+    "back office"
+   ],
+   "tags": [
+    "timeline",
+    "scheduling",
+    "resources",
+    "conflicts",
+    "bookings",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/resource-timeline/Screen.tsx",
+     "to": "src/screens/resource-timeline/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/resource-timeline/screen.css",
+     "to": "src/screens/resource-timeline/screen.css"
+    },
+    {
+     "from": "recipes/app-react/resource-timeline/tokens.css",
+     "to": "src/screens/resource-timeline/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-resource-timeline.md",
+   "size": 27417
   },
   {
    "id": "app-react-settings-account",
@@ -8130,6 +9060,102 @@
    "preview": null,
    "path": "assets/section/app-record.md",
    "size": 20580
+  },
+  {
+   "id": "app-report-builder",
+   "type": "section",
+   "title": "App screen: Report builder: filters, preview and schedule",
+   "summary": "An editable report name, a filter panel (date range, regions, category, group by), a live chart and table preview, and the schedule that sends it by email.",
+   "moods": [
+    "precise",
+    "focused",
+    "dark"
+   ],
+   "products": [
+    "reports",
+    "analytics",
+    "bi",
+    "finance",
+    "export",
+    "scheduled reports",
+    "back office"
+   ],
+   "tags": [
+    "report",
+    "filters",
+    "preview",
+    "chart",
+    "table",
+    "schedule",
+    "export",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "dark"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/report-builder.html",
+     "to": "screens/report-builder.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-report-builder.md",
+   "size": 20708
+  },
+  {
+   "id": "app-resource-timeline",
+   "type": "section",
+   "title": "App screen: Scheduling: resource timeline with conflicts",
+   "summary": "A day timeline with one row per resource (rooms, staff, vehicles), booking blocks coloured by state, a clear conflict card with two ways out and a list of requests waiting for a slot.",
+   "moods": [
+    "businesslike",
+    "clear",
+    "light"
+   ],
+   "products": [
+    "scheduling",
+    "bookings",
+    "rooms",
+    "staff rota",
+    "fleet",
+    "resource planning",
+    "back office"
+   ],
+   "tags": [
+    "timeline",
+    "scheduling",
+    "resources",
+    "conflicts",
+    "bookings",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/resource-timeline.html",
+     "to": "screens/resource-timeline.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-resource-timeline.md",
+   "size": 26221
   },
   {
    "id": "app-settings-account",

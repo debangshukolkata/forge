@@ -16,6 +16,7 @@ sys.path.insert(0, str(REPO / "src"))
 
 from app_screens import (  # noqa: E402
     screens_apps,
+    screens_backoffice,
     screens_dashboards,
     screens_forms,
     screens_settings,
@@ -25,7 +26,14 @@ from app_screens.jsx import screen_component  # noqa: E402
 from app_screens.kit import BASE_CSS, page, root_block, sprite  # noqa: E402
 from app_screens.screen import Screen  # noqa: E402
 
-MODULES = [screens_dashboards, screens_tables, screens_forms, screens_settings, screens_apps]
+MODULES = [
+    screens_dashboards,
+    screens_tables,
+    screens_forms,
+    screens_settings,
+    screens_apps,
+    screens_backoffice,
+]
 SKILL = REPO / "src" / "forge" / "skills" / "ui-design-quality"
 PREVIEW = SKILL / "assets" / "preview"
 # Every screen also exists as React (D-377 for the first five, D-397 for the rest); the screens have no scripts, so the markup converts as it is.

@@ -102,6 +102,8 @@ class Converter(HTMLParser):
             return f"contentEditable={{{str(value != 'false').lower()}}} suppressContentEditableWarning"
         if name in ("width", "height") and tag == "svg" and value.isdigit():
             return f"{key}={{{value}}}"
+        if name in ("colspan", "rowspan") and value.isdigit():  # React types these as numbers
+            return f"{key}={{{value}}}"
         return f"{key}={json.dumps(value)}"
 
     def tag_text(self, tag: str, attrs: list[tuple[str, str | None]], close: bool) -> str:

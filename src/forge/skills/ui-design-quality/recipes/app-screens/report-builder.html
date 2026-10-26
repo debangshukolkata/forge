@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report builder: filters, preview and schedule</title>
+<!-- SCREEN: Report builder: filters, preview and schedule. An editable report name, a filter panel (date range, regions, category, group by), a live chart and table preview, and the schedule that sends it by email. Use it for asking a question of the data and sending the answer on a schedule: reporting tools, finance, sales ops, admin consoles.
+     Replace the :root block with the tokens exported from DESIGN.md (design_md_export css-variables) and delete it; change every word and number to the product's own; keep the structure that fits. -->
+<style>
+:root{--color-neutral:#0e1116;--color-surface:#161b22;--color-ink:#edf0f5;--color-muted:#9aa5b4;--color-primary:#6aa6ff;--color-on-primary:#07101f;--color-accent2:#f0a35c;--color-border:#262d37;--color-ok:#5fd08f;--color-warn:#f0b45a;--color-danger:#ff8a80;color-scheme:dark;--font-display:"Inter",system-ui,sans-serif;--font-body-md:"Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font:400 15px/1.55 var(--font-body-md);-webkit-font-smoothing:antialiased}
+h1{font:600 1.85rem/1.2 var(--font-display);letter-spacing:-.02em;margin:0}h2{font:600 1.05rem/1.3 var(--font-display);margin:0}h3{font:600 .95rem/1.3 var(--font-display);margin:0}p{margin:0}
+button,input,select,textarea,legend{font:inherit}a{color:var(--color-primary)}:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px;border-radius:4px}
+.ico{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.muted{color:var(--color-muted)}.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:root{--soft:color-mix(in srgb,var(--color-primary) 11%,var(--color-surface));--hover:color-mix(in srgb,var(--color-ink) 5%,var(--color-surface));--radius:14px;--r:10px;--field:color-mix(in srgb,var(--color-ink) 26%,var(--color-surface));--shadow:0 1px 2px color-mix(in srgb,var(--color-ink) 8%,transparent)}
+/* shell */
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.side{background:var(--color-surface);border-right:1px solid var(--color-border);padding:18px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font:700 1.05rem var(--font-display);letter-spacing:-.01em}
+.brand i{width:28px;height:28px;padding:1px;border-radius:var(--r);background:var(--color-primary);color:var(--color-on-primary);display:grid;place-items:center;font-style:normal;font-size:.85rem}
+.nav-title{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--color-muted);padding:14px 10px 6px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);color:var(--color-muted);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--hover);color:var(--color-ink)}.nav a[aria-current=page]{background:var(--soft);color:var(--color-ink);font-weight:600}
+.nav .count{margin-left:auto;font-size:.75rem;padding:1px 7px;border-radius:999px;background:var(--hover);color:var(--color-muted)}
+.side .me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px 4px;border-top:1px solid var(--color-border)}
+.avatar{width:32px;height:32px;padding:1px;border-radius:999px;background:var(--soft);color:var(--color-primary);display:grid;place-items:center;font-weight:700;font-size:.8rem;flex:none}
+.main{padding:26px clamp(16px,3vw,40px) 48px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px 20px;flex-wrap:wrap;margin-bottom:22px}
+.top .sub{color:var(--color-muted);margin-top:2px}.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.topbar{display:flex;align-items:center;gap:20px;padding:0 clamp(16px,3vw,40px);height:60px;background:var(--color-surface);border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:5}
+.topbar nav{display:flex;gap:4px;margin-left:12px;overflow-x:auto;min-width:0}.topbar nav a{padding:8px 12px;border-radius:var(--r);color:var(--color-muted);text-decoration:none;font-weight:500;white-space:nowrap}
+.topbar nav a[aria-current=page]{color:var(--color-ink);background:var(--soft);font-weight:600}.topbar .grow{flex:1}
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border-radius:var(--r);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-ink);font:600 .9rem var(--font-body-md);cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--hover)}.btn--primary{background:var(--color-primary);border-color:var(--color-primary);color:var(--color-on-primary)}.btn--primary:hover{background:var(--color-primary);filter:brightness(1.08)}
+.btn--ghost{border-color:transparent;background:transparent;color:var(--color-muted)}.btn--sm{min-height:32px;padding:0 12px;font-size:.85rem}.btn--danger{color:var(--color-danger);border-color:color-mix(in srgb,var(--color-danger) 40%,var(--color-border))}
+.btn:disabled{opacity:.5;cursor:not-allowed}.btn--icon{width:38px;padding:0}.btn--sm.btn--icon{width:32px}
+.field{display:grid;gap:6px;align-content:start}.field label,.label{font-weight:600;font-size:.88rem}.field .hint{font-size:.85rem;color:var(--color-muted)}
+.input,.select,.textarea{width:100%;min-height:40px;padding:8px 12px;border-radius:var(--r);border:1px solid var(--field);background:var(--color-surface);color:var(--color-ink);font:400 .95rem var(--font-body-md)}
+.textarea{min-height:96px;resize:vertical}.input::placeholder{color:var(--color-muted)}.input:hover,.select:hover{border-color:var(--color-ink)}
+.input:focus-visible,.select:focus-visible,.textarea:focus-visible{outline:2px solid var(--color-primary);outline-offset:0;border-color:var(--color-primary)}
+.field.is-error .input{border-color:var(--color-danger)}.field .error{color:var(--color-danger);font-size:.85rem;display:flex;gap:6px;align-items:center}
+.search{position:relative;display:flex;align-items:center}.search .ico{position:absolute;left:11px;color:var(--color-muted)}.search .input{padding-left:36px}
+.switch{position:relative;width:42px;height:24px;flex:none}.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:999px;background:color-mix(in srgb,var(--color-ink) 24%,var(--color-surface));transition:background .15s}
+.switch span::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:999px;background:var(--color-surface);box-shadow:var(--shadow);transition:transform .15s}
+.switch input:checked+span{background:var(--color-primary)}.switch input:checked+span::after{transform:translateX(18px)}.switch input:focus-visible+span{outline:2px solid var(--color-primary);outline-offset:2px}
+.check{display:inline-flex;align-items:center;gap:10px}.check input{width:18px;height:18px;accent-color:var(--color-primary);margin:0}
+.seg{display:inline-flex;padding:3px;border-radius:var(--r);background:var(--hover);border:1px solid var(--color-border)}.seg button{border:0;background:transparent;color:var(--color-muted);font:600 .85rem var(--font-body-md);padding:6px 12px;border-radius:var(--r);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--color-surface);color:var(--color-ink);box-shadow:var(--shadow)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--color-border);overflow-x:auto}.tabs a{padding:10px 14px;color:var(--color-muted);text-decoration:none;font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs a[aria-current=page]{color:var(--color-ink);border-bottom-color:var(--color-primary)}
+/* surfaces */
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card>header,.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.card-head p{color:var(--color-muted);font-size:.88rem}
+.grid{display:grid;gap:16px}.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi .label{color:var(--color-muted);font-weight:500;font-size:.88rem}.kpi .value{font:600 1.9rem/1.15 var(--font-display);letter-spacing:-.02em;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:.85rem;font-weight:600}.delta .ico{width:14px;height:14px}.delta--up{color:var(--color-ok)}.delta--down{color:var(--color-danger)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:.8rem;font-weight:600;line-height:1.5;white-space:nowrap;background:var(--hover);color:var(--color-muted)}
+.pill::before{content:"";width:6px;height:6px;border-radius:999px;background:currentColor}
+.pill--ok{background:color-mix(in srgb,var(--color-ok) 14%,var(--color-surface));color:var(--color-ok)}.pill--warn{background:color-mix(in srgb,var(--color-warn) 15%,var(--color-surface));color:var(--color-warn)}
+.pill--danger{background:color-mix(in srgb,var(--color-danger) 13%,var(--color-surface));color:var(--color-danger)}.pill--info{background:var(--soft);color:var(--color-primary)}
+.divider{height:1px;background:var(--color-border);border:0;margin:16px 0}
+.list{list-style:none;margin:0;padding:0}.list li{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--color-border)}.list li:last-child{border-bottom:0}
+/* tables */
+.table-wrap{position:relative;overflow-x:auto;border:1px solid var(--color-border);border-radius:var(--radius);background:var(--color-surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}th{text-align:left;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--color-muted);font-weight:600;padding:11px 16px;border-bottom:1px solid var(--color-border);white-space:nowrap}thead{background:color-mix(in srgb,var(--color-ink) 3%,var(--color-surface))}
+td{padding:12px 16px;border-bottom:1px solid var(--color-border);vertical-align:middle}tr:last-child td{border-bottom:0}tbody tr:hover td{background:var(--hover)}
+td.r,th.r{text-align:right}th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}th button:focus-visible{outline:2px solid var(--color-primary)}
+.cell-main{display:flex;align-items:center;gap:12px;min-width:0}.cell-main b{display:block;font-weight:600}.cell-main span{color:var(--color-muted);font-size:.85rem}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 4px 0;color:var(--color-muted);font-size:.9rem}
+/* charts: SVG for the shape, HTML for the labels, so text stays readable at every width */
+.chart{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px}.chart .ys{display:flex;flex-direction:column;justify-content:space-between;font-size:.75rem;color:var(--color-muted);text-align:right;padding:2px 0}
+.chart svg{width:100%;height:100%;display:block}.chart .plot{height:var(--h,220px);position:relative}.chart .xs{grid-column:2;display:flex;justify-content:space-between;font-size:.75rem;color:var(--color-muted);padding-top:8px}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;align-items:end;height:var(--h,180px)}.bars div{background:var(--color-primary);border-radius:6px;min-height:4px;position:relative}
+.bars div.alt{background:color-mix(in srgb,var(--color-primary) 35%,var(--color-surface))}.bar-labels{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;font-size:.75rem;color:var(--color-muted);text-align:center;padding-top:8px}
+.meter{height:8px;border-radius:999px;background:var(--hover);overflow:hidden;border:1px solid var(--color-border)}.meter i{display:block;height:100%;background:var(--color-primary);border-radius:999px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--color-muted)}.legend i{display:inline-block;width:10px;height:10px;border-radius:6px;margin-right:6px;vertical-align:-1px}
+/* narrow screens: the sidebar becomes a strip, grids stack, tables scroll inside their frame */
+@media (max-width:1100px){.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.app{grid-template-columns:minmax(0,1fr)}.side{position:static;height:auto;flex-direction:row;align-items:center;gap:6px;padding:10px 12px;border-right:0;border-bottom:1px solid var(--color-border);overflow-x:auto}
+.side .brand{padding:0 8px 0 0}.side .nav-title,.side .me{display:none}.nav{display:flex;gap:2px}.nav a{white-space:nowrap}.cols-3,.cols-2,.cols-4{grid-template-columns:minmax(0,1fr)}.main{padding:18px 16px 40px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:1100px){.split{grid-template-columns:minmax(0,1fr)!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4"/><path d="M4 20h16"/><path d="m8 15 3-4 3 2 4-6"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.4 5 5.5.7-4 3.8 1 5.4L12 16.3 7.1 19l1-5.4-4-3.8 5.5-.7z"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/></symbol><symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol></svg>
+<div class="app">
+<aside class="side" aria-label="Main"><div class="brand"><i>M</i>Metrics</div><nav class="nav" aria-label="Primary"><a href="#" aria-current=page><svg class="ico" aria-hidden="true"><use href="#i-chart"/></svg>Reports</a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-star"/></svg>Saved views<span class=count>8</span></a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>Schedules<span class=count>3</span></a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg>Data sources</a><a href="#" ><svg class="ico" aria-hidden="true"><use href="#i-settings"/></svg>Settings</a></nav><div class="me"><span class="avatar">LF</span><div><b style="font-size:.9rem">Luca Ferrante</b><div class="muted" style="font-size:.8rem">Analyst</div></div></div></aside>
+<main class="main">
+  <div class="top"><div><h1 class="sr">Revenue by city, Q1</h1><label class="sr" for="rn">Report name</label><input class="input" id="rn" value="Revenue by city, Q1" style="font:600 1.6rem var(--font-display);min-height:48px;max-width:min(520px,90vw)"><p class="sub" style="margin-top:6px">Edited by you 4 minutes ago · 1,204 orders in range</p></div>
+    <div class="actions"><button class="btn"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>Schedule</button><button class="btn"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Export</button><button class="btn btn--primary"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg>Save view</button></div></div>
+  <div class="grid split" style="grid-template-columns:260px minmax(0,1fr);align-items:start">
+    <aside class="card" aria-label="Filters"><h2 style="margin-bottom:12px">Filters</h2>
+      <div class="field" style="margin-bottom:14px"><label for="dr">Date range</label><select class="select" id="dr"><option>Jan 1 to Mar 31, 2025</option><option>Last 30 days</option><option>Last quarter</option></select></div>
+      <div class="field" style="margin-bottom:14px"><span class="label">Region</span><div style="display:grid;gap:8px"><label class="check"><input type="checkbox" checked>North</label><label class="check"><input type="checkbox" checked>South</label><label class="check"><input type="checkbox">East</label><label class="check"><input type="checkbox" checked>West</label></div></div>
+      <div class="field" style="margin-bottom:14px"><label for="cat">Product category</label><select class="select" id="cat"><option>All categories</option><option>Outdoor</option><option>Kitchen</option></select></div>
+      <div class="field" style="margin-bottom:14px"><span class="label">Group by</span><div class="seg" role="group" aria-label="Group by"><button aria-pressed="true">City</button><button aria-pressed="false">Month</button><button aria-pressed="false">Product</button></div></div>
+      <button class="btn" style="width:100%">Reset filters</button></aside>
+    <div class="grid">
+      <section class="card" aria-labelledby="cv"><div class="card-head"><div><h2 id="cv">Revenue by city</h2><p>Q1 2025 · 3 of 4 regions</p></div><div class="seg" role="group" aria-label="Metric"><button aria-pressed="true">Revenue</button><button aria-pressed="false">Orders</button></div></div><div role="img" aria-label="Revenue by city, in thousands of dollars"><div class="bars" style="--h:150px"><div class="" style="height:100%" title="Lisbon: 182"></div><div class="alt" style="height:73%" title="Porto: 132"></div><div class="alt" style="height:35%" title="Braga: 64"></div><div class="alt" style="height:26%" title="Faro: 48"></div></div><div class="bar-labels"><span>Lisbon</span><span>Porto</span><span>Braga</span><span>Faro</span></div></div></section>
+      <div class="table-wrap"><table><thead><tr><th>City</th><th class="r">Revenue</th><th class="r">Orders</th><th class="r">Average order</th><th class="r">Change</th></tr></thead><tbody><tr><td><b>Lisbon</b></td><td class="r num">$182,400</td><td class="r num">1,204</td><td class="r num">$151.50</td><td class="r num"><span class="delta delta--up">+12.4%</span></td></tr><tr><td><b>Porto</b></td><td class="r num">$131,950</td><td class="r num">902</td><td class="r num">$146.30</td><td class="r num"><span class="delta delta--up">+7.1%</span></td></tr><tr><td><b>Braga</b></td><td class="r num">$64,300</td><td class="r num">455</td><td class="r num">$141.30</td><td class="r num"><span class="delta delta--down">-2.8%</span></td></tr><tr><td><b>Faro</b></td><td class="r num">$48,120</td><td class="r num">361</td><td class="r num">$133.30</td><td class="r num"><span class="delta delta--up">+18.9%</span></td></tr></tbody></table></div>
+      <section class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="avatar"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg></span><div><b>Sent every Monday at 08:00</b><div class="muted">To finance@brightwell.io and 2 others as a PDF</div></div><button class="btn btn--sm" style="margin-left:auto">Change schedule</button></section>
+    </div>
+  </div>
+</main></div>
+</body>
+</html>

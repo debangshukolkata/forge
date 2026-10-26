@@ -230,11 +230,11 @@ The machine-made page is a centred column: a hero with a gradient, three identic
 
 ## 0i. Applications: start from a screen recipe, not a blank file
 For an application (dashboard, table, form, settings, inbox, calendar, record page, board) do not write the screen from nothing: that is thousands of output
-tokens and it looks generic. `find_asset` with type `section` and the tag `app screen` lists 24 complete screens in plain HTML and CSS with believable content, drawn
+tokens and it looks generic. `find_asset` with type `section` and the tag `app screen` lists 34 complete screens in plain HTML and CSS with believable content, drawn
 charts (SVG shapes with HTML labels) and an icon sprite. Families: **dashboards** (sales KPIs, operations board, dark analytics, personal day view), **tables**
 (people table with filters and bulk actions, master and detail, kanban board, editable grid for fast entry), **forms** (multi-step wizard, invoice with line items,
 long form with an error summary, sign-in split screen, quick capture), **settings** (account and API keys, notification matrix, plan and billing, roles and
-permissions), and **web-app screens** (inbox, chat, week calendar, customer record, map with a list, document editor, empty / error / offline / loading states).
+permissions), **web-app screens** (inbox, chat, week calendar, customer record, map with a list, document editor, empty / error / offline / loading states) and **back-office screens** (approval queue with a decision panel, audit log with before and after, order fulfilment, stock levels with reorder, receivables ageing, support queue with reply deadlines, CSV import with column mapping, report builder, background jobs monitor, resource timeline with conflicts).
 - Pick by the job the user does on the screen, not by the product's industry; then `add_asset` copies the file (it lands in `screens/`) and `view_image` its
   reference pictures. Name it in the candidate's front matter as `composition: app-dashboard-kpi` (or the id you chose).
 - Make it the product's own: replace the `:root` block with the tokens from `design_md_export css-variables`, fetch the fonts the tokens name, change every

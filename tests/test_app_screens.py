@@ -17,7 +17,7 @@ FAMILIES = {"dashboard": 4, "table": 4, "form": 5, "settings": 4}
 
 
 def test_there_are_screens_in_every_family_each_in_the_catalogue_with_pictures() -> None:
-    assert len(FILES) == 24
+    assert len(FILES) == 34  # 24 general screens and the ten back-office ones (D-487)
     for family, count in FAMILIES.items():
         assert len([f for f in FILES if f.stem.startswith(family + "-")]) == count, family
     ids = {
@@ -103,6 +103,16 @@ RETRIEVAL = [
     ("store locator pickup points on a map", "app-map-list"),
     ("document editor with comments and outline", "app-editor"),
     ("empty state error offline and loading skeleton", "app-empty-states"),
+    ("approval queue for expenses and purchase orders with a decision panel", "app-approval-queue"),
+    ("audit log of who changed what with a before and after comparison", "app-audit-log"),
+    ("order fulfilment pick pack and ship for a warehouse", "app-order-fulfilment"),
+    ("stock levels with reorder alerts for a kitchen", "app-inventory-levels"),
+    ("accounts receivable ageing with overdue invoices and reminders", "app-invoice-ageing"),
+    ("customer support ticket queue with reply deadlines", "app-helpdesk-queue"),
+    ("csv import with column mapping and validation errors", "app-csv-import"),
+    ("report builder with filters, a chart and a scheduled email", "app-report-builder"),
+    ("background jobs and queues monitor with a failed job to retry", "app-jobs-monitor"),
+    ("resource scheduling timeline for rooms staff and vans with conflicts", "app-resource-timeline"),
 ]
 
 
