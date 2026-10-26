@@ -42,6 +42,15 @@ ROLES: dict[str, tuple[str, ...]] = {
 def light_variables(css: str) -> dict[str, str]:
     """The custom properties of the light theme: blocks under `.dark`, `[data-theme=dark]` or `prefers-color-scheme: dark` are left out, and the last
     light definition of a name wins."""
+    return _variables(css, dark=False)
+
+
+def dark_variables(css: str) -> dict[str, str]:
+    """Only the custom properties set inside a dark-theme block (BO8): the overrides of the light values, last definition winning."""
+    return _variables(css, dark=True)
+
+
+def _variables(css: str, dark: bool) -> dict[str, str]:
     text = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
     stack: list[str] = []
     declarations: list[list[str]] = []
@@ -57,7 +66,7 @@ def light_variables(css: str) -> dict[str, str]:
                 tail = prelude.strip()
                 if tail:
                     declarations[-1].append(tail)
-                if not DARK.search(" ".join(stack)):
+                if bool(DARK.search(" ".join(stack))) == dark:
                     for declaration in declarations[-1]:
                         match = re.match(r"^--([\w-]+)\s*:\s*(.+)$", declaration, re.DOTALL)
                         if match:
@@ -265,4 +274,37 @@ def read_config(text: str, variables: dict[str, str]) -> dict[str, Any]:
             match = re.match(r"^(-?\d+(?:\.\d+)?)(px|rem)?$", raw.strip())
             if match:
                 radii.append(float(match.group(1)) * (16 if match.group(2) == "rem" else 1))
-    return {"colors": colours, "ramps": sorted(set(ramps)), "fonts": fonts, "radii": sorted(set(radii))}
+    return {
+        "colors": colours,
+        "ramps": sorted(set(ramps)),
+        "fonts": fonts,
+        "radii": sorted(set(radii)),
+        "shadows": _named_strings(text, "boxShadow"),
+        "spacing": _named_strings(text, "spacing"),
+        "screens": _screens(text),
+        "plugins": sorted(set(re.findall(r"require\(\s*['\"]([^'\"]+)['\"]\s*\)", text))),
+        "dark_mode": _dark_mode(text),
+    }
+
+
+def _named_strings(text: str, key: str) -> dict[str, str]:
+    """The string entries of every `key: { ... }` object in the config (theme and extend), later ones winning."""
+    found: dict[str, str] = {}
+    for block in objects_named(text, key):
+        found.update({name: value.strip() for name, value in block.items() if isinstance(value, str)})
+    return found
+
+
+def _screens(text: str) -> dict[str, int]:
+    """Breakpoints in px (`md: '768px'`); values in rem are converted, other forms skipped."""
+    screens: dict[str, int] = {}
+    for name, value in _named_strings(text, "screens").items():
+        match = re.match(r"^(\d+(?:\.\d+)?)(px|rem)?$", value)
+        if match:
+            screens[name] = round(float(match.group(1)) * (16 if match.group(2) == "rem" else 1))
+    return screens
+
+
+def _dark_mode(text: str) -> str:
+    match = re.search(r"darkMode\s*:\s*(?:\[\s*)?['\"](\w+)['\"]", text)
+    return match.group(1) if match else ""

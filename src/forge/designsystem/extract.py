@@ -5,6 +5,7 @@ the prose and the choices that matter. Nothing here fetches anything."""
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -12,7 +13,13 @@ from typing import Any
 from forge.brand.kit import readable_on
 from forge.designsystem.colour import contrast, hue_and_saturation, parse, to_hex
 from forge.designsystem.spec import DesignMdError
-from forge.designsystem.tailwind3 import CONFIG_NAMES, colour_hex, light_variables, read_config
+from forge.designsystem.tailwind3 import (
+    CONFIG_NAMES,
+    colour_hex,
+    dark_variables,
+    light_variables,
+    read_config,
+)
 
 CUSTOM_PROPERTY = re.compile(r"--([\w-]+)\s*:\s*([^;{}]+);")
 SYSTEM_FONTS = {
@@ -43,6 +50,7 @@ class Extracted:
     max_width: float = 0.0
     gradients: int = 0
     notes: list[str] = field(default_factory=list)
+    dark_colors: dict[str, str] = field(default_factory=dict)  # roles whose dark-theme value differs (BO8)
 
 
 def _hex(value: str) -> str | None:
@@ -297,6 +305,60 @@ def _quote(text: str) -> str:
     return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+HINT_FILES = (
+    "components.json",
+    "postcss.config.js",
+    "postcss.config.cjs",
+    "postcss.config.mjs",
+)  # read for notes only, never as styles
+
+
+def _config_notes(read: dict[str, Any]) -> list[str]:
+    """What a Tailwind 3 config says beyond colours, fonts and radii (BO8): shadows, breakpoints, spacing, plugins and the dark-mode switch."""
+    notes: list[str] = []
+    if read["shadows"]:
+        shadows = ", ".join(f"{k} = {v}" for k, v in list(read["shadows"].items())[:4])
+        notes.append(f"Shadows named in the config: {shadows}.")
+    if read["screens"]:
+        points = ", ".join(f"{k} {v}px" for k, v in sorted(read["screens"].items(), key=lambda i: i[1]))
+        notes.append(f"Breakpoints: {points}.")
+    if read["spacing"]:
+        steps = ", ".join(f"{k} = {v}" for k, v in list(read["spacing"].items())[:6])
+        notes.append(f"Extra spacing steps: {steps}.")
+    if read["plugins"]:
+        notes.append(
+            "Plugins: " + ", ".join(read["plugins"]) + " (their classes are in the project's markup)."
+        )
+    if read["dark_mode"]:
+        notes.append(f"Dark mode switch: {read['dark_mode']}.")
+    return notes
+
+
+def _components_json_notes(files: dict[str, str]) -> list[str]:
+    """The shadcn `components.json` hints (style, base colour, colours as CSS variables) and whether postcss is configured."""
+    notes: list[str] = []
+    for name, text in sorted(files.items()):
+        base = name.replace("\\", "/").rsplit("/", 1)[-1]
+        if base == "components.json":
+            try:
+                data = json.loads(text)
+            except ValueError:
+                continue
+            if not isinstance(data, dict):
+                continue
+            tailwind = data.get("tailwind", {})
+            tailwind = tailwind if isinstance(tailwind, dict) else {}
+            parts = [
+                f"style {data['style']}" if data.get("style") else "",
+                f"base colour {tailwind['baseColor']}" if tailwind.get("baseColor") else "",
+                "colours as CSS variables" if tailwind.get("cssVariables") else "",
+            ]
+            notes.append("shadcn components.json: " + ", ".join(p for p in parts if p) + ".")
+        elif base.startswith("postcss.config"):
+            notes.append("A postcss config exists (tailwind and autoprefixer run through it).")
+    return notes
+
+
 def css_from_project(files: dict[str, str]) -> Extracted:
     """Merge the tokens of several CSS files (a theme file, an index.css) into one draft input."""
     merged = Extracted()
@@ -305,7 +367,12 @@ def css_from_project(files: dict[str, str]) -> Extracted:
         for name, text in files.items()
         if name.replace("\\", "/").rsplit("/", 1)[-1] in CONFIG_NAMES
     }
-    sheets = {name: text for name, text in files.items() if name not in configs}
+    hints = {
+        name
+        for name in files
+        if name.replace("\\", "/").rsplit("/", 1)[-1] in HINT_FILES or name.endswith(".json")
+    }
+    sheets = {name: text for name, text in files.items() if name not in configs and name not in hints}
     for _, text in sorted(sheets.items()):
         part = from_css(text)
         for role, value in part.colors.items():
@@ -314,8 +381,10 @@ def css_from_project(files: dict[str, str]) -> Extracted:
         merged.heading_font = merged.heading_font or part.heading_font
         merged.radii = sorted(set(merged.radii) | set(part.radii))
     variables: dict[str, str] = {}
+    overrides: dict[str, str] = {}
     for text in sheets.values():
         variables.update(light_variables(text) if "{" in text else {})
+        overrides.update(dark_variables(text) if "{" in text else {})
     for name, text in sorted(configs.items()):
         read = read_config(text, variables)
         for role, value in read["colors"].items():
@@ -327,6 +396,12 @@ def css_from_project(files: dict[str, str]) -> Extracted:
                 if key in ("display", "heading", "serif") and not merged.heading_font:
                     merged.heading_font = names[0]
         merged.radii = sorted(set(merged.radii) | set(read["radii"]))
+        if overrides:
+            dark = read_config(text, {**variables, **overrides})["colors"]
+            for role, value in dark.items():
+                if value != read["colors"].get(role):
+                    merged.dark_colors.setdefault(role, value)
+        merged.notes += _config_notes(read)
         fallbacks = sorted(
             {n for families in read["fonts"].values() for n in _families(", ".join(families))[1:]}
         )
@@ -338,6 +413,13 @@ def css_from_project(files: dict[str, str]) -> Extracted:
         merged.notes.append(
             f"Read from {name} (Tailwind 3)."
             + (f" Colour scales (50 to 950) exist for: {ramps}." if ramps else "")
+        )
+    merged.notes += _components_json_notes(files)
+    if merged.dark_colors:
+        merged.notes.append(
+            "The project also has a dark theme ("
+            + ", ".join(f"{role} {value}" for role, value in sorted(merged.dark_colors.items())[:8])
+            + "): the draft holds the light theme only; a dark design is a second token set, not overrides."
         )
     if not merged.colors and not merged.fonts:
         raise DesignMdError(

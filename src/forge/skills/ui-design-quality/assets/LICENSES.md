@@ -18,6 +18,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `ds-glass-aurora` | original | authored for DebCraft (D-350) from dir-glass-aurora |
 | `ds-minimal-monochrome` | original | authored for DebCraft (D-350) from dir-minimal-monochrome |
 | `ds-neo-brutalist` | original | authored for DebCraft (D-350) from dir-neo-brutalist |
+| `ds-office-polish-dark` | original | authored for DebCraft (D-350) from the office design (D-489) as its own dark token set, not overrides of the light one (BO7) |
 | `ds-office-polish` | original | authored for DebCraft (D-350) from the design philosophy of a user-owned back-office app (D-489) |
 | `ds-playful-friendly` | original | authored for DebCraft (D-350) from dir-playful-friendly |
 | `ds-retro-terminal` | original | authored for DebCraft (D-350) from dir-retro-terminal |

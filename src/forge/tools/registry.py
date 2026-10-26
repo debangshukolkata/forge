@@ -37,6 +37,7 @@ from forge.tools.shadcn import AddUiComponent, ShadcnSetup
 from forge.tools.show_app import ShowApp
 from forge.tools.skill_install_tool import InstallSkill
 from forge.tools.test_quality import MutationCheck
+from forge.tools.theme_search import theme_search_tools
 from forge.tools.todo import TodoWrite
 from forge.tools.vision import vision_tools
 from forge.tools.visual_diff import CompareDesigns, VisualBaseline, VisualCheck
@@ -116,6 +117,7 @@ def default_tools() -> list[Tool]:
         *design_knowledge_tools(),
         *design_candidate_tools(),
         *design_palette_tools(),
+        *theme_search_tools(),
         *document_tools(),
         *document_preview_tools(),
         *pdf_toolkit_tools(),

@@ -502,6 +502,46 @@
    "size": 3031
   },
   {
+   "id": "ds-office-polish-dark",
+   "type": "design-system",
+   "title": "Office polish, dark",
+   "summary": "Near-black blue page, raised dark cards with a hairline border, one light orange accent with dark text on filled controls, tinted status chips, Inter: the dark twin of Office polish.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "polished",
+    "dark"
+   ],
+   "products": [
+    "back office",
+    "admin",
+    "crm",
+    "case management",
+    "operations",
+    "monitoring",
+    "erp"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-office-polish-dark.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from the office design (D-489) as its own dark token set, not overrides of the light one (BO7)",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-office-polish-dark.md",
+   "size": 4320
+  },
+  {
    "id": "ds-office-polish",
    "type": "design-system",
    "title": "Office polish",

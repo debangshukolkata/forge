@@ -28,6 +28,13 @@ from forge.tools.vision import _relative, image_path
 from forge.tools.web_guard import WebPolicy, check_resolving
 from forge.tools.web_render import RenderUnavailable, _launch
 
+EXTRA_CONFIG_NAMES = (
+    "components.json",
+    "postcss.config.js",
+    "postcss.config.cjs",
+    "postcss.config.mjs",
+)  # read for hints only (BO8)
+
 INSPIRATION_FOLDER = ".forge/inspiration"
 PAGE_TIMEOUT_S = 30
 MAX_URLS = 5
@@ -272,7 +279,10 @@ class DesignMdFromProject(Tool):
                 continue
             with contextlib.suppress(OSError):
                 files[path.relative_to(root).as_posix()] = path.read_text(encoding="utf-8", errors="replace")
-        for config in CONFIG_NAMES:  # a Tailwind 3 project keeps its palette here, not in CSS (D-490)
+        for config in (
+            *CONFIG_NAMES,
+            *EXTRA_CONFIG_NAMES,
+        ):  # a Tailwind 3 project keeps its palette here, not in CSS (D-490)
             for path in root.rglob(config):
                 if (
                     not SKIPPED_FOLDERS.intersection(path.relative_to(root).parts)

@@ -13,6 +13,8 @@ from forge.designsystem.palettes import (
     accepted_backgrounds,
     apply_palette,
     custom_palette,
+    dark_variant,
+    is_dark_design,
     palette_by_id,
 )
 from forge.toolkit.base import ToolContext
@@ -73,6 +75,22 @@ def test_the_palette_picture_names_the_colours_and_the_contrast() -> None:
     assert "below the 4.5" not in palette_html(palette_by_id("teal"))  # type: ignore[arg-type]
 
 
+DARK = (SKILL / "recipes" / "design-systems" / "ds-office-polish-dark.design.md").read_text(encoding="utf-8")
+
+
+def test_a_dark_design_is_recognised_and_takes_the_light_accent_with_dark_text() -> None:
+    assert is_dark_design(DARK) and not is_dark_design(OFFICE)
+    for palette in PALETTES:
+        variant = dark_variant(palette)
+        assert variant.ratio >= 4.5, (
+            palette.id,
+            variant.ratio,
+        )  # the dark twin never needs an accepted exception
+        after = apply_palette(DARK, variant)
+        assert [f for f in lint_text(after) if f.severity in ("error", "warning")] == [], palette.id
+    assert "#0E1116" in palette_html(dark_variant(palette_by_id("teal")), True)  # type: ignore[arg-type]
+
+
 @pytest.fixture
 def context(original_repo: Path, tmp_path: Path) -> ToolContext:
     return ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
@@ -113,3 +131,10 @@ async def test_showing_the_palettes_draws_four_pictures_and_says_how_to_ask(cont
         "page=3"
         not in (await DesignPalette().run(DesignPalette.Args(action="show", page=3), context)).content
     )
+
+
+async def test_the_tool_applies_the_dark_variant_to_a_dark_design(context: ToolContext) -> None:
+    context.workspace.write_text("DESIGN.md", DARK, "x")
+    result = await DesignPalette().run(DesignPalette.Args(action="apply", palette="blue"), context)
+    assert result.ok and "(dark)" in result.content and "recorded as accepted" not in result.content
+    assert "contrast-accepted" not in context.workspace.path_of("DESIGN.md").read_text(encoding="utf-8")

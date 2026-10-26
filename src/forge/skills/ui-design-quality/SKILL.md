@@ -250,7 +250,7 @@ permissions), **web-app screens** (inbox, chat, week calendar, customer record, 
 ## 0j. Back-office polish: the look of an office app that is finished
 For any tool people work in all day (approvals, queues, tables, records, settings, imports, reports) use the **office polish** rules; they are what separates a
 finished office app from a plain one. Read `recipes/back-office-polish.md` (the ten rules and one recipe per component, in plain HTML classes and in Tailwind) and start
-the design system from `ds-office-polish` (find_asset, type design-system, "office") unless the user supplied their own. In short: **one accent** (orange or the
+the design system from `ds-office-polish` (find_asset, type design-system, "office") unless the user supplied their own. When the user wants a dark app, use `ds-office-polish-dark` instead: it is its own set of dark tokens (raised surfaces by lightness, light accent with dark text on it), not the light file with overrides; `design_palette` detects a dark DESIGN.md and applies the light-accent variant of the chosen palette (`show` takes `theme: dark` for the pictures). In short: **one accent** (orange or the
 product's colour) for the main action, the active menu item and the counts, everything else neutral; **one recipe for every coloured label** (a pale tint, darker text of
 the same hue, a thin inner ring); white cards on an off-white page with a 1px border and one soft shadow; one family of corners; hierarchy by weight and grey, not many
 sizes; icons of one family, alone in a soft tinted square; motion of 200 to 300 ms (a lift on hover, a 98 percent press, a sliding tab underline); real loading, empty

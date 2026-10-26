@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from forge.designsystem.extract import css_from_project, draft_design_md, from_css
 from forge.designsystem.lint import lint_text
-from forge.designsystem.tailwind3 import colour_hex, light_variables, objects_named, read_config
+from forge.designsystem.tailwind3 import (
+    colour_hex,
+    dark_variables,
+    light_variables,
+    objects_named,
+    read_config,
+)
 
 CSS = """
 @tailwind base;
@@ -128,3 +134,50 @@ def test_a_config_alone_is_enough_and_a_broken_one_is_survived() -> None:
     assert css_from_project({"tailwind.config.js": CONFIG}).colors["primary"] == "#0F766E"
     broken = "export default { theme: { extend: { colors: { primary: '#123456', oops: { , } , } } }"
     assert css_from_project({"tailwind.config.js": broken}).colors["primary"] == "#123456"
+
+
+BO8_CONFIG = """
+const colors = require('tailwindcss/colors')
+module.exports = {
+  darkMode: 'class',
+  theme: {
+    screens: { sm: '640px', md: '48rem', xl: '1280px' },
+    spacing: { 13: '3.25rem' },
+    colors: { ...colors, brand: { DEFAULT: '#7C3AED', 500: '#8B5CF6' }, background: 'hsl(var(--background))' },
+    boxShadow: { soft: '0 2px 8px rgba(0,0,0,.08)' },
+  },
+  plugins: [require('@tailwindcss/forms'), require("@tailwindcss/typography")],
+}
+"""
+
+
+def test_the_dark_values_are_read_apart_from_the_light_ones() -> None:
+    dark = dark_variables(CSS)
+    assert dark["background"] == "220 16% 9%" and dark["card"] == "1 2% 3%"
+    assert "radius" not in dark and light_variables(CSS)["background"] == "216 20% 98%"
+
+
+def test_the_config_gives_shadows_breakpoints_spacing_plugins_and_the_dark_switch() -> None:
+    read = read_config(BO8_CONFIG, light_variables(CSS))
+    assert read["shadows"] == {"soft": "0 2px 8px rgba(0,0,0,.08)"} and read["spacing"] == {"13": "3.25rem"}
+    assert read["screens"] == {"sm": 640, "md": 768, "xl": 1280}
+    assert read["plugins"] == ["@tailwindcss/forms", "@tailwindcss/typography", "tailwindcss/colors"]
+    assert read["dark_mode"] == "class"
+    assert read["colors"]["neutral"].startswith(
+        "#"
+    )  # colours directly in theme.colors, next to a spread, are read
+
+
+def test_the_project_notes_name_the_dark_theme_and_the_shadcn_hints() -> None:
+    files = {
+        "src/index.css": CSS,
+        "tailwind.config.js": CONFIG,
+        "components.json": '{"style": "new-york", "tailwind": {"baseColor": "slate", "cssVariables": true}}',
+        "postcss.config.js": "module.exports = { plugins: { tailwindcss: {} } }",
+    }
+    found = css_from_project(files)
+    notes = " ".join(found.notes)
+    assert "dark theme" in notes and found.dark_colors["neutral"] != found.colors["neutral"]
+    assert "style new-york" in notes and "base colour slate" in notes and "postcss" in notes
+    assert "Shadows named in the config: card" in notes
+    assert [f for f in lint_text(draft_design_md(found, "Acme", "x")) if f.severity == "error"] == []

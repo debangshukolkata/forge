@@ -171,6 +171,30 @@ def apply_palette(text: str, palette: Palette) -> str:
     return opening + newline.join(lines) + rest
 
 
+def dark_variant(palette: Palette) -> Palette:
+    """The palette for a dark office design (BO7): the filled controls use the light accent (the `brand` colour lifted a little) with dark text, because a deep
+    shade that carries white text on a light page is too heavy on a near-black one. Contrast is computed, not assumed."""
+    lifted = "#" + mix(palette.brand.lstrip("#"), "FFFFFF", 0.12).upper()
+    on_primary = (
+        "#111111"
+        if hex_contrast("111111", lifted.lstrip("#")) >= hex_contrast("FFFFFF", lifted.lstrip("#"))
+        else "#FFFFFF"
+    )
+    return Palette(f"{palette.id}-dark", f"{palette.name} (dark)", lifted, lifted, on_primary, palette.mood)
+
+
+def is_dark_design(text: str) -> bool:
+    """True when the DESIGN.md's page colour (`neutral`, else `background`) is dark."""
+    parts = _front_matter(text)
+    if parts is None:
+        return False
+    for key in ("neutral", "background"):
+        found = re.search(rf"^\s+{key}\s*:\s*[\"']?#?([0-9a-fA-F]{{6}})", parts[1], re.MULTILINE)
+        if found:
+            return hex_contrast("FFFFFF", found.group(1)) > 8
+    return False
+
+
 def accepted_backgrounds(text: str) -> list[str]:
     """Hex colours whose text contrast the owner accepted below the guideline (`contrast-accepted:` in the front matter)."""
     parts = _front_matter(text)
