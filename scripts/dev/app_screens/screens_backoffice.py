@@ -8,6 +8,17 @@ from .kit import bar_chart, icon, sidebar, spark
 from .screen import Screen
 
 SPLIT = "@media (max-width:1100px){.split{grid-template-columns:minmax(0,1fr)!important}}"
+
+
+def _tile(label: str, value: str, note: str, glyph: str, tone: str = "") -> str:
+    """A summary tile: label and figure on the left, a tinted icon chip on the right, one line of context underneath (D-489)."""
+    modifier = f" chip--{tone}" if tone else ""
+    return (
+        f'<div class="card card--lift kpi"><div class="tile"><div><div class="label">{label}</div><div class="value">{value}</div></div>'
+        f'<span class="chip{modifier}">{icon(glyph)}</span></div><div class="foot">{note}</div></div>'
+    )
+
+
 STAGES = ".stages{grid-template-columns:repeat(5,minmax(0,1fr))}@media (max-width:860px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}}"
 
 
@@ -72,9 +83,9 @@ def approval_queue() -> Screen:
   <div class="top"><div><h1>Approval queue</h1><p class="sub">14 waiting · 2 past their deadline · average decision time 5 h</p></div>
     <div class="seg" role="group" aria-label="Whose requests"><button aria-pressed="true">Assigned to me</button><button aria-pressed="false">My team</button><button aria-pressed="false">Everyone</button></div></div>
   <div class="grid cols-3" style="margin-bottom:16px">
-    <div class="card kpi"><div class="label">Waiting for you</div><div class="value">14</div><span class="delta delta--down">{icon("up")}3 more than yesterday</span></div>
-    <div class="card kpi"><div class="label">Oldest request</div><div class="value">2 d 4 h</div><span class="muted">PO-1190, Marcus Webb</span></div>
-    <div class="card kpi"><div class="label">Decided this week</div><div class="value">61</div><span class="delta delta--up">{icon("up")}94% inside the deadline</span></div>
+    {_tile("Waiting for you", "14", "3 more than yesterday", "inbox", "")}
+    {_tile("Oldest request", "2 d 4 h", "PO-1190, Marcus Webb", "clock", "warn")}
+    {_tile("Decided this week", "61", "94% inside the deadline", "check", "ok")}
   </div>
   <div class="grid split" style="grid-template-columns:minmax(0,1fr) 350px;align-items:start">
     <section aria-label="Requests">
@@ -101,13 +112,24 @@ def approval_queue() -> Screen:
         "approval-queue",
         "Approvals: queue with decision panel",
         "A queue of requests with deadline pills, a bulk-decision bar and a decision panel: policy checks, what changed since the last version, a note and approve, ask or reject.",
-        "slate",
+        "office",
         "inter",
         SPLIT,
         body,
         ["inbox", "file", "users", "shield", "clock", "search", "filter", "check", "up", "help"],
         ["businesslike", "precise", "light"],
-        ["approvals", "approval", "approve", "expenses", "expense claims", "purchase orders", "purchasing", "finance", "workflow", "back office"],
+        [
+            "approvals",
+            "approval",
+            "approve",
+            "expenses",
+            "expense claims",
+            "purchase orders",
+            "purchasing",
+            "finance",
+            "workflow",
+            "back office",
+        ],
         "balanced",
         uses="anyone who decides on other people's requests: expenses, purchase orders, leave, vendors, access; shows what is asked, what changed and what the policy says",
         tags=["queue", "approval", "decision panel", "deadline", "bulk actions", "diff", "side navigation"],
@@ -226,7 +248,7 @@ def audit_log() -> Screen:
         "audit-log",
         "Audit log: events with before and after",
         "A filterable stream of who did what: actor, action pill, resource, origin, an expanded entry with a before and after comparison, and the retention and integrity of the log.",
-        "mono",
+        "office",
         "inter",
         SPLIT,
         body,
@@ -302,8 +324,8 @@ def order_fulfilment() -> Screen:
         "order-fulfilment",
         "Orders: fulfilment pipeline with order panel",
         "Stage counters across the top, an order list with a four-step progress bar and stage pill, and the selected order's pick list, address, carrier and box size with a mark-as-packed action.",
-        "harbour",
-        "manrope",
+        "office",
+        "inter",
         SPLIT + STAGES,
         body,
         ["box", "truck", "tag", "map", "chart", "download", "send", "check"],
@@ -349,8 +371,8 @@ def inventory_levels() -> Screen:
         "inventory-levels",
         "Stock levels: alerts, level bars and reorder",
         "Stock by location with a level bar against the minimum, status pills (healthy, low, below minimum, out), a warning banner and a suggested purchase order for the items to reorder.",
-        "paper",
-        "jakarta",
+        "office",
+        "inter",
         SPLIT,
         body,
         ["box", "truck", "tag", "map", "chart", "download", "plus", "send"],
@@ -408,10 +430,10 @@ def invoice_ageing() -> Screen:
 <main class="main">
   <div class="top"><div><h1>Receivables ageing</h1><p class="sub">As of 14 March · 42 open invoices across 18 customers</p></div><div class="actions"><button class="btn">{icon("download")}Statement run</button><button class="btn btn--primary">{icon("send")}Send 6 reminders</button></div></div>
   <div class="grid cols-4" style="margin-bottom:16px">
-    <div class="card kpi"><div class="label">Outstanding</div><div class="value">$115,265</div><span class="muted">42 invoices</span></div>
-    <div class="card kpi"><div class="label">Overdue</div><div class="value">$66,350</div><span class="delta delta--down">{icon("up")}$4,100 since last week</span></div>
-    <div class="card kpi"><div class="label">Average days to pay</div><div class="value">34</div><span class="delta delta--up">{icon("down")}2 days faster</span></div>
-    <div class="card kpi"><div class="label">Collected this month</div><div class="value">$87,420</div><span class="muted">74% of target</span></div>
+    {_tile("Outstanding", "$115,265", "42 invoices", "file", "")}
+    {_tile("Overdue", "$66,350", "$4,100 more than last week", "clock", "danger")}
+    {_tile("Average days to pay", "34", "2 days faster than last quarter", "card", "ok")}
+    {_tile("Collected this month", "$87,420", "74% of target", "chart", "")}
   </div>
   <div class="grid split" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);margin-bottom:16px">
     <section class="card" aria-labelledby="age"><div class="card-head"><div><h2 id="age">Balance by age</h2><p>In thousands of dollars</p></div></div>{chart}</section>
@@ -424,11 +446,11 @@ def invoice_ageing() -> Screen:
         "invoice-ageing",
         "Receivables: ageing buckets and reminders",
         "Outstanding and overdue totals, a bar chart of balances by age with the 61 to 90 bucket highlighted, the reminder sequence and a customer table with a balance per bucket and a remind action.",
-        "slate",
+        "office",
         "inter",
         SPLIT,
         body,
-        ["home", "file", "card", "users", "chart", "download", "send", "mail", "up", "down"],
+        ["home", "file", "card", "users", "chart", "download", "send", "mail", "clock"],
         ["businesslike", "precise", "light"],
         ["accounting", "receivables", "invoices", "credit control", "finance", "back office"],
         "dense",
@@ -520,8 +542,8 @@ def helpdesk_queue() -> Screen:
         "helpdesk-queue",
         "Support queue: tickets with reply deadlines",
         "A ticket queue sorted by what is due: priority and reply-by pills that turn red as the deadline nears, assignee avatars, status tabs with counts, team workload meters and quick replies.",
-        "harbour",
-        "manrope",
+        "office",
+        "inter",
         SPLIT,
         body,
         ["inbox", "users", "chat", "chart", "settings", "filter", "plus", "search"],
@@ -576,8 +598,8 @@ def csv_import() -> Screen:
         "csv-import",
         "Import: map columns and check rows",
         "A four-step import: file summary, a column-to-field mapping table with sample values and match status, a validation summary with the first errors, and a footer that says exactly what will be imported.",
-        "paper",
-        "manrope",
+        "office",
+        "inter",
         SPLIT,
         body,
         ["users", "download", "calendar", "chart", "settings", "check", "x"],
@@ -775,8 +797,8 @@ def resource_timeline() -> Screen:
         "resource-timeline",
         "Scheduling: resource timeline with conflicts",
         "A day timeline with one row per resource (rooms, staff, vehicles), booking blocks coloured by state, a clear conflict card with two ways out and a list of requests waiting for a slot.",
-        "slate",
-        "grotesk",
+        "office",
+        "inter",
         SPLIT,
         body,
         ["calendar", "users", "inbox", "clock", "settings", "plus", "chevron"],

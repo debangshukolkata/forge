@@ -17,7 +17,7 @@ FAMILIES = {"dashboard": 4, "table": 4, "form": 5, "settings": 4}
 
 
 def test_there_are_screens_in_every_family_each_in_the_catalogue_with_pictures() -> None:
-    assert len(FILES) == 34  # 24 general screens and the ten back-office ones (D-487)
+    assert len(FILES) == 38  # 24 general screens, ten back-office ones (D-487) and four patterns (D-491)
     for family, count in FAMILIES.items():
         assert len([f for f in FILES if f.stem.startswith(family + "-")]) == count, family
     ids = {
@@ -113,6 +113,10 @@ RETRIEVAL = [
     ("report builder with filters, a chart and a scheduled email", "app-report-builder"),
     ("background jobs and queues monitor with a failed job to retry", "app-jobs-monitor"),
     ("resource scheduling timeline for rooms staff and vans with conflicts", "app-resource-timeline"),
+    ("task list grouped by overdue and due this week with summary tiles", "app-grouped-tasks"),
+    ("department hierarchy tree with a detail panel and notes", "app-hierarchy-detail"),
+    ("project card grid with progress budget and status", "app-card-grid"),
+    ("slide-over drawer form with collapsible sections", "app-drawer-form"),
 ]
 
 

@@ -12,6 +12,7 @@ from typing import Any
 from forge.brand.kit import readable_on
 from forge.designsystem.colour import contrast, hue_and_saturation, parse, to_hex
 from forge.designsystem.spec import DesignMdError
+from forge.designsystem.tailwind3 import CONFIG_NAMES, colour_hex, light_variables, read_config
 
 CUSTOM_PROPERTY = re.compile(r"--([\w-]+)\s*:\s*([^;{}]+);")
 SYSTEM_FONTS = {
@@ -77,10 +78,16 @@ def _px(text: str) -> float | None:
 
 
 def from_css(css: str) -> Extracted:
-    """Tokens from CSS custom properties (`:root` and Tailwind v4 `@theme` blocks)."""
+    """Tokens from CSS custom properties (`:root` and Tailwind v4 `@theme` blocks). Only the light theme counts: `.dark` blocks are left out, and the bare
+    `H S% L%` numbers of the shadcn pattern (`--background: 216 20% 98%`) are colours (D-490)."""
     found = Extracted()
     named: dict[str, str] = {}
-    for name, raw in CUSTOM_PROPERTY.findall(css):
+    variables = (
+        light_variables(css)
+        if "{" in css
+        else {name: raw.strip() for name, raw in CUSTOM_PROPERTY.findall(css)}
+    )
+    for name, raw in variables.items():
         value = raw.strip()
         lowered = name.lower().removeprefix("color-")
         if "font" in lowered or lowered.startswith(("display", "heading", "body")):
@@ -95,14 +102,14 @@ def from_css(css: str) -> Extracted:
             if pixels is not None:
                 found.radii.append(pixels)
             continue
-        colour = _hex(value)
+        colour = _hex(value) or colour_hex(value, variables)
         if colour is not None:
             named[lowered] = colour
     roles = {
         "primary": ("primary", "accent", "brand", "main"),
         "neutral": ("background", "bg", "canvas", "page", "neutral", "base"),
         "ink": ("foreground", "ink", "text", "fg"),
-        "muted": ("muted", "secondary-text", "subtle", "text-muted"),
+        "muted": ("muted-foreground", "muted", "secondary-text", "subtle", "text-muted"),
         "surface": ("surface", "card", "panel", "elevated"),
         "border": ("border", "line", "divider", "hairline"),
     }
@@ -293,15 +300,47 @@ def _quote(text: str) -> str:
 def css_from_project(files: dict[str, str]) -> Extracted:
     """Merge the tokens of several CSS files (a theme file, an index.css) into one draft input."""
     merged = Extracted()
-    for _, text in sorted(files.items()):
+    configs = {
+        name: text
+        for name, text in files.items()
+        if name.replace("\\", "/").rsplit("/", 1)[-1] in CONFIG_NAMES
+    }
+    sheets = {name: text for name, text in files.items() if name not in configs}
+    for _, text in sorted(sheets.items()):
         part = from_css(text)
         for role, value in part.colors.items():
             merged.colors.setdefault(role, value)
         merged.fonts += [f for f in part.fonts if f not in merged.fonts]
         merged.heading_font = merged.heading_font or part.heading_font
         merged.radii = sorted(set(merged.radii) | set(part.radii))
+    variables: dict[str, str] = {}
+    for text in sheets.values():
+        variables.update(light_variables(text) if "{" in text else {})
+    for name, text in sorted(configs.items()):
+        read = read_config(text, variables)
+        for role, value in read["colors"].items():
+            merged.colors.setdefault(role, value)
+        for key, families in read["fonts"].items():
+            names = _families(", ".join(families))
+            if names:
+                merged.fonts += [names[0]] if names[0] not in merged.fonts else []
+                if key in ("display", "heading", "serif") and not merged.heading_font:
+                    merged.heading_font = names[0]
+        merged.radii = sorted(set(merged.radii) | set(read["radii"]))
+        fallbacks = sorted(
+            {n for families in read["fonts"].values() for n in _families(", ".join(families))[1:]}
+        )
+        if fallbacks:
+            merged.notes.append(
+                f"Fallback fonts named in the config: {', '.join(fallbacks)} (keep them for scripts the main font lacks)."
+            )
+        ramps = ", ".join(read["ramps"][:6])
+        merged.notes.append(
+            f"Read from {name} (Tailwind 3)."
+            + (f" Colour scales (50 to 950) exist for: {ramps}." if ramps else "")
+        )
     if not merged.colors and not merged.fonts:
         raise DesignMdError(
-            "No design tokens (CSS custom properties or a Tailwind @theme block) were found in the project's style files"
+            "No design tokens (CSS custom properties, a Tailwind 3 config or a Tailwind 4 @theme block) were found in the project's style files"
         )
     return merged

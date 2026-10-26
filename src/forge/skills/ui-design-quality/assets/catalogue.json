@@ -502,6 +502,46 @@
    "size": 3031
   },
   {
+   "id": "ds-office-polish",
+   "type": "design-system",
+   "title": "Office polish",
+   "summary": "Cool off-white page, white cards with a hairline border and one soft shadow, one orange accent, tinted status chips with an inner ring, Inter: calm, finished back-office screens.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "polished",
+    "light"
+   ],
+   "products": [
+    "back office",
+    "admin",
+    "crm",
+    "case management",
+    "government",
+    "operations",
+    "erp"
+   ],
+   "tags": [
+    "design-md",
+    "tokens",
+    "tailwind v4 export"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/design-systems/ds-office-polish.design.md",
+     "to": "DESIGN.md"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-350) from the design philosophy of a user-owned back-office app (D-489)",
+   "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
+   "preview": null,
+   "path": "assets/design-system/ds-office-polish.md",
+   "size": 4406
+  },
+  {
    "id": "ds-playful-friendly",
    "type": "design-system",
    "title": "Playful and friendly",
@@ -6254,7 +6294,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-approval-queue.md",
-   "size": 23422
+   "size": 26032
   },
   {
    "id": "app-audit-log",
@@ -6301,7 +6341,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-audit-log.md",
-   "size": 23934
+   "size": 26269
   },
   {
    "id": "app-calendar",
@@ -6344,7 +6384,55 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-calendar.md",
-   "size": 20392
+   "size": 22705
+  },
+  {
+   "id": "app-card-grid",
+   "type": "section",
+   "title": "App screen: Cards: portfolio grid with progress and budget",
+   "summary": "Summary tiles, a segmented portfolio switch, search with status and department filters and a table or card toggle, then a grid of cards: name, department, status, progress meter, budget against spent, people, timeline, place, tag and edit or delete.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "projects",
+    "portfolio",
+    "budget",
+    "programmes",
+    "delivery tracking",
+    "grants",
+    "back office"
+   ],
+   "tags": [
+    "cards",
+    "grid",
+    "progress",
+    "budget",
+    "filters",
+    "view toggle",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/card-grid.html",
+     "to": "screens/card-grid.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-card-grid.md",
+   "size": 32871
   },
   {
    "id": "app-chat",
@@ -6387,7 +6475,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-chat.md",
-   "size": 20059
+   "size": 22296
   },
   {
    "id": "app-csv-import",
@@ -6434,7 +6522,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-csv-import.md",
-   "size": 21590
+   "size": 23915
   },
   {
    "id": "app-dashboard-analytics",
@@ -6478,7 +6566,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-dashboard-analytics.md",
-   "size": 24131
+   "size": 26368
   },
   {
    "id": "app-dashboard-kpi",
@@ -6521,7 +6609,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-dashboard-kpi.md",
-   "size": 24742
+   "size": 27055
   },
   {
    "id": "app-dashboard-ops",
@@ -6564,7 +6652,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-dashboard-ops.md",
-   "size": 20443
+   "size": 22756
   },
   {
    "id": "app-dashboard-personal",
@@ -6607,7 +6695,55 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-dashboard-personal.md",
-   "size": 21602
+   "size": 23915
+  },
+  {
+   "id": "app-drawer-form",
+   "type": "section",
+   "title": "App screen: Form: slide-over drawer over a list",
+   "summary": "A list page dimmed behind a scrim, and a drawer from the right with a title, an expand button, collapsible sections (the first open, the others closed), fields with hints and a sticky footer with Cancel and the main action.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "forms",
+    "create",
+    "edit record",
+    "drawer",
+    "side panel",
+    "modal form",
+    "back office"
+   ],
+   "tags": [
+    "drawer",
+    "slide-over",
+    "form",
+    "collapsible sections",
+    "sticky footer",
+    "scrim",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/drawer-form.html",
+     "to": "screens/drawer-form.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-drawer-form.md",
+   "size": 24698
   },
   {
    "id": "app-editor",
@@ -6650,7 +6786,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-editor.md",
-   "size": 19641
+   "size": 21954
   },
   {
    "id": "app-empty-states",
@@ -6693,7 +6829,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-empty-states.md",
-   "size": 20110
+   "size": 22423
   },
   {
    "id": "app-form-line-entry",
@@ -6737,7 +6873,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-line-entry.md",
-   "size": 20307
+   "size": 22620
   },
   {
    "id": "app-form-long",
@@ -6781,7 +6917,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-long.md",
-   "size": 19911
+   "size": 22224
   },
   {
    "id": "app-form-quick-capture",
@@ -6824,7 +6960,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-quick-capture.md",
-   "size": 18301
+   "size": 20614
   },
   {
    "id": "app-form-sign-in",
@@ -6867,7 +7003,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-sign-in.md",
-   "size": 17909
+   "size": 20222
   },
   {
    "id": "app-form-wizard",
@@ -6911,7 +7047,55 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-form-wizard.md",
-   "size": 20176
+   "size": 22489
+  },
+  {
+   "id": "app-grouped-tasks",
+   "type": "section",
+   "title": "App screen: Tasks: summary tiles and a list grouped by urgency",
+   "summary": "Four summary tiles with icon chips, a segmented filter with counts, search and filters, and the tasks grouped under Overdue and Due this week with a red bar on late rows, status, type, person, date and priority.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "tasks",
+    "to-do",
+    "follow-ups",
+    "operations",
+    "case work",
+    "reminders",
+    "back office"
+   ],
+   "tags": [
+    "list",
+    "grouped",
+    "summary tiles",
+    "filters",
+    "priority",
+    "overdue",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/grouped-tasks.html",
+     "to": "screens/grouped-tasks.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-grouped-tasks.md",
+   "size": 25999
   },
   {
    "id": "app-helpdesk-queue",
@@ -6958,7 +7142,55 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-helpdesk-queue.md",
-   "size": 20909
+   "size": 23234
+  },
+  {
+   "id": "app-hierarchy-detail",
+   "type": "section",
+   "title": "App screen: Hierarchy: expandable tree with a detail panel",
+   "summary": "A department tree on the left (a coloured dot for each level, chevrons, code badges, the head of each, edit on hover) and the selected department on the right with a header, tabs with counts and note cards.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "organisation",
+    "departments",
+    "hierarchy",
+    "org chart",
+    "directory",
+    "categories",
+    "back office"
+   ],
+   "tags": [
+    "tree",
+    "hierarchy",
+    "detail panel",
+    "tabs",
+    "notes",
+    "expand collapse",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/hierarchy-detail.html",
+     "to": "screens/hierarchy-detail.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-hierarchy-detail.md",
+   "size": 29499
   },
   {
    "id": "app-inbox",
@@ -7001,7 +7233,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-inbox.md",
-   "size": 22617
+   "size": 24930
   },
   {
    "id": "app-inventory-levels",
@@ -7048,7 +7280,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-inventory-levels.md",
-   "size": 21218
+   "size": 23513
   },
   {
    "id": "app-invoice-ageing",
@@ -7095,7 +7327,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-invoice-ageing.md",
-   "size": 21636
+   "size": 24324
   },
   {
    "id": "app-jobs-monitor",
@@ -7144,7 +7376,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-jobs-monitor.md",
-   "size": 22263
+   "size": 24500
   },
   {
    "id": "app-map-list",
@@ -7188,7 +7420,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-map-list.md",
-   "size": 21093
+   "size": 23406
   },
   {
    "id": "app-order-fulfilment",
@@ -7234,7 +7466,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-order-fulfilment.md",
-   "size": 22965
+   "size": 25290
   },
   {
    "id": "app-react-approval-queue",
@@ -7293,7 +7525,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-approval-queue.md",
-   "size": 23679
+   "size": 26318
   },
   {
    "id": "app-react-audit-log",
@@ -7348,7 +7580,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-audit-log.md",
-   "size": 24317
+   "size": 26652
   },
   {
    "id": "app-react-calendar",
@@ -7399,7 +7631,63 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-calendar.md",
-   "size": 20765
+   "size": 23078
+  },
+  {
+   "id": "app-react-card-grid",
+   "type": "section",
+   "title": "React app screen: Cards: portfolio grid with progress and budget",
+   "summary": "Summary tiles, a segmented portfolio switch, search with status and department filters and a table or card toggle, then a grid of cards: name, department, status, progress meter, budget against spent, people, timeline, place, tag and edit or delete. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "projects",
+    "portfolio",
+    "budget",
+    "programmes",
+    "delivery tracking",
+    "grants",
+    "back office"
+   ],
+   "tags": [
+    "cards",
+    "grid",
+    "progress",
+    "budget",
+    "filters",
+    "view toggle",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/card-grid/Screen.tsx",
+     "to": "src/screens/card-grid/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/card-grid/screen.css",
+     "to": "src/screens/card-grid/screen.css"
+    },
+    {
+     "from": "recipes/app-react/card-grid/tokens.css",
+     "to": "src/screens/card-grid/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-card-grid.md",
+   "size": 33587
   },
   {
    "id": "app-react-chat",
@@ -7450,7 +7738,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-chat.md",
-   "size": 20283
+   "size": 22520
   },
   {
    "id": "app-react-csv-import",
@@ -7505,7 +7793,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-csv-import.md",
-   "size": 21734
+   "size": 24059
   },
   {
    "id": "app-react-dashboard-analytics",
@@ -7557,7 +7845,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-dashboard-analytics.md",
-   "size": 24398
+   "size": 26635
   },
   {
    "id": "app-react-dashboard-kpi",
@@ -7608,7 +7896,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-dashboard-kpi.md",
-   "size": 25064
+   "size": 27377
   },
   {
    "id": "app-react-dashboard-ops",
@@ -7659,7 +7947,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-dashboard-ops.md",
-   "size": 20755
+   "size": 23068
   },
   {
    "id": "app-react-dashboard-personal",
@@ -7710,7 +7998,63 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-dashboard-personal.md",
-   "size": 22011
+   "size": 24324
+  },
+  {
+   "id": "app-react-drawer-form",
+   "type": "section",
+   "title": "React app screen: Form: slide-over drawer over a list",
+   "summary": "A list page dimmed behind a scrim, and a drawer from the right with a title, an expand button, collapsible sections (the first open, the others closed), fields with hints and a sticky footer with Cancel and the main action. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "forms",
+    "create",
+    "edit record",
+    "drawer",
+    "side panel",
+    "modal form",
+    "back office"
+   ],
+   "tags": [
+    "drawer",
+    "slide-over",
+    "form",
+    "collapsible sections",
+    "sticky footer",
+    "scrim",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/drawer-form/Screen.tsx",
+     "to": "src/screens/drawer-form/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/drawer-form/screen.css",
+     "to": "src/screens/drawer-form/screen.css"
+    },
+    {
+     "from": "recipes/app-react/drawer-form/tokens.css",
+     "to": "src/screens/drawer-form/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-drawer-form.md",
+   "size": 24636
   },
   {
    "id": "app-react-editor",
@@ -7761,7 +8105,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-editor.md",
-   "size": 19789
+   "size": 22102
   },
   {
    "id": "app-react-empty-states",
@@ -7812,7 +8156,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-empty-states.md",
-   "size": 19937
+   "size": 22250
   },
   {
    "id": "app-react-form-line-entry",
@@ -7864,7 +8208,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-line-entry.md",
-   "size": 20582
+   "size": 22895
   },
   {
    "id": "app-react-form-long",
@@ -7916,7 +8260,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-long.md",
-   "size": 19861
+   "size": 22174
   },
   {
    "id": "app-react-form-quick-capture",
@@ -7967,7 +8311,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-quick-capture.md",
-   "size": 18221
+   "size": 20534
   },
   {
    "id": "app-react-form-sign-in",
@@ -8018,7 +8362,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-sign-in.md",
-   "size": 17707
+   "size": 20020
   },
   {
    "id": "app-react-form-wizard",
@@ -8070,7 +8414,63 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-form-wizard.md",
-   "size": 20348
+   "size": 22661
+  },
+  {
+   "id": "app-react-grouped-tasks",
+   "type": "section",
+   "title": "React app screen: Tasks: summary tiles and a list grouped by urgency",
+   "summary": "Four summary tiles with icon chips, a segmented filter with counts, search and filters, and the tasks grouped under Overdue and Due this week with a red bar on late rows, status, type, person, date and priority. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "tasks",
+    "to-do",
+    "follow-ups",
+    "operations",
+    "case work",
+    "reminders",
+    "back office"
+   ],
+   "tags": [
+    "list",
+    "grouped",
+    "summary tiles",
+    "filters",
+    "priority",
+    "overdue",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/grouped-tasks/Screen.tsx",
+     "to": "src/screens/grouped-tasks/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/grouped-tasks/screen.css",
+     "to": "src/screens/grouped-tasks/screen.css"
+    },
+    {
+     "from": "recipes/app-react/grouped-tasks/tokens.css",
+     "to": "src/screens/grouped-tasks/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-grouped-tasks.md",
+   "size": 26191
   },
   {
    "id": "app-react-helpdesk-queue",
@@ -8125,7 +8525,63 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-helpdesk-queue.md",
-   "size": 20979
+   "size": 23304
+  },
+  {
+   "id": "app-react-hierarchy-detail",
+   "type": "section",
+   "title": "React app screen: Hierarchy: expandable tree with a detail panel",
+   "summary": "A department tree on the left (a coloured dot for each level, chevrons, code badges, the head of each, edit on hover) and the selected department on the right with a header, tabs with counts and note cards. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "organisation",
+    "departments",
+    "hierarchy",
+    "org chart",
+    "directory",
+    "categories",
+    "back office"
+   ],
+   "tags": [
+    "tree",
+    "hierarchy",
+    "detail panel",
+    "tabs",
+    "notes",
+    "expand collapse",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/hierarchy-detail/Screen.tsx",
+     "to": "src/screens/hierarchy-detail/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/hierarchy-detail/screen.css",
+     "to": "src/screens/hierarchy-detail/screen.css"
+    },
+    {
+     "from": "recipes/app-react/hierarchy-detail/tokens.css",
+     "to": "src/screens/hierarchy-detail/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-hierarchy-detail.md",
+   "size": 30221
   },
   {
    "id": "app-react-inbox",
@@ -8176,7 +8632,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-inbox.md",
-   "size": 23166
+   "size": 25479
   },
   {
    "id": "app-react-inventory-levels",
@@ -8231,7 +8687,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-inventory-levels.md",
-   "size": 21442
+   "size": 23737
   },
   {
    "id": "app-react-invoice-ageing",
@@ -8286,7 +8742,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-invoice-ageing.md",
-   "size": 21787
+   "size": 24517
   },
   {
    "id": "app-react-jobs-monitor",
@@ -8343,7 +8799,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-jobs-monitor.md",
-   "size": 22436
+   "size": 24673
   },
   {
    "id": "app-react-map-list",
@@ -8395,7 +8851,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-map-list.md",
-   "size": 21366
+   "size": 23679
   },
   {
    "id": "app-react-order-fulfilment",
@@ -8449,7 +8905,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-order-fulfilment.md",
-   "size": 23695
+   "size": 26020
   },
   {
    "id": "app-react-record",
@@ -8501,7 +8957,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-record.md",
-   "size": 20785
+   "size": 23098
   },
   {
    "id": "app-react-report-builder",
@@ -8558,7 +9014,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-report-builder.md",
-   "size": 20892
+   "size": 23129
   },
   {
    "id": "app-react-resource-timeline",
@@ -8613,7 +9069,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-resource-timeline.md",
-   "size": 27417
+   "size": 29736
   },
   {
    "id": "app-react-settings-account",
@@ -8664,7 +9120,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-settings-account.md",
-   "size": 21726
+   "size": 24039
   },
   {
    "id": "app-react-settings-billing",
@@ -8715,7 +9171,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-settings-billing.md",
-   "size": 20183
+   "size": 22496
   },
   {
    "id": "app-react-settings-notifications",
@@ -8765,7 +9221,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-settings-notifications.md",
-   "size": 20797
+   "size": 23110
   },
   {
    "id": "app-react-settings-roles",
@@ -8816,7 +9272,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-settings-roles.md",
-   "size": 22211
+   "size": 24448
   },
   {
    "id": "app-react-table-data",
@@ -8868,7 +9324,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-table-data.md",
-   "size": 21494
+   "size": 23807
   },
   {
    "id": "app-react-table-editable-grid",
@@ -8920,7 +9376,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-table-editable-grid.md",
-   "size": 20995
+   "size": 23308
   },
   {
    "id": "app-react-table-kanban",
@@ -8971,7 +9427,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-table-kanban.md",
-   "size": 26595
+   "size": 28908
   },
   {
    "id": "app-react-table-master-detail",
@@ -9023,7 +9479,7 @@
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
    "preview": null,
    "path": "assets/section/app-react-table-master-detail.md",
-   "size": 22976
+   "size": 25289
   },
   {
    "id": "app-record",
@@ -9067,7 +9523,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-record.md",
-   "size": 20580
+   "size": 22893
   },
   {
    "id": "app-report-builder",
@@ -9116,7 +9572,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-report-builder.md",
-   "size": 20708
+   "size": 22945
   },
   {
    "id": "app-resource-timeline",
@@ -9163,7 +9619,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-resource-timeline.md",
-   "size": 26221
+   "size": 28540
   },
   {
    "id": "app-settings-account",
@@ -9206,7 +9662,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-settings-account.md",
-   "size": 21547
+   "size": 23860
   },
   {
    "id": "app-settings-billing",
@@ -9249,7 +9705,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-settings-billing.md",
-   "size": 20082
+   "size": 22395
   },
   {
    "id": "app-settings-notifications",
@@ -9291,7 +9747,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-settings-notifications.md",
-   "size": 20415
+   "size": 22728
   },
   {
    "id": "app-settings-roles",
@@ -9334,7 +9790,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-settings-roles.md",
-   "size": 21927
+   "size": 24164
   },
   {
    "id": "app-table-data",
@@ -9378,7 +9834,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-table-data.md",
-   "size": 21450
+   "size": 23763
   },
   {
    "id": "app-table-editable-grid",
@@ -9422,7 +9878,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-table-editable-grid.md",
-   "size": 20842
+   "size": 23155
   },
   {
    "id": "app-table-kanban",
@@ -9465,7 +9921,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-table-kanban.md",
-   "size": 25348
+   "size": 27661
   },
   {
    "id": "app-table-master-detail",
@@ -9509,7 +9965,7 @@
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
    "preview": null,
    "path": "assets/section/app-table-master-detail.md",
-   "size": 22166
+   "size": 24479
   },
   {
    "id": "lay-editorial-split",

@@ -19,6 +19,7 @@ from app_screens import (  # noqa: E402
     screens_backoffice,
     screens_dashboards,
     screens_forms,
+    screens_patterns,
     screens_settings,
     screens_tables,
 )
@@ -33,6 +34,7 @@ MODULES = [
     screens_settings,
     screens_apps,
     screens_backoffice,
+    screens_patterns,
 ]
 SKILL = REPO / "src" / "forge" / "skills" / "ui-design-quality"
 PREVIEW = SKILL / "assets" / "preview"

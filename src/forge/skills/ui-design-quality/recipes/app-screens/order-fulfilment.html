@@ -7,7 +7,7 @@
 <!-- SCREEN: Orders: fulfilment pipeline with order panel. Stage counters across the top, an order list with a four-step progress bar and stage pill, and the selected order's pick list, address, carrier and box size with a mark-as-packed action. Use it for the people who pick, pack and ship: warehouse, e-commerce back office, service dispatch; stage counters, one order at a time.
      Replace the :root block with the tokens exported from DESIGN.md (design_md_export css-variables) and delete it; change every word and number to the product's own; keep the structure that fits. -->
 <style>
-:root{--color-neutral:#edf3f4;--color-surface:#ffffff;--color-ink:#0e2a33;--color-muted:#4d6670;--color-primary:#0a6670;--color-on-primary:#ffffff;--color-accent2:#b8620f;--color-border:#d3e0e3;--color-ok:#17693d;--color-warn:#8b5200;--color-danger:#b3261e;--font-display:"Manrope","Inter",system-ui,sans-serif;--font-body-md:"Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;}
+:root{--color-neutral:#f7f8fa;--color-surface:#ffffff;--color-ink:#1c1c1e;--color-muted:#5f6672;--color-primary:#a34c00;--color-on-primary:#ffffff;--color-accent2:#0a6fd6;--color-border:#e5e7eb;--color-ok:#17693d;--color-warn:#8a5200;--color-danger:#b42318;--color-brand:#ff7a00;--shadow-card:0 1px 2px rgba(16,24,40,.06),0 6px 20px rgba(16,24,40,.05);--lift:0 10px 30px rgba(16,24,40,.10);--font-display:"Inter",system-ui,sans-serif;--font-body-md:"Inter",system-ui,sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;}
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--color-neutral);color:var(--color-ink);font:400 15px/1.55 var(--font-body-md);-webkit-font-smoothing:antialiased}
 h1{font:600 1.85rem/1.2 var(--font-display);letter-spacing:-.02em;margin:0}h2{font:600 1.05rem/1.3 var(--font-display);margin:0}h3{font:600 .95rem/1.3 var(--font-display);margin:0}p{margin:0}
@@ -15,7 +15,7 @@ button,input,select,textarea,legend{font:inherit}a{color:var(--color-primary)}:f
 .ico{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .muted{color:var(--color-muted)}.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.num{font-variant-numeric:tabular-nums}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-:root{--soft:color-mix(in srgb,var(--color-primary) 11%,var(--color-surface));--hover:color-mix(in srgb,var(--color-ink) 5%,var(--color-surface));--radius:14px;--r:10px;--field:color-mix(in srgb,var(--color-ink) 26%,var(--color-surface));--shadow:0 1px 2px color-mix(in srgb,var(--color-ink) 8%,transparent)}
+:root{--soft:color-mix(in srgb,var(--color-primary) 11%,var(--color-surface));--hover:color-mix(in srgb,var(--color-ink) 5%,var(--color-surface));--radius:14px;--r:10px;--field:color-mix(in srgb,var(--color-ink) 26%,var(--color-surface));--shadow:var(--shadow-card,0 1px 2px color-mix(in srgb,var(--color-ink) 8%,transparent))}
 /* shell */
 .app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
 .side{background:var(--color-surface);border-right:1px solid var(--color-border);padding:18px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow:auto}
@@ -79,6 +79,22 @@ td.r,th.r{text-align:right}th button{all:unset;cursor:pointer;display:inline-fle
 .bars div.alt{background:color-mix(in srgb,var(--color-primary) 35%,var(--color-surface))}.bar-labels{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;font-size:.75rem;color:var(--color-muted);text-align:center;padding-top:8px}
 .meter{height:8px;border-radius:999px;background:var(--hover);overflow:hidden;border:1px solid var(--color-border)}.meter i{display:block;height:100%;background:var(--color-primary);border-radius:999px}
 .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--color-muted)}.legend i{display:inline-block;width:10px;height:10px;border-radius:6px;margin-right:6px;vertical-align:-1px}
+/* office polish (D-489): one recipe for every coloured label, icon chips, soft depth, press and focus feedback */
+.pill{box-shadow:inset 0 0 0 1px color-mix(in srgb,currentColor 20%,transparent)}
+.chip{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;flex:none;background:var(--soft);color:var(--color-primary);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-primary) 16%,transparent)}.chip .ico{width:22px;height:22px}
+.chip--ok{background:color-mix(in srgb,var(--color-ok) 12%,var(--color-surface));color:var(--color-ok);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-ok) 20%,transparent)}
+.chip--warn{background:color-mix(in srgb,var(--color-warn) 13%,var(--color-surface));color:var(--color-warn);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-warn) 22%,transparent)}
+.chip--danger{background:color-mix(in srgb,var(--color-danger) 11%,var(--color-surface));color:var(--color-danger);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-danger) 20%,transparent)}
+.tile{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.tile .foot{margin-top:12px;font-size:.85rem;color:var(--color-muted)}
+.card--lift{transition:transform .2s ease,box-shadow .2s ease}.card--lift:hover{transform:translateY(-2px);box-shadow:var(--lift,var(--shadow))}
+.btn{transition:background .15s,transform .15s,box-shadow .15s}.btn:active:not(:disabled){transform:scale(.98)}
+.input:focus-visible,.select:focus-visible,.textarea:focus-visible{box-shadow:0 0 0 4px color-mix(in srgb,var(--color-brand,var(--color-primary)) 20%,transparent)}
+.tabs a[aria-current=page]{border-bottom-color:var(--color-brand,var(--color-primary))}
+.tabs .count{margin-left:6px;padding:1px 7px;border-radius:999px;font-size:.75rem;font-weight:600;background:var(--hover);color:var(--color-muted)}.tabs a[aria-current=page] .count{background:var(--soft);color:var(--color-primary)}
+.meter i{background:var(--color-brand,var(--color-primary))}
+thead{background:var(--hover)}
+.row-alert{box-shadow:inset 3px 0 0 var(--color-danger)}
+@media (prefers-reduced-motion:reduce){.card--lift:hover{transform:none}.btn:active:not(:disabled){transform:none}}
 /* narrow screens: the sidebar becomes a strip, grids stack, tables scroll inside their frame */
 @media (max-width:1100px){.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:860px){.app{grid-template-columns:minmax(0,1fr)}.side{position:static;height:auto;flex-direction:row;align-items:center;gap:6px;padding:10px 12px;border-right:0;border-bottom:1px solid var(--color-border);overflow-x:auto}

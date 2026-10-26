@@ -20,6 +20,7 @@ from forge.designsystem.extract import css_from_project, draft_design_md, from_c
 from forge.designsystem.lint import describe_findings, lint_text
 from forge.designsystem.reference import reference_note
 from forge.designsystem.spec import DesignMdError, parse_design_md
+from forge.designsystem.tailwind3 import CONFIG_NAMES
 from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.design_knowledge import record_use
@@ -249,7 +250,7 @@ class DesignMdFromProject(Tool):
     name = "design_md_from_project"
     read_only = False
     description = (
-        "Write a draft DESIGN.md from the design tokens already in the project's style files (CSS custom properties, Tailwind v4 @theme): colours by "
+        "Write a draft DESIGN.md from the design tokens already in the project's style files (CSS custom properties, Tailwind v4 @theme, or a Tailwind 3 tailwind.config.js with its CSS variables): colours by "
         "role, fonts, radii. Use it when a project has styles but no DESIGN.md (an existing app to restyle or extend). Review the draft and rewrite its prose."
     )
 
@@ -271,6 +272,16 @@ class DesignMdFromProject(Tool):
                 continue
             with contextlib.suppress(OSError):
                 files[path.relative_to(root).as_posix()] = path.read_text(encoding="utf-8", errors="replace")
+        for config in CONFIG_NAMES:  # a Tailwind 3 project keeps its palette here, not in CSS (D-490)
+            for path in root.rglob(config):
+                if (
+                    not SKIPPED_FOLDERS.intersection(path.relative_to(root).parts)
+                    and path.stat().st_size <= 200_000
+                ):
+                    with contextlib.suppress(OSError):
+                        files[path.relative_to(root).as_posix()] = path.read_text(
+                            encoding="utf-8", errors="replace"
+                        )
         try:
             found = css_from_project(files)
             name = args.name or root.name or "Project"

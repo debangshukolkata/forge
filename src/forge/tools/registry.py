@@ -16,6 +16,7 @@ from forge.tools.design_candidates import design_candidate_tools
 from forge.tools.design_inspire import design_inspire_tools
 from forge.tools.design_knowledge import design_knowledge_tools
 from forge.tools.design_md import design_md_tools
+from forge.tools.design_palette import design_palette_tools
 from forge.tools.document import document_tools
 from forge.tools.document_preview import document_preview_tools
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
@@ -114,6 +115,7 @@ def default_tools() -> list[Tool]:
         *design_inspire_tools(),
         *design_knowledge_tools(),
         *design_candidate_tools(),
+        *design_palette_tools(),
         *document_tools(),
         *document_preview_tools(),
         *pdf_toolkit_tools(),

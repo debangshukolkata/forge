@@ -18,6 +18,7 @@ from forge.tools.ui_audit_svg import svg_findings
 # Runs in the page. Returns {"findings": [...], "stats": {...}}; kept dependency-free and read-only.
 AUDIT_SCRIPT = r"""
 (options) => {
+  const accepted = new Set(((options && options.accepted) || []).map((x) => String(x).toUpperCase()));  // backgrounds whose text contrast the owner accepted (D-490)
   const brandPage = !!(options && options.brandPage);  // DESIGN.md names a page composition: a brand page needs its pictures even when it holds a form (D-419)
   const findings = [];
   const all = Array.from(document.body ? document.body.querySelectorAll('*') : []);
@@ -147,6 +148,7 @@ AUDIT_SCRIPT = r"""
     const s = getComputedStyle(el);
     if (getComputedStyle(el).backgroundImage !== 'none' || (el.closest('[style*="gradient"]'))) continue;
     const fg = parse(s.color), bg = backdrop(el);
+    if (accepted.has(toHex(bg).toUpperCase())) continue;
     const l1 = lum(fg) , l2 = lum(bg);
     const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
     const large = parseFloat(s.fontSize) >= 24 || (parseFloat(s.fontSize) >= 18.66 && parseInt(s.fontWeight) >= 700);
@@ -448,6 +450,22 @@ def _brand_page(root: Path | None) -> bool:
     return False
 
 
+def _accepted_contrast(root: Path | None) -> list[str]:
+    """Backgrounds whose text contrast the owner accepted (`contrast-accepted` in DESIGN.md), so the audit does not rewrite a colour they chose (D-490)."""
+    from forge.designsystem.palettes import accepted_backgrounds
+
+    if root is None:
+        return []
+    for name in ("DESIGN.md", "design.md", "docs/DESIGN.md"):
+        path = root / name
+        if path.is_file():
+            try:
+                return accepted_backgrounds(path.read_text(encoding="utf-8", errors="replace"))
+            except OSError:
+                return []
+    return []
+
+
 def _imagery_not_wanted(root: Path) -> bool:
     """A DESIGN.md that says imagery is not wanted (a text-only editorial or a utility page) lifts the blocker on a page with no pictures."""
     for name in ("DESIGN.md", "design.md", "docs/DESIGN.md"):
@@ -463,7 +481,9 @@ def _imagery_not_wanted(root: Path) -> bool:
 async def audit_page(page: Any, root: Path | None = None) -> str:
     """The audit as text for the model: numbered findings, or a clean line; never raises."""
     try:
-        result = await page.evaluate(AUDIT_SCRIPT, {"brandPage": _brand_page(root)})
+        result = await page.evaluate(
+            AUDIT_SCRIPT, {"brandPage": _brand_page(root), "accepted": _accepted_contrast(root)}
+        )
     except (
         Exception
     ) as error:  # a page that blocks scripts or is mid-navigation must not break the screenshot

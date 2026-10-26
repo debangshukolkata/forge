@@ -225,7 +225,15 @@ def _check_values(system: DesignSystem, findings: list[Finding]) -> None:
                 )
 
 
+def _accepted_backgrounds(system: DesignSystem) -> set[str]:
+    """Colours whose text contrast the owner accepted below the guideline (`contrast-accepted: ["#FF7A00"]` in the front matter, D-490)."""
+    value = system.extra.get("contrast-accepted")
+    items = value if isinstance(value, list) else [value] if value else []
+    return {str(item).strip().upper() for item in items}
+
+
 def _check_contrast(system: DesignSystem, findings: list[Finding]) -> None:
+    accepted = _accepted_backgrounds(system)
     for name, component in system.components.items():
         if not isinstance(component, dict):
             continue
@@ -235,7 +243,16 @@ def _check_contrast(system: DesignSystem, findings: list[Finding]) -> None:
         )
         if isinstance(background, str) and isinstance(text, str):
             ratio = contrast(background, text)
-            if ratio is not None and ratio < CONTRAST_MINIMUM:
+            if ratio is not None and ratio < CONTRAST_MINIMUM and background.strip().upper() in accepted:
+                findings.append(
+                    Finding(
+                        "info",
+                        "contrast-accepted",
+                        f"components.{name}",
+                        f"text {text} on {background} is {ratio:.1f}:1, below {CONTRAST_MINIMUM}:1; the owner accepted it",
+                    )
+                )
+            elif ratio is not None and ratio < CONTRAST_MINIMUM:
                 findings.append(
                     Finding(
                         "error",

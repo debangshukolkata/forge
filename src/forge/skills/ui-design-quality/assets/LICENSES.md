@@ -18,6 +18,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `ds-glass-aurora` | original | authored for DebCraft (D-350) from dir-glass-aurora |
 | `ds-minimal-monochrome` | original | authored for DebCraft (D-350) from dir-minimal-monochrome |
 | `ds-neo-brutalist` | original | authored for DebCraft (D-350) from dir-neo-brutalist |
+| `ds-office-polish` | original | authored for DebCraft (D-350) from the design philosophy of a user-owned back-office app (D-489) |
 | `ds-playful-friendly` | original | authored for DebCraft (D-350) from dir-playful-friendly |
 | `ds-retro-terminal` | original | authored for DebCraft (D-350) from dir-retro-terminal |
 | `ds-soft-editorial` | original | authored for DebCraft (D-350) from dir-soft-editorial |
@@ -171,12 +172,14 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-approval-queue` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-audit-log` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-calendar` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-card-grid` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-chat` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-csv-import` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-dashboard-analytics` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-dashboard-kpi` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-dashboard-ops` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-dashboard-personal` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-drawer-form` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-editor` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-empty-states` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-form-line-entry` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
@@ -184,7 +187,9 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-form-quick-capture` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-form-sign-in` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-form-wizard` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-grouped-tasks` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-helpdesk-queue` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-hierarchy-detail` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-inbox` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-inventory-levels` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-invoice-ageing` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
@@ -194,12 +199,14 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-react-approval-queue` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-audit-log` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-calendar` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-card-grid` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-chat` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-csv-import` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-dashboard-analytics` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-dashboard-kpi` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-dashboard-ops` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-dashboard-personal` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-drawer-form` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-editor` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-empty-states` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-form-line-entry` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
@@ -207,7 +214,9 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-react-form-quick-capture` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-form-sign-in` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-form-wizard` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-grouped-tasks` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-helpdesk-queue` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-hierarchy-detail` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-inbox` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-inventory-levels` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-invoice-ageing` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |

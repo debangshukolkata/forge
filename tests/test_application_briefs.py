@@ -71,7 +71,11 @@ def test_an_application_brief_is_told_so_and_a_brand_layout_is_pointed_at_the_sc
         {"a": "lay-editorial-split", "b": "app-helpdesk-queue"},
     )
     text = "\n".join(notes)
-    assert "READS AS AN APPLICATION SCREEN" in text and "app-helpdesk-queue" in text
+    assert (
+        "READS AS AN APPLICATION SCREEN" in text
+        and "app-helpdesk-queue" in text
+        and "ds-office-polish" in text
+    )
     assert (
         "a: `lay-editorial-split` is a layout for a brand page" in text
         and "b:" not in text.split("READS AS")[1].split("a:")[0] + "x"[:0]

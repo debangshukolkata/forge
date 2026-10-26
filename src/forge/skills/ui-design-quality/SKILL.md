@@ -230,7 +230,7 @@ The machine-made page is a centred column: a hero with a gradient, three identic
 
 ## 0i. Applications: start from a screen recipe, not a blank file
 For an application (dashboard, table, form, settings, inbox, calendar, record page, board) do not write the screen from nothing: that is thousands of output
-tokens and it looks generic. `find_asset` with type `section` and the tag `app screen` lists 34 complete screens in plain HTML and CSS with believable content, drawn
+tokens and it looks generic. `find_asset` with type `section` and the tag `app screen` lists 38 complete screens in plain HTML and CSS with believable content, drawn
 charts (SVG shapes with HTML labels) and an icon sprite. Families: **dashboards** (sales KPIs, operations board, dark analytics, personal day view), **tables**
 (people table with filters and bulk actions, master and detail, kanban board, editable grid for fast entry), **forms** (multi-step wizard, invoice with line items,
 long form with an error summary, sign-in split screen, quick capture), **settings** (account and API keys, notification matrix, plan and billing, roles and
@@ -246,6 +246,17 @@ permissions), **web-app screens** (inbox, chat, week calendar, customer record, 
   the first screen, then write only what differs; keep one shell for the whole app. Every list, search and fetch also needs its empty, no-results, error and
   loading states: `app-empty-states` has them. **In a React project use the React version** (`app-react-<id>`: dashboard-kpi, table-data, form-wizard, settings-account, inbox: `Screen.tsx` + `screen.css` + `tokens.css`, type-checked and built with Vite) and split it into components; for the other screens copy the HTML recipe and convert it the same way.
 - Screens must work on a phone: the side navigation becomes a strip and tables scroll inside their frame. Check at 375 px with `browser_screenshot`.
+
+## 0j. Back-office polish: the look of an office app that is finished
+For any tool people work in all day (approvals, queues, tables, records, settings, imports, reports) use the **office polish** rules; they are what separates a
+finished office app from a plain one. Read `recipes/back-office-polish.md` (the ten rules and one recipe per component, in plain HTML classes and in Tailwind) and start
+the design system from `ds-office-polish` (find_asset, type design-system, "office") unless the user supplied their own. In short: **one accent** (orange or the
+product's colour) for the main action, the active menu item and the counts, everything else neutral; **one recipe for every coloured label** (a pale tint, darker text of
+the same hue, a thin inner ring); white cards on an off-white page with a 1px border and one soft shadow; one family of corners; hierarchy by weight and grey, not many
+sizes; icons of one family, alone in a soft tinted square; motion of 200 to 300 ms (a lift on hover, a 98 percent press, a sliding tab underline); real loading, empty
+and error states; money and dates in the reader's convention. Keep contrast at 4.5 to 1 on tints too: filled controls use the deeper shade of the accent, the bright
+shade is for bars, underlines and rings. These rules apply on top of 0i: copy the closest screen, then make it follow them.
+**The colour is the user's choice.** Unless they named a colour or gave a brand guide or DESIGN.md, call `design_palette` with `action: show` (four options drawn as pictures), put them to the user with ONE `ask_user` call (they can also type their own hex or ask for more), then `design_palette` with `action: apply`. If they pick a colour whose white text is below 4.5 to 1 (the bright orange), say so in one sentence and apply it anyway: it is recorded as `contrast-accepted`, and the lint and the audit leave their choice alone. For an existing project with a Tailwind 3 config, `design_md_from_project` reads `tailwind.config.js` and the shadcn-style CSS variables into a DESIGN.md.
 
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)
 - **Purpose and tone** of the product (a blood donation drive: warm, trustworthy, urgent but calm).

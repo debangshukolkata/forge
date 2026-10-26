@@ -438,3 +438,41 @@ async def test_the_audit_asks_a_brand_page_with_a_booking_form_for_its_pictures(
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
         server.shutdown()
+
+
+OWNER_ORANGE = (
+    "<!doctype html><html><head><style>body{margin:0;font-family:Arial,sans-serif;background:#f7f8fa}.btn{display:inline-block;margin:24px;padding:12px 22px;"
+    "border-radius:10px;background:#ff7a00;color:#fff;font-size:16px;font-weight:600}</style></head><body><h1>Tasks</h1><span class='btn'>New task</span></body></html>"
+)
+
+
+@pytest.mark.e2e
+@pytest.mark.parametrize("accepted", [False, True])
+async def test_a_colour_the_owner_accepted_below_the_contrast_guideline_is_not_rewritten(
+    accepted: bool, tmp_path: Path, original_repo: Path
+) -> None:
+    """White text on #FF7A00 is 2.6 to 1. Without the owner's `contrast-accepted` note the audit asks for a fix; with it the colour they chose is left alone (D-490)."""
+    pytest.importorskip("playwright.async_api")
+    site_root = tmp_path / "orange"
+    site_root.mkdir()
+    (site_root / "index.html").write_text(OWNER_ORANGE, encoding="utf-8")
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(site_root))
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    if accepted:
+        (workspace.repo_dir / "DESIGN.md").write_text(
+            '---\nname: Tasks\ncontrast-accepted: ["#FF7A00"]\n---\n', encoding="utf-8"
+        )
+    context = ToolContext(workspace=workspace)
+    try:
+        assert (
+            await BrowserOpen().run(
+                BrowserOpen.Args(url=f"http://127.0.0.1:{server.server_address[1]}/index.html"), context
+            )
+        ).ok
+        shot = await BrowserScreenshot().run(BrowserScreenshot.Args(), context)
+        assert ("Low text contrast" in shot.content) is (not accepted), shot.content
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)
+        server.shutdown()

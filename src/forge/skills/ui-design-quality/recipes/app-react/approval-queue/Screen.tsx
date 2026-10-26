@@ -13,9 +13,9 @@ export default function Screen() {
         <div className="top"><div><h1>Approval queue</h1><p className="sub">14 waiting · 2 past their deadline · average decision time 5 h</p></div>
           <div className="seg" role="group" aria-label="Whose requests"><button aria-pressed="true">Assigned to me</button><button aria-pressed="false">My team</button><button aria-pressed="false">Everyone</button></div></div>
         <div className="grid cols-3" style={{ "marginBottom": "16px" }}>
-          <div className="card kpi"><div className="label">Waiting for you</div><div className="value">14</div><span className="delta delta--down"><svg className="ico" aria-hidden="true"><use href="#i-up" /></svg>3 more than yesterday</span></div>
-          <div className="card kpi"><div className="label">Oldest request</div><div className="value">2 d 4 h</div><span className="muted">PO-1190, Marcus Webb</span></div>
-          <div className="card kpi"><div className="label">Decided this week</div><div className="value">61</div><span className="delta delta--up"><svg className="ico" aria-hidden="true"><use href="#i-up" /></svg>94% inside the deadline</span></div>
+          <div className="card card--lift kpi"><div className="tile"><div><div className="label">Waiting for you</div><div className="value">14</div></div><span className="chip"><svg className="ico" aria-hidden="true"><use href="#i-inbox" /></svg></span></div><div className="foot">3 more than yesterday</div></div>
+          <div className="card card--lift kpi"><div className="tile"><div><div className="label">Oldest request</div><div className="value">2 d 4 h</div></div><span className="chip chip--warn"><svg className="ico" aria-hidden="true"><use href="#i-clock" /></svg></span></div><div className="foot">PO-1190, Marcus Webb</div></div>
+          <div className="card card--lift kpi"><div className="tile"><div><div className="label">Decided this week</div><div className="value">61</div></div><span className="chip chip--ok"><svg className="ico" aria-hidden="true"><use href="#i-check" /></svg></span></div><div className="foot">94% inside the deadline</div></div>
         </div>
         <div className="grid split" style={{ "gridTemplateColumns": "minmax(0,1fr) 350px", "alignItems": "start" }}>
           <section aria-label="Requests">
