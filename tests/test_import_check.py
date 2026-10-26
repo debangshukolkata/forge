@@ -95,3 +95,28 @@ def test_only_the_named_files_are_read_for_imports(tmp_path: Path) -> None:
     problems = import_problems(tmp_path, sys.executable, only={(tmp_path / "new.py").resolve()})
     assert problems == ["new.py:2: no module named 'invented_by_the_model'"]
     assert import_problems(tmp_path, sys.executable, only=set()) == []
+
+
+def test_an_invented_attribute_of_a_real_module_is_reported_with_its_line(tmp_path: Path) -> None:
+    source = (
+        "import os\nimport json as js\nfrom os import path\nfrom xml import etree\n"
+        "a = os.getcwd()\nb = js.dumps({})\nc = os.pathh.join('a')\nd = js.loadz('{}')\n"
+        "e = path.joinn('a', 'b')\nf = etree.ElementTree.parse\ng = os.path.exists('x')\n"
+    )
+    root = _project(tmp_path, **{"app.py": source})
+    assert import_problems(root, sys.executable) == [
+        "app.py:7: 'os' has no attribute 'pathh'",
+        "app.py:8: 'json' has no attribute 'loadz'",
+        "app.py:9: 'os.path' has no attribute 'joinn'",
+    ]
+
+
+def test_attribute_checks_leave_shadowed_names_classes_and_submodules_alone(tmp_path: Path) -> None:
+    source = (
+        "import datetime\nimport os\nimport logging\n"
+        "def run(os):\n    return os.anything_at_all\n"
+        "x = datetime.datetime.now().whatever\n"  # a class and an instance: not checked
+        "y = logging.handlers\n"  # a submodule that is only importable, not yet loaded
+    )
+    root = _project(tmp_path, **{"app.py": source})
+    assert import_problems(root, sys.executable) == []

@@ -17,7 +17,9 @@ FAMILIES = {"dashboard": 4, "table": 4, "form": 5, "settings": 4}
 
 
 def test_there_are_screens_in_every_family_each_in_the_catalogue_with_pictures() -> None:
-    assert len(FILES) == 38  # 24 general screens, ten back-office ones (D-487) and four patterns (D-491)
+    assert (
+        len(FILES) == 40
+    )  # 24 general screens, ten back-office ones (D-487), four patterns (D-491), two list patterns (D-495)
     for family, count in FAMILIES.items():
         assert len([f for f in FILES if f.stem.startswith(family + "-")]) == count, family
     ids = {
@@ -117,6 +119,8 @@ RETRIEVAL = [
     ("department hierarchy tree with a detail panel and notes", "app-hierarchy-detail"),
     ("project card grid with progress budget and status", "app-card-grid"),
     ("slide-over drawer form with collapsible sections", "app-drawer-form"),
+    ("invoice list with status links bulk actions and row actions on hover", "app-list-bulk"),
+    ("document collection with a switch between grid and table view", "app-collection-switch"),
 ]
 
 

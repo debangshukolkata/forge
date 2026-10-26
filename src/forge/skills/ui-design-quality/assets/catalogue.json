@@ -6518,6 +6518,54 @@
    "size": 22296
   },
   {
+   "id": "app-collection-switch",
+   "type": "section",
+   "title": "App screen: Collection with a table, grid and list view switch",
+   "summary": "A document collection shown as cards with a thumbnail, status and team, a switch between table, grid and list in the toolbar, team filter, sort and search, and a pager.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "collection",
+    "documents",
+    "files",
+    "gallery",
+    "catalogue",
+    "view switch",
+    "back office"
+   ],
+   "tags": [
+    "collection",
+    "grid",
+    "view switch",
+    "filters",
+    "sort",
+    "cards",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/collection-switch.html",
+     "to": "screens/collection-switch.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-collection-switch.md",
+   "size": 26240
+  },
+  {
    "id": "app-csv-import",
    "type": "section",
    "title": "App screen: Import: map columns and check rows",
@@ -7419,6 +7467,55 @@
    "size": 24500
   },
   {
+   "id": "app-list-bulk",
+   "type": "section",
+   "title": "App screen: List with status links, row actions and a bulk bar",
+   "summary": "Status links with counts above a list, a dismissible notice, search, filters and a column menu, hover row actions (always shown on touch), checkboxes with a bulk bar that names the selection and its total, and a pager.",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "list",
+    "invoices",
+    "orders",
+    "records",
+    "bulk actions",
+    "back office",
+    "admin"
+   ],
+   "tags": [
+    "list",
+    "status links",
+    "bulk actions",
+    "row actions",
+    "columns menu",
+    "notice",
+    "pager",
+    "side navigation",
+    "app screen",
+    "plain html",
+    "css",
+    "no build step",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-screens/list-bulk.html",
+     "to": "screens/list-bulk.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
+   "preview": null,
+   "path": "assets/section/app-list-bulk.md",
+   "size": 28462
+  },
+  {
    "id": "app-map-list",
    "type": "section",
    "title": "App screen: Map: list and map side by side",
@@ -7779,6 +7876,62 @@
    "preview": null,
    "path": "assets/section/app-react-chat.md",
    "size": 22520
+  },
+  {
+   "id": "app-react-collection-switch",
+   "type": "section",
+   "title": "React app screen: Collection with a table, grid and list view switch",
+   "summary": "A document collection shown as cards with a thumbnail, status and team, a switch between table, grid and list in the toolbar, team filter, sort and search, and a pager. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "collection",
+    "documents",
+    "files",
+    "gallery",
+    "catalogue",
+    "view switch",
+    "back office"
+   ],
+   "tags": [
+    "collection",
+    "grid",
+    "view switch",
+    "filters",
+    "sort",
+    "cards",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/collection-switch/Screen.tsx",
+     "to": "src/screens/collection-switch/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/collection-switch/screen.css",
+     "to": "src/screens/collection-switch/screen.css"
+    },
+    {
+     "from": "recipes/app-react/collection-switch/tokens.css",
+     "to": "src/screens/collection-switch/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-collection-switch.md",
+   "size": 26470
   },
   {
    "id": "app-react-csv-import",
@@ -8840,6 +8993,63 @@
    "preview": null,
    "path": "assets/section/app-react-jobs-monitor.md",
    "size": 24673
+  },
+  {
+   "id": "app-react-list-bulk",
+   "type": "section",
+   "title": "React app screen: List with status links, row actions and a bulk bar",
+   "summary": "Status links with counts above a list, a dismissible notice, search, filters and a column menu, hover row actions (always shown on touch), checkboxes with a bulk bar that names the selection and its total, and a pager. (React, TSX with one plain stylesheet.)",
+   "moods": [
+    "businesslike",
+    "calm",
+    "light"
+   ],
+   "products": [
+    "list",
+    "invoices",
+    "orders",
+    "records",
+    "bulk actions",
+    "back office",
+    "admin"
+   ],
+   "tags": [
+    "list",
+    "status links",
+    "bulk actions",
+    "row actions",
+    "columns menu",
+    "notice",
+    "pager",
+    "side navigation",
+    "app screen",
+    "react",
+    "tsx",
+    "plain css",
+    "light"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/app-react/list-bulk/Screen.tsx",
+     "to": "src/screens/list-bulk/Screen.tsx"
+    },
+    {
+     "from": "recipes/app-react/list-bulk/screen.css",
+     "to": "src/screens/list-bulk/screen.css"
+    },
+    {
+     "from": "recipes/app-react/list-bulk/tokens.css",
+     "to": "src/screens/list-bulk/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
+   "preview": null,
+   "path": "assets/section/app-react-list-bulk.md",
+   "size": 28796
   },
   {
    "id": "app-react-map-list",

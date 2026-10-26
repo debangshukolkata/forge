@@ -175,6 +175,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-calendar` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-card-grid` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-chat` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-collection-switch` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-csv-import` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-dashboard-analytics` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-dashboard-kpi` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
@@ -195,6 +196,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-inventory-levels` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-invoice-ageing` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-jobs-monitor` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-list-bulk` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-map-list` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-order-fulfilment` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-approval-queue` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
@@ -202,6 +204,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-react-calendar` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-card-grid` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-chat` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-collection-switch` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-csv-import` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-dashboard-analytics` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-dashboard-kpi` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
@@ -222,6 +225,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-react-inventory-levels` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-invoice-ageing` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-jobs-monitor` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `app-react-list-bulk` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-map-list` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-order-fulfilment` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-react-record` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
