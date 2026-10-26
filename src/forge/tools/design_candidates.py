@@ -14,6 +14,7 @@ from typing import Any
 
 from pydantic import Field
 
+from forge.designsystem.brief_kind import classify_brief
 from forge.designsystem.concept import concept_problem, same_idea
 from forge.designsystem.fonts import font_css
 from forge.designsystem.lint import describe_findings, lint_text
@@ -169,6 +170,47 @@ def _unknown_composition(context: ToolContext, composition: str) -> str:
     )
 
 
+def _closest_screens(context: ToolContext, brief: str, limit: int = 3) -> list[str]:
+    """The ready-made application screens that fit the brief best, as "id (title)" with the plain-HTML ones first."""
+    from forge.parity.assets import search
+    from forge.tools.assets import _catalogues
+
+    screens = [
+        asset
+        for _skill, asset in _catalogues(context)
+        if asset.type == "section" and asset.id.startswith("app-") and not asset.id.startswith("app-react-")
+    ]
+    return [
+        f"{asset.id} ({asset.title.removeprefix('App screen: ')})"
+        for asset in search(screens, brief, limit=limit)
+    ]
+
+
+def _kind_notes(context: ToolContext, brief: str, compositions: dict[str, str]) -> list[str]:
+    """Says what kind of request the brief is and whether each candidate's composition matches it (D-488). Notes only: a wrong guess must never block a design."""
+    verdict = classify_brief(brief)
+    notes: list[str] = []
+    if verdict.kind == "application":
+        close = _closest_screens(context, brief)
+        notes.append(
+            f"THIS BRIEF READS AS AN APPLICATION SCREEN ({verdict.reason}), not a brand page. Closest ready-made screens: {'; '.join(close) or 'none found'}. "
+            "Name one of them as `composition: app-...` in the winner; add_asset copies it and the first page is refused until it has been copied. Write "
+            "`composition: custom <one line>` only when none of them fits what the user does on the screen."
+        )
+        for path, composition in compositions.items():
+            if composition.lower().startswith("lay-"):
+                notes.append(
+                    f"{path}: `{composition}` is a layout for a brand page; this brief is an application, so use an `app-...` screen from the list above."
+                )
+    elif verdict.kind == "brand":
+        for path, composition in compositions.items():
+            if composition.lower().startswith("app-"):
+                notes.append(
+                    f"{path}: `{composition}` is an application screen, but the brief reads as a brand page ({verdict.reason}); pick a `lay-...` composition unless the page really is a tool."
+                )
+    return notes
+
+
 SHOW_CANDIDATES_NOTE = (
     chr(10)
     + "NEXT STEP, required unless an exception below applies. Before you import the winner: when the look is open (the brief names no style, and the user supplied no DESIGN.md, brand guide or reference to follow), show the "
@@ -251,6 +293,16 @@ class DesignCandidates(Tool):
             else:
                 usable.append(path)
         prints = {path: fingerprint(loaded[path][0]) for path in loaded}
+        lines.extend(
+            _kind_notes(
+                context,
+                args.brief,
+                {
+                    path: str(loaded[path][0].extra.get("composition", "") or "").split(" ")[0]
+                    for path in usable
+                },
+            )
+        )
         for path in usable:
             lines.append(f"{path}: {describe_fingerprint(prints[path])}")
             lines.extend(_font_notes(path, loaded[path][0], loaded[path][1]))

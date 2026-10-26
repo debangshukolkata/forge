@@ -235,6 +235,9 @@ charts (SVG shapes with HTML labels) and an icon sprite. Families: **dashboards*
 (people table with filters and bulk actions, master and detail, kanban board, editable grid for fast entry), **forms** (multi-step wizard, invoice with line items,
 long form with an error summary, sign-in split screen, quick capture), **settings** (account and API keys, notification matrix, plan and billing, roles and
 permissions), **web-app screens** (inbox, chat, week calendar, customer record, map with a list, document editor, empty / error / offline / loading states) and **back-office screens** (approval queue with a decision panel, audit log with before and after, order fulfilment, stock levels with reorder, receivables ageing, support queue with reply deadlines, CSV import with column mapping, report builder, background jobs monitor, resource timeline with conflicts).
+- Forge reads the brief for you: `design_candidates` says whether it reads as an application screen or a brand page and names the three closest screens. For an application, name one as
+  `composition: app-...` (or `composition: custom <one line>` when none fits); the first page or screen is refused until `add_asset` has copied the screen you named, so run it
+  as soon as you have chosen, and build from the copy instead of from a blank file.
 - Pick by the job the user does on the screen, not by the product's industry; then `add_asset` copies the file (it lands in `screens/`) and `view_image` its
   reference pictures. Name it in the candidate's front matter as `composition: app-dashboard-kpi` (or the id you chose).
 - Make it the product's own: replace the `:root` block with the tokens from `design_md_export css-variables`, fetch the fonts the tokens name, change every

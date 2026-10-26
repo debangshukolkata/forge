@@ -107,7 +107,7 @@ def approval_queue() -> Screen:
         body,
         ["inbox", "file", "users", "shield", "clock", "search", "filter", "check", "up", "help"],
         ["businesslike", "precise", "light"],
-        ["approvals", "expenses", "purchasing", "finance", "workflow", "back office"],
+        ["approvals", "approval", "approve", "expenses", "expense claims", "purchase orders", "purchasing", "finance", "workflow", "back office"],
         "balanced",
         uses="anyone who decides on other people's requests: expenses, purchase orders, leave, vendors, access; shows what is asked, what changed and what the policy says",
         tags=["queue", "approval", "decision panel", "deadline", "bulk actions", "diff", "side navigation"],

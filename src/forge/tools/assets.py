@@ -160,6 +160,7 @@ class AddAsset(Tool):
                 if not result.ok:
                     return result
             written.append(relative)
+        context.assets_added.add(asset.id)
         if written:
             _record_licence(context, base, asset)
         ui_files = any(path.lower().endswith(UI_SUFFIXES) for path in written)

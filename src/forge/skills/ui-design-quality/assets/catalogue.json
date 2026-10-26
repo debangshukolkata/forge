@@ -6217,7 +6217,11 @@
    ],
    "products": [
     "approvals",
+    "approval",
+    "approve",
     "expenses",
+    "expense claims",
+    "purchase orders",
     "purchasing",
     "finance",
     "workflow",
@@ -7244,7 +7248,11 @@
    ],
    "products": [
     "approvals",
+    "approval",
+    "approve",
     "expenses",
+    "expense claims",
+    "purchase orders",
     "purchasing",
     "finance",
     "workflow",

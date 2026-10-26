@@ -4,7 +4,7 @@ type: section
 title: "React app screen: Approvals: queue with decision panel"
 summary: "A queue of requests with deadline pills, a bulk-decision bar and a decision panel: policy checks, what changed since the last version, a note and approve, ask or reject. (React, TSX with one plain stylesheet.)"
 moods: [businesslike, precise, light]
-products: [approvals, expenses, purchasing, finance, workflow, back office]
+products: [approvals, approval, approve, expenses, expense claims, purchase orders, purchasing, finance, workflow, back office]
 tags: [queue, approval, decision panel, deadline, bulk actions, diff, side navigation, app screen, react, tsx, plain css, light]
 density: balanced
 dependencies: []

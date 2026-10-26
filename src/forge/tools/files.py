@@ -386,6 +386,10 @@ def design_gate(context: ToolContext, relative: str) -> str:
             if missing:
                 context.design_gate_rounds += 1
                 return f"Before the page: the project's DESIGN.md needs its Concept (D-486). {missing}"
+            unused = composition_copy_problem(context, found.read_text(encoding="utf-8", errors="replace"))
+            if unused:
+                context.composition_refusals += 1
+                return unused
         return ""
     context.design_gate_rounds += 1
     return DESIGN_NOTE
@@ -426,6 +430,36 @@ def control_character_problem(text: str, before: str = "") -> str | None:
         f"Not saved: the text has {len(found)} control character(s), the first U+{ord(text[first]):04X} at line {line}, column {column} (near: {around!r}). "
         "That is usually a mangled en dash, curly quote or other non-ASCII character. Write it as the plain character or an HTML entity (&ndash;, &rsquo;) "
         "and send the file again."
+    )
+
+
+COMPOSITION_REFUSALS = 3  # a screen that does not fit can always be given up for `composition: custom`, so this only ever asks three times
+APPLICATION_COMPOSITION = re.compile(r"^composition:\s*[`'\"]?(app-[\w-]+)", re.IGNORECASE | re.MULTILINE)
+
+
+def composition_copy_problem(context: ToolContext, text: str) -> str:
+    """The DESIGN.md names a ready-made application screen that add_asset has not copied yet (D-488): the model wrote such screens from a blank file (D-406, D-485)
+    although the screen is tested at both widths and costs a fraction of the output. Empty string when it is fine, the screen is unknown (design_candidates says so)
+    or the model has already been asked enough times."""
+    match = APPLICATION_COMPOSITION.search(text)
+    if match is None or context.composition_refusals >= COMPOSITION_REFUSALS:
+        return ""
+    from forge.tools.assets import _catalogues
+
+    wanted = match.group(1).lower()
+    other = (
+        "app-" + wanted[len("app-react-") :]
+        if wanted.startswith("app-react-")
+        else "app-react-" + wanted[len("app-") :]
+    )
+    known = {asset.id for _skill, asset in _catalogues(context) if asset.type == "section"}
+    if wanted not in known or {wanted, other} & context.assets_added:
+        return ""
+    return (
+        f"Before the page: your DESIGN.md names the ready-made screen `{wanted}` as its composition, and it has not been copied yet. Run add_asset with id `{wanted}` "
+        "(project_dir = the app folder), look at the reference pictures it lists with view_image, then build from its files: replace the :root tokens with the DESIGN.md "
+        "ones, change every word, name and number to this product, remove what the product does not have and add what it does. If the screen does not fit the "
+        "product, change the composition line to `composition: custom <one line describing the layout>` instead."
     )
 
 
