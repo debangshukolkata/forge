@@ -14,6 +14,7 @@ from typing import Any
 
 from pydantic import Field
 
+from forge.designsystem.concept import concept_problem, same_idea
 from forge.designsystem.fonts import font_css
 from forge.designsystem.lint import describe_findings, lint_text
 from forge.designsystem.novelty import describe_fingerprint, differences, fingerprint, is_different_enough
@@ -237,6 +238,10 @@ class DesignCandidates(Tool):
                     "describing the layout idea>` when none fits the product."
                 )
                 continue
+            missing_concept = concept_problem(loaded[path][1])
+            if missing_concept:
+                lines.append(f"{path}: NOT USABLE until it has its Concept (D-486). {missing_concept}")
+                continue
             unknown = _unknown_composition(context, str(loaded[path][0].extra.get("composition", "")))
             if unknown:
                 lines.append(f"{path}: NOT USABLE until fixed\n{unknown}")
@@ -251,6 +256,10 @@ class DesignCandidates(Tool):
             lines.extend(_font_notes(path, loaded[path][0], loaded[path][1]))
         for index, one in enumerate(usable):
             for two in usable[index + 1 :]:
+                if same_idea(loaded[one][1], loaded[two][1]):
+                    lines.append(
+                        f"SAME IDEA: {one} and {two} have the same Concept idea, so they are one design in different colours; give each its own idea and signature visual."
+                    )
                 if not is_different_enough(prints[one], prints[two]):
                     lines.append(
                         f"TOO SIMILAR: {one} and {two} differ only in {', '.join(differences(prints[one], prints[two])) or 'nothing'}; change at least three of tone, accent hue, display font, corners, density, layout energy."

@@ -64,6 +64,10 @@ components:
     textColor: "{on_primary}"
 ---
 
+## Concept
+Idea: A page for the {name} studio, a small neighbourhood place where the day begins slowly, told through its own street.
+Signature visual: A drawn SVG scene of the {name} street at first light, filling the whole hero.
+
 ## Overview
 A test system.
 

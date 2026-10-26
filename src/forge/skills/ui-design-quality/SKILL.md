@@ -86,6 +86,11 @@ kept in DebCraft's library, so the next project needs no network. If the user na
 an address and use `fetch_font` with `url` (a .ttf, .otf, .woff2 or a zip); say its licence was not checked. Never link a font from a CDN.
 
 ## 0c. Write the project's DESIGN.md first
+**For a brand page (landing page, portfolio, marketing site) start with its Concept, before any colour or font:** the `## Concept` section of the template, two lines. `Idea:` one sentence
+on what this page is about, taken from the subject's own world (a yoga studio above a river at first light, a bakery that starts at 4 am), not a style word. `Signature visual:` the one
+picture that carries the hero: what it shows, how it is made (a drawn SVG scene, a licensed photograph from `find_image`, a product shot) and how large it is. Every other choice
+(palette, type, layout, the hero) then answers to that idea. The write gate and `design_candidates` refuse a model-written DESIGN.md or candidate without it, and each of the three
+candidates needs its own idea and its own signature visual. Application screens skip it.
 Before building any screen, write `DESIGN.md` in the project root from `recipes/design-md-template.md`: the open DESIGN.md format, YAML
 tokens (exact colours, type, radii, spacing, components with `{colors.primary}` references) plus prose that says why (design read and the three
 dials, do's and don'ts, responsive rules, known gaps). The write result already lists lint findings; run `design_md_lint` until there are no errors

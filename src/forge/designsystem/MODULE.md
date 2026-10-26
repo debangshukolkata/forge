@@ -4,7 +4,7 @@ DESIGN.md files (TODO DS1, D-348): the project's design system as YAML tokens (c
 references) plus ordered prose sections, in the open DESIGN.md format by Google Labs (Apache-2.0; this is our own implementation of the published format,
 no code copied). `spec.py` parses a file into a model and resolves references; `lint.py` finds structural, reference and contrast problems and a few
 look problems (one-hue palette, too many accents); `export.py` writes the tokens as Tailwind v4 `@theme` CSS, CSS variables, W3C design tokens or Tailwind v3
-JSON; `blueprint.py` notes missing blueprint parts (page composition, imagery, motion, responsive, accessibility) and decisions with no stated reason (DIE2); `diff.py` compares two files. Extensions are tolerated, not required: our dials and do's headings, `website`, Known Gaps, Responsive Behavior, font substitutes, component variants as separate entries.
+JSON; `blueprint.py` notes missing blueprint parts (page composition, imagery, motion, responsive, accessibility) and decisions with no stated reason (DIE2); `diff.py` compares two files; `concept.py` checks the Concept section (idea and signature visual) a brand page starts from (D-486). Extensions are tolerated, not required: our dials and do's headings, `website`, Known Gaps, Responsive Behavior, font substitutes, component variants as separate entries.
 The tools are in `tools/design_md.py`; the skill is `skills/ui-design-quality/SKILL.md` (sections 0c and 0d).
 
 - **Depends on:** brand, errors

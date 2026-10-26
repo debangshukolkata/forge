@@ -88,6 +88,12 @@ components:
 
 # <Product> design system
 
+## Concept
+For a brand page (landing page, portfolio, marketing site); an application screen leaves it out. Written before everything else; the gates read these two lines.
+Idea: one sentence on what this page is about, taken from the subject's own world (a studio above a river at first light; a bakery that starts at 4 am). Not a style word.
+Signature visual: the one picture that carries the hero: what it shows, how it is made (a drawn SVG scene, a licensed photograph found with find_image, a product shot) and how large it is (the whole hero, half of it). It belongs to this product and no other.
+Why not generic: what the obvious version would be (a headline, a card, three columns of text) and what this page does instead.
+
 ## Experience
 Written first, before any token. Who it is for and the context they arrive in (for an application: the people, what each must get done, in how many steps, and what must never go wrong). The feeling in three or four words and what it must NOT feel like. The reaction wanted, in the visitor's words ("This bakery looks special. I want to visit."). One line of creative direction ("the warmth of a neighbourhood bakery, the refinement of an editorial food magazine"). Say what you inferred from the brief.
 

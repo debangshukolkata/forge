@@ -8,6 +8,7 @@ from pathlib import Path
 
 from pydantic import Field
 
+from forge.designsystem.concept import concept_problem
 from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.baseline_gate import baseline_gate, rewrite_gate
@@ -309,7 +310,7 @@ DESIGN_NOTE = (
     "In it, compactly: the product and who "
     "it is for in a sentence; 4 to 6 named colours with hex values; the type roles with family, size and weight; the layout of each screen "
     "as a small ASCII wireframe; one alignment and spacing rule; three design principles. Check it against the brief and replace every "
-    "generic choice (a default blue, a default font, a row of three cards) with one that comes from the product. The ui-design-quality skill "
+    "generic choice (a default blue, a default font, a row of three cards) with one that comes from the product. A brand page also needs its `## Concept` (the idea in one sentence and the signature visual that carries the hero), before everything else. The ui-design-quality skill "
     "(sections 0c and 0d) has the details. Then write this file again."
 )
 
@@ -336,7 +337,7 @@ CANDIDATES_NOTE = (
     "candidate A (or copy it to .forge/candidates/a/DESIGN.md), write two more DESIGN.md files (.forge/candidates/b and c) that differ from it "
     "and from each other in at least three of: light or dark tone, accent hue, composition (name a layout from find_asset type section, tag composition, or for an application tag 'app screen'; write it as `composition: lay-...` or `composition: app-...` in the front matter), display font, corner style, density, layout energy; find_asset "
     "(type design-system) has tokenised starting points. Run design_candidates with the brief, apply the winner's fixes, design_md_import the "
-    "winner as DESIGN.md (overwrite), and then write the page. Never make the three differ only in colour; each names a real display font and text font that suit the product, its mood and its language (find_asset type font-pairing, find_font), never the system stack."
+    "winner as DESIGN.md (overwrite), and then write the page. Each candidate has its own `## Concept` (a different idea and a different signature visual). Never make the three differ only in colour; each names a real display font and text font that suit the product, its mood and its language (find_asset type font-pairing, find_font), never the system stack."
 )
 
 
@@ -380,6 +381,11 @@ def design_gate(context: ToolContext, relative: str) -> str:
         if broken:
             context.design_gate_rounds += 1
             return f"The project's DESIGN.md has errors that must be fixed before pages are built (design_md_lint shows them):\n{broken}"
+        if context.design_md_written:
+            missing = concept_problem(found.read_text(encoding="utf-8", errors="replace"))
+            if missing:
+                context.design_gate_rounds += 1
+                return f"Before the page: the project's DESIGN.md needs its Concept (D-486). {missing}"
         return ""
     context.design_gate_rounds += 1
     return DESIGN_NOTE
@@ -496,7 +502,7 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
 
         message += "\n" + describe_findings([f for f in lint_text(text) if f.severity != "info"], 15)
         if ".forge/candidates/" in relative.replace("\\", "/"):
-            note = candidate_composition_note(text)
+            note = candidate_composition_note(text) or concept_problem(text)
             if note:
                 message += "\n" + note
     problem = await diagnose_file(workspace, relative)
