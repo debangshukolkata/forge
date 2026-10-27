@@ -343,3 +343,21 @@ def test_runtime_data_files_are_not_delivered(workspace: Workspace) -> None:
     assert "backend/claims_app/services/export_service.py" in paths
     assert not any(path.endswith((".sqlite", ".db-journal")) for path in paths)
     assert not (workspace.output_dir / "backend" / "claims_app" / "app.sqlite").exists()
+
+
+def test_a_deleted_or_replaced_binary_file_does_not_break_the_delivery(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """Seen on the office laptop: ValueError 'binary file' while building changes.patch for an existing repo."""
+    (original_repo / "backend" / "logo.bin").write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x01\xff" * 20)
+    (original_repo / "backend" / "cache.dat").write_bytes(b"\x00\x01\x02\x03" * 50)
+    workspace = create_workspace(original_repo, tmp_path / "ws-binary", "backend")
+    workspace.delete("backend/logo.bin")  # a binary original with nothing left to decode
+    (workspace.repo_dir / "backend" / "cache.dat").write_text("now plain text\n")  # replaced in the shell
+
+    build_output(workspace)
+
+    patch = (workspace.output_dir / "changes.patch").read_text(encoding="utf-8")
+    assert "Binary file backend/logo.bin deleted" in patch
+    changes = (workspace.output_dir / "CHANGES.md").read_text(encoding="utf-8")
+    assert "backend/logo.bin" in changes and "no text diff" in changes

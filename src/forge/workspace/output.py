@@ -140,7 +140,11 @@ def build_patch(workspace: Workspace, changes: list[FileChange]) -> str:
         if change.binary:
             chunks.append(f"Binary file {change.path} {change.status}\n")
             continue
-        before, after = file_texts(workspace, change)
+        texts = file_texts(workspace, change)
+        if texts is None:  # binary before or after (a deleted or replaced binary file is not flagged as one)
+            chunks.append(f"Binary file {change.path} {change.status}\n")
+            continue
+        before, after = texts
         chunks.append(
             "".join(
                 difflib.unified_diff(
@@ -168,7 +172,14 @@ def build_changes_md(workspace: Workspace, changes: list[FileChange]) -> str:
         elif change.binary:
             lines += ["Binary file: copy it from `output/`.", ""]
         elif change.status != "deleted":
-            before, after = file_texts(workspace, change)
+            texts = file_texts(workspace, change)
+            if texts is None:
+                lines += [
+                    "Binary file: no text diff. Copy it from `output/`, or delete it if the status is deleted.",
+                    "",
+                ]
+                continue
+            before, after = texts
             diff = "".join(
                 difflib.unified_diff(before.splitlines(True), after.splitlines(True), "before", "after")
             )
@@ -258,13 +269,17 @@ def _is_move_source(change: FileChange, changes: list[FileChange]) -> bool:
     return any(other.moved_from == change.path for other in changes)
 
 
-def file_texts(workspace: Workspace, change: FileChange) -> tuple[str, str]:
+def file_texts(workspace: Workspace, change: FileChange) -> tuple[str, str] | None:
+    """The text before and after a change, or None when either side is binary (no text diff exists)."""
     saved = workspace.forge_dir / "baseline" / change.path
     # Files changed outside the writer (e.g. by a formatter run in the shell) have no saved baseline;
     # the untouched original in the user's repository is then the "before".
     original = saved if saved.exists() else Path(workspace.info.repo_path) / change.path
-    before = _decoded(original) if change.status != "added" else ""
-    after = _decoded(workspace.repo_dir / change.path) if change.status != "deleted" else ""
+    try:
+        before = _decoded(original) if change.status != "added" else ""
+        after = _decoded(workspace.repo_dir / change.path) if change.status != "deleted" else ""
+    except ValueError:  # decode_text refuses binary content
+        return None
     return before, after
 
 
