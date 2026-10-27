@@ -63,9 +63,7 @@ async def test_find_references_lists_both_uses_and_the_definition(
 ) -> None:
     pytest.importorskip("jedi")
     context = _context(original_repo, tmp_path)
-    result = await FindReferences().run(
-        FindReferences.Args(path="pkg/helpers.py", line=9, column=6), context
-    )
+    result = await FindReferences().run(FindReferences.Args(path="pkg/helpers.py", line=9, column=6), context)
     assert result.ok, result.content
     assert "pkg/main.py:7" in result.content and "pkg/main.py:11" in result.content
     assert "pkg/helpers.py:9" in result.content
