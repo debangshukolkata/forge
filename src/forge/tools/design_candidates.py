@@ -196,8 +196,8 @@ def _kind_notes(context: ToolContext, brief: str, compositions: dict[str, str]) 
             f"THIS BRIEF READS AS AN APPLICATION SCREEN ({verdict.reason}), not a brand page. Closest ready-made screens: {'; '.join(close) or 'none found'}. "
             "Name one of them as `composition: app-...` in the winner; add_asset copies it and the first page is refused until it has been copied. Write "
             "`composition: custom <one line>` only when none of them fits what the user does on the screen. For the look, start from the design system ds-office-polish "
-            "(find_asset type design-system) and the rules in recipes/back-office-polish.md, unless the user supplied their own design. The colour is the user's choice: unless they named one or "
-            "gave a brand guide, call design_palette show and ask them with one ask_user call, then design_palette apply."
+            "(find_asset type design-system) and the rules in recipes/back-office-polish.md, unless the user supplied their own design. Keep the design system's own orange and do not ask which palette they want; "
+            "only if the user says they dislike the colours or asks to change them, call design_palette show and ask them with one ask_user call, then design_palette apply."
         )
         for path, composition in compositions.items():
             if composition.lower().startswith("lay-"):

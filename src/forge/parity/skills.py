@@ -72,10 +72,17 @@ def disabled_names() -> set[str]:
     return {name.strip() for name in os.environ.get("FORGE_DISABLED_SKILLS", "").split(",") if name.strip()}
 
 
+def extra_roots() -> list[Path]:
+    """Extra skill folders for this process (`FORGE_EXTRA_SKILLS_DIR`, folders separated by the OS path separator): the arms experiment (C16) shows the
+    original external skills to an isolated benchmark run this way. They sit after the built-in skills and before the user's own folders."""
+    raw = os.environ.get("FORGE_EXTRA_SKILLS_DIR", "")
+    return [Path(part.strip()) for part in raw.split(os.pathsep) if part.strip()]
+
+
 def discover(*roots: Path | None) -> dict[str, Skill]:
     builtin = Path(str(resources.files("forge") / "skills"))
     skills: dict[str, Skill] = {}
-    for root in (builtin, *roots):
+    for root in (builtin, *extra_roots(), *roots):
         if root is None or not root.is_dir():
             continue
         for skill_file in sorted(root.glob("*/SKILL.md")):

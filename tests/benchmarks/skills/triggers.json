@@ -1,0 +1,314 @@
+{
+  "test-first": {
+    "should": [
+      "Add a function that parses ISO durations like PT1H30M into seconds. Put it in utils/duration.py.",
+      "implement a rate limiter class, token bucket, thread safe",
+      "We need a new feature: users can export their order history as CSV from the account page. The backend is a FastAPI app. Please build the endpoint and whatever it needs.",
+      "write a slugify helper for blog titles",
+      "Fix the bug where discounts over 100% make the total negative. Orders live in billing/totals.py and the logic is about 40 lines.",
+      "Can you add retry-with-backoff to our HTTP client wrapper?",
+      "build me a small module that merges overlapping date ranges",
+      "New requirement: invoices must round to the nearest 5 cents in Switzerland. Change the pricing code accordingly.",
+      "create a LRU cache with a ttl, no external libs",
+      "Our CSV importer silently drops rows with a trailing comma. Make it handle them properly and don't break the other formats."
+    ],
+    "should_not": [
+      "Rename the variable `tmp` to `buffer` in cache.py.",
+      "Why is my pytest fixture running twice per test? Here is the conftest: ...",
+      "Fix the typo in the README where it says 'recieve'.",
+      "Our nightly job crashes with a KeyError somewhere in the loader and I cannot reproduce it locally. Help me find out why.",
+      "Run the unit tests and tell me whether everything passes.",
+      "Design the folder layout for a new Python library that will wrap three payment providers.",
+      "What does the walrus operator do in Python?",
+      "Make the settings page look nicer, the spacing is off.",
+      "Bump the version of requests in requirements.txt to 2.32.",
+      "Add a docstring to every public function in api/routes.py."
+    ]
+  },
+  "debugging": {
+    "should": [
+      "The login test fails on CI but passes on my machine and I have no idea why.",
+      "Getting 'NoneType has no attribute items' somewhere in the report generator. Traceback attached. Please sort it out.",
+      "Output is wrong: totals are off by one cent for some orders only.",
+      "my script randomly hangs after about 200 requests",
+      "This endpoint went from 80ms to 4 seconds after last week's deploy. Find out what is slow.",
+      "Flaky test: test_queue_drain fails roughly one run in ten. Figure out the real cause, not just add a sleep.",
+      "app crashes on startup with a segfault when the pdf library is imported",
+      "Memory keeps growing in the worker process until it is killed. Where is the leak?",
+      "Dates show up a day early for users in Australia. Why?",
+      "something is broken in the websocket reconnect logic, messages get duplicated after a drop"
+    ],
+    "should_not": [
+      "Add a new endpoint that returns the last 10 audit log entries.",
+      "Explain what this stack trace line means: 'RecursionError: maximum recursion depth exceeded'. I just want a definition.",
+      "Run the whole test suite and tell me if it is green before I merge.",
+      "Write a regression test for the empty-cart case, the fix is already in.",
+      "Refactor the payment module into smaller classes.",
+      "Add logging to the scheduler so we can see which jobs run.",
+      "Which is faster in Python, a list comprehension or map? Just curious.",
+      "Set up a pytest configuration with markers for slow and integration tests.",
+      "Update the dependency pins, a security advisory came out.",
+      "Look up what the official docs say about the retry-after header."
+    ]
+  },
+  "verify-before-done": {
+    "should": [
+      "ok I think we are finished here, wrap it up and summarise what you changed",
+      "Is the migration fixed now? Tell me yes or no.",
+      "Before you commit this, make sure it really works.",
+      "Great, mark the task as complete.",
+      "So the build passes now?",
+      "You said the import bug was resolved. Can I merge?",
+      "Finish up and give me the final report on the feature.",
+      "Done? Then write the commit message and commit.",
+      "Confirm that the failing tests are green again before we close the ticket.",
+      "I am about to deploy. Can you say with confidence the change works as intended?"
+    ],
+    "should_not": [
+      "Start by listing the files that touch authentication.",
+      "Explain how git rebase differs from merge.",
+      "Write the first failing test for the new parser, then stop.",
+      "Open the page in a browser and click through the checkout including a declined card.",
+      "Find the root cause of the timeout in the upload handler.",
+      "Draft a plan for migrating the app from Flask to FastAPI.",
+      "What is the difference between a unit test and an integration test?",
+      "Delete the unused helper functions in utils.py.",
+      "Please research which Python version Azure Functions supports at the moment.",
+      "Make a PDF of the changelog and send it over."
+    ]
+  },
+  "deep-modules": {
+    "should": [
+      "I want to introduce a PaymentGateway interface plus a factory plus a registry for our two providers. Good idea?",
+      "This class has 14 public methods and half of them just forward to another object. Clean it up.",
+      "Split utils.py, it has 2000 lines and everybody imports from it.",
+      "design the module that will handle notifications (email, sms, push) for our app",
+      "Our service layer wraps the repository layer which wraps the ORM. Is that too many layers? Simplify.",
+      "Refactor the order processing code so it is easier to understand and change.",
+      "How should I structure a new package that fetches, caches and parses exchange rates?",
+      "Review the architecture of this folder: too many tiny classes with one method each.",
+      "We keep adding config flags 'just in case'. Help me shrink this API surface.",
+      "Do we need an abstract base class here or is that over-engineering?"
+    ],
+    "should_not": [
+      "Rename the method get_usr to get_user across the codebase.",
+      "Split the long marketing paragraph in the landing page into two shorter ones.",
+      "Which design pattern name matches 'a thing that builds objects step by step'? Quiz question for my exam.",
+      "Plan the product: who are the users of an expense approval tool and what does success look like?",
+      "Add type hints to the functions in parsers.py.",
+      "Break the CSS file into components, the stylesheet is huge.",
+      "Fix the circular import error between models and services.",
+      "Format the code with ruff and fix the lint warnings.",
+      "Write tests for the existing cache module.",
+      "Move the database credentials out of the source and into environment variables."
+    ]
+  },
+  "solution-thinking": {
+    "should": [
+      "Build an app where employees request leave and managers approve it.",
+      "We need a purchase order system for our procurement team. Get started.",
+      "Make me a customer complaints tracker for our support team, including escalation.",
+      "Build a tool to handle expense claims. I'm not sure what it needs exactly.",
+      "Create an internal portal for onboarding new hires; HR, IT and the manager all have tasks.",
+      "I want a web app to manage equipment loans in our lab.",
+      "can you build something for tracking invoice approvals across finance",
+      "Our field engineers file service requests by email today and it is a mess. Build a proper system for it, you decide the details.",
+      "Develop a booking application for meeting rooms and shared desks across three offices.",
+      "A system for handling insurance claims from submission through payout. Go."
+    ],
+    "should_not": [
+      "Build a landing page for my bakery with a menu and opening hours.",
+      "Add a 'cancel' button to the existing order detail page.",
+      "Implement the function described in spec.md, signature and behaviour are fully specified there.",
+      "Make a slide deck that explains the leave approval process to new staff.",
+      "Write a spreadsheet that totals monthly expenses by category.",
+      "Fix the approval email that is sent twice.",
+      "Convert this Flask route to use async.",
+      "Write a script that renames all files in a folder to lowercase.",
+      "Which database should I use for a small personal blog?",
+      "Make the existing dashboard faster by adding an index on created_at."
+    ]
+  },
+  "pytest-patterns": {
+    "should": [
+      "Add tests for the invoice service in this repo, it already has a conftest with fixtures.",
+      "my test uses a real HTTP call to the weather API, make it not do that",
+      "parametrize these five near-identical tests",
+      "This test is red after my change. Just make it pass by loosening the assertion.",
+      "Write tests for the new /users endpoint; the repo uses pytest-django.",
+      "How do I fake the clock and the S3 client in the existing test suite without adding new libraries?",
+      "tests/ has 300 tests and a lot of copy-pasted setup. Tidy it with fixtures.",
+      "Add a test that checks the cleanup runs even when the handler raises, using the project's test helpers.",
+      "The test for send_email talks to a real SMTP server on CI. Stub it properly.",
+      "Update the existing tests for the renamed `Cart.total` property."
+    ],
+    "should_not": [
+      "Write the failing test first and then implement a function that validates IBANs.",
+      "Run pytest and show me the summary line.",
+      "A test failure only happens in CI, find out why.",
+      "Set up the project skeleton for a new Python CLI, with pyproject and a test folder.",
+      "What is the difference between mock and stub in testing theory?",
+      "Write Jest tests for this React component.",
+      "Add an end-to-end browser test that signs up a user.",
+      "Measure code coverage and tell me the number.",
+      "Make the test suite faster by running it in parallel.",
+      "Write a unit test plan document for the QA team as a Word file."
+    ]
+  },
+  "ui-design-quality": {
+    "should": [
+      "Create a landing page for a yoga studio.",
+      "the dashboard looks ugly and cluttered, improve it",
+      "Build a settings screen for our admin app with tabs for profile, billing and team.",
+      "Make a pricing page with three tiers. It should look professional.",
+      "Can you restyle the signup form? It looks like it was made in 2005.",
+      "Build a responsive portfolio website for a photographer, single page.",
+      "UX of the checkout is clunky; redesign the screen and its CSS.",
+      "Add a navigation sidebar and a data table component to the React admin panel, nice looking please.",
+      "I need a product page for a coffee grinder: gallery, specs, reviews, buy button.",
+      "Give the whole app a cleaner, more modern look; fonts, spacing and colours are all over the place."
+    ],
+    "should_not": [
+      "Check that clicking Save on the profile form really stores the data and shows an error for an empty name.",
+      "Take a screenshot of the running app and tell me if the page loads.",
+      "Add an API endpoint that returns the profile as JSON.",
+      "Make a PowerPoint deck with a modern look for the quarterly review.",
+      "Choose a Python web framework for a small CRUD tool.",
+      "Convert the hex colours in the stylesheet to CSS variables, nothing visual should change.",
+      "Write a bash script that minifies the CSS files.",
+      "Research what colours are trending in fintech websites this year and give me sources.",
+      "Fix the JavaScript error 'undefined is not a function' on the cart page.",
+      "Build a command line tool with colourful terminal output."
+    ]
+  },
+  "web-ui-verification": {
+    "should": [
+      "I added a drag and drop reorder to the task list. Make sure it actually works in the browser.",
+      "Is the new login form working? Try it, including a wrong password.",
+      "Before we say the registration page is ready, run the app and click through it.",
+      "check the checkout flow end to end in a real browser and leave a script I can rerun",
+      "The feature is coded. Now start the dev server, open the page and confirm the modal closes properly.",
+      "Please test my Flask web UI by using it like a user would and look at what it renders.",
+      "Does the search box on the site return results and show a message when there are none?",
+      "Give me a Playwright script that confirms the filter dropdown updates the table.",
+      "Run the web app and see for yourself that the delete confirmation appears.",
+      "Open the page, submit the form with bad input and tell me what the user sees."
+    ],
+    "should_not": [
+      "Redesign the login page so it looks premium.",
+      "Write Jest unit tests for the Button component.",
+      "The API returns 500 for empty payloads, find out why.",
+      "Say whether the Python package builds; just run the build command.",
+      "Make the table sortable by clicking on column headers.",
+      "Scrape the prices from this website into a CSV.",
+      "Look up the current Playwright version and its release notes.",
+      "Add a dark mode toggle to the app.",
+      "Test the REST endpoint with curl and show me the response codes.",
+      "Take all the pages of the site and make a PDF out of them."
+    ]
+  },
+  "web-research": {
+    "should": [
+      "What is the current price of the Azure OpenAI gpt-4o deployment per million tokens?",
+      "Find out which versions of Django still get security fixes right now.",
+      "Compare the three most popular Python PDF libraries based on current docs and cite your sources.",
+      "Is there a newer RFC that replaces 7231? Check.",
+      "look up whether the pandas read_csv 'on_bad_lines' argument exists in the latest release",
+      "What did the EU AI Act change for general purpose models? Need links.",
+      "Check online if library X has known CVEs.",
+      "Who maintains the 'attrs' package and when was the last release?",
+      "I need up-to-date facts on GDPR fines in 2025, with URLs for each claim.",
+      "Search the web for how others solved SQLite lock errors with Celery and summarise."
+    ],
+    "should_not": [
+      "Explain how TCP slow start works.",
+      "Read the file docs/architecture.md and summarise it.",
+      "Fetch the page at https://example.com/pricing and turn it into a spreadsheet.",
+      "Write a literature review essay on climate policy as a Word document.",
+      "Find where in our codebase the retry logic lives.",
+      "Install the requests library.",
+      "Look in the repo's changelog for the last breaking change.",
+      "Build a web scraper class that downloads and caches pages.",
+      "Translate this paragraph into German.",
+      "Test that our public site loads and the contact form works."
+    ]
+  },
+  "make-document": {
+    "should": [
+      "Write a project proposal for our data migration and give it to me as a Word document.",
+      "Edit the attached .docx: change the heading styles and add a table of contents.",
+      "Draft a formal letter to the landlord about the broken heating, as a docx.",
+      "I need a two page memo for the board on the budget overrun, in Word format.",
+      "Open report.docx, fix the numbering of the sections and highlight every mention of 'risk'.",
+      "Create a user manual for the booking tool with screenshots placeholders, delivered as a Word file.",
+      "Take this meeting transcript and produce a neat minutes document in .docx.",
+      "Convert my notes into a polished report with headings, a table and a footer with page numbers (Word).",
+      "update the contract draft docx: replace 'Supplier' with 'Vendor' everywhere and keep the formatting",
+      "Make a one-page CV in a docx file from these bullet points."
+    ],
+    "should_not": [
+      "Write the README for this repo.",
+      "Make a slide deck out of this report.",
+      "Turn the attached Word document into a PDF with page numbers.",
+      "Build a spreadsheet of the project budget with formulas.",
+      "Summarise the attached text in three bullet points, no file needed.",
+      "Write docstrings for the module.",
+      "Document the decision to use Postgres in docs/decisions.md.",
+      "Extract the text from this PDF contract.",
+      "Create an HTML report page with charts of sales.",
+      "Proofread this email draft and fix the grammar."
+    ]
+  },
+  "make-presentation": {
+    "should": [
+      "Prepare 10 slides for tomorrow's kickoff meeting about the CRM rollout.",
+      "Turn this report into a pitch deck for investors.",
+      "I need a PowerPoint on cybersecurity basics for new employees.",
+      "restyle my existing pptx to match the company template, same content",
+      "Can you make a short deck, 5 slides, comparing the three vendor offers?",
+      "Build a presentation for the quarterly review with charts and speaker notes.",
+      "make slides from the outline below: intro, problem, solution, roadmap, ask",
+      "Edit the attached .pptx: add a title slide and fix the inconsistent fonts.",
+      "Create a training deck explaining how our approval workflow works, one concept per slide.",
+      "Give me a conference talk deck about lessons learned from our cloud migration."
+    ],
+    "should_not": [
+      "Write the speech text for the CEO's talk, text only, no slides.",
+      "Create a landing page for the product launch.",
+      "Make a Word report from the quarterly numbers.",
+      "Extract the text and speaker notes from the PDF version of the presentation.",
+      "Produce an Excel workbook with the quarterly figures.",
+      "Explain how to structure a good talk, general advice only.",
+      "Make a bar chart image of the sales numbers.",
+      "Build an interactive slideshow component in React with swipe support.",
+      "Proofread the bullet points I pasted below.",
+      "Find a good stock photo source for presentations."
+    ]
+  },
+  "pdf-toolkit": {
+    "should": [
+      "Merge these three PDFs into one file, in the order invoice, receipt, contract.",
+      "Fill in the form fields of application.pdf with the data from this JSON.",
+      "Pull all the tables out of the attached annual report PDF.",
+      "split scan.pdf into one file per page",
+      "This PDF is a scan, I need the text from it.",
+      "Add a 'CONFIDENTIAL' watermark and page numbers to every page of the PDF.",
+      "Remove pages 3 to 5 and rotate the rest by 90 degrees.",
+      "Encrypt this pdf with a password so it can be opened but not printed.",
+      "Create a PDF from this outline: title, three sections with text, closing page.",
+      "Extract the images out of brochure.pdf."
+    ],
+    "should_not": [
+      "Convert this Word document to a nicely formatted report, docx please.",
+      "Summarise what the attached contract says; I pasted the text below.",
+      "Write a Python function that validates a PDF file name.",
+      "Export the slides as images for the website.",
+      "Take screenshots of every page of the web app.",
+      "What is the history of the PDF format?",
+      "Create an Excel sheet from the table printed in this text.",
+      "Look up which PDF libraries are maintained at the moment, with sources.",
+      "Generate an HTML page that displays a PDF viewer.",
+      "Compress these PNG files."
+    ]
+  }
+}
