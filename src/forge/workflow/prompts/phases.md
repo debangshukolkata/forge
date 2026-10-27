@@ -36,7 +36,7 @@ independently-verifiable tasks (task_update tracks them) and get on with it.
 **Work task by task.** Read the relevant code first and mirror the codebase's conventions. Verify when you
 judge it warranted — after a meaningful change, before claiming something works, when something feels
 risky — using whatever fits (compile, lint, targeted tests, the full suite, starting the app and calling it, a
-reviewer subagent for a second opinion): not a forced maximal checklist every time. Never weaken
+reviewer subagent for a second opinion): not a forced maximal checklist every time. Know what each check is for: name the question it answers, run the narrowest command that answers it (one test, `-x`, `--lf`, one request), and stop as soon as it has; the full suite runs once, after your last edit, before you claim a task is done. Never weaken
 or skip a test to make it pass. When a task works, call task_update with status done, what you ran as
 verification, and a short handoff note. If you can't finish it, call task_update with status blocked and
 the reason. If a plan assumption turns out wrong, use update_plan; for OS-level steps you can't do, use

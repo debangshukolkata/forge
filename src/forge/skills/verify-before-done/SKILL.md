@@ -11,7 +11,7 @@ work" and "the change is small" are not evidence.
 
 ## Before you write "done", "fixed", "passes" or "works"
 1. **Name the command that would prove it** (the test command, the linter, the build, the request that used to fail).
-2. **Run it in full**, not a part of it, and read the whole output: the exit code, the count of failures, warnings that matter.
+2. **Run it in full for a final claim** (narrower checks are for the steps before it, see below), and read the whole output: the exit code, the count of failures, warnings that matter.
 3. **Compare** the output with the claim. If it does not confirm it, say what it does show, with the numbers.
 4. Only then make the claim, and put the evidence next to it ("`pytest`: 212 passed, 0 failed").
 
@@ -25,6 +25,18 @@ work" and "the change is small" are not evidence.
 | The new test is a real regression test | it **fails** with the fix removed and passes with it | it passes once |
 | Requirements are met | each requirement checked one by one against the running result | the tests pass |
 | A subagent or builder succeeded | its changed files read and its checks re-run by you | its report says success |
+
+## Know what a check is for, and stop when it has answered
+The full run above is for the **final claim**. Every check before it has a narrower purpose: say it in one line first
+("does the 404 case pass?", "does the module import?", "did the fix remove this failure?"), then use the smallest command that
+answers it and stop when it has.
+- **One behaviour:** run that test (`pytest path::test_name -q`), not the file or the suite.
+- **Find out what is broken:** `pytest -x -q` (stop at the first failure), or `--lf` (the tests that failed last time) after a fix.
+- **A slow or long run:** read the first failure and stop the run; do not wait for the other 200 tests to say the same thing.
+- **A server, page or script check:** one request or one screenshot that shows the thing, not a full walkthrough.
+- **A command that has run longer than expected with nothing new:** stop it, narrow the scope, and run that.
+- Say in the note what you ran **and what you did not run**. A narrowed run never supports "all tests pass".
+- The full suite (or the whole build) runs once, after the last edit, before "done". An early stop is for the steps in between.
 
 ## Rules of thumb
 - Words like "should", "probably" and "seems to" mean you have not checked: check, or say it is unchecked.
