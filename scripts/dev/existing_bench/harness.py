@@ -171,11 +171,22 @@ def tests_added(pristine: Path, delivered: Path, changes: dict[str, list[str]]) 
 # ---------------------------------------------------------------- running pytest and friends
 
 
+def with_unix_tools(path: str) -> str:
+    """click's pager tests run the real `cat`; a plain PowerShell has none on PATH (Git for Windows ships one), which made a correct delivery look broken."""
+    if shutil.which("cat", path=path):
+        return path
+    for folder in (r"C:\Program Files\Git\usr\bin", r"C:\Program Files (x86)\Git\usr\bin"):
+        if (Path(folder) / "cat.exe").is_file():
+            return path + os.pathsep + folder
+    return path
+
+
 def check_environment(challenge: Challenge, repo: Path) -> tuple[dict[str, str], Path]:
     """Environment variables and working directory for running Python against the repo copy."""
     env = {**os.environ, "BENCH_REPO": str(repo), "PYTHONIOENCODING": "utf-8", "PYTHONDONTWRITEBYTECODE": "1"}
     if challenge.repo == "click":
         env["PYTHONPATH"] = str(repo / "src")
+        env["PATH"] = with_unix_tools(env.get("PATH", ""))
         return env, repo
     env.update({key: env.get(key) or value for key, value in TEMPLATE_ENV.items()})
     env["PYTHONPATH"] = str(repo / "backend")
