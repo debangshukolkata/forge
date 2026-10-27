@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
@@ -29,6 +30,10 @@ def test_runnable_blocks_run(recipe: Path, tmp_path: Path) -> None:
         run = subprocess.run(
             [sys.executable, str(script)],
             cwd=tmp_path,
+            # the outer pytest-xdist worker's variables would leak into the nested pytest run
+            env={
+                key: value for key, value in os.environ.items() if not key.startswith(("PYTEST_", "XDIST_"))
+            },
             capture_output=True,
             text=True,
             encoding="utf-8",
