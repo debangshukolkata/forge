@@ -32,6 +32,7 @@ code, and when you review your own code run through `rcp-security` for anything 
 - One test per behaviour, with edge cases and the error path; expected values written by hand, not recomputed from the code.
 - Dependencies go in `pyproject.toml` (runtime in `dependencies`, tools in the `dev` extra); do not leave an unused one.
 - In a large repository, `code_outline` shows the structure of a file or folder and who calls a function before you read whole files.
+- When jedi is installed, `find_definition`, `find_references` and `list_symbols` (next to `code_outline`) give exact definitions, uses and symbols of Python names; without it they say so, and grep does the job.
 - Before using a library you do not know well, ask `library_api` (installed version, signature, docstring, nearest real names; or `python -m pip show <package>`) and read its docs.
 
 ## Gotchas

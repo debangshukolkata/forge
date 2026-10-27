@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -40,11 +41,34 @@ class HeadlessResult:
     activity: str
     tasks: list[dict[str, str]]
     errors: list[str]
+    installs: list[str] = field(
+        default_factory=list
+    )  # package installs approved by --allow-installs, in order
 
 
-def auto_reply(event: Event, auto_approve: bool) -> UserInput | None:
+PIP_INSTALL = re.compile(r"^\s*(?:\S*python[\w.]*(?:\.exe)?\s+-m\s+pip|pip[\w.]*)\s+install\b", re.IGNORECASE)
+# Anything that sends the install somewhere else, installs from an address or leaves the project environment is never approved.
+INSTALL_REFUSED = re.compile(
+    r"://|git\+|--target|--user|--prefix|--root|--index-url|-i\s|--extra-index-url|--trusted-host|--find-links|-f\s|--no-verify|&&|;|\||`|\$\(",
+    re.IGNORECASE,
+)
+
+
+def is_environment_install(command: str) -> bool:
+    """A plain `pip install <names>` / `-r requirements.txt` / `-e .` into the workspace's own environment (D-500): the one always-ask command a headless run may approve on request."""
+    return bool(PIP_INSTALL.match(command)) and not INSTALL_REFUSED.search(command)
+
+
+def auto_reply(event: Event, auto_approve: bool, allow_installs: bool = False) -> UserInput | None:
     payload = event.payload
     if event.type == EventType.APPROVAL_REQUESTED:
+        if (
+            allow_installs
+            and auto_approve
+            and payload.get("always_ask")
+            and is_environment_install(str(payload.get("command") or ""))
+        ):
+            return Approve(request_id=payload["id"])
         if payload.get("always_ask") or not auto_approve:
             return Reject(request_id=payload["id"], instruction=HEADLESS_REFUSAL)
         return Approve(request_id=payload["id"])
@@ -107,9 +131,11 @@ async def run_headless(
     auto_approve: bool,
     timebox: TimeBox | None = None,
     now: Callable[[], datetime] = datetime.now,
+    allow_installs: bool = False,
 ) -> HeadlessResult:
     assert host.orchestrator is not None
     errors: list[str] = []
+    installs: list[str] = []
     box_state = BoxState()
     watcher = (
         asyncio.create_task(_watch_deadline(host, timebox, box_state, now))
@@ -124,7 +150,15 @@ async def run_headless(
         async for event in subscription:
             if event.type == EventType.ERROR:
                 errors.append(str(event.payload.get("message")))
-            reply = auto_reply(event, auto_approve)
+            if allow_installs and event.type == EventType.APPROVAL_REQUESTED:
+                command = str(event.payload.get("command") or "")
+                if event.payload.get("always_ask") and is_environment_install(command):
+                    installs.append(command)
+            reply = (
+                auto_reply(event, auto_approve, allow_installs=True)
+                if allow_installs
+                else auto_reply(event, auto_approve)
+            )
             if reply is not None:
                 await host.submit(reply)
 
@@ -175,7 +209,7 @@ async def run_headless(
         code = EXIT_TIMEBOX
         ended = "stopped at the hard limit" if box_state.hard_stopped else "wrapped up"
         summary = f"Time box: {ended}; the work is not finished. {summary}"
-    return HeadlessResult(code, summary, tasks, errors)
+    return HeadlessResult(code, summary, tasks, errors, installs)
 
 
 async def _wait_until_idle(host: SessionHost) -> None:

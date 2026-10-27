@@ -39,10 +39,17 @@ def _folder(text: str | None) -> str | None:
 
 
 def load_agents(home: Path) -> dict[str, AgentDefinition]:
-    folder = home / "agents"
+    from forge.parity.plugins import plugin_agent_folders
+
     agents: dict[str, AgentDefinition] = {}
-    if not folder.is_dir():
-        return agents
+    # an enabled plugin's agents first, so the user's own file of the same name replaces them (D-501)
+    for folder in [*plugin_agent_folders(home), home / "agents"]:
+        if folder.is_dir():
+            _read_agent_folder(folder, agents)
+    return agents
+
+
+def _read_agent_folder(folder: Path, agents: dict[str, AgentDefinition]) -> None:
     for path in sorted(folder.glob("*.md")):
         if not _NAME.match(path.stem):
             continue
@@ -61,4 +68,3 @@ def load_agents(home: Path) -> dict[str, AgentDefinition]:
             max_steps=_positive_int(meta.get("max_steps")),
             write_only_under=_folder(meta.get("write_only_under")),
         )
-    return agents

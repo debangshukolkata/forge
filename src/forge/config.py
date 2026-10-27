@@ -255,6 +255,13 @@ class WebConfig(_Strict):
     archive_fallback: bool = True  # try an archive.org copy of a page that cannot be reached
 
 
+class HookRule(_Strict):
+    """One hook limited to some tools (`match` is a tool name pattern such as `run_command` or `write_*`); a plain string in the list applies to all tools."""
+
+    command: str
+    match: str = "*"
+
+
 class HooksConfig(_Strict):
     # Commands run after every successful file edit, e.g. "ruff format {file}" ({file} = the edited path,
     # relative to the repository root). They run like any command: in the workspace, sandboxed.
@@ -263,6 +270,13 @@ class HooksConfig(_Strict):
     # summariser as facts to keep; post_compact runs afterwards. A failing hook never blocks compaction.
     pre_compact: list[str] = []
     post_compact: list[str] = []
+    # Hooks around tool calls and the session (D-501). They run through the permission gate like any command; a hook the gate would ask about is not run,
+    # and a failing pre_tool hook DENIES the call (it can never allow one). Only {tool} and {file} are filled into a command.
+    pre_tool: list[str | HookRule] = []
+    post_tool: list[str | HookRule] = []
+    session_start: list[str | HookRule] = []
+    session_end: list[str | HookRule] = []
+    user_message: list[str | HookRule] = []
 
 
 class LearningConfig(_Strict):

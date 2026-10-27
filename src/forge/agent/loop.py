@@ -14,8 +14,11 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from forge.agent.hooks import EVENTS as HOOK_EVENTS
+from forge.agent.hooks import HookRunner
 from forge.agent.parallel import MAX_PARALLEL_COMMANDS, is_parallel_safe_command, is_test_command
 from forge.agent.tool_output import save_full_output
+from forge.config import HookRule, forge_home
 from forge.context.manager import ContextManager
 from forge.context.warnings import next_warning
 from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthError
@@ -23,6 +26,7 @@ from forge.llm.base import ChatRequest, LLMResponse, Message, ProgressCallback, 
 from forge.llm.router import LLMRouter
 from forge.llm.tool_args import parse_error_result
 from forge.parity.path_rules import PathRules
+from forge.parity.plugins import plugin_hooks
 from forge.protocol.approvals import ApprovalBroker
 from forge.protocol.events import EventBus, EventType
 from forge.safety.injection import flag
@@ -177,9 +181,21 @@ class AgentLoop:
         self.effort: str | None = None  # /effort: overrides the model's configured reasoning effort
         self.turn_effort: str | None = None  # "think hard:" raises it for one turn
         self._context_warned = 0  # which context-usage warning was already shown (C12 e, D-298)
+        self.hooks = HookRunner(self._hook_rules(), context, gate, bus)
         self.path_rules: PathRules | None = (
             None  # set by the session host: rules shown when a matching file is touched (D-297)
         )
+
+    def _hook_rules(self) -> dict[str, list[Any]]:
+        config = self.router.config.hooks
+        from_plugins = plugin_hooks(forge_home())
+        rules: dict[str, list[Any]] = {}
+        for event in HOOK_EVENTS:
+            configured: list[Any] = list(getattr(config, event))
+            rules[event] = configured + [
+                HookRule(**rule) if isinstance(rule, dict) else rule for rule in from_plugins.get(event, [])
+            ]
+        return rules
 
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
@@ -541,8 +557,17 @@ class AgentLoop:
         )
         started = time.perf_counter()
         waits: list[float] = []  # seconds spent waiting for the user, kept out of the tool's own time (S1)
+        blocking = None
+        if decision.verdict != "deny" and self.hooks.has("pre_tool"):
+            blocking = HookRunner.blocked_by(
+                await self.hooks.run("pre_tool", tool.name, str(getattr(args, "path", "") or ""))
+            )
         if decision.verdict == "deny":
             result = ToolResult(ok=False, content=f"Not allowed: {decision.reason}")
+        elif blocking is not None:
+            result = ToolResult(
+                ok=False, content=f"Blocked by a pre-tool hook ({blocking.command}):\n{blocking.output}"
+            )
         else:
             result = (
                 await self._approved_run(tool, args, summary, command, decision, waits)
@@ -551,6 +576,15 @@ class AgentLoop:
             )
             if result.ok and tool.name in HOOKED_TOOLS and self.router.config.hooks.post_edit:
                 result = await self._post_edit_hooks(args, result)
+            if self.hooks.has("post_tool"):
+                notes = [
+                    outcome.note("post-tool")
+                    for outcome in await self.hooks.run(
+                        "post_tool", tool.name, str(getattr(args, "path", "") or "")
+                    )
+                ]
+                if notes:
+                    result = result.model_copy(update={"content": result.content + "\n" + "\n".join(notes)})
             if result.ok and self.path_rules is not None and tool.name in RULE_TOOLS:
                 touched = getattr(args, "path", None)
                 note = self.path_rules.note_for(touched) if isinstance(touched, str) else ""

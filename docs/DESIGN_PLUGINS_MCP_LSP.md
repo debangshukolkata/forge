@@ -1,6 +1,6 @@
 # Design for sign-off: plugins and hooks, MCP in Mode B, code intelligence (LSP)
 
-Status: **proposal, nothing built.** Per CLAUDE.md these are security-relevant or new interfaces, so they wait for the
+Status: **section 2 (MCP allow-list, option B) is built (D-499); the rest is a proposal, nothing built.** Per CLAUDE.md these are security-relevant or new interfaces, so they wait for the
 user's decision. Each part: context, options with trade-offs, recommendation, what the user decides.
 
 ## 1. Plugins, project folder, settings, hooks
@@ -45,6 +45,14 @@ can reach, and what they return goes to the model.
 tools default to the permission gate's "ask". C is a later option for local servers that need no network.
 **User decides:** A or B for Mode B; which servers exist at all (only the user can vouch for them).
 
+**Built (D-499).** The user's `<home>/settings.json` carries `{"mcp_allow": {"<project scope>": {"<server>": {"tools": ["a", "b"] | "*"}}}}`
+(scope = the memory scope: `repo:<slug>-<hash>` in Mode A, `profile:<name>` in Mode B). A server in `config.yaml` starts only when listed for
+the project (no entry = nothing allowed, in both modes; this ends the old "start everything in config" behaviour); unlisted servers are
+reported in `McpHub.errors`, the `mcp` notice and `forge doctor`; unlisted tools are never shown to the model. Every MCP result is redacted
+and labelled untrusted. In Mode B: a warning notice per server, call arguments with a host term are refused, host terms are masked in
+results, and each call is logged as an `mcp_call` notice. The permission gate is unchanged (ask; deny rules win; auto mode as before).
+Only the user's own file counts: the model cannot grant a server. A broken file starts no server.
+
 ## 3. Code intelligence (definitions, references, symbols, diagnostics)
 
 **Context.** The knowledge base and its symbol tools were retired (D-160); the model uses grep/read. For large repos a
@@ -64,3 +72,5 @@ read-only, run on the workspace copy only (Mode A) or the project folder (Mode B
 1. settings + permission rules (small, high value), 2. `jedi` tools, 3. plugins (enable-once, no marketplace), 4. hooks,
 5. MCP allow-list. Each step gets tests (deterministic where possible), a decision record and a MODULE.md update; the
 always-ask list and the safety invariants stay untouched.
+
+**Built 2026-10-27 (D-500, D-501):** jedi tools, hooks (all five events, deny-only `pre_tool`), plugins as folders with `forge plugin list|show|enable|disable`, and `forge run --allow-installs`. Not built: LSP clients for TypeScript (option C), plugin marketplace (option C). Tests are written and run after the development batch.

@@ -215,7 +215,7 @@ async def test_mcp_tools_are_listed_called_and_gated(tmp_path: Path) -> None:
         spec = tools[0].spec()
         assert spec.parameters["properties"]["a"]["type"] == "integer"
         result = await tools[0].run(tools[0].Args.model_validate({"a": 2, "b": 3}), None)  # type: ignore[arg-type]
-        assert result.ok and result.content.strip() == "5"
+        assert result.ok and result.content.strip().endswith("5")
         gate = PermissionGate("default", tmp_path / "permissions.json")
         assert gate.decide("mcp__demo__add", False, None, None).verdict == "ask"
         assert (

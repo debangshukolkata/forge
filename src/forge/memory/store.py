@@ -18,6 +18,7 @@ $ARGUMENTS replaced by whatever follows the command.
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -148,20 +149,21 @@ def combined_index(home: Path, scope: str | None) -> str | None:
 
 
 class CommandStore:
-    def __init__(self, home: Path) -> None:
+    def __init__(self, home: Path, extra_folders: Sequence[Path] = ()) -> None:
         self.folder = home / "commands"
+        # an enabled plugin's folders come from the caller (memory sits below parity); the user's own folder is looked at first, so it wins (D-501)
+        self.folders = [self.folder, *extra_folders]
 
     def names(self) -> list[str]:
-        if not self.folder.exists():
-            return []
-        return sorted(p.stem for p in self.folder.glob("*.md") if _NAME.match(p.stem))
+        found = {p.stem for f in self.folders if f.exists() for p in f.glob("*.md") if _NAME.match(p.stem)}
+        return sorted(found)
 
     def expand(self, name: str, arguments: str) -> str | None:
         """The message a custom command stands for, or None when there is no such command."""
         if not _NAME.match(name):
             return None
-        path = self.folder / f"{name}.md"
-        if not path.exists():
+        path = next((f / f"{name}.md" for f in self.folders if (f / f"{name}.md").exists()), None)
+        if path is None:
             return None
         template = path.read_text(encoding="utf-8")
         return template.replace("$ARGUMENTS", arguments.strip()).strip()

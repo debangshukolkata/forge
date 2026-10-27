@@ -8,6 +8,7 @@ from typing import Any
 
 from forge.config import forge_home
 from forge.memory.scope import repo_level_dir
+from forge.parity.plugins import plugin_skill_roots
 from forge.parity.skills import Skill, discover, pack_listing, packs
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
@@ -29,7 +30,7 @@ BUILT_IN_TYPES = {
 
 
 def skill_roots(context: ToolContext) -> list[Any]:
-    roots: list[Any] = [forge_home() / "skills"]
+    roots: list[Any] = [forge_home() / "skills", *plugin_skill_roots(forge_home())]
     profile_root = context.profile.root if context.profile is not None else None
     roots.append(repo_level_dir(forge_home(), context.workspace, profile_root) / "skills")
     return roots

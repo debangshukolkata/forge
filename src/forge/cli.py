@@ -46,6 +46,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="approve requirements/plan and ordinary commands (never the always-ask list)",
     )
+    run.add_argument(
+        "--allow-installs",
+        action="store_true",
+        help="with --auto-approve: also approve a plain `pip install` into the workspace's own environment (never an address, index, target or chained command); each is listed at the end",
+    )
     run.add_argument("--output-format", choices=["text", "json"], default="text")
     run.add_argument(
         "--start-at", help="wait until this time before starting: 14:00 (the next 14:00) or 2026-10-17 14:00"
@@ -121,6 +126,17 @@ def build_parser() -> argparse.ArgumentParser:
     label.add_argument("--no-browser", action="store_true")
     sessions = subcommands.add_parser("sessions", help="list recent workspaces/sessions")
     sessions.add_argument("action", choices=["list"])
+    plugin = subcommands.add_parser(
+        "plugin", help="list, inspect, enable or disable plugins in DebCraft Home"
+    )
+    plugin_commands = plugin.add_subparsers(dest="plugin_command", required=True)
+    plugin_commands.add_parser("list", help="every plugin in <home>/plugins and whether it is on")
+    for name, text in (
+        ("show", "what a plugin adds (commands, agents, skills, hooks), before you enable it"),
+        ("enable", "turn a plugin on (after `show`)"),
+        ("disable", "turn a plugin off"),
+    ):
+        plugin_commands.add_parser(name, help=text).add_argument("name")
     skill = subcommands.add_parser("skill", help="add, list or remove skills (instruction packs)")
     skill_commands = skill.add_subparsers(dest="skill_command", required=True)
     skill_add = skill_commands.add_parser("add", help="install skills from a github.com link or a folder")
@@ -184,7 +200,16 @@ def main(argv: list[str] | None = None) -> int:
         except TimeBoxError as problem:
             Console().print(f"Cannot start: {problem}", markup=False)
             return 1
-        return asyncio.run(_run(args.run_workspace, text, args.auto_approve, args.output_format, timebox))
+        return asyncio.run(
+            _run(
+                args.run_workspace,
+                text,
+                args.auto_approve,
+                args.output_format,
+                timebox,
+                args.allow_installs,
+            )
+        )
     if args.command == "resume":
         return _interactive(args.resume_workspace, direct=False)
     if args.command == "diagnose":
@@ -198,6 +223,8 @@ def main(argv: list[str] | None = None) -> int:
         return _template_probe(args.template, args.out, args.hide_text, args.max_samples)
     if args.command == "skill":
         return _skill(args)
+    if args.command == "plugin":
+        return _plugin(args)
     if args.command == "ui":
         from forge.safety.server_security import BindError
         from forge.web.run import run_ui
@@ -223,6 +250,40 @@ def _printable(console: Console, text: str) -> str:
     """Third-party text can hold characters the Windows console cannot show; that must not stop the output."""
     encoding = console.encoding or "utf-8"
     return text.encode(encoding, errors="replace").decode(encoding)
+
+
+def _plugin(args: argparse.Namespace) -> int:
+    from forge.config import forge_home
+    from forge.parity.plugins import list_plugins, set_enabled
+
+    console = Console()
+    home = forge_home()
+    plugins = list_plugins(home)
+    if args.plugin_command == "list":
+        for plugin in plugins:
+            console.print(
+                _printable(
+                    console,
+                    f"{'on ' if plugin.enabled else 'off'} {plugin.name} {plugin.version} {plugin.description}",
+                ),
+                markup=False,
+            )
+        if not plugins:
+            console.print(f"No plugins in {home / 'plugins'}.", markup=False)
+        return 0
+    chosen = next((p for p in plugins if p.name == args.name), None)
+    if chosen is None:
+        console.print(f"No plugin named {args.name!r} in {home / 'plugins'}.", markup=False)
+        return 1
+    if args.plugin_command == "show":
+        console.print(_printable(console, chosen.adds()), markup=False)
+        return 0
+    set_enabled(home, args.name, args.plugin_command == "enable")
+    if args.plugin_command == "enable":
+        console.print(_printable(console, "Enabled. It adds:\n" + chosen.adds()), markup=False)
+    else:
+        console.print(f"Disabled {args.name}.", markup=False)
+    return 0
 
 
 def _skill(args: argparse.Namespace) -> int:
@@ -280,6 +341,7 @@ async def _run(
     auto_approve: bool,
     output_format: str,
     timebox: Any = None,
+    allow_installs: bool = False,
 ) -> int:
     import json
 
@@ -311,7 +373,7 @@ async def _run(
                 f"Time box: wrap-up from {timebox.wrap_starts:%H:%M}, run ends {timebox.until:%H:%M}, stopped at the latest {timebox.hard_stop:%H:%M}.",
                 markup=False,
             )
-    result = await run_headless(host, requirement, auto_approve, timebox)
+    result = await run_headless(host, requirement, auto_approve, timebox, allow_installs=allow_installs)
     if output_format == "json":
         print(
             json.dumps(
@@ -320,6 +382,7 @@ async def _run(
                     "status": result.activity,
                     "tasks": result.tasks,
                     "errors": result.errors,
+                    "installs": result.installs,
                     "output": str(workspace_path / "output"),
                 },
                 indent=1,
@@ -331,6 +394,8 @@ async def _run(
             console.print(f"  [{task['status']}] {task['id']} {task['title']} — {task['note']}", markup=False)
         for message in result.errors:
             console.print(f"Error: {message}", markup=False)
+        for command in result.installs:
+            console.print(f"Installed (--allow-installs): {command}", markup=False)
     return result.exit_code
 
 

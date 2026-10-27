@@ -11,6 +11,7 @@ from forge.tools.archive import archive_tools
 from forge.tools.assets import AddAsset, FindAsset
 from forge.tools.brand_file import SaveBrand
 from forge.tools.browser import browser_tools
+from forge.tools.code_intel import code_intel_tools
 from forge.tools.code_outline import code_outline_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.design_candidates import design_candidate_tools
@@ -64,6 +65,9 @@ LEAVE_OUT_FIRST = (
     "design_md_export",
     "split_pdf",
     "extract_pdf_images",
+    "list_symbols",
+    "find_references",
+    "find_definition",
 )
 
 
@@ -86,6 +90,7 @@ def default_tools() -> list[Tool]:
         PythonRun(),
         LibraryApi(),
         *code_outline_tools(),
+        *code_intel_tools(),
         SaveBrand(),
         ShadcnSetup(),
         AddUiComponent(),

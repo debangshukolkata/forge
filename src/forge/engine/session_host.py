@@ -42,11 +42,13 @@ from forge.parity.instructions import render as render_instructions
 from forge.parity.mcp_client import McpHub
 from forge.parity.mentions import expand as expand_mentions
 from forge.parity.path_rules import PathRules
+from forge.parity.plugins import plugin_skill_roots
 from forge.parity.skills import discover
 from forge.parity.skills import index_text as skills_index
 from forge.protocol.approvals import ApprovalBroker, QuestionBroker
 from forge.protocol.events import EventBus, EventType
 from forge.protocol.inputs import Answer, Approve, Interrupt, Reject, SendMessage, SlashCommand, UserInput
+from forge.safety.mcp_allow import McpAllowList
 from forge.safety.permissions import PermissionGate, PermissionMode
 from forge.safety.redact import default_redactor
 from forge.subagents.spawn_tool import SpawnSubagent
@@ -377,9 +379,34 @@ class SessionHost:
     async def start_mcp(self) -> None:
         """Optional MCP servers (config mcp.enabled); their tools join every phase (spec §13B)."""
         settings = self.router.config.mcp
-        if not settings.enabled or not settings.servers or self.agent is None or self.mcp_hub is not None:
+        if (
+            not settings.enabled
+            or not settings.servers
+            or self.agent is None
+            or self.workspace is None
+            or self.mcp_hub is not None
+        ):
             return
-        self.mcp_hub = McpHub(settings.servers, self.secrets)
+        mode_b = self.workspace.mode_b
+        try:  # D-499: nothing is allowed unless the user's settings.json lists it for this project
+            allow = McpAllowList.load(forge_home() / "settings.json", scope_of(self.workspace))
+            problem = ""
+        except ConfigError as error:
+            allow, problem = McpAllowList(), str(error)
+
+        async def notify(kind: str, text: str) -> None:
+            await self.bus.publish(EventType.NOTICE, {"kind": kind, "text": text})
+
+        self.mcp_hub = McpHub(
+            settings.servers,
+            self.secrets,
+            allow=allow,
+            mode_b=mode_b,
+            sensitive_terms=self.agent.context.sensitive_terms if mode_b else (),
+            notify=notify,
+        )
+        if problem:
+            self.mcp_hub.errors["*"] = problem
         tools = await self.mcp_hub.start()
         self.extra_tools += tools
         for tool in tools:
@@ -408,6 +435,7 @@ class SessionHost:
         if self.workspace is not None:  # local history baseline (spec §13B); runs beside the input loop
             self._history_baseline = asyncio.create_task(asyncio.to_thread(History(self.workspace).ensure))
         await self.start_mcp()
+        await self._run_hooks("session_start")
         if self.workspace is not None and self.orchestrator is None and not self.workspace.mode_b:
             await self._prepare_database_quietly()
         if self.orchestrator is not None and self.orchestrator.needs_resume:
@@ -429,8 +457,14 @@ class SessionHost:
                     EventType.NOTICE, {"kind": "unsupported", "text": f"'{user_input.kind}' is not used yet"}
                 )
 
+    async def _run_hooks(self, event: str) -> None:
+        """config hooks for a session event (D-501): output is shown as notices only; a hook cannot change the message or approve anything."""
+        if self.agent is not None and self.agent.hooks.has(event):
+            await self.agent.hooks.run(event)
+
     def _message_turn(self, text: str) -> Callable[[], Awaitable[None]]:
         async def turn() -> None:
+            await self._run_hooks("user_message")
             if self.orchestrator is not None:
                 await self.orchestrator.handle_message(text)  # it decides where the message goes
                 return
@@ -523,7 +557,7 @@ class SessionHost:
         self.context_manager.pinned.set(
             "instructions", render_instructions(self.instruction_files(), getattr(self, "style", None))
         )
-        roots = [forge_home() / "skills"]
+        roots = [forge_home() / "skills", *plugin_skill_roots(forge_home())]
         level = self.repo_level_dir()
         if level is not None:
             roots.append(level / "skills")
@@ -709,6 +743,8 @@ class SessionHost:
 
     async def close(self) -> None:
         self.closed = True
+        with contextlib.suppress(Exception):  # a hook never stops a session from closing
+            await self._run_hooks("session_end")
         await self.interrupt()
         if self._current_turn is not None:
             with contextlib.suppress(asyncio.CancelledError):

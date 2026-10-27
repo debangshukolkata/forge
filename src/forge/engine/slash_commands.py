@@ -11,6 +11,7 @@ from forge.errors import ConfigError
 from forge.llm.cost import format_money
 from forge.memory.scope import scope_of
 from forge.memory.store import CommandStore, MemoryStore
+from forge.parity.plugins import plugin_command_folders
 from forge.protocol.events import EventType
 from forge.workspace.output import build_output
 from forge.workspace.read_grants import ReadGrantError
@@ -139,11 +140,15 @@ class SlashCommandHandler:
         }
         handler = handlers.get(name)
         if handler is None:
-            expanded = CommandStore(forge_home()).expand(name.lstrip("/"), " ".join(args))
+            expanded = CommandStore(forge_home(), plugin_command_folders(forge_home())).expand(
+                name.lstrip("/"), " ".join(args)
+            )
             if expanded is not None:  # a custom command: its text goes to DebCraft as a message
                 await self.host.run_message(expanded)
                 return
-            custom = ", ".join(f"/{n}" for n in CommandStore(forge_home()).names())
+            custom = ", ".join(
+                f"/{n}" for n in CommandStore(forge_home(), plugin_command_folders(forge_home())).names()
+            )
             await self._say(
                 f"Unknown command: {name}. Type /help."
                 + (f" Your custom commands: {custom}" if custom else "")

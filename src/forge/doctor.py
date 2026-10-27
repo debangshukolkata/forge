@@ -25,6 +25,7 @@ from forge.errors import ForgeError
 from forge.llm.base import ChatRequest, Message
 from forge.llm.router import LLMRouter
 from forge.llm.tokens import count_text_tokens
+from forge.safety.mcp_allow import scopes_with_entries
 
 Status = Literal["ok", "warn", "fail"]
 TARGET_PYTHON = (3, 13)
@@ -69,6 +70,18 @@ def check_packages() -> CheckResult:
     if missing:
         return CheckResult("Packages", "fail", "missing: " + ", ".join(missing))
     return CheckResult("Packages", "ok", ", ".join(found))
+
+
+def check_code_intelligence() -> CheckResult:
+    """jedi is optional: without it find_definition, find_references and list_symbols say how to install it."""
+    try:
+        return CheckResult("Code intelligence (jedi)", "ok", f"jedi {importlib.metadata.version('jedi')}")
+    except importlib.metadata.PackageNotFoundError:
+        return CheckResult(
+            "Code intelligence (jedi)",
+            "warn",
+            "optional, not installed: pip install jedi (find_definition, find_references, list_symbols); code_outline and grep still work",
+        )
 
 
 def check_tokenizer() -> CheckResult:
@@ -228,6 +241,24 @@ def check_databases(config: ForgeConfig, secrets: Secrets) -> list[CheckResult]:
     return results
 
 
+def check_mcp(config: ForgeConfig, home: Path) -> CheckResult | None:
+    """MCP servers need two things (D-499): an entry in config.yaml and a per-project line in settings.json."""
+    if not config.mcp.enabled or not config.mcp.servers:
+        return None
+    try:
+        scopes = scopes_with_entries(home / "settings.json")
+    except ForgeError as error:
+        return CheckResult("MCP", "fail", f"{error} - no MCP server will start")
+    listed = {server for names in scopes.values() for server in names}
+    unlisted = sorted(set(config.mcp.servers) - listed)
+    detail = f"{len(config.mcp.servers)} configured; allowed in {len(scopes)} project(s) (settings.json, mcp_allow)"
+    if unlisted:
+        return CheckResult(
+            "MCP", "warn", f"{detail}; not allowed in any project, so never started: {', '.join(unlisted)}"
+        )
+    return CheckResult("MCP", "ok", detail)
+
+
 def _all_set(names: set[str], secrets: Secrets) -> bool:
     return all(secrets.get(name) for name in names)
 
@@ -242,6 +273,7 @@ async def run_doctor(offline: bool = False) -> list[CheckResult]:
     results = [
         check_python(),
         check_packages(),
+        check_code_intelligence(),
         check_tokenizer(),
         check_certificates(),
         check_forge_home(home),
@@ -258,6 +290,9 @@ async def run_doctor(offline: bool = False) -> list[CheckResult]:
     secrets_result = check_secrets(config, secrets, home)
     results.append(secrets_result)
     results.extend(check_databases(config, secrets))
+    mcp_result = check_mcp(config, home)
+    if mcp_result is not None:
+        results.append(mcp_result)
     if offline:
         results.append(CheckResult("Models", "warn", "skipped (--offline)"))
     elif secrets_result.status == "ok":

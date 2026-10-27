@@ -38,6 +38,7 @@ webtext = ["trafilatura>=1.12"]  # cleaner Markdown from web pages for web_fetch
 slides = ["python-pptx>=1.0"]  # build_presentation: real .pptx files (MIT), D-240
 docs = ["openpyxl>=3.1", "python-docx>=1.1", "pypdf>=4.0", "reportlab>=4.0"]  # Excel, Word and PDF files (MIT/MIT/BSD/BSD), D-275; charts read .xlsx with openpyxl
 audit = ["pip-audit>=2.7"]  # second vulnerability source for the Dependencies section (Apache-2.0), D-238
+intel = ["jedi>=0.19"]  # find_definition / find_references / list_symbols for Python (MIT, pure Python; pulls in parso, MIT)
 gemini = ["google-genai>=1.0"]  # Gemini on Vertex AI (Apache-2.0); auth is ADC, D-150
 dev = [
     "pytest>=8.0",
@@ -125,5 +126,5 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 # No type stubs are published for these.
-module = ["pypdfium2", "pypdfium2.*", "openpyxl", "openpyxl.*", "reportlab", "reportlab.*"]
+module = ["pypdfium2", "pypdfium2.*", "openpyxl", "openpyxl.*", "reportlab", "reportlab.*", "jedi", "jedi.*"]
 ignore_missing_imports = true
