@@ -147,11 +147,28 @@ class ThemeSearch(Tool):
             slug = slug_of(repo.split("/")[1])
             files, where = await self._read_repository(client, policy, repo), f"https://github.com/{repo}"
         else:
-            slug = slug_of(args.source)
-            files, where = (
-                await self._read_package(client, policy, slug),
-                f"https://wordpress.org/themes/{quote(slug)}/",
-            )
+            slug = slug_of(sources.theme_slug(args.source))
+            try:
+                files = await self._read_package(client, policy, slug)
+            except SourceError as error:
+                listed = await sources.wpcom_theme(client, slug, policy)
+                if listed is None:
+                    raise error
+                demo = str(listed.get("demo_uri") or "")
+                return ToolResult(
+                    ok=False,
+                    content=(
+                        f"'{listed.get('name', slug)}' is listed on WordPress.com ({listed.get('theme_type', 'theme')}) but has no public theme files, "
+                        "so it cannot be studied by its files. Say so to the user"
+                        + (
+                            f" and work from its demo with design_inspire: {demo}"
+                            if demo
+                            else " and ask for a demo address"
+                        )
+                        + ". We do not copy a paid theme; offer an original page with the same feel."
+                    ),
+                )
+            where = f"https://wordpress.org/themes/{quote(slug)}/"
         if not files:
             return ToolResult(
                 ok=False,

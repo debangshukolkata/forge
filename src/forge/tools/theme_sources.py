@@ -206,6 +206,27 @@ async def search_themes(
     return found, notes
 
 
+async def wpcom_theme(client: httpx.AsyncClient, slug: str, policy: WebPolicy) -> dict[str, Any] | None:
+    """The WordPress.com list entry of one theme, or None. Paid and marketplace themes are listed there but have no public files."""
+    data = await get_json(client, f"{WPCOM_API}?search={quote(slug)}&number=10", policy)
+    for row in data.get("themes", []) if isinstance(data, dict) else []:
+        if isinstance(row, dict) and slug in (str(row.get("id", "")), str(row.get("stylesheet", ""))):
+            return row
+    return None
+
+
+def theme_slug(text: str) -> str:
+    """The theme name from a WordPress.org or WordPress.com theme address, or the text itself when it is a plain name."""
+    cleaned = text.strip()
+    if "://" in cleaned or cleaned.startswith(("wordpress.org/", "wordpress.com/")):
+        parsed = urlparse(cleaned if "://" in cleaned else "https://" + cleaned)
+        parts = [p for p in parsed.path.split("/") if p]
+        for marker in ("theme", "themes"):
+            if marker in parts and parts.index(marker) + 1 < len(parts):
+                return parts[parts.index(marker) + 1]
+    return cleaned
+
+
 # --- reading a theme -----------------------------------------------------------------------------------------------------
 
 
@@ -214,6 +235,10 @@ def github_repo(text: str) -> str:
     cleaned = text.strip()
     parsed = urlparse(cleaned if "://" in cleaned else "https://github.com/" + cleaned.lstrip("/"))
     parts = [p for p in parsed.path.split("/") if p]
+    if "." in (
+        parts[0] if parts else "."
+    ):  # a web address without its scheme, not an owner (GitHub owners have no dots)
+        return ""
     if (parsed.hostname or "") in ("github.com", "www.github.com") and len(parts) >= 2:
         return f"{parts[0]}/{parts[1].removesuffix('.git')}"
     return ""

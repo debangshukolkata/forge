@@ -1,0 +1,5 @@
+Our finance team of four approves expense claims for about 180 staff. Claims arrive as emails with photos of receipts and a spreadsheet; managers say yes in a reply, and finance chases missing receipts for days. I want one place where staff file a claim with its lines and receipts, managers approve or send it back with a reason, and finance sees what is waiting, what is over policy and what has been paid.
+
+Build a web application that does this, so that finance can work through the approval queue quickly.
+
+It should run on a Windows laptop and be easy to start: Python 3.13 with FastAPI and Jinja2 templates, SQLite for storage, plain JavaScript and CSS in the pages, no Node and no build step; install what you need into this project's own environment. One command starts it and the README says how. Use fictional people, companies and numbers only. Say clearly in the README what works for real and what is only a stand-in. Look at the screens in a browser before you finish and fix what you see.

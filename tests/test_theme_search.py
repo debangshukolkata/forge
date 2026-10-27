@@ -90,6 +90,22 @@ def _handler(request: httpx.Request) -> httpx.Response:
                 ]
             },
         )
+    if host == "api.wordpress.org" and request.url.params.get("request[slug]") == "paidtheme":
+        return httpx.Response(404)
+    if host == "public-api.wordpress.com" and request.url.params.get("search") == "paidtheme":
+        return httpx.Response(
+            200,
+            json={
+                "themes": [
+                    {
+                        "id": "paidtheme",
+                        "name": "Paid Theme",
+                        "theme_type": "managed-external",
+                        "demo_uri": "https://demo.example/paidtheme/",
+                    }
+                ]
+            },
+        )
     if host == "api.wordpress.org" and request.url.params.get("action") == "theme_information":
         return httpx.Response(
             200, json={"download_link": "https://downloads.wordpress.org/theme/solar-test.1.0.zip"}
@@ -211,3 +227,22 @@ def test_parsers_survive_missing_fields() -> None:
         0
     ].tags == ["Blog"]
     assert sources.github_repo("https://example.com/a/b") == "" and sources.github_repo("a/b") == "a/b"
+
+
+@pytest.mark.parametrize(
+    "source", ["https://wordpress.org/themes/solar-test/", "wordpress.com/theme/solar-test"]
+)
+async def test_a_theme_address_is_studied_like_its_name(context: ToolContext, source: str) -> None:
+    result = await ThemeSearch().run(ThemeSearch.Args(action="study", source=source), context)
+    assert result.ok, result.content
+    assert (context.workspace.path_of(".") / ".forge" / "inspiration" / "solar-test.md").is_file()
+
+
+async def test_a_paid_wordpress_com_theme_points_to_its_demo_and_saves_nothing(context: ToolContext) -> None:
+    result = await ThemeSearch().run(
+        ThemeSearch.Args(action="study", source="https://wordpress.com/theme/paidtheme"), context
+    )
+    assert not result.ok
+    assert "no public theme files" in result.content and "https://demo.example/paidtheme/" in result.content
+    assert "design_inspire" in result.content and "do not copy a paid theme" in result.content
+    assert not (context.workspace.path_of(".") / ".forge" / "inspiration").exists()
