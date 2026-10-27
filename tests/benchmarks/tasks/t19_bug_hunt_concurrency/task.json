@@ -1,0 +1,1 @@
+{"id": "t19_bug_hunt_concurrency", "tier": "bug hunt: ordering, lease and thread-safety bugs", "entry": "jobqueue.py"}

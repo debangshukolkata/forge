@@ -1,0 +1,1 @@
+{"id": "t20_migration_script", "tier": "idempotent data migration with error handling", "entry": "migrate.py"}

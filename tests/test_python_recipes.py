@@ -19,7 +19,11 @@ BLOCK = re.compile(r"```python\n(# runnable\n.*?)```", re.S)
 def test_there_are_recipes_and_each_has_a_runnable_example() -> None:
     assert len(RECIPES) >= 12
     for recipe in RECIPES:
-        assert BLOCK.search(recipe.read_text(encoding="utf-8")), f"{recipe.name} has no runnable block"
+        text = recipe.read_text(encoding="utf-8")
+        # a recipe about a package that is not installed here says so in `tested:` and shows its example unexecuted
+        if re.search(r"^tested:.*not executed", text, re.M):
+            continue
+        assert BLOCK.search(text), f"{recipe.name} has no runnable block"
 
 
 @pytest.mark.parametrize("recipe", RECIPES, ids=lambda path: path.stem)

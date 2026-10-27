@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "meta": {"exported_by": "legacy-tool"},
+  "users": [
+    {"id": 1, "name": "Ana Paul", "email": "ANA@Example.org", "phone": "(555) 123-4567", "created": "03/15/2024", "tags": "admin, Beta,admin"},
+    {"id": 2, "name": "Cher", "email": null, "phone": "", "created": "12/01/2023", "tags": ""},
+    {"id": 3, "name": "   ", "created": "01/02/2024"}
+  ]
+}

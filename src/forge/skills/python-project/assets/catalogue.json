@@ -61,6 +61,136 @@
    "size": 1742
   },
   {
+   "id": "rcp-data-pandas-polars",
+   "type": "recipe",
+   "title": "Tables with pandas and Polars",
+   "summary": "Loading with explicit dtypes, vectorised work, groupby, joins, missing values, big files, input validation and pandas pitfalls.",
+   "moods": [
+    "robust",
+    "clean"
+   ],
+   "products": [
+    "data analysis",
+    "report",
+    "etl script"
+   ],
+   "tags": [
+    "pandas",
+    "polars",
+    "dataframe",
+    "groupby",
+    "join",
+    "lazy",
+    "validation"
+   ],
+   "density": "any",
+   "dependencies": [
+    "pandas",
+    "polars"
+   ],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "not executed (pandas and polars are not installed in the build venv); follows the documented pandas 2 and Polars 1 APIs",
+   "preview": null,
+   "path": "assets/recipe/rcp-data-pandas-polars.md",
+   "size": 4056
+  },
+  {
+   "id": "rcp-debug-ci-failure",
+   "type": "recipe",
+   "title": "Debugging a failing CI run",
+   "summary": "Reproduce locally with the same versions and commands, read the first failure, separate flaky from deterministic, compare environments, bisect.",
+   "moods": [
+    "methodical"
+   ],
+   "products": [
+    "ci",
+    "any python code"
+   ],
+   "tags": [
+    "ci",
+    "pytest",
+    "flaky tests",
+    "debugging",
+    "bisect",
+    "environment"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-debug-ci-failure.md",
+   "size": 3609
+  },
+  {
+   "id": "rcp-differential-review",
+   "type": "recipe",
+   "title": "Reviewing a diff (differential review)",
+   "summary": "Read the diff first, list behaviour changes, check callers and tests, then look hard at risky categories.",
+   "moods": [
+    "careful"
+   ],
+   "products": [
+    "code review",
+    "any python code"
+   ],
+   "tags": [
+    "code review",
+    "diff",
+    "pull request",
+    "callers",
+    "regression",
+    "risk"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-differential-review.md",
+   "size": 3835
+  },
+  {
+   "id": "rcp-django-app",
+   "type": "recipe",
+   "title": "A Django app that stays maintainable",
+   "summary": "Project layout, settings split by environment, models, views, urls, migrations, N+1 queries and tests with the test client.",
+   "moods": [
+    "robust",
+    "clean"
+   ],
+   "products": [
+    "web app",
+    "backend",
+    "admin tool"
+   ],
+   "tags": [
+    "django",
+    "orm",
+    "migrations",
+    "settings",
+    "select_related",
+    "testing"
+   ],
+   "density": "any",
+   "dependencies": [
+    "django"
+   ],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "not executed (django is not installed in the build venv); the code follows the documented Django 5 API",
+   "preview": null,
+   "path": "assets/recipe/rcp-django-app.md",
+   "size": 4587
+  },
+  {
    "id": "rcp-error-handling",
    "type": "recipe",
    "title": "Error handling that helps",
@@ -85,6 +215,74 @@
    "preview": null,
    "path": "assets/recipe/rcp-error-handling.md",
    "size": 1702
+  },
+  {
+   "id": "rcp-flask-extension",
+   "type": "recipe",
+   "title": "Flask app factory, blueprints and extensions",
+   "summary": "Application factory, blueprints, the init_app extension pattern, config classes, error handlers and test-client tests.",
+   "moods": [
+    "robust",
+    "clean"
+   ],
+   "products": [
+    "web app",
+    "api",
+    "small backend"
+   ],
+   "tags": [
+    "flask",
+    "blueprint",
+    "application-factory",
+    "extension",
+    "testing"
+   ],
+   "density": "any",
+   "dependencies": [
+    "flask"
+   ],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "not executed (flask is not installed in the build venv); follows the documented Flask 3 API",
+   "preview": null,
+   "path": "assets/recipe/rcp-flask-extension.md",
+   "size": 4223
+  },
+  {
+   "id": "rcp-hypothesis",
+   "type": "recipe",
+   "title": "Property tests with Hypothesis",
+   "summary": "Strategies, round trips and invariants, stateful testing, shrinking, settings profiles, and when not to use it.",
+   "moods": [
+    "robust",
+    "clean"
+   ],
+   "products": [
+    "testing",
+    "parsers",
+    "formatters",
+    "data structures"
+   ],
+   "tags": [
+    "hypothesis",
+    "property-based",
+    "testing",
+    "strategies",
+    "stateful"
+   ],
+   "density": "any",
+   "dependencies": [
+    "hypothesis",
+    "pytest"
+   ],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "not executed (hypothesis is not installed in the build venv); follows the documented Hypothesis 6 API",
+   "preview": null,
+   "path": "assets/recipe/rcp-hypothesis.md",
+   "size": 4611
   },
   {
    "id": "rcp-logging",
@@ -140,6 +338,38 @@
    "preview": null,
    "path": "assets/recipe/rcp-performance.md",
    "size": 2002
+  },
+  {
+   "id": "rcp-profiling",
+   "type": "recipe",
+   "title": "Profiling slow Python code",
+   "summary": "Measure first: timeit for small snippets, cProfile for where time goes, tracemalloc for memory; read the profile, then change one thing.",
+   "moods": [
+    "fast"
+   ],
+   "products": [
+    "any python code",
+    "web",
+    "cli",
+    "data"
+   ],
+   "tags": [
+    "profiling",
+    "cprofile",
+    "timeit",
+    "tracemalloc",
+    "performance",
+    "benchmark"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-profiling.md",
+   "size": 3386
   },
   {
    "id": "rcp-pytest",
@@ -315,6 +545,170 @@
    "preview": null,
    "path": "assets/recipe/rcp-sql.md",
    "size": 1976
+  },
+  {
+   "id": "rcp-sqlalchemy-alembic",
+   "type": "recipe",
+   "title": "SQLAlchemy 2.0 and Alembic migrations",
+   "summary": "Engine and session, typed declarative models, select() queries, loading strategies, transactions and migrations safe on live data.",
+   "moods": [
+    "robust",
+    "clean"
+   ],
+   "products": [
+    "database layer",
+    "backend",
+    "web app"
+   ],
+   "tags": [
+    "sqlalchemy",
+    "alembic",
+    "orm",
+    "migrations",
+    "transactions",
+    "n+1"
+   ],
+   "density": "any",
+   "dependencies": [
+    "sqlalchemy",
+    "alembic"
+   ],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "not executed (sqlalchemy and alembic are not installed in the build venv); follows the documented SQLAlchemy 2.0 API",
+   "preview": null,
+   "path": "assets/recipe/rcp-sqlalchemy-alembic.md",
+   "size": 4906
+  },
+  {
+   "id": "rcp-stack-trace-fixing",
+   "type": "recipe",
+   "title": "Fixing a production error from a stack trace",
+   "summary": "Read bottom-up, find the first frame in our code, hypothesise, reproduce with a failing test, fix the cause, add a regression test.",
+   "moods": [
+    "methodical"
+   ],
+   "products": [
+    "bug fix",
+    "any python code",
+    "web"
+   ],
+   "tags": [
+    "traceback",
+    "stack trace",
+    "debugging",
+    "regression test",
+    "production"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-stack-trace-fixing.md",
+   "size": 3510
+  },
+  {
+   "id": "rcp-static-analysis-defaults",
+   "type": "recipe",
+   "title": "Static checks and insecure defaults",
+   "summary": "Configure ruff, mypy and a bandit-style scan, and know the insecure defaults to remove: debug on, open CORS, weak hashes, shell=True, yaml.load, mktemp, verify=False.",
+   "moods": [
+    "secure",
+    "clean"
+   ],
+   "products": [
+    "any python code",
+    "web",
+    "ci"
+   ],
+   "tags": [
+    "static analysis",
+    "ruff",
+    "mypy",
+    "bandit",
+    "insecure defaults",
+    "lint",
+    "security"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-static-analysis-defaults.md",
+   "size": 3393
+  },
+  {
+   "id": "rcp-threat-model-review",
+   "type": "recipe",
+   "title": "Threat model and security code review",
+   "summary": "List assets, entry points and trust boundaries, ask STRIDE-style questions in plain words, check each entry point, rank by impact and likelihood.",
+   "moods": [
+    "secure",
+    "careful"
+   ],
+   "products": [
+    "security review",
+    "web",
+    "api",
+    "any python code"
+   ],
+   "tags": [
+    "threat model",
+    "stride",
+    "security review",
+    "trust boundary",
+    "entry points",
+    "risk"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "runnable examples are executed by tests/test_python_recipes.py",
+   "preview": null,
+   "path": "assets/recipe/rcp-threat-model-review.md",
+   "size": 3602
+  },
+  {
+   "id": "rcp-typer-click",
+   "type": "recipe",
+   "title": "Command-line tools with Click and Typer",
+   "summary": "Commands, options, arguments, groups, exit codes, CliRunner tests and shell completion for Click and Typer.",
+   "moods": [
+    "robust",
+    "clean"
+   ],
+   "products": [
+    "cli tool",
+    "developer tool"
+   ],
+   "tags": [
+    "click",
+    "typer",
+    "cli",
+    "exit-codes",
+    "completion",
+    "testing"
+   ],
+   "density": "any",
+   "dependencies": [
+    "click"
+   ],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (python recipes, 2026-10-27)",
+   "tested": "the Click example is executed by tests/test_python_recipes.py; the Typer snippet is not executed (typer is not installed in the build venv)",
+   "preview": null,
+   "path": "assets/recipe/rcp-typer-click.md",
+   "size": 4393
   },
   {
    "id": "rcp-typing",

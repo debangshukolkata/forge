@@ -8,6 +8,7 @@ import getpass
 import re
 from collections import defaultdict
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
 
 from forge.engine.log_summary import summarize
@@ -124,6 +125,58 @@ def _task_section(events: list[Event]) -> list[str]:
     return out
 
 
+def _seconds_between(first: str, last: str) -> float:
+    try:
+        return (datetime.fromisoformat(last) - datetime.fromisoformat(first)).total_seconds()
+    except ValueError:
+        return 0.0
+
+
+def _timeline_section(events: list[Event]) -> list[str]:
+    """Where the time went: wall clock, waiting for the model, running tools, a per-tool table and the slowest calls (TODO C17, needs the `duration_s` of S1)."""
+    if not events:
+        return []
+    wall = _seconds_between(events[0].ts, events[-1].ts)
+    model = sum(float(e.payload.get("latency_s") or 0) for e in events if e.type == EventType.LLM_CALL)
+    finished = [
+        e
+        for e in events
+        if e.type == EventType.TOOL_CALL_FINISHED and e.payload.get("duration_s") is not None
+    ]
+    by_tool: dict[str, list[float]] = defaultdict(list)
+    by_phase: dict[str, float] = defaultdict(float)
+    for event in finished:
+        seconds = float(event.payload["duration_s"])
+        by_tool[str(event.payload.get("name"))].append(seconds)
+        by_phase[str((event.where or {}).get("phase") or "-")] += seconds
+    tools = sum(sum(values) for values in by_tool.values())
+    out = [
+        "## Timeline",
+        "",
+        f"Wall clock {wall:.0f}s; model calls {model:.0f}s summed (subagents run in parallel, so this can exceed the wall clock); tools {tools:.0f}s summed.",
+        "",
+        "| Tool | Calls | Total s | Slowest s |",
+        "|---|---|---|---|",
+    ]
+    for name, values in sorted(by_tool.items(), key=lambda item: -sum(item[1]))[:12]:
+        out.append(f"| {name} | {len(values)} | {sum(values):.1f} | {max(values):.1f} |")
+    out += [
+        "",
+        "Tool seconds by phase: "
+        + (", ".join(f"{k} {v:.0f}s" for k, v in sorted(by_phase.items())) or "none"),
+        "",
+    ]
+    slowest = sorted(finished, key=lambda e: -float(e.payload["duration_s"]))[:8]
+    if slowest:
+        out.append("Slowest calls:")
+        out += [
+            f"- #{e.seq} {e.payload.get('name')} {float(e.payload['duration_s']):.1f}s: {' '.join(str(e.payload.get('summary', '')).split())[:70]}"
+            for e in slowest
+        ]
+        out.append("")
+    return out
+
+
 def build_run_report(
     events: list[Event], workspace: Path | None = None, redactor: Redactor = default_redactor
 ) -> str:
@@ -131,6 +184,7 @@ def build_run_report(
     parts = [
         summarize(events),
         *_agent_table(events),
+        *_timeline_section(events),
         *_critic_section(events),
         *_failed_and_screens(events),
         *_task_section(events),

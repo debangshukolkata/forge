@@ -1,0 +1,3 @@
+Review `webapp.py` for security problems and fix them. The web layer calls these functions with values taken straight from the request, so treat every argument as attacker-controlled. Keep every function's name, arguments and documented behaviour (the docstrings say what each one is for and how it may fail); only change what the security fixes require. `test_webapp.py` holds the existing tests; keep them passing.
+
+Fix the problems at the root, not by blocking a few example strings. Add tests that show each weakness is closed (they must be deterministic and must not touch the network or anything outside a temporary folder), and finish with a short list of what you found and what you changed. Use only the standard library.

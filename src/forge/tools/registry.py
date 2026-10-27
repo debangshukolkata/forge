@@ -11,6 +11,7 @@ from forge.tools.archive import archive_tools
 from forge.tools.assets import AddAsset, FindAsset
 from forge.tools.brand_file import SaveBrand
 from forge.tools.browser import browser_tools
+from forge.tools.code_outline import code_outline_tools
 from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
 from forge.tools.design_candidates import design_candidate_tools
 from forge.tools.design_inspire import design_inspire_tools
@@ -84,6 +85,7 @@ def default_tools() -> list[Tool]:
         VisualCheck(),
         PythonRun(),
         LibraryApi(),
+        *code_outline_tools(),
         SaveBrand(),
         ShadcnSetup(),
         AddUiComponent(),

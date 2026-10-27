@@ -1,7 +1,7 @@
 # Coding benchmark (TODO C1)
 
 Measures how good the code DebCraft writes is, on the real model, so every change in TODO section 5b can be judged by numbers.
-Status 2026-10-13: ten tasks and the runner are built and validated offline; the first full baseline is below.
+Status 2026-10-13: ten tasks and the runner are built and validated offline; the first full baseline is below. Written 2026-10-27, **not yet validated or run**: tasks t15 to t22 and the judge `scripts/benchmark/judge_code.py` (testing is scheduled after development; their references were only checked against their hidden tests in a scratch copy).
 
 ## Tasks (`tests/benchmarks/tasks/<id>/`)
 | Id | Tier | What it asks for |
@@ -20,15 +20,29 @@ Status 2026-10-13: ten tasks and the runner are built and validated offline; the
 | t12_expr_calc | parser with error positions | expression evaluator without eval: precedence, right-associative power, unary minus rules, exact error positions |
 | t13_todo_undo | multi-file feature, persisted format | undo/redo in an existing store + CLI, history in the JSON file, old files still load, history limit |
 | t14_cron_next | calendar logic, many edge cases | next fire time of a cron expression: ranges, steps, names, the day-of-month/day-of-week rule, leap years, never-firing expressions |
+| t15_rest_inventory_api | REST API on the standard library | WSGI app (`create_app()`): CRUD, validation with per-field details, 404/405/409/415, JSON errors, pagination and filter; tests call the app directly |
+| t16_mode_a_repo_feature | feature across several modules of an existing repo | reservations/waiting list in a 10-file library-desk repo (loans, reports, CLI); existing tests stay green; `"mode": "A"` in task.json |
+| t17_mode_b_no_host_code | new tool from a prose spec, no seed | log anonymiser with exact pseudonym hashing, secret/user/email/IPv4 rules, idempotence, report counts; `"mode": "B"` |
+| t18_large_multifile_feature | large multi-file feature, persisted format | recurring subscriptions with proration (half-up rounding) across models, storage (JSON key added, `next_id` unchanged), new `billing.py`, report and CLI |
+| t19_bug_hunt_concurrency | bug hunt: ordering, lease, thread safety | job queue with FIFO tie-break, stale-lease completion, reaping finished jobs, one attempt too many, peek/pop race; deterministic (injected clock) plus one threaded stress test |
+| t20_migration_script | idempotent data migration | JSON schema v1 to v2: record rules, skip and log bad records, atomic write, backup never overwritten, second run changes nothing |
+| t21_text_diff_patch | format parser, exact failure semantics | unified-diff parser and `apply_patch`: exact positions, no fuzz, conflict details, `\ No newline`, CRLF, reverse |
+| t22_security_fix | security review and fix | brief-free "review and fix": SQL injection, path traversal, pickle sessions, `eval`, XSS, open redirect; hidden tests probe each |
 
 Each task folder holds `task.md` (the prompt DebCraft gets), `task.json` (id, tier, entry module), `seed/` (files the "user" already
 has, put in the workspace's `project/` folder), `hidden/` (tests DebCraft never sees) and `reference/` (a solution that proves the task
 is solvable). `tests/test_benchmark_fixtures.py` checks, in the normal suite and without any model, that the reference passes every
 hidden test and the seed's own tests, and that the hidden tests fail without the reference.
 
-## Not covered yet (add before the benchmark is "complete")
-REST API service (needs a framework install), a Mode A repository task, a Mode B task with no host code at all, a larger multi-file
-feature, and the judge rubric (below). Aim: 20 to 30 tasks.
+## Not covered yet
+t15 to t22 now cover a framework-free REST service, a Mode A repository, a Mode B task with no host code, a large multi-file feature, a
+concurrency bug hunt, a migration, a format parser and a security review. Still missing: a service that needs an installed framework,
+UI or database work, and ambiguous requirements where the right move is to ask. Aim: 20 to 30 tasks (22 now).
+
+Mode note: `run_code_benchmark.py` always creates a standalone (Mode B style) workspace and copies `seed/` into its `project/`
+folder, so a task with a seed is "the user's pasted code" and a task without one has no host code. The `"mode"` key in
+task.json (t16 `A`, t17 `B`) records the intent and is not read by the runner; a true Mode A run (repo copy opened by the agent)
+is not implemented.
 
 ## Running it
 ```
@@ -40,9 +54,22 @@ Work is under `C:\Work\ForgeRuns\codebench\<run-name>` (one workspace per task, 
 records wall time, model calls, tool seconds, seconds waited for approvals, tokens and cost. Paste the table below with the date and
 what changed.
 
-## Judge rubric (manual for now)
-Read the delivered code and score 1 to 5: correctness, edge cases, error handling, tests that prove something, security, simplicity,
-readability. An automatic judge (a different model) comes after the first manual scores show whether it agrees with you.
+## Judge rubric
+Seven criteria, each scored 0 to 5 with a one-line reason, plus an overall score, a two-sentence summary and the worst problem:
+correctness, edge cases, error handling, tests that prove something, security, simplicity, readability.
+
+`scripts/benchmark/judge_code.py` does it automatically with the configured `judge` model role (Forge's own LLM client, as the
+document and deck benchmarks do). It reads a run folder written by `run_code_benchmark.py`: for each task it builds a prompt from
+`task.md`, the files delivered under `project/` and `output/` (changed or new files in full up to 14,000 characters each and 60,000
+in total, unchanged seed files by name only) and the rubric, asks for one JSON object, validates the scores, and writes `judge.json`
+and `judge.md` (a score table plus reasons) next to `results.json`. The judge cannot run the code and does not see the hidden tests
+except for the pass count as context, so it is a second opinion, not a replacement for the hidden tests.
+```
+.venv\Scripts\python scripts\benchmark\judge_code.py baseline-2026-11-01
+.venv\Scripts\python scripts\benchmark\judge_code.py try-x --tasks t15_rest_inventory_api,t22_security_fix --parallel 3 --model gpt54
+```
+Use a different model for judging than the one that wrote the code when you can (`--model`), and read a few judged tasks yourself
+before trusting the scores: the first manual scores should show whether the judge agrees with you.
 
 ## Results
 Smoke run 2026-10-13 (runner check, one task, current main at commit 1385806 plus runner fixes):
