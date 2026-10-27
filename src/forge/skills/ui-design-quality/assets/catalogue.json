@@ -579,7 +579,7 @@
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
    "preview": null,
    "path": "assets/design-system/ds-office-polish.md",
-   "size": 4406
+   "size": 4706
   },
   {
    "id": "ds-playful-friendly",

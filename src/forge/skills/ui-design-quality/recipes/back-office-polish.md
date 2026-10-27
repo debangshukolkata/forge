@@ -44,7 +44,8 @@ from decoration. It comes from **one accent, one recipe per component and no exc
   and the user.
 
 ## Accessibility notes
-- White text on bright orange (`#FF7A00`) is only 2.6 to 1. Filled controls use the deeper orange (`primary`, `#A34C00`, white text 5.9 to 1); the bright orange
-  (`brand`) is for the menu bar, the underline, progress, the focus ring and icon tints, never for text on white.
+- White text on bright orange (`#FF7A00`) is only 2.6 to 1. The design system starts from the bright orange anyway, because the owner chose it and the file records
+  `contrast-accepted`; keep filled-control labels large and bold. The deeper orange (`#A34C00`, white text 5.9 to 1) is one choice away in `design_palette`. The bright
+  orange is never used for small text on white.
 - Muted text must stay 4.5 to 1 on every surface it sits on, including the tinted ones (use `#5F6672`, not `#6B7280`, on a grey tint).
 - Dark mode is a second set of tokens, not a list of overrides for white and slate.

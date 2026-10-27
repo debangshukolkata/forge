@@ -104,7 +104,7 @@ def evaluate(
     result["seconds"] = (
         args.seconds if args.seconds is not None else H.seconds_between(nav["first_event"], nav["last_event"])
     )
-    result["cost_usd"] = args.cost
+    result["cost_usd"] = args.cost if args.cost is not None else H.run_cost(events)
     result["where_lost"] = args.where_lost or ""
     reasons: list[str] = []
     if result["check"]["status"] == "fail":

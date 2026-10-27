@@ -153,9 +153,9 @@ def is_test_file(relative: str) -> bool:
 def count_test_functions(path: Path) -> int:
     if not path.is_file():
         return 0
-    return len(
-        re.findall(r"^\s*(?:async\s+)?def test_", path.read_text(encoding="utf-8", errors="replace"), re.M)
-    )
+    text = path.read_text(encoding="utf-8", errors="replace")
+    # a new case in an existing parametrized test is a new test too, so `pytest.param(` counts as one
+    return len(re.findall(r"^\s*(?:async\s+)?def test_", text, re.M)) + text.count("pytest.param(")
 
 
 def tests_added(pristine: Path, delivered: Path, changes: dict[str, list[str]]) -> int:
@@ -402,6 +402,17 @@ def navigation(events: list[dict[str, Any]], expected: tuple[str, ...]) -> dict[
         "first_event": stamps[0] if stamps else None,
         "last_event": stamps[-1] if stamps else None,
     }
+
+
+def run_cost(events: list[dict[str, Any]]) -> float | None:
+    """The run's cost in USD: the largest `total_usd` of the cost_updated events (the counter only grows)."""
+    costs = [
+        float(event["payload"]["total_usd"])
+        for event in events
+        if event.get("type") == "cost_updated"
+        and isinstance(event.get("payload", {}).get("total_usd"), int | float)
+    ]
+    return round(max(costs), 4) if costs else None
 
 
 def seconds_between(first: str | None, last: str | None) -> int | None:

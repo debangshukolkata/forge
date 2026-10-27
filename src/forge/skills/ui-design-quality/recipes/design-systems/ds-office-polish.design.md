@@ -6,8 +6,9 @@ dials:
   density: 5
   variance: 2
   motion: 4
+contrast-accepted: ["#FF7A00", "#D96800"]
 colors:
-  primary: "#A34C00"
+  primary: "#FF7A00"
   neutral: "#F7F8FA"
   surface: "#FFFFFF"
   ink: "#1C1C1E"
@@ -59,7 +60,7 @@ components:
     rounded: "{rounded.pill}"
     padding: 12px
   button-primary-hover:
-    backgroundColor: "#8B4100"
+    backgroundColor: "#D96800"
     textColor: "#FFFFFF"
   card:
     backgroundColor: "{colors.surface}"
@@ -80,7 +81,7 @@ An office tool people use all day: quiet, regular and finished. One orange accen
 Dials: VISUAL_DENSITY 5, DESIGN_VARIANCE 2, MOTION_INTENSITY 4 (1-10). Use for: back office, admin, crm, case management, government, operations, erp.
 
 ## Colors
-Orange is the only accent. The filled controls use the deeper orange (primary) so white text passes contrast; the bright orange (brand) is for the active-item bar, tab underline, progress, focus ring and icon chips, never for text on white.
+Orange is the only accent. The filled controls use the bright orange (primary) with white text, a choice the owner accepted below the contrast guideline; the same orange (brand) marks the active-item bar, tab underline, progress, focus ring and icon chips. Orange is never used for small text on white; for a contrast-safe look pick the deep orange with design_palette.
 
 ## Typography
 Inter for display and headings, Inter for text. Numbers in tables use tabular figures.
@@ -105,5 +106,5 @@ Corners 8px and 12px, buttons are pills.
 Grids collapse to one column at 768px, navigation to a menu, tables to cards; touch targets are at least 44px.
 
 ## Known Gaps
-- Inter has no Bengali or other Indic letters: for such content name a fallback face (Tiro Bangla for Bengali) with find_font. White text on the bright orange #FF7A00 is only 2.6 to 1, so filled controls use the deeper orange.
+- Inter has no Bengali or other Indic letters: for such content name a fallback face (Tiro Bangla for Bengali) with find_font. White text on the bright orange #FF7A00 is only 2.6 to 1: the owner accepted this for filled controls, so keep those labels large and bold, and offer the deep orange (#A34C00, 5.9 to 1) when the audience needs the guideline met.
 - Derived from the design philosophy of a user-owned back-office app (D-489); adapt every value to the product before building.

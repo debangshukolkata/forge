@@ -13,6 +13,7 @@ from pathlib import Path
 
 from forge.brand.kit import mix, readable_on
 from forge.designsystem.lint import describe_findings, lint_text
+from forge.designsystem.palettes import apply_palette, palette_by_id
 from forge.designsystem.spec import parse_design_md
 from forge.designsystem.specimen import specimen_html
 from forge.tools.design_candidates import draw
@@ -496,7 +497,7 @@ SYSTEMS = [
         "#FFFFFF",
         "#1C1C1E",
         "#5F6672",
-        "#A34C00",
+        "#FF7A00",
         "#E5E7EB",
         "Inter",
         "Inter",
@@ -505,7 +506,7 @@ SYSTEMS = [
         True,
         (5, 2, 4),
         "An office tool people use all day: quiet, regular and finished. One orange accent marks the main action, the active menu item and the counts; everything else is neutral. Every coloured label is built the same way, every card the same way, so the whole app reads as one system.",
-        "Orange is the only accent. The filled controls use the deeper orange (primary) so white text passes contrast; the bright orange (brand) is for the active-item bar, tab underline, progress, focus ring and icon chips, never for text on white.",
+        "Orange is the only accent. The filled controls use the bright orange (primary) with white text, a choice the owner accepted below the contrast guideline; the same orange (brand) marks the active-item bar, tab underline, progress, focus ring and icon chips. Orange is never used for small text on white; for a contrast-safe look pick the deep orange with design_palette.",
         [
             "One accent: orange marks the main action, the active menu item and the counts; everything else stays neutral",
             "Every coloured label is built the same way: a pale tint of the colour, darker text of the same hue and a thin inner ring",
@@ -526,7 +527,7 @@ SYSTEMS = [
         display_weight=700,
         display_size=40,
         tracking="-0.02em",
-        gaps="Inter has no Bengali or other Indic letters: for such content name a fallback face (Tiro Bangla for Bengali) with find_font. White text on the bright orange #FF7A00 is only 2.6 to 1, so filled controls use the deeper orange.",
+        gaps="Inter has no Bengali or other Indic letters: for such content name a fallback face (Tiro Bangla for Bengali) with find_font. White text on the bright orange #FF7A00 is only 2.6 to 1: the owner accepted this for filled controls, so keep those labels large and bold, and offer the deep orange (#A34C00, 5.9 to 1) when the audience needs the guideline met.",
     ),
     System(
         "ds-office-polish-dark",
@@ -726,6 +727,8 @@ async def main() -> int:
     status = 0
     for system in SYSTEMS:
         text = design_md(system)
+        if system.id == "ds-office-polish":
+            text = apply_palette(text, palette_by_id("orange-bright"))
         findings = [f for f in lint_text(text) if f.severity in ("error", "warning")]
         if findings:
             print(f"{system.id}: {describe_findings(findings)}")
