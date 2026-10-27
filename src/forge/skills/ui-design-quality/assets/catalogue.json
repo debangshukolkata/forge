@@ -10218,6 +10218,48 @@
    "size": 24479
   },
   {
+   "id": "lay-boutique-hotel",
+   "type": "section",
+   "title": "Composition: Boutique hotel",
+   "summary": "A hospitality page: full-bleed dusk hero with a drawn building and sea, a booking bar, alternating room rows, text amenities, one large guest quote and address cards.",
+   "moods": [
+    "refined",
+    "calm",
+    "elegant"
+   ],
+   "products": [
+    "hotels",
+    "guesthouses",
+    "resorts",
+    "retreats",
+    "hospitality"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "serif",
+    "full-bleed"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/boutique-hotel.html",
+     "to": "compositions/boutique-hotel.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (BO9, 2026-10-27)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
+   "preview": null,
+   "path": "assets/section/lay-boutique-hotel.md",
+   "size": 14462
+  },
+  {
    "id": "lay-editorial-split",
    "type": "section",
    "title": "Composition: Editorial split",
@@ -10257,6 +10299,50 @@
    "preview": null,
    "path": "assets/section/lay-editorial-split.md",
    "size": 4592
+  },
+  {
+   "id": "lay-event-lineup",
+   "type": "section",
+   "title": "Composition: Event lineup",
+   "summary": "A one-day festival page: poster hero with a drawn stage and crowd, time-column schedule with tracks, artist cards, three ticket tiers and a venue card.",
+   "moods": [
+    "bold",
+    "dark",
+    "energetic"
+   ],
+   "products": [
+    "festivals",
+    "conferences",
+    "concerts",
+    "club nights",
+    "meetups"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "dark",
+    "events",
+    "schedule",
+    "pricing"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/event-lineup.html",
+     "to": "compositions/event-lineup.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (BO9, 2026-10-27)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
+   "preview": null,
+   "path": "assets/section/lay-event-lineup.md",
+   "size": 16782
   },
   {
    "id": "lay-fullbleed-blocks",
@@ -10299,6 +10385,54 @@
    "size": 4063
   },
   {
+   "id": "lay-local-trades",
+   "type": "section",
+   "title": "Composition: Local trades",
+   "summary": "A practical local-services page: split hero with phone number and drawn van, three service cards, a dark address, hours and service-area band, and a call bar.",
+   "moods": [
+    "practical",
+    "bold",
+    "trustworthy",
+    "energetic"
+   ],
+   "products": [
+    "plumbers",
+    "electricians",
+    "locksmiths",
+    "roofers",
+    "cleaners",
+    "garages",
+    "local services"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "split hero",
+    "service cards",
+    "address cards",
+    "call bar",
+    "dark band"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/local-trades.html",
+     "to": "compositions/local-trades.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (BO9, 2026-10-27)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
+   "preview": null,
+   "path": "assets/section/lay-local-trades.md",
+   "size": 10371
+  },
+  {
    "id": "lay-menu-list",
    "type": "section",
    "title": "Composition: Menu with leaders",
@@ -10337,6 +10471,50 @@
    "preview": null,
    "path": "assets/section/lay-menu-list.md",
    "size": 5080
+  },
+  {
+   "id": "lay-nonprofit-appeal",
+   "type": "section",
+   "title": "Composition: Non-profit appeal",
+   "summary": "A charity page: full-bleed drawn hero with a donate amount selector, impact numbers, story with pull quote, three programme cards and a newsletter footer.",
+   "moods": [
+    "warm",
+    "earthy",
+    "human",
+    "hopeful"
+   ],
+   "products": [
+    "charities",
+    "non-profits",
+    "community groups",
+    "foundations",
+    "fundraisers"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "light",
+    "donate",
+    "footer"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/nonprofit-appeal.html",
+     "to": "compositions/nonprofit-appeal.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (BO9, 2026-10-27)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
+   "preview": null,
+   "path": "assets/section/lay-nonprofit-appeal.md",
+   "size": 14464
   },
   {
    "id": "lay-notebook-grid",
@@ -10426,6 +10604,50 @@
    "size": 16949
   },
   {
+   "id": "lay-portfolio-casestudies",
+   "type": "section",
+   "title": "Composition: Portfolio with case studies",
+   "summary": "A monochrome editorial portfolio: masonry grid of drawn work tiles, case-study cards with a one-line result, an about strip and a contact line.",
+   "moods": [
+    "editorial",
+    "minimal",
+    "refined"
+   ],
+   "products": [
+    "designer portfolios",
+    "photographer portfolios",
+    "studios",
+    "freelancers",
+    "agencies"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "light",
+    "portfolio",
+    "masonry",
+    "case studies"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/portfolio-casestudies.html",
+     "to": "compositions/portfolio-casestudies.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (BO9, 2026-10-27)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
+   "preview": null,
+   "path": "assets/section/lay-portfolio-casestudies.md",
+   "size": 11243
+  },
+  {
    "id": "lay-poster-hero",
    "type": "section",
    "title": "Composition: Poster hero",
@@ -10464,6 +10686,54 @@
    "preview": null,
    "path": "assets/section/lay-poster-hero.md",
    "size": 5201
+  },
+  {
+   "id": "lay-react-boutique-hotel",
+   "type": "section",
+   "title": "React composition: Hotel Marea",
+   "summary": "A hospitality page: full-bleed dusk hero with a drawn building and sea, a booking bar, alternating room rows, text amenities, one large guest quote and address cards. (React, TSX with plain CSS.)",
+   "moods": [
+    "refined",
+    "calm",
+    "elegant"
+   ],
+   "products": [
+    "hotels",
+    "guesthouses",
+    "resorts",
+    "retreats",
+    "hospitality"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/boutique-hotel/Composition.tsx",
+     "to": "src/compositions/boutique-hotel/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/boutique-hotel/composition.css",
+     "to": "src/compositions/boutique-hotel/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/boutique-hotel/tokens.css",
+     "to": "src/compositions/boutique-hotel/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-boutique-hotel.md",
+   "size": 14955
   },
   {
    "id": "lay-react-editorial-split",
@@ -10514,6 +10784,54 @@
    "size": 4706
   },
   {
+   "id": "lay-react-event-lineup",
+   "type": "section",
+   "title": "React composition: Event lineup",
+   "summary": "A one-day festival page: poster hero with a drawn stage and crowd, time-column schedule with tracks, artist cards, three ticket tiers and a venue card. (React, TSX with plain CSS.)",
+   "moods": [
+    "bold",
+    "dark",
+    "energetic"
+   ],
+   "products": [
+    "festivals",
+    "conferences",
+    "concerts",
+    "club nights",
+    "meetups"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/event-lineup/Composition.tsx",
+     "to": "src/compositions/event-lineup/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/event-lineup/composition.css",
+     "to": "src/compositions/event-lineup/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/event-lineup/tokens.css",
+     "to": "src/compositions/event-lineup/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-event-lineup.md",
+   "size": 17747
+  },
+  {
    "id": "lay-react-fullbleed-blocks",
    "type": "section",
    "title": "React composition: Full-bleed colour blocks",
@@ -10561,6 +10879,57 @@
    "size": 4054
   },
   {
+   "id": "lay-react-local-trades",
+   "type": "section",
+   "title": "React composition: Local trades",
+   "summary": "A practical local-services page: split hero with phone number and drawn van, three service cards, a dark address, hours and service-area band, and a call bar. (React, TSX with plain CSS.)",
+   "moods": [
+    "practical",
+    "bold",
+    "trustworthy",
+    "energetic"
+   ],
+   "products": [
+    "plumbers",
+    "electricians",
+    "locksmiths",
+    "roofers",
+    "cleaners",
+    "garages",
+    "local services"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/local-trades/Composition.tsx",
+     "to": "src/compositions/local-trades/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/local-trades/composition.css",
+     "to": "src/compositions/local-trades/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/local-trades/tokens.css",
+     "to": "src/compositions/local-trades/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-local-trades.md",
+   "size": 10695
+  },
+  {
    "id": "lay-react-menu-list",
    "type": "section",
    "title": "React composition: Menu with leaders",
@@ -10606,6 +10975,55 @@
    "preview": null,
    "path": "assets/section/lay-react-menu-list.md",
    "size": 5247
+  },
+  {
+   "id": "lay-react-nonprofit-appeal",
+   "type": "section",
+   "title": "React composition: Fieldfare Food Trust",
+   "summary": "A charity page: full-bleed drawn hero with a donate amount selector, impact numbers, story with pull quote, three programme cards and a newsletter footer. (React, TSX with plain CSS.)",
+   "moods": [
+    "warm",
+    "earthy",
+    "human",
+    "hopeful"
+   ],
+   "products": [
+    "charities",
+    "non-profits",
+    "community groups",
+    "foundations",
+    "fundraisers"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/nonprofit-appeal/Composition.tsx",
+     "to": "src/compositions/nonprofit-appeal/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/nonprofit-appeal/composition.css",
+     "to": "src/compositions/nonprofit-appeal/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/nonprofit-appeal/tokens.css",
+     "to": "src/compositions/nonprofit-appeal/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-nonprofit-appeal.md",
+   "size": 15099
   },
   {
    "id": "lay-react-notebook-grid",
@@ -10707,6 +11125,54 @@
    "size": 16700
   },
   {
+   "id": "lay-react-portfolio-casestudies",
+   "type": "section",
+   "title": "React composition: Portfolio case studies",
+   "summary": "A monochrome editorial portfolio: masonry grid of drawn work tiles, case-study cards with a one-line result, an about strip and a contact line. (React, TSX with plain CSS.)",
+   "moods": [
+    "editorial",
+    "minimal",
+    "refined"
+   ],
+   "products": [
+    "designer portfolios",
+    "photographer portfolios",
+    "studios",
+    "freelancers",
+    "agencies"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/portfolio-casestudies/Composition.tsx",
+     "to": "src/compositions/portfolio-casestudies/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/portfolio-casestudies/composition.css",
+     "to": "src/compositions/portfolio-casestudies/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/portfolio-casestudies/tokens.css",
+     "to": "src/compositions/portfolio-casestudies/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-portfolio-casestudies.md",
+   "size": 11676
+  },
+  {
    "id": "lay-react-poster-hero",
    "type": "section",
    "title": "React composition: Poster hero",
@@ -10752,6 +11218,102 @@
    "preview": null,
    "path": "assets/section/lay-react-poster-hero.md",
    "size": 5282
+  },
+  {
+   "id": "lay-react-saas-product-tour",
+   "type": "section",
+   "title": "React composition: Plumbline product tour",
+   "summary": "A B2B software page: centred hero with a drawn app window, alternating feature rows, a plan comparison table, two-column FAQ and a logo wall. (React, TSX with plain CSS.)",
+   "moods": [
+    "clean",
+    "modern",
+    "trustworthy",
+    "cool"
+   ],
+   "products": [
+    "saas",
+    "b2b software",
+    "developer tools",
+    "internal platforms"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/saas-product-tour/Composition.tsx",
+     "to": "src/compositions/saas-product-tour/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/saas-product-tour/composition.css",
+     "to": "src/compositions/saas-product-tour/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/saas-product-tour/tokens.css",
+     "to": "src/compositions/saas-product-tour/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-saas-product-tour.md",
+   "size": 20595
+  },
+  {
+   "id": "lay-react-school-courses",
+   "type": "section",
+   "title": "React composition: Lantern Academy courses",
+   "summary": "A friendly academy page: split hero with a drawn open book, course list with date, length and price, numbered enrolment steps, teachers and three testimonial cards. (React, TSX with plain CSS.)",
+   "moods": [
+    "friendly",
+    "bright",
+    "playful"
+   ],
+   "products": [
+    "schools",
+    "online academies",
+    "tutoring",
+    "workshops",
+    "training providers"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/school-courses/Composition.tsx",
+     "to": "src/compositions/school-courses/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/school-courses/composition.css",
+     "to": "src/compositions/school-courses/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/school-courses/tokens.css",
+     "to": "src/compositions/school-courses/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-school-courses.md",
+   "size": 15188
   },
   {
    "id": "lay-react-ticket-stub",
@@ -10848,6 +11410,142 @@
    "size": 4921
   },
   {
+   "id": "lay-react-wellness-retreat",
+   "type": "section",
+   "title": "React composition: Wellness retreat",
+   "summary": "A calm brand page: centred hero with one button over a drawn sun and hills, numbered day steps and a team grid with drawn avatars. (React, TSX with plain CSS.)",
+   "moods": [
+    "calm",
+    "warm",
+    "natural",
+    "refined"
+   ],
+   "products": [
+    "yoga studios",
+    "wellness",
+    "spas",
+    "retreats",
+    "meditation",
+    "coaching"
+   ],
+   "tags": [
+    "react",
+    "tsx",
+    "plain css",
+    "composition",
+    "layout",
+    "drawn svg art"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions-react/wellness-retreat/Composition.tsx",
+     "to": "src/compositions/wellness-retreat/Composition.tsx"
+    },
+    {
+     "from": "recipes/compositions-react/wellness-retreat/composition.css",
+     "to": "src/compositions/wellness-retreat/composition.css"
+    },
+    {
+     "from": "recipes/compositions-react/wellness-retreat/tokens.css",
+     "to": "src/compositions/wellness-retreat/tokens.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
+   "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
+   "preview": null,
+   "path": "assets/section/lay-react-wellness-retreat.md",
+   "size": 10009
+  },
+  {
+   "id": "lay-saas-product-tour",
+   "type": "section",
+   "title": "Composition: SaaS product tour",
+   "summary": "A B2B software page: centred hero with a drawn app window, alternating feature rows, a plan comparison table, two-column FAQ and a logo wall.",
+   "moods": [
+    "clean",
+    "modern",
+    "trustworthy",
+    "cool"
+   ],
+   "products": [
+    "saas",
+    "b2b software",
+    "developer tools",
+    "internal platforms"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "light",
+    "pricing table",
+    "faq",
+    "logo wall"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/saas-product-tour.html",
+     "to": "compositions/saas-product-tour.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (BO9, 2026-10-27)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
+   "preview": null,
+   "path": "assets/section/lay-saas-product-tour.md",
+   "size": 19419
+  },
+  {
+   "id": "lay-school-courses",
+   "type": "section",
+   "title": "Composition: School and course catalogue",
+   "summary": "A friendly academy page: split hero with a drawn open book, course list with date, length and price, numbered enrolment steps, teachers and three testimonial cards.",
+   "moods": [
+    "friendly",
+    "bright",
+    "playful"
+   ],
+   "products": [
+    "schools",
+    "online academies",
+    "tutoring",
+    "workshops",
+    "training providers"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "education",
+    "rounded"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/school-courses.html",
+     "to": "compositions/school-courses.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (BO9, 2026-10-27)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
+   "preview": null,
+   "path": "assets/section/lay-school-courses.md",
+   "size": 14460
+  },
+  {
    "id": "lay-ticket-stub",
    "type": "section",
    "title": "Composition: Ticket stubs",
@@ -10926,6 +11624,53 @@
    "preview": null,
    "path": "assets/section/lay-vertical-type.md",
    "size": 4884
+  },
+  {
+   "id": "lay-wellness-retreat",
+   "type": "section",
+   "title": "Composition: Wellness retreat",
+   "summary": "A calm brand page: centred hero with one button over a drawn sun and hills, numbered day steps and a team grid with drawn avatars.",
+   "moods": [
+    "calm",
+    "warm",
+    "natural",
+    "refined"
+   ],
+   "products": [
+    "yoga studios",
+    "wellness",
+    "spas",
+    "retreats",
+    "meditation",
+    "coaching"
+   ],
+   "tags": [
+    "plain html",
+    "css",
+    "composition",
+    "layout",
+    "drawn svg art",
+    "no build step",
+    "light",
+    "serif",
+    "centred hero",
+    "numbered steps",
+    "team grid"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/compositions/wellness-retreat.html",
+     "to": "compositions/wellness-retreat.html"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (BO9, 2026-10-27)",
+   "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
+   "preview": null,
+   "path": "assets/section/lay-wellness-retreat.md",
+   "size": 9527
   },
   {
    "id": "sec-category-tiles",

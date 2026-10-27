@@ -1,0 +1,42 @@
+*{box-sizing:border-box}
+.hero__title,.sec-title,.card h3,.info h3,.hero__phone,.callbar a{letter-spacing:.02em}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font-family:var(--font-body-md);line-height:1.55;padding-bottom:76px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+.top{background:var(--color-deep);color:#fff;font-size:.875rem}
+.top .wrap{display:flex;justify-content:space-between;gap:12px;padding-top:9px;padding-bottom:9px}
+.top b{color:#ffb27a}
+.hero{background:#fff;border-bottom:4px solid var(--color-primary)}
+.hero__grid{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(24px,5vw,64px);align-items:center;padding-top:clamp(32px,5vw,64px);padding-bottom:clamp(32px,5vw,64px)}
+.hero__tag{display:inline-block;background:var(--color-deep);color:#fff;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;margin:0 0 16px}
+.hero__title{font-family:var(--font-display);font-size:clamp(2.8rem,7vw,5.2rem);line-height:.95;text-transform:uppercase;margin:0 0 16px;font-weight:700}
+.hero__title span{color:var(--color-primary)}
+.hero__lead{font-size:1.125rem;color:var(--color-muted);max-width:44ch;margin:0 0 24px}
+.hero__phone{display:inline-flex;align-items:center;gap:12px;background:var(--color-primary);color:#fff;text-decoration:none;font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,4vw,2.4rem);padding:12px 24px;border-radius:6px}
+.hero__note{margin:12px 0 0;font-size:.875rem;color:var(--color-muted)}
+.hero__art{width:100%;height:auto;display:block}
+.services{padding:clamp(40px,6vw,80px) 0}
+.sec-title{font-family:var(--font-display);font-size:clamp(2rem,4.6vw,3.2rem);text-transform:uppercase;line-height:1;margin:0 0 24px;font-weight:700}
+.services__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2.4vw,28px)}
+.card{background:#fff;border:1px solid var(--color-border);border-top:5px solid var(--color-primary);border-radius:6px;padding:24px}
+.card__icon{width:48px;height:48px;display:block;margin-bottom:12px}
+.card h3{font-family:var(--font-display);font-size:1.5rem;text-transform:uppercase;margin:0 0 6px;font-weight:700}
+.card p{margin:0 0 14px;color:var(--color-muted)}
+.card__price{font-weight:700;color:var(--color-ink);border-top:1px solid var(--color-border);padding-top:12px;font-size:1rem}
+.band{background:var(--color-deep);color:#fff;padding:clamp(40px,6vw,80px) 0}
+.band .sec-title{color:#fff}
+.band__grid{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:clamp(14px,2.4vw,28px)}
+.info{background:#17304a;border:1px solid #2c4a68;border-radius:6px;padding:24px}
+.info h3{font-family:var(--font-display);font-size:1.5rem;text-transform:uppercase;letter-spacing:.04em;color:#ffb27a;margin:0 0 12px;font-weight:700}
+.info p{margin:0;color:#e3ebf2}
+.hours{list-style:none;margin:0;padding:0;color:#e3ebf2}
+.hours li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed #2c4a68}
+.areas{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.areas li{background:#0f2234;border:1px solid #2c4a68;border-radius:999px;padding:5px 14px;font-size:.875rem;color:#e3ebf2}
+.callbar{position:fixed;left:0;right:0;bottom:0;background:var(--color-primary);color:#fff;z-index:5}
+.callbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px}
+.callbar span{font-weight:700}
+.hero__phone:hover,.callbar a:hover{filter:brightness(1.15)}
+a:focus-visible{outline:3px solid #ffb27a;outline-offset:3px}
+.callbar a{background:var(--color-deep);color:#fff;text-decoration:none;font-family:var(--font-display);font-weight:700;font-size:1.5rem;padding:6px 20px;border-radius:6px;white-space:nowrap}
+@media (max-width:900px){.band__grid{grid-template-columns:1fr 1fr}.info--areas{grid-column:1/-1}}
+@media (max-width:760px){.hero__grid{grid-template-columns:1fr}.services__grid{grid-template-columns:1fr}.band__grid{grid-template-columns:1fr}.top .wrap span:last-child{display:none}.callbar span{display:none}.callbar .wrap{justify-content:center}}

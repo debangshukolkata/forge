@@ -1,0 +1,60 @@
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font-family:var(--font-body-md);line-height:1.55}
+h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0}
+.wrap{max-width:1160px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0}
+.nav__brand{font-family:var(--font-display);font-weight:800;font-size:1.5rem;color:var(--color-ink);text-decoration:none}
+.nav__links{display:flex;gap:22px;font-weight:600;font-size:.875rem}
+.nav__links a{color:var(--color-ink);text-decoration:none}
+.btn{display:inline-block;background:var(--color-primary);color:#fff;font-weight:800;text-decoration:none;padding:14px 26px;border-radius:999px;box-shadow:0 4px 0 #24399c}
+.btn--soft{background:#fff;color:var(--color-primary);box-shadow:inset 0 0 0 2px var(--color-primary)}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,5vw,64px);align-items:center;padding:clamp(24px,5vw,64px) 0}
+.hero__eyebrow{display:inline-block;background:var(--color-sun);color:var(--color-ink);font-weight:800;font-size:.75rem;padding:6px 14px;border-radius:999px;margin-bottom:18px}
+.hero h1{font-size:3rem;letter-spacing:-.01em}
+.hero h1 em{font-style:normal;color:var(--color-primary)}
+.hero p{font-size:1.125rem;color:var(--color-muted);max-width:46ch;margin:18px 0 28px}
+.hero__cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.hero__art{width:100%;height:auto;display:block}
+.section{padding:clamp(40px,6vw,80px) 0}
+.section__title{font-size:2.25rem;margin-bottom:10px}
+.section__lead{color:var(--color-muted);max-width:56ch;margin:0 0 32px}
+.courses{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.course{display:grid;grid-template-columns:minmax(0,1fr) 150px 110px 90px auto;gap:12px 24px;align-items:center;background:#fff;border:2px solid var(--color-border);border-radius:24px;padding:20px 24px}
+.course__name{font-family:var(--font-display);font-size:1.25rem;font-weight:700}
+.course__name small{display:block;font-family:var(--font-body-md);font-size:.875rem;font-weight:400;color:var(--color-muted)}
+.course__when,.course__len{font-weight:700;font-size:.875rem}
+.course__when span,.course__len span{display:block;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--color-muted);font-weight:700}
+.course__price{font-family:var(--font-display);font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
+.course__go{font-weight:800;color:var(--color-primary);text-decoration:none;white-space:nowrap}
+.steps-band{background:var(--color-sky)}
+.steps{list-style:none;counter-reset:step;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.step{counter-increment:step;background:#fff;border-radius:24px;padding:24px}
+.step::before{content:counter(step);display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--color-accent);color:#fff;font-family:var(--font-display);font-weight:800;font-size:1.25rem;margin-bottom:14px}
+.step h3{font-size:1.25rem;margin-bottom:6px}
+.step p{margin:0;color:var(--color-muted);font-size:.875rem}
+.teachers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(24px,5vw,64px)}
+.teacher{display:grid;grid-template-columns:56px minmax(0,1fr);gap:16px;align-items:center;padding:16px 0;border-bottom:2px dotted var(--color-border)}
+.teacher__dot{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:1.25rem;color:var(--color-ink);padding:4px}
+.teacher__name{font-family:var(--font-display);font-size:1.25rem;font-weight:700}
+.teacher__role{color:var(--color-muted);font-size:.875rem}
+.quotes{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.quote{margin:0;border-radius:28px;padding:28px}
+.quote:nth-child(1){background:var(--color-mint)}.quote:nth-child(2){background:var(--color-sun)}.quote:nth-child(3){background:var(--color-sky)}
+.quote p{margin:0 0 18px;font-size:1rem}
+.quote cite{font-style:normal;font-weight:800}
+.quote cite span{display:block;font-weight:400;font-size:.875rem;color:#38425c}
+.foot{border-top:2px solid var(--color-border);padding:28px 0 40px;color:var(--color-muted);font-size:.875rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .course{grid-template-columns:1fr 1fr;border-radius:22px}
+  .course__name{grid-column:1/-1}
+  .course__go{grid-column:1/-1}
+  .steps{grid-template-columns:1fr 1fr}
+  .teachers{grid-template-columns:1fr}
+  .quotes{grid-template-columns:1fr}
+}
+@media (max-width:560px){.nav__links{display:none}.steps{grid-template-columns:1fr}.btn{text-align:center}}
+.btn,.course,.nav__links a,.course__go,.nav__brand{transition:transform .15s,background .15s,border-color .15s}
+.btn:hover{background:#2c47b5;transform:translateY(-2px)}.btn--soft:hover{background:var(--color-sky)}.course:hover{border-color:var(--color-primary)}.course__go:hover,.nav__links a:hover{text-decoration:underline}
+a:focus-visible{outline:3px solid var(--color-accent);outline-offset:3px;border-radius:6px}
+@media (max-width:560px){.hero h1{font-size:2.25rem}.section__title{font-size:1.875rem}}

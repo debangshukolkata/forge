@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lantern Academy courses</title>
+<!-- COMPOSITION: school-courses. A friendly academy page: split hero with a drawn open book, a course list with date, duration and price, numbered enrolment steps,
+     a teacher list with roles and three testimonial cards. Use for: schools, online academies, tutoring, workshops, training providers.
+     Replace the :root block with the exported tokens and delete it. -->
+<style>
+:root{--color-neutral:#fffaf0;--color-ink:#1f2a44;--color-muted:#56607a;--color-primary:#3a5bd9;--color-accent:#ff8a3d;--color-sun:#ffd25e;--color-mint:#bfeedd;--color-sky:#dbe7ff;--color-border:#e6dcc6;--font-display:"Baloo 2","Nunito",system-ui,sans-serif;--font-body-md:"Nunito","DM Sans",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font-family:var(--font-body-md);line-height:1.55}
+h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0}
+.wrap{max-width:1160px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0}
+.nav__brand{font-family:var(--font-display);font-weight:800;font-size:1.5rem;color:var(--color-ink);text-decoration:none}
+.nav__links{display:flex;gap:22px;font-weight:600;font-size:.875rem}
+.nav__links a{color:var(--color-ink);text-decoration:none}
+.btn{display:inline-block;background:var(--color-primary);color:#fff;font-weight:800;text-decoration:none;padding:14px 26px;border-radius:999px;box-shadow:0 4px 0 #24399c}
+.btn--soft{background:#fff;color:var(--color-primary);box-shadow:inset 0 0 0 2px var(--color-primary)}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,5vw,64px);align-items:center;padding:clamp(24px,5vw,64px) 0}
+.hero__eyebrow{display:inline-block;background:var(--color-sun);color:var(--color-ink);font-weight:800;font-size:.75rem;padding:6px 14px;border-radius:999px;margin-bottom:18px}
+.hero h1{font-size:3rem;letter-spacing:-.01em}
+.hero h1 em{font-style:normal;color:var(--color-primary)}
+.hero p{font-size:1.125rem;color:var(--color-muted);max-width:46ch;margin:18px 0 28px}
+.hero__cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.hero__art{width:100%;height:auto;display:block}
+.section{padding:clamp(40px,6vw,80px) 0}
+.section__title{font-size:2.25rem;margin-bottom:10px}
+.section__lead{color:var(--color-muted);max-width:56ch;margin:0 0 32px}
+.courses{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.course{display:grid;grid-template-columns:minmax(0,1fr) 150px 110px 90px auto;gap:12px 24px;align-items:center;background:#fff;border:2px solid var(--color-border);border-radius:24px;padding:20px 24px}
+.course__name{font-family:var(--font-display);font-size:1.25rem;font-weight:700}
+.course__name small{display:block;font-family:var(--font-body-md);font-size:.875rem;font-weight:400;color:var(--color-muted)}
+.course__when,.course__len{font-weight:700;font-size:.875rem}
+.course__when span,.course__len span{display:block;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--color-muted);font-weight:700}
+.course__price{font-family:var(--font-display);font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
+.course__go{font-weight:800;color:var(--color-primary);text-decoration:none;white-space:nowrap}
+.steps-band{background:var(--color-sky)}
+.steps{list-style:none;counter-reset:step;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.step{counter-increment:step;background:#fff;border-radius:24px;padding:24px}
+.step::before{content:counter(step);display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--color-accent);color:#fff;font-family:var(--font-display);font-weight:800;font-size:1.25rem;margin-bottom:14px}
+.step h3{font-size:1.25rem;margin-bottom:6px}
+.step p{margin:0;color:var(--color-muted);font-size:.875rem}
+.teachers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(24px,5vw,64px)}
+.teacher{display:grid;grid-template-columns:56px minmax(0,1fr);gap:16px;align-items:center;padding:16px 0;border-bottom:2px dotted var(--color-border)}
+.teacher__dot{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:1.25rem;color:var(--color-ink);padding:4px}
+.teacher__name{font-family:var(--font-display);font-size:1.25rem;font-weight:700}
+.teacher__role{color:var(--color-muted);font-size:.875rem}
+.quotes{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.quote{margin:0;border-radius:28px;padding:28px}
+.quote:nth-child(1){background:var(--color-mint)}.quote:nth-child(2){background:var(--color-sun)}.quote:nth-child(3){background:var(--color-sky)}
+.quote p{margin:0 0 18px;font-size:1rem}
+.quote cite{font-style:normal;font-weight:800}
+.quote cite span{display:block;font-weight:400;font-size:.875rem;color:#38425c}
+.foot{border-top:2px solid var(--color-border);padding:28px 0 40px;color:var(--color-muted);font-size:.875rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .course{grid-template-columns:1fr 1fr;border-radius:22px}
+  .course__name{grid-column:1/-1}
+  .course__go{grid-column:1/-1}
+  .steps{grid-template-columns:1fr 1fr}
+  .teachers{grid-template-columns:1fr}
+  .quotes{grid-template-columns:1fr}
+}
+@media (max-width:560px){.nav__links{display:none}.steps{grid-template-columns:1fr}.btn{text-align:center}}
+.btn,.course,.nav__links a,.course__go,.nav__brand{transition:transform .15s,background .15s,border-color .15s}
+.btn:hover{background:#2c47b5;transform:translateY(-2px)}.btn--soft:hover{background:var(--color-sky)}.course:hover{border-color:var(--color-primary)}.course__go:hover,.nav__links a:hover{text-decoration:underline}
+a:focus-visible{outline:3px solid var(--color-accent);outline-offset:3px;border-radius:6px}
+@media (max-width:560px){.hero h1{font-size:2.25rem}.section__title{font-size:1.875rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="nav">
+    <a class="nav__brand" href="#">Lantern Academy</a>
+    <nav class="nav__links" aria-label="Main"><a href="#courses">Courses</a><a href="#enrol">Enrolment</a><a href="#teachers">Teachers</a><a href="#voices">Families</a></nav>
+    <a class="btn btn--soft" href="#enrol">Enrol</a>
+  </header>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div>
+      <span class="hero__eyebrow">Autumn term opens 4 November</span>
+      <h1 id="hero-title">Small classes where <em>curious</em> kids and adults light up</h1>
+      <p>Evening and weekend courses in writing, coding, drawing and maths, taught live in groups of eight or fewer.</p>
+      <div class="hero__cta"><a class="btn" href="#enrol">Enrol for autumn</a><a class="btn btn--soft" href="#courses">See the courses</a></div>
+    </div>
+    <!-- Drawn open book with a lantern light: not a placeholder. -->
+    <svg class="hero__art" viewBox="0 0 520 420" role="img" aria-label="An open book with a glowing lantern, stars and a pencil">
+      <rect x="10" y="10" width="500" height="400" rx="48" fill="#dbe7ff"/>
+      <circle cx="400" cy="90" r="46" fill="#ffd25e"/><circle cx="400" cy="90" r="70" fill="#ffd25e" opacity=".3"/>
+      <g fill="#fff"><path d="M70 90l6 14 14 6-14 6-6 14-6-14-14-6 14-6z"/><path d="M180 60l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/><path d="M110 170l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/></g>
+      <path d="M260 300c-40-34-110-40-190-24V150c80-16 150-10 190 24z" fill="#fff" stroke="#1f2a44" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M260 300c40-34 110-40 190-24V150c-80-16-150-10-190 24z" fill="#fffaf0" stroke="#1f2a44" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M260 174v126" stroke="#1f2a44" stroke-width="6"/>
+      <g stroke="#3a5bd9" stroke-width="6" stroke-linecap="round" fill="none"><path d="M100 188c40-8 78-4 128 16M100 218c40-8 78-4 128 16M100 248c34-6 60-2 100 12"/></g>
+      <g stroke="#ff8a3d" stroke-width="6" stroke-linecap="round" fill="none"><path d="M292 204c50-20 88-24 128-16M292 234c50-20 88-24 128-16"/></g>
+      <path d="M70 316c60 18 130 20 190 6 60 14 130 12 190-6l-10 34c-58 14-120 14-180 0-60 14-122 14-180 0z" fill="#ff8a3d"/>
+      <g transform="rotate(-32 130 356)"><rect x="60" y="346" width="150" height="22" rx="6" fill="#3a5bd9"/><path d="M210 346l34 11-34 11z" fill="#ffd25e"/><rect x="60" y="346" width="26" height="22" rx="6" fill="#ff8a3d"/></g>
+      <g transform="translate(260 96)"><path d="M-10 -34h20v12h-20z" fill="#1f2a44"/><rect x="-26" y="-22" width="52" height="54" rx="14" fill="#ffd25e" stroke="#1f2a44" stroke-width="6"/><rect x="-14" y="-6" width="28" height="26" rx="8" fill="#fff6c9"/><path d="M-18 32h36" stroke="#1f2a44" stroke-width="6"/></g>
+    </svg>
+  </section>
+</div>
+
+<section class="section" id="courses" aria-labelledby="courses-title">
+  <div class="wrap">
+    <h2 class="section__title" id="courses-title">This term's courses</h2>
+    <p class="section__lead">Every course meets once a week. Materials are included, and the first session can be swapped for a refund.</p>
+    <ul class="courses">
+      <li class="course"><div class="course__name">Storycraft<small>Write a short story from first idea to last line. Ages 10 to 14.</small></div><div class="course__when"><span>Starts</span>Tue 5 Nov</div><div class="course__len"><span>Length</span>8 weeks</div><div class="course__price">$180</div><a class="course__go" href="#enrol">Enrol</a></li>
+      <li class="course"><div class="course__name">First Code<small>Build a small game with blocks, then with real code. Ages 9 to 12.</small></div><div class="course__when"><span>Starts</span>Thu 7 Nov</div><div class="course__len"><span>Length</span>10 weeks</div><div class="course__price">$240</div><a class="course__go" href="#enrol">Enrol</a></li>
+      <li class="course"><div class="course__name">Sketchbook Sundays<small>Observation drawing, shading and a finished portrait. All ages.</small></div><div class="course__when"><span>Starts</span>Sun 10 Nov</div><div class="course__len"><span>Length</span>6 weeks</div><div class="course__price">$130</div><a class="course__go" href="#enrol">Enrol</a></li>
+      <li class="course"><div class="course__name">Maths Without Tears<small>Fractions, ratios and word problems explained slowly. Ages 11 to 15.</small></div><div class="course__when"><span>Starts</span>Mon 11 Nov</div><div class="course__len"><span>Length</span>12 weeks</div><div class="course__price">$260</div><a class="course__go" href="#enrol">Enrol</a></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section steps-band" id="enrol" aria-labelledby="enrol-title">
+  <div class="wrap">
+    <h2 class="section__title" id="enrol-title">How enrolment works</h2>
+    <p class="section__lead">Four short steps, and most families finish them in one evening.</p>
+    <ol class="steps">
+      <li class="step"><h3>Pick a course</h3><p>Choose a course and a start date from the list above.</p></li>
+      <li class="step"><h3>Book a trial</h3><p>Join a free twenty-minute taster call with the teacher.</p></li>
+      <li class="step"><h3>Confirm and pay</h3><p>Reserve the seat by card or in two instalments.</p></li>
+      <li class="step"><h3>Get your welcome pack</h3><p>We send the class link, the materials list and a first task.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section" id="teachers" aria-labelledby="teachers-title">
+  <div class="wrap">
+    <h2 class="section__title" id="teachers-title">Meet the teachers</h2>
+    <p class="section__lead">Working writers, engineers and artists who like explaining things.</p>
+    <ul class="teachers">
+      <li class="teacher"><span class="teacher__dot" style="background:#ffd25e">M</span><div><div class="teacher__name">Maya Okafor</div><div class="teacher__role">Head of writing, former newspaper editor</div></div></li>
+      <li class="teacher"><span class="teacher__dot" style="background:#bfeedd">T</span><div><div class="teacher__name">Tomas Lindqvist</div><div class="teacher__role">Coding teacher and game developer</div></div></li>
+      <li class="teacher"><span class="teacher__dot" style="background:#dbe7ff">P</span><div><div class="teacher__name">Priya Raman</div><div class="teacher__role">Maths tutor, twelve years in classrooms</div></div></li>
+      <li class="teacher"><span class="teacher__dot" style="background:#ffc9a8">J</span><div><div class="teacher__name">Joao Alves</div><div class="teacher__role">Illustrator and drawing coach</div></div></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section" id="voices" aria-labelledby="voices-title">
+  <div class="wrap">
+    <h2 class="section__title" id="voices-title">What families say</h2>
+    <p class="section__lead">Notes we received after the summer term.</p>
+    <div class="quotes">
+      <blockquote class="quote"><p>My daughter finished her first story and read it aloud to the whole family. She has not stopped writing since.</p><cite>Helen D.<span>Parent of a Storycraft student</span></cite></blockquote>
+      <blockquote class="quote"><p>Tomas never made coding feel like homework. Our son built a maze game and then asked for the next course.</p><cite>Arjun S.<span>Parent of a First Code student</span></cite></blockquote>
+      <blockquote class="quote"><p>I came to Sunday drawing as a complete beginner. Six weeks later I framed my own portrait.</p><cite>Rosa B.<span>Adult learner, Sketchbook Sundays</span></cite></blockquote>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <footer class="foot"><span>Lantern Academy · 14 Marsh Lane · hello@lanternacademy.example</span><span>Open weekdays 10:00 to 19:00</span></footer>
+</div>
+</body>
+</html>

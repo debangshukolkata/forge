@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local trades</title>
+<!-- COMPOSITION: local-trades. A practical local-services page: split hero with the phone number and a drawn van, three service cards, a dark band with address and hours cards and a service-area list, and a call bar that stays at the bottom of the screen.
+     Use for: plumbers, electricians, locksmiths, roofers, cleaners, garages. Replace the :root block with the exported tokens and delete it. -->
+<style>
+:root{--color-neutral:#f5f6f7;--color-ink:#14202b;--color-muted:#4d5b68;--color-primary:#c2410c;--color-deep:#0f2234;--color-border:#d5dbe0;--font-display:"Barlow Condensed","Oswald",Impact,sans-serif;--font-body-md:"Barlow","DM Sans",system-ui,sans-serif}
+*{box-sizing:border-box}
+.hero__title,.sec-title,.card h3,.info h3,.hero__phone,.callbar a{letter-spacing:.02em}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font-family:var(--font-body-md);line-height:1.55;padding-bottom:76px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+.top{background:var(--color-deep);color:#fff;font-size:.875rem}
+.top .wrap{display:flex;justify-content:space-between;gap:12px;padding-top:9px;padding-bottom:9px}
+.top b{color:#ffb27a}
+.hero{background:#fff;border-bottom:4px solid var(--color-primary)}
+.hero__grid{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(24px,5vw,64px);align-items:center;padding-top:clamp(32px,5vw,64px);padding-bottom:clamp(32px,5vw,64px)}
+.hero__tag{display:inline-block;background:var(--color-deep);color:#fff;font-weight:700;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;margin:0 0 16px}
+.hero__title{font-family:var(--font-display);font-size:clamp(2.8rem,7vw,5.2rem);line-height:.95;text-transform:uppercase;margin:0 0 16px;font-weight:700}
+.hero__title span{color:var(--color-primary)}
+.hero__lead{font-size:1.125rem;color:var(--color-muted);max-width:44ch;margin:0 0 24px}
+.hero__phone{display:inline-flex;align-items:center;gap:12px;background:var(--color-primary);color:#fff;text-decoration:none;font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,4vw,2.4rem);padding:12px 24px;border-radius:6px}
+.hero__note{margin:12px 0 0;font-size:.875rem;color:var(--color-muted)}
+.hero__art{width:100%;height:auto;display:block}
+.services{padding:clamp(40px,6vw,80px) 0}
+.sec-title{font-family:var(--font-display);font-size:clamp(2rem,4.6vw,3.2rem);text-transform:uppercase;line-height:1;margin:0 0 24px;font-weight:700}
+.services__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,2.4vw,28px)}
+.card{background:#fff;border:1px solid var(--color-border);border-top:5px solid var(--color-primary);border-radius:6px;padding:24px}
+.card__icon{width:48px;height:48px;display:block;margin-bottom:12px}
+.card h3{font-family:var(--font-display);font-size:1.5rem;text-transform:uppercase;margin:0 0 6px;font-weight:700}
+.card p{margin:0 0 14px;color:var(--color-muted)}
+.card__price{font-weight:700;color:var(--color-ink);border-top:1px solid var(--color-border);padding-top:12px;font-size:1rem}
+.band{background:var(--color-deep);color:#fff;padding:clamp(40px,6vw,80px) 0}
+.band .sec-title{color:#fff}
+.band__grid{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:clamp(14px,2.4vw,28px)}
+.info{background:#17304a;border:1px solid #2c4a68;border-radius:6px;padding:24px}
+.info h3{font-family:var(--font-display);font-size:1.5rem;text-transform:uppercase;letter-spacing:.04em;color:#ffb27a;margin:0 0 12px;font-weight:700}
+.info p{margin:0;color:#e3ebf2}
+.hours{list-style:none;margin:0;padding:0;color:#e3ebf2}
+.hours li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed #2c4a68}
+.areas{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.areas li{background:#0f2234;border:1px solid #2c4a68;border-radius:999px;padding:5px 14px;font-size:.875rem;color:#e3ebf2}
+.callbar{position:fixed;left:0;right:0;bottom:0;background:var(--color-primary);color:#fff;z-index:5}
+.callbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px}
+.callbar span{font-weight:700}
+.hero__phone:hover,.callbar a:hover{filter:brightness(1.15)}
+a:focus-visible{outline:3px solid #ffb27a;outline-offset:3px}
+.callbar a{background:var(--color-deep);color:#fff;text-decoration:none;font-family:var(--font-display);font-weight:700;font-size:1.5rem;padding:6px 20px;border-radius:6px;white-space:nowrap}
+@media (max-width:900px){.band__grid{grid-template-columns:1fr 1fr}.info--areas{grid-column:1/-1}}
+@media (max-width:760px){.hero__grid{grid-template-columns:1fr}.services__grid{grid-template-columns:1fr}.band__grid{grid-template-columns:1fr}.top .wrap span:last-child{display:none}.callbar span{display:none}.callbar .wrap{justify-content:center}}
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap"><span>Licensed &amp; insured · Same-day call-outs</span><span>Open <b>7 am to 9 pm</b>, every day</span></div></div>
+<header class="hero">
+  <div class="wrap hero__grid">
+    <div>
+      <span class="hero__tag">Plumbing &amp; heating · Leeds</span>
+      <h1 class="hero__title">Leak at 2 am? <span>We pick up.</span></h1>
+      <p class="hero__lead">Fixed prices quoted before we start, tidy workers and a van that carries the part you need. Family-run since 2009.</p>
+      <a class="hero__phone" href="tel:+441130000000">0113 000 0000</a>
+      <p class="hero__note">Call now, or send a photo by text. We reply within ten minutes.</p>
+    </div>
+    <!-- Drawn van with a wrench and pipe: not a placeholder. -->
+    <svg class="hero__art" viewBox="0 0 520 330" role="img" aria-label="A work van with a ladder on the roof and a wrench and pipe beside it">
+      <rect x="0" y="262" width="520" height="10" fill="#d5dbe0"/>
+      <rect x="40" y="86" width="340" height="12" rx="3" fill="#4d5b68"/><rect x="40" y="86" width="12" height="40" fill="#4d5b68"/><rect x="368" y="86" width="12" height="40" fill="#4d5b68"/>
+      <path d="M30 240V130c0-12 8-20 20-20h250c10 0 18 5 24 14l38 50h42c10 0 16 8 16 18v48z" fill="#0f2234"/>
+      <path d="M322 134l30 40h-62v-40z" fill="#9cc7e8"/><path d="M270 134v40h-70v-40z" fill="#9cc7e8"/>
+      <rect x="40" y="186" width="190" height="26" rx="3" fill="#e8590c"/><text x="52" y="205" font-family="Arial,sans-serif" font-weight="700" font-size="17" fill="#fff">PIPE &amp; SON · 24H</text>
+      <rect x="430" y="214" width="22" height="12" rx="2" fill="#ffb27a"/>
+      <g fill="#14202b"><circle cx="110" cy="248" r="30"/><circle cx="360" cy="248" r="30"/></g><g fill="#d5dbe0"><circle cx="110" cy="248" r="13"/><circle cx="360" cy="248" r="13"/></g>
+      <g transform="translate(445 60) rotate(30)"><rect x="-7" y="0" width="14" height="170" rx="6" fill="#e8590c"/><path d="M-22 0a22 22 0 1 1 44 0v-14h-14a8 8 0 0 0-16 0h-14z" fill="#e8590c"/></g>
+    </svg>
+  </div>
+</header>
+
+<section class="services" aria-labelledby="svc-title">
+  <div class="wrap">
+    <h2 class="sec-title" id="svc-title">What we fix</h2>
+    <div class="services__grid">
+      <article class="card">
+        <svg class="card__icon" viewBox="0 0 48 48" role="img" aria-label="Drop"><path d="M24 4c10 12 14 19 14 26a14 14 0 0 1-28 0c0-7 4-14 14-26z" fill="#e8590c"/><path d="M17 31a7 7 0 0 0 7 7" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+        <h3>Leaks &amp; blockages</h3><p>Burst pipes, dripping taps, slow drains, a toilet that will not stop running. Found and fixed on the first visit.</p><div class="card__price">From £79 · no call-out fee</div>
+      </article>
+      <article class="card">
+        <svg class="card__icon" viewBox="0 0 48 48" role="img" aria-label="Flame"><path d="M24 4c3 9 12 13 12 25a12 12 0 0 1-24 0c0-6 3-9 6-12 0 5 3 7 5 7-3-8-1-14 1-20z" fill="#e8590c"/><path d="M24 44a6 6 0 0 1-6-6c0-4 6-6 6-12 4 4 6 8 6 12a6 6 0 0 1-6 6z" fill="#ffb27a"/></svg>
+        <h3>Boilers &amp; heating</h3><p>Annual services, repairs and new boilers fitted in a day. We leave the house warm and the floor clean.</p><div class="card__price">Service £85 · new boiler quotes free</div>
+      </article>
+      <article class="card">
+        <svg class="card__icon" viewBox="0 0 48 48" role="img" aria-label="Bathroom tap"><path d="M8 18h20a8 8 0 0 1 8 8v4h-8v-4H8z" fill="#0f2234"/><rect x="4" y="14" width="16" height="6" rx="2" fill="#e8590c"/><path d="M33 36c2 3 3 5 3 7a3 3 0 0 1-6 0c0-2 1-4 3-7z" fill="#e8590c"/></svg>
+        <h3>Bathrooms &amp; kitchens</h3><p>Taps, showers, baths and whole rooms. One tradesperson from stripping out to the last bead of sealant.</p><div class="card__price">Free survey · fixed written price</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="where-title">
+  <div class="wrap">
+    <h2 class="sec-title" id="where-title">Find us, or we find you</h2>
+    <div class="band__grid">
+      <div class="info"><h3>Workshop</h3><p>Unit 6, Canal Wharf Yard<br>Kirkstall Road<br>Leeds LS4 2AB</p></div>
+      <div class="info"><h3>Hours</h3><ul class="hours"><li><span>Mon to Fri</span><span>7 am to 9 pm</span></li><li><span>Saturday</span><span>8 am to 6 pm</span></li><li><span>Sunday</span><span>Emergencies</span></li></ul></div>
+      <div class="info info--areas"><h3>We cover</h3><ul class="areas"><li>Headingley</li><li>Kirkstall</li><li>Chapel Allerton</li><li>Roundhay</li><li>Armley</li><li>Horsforth</li><li>Pudsey</li><li>City centre</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<div class="callbar"><div class="wrap"><span>Burst pipe or no heating? Talk to a person now.</span><a href="tel:+441130000000">Call 0113 000 0000</a></div></div>
+</body>
+</html>

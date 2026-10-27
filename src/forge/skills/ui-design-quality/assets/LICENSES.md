@@ -250,22 +250,38 @@ Generated from the assets' front-matter; do not edit by hand.
 | `app-table-editable-grid` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-table-kanban` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-table-master-detail` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
+| `lay-boutique-hotel` | original | authored for DebCraft (BO9, 2026-10-27) |
 | `lay-editorial-split` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-event-lineup` | original | authored for DebCraft (BO9, 2026-10-27) |
 | `lay-fullbleed-blocks` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-local-trades` | original | authored for DebCraft (BO9, 2026-10-27) |
 | `lay-menu-list` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-nonprofit-appeal` | original | authored for DebCraft (BO9, 2026-10-27) |
 | `lay-notebook-grid` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-photo-led-story` | original | authored for DebCraft (D-439, after the user's own Fernhill Bakery page) |
+| `lay-portfolio-casestudies` | original | authored for DebCraft (BO9, 2026-10-27) |
 | `lay-poster-hero` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-react-boutique-hotel` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-react-editorial-split` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-event-lineup` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-react-fullbleed-blocks` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-local-trades` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-react-menu-list` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-nonprofit-appeal` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-react-notebook-grid` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-react-photo-led-story` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-portfolio-casestudies` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-react-poster-hero` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-saas-product-tour` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-school-courses` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-react-ticket-stub` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
 | `lay-react-vertical-type` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-react-wellness-retreat` | original | authored for DebCraft (D-354 compositions, converted to React in D-398) |
+| `lay-saas-product-tour` | original | authored for DebCraft (BO9, 2026-10-27) |
+| `lay-school-courses` | original | authored for DebCraft (BO9, 2026-10-27) |
 | `lay-ticket-stub` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
 | `lay-vertical-type` | original | authored for DebCraft (D-354, compositions for plain HTML pages) |
+| `lay-wellness-retreat` | original | authored for DebCraft (BO9, 2026-10-27) |
 | `sec-category-tiles` | original | authored for DebCraft (section library, D-385) |
 | `sec-contact-form` | original | authored for DebCraft (section library, D-273) |
 | `sec-craft-band` | original | authored for DebCraft (section library, D-434) |

@@ -19,7 +19,7 @@ GROUPS: list[tuple[str, str, str]] = [
     (
         "Page compositions (marketing pages)",
         "lay-",
-        "Seven complete layouts with drawn art; a candidate design names one as `composition: lay-...`.",
+        "Sixteen complete layouts with drawn art; a candidate design names one as `composition: lay-...`.",
     ),
     (
         "Application screens, plain HTML",

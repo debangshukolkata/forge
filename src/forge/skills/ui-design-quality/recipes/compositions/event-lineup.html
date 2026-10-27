@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event lineup</title>
+<!-- COMPOSITION: event-lineup. A one-day festival or conference page: poster hero with the date, a time-column schedule with tracks,
+     artist cards, three ticket tiers (one lifted) and a venue card. Replace the :root block with the exported tokens (design_md_export css-variables) and delete it. -->
+<style>
+:root{--color-neutral:#0e0b16;--color-surface:#181325;--color-ink:#f6f3fb;--color-muted:#b7aecb;--color-primary:#ff4d6d;--color-border:#3a3150;--font-display:"Archivo Black","Space Grotesk",Impact,sans-serif;--font-body-md:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font-family:var(--font-body-md);line-height:1.55}
+a{color:inherit}
+.wrap{width:min(1120px,100% - 40px);margin-inline:auto}
+.eyebrow{margin:0 0 .6rem;font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--color-primary);font-weight:700}
+.h2{margin:0 0 clamp(20px,3vw,36px);font-family:var(--font-display);text-transform:uppercase;letter-spacing:-.02em;line-height:1;font-size:clamp(2rem,5vw,3.4rem)}
+.btn{display:inline-block;background:var(--color-primary);color:#16101f;font-weight:800;text-transform:uppercase;letter-spacing:.06em;text-decoration:none;padding:.95rem 1.5rem;border:2px solid var(--color-primary);transition:background .15s,color .15s}
+.btn:hover{background:transparent;color:var(--color-primary)}
+.btn--line{background:transparent;color:var(--color-ink);border-color:var(--color-border)}
+.btn--line:hover{border-color:var(--color-primary);color:var(--color-primary)}
+.btn:focus-visible{outline:3px solid var(--color-ink);outline-offset:3px}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-block:20px;font-size:14px;letter-spacing:.12em;text-transform:uppercase}
+.top b{font-family:var(--font-display);font-size:18px;letter-spacing:.02em}
+.top nav{display:flex;gap:22px}
+.top nav a{text-decoration:none;color:var(--color-muted)}
+.top nav a:hover{color:var(--color-ink)}
+@media (max-width:640px){.top nav{display:none}}
+
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--color-border)}
+.hero__in{position:relative;z-index:1;padding-block:clamp(36px,7vw,96px) clamp(200px,24vw,320px)}
+.hero__date{display:inline-block;margin:0 0 1rem;padding:.4rem .8rem;border:2px solid var(--color-primary);color:var(--color-primary);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:14px}
+.hero__title{margin:0;font-family:var(--font-display);text-transform:uppercase;line-height:.88;letter-spacing:-.04em;font-size:clamp(3.2rem,13vw,10.5rem)}
+.hero__title span{display:block}
+.hero__title .hot{color:var(--color-primary)}
+.hero__lede{max-width:40ch;margin:1.4rem 0 1.8rem;font-size:clamp(1rem,1.6vw,1.2rem);color:var(--color-muted)}
+.hero__cta{display:flex;flex-wrap:wrap;gap:14px}
+.hero__scene{position:absolute;left:0;right:0;bottom:0;width:100%;height:clamp(170px,22vw,300px);z-index:0}
+
+.sec{padding-block:clamp(48px,8vw,96px);border-bottom:1px solid var(--color-border)}
+
+.sched{list-style:none;margin:0;padding:0;border-top:2px solid var(--color-ink)}
+.slot{display:grid;grid-template-columns:110px 1fr auto;gap:8px 24px;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--color-border)}
+.slot__time{font-family:var(--font-display);font-size:24px;color:var(--color-primary)}
+.slot__what{margin:0;font-weight:700;font-size:18px}
+.slot__who{display:block;margin-top:2px;font-weight:400;font-size:16px;color:var(--color-muted)}
+.track{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;padding:.3rem .65rem;border:1px solid var(--color-border);border-radius:999px;color:var(--color-muted);white-space:nowrap}
+.track--main{background:var(--color-primary);border-color:var(--color-primary);color:#16101f}
+@media (max-width:640px){.slot{grid-template-columns:78px 1fr}.slot__time{font-size:18px}.track{grid-column:2;justify-self:start}}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+.act{background:var(--color-surface);border:1px solid var(--color-border);padding:0 0 20px;overflow:hidden}
+.act svg{display:block;width:100%;height:auto}
+.act h3{margin:16px 20px 2px;font-family:var(--font-display);text-transform:uppercase;font-size:20px;line-height:1.1}
+.act p{margin:0 20px;color:var(--color-muted);font-size:16px}
+.act .when{margin-top:10px;color:var(--color-primary);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase}
+
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;align-items:stretch}
+.tier{display:flex;flex-direction:column;padding:28px;background:var(--color-surface);border:1px solid var(--color-border)}
+.tier--hot{background:var(--color-primary);color:#16101f;border-color:var(--color-primary);transform:translateY(-10px)}
+.tier__name{margin:0;font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:14px}
+.tier__price{margin:.4rem 0 1rem;font-family:var(--font-display);font-size:48px;line-height:1}
+.tier ul{list-style:none;margin:0 0 24px;padding:0;flex:1}
+.tier li{padding:.5rem 0;border-top:1px solid currentColor;border-top-color:rgba(127,127,150,.35)}
+.tier .btn{text-align:center}
+.tier--hot .btn{background:#16101f;border-color:#16101f;color:var(--color-ink)}
+.tier--hot .btn:hover{background:transparent;color:#16101f}
+@media (max-width:640px){.tier--hot{transform:none}}
+
+.venue{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(20px,4vw,48px);align-items:center}
+.venue__card{border:2px solid var(--color-ink);padding:clamp(22px,3vw,36px)}
+.venue__card address{font-style:normal;font-size:20px;font-weight:700;line-height:1.4;margin:0 0 1rem}
+.venue__card dl{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:0 0 1.4rem;color:var(--color-muted)}
+.venue__card dt{color:var(--color-ink);font-weight:700}
+.venue__card dd{margin:0}
+.venue svg{width:100%;height:auto;display:block;border:1px solid var(--color-border)}
+@media (max-width:760px){.venue{grid-template-columns:1fr}}
+
+.foot{padding-block:28px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;color:var(--color-muted);font-size:14px}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <div class="top"><b>Low Tide Live</b><nav aria-label="Sections"><a href="#schedule">Schedule</a><a href="#acts">Artists</a><a href="#tickets">Tickets</a><a href="#venue">Venue</a></nav></div>
+    <div class="hero__in">
+      <p class="hero__date">Sat 20 September · Gates 2 pm</p>
+      <h1 class="hero__title"><span>Low tide</span><span class="hot">live</span></h1>
+      <p class="hero__lede">One day, two stages and eleven acts on the old ferry pier. Come for the sunset set, stay for the last boat home.</p>
+      <div class="hero__cta"><a class="btn" href="#tickets">Get tickets</a><a class="btn btn--line" href="#schedule">See the day</a></div>
+    </div>
+  </div>
+  <!-- Drawn scene: stage with truss and lights, crowd silhouettes. Redraw it for the event you are building. -->
+  <svg class="hero__scene" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" role="img" aria-label="A lit stage with a crowd in front">
+    <defs><linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff4d6d" stop-opacity=".55"/><stop offset="1" stop-color="#ff4d6d" stop-opacity="0"/></linearGradient></defs>
+    <g fill="url(#beam)"><path d="M330 70 L210 260 L450 260z"/><path d="M600 70 L500 260 L700 260z"/><path d="M870 70 L750 260 L990 260z"/></g>
+    <g fill="#241b38" stroke="#3a3150" stroke-width="2"><rect x="250" y="60" width="700" height="14"/><rect x="262" y="60" width="10" height="200"/><rect x="928" y="60" width="10" height="200"/><rect x="250" y="200" width="700" height="60"/></g>
+    <g fill="#ff4d6d"><circle cx="330" cy="82" r="9"/><circle cx="600" cy="82" r="9"/><circle cx="870" cy="82" r="9"/></g>
+    <g fill="#0e0b16"><path d="M580 200v-36a20 20 0 0 1 40 0v36z"/><circle cx="600" cy="140" r="14"/></g>
+    <g fill="#0e0b16">
+      <circle cx="60" cy="236" r="14"/><path d="M36 300v-40a24 24 0 0 1 48 0v40z"/>
+      <circle cx="150" cy="226" r="15"/><path d="M124 300v-48a26 26 0 0 1 52 0v48z"/>
+      <circle cx="240" cy="244" r="13"/><path d="M218 300v-34a22 22 0 0 1 44 0v34z"/>
+      <circle cx="330" cy="232" r="14"/><path d="M306 300v-44a24 24 0 0 1 48 0v44z"/>
+      <circle cx="430" cy="246" r="13"/><path d="M408 300v-32a22 22 0 0 1 44 0v32z"/>
+      <circle cx="520" cy="228" r="15"/><path d="M494 300v-46a26 26 0 0 1 52 0v46z"/>
+      <circle cx="640" cy="240" r="14"/><path d="M616 300v-38a24 24 0 0 1 48 0v38z"/>
+      <circle cx="740" cy="226" r="15"/><path d="M714 300v-48a26 26 0 0 1 52 0v48z"/>
+      <circle cx="840" cy="244" r="13"/><path d="M818 300v-34a22 22 0 0 1 44 0v34z"/>
+      <circle cx="940" cy="230" r="14"/><path d="M916 300v-44a24 24 0 0 1 48 0v44z"/>
+      <circle cx="1040" cy="242" r="14"/><path d="M1016 300v-36a24 24 0 0 1 48 0v36z"/>
+      <circle cx="1140" cy="228" r="15"/><path d="M1114 300v-46a26 26 0 0 1 52 0v46z"/>
+    </g>
+    <g stroke="#f6f3fb" stroke-width="4" stroke-linecap="round"><path d="M150 205v-26M740 203v-30M1140 205v-24"/></g>
+  </svg>
+</header>
+
+<main>
+<section class="sec" id="schedule">
+  <div class="wrap">
+    <p class="eyebrow">Saturday 20 September</p>
+    <h2 class="h2">The day, hour by hour</h2>
+    <ol class="sched">
+      <li class="slot"><span class="slot__time">14:00</span><p class="slot__what">Gates open<span class="slot__who">Food yard and record fair start</span></p><span class="track">Pier</span></li>
+      <li class="slot"><span class="slot__time">15:00</span><p class="slot__what">Mara Quill<span class="slot__who">Folk songs for slow water</span></p><span class="track">Boat stage</span></li>
+      <li class="slot"><span class="slot__time">16:30</span><p class="slot__what">The Paper Kites Club<span class="slot__who">Jangle pop, nine players</span></p><span class="track track--main">Main stage</span></li>
+      <li class="slot"><span class="slot__time">18:00</span><p class="slot__what">Dj Okoro<span class="slot__who">Afrobeat sunset set</span></p><span class="track track--main">Main stage</span></li>
+      <li class="slot"><span class="slot__time">20:00</span><p class="slot__what">Static Harbour<span class="slot__who">Headline show, lights and all</span></p><span class="track track--main">Main stage</span></li>
+      <li class="slot"><span class="slot__time">22:30</span><p class="slot__what">Last boat home<span class="slot__who">Free ferry to the north shore</span></p><span class="track">Pier</span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="sec" id="acts">
+  <div class="wrap">
+    <p class="eyebrow">On the bill</p>
+    <h2 class="h2">Meet the acts</h2>
+    <div class="cards">
+      <article class="act">
+        <svg viewBox="0 0 300 180" role="img" aria-label="A singer with a guitar against a pink moon"><rect width="300" height="180" fill="#2a1c3f"/><circle cx="215" cy="70" r="44" fill="#ff4d6d"/><circle cx="130" cy="78" r="18" fill="#0e0b16"/><path d="M100 180v-52a30 30 0 0 1 60 0v52z" fill="#0e0b16"/><path d="M140 150l56-34" stroke="#f6f3fb" stroke-width="5" stroke-linecap="round"/><ellipse cx="205" cy="124" rx="16" ry="11" fill="#f6f3fb" transform="rotate(-30 205 124)"/></svg>
+        <h3>Mara Quill</h3><p>Folk songs for slow water. Three voices, one borrowed guitar.</p><p class="when">15:00 · Boat stage</p>
+      </article>
+      <article class="act">
+        <svg viewBox="0 0 300 180" role="img" aria-label="A drummer behind a kit under a red light"><rect width="300" height="180" fill="#1d2a3f"/><path d="M150 0L60 180h180z" fill="#ff4d6d" opacity=".25"/><circle cx="150" cy="70" r="16" fill="#0e0b16"/><path d="M122 180v-58a28 28 0 0 1 56 0v58z" fill="#0e0b16"/><ellipse cx="80" cy="130" rx="34" ry="8" fill="none" stroke="#f6f3fb" stroke-width="4"/><ellipse cx="225" cy="124" rx="34" ry="8" fill="none" stroke="#f6f3fb" stroke-width="4"/><path d="M80 138v42M225 132v48" stroke="#f6f3fb" stroke-width="3"/></svg>
+        <h3>Paper Kites Club</h3><p>Jangle pop from nine players who rehearse in a bakery.</p><p class="when">16:30 · Main stage</p>
+      </article>
+      <article class="act">
+        <svg viewBox="0 0 300 180" role="img" aria-label="A DJ at decks with sound waves"><rect width="300" height="180" fill="#2f1a2a"/><g fill="none" stroke="#ff4d6d" stroke-width="4"><path d="M40 60q20-20 40 0t40 0 40 0 40 0 40 0"/><path d="M40 90q20-20 40 0t40 0 40 0 40 0 40 0" opacity=".6"/></g><circle cx="150" cy="104" r="14" fill="#0e0b16"/><path d="M126 150v-26a24 24 0 0 1 48 0v26z" fill="#0e0b16"/><rect x="60" y="148" width="180" height="32" fill="#0e0b16"/><circle cx="105" cy="164" r="11" fill="none" stroke="#f6f3fb" stroke-width="3"/><circle cx="195" cy="164" r="11" fill="none" stroke="#f6f3fb" stroke-width="3"/></svg>
+        <h3>Dj Okoro</h3><p>Afrobeat and highlife, timed to the sun going down.</p><p class="when">18:00 · Main stage</p>
+      </article>
+      <article class="act">
+        <svg viewBox="0 0 300 180" role="img" aria-label="A band silhouette in front of a wall of light"><rect width="300" height="180" fill="#ff4d6d"/><g fill="#0e0b16"><circle cx="90" cy="84" r="14"/><path d="M64 180v-50a26 26 0 0 1 52 0v50z"/><circle cx="150" cy="70" r="15"/><path d="M122 180v-62a28 28 0 0 1 56 0v62z"/><circle cx="212" cy="84" r="14"/><path d="M186 180v-50a26 26 0 0 1 52 0v50z"/></g><g stroke="#f6f3fb" stroke-width="3" opacity=".7"><path d="M20 20v30M70 10v40M130 8v34M190 8v34M250 14v40"/></g></svg>
+        <h3>Static Harbour</h3><p>The headline set: synths, a choir and a very large lamp.</p><p class="when">20:00 · Main stage</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="tickets">
+  <div class="wrap">
+    <p class="eyebrow">Tickets</p>
+    <h2 class="h2">Pick your spot</h2>
+    <div class="tiers">
+      <article class="tier"><h3 class="tier__name">General</h3><p class="tier__price">£45</p><ul><li>Entry from 2 pm</li><li>Both stages</li><li>Free ferry home</li></ul><a class="btn btn--line" href="#">Buy general</a></article>
+      <article class="tier tier--hot"><h3 class="tier__name">Front of stage</h3><p class="tier__price">£80</p><ul><li>Everything in General</li><li>Barrier access, main stage</li><li>Fast lane at the gates</li><li>One free drink</li></ul><a class="btn" href="#">Buy front of stage</a></article>
+      <article class="tier"><h3 class="tier__name">Pier pass</h3><p class="tier__price">£140</p><ul><li>Everything above</li><li>Seats on the upper deck</li><li>Dinner from the food yard</li></ul><a class="btn btn--line" href="#">Buy pier pass</a></article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="venue">
+  <div class="wrap venue">
+    <div class="venue__card">
+      <p class="eyebrow">Where</p>
+      <address>Old Ferry Pier<br>14 Customs Quay<br>Harbourton HT1 4QA</address>
+      <dl><dt>Train</dt><dd>Harbourton, 8 minutes' walk</dd><dt>Bus</dt><dd>Route 12 to Customs Quay</dd><dt>Bikes</dt><dd>Free valet at the north gate</dd></dl>
+      <a class="btn" href="#">Open in maps</a>
+    </div>
+    <svg viewBox="0 0 480 320" role="img" aria-label="A simple map: the pier jutting into the water with the station inland">
+      <rect width="480" height="320" fill="#181325"/><path d="M0 190q120-40 240-10t240-20v160H0z" fill="#1d2a3f"/>
+      <g stroke="#3a3150" stroke-width="10" fill="none"><path d="M0 90h480M120 0v200M340 0v170"/></g>
+      <path d="M232 168v90h28v-90z" fill="#ff4d6d"/><circle cx="246" cy="150" r="12" fill="#ff4d6d"/><circle cx="246" cy="150" r="5" fill="#0e0b16"/>
+      <rect x="104" y="66" width="32" height="48" fill="#f6f3fb"/><path d="M110 82h20" stroke="#0e0b16" stroke-width="4"/>
+      <path d="M120 114L240 150" stroke="#f6f3fb" stroke-width="3" stroke-dasharray="6 6" fill="none"/>
+    </svg>
+  </div>
+</section>
+</main>
+<footer class="wrap foot"><span>Low Tide Live · Harbourton Council licence 2291</span><span>hello@lowtide.example</span></footer>
+</body>
+</html>

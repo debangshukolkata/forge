@@ -1,0 +1,22 @@
+---
+id: lay-react-local-trades
+type: section
+title: "React composition: Local trades"
+summary: "A practical local-services page: split hero with phone number and drawn van, three service cards, a dark address, hours and service-area band, and a call bar. (React, TSX with plain CSS.)"
+moods: [practical, bold, trustworthy, energetic]
+products: [plumbers, electricians, locksmiths, roofers, cleaners, garages, local services]
+tags: [react, tsx, plain css, composition, layout, drawn svg art]
+density: balanced
+dependencies: []
+licence: original
+source: "authored for DebCraft (D-354 compositions, converted to React in D-398)"
+tested: "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)"
+files:
+  - from: recipes/compositions-react/local-trades/Composition.tsx
+    to: src/compositions/local-trades/Composition.tsx
+  - from: recipes/compositions-react/local-trades/composition.css
+    to: src/compositions/local-trades/composition.css
+  - from: recipes/compositions-react/local-trades/tokens.css
+    to: src/compositions/local-trades/tokens.css
+---
+The React version of the composition `lay-local-trades`: the same layout, class names and drawn art as the HTML file, as a component with its own stylesheet and a token file. Copy the three files, replace `tokens.css` with the tokens exported from DESIGN.md (`design_md_export css-variables`), replace the sample words and redraw the SVG for the product, and render `<Composition />` from the app. Use it as the layout of one candidate in `design_candidates` (`composition: lay-react-local-trades` is also accepted); do not ship it unchanged.

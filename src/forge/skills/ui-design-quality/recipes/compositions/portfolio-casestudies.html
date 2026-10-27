@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio case studies</title>
+<!-- COMPOSITION: portfolio-casestudies. A designer's or photographer's portfolio: a masonry work grid of uneven drawn tiles, case-study cards each with a
+     one-line result, a short about strip and a contact line. Monochrome editorial type with one accent. Replace the :root block with the exported tokens
+     (design_md_export css-variables) and delete it. -->
+<style>
+:root{--color-neutral:#f4f2ee;--color-ink:#141414;--color-muted:#5c5a56;--color-primary:#d9480f;--color-border:#cfcbc3;--font-display:"Fraunces","Playfair Display",Georgia,serif;--font-body-md:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--color-neutral);color:var(--color-ink);font-family:var(--font-body-md);line-height:1.6}
+a{color:inherit}
+a:focus-visible{outline:3px solid var(--color-primary);outline-offset:3px}
+.wrap{width:min(1180px,100% - 40px);margin-inline:auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-block:22px;border-bottom:1px solid var(--color-ink);font-size:14px}
+.top b{font-family:var(--font-display);font-size:20px}
+.top nav{display:flex;gap:24px}
+.top a{text-decoration:none}
+.top a:hover{color:var(--color-primary)}
+@media (max-width:560px){.top nav{gap:14px;font-size:14px}}
+
+.intro{padding-block:clamp(40px,8vw,104px) clamp(28px,5vw,56px)}
+.intro__kicker{margin:0 0 1rem;font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:var(--color-muted)}
+.intro__title{margin:0;max-width:16ch;font-family:var(--font-display);font-weight:500;line-height:.98;letter-spacing:-.03em;font-size:clamp(2.8rem,9vw,7.4rem)}
+.intro__title em{font-style:italic;color:var(--color-primary)}
+.intro__lede{max-width:46ch;margin:1.6rem 0 0;font-size:clamp(1.05rem,1.7vw,1.3rem);color:var(--color-muted)}
+
+.h2{margin:0 0 24px;font-family:var(--font-display);font-weight:500;font-size:clamp(1.8rem,4vw,2.8rem);letter-spacing:-.02em;line-height:1.1}
+.sec{padding-block:clamp(36px,6vw,72px);border-top:1px solid var(--color-ink)}
+
+.work{columns:3 280px;column-gap:18px}
+.tile{break-inside:avoid;margin:0 0 18px;position:relative;background:var(--color-ink);color:var(--color-neutral)}
+.tile svg{display:block;width:100%;height:auto}
+.tile figcaption{display:flex;justify-content:space-between;gap:12px;padding:10px 14px;font-size:14px;background:var(--color-neutral);color:var(--color-ink);border:1px solid var(--color-ink);border-top:0}
+.tile figcaption span{color:var(--color-muted)}
+
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;border:1px solid var(--color-ink)}
+.case{padding:26px;border-right:1px solid var(--color-ink);border-bottom:1px solid var(--color-ink);margin:0 -1px -1px 0;display:flex;flex-direction:column;gap:10px}
+.case__no{font-family:var(--font-display);font-size:16px;color:var(--color-muted)}
+.case h3{margin:0;font-family:var(--font-display);font-weight:500;font-size:24px;line-height:1.15}
+.case p{margin:0;color:var(--color-muted);font-size:16px}
+.case__result{margin-top:auto;padding-top:14px;border-top:1px solid var(--color-border);color:var(--color-ink);font-weight:700;font-size:16px}
+.case__result b{color:var(--color-primary);font-family:var(--font-display);font-size:30px;font-weight:600;display:block;line-height:1.1}
+.case a{font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:4px}
+.case a:hover{color:var(--color-primary)}
+
+.about{display:grid;grid-template-columns:200px 1fr;gap:clamp(20px,4vw,48px);align-items:center}
+.about svg{width:100%;height:auto;display:block;border:1px solid var(--color-ink)}
+.about p{margin:0 0 .8rem;max-width:58ch;font-size:clamp(1.05rem,1.6vw,1.25rem)}
+.about small{color:var(--color-muted);font-size:14px}
+@media (max-width:560px){.about{grid-template-columns:120px 1fr;align-items:start}.about p{font-size:16px}}
+
+.contact{background:var(--color-ink);color:var(--color-neutral);padding-block:clamp(40px,7vw,88px)}
+.contact p{margin:0 0 .4rem;font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:#c9c5bc}
+.contact a{display:inline-block;font-family:var(--font-display);font-size:clamp(1.7rem,6vw,4.2rem);line-height:1.1;letter-spacing:-.02em;text-decoration:none;border-bottom:3px solid var(--color-primary);overflow-wrap:anywhere}
+.contact a:hover{color:var(--color-primary)}
+.contact small{display:block;margin-top:1.4rem;color:#c9c5bc}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><b>Ines Varga</b><nav aria-label="Sections"><a href="#work">Work</a><a href="#cases">Cases</a><a href="#about">About</a><a href="#contact">Contact</a></nav></div>
+  <header class="intro">
+    <p class="intro__kicker">Brand and editorial designer · Lisbon</p>
+    <h1 class="intro__title">Quiet design for <em>loud</em> small businesses.</h1>
+    <p class="intro__lede">Twelve years of identities, packaging and print for bakeries, bookshops and the people who run them. Selected work, 2019 to now.</p>
+  </header>
+</div>
+
+<main>
+<section class="sec" id="work">
+  <div class="wrap">
+    <h2 class="h2">Selected work</h2>
+    <div class="work">
+      <figure class="tile">
+        <svg viewBox="0 0 400 520" role="img" aria-label="A poster with a large orange circle and a tall black bar"><rect width="400" height="520" fill="#ebe7df"/><circle cx="200" cy="190" r="120" fill="#d9480f"/><rect x="60" y="330" width="280" height="14" fill="#141414"/><rect x="60" y="360" width="190" height="14" fill="#141414"/><rect x="60" y="440" width="60" height="6" fill="#141414"/></svg>
+        <figcaption>Forno Lume poster <span>Print</span></figcaption>
+      </figure>
+      <figure class="tile">
+        <svg viewBox="0 0 400 280" role="img" aria-label="A wide logo lockup of stacked lines on black"><rect width="400" height="280" fill="#141414"/><g fill="none" stroke="#f4f2ee" stroke-width="6"><path d="M80 90h240M80 130h240M80 170h140"/></g><circle cx="300" cy="190" r="22" fill="#d9480f"/></svg>
+        <figcaption>Linha Books identity <span>Brand</span></figcaption>
+      </figure>
+      <figure class="tile">
+        <svg viewBox="0 0 400 400" role="img" aria-label="Packaging: three boxes with a diagonal stripe"><rect width="400" height="400" fill="#d6d1c6"/><g stroke="#141414" stroke-width="4"><path d="M70 150l70-40 70 40v110l-70 40-70-40z" fill="#f4f2ee"/><path d="M70 150l70 40 70-40M140 190v110" fill="none"/><path d="M210 190l60-34 60 34v94l-60 34-60-34z" fill="#d9480f"/><path d="M210 190l60 34 60-34M270 224v94" fill="none"/></g></svg>
+        <figcaption>Casa Cacau packaging <span>Packaging</span></figcaption>
+      </figure>
+      <figure class="tile">
+        <svg viewBox="0 0 400 600" role="img" aria-label="A tall book cover with a drawn horizon and sun"><rect width="400" height="600" fill="#f4f2ee" stroke="#141414" stroke-width="4"/><rect x="30" y="30" width="340" height="540" fill="#141414"/><path d="M30 400h340v170H30z" fill="#2c2c2c"/><circle cx="200" cy="340" r="64" fill="#d9480f"/><path d="M30 400h340" stroke="#f4f2ee" stroke-width="3"/><g fill="#f4f2ee"><rect x="70" y="80" width="200" height="12"/><rect x="70" y="106" width="130" height="12"/></g></svg>
+        <figcaption>"Salt Road" book jacket <span>Editorial</span></figcaption>
+      </figure>
+      <figure class="tile">
+        <svg viewBox="0 0 400 300" role="img" aria-label="A website layout with a header bar, a headline block and three small cards"><rect width="400" height="300" fill="#ebe7df"/><rect x="24" y="24" width="352" height="252" fill="#f4f2ee" stroke="#141414" stroke-width="3"/><rect x="24" y="24" width="352" height="26" fill="#141414"/><rect x="48" y="76" width="200" height="22" fill="#141414"/><rect x="48" y="108" width="140" height="22" fill="#d9480f"/><g fill="none" stroke="#141414" stroke-width="3"><rect x="48" y="170" width="96" height="80"/><rect x="152" y="170" width="96" height="80"/><rect x="256" y="170" width="96" height="80"/></g></svg>
+        <figcaption>Mercado do Bairro site <span>Web</span></figcaption>
+      </figure>
+      <figure class="tile">
+        <svg viewBox="0 0 400 460" role="img" aria-label="A grid of repeating pattern tiles in black, cream and orange"><rect width="400" height="460" fill="#f4f2ee"/><g fill="#141414"><circle cx="100" cy="100" r="60"/><rect x="220" y="40" width="120" height="120"/><path d="M40 260h120v120z"/></g><g fill="#d9480f"><circle cx="280" cy="320" r="60"/></g><path d="M200 400h160" stroke="#141414" stroke-width="6"/></svg>
+        <figcaption>Azulejo pattern set <span>Pattern</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="cases">
+  <div class="wrap">
+    <h2 class="h2">Case studies</h2>
+    <div class="cases">
+      <article class="case"><span class="case__no">01</span><h3>Forno Lume: a bakery that sells out by nine</h3><p>New name, shop sign and bag, drawn to be seen from across a busy street.</p><div class="case__result"><b>+38%</b>morning walk-ins in the first quarter</div><a href="#">Read the case</a></article>
+      <article class="case"><span class="case__no">02</span><h3>Linha Books: from one shelf to a reading club</h3><p>An identity that works as a stamp, a tote bag and a monthly zine cover.</p><div class="case__result"><b>420</b>club members signed up in six months</div><a href="#">Read the case</a></article>
+      <article class="case"><span class="case__no">03</span><h3>Casa Cacau: packaging that ships flat</h3><p>One folded sheet replaced three boxes, with no glue and no plastic.</p><div class="case__result"><b>-22%</b>on postage and zero returns for damage</div><a href="#">Read the case</a></article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="about">
+  <div class="wrap about">
+    <svg viewBox="0 0 200 240" role="img" aria-label="A drawn portrait: a head and shoulders in simple black and orange shapes"><rect width="200" height="240" fill="#ebe7df"/><circle cx="100" cy="92" r="44" fill="#141414"/><path d="M30 240v-30a70 56 0 0 1 140 0v30z" fill="#141414"/><path d="M64 78a40 40 0 0 1 72 0z" fill="#d9480f"/></svg>
+    <div><p>I work alone, with a small circle of printers and developers I trust. One project at a time, so every client gets the whole of my attention.</p><small>Based in Lisbon · booking from January</small></div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <div class="wrap"><p>Start a project</p><a href="mailto:hello@inesvarga.example">hello@inesvarga.example</a><small>Replies within two working days · Studio visits by appointment</small></div>
+</section>
+</main>
+</body>
+</html>

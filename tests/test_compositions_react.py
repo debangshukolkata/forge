@@ -1,4 +1,4 @@
-"""D-398: the React versions of the seven compositions type-check, build with Vite, audit clean at both widths and show the same text as their HTML recipes."""
+"""D-398: the React versions of the sixteen compositions type-check, build with Vite, audit clean at both widths and show the same text as their HTML recipes."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ async def body_text(page: object, url: str) -> str:
 def test_there_is_a_react_version_of_every_composition_in_the_catalogue() -> None:
     from forge.parity.assets import build_catalogue
 
-    assert len(IDS) == 8
+    assert len(IDS) == 16
     assets = {a.id: a for a in build_catalogue(SKILL).assets}
     for name in IDS:
         asset = assets[f"lay-react-{name}"]
