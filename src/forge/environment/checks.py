@@ -21,7 +21,17 @@ from forge.doctor import (
     check_secrets,
     missing_secret_names,
 )
-from forge.environment.tavily_tool import TavilyAuthError, TavilySettings, missing_names
+from forge.environment.tavily_tool import (
+    KIND_ID_NAMES,
+    TavilyAuthError,
+    TavilySettings,
+    kind_settings,
+    missing_kind_names,
+    missing_names,
+)
+from forge.environment.tavily_tool import crawl as tavily_crawl
+from forge.environment.tavily_tool import extract as tavily_extract
+from forge.environment.tavily_tool import research as tavily_research
 from forge.environment.tavily_tool import search as tavily_search
 from forge.errors import ForgeError
 from forge.safety.redact import default_redactor
@@ -76,6 +86,27 @@ CHECKS = (
         True,
         "Web search through your company's Tavily tool (a URL, a tool id, a bearer token in .env)",
         ask="Is the Tavily web search service available to you?",
+    ),
+    CheckInfo(
+        "tavily_research",
+        "Tavily Research",
+        True,
+        "A research report with sources from the company's Tavily Research tool (same URL and token as the search, its own tool number)",
+        ask="Is the Tavily Research tool available to you?",
+    ),
+    CheckInfo(
+        "tavily_extract",
+        "Tavily Extract",
+        True,
+        "Clean page text from the company's Tavily Extract tool (same URL and token, its own tool number)",
+        ask="Is the Tavily Extract tool available to you?",
+    ),
+    CheckInfo(
+        "tavily_crawl",
+        "Tavily Crawl",
+        True,
+        "Site exploration with the company's Tavily Crawl tool (same URL and token, its own tool number)",
+        ask="Is the Tavily Crawl tool available to you?",
     ),
     CheckInfo(
         "tesseract",
@@ -365,6 +396,55 @@ def check_node() -> Outcome:
     )
 
 
+def _kind_steps(kind: str) -> list[str]:
+    name = KIND_ID_NAMES[kind]
+    return [
+        f"Open the .env file (the setup guide shows where it is) and add {name}=<the tool's number>. It uses the same "
+        "TAVILY_TOOL_URL and TAVILY_BEARER_TOKEN as the search. Keys and tokens are never typed into this app.",
+        "The bearer token usually expires. If the test says it was rejected (401 or 403), copy a fresh token into the file.",
+        f"Without it DebCraft does not offer the Tavily {kind} tool to the model; nothing else changes. Answer No to stop it being tried.",
+    ]
+
+
+def check_tavily_kind(kind: str) -> Outcome:
+    """Only run when the user said the tool is available: one small real call on the tool's own number."""
+    check_id = f"tavily_{kind}"
+    secrets = load_secrets(forge_home())
+    settings = kind_settings(secrets, kind)
+    if settings is None:
+        return Outcome(
+            check_id,
+            "fail",
+            f"missing in .env: {', '.join(missing_kind_names(secrets, kind))}",
+            "The tool is not offered until these are set; see the steps.",
+            steps=_kind_steps(kind),
+        )
+    try:
+        if kind == "research":
+            report = asyncio.run(tavily_research(settings, "What is the Python programming language?"))
+            detail = f"The research tool answered ({len(report.report)} characters, {len(report.sources)} sources)."
+        elif kind == "extract":
+            pages = asyncio.run(tavily_extract(settings, "https://example.com"))
+            detail = f"The extract tool answered ({len(pages.pages)} page, {len(pages.failed)} failed)."
+        else:
+            pages = asyncio.run(tavily_crawl(settings, "https://example.com", max_depth=1, max_breadth=1))
+            detail = (
+                f"The crawl tool answered ({len(pages.pages)} page{'s' if len(pages.pages) != 1 else ''})."
+            )
+    except TavilyAuthError as error:
+        return Outcome(
+            check_id,
+            "fail",
+            str(error),
+            "Put a fresh bearer token in the .env file, then test again.",
+            steps=_kind_steps(kind),
+        )
+    except Exception as error:  # a network or platform failure: say what happened, never the token
+        detail = default_redactor.redact(f"{type(error).__name__}: {str(error)[:700]}")
+        return Outcome(check_id, "fail", detail, "See the steps.", steps=_kind_steps(kind))
+    return Outcome(check_id, "ok", detail)
+
+
 TAVILY_STEPS = [
     "Open the .env file (the setup guide shows where it is) and add three lines: TAVILY_TOOL_URL=<the tool's "
     "execute-tool address>, TAVILY_TOOL_ID=<the tool's number> and TAVILY_BEARER_TOKEN=<the bearer token>. "
@@ -471,6 +551,9 @@ async def run_check(check_id: str) -> Outcome:
             "postgres_dev": lambda: check_postgres(config, "dev"),
             "gemini": lambda: check_gemini(config),
             "tavily": lambda: check_tavily(config),
+            "tavily_research": lambda: check_tavily_kind("research"),
+            "tavily_extract": lambda: check_tavily_kind("extract"),
+            "tavily_crawl": lambda: check_tavily_kind("crawl"),
             "node": check_node,
             "tesseract": check_tesseract,
         }[check_id]

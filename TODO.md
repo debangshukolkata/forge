@@ -672,6 +672,8 @@ Kept for reference. Open items were moved up into sections 1-6.
 - [x] Gemini provider built and pushed (D-150, D-205): adapter, router dispatch, drawer real call + (i) steps; project/location optional
 - [x] Mode B project folder may be non-empty (D-211)
 - [x] Tavily through the company platform (D-210); direct Tavily key code removed; untested against the real platform (needs the user's token)
+- [~] **BUILT 2026-10-27, TO TEST ON THE OFFICE LAPTOP (D-504):** Tavily Research, Extract and Crawl as tools on the same endpoint (numbers `TAVILY_RESEARCH_TOOL_ID`, `TAVILY_EXTRACT_TOOL_ID`, `TAVILY_CRAWL_TOOL_ID` in .env); mock tests pass; run the three new checks in the Environment test, then one real call each.
+- [~] **BUILT 2026-10-27 (D-503), TO TEST:** egress guard that keeps the project code out of web queries, addresses and MCP calls (docs/SECURITY_EGRESS.md); unit and loop tests pass; watch for false positives in real runs.
 - [x] Web research chain (D-209): guard, PDF + Markdown extraction, headless-browser fallback, archive/snippet fallbacks, `researcher` subagent, `web-research` skill, SearXNG provider
 - [x] Read grants (D-208): `/allow-read`, `/revoke-read`, typed paths, installed skills readable in both modes; no skill copies
 - [x] `forge skill add/list/remove` (D-207): third-party skills like Claude Code; `load_skill` reads a skill's own files

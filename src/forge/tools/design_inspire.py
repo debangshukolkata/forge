@@ -185,6 +185,7 @@ def describe_capture(url: str, data: dict[str, Any], picture: str, draft: str) -
 
 class DesignInspire(Tool):
     name = "design_inspire"
+    sends_outside = True
     read_only = False
     description = (
         "Look at 1 to 5 public web pages as design references: opens each in a guarded, isolated browser, saves a screenshot and reads the computed "
@@ -311,6 +312,7 @@ class DesignMdFromProject(Tool):
 
 class DesignMdImport(Tool):
     name = "design_md_import"
+    sends_outside = True
     read_only = False
     description = (
         "Bring a DESIGN.md the user supplied into the project: a file they gave (a path in the project or one they opened for you) or ONE web address "

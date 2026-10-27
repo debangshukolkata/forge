@@ -23,6 +23,17 @@ TAVILY_ROWS = (
     ),
     ("TAVILY_TOOL_ID", "<the tool's number, e.g. 2361>", "The tool instance id."),
     ("TAVILY_BEARER_TOKEN", "<bearer token>", "The platform's bearer token for that call."),
+    (
+        "TAVILY_RESEARCH_TOOL_ID",
+        "<number, e.g. 2362>",
+        "Optional: the Tavily Research tool (same URL and token).",
+    ),
+    (
+        "TAVILY_EXTRACT_TOOL_ID",
+        "<number, e.g. 2408>",
+        "Optional: the Tavily Extract tool (same URL and token).",
+    ),
+    ("TAVILY_CRAWL_TOOL_ID", "<number, e.g. 2411>", "Optional: the Tavily Crawl tool (same URL and token)."),
 )
 
 

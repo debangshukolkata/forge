@@ -68,6 +68,7 @@ class WebCache:
 
 class WebSearch(Tool):
     name = "web_search"
+    sends_outside = True
     read_only = True
     description = (
         "Search the web for documentation, error messages or library usage. Returns titles, URLs and short "
@@ -382,6 +383,7 @@ async def duckduckgo_search(query: str, max_results: int) -> list[dict[str, str]
 
 class WebFetch(Tool):
     name = "web_fetch"
+    sends_outside = True
     read_only = True
     description = (
         "Fetch a web page, PDF or text file as readable text (optionally answering `question` from it). It "

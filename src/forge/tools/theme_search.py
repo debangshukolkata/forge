@@ -51,6 +51,7 @@ def slug_of(text: str) -> str:
 
 class ThemeSearch(Tool):
     name = "theme_search"
+    sends_outside = True
     read_only = False
     description = (
         "Theme inspiration. `search`: find themes by look or name in the public lists (WordPress.org, WordPress.com, GitHub) and save their screenshots, so you can show "

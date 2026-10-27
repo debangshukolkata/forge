@@ -64,6 +64,7 @@ WEB_SETTINGS = (
     "web_policy",
     "web_render",
     "web_archive",
+    "egress",
 )
 
 

@@ -65,6 +65,7 @@ def font_id(text: str) -> str:
 
 class FindFont(Tool):
     name = "find_font"
+    sends_outside = True
     read_only = True
     description = (
         "Search open-licence fonts (about 2,100 families from Google Fonts and others: OFL, Apache, MIT) by name, look and script. "
@@ -109,6 +110,7 @@ class FindFont(Tool):
 
 class FetchFont(Tool):
     name = "fetch_font"
+    sends_outside = True
     read_only = False
     description = (
         "Download a font into the project: by `font` (an id from find_font, or a family name) as web files (woff2 plus a ready "

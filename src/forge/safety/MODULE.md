@@ -9,3 +9,4 @@ Write jail, permission gate, shell classifier, low-integrity sandbox, secret red
 - **Decisions:** docs/DECISIONS.md (search the module's feature names); layering is enforced by tests/test_module_boundaries.py.
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
+- **Egress guard (D-503):** `egress.py` refuses outbound text of tools marked `sends_outside` when it repeats code the agent has seen (token windows, also through URL escapes and base64) or carries data in an address. Built per session in session_host, checked in `AgentLoop._execute`. Tests: test_egress.py. Limits: docs/SECURITY_EGRESS.md.

@@ -201,3 +201,174 @@ def _keys(value: Any) -> str:
 
 def _scrub(text: str, settings: TavilySettings | None) -> str:
     return text.replace(settings.token, "***") if settings is not None else text
+
+
+# --- the other Tavily tools on the same endpoint (D-504): research, extract, crawl ---
+# Same URL and bearer token; each tool has its own number in .env and its own `args`. A tool is offered only when its number is set.
+
+KINDS = ("research", "extract", "crawl")
+KIND_ID_NAMES = {kind: f"TAVILY_{kind.upper()}_TOOL_ID" for kind in KINDS}
+MAX_PAGES = 20
+MAX_PAGE_CHARS = 4000
+
+
+@dataclass
+class TavilyReport:
+    """What Tavily Research returns: a written report and the sources behind it."""
+
+    report: str
+    sources: list[dict[str, str]]
+
+
+@dataclass
+class TavilyPages:
+    """What Extract and Crawl return: page texts by address, and the addresses that failed."""
+
+    pages: list[dict[str, str]]
+    failed: list[str]
+    base_url: str = ""
+
+
+def kind_settings(secrets: Any, kind: str) -> TavilySettings | None:
+    """The shared URL and token with this tool's own number; None unless all three are in .env."""
+    if secrets is None:
+        return None
+    url, token, tool_id = (
+        secrets.get("TAVILY_TOOL_URL"),
+        secrets.get("TAVILY_BEARER_TOKEN"),
+        secrets.get(KIND_ID_NAMES[kind]),
+    )
+    if not (url and token and tool_id):
+        return None
+    return TavilySettings(url, tool_id, clean_token(token))
+
+
+def missing_kind_names(secrets: Any, kind: str) -> list[str]:
+    wanted = ("TAVILY_TOOL_URL", KIND_ID_NAMES[kind], "TAVILY_BEARER_TOKEN")
+    return [name for name in wanted if secrets is None or not secrets.get(name)]
+
+
+async def _call(
+    settings: TavilySettings, args: dict[str, str], client_factory: Callable[[], httpx.AsyncClient] | None
+) -> Any:
+    try:
+        tool_id = int(settings.tool_id)
+    except ValueError as error:
+        raise TavilyToolError("the Tavily tool number in .env must be a number, for example 2362") from error
+    client = client_factory() if client_factory else httpx.AsyncClient(timeout=TIMEOUT_S)
+    headers = {"Authorization": f"Bearer {settings.token}", "Content-Type": "application/json"}
+    async with client:
+        response = await client.post(
+            settings.url, json={"args": args, "tool_instance_id": tool_id}, headers=headers
+        )
+    if response.status_code in (401, 403):
+        raise TavilyAuthError(
+            f"the platform rejected the bearer token (HTTP {response.status_code}); it has probably "
+            "expired: put a fresh one in TAVILY_BEARER_TOKEN in the .env file"
+        )
+    if response.status_code >= 400:
+        raise TavilyToolError(
+            f"the platform answered HTTP {response.status_code}: {_scrub(response.text, settings)[:200]}"
+        )
+    try:
+        return response.json()
+    except ValueError as error:
+        raise TavilyToolError("the platform's reply was not JSON") from error
+
+
+def _find(value: Any, markers: tuple[str, ...], depth: int = 0) -> Any:
+    """Unwraps the platform's wrapping (JSON inside JSON, output/data/response/result) down to the dict that holds one of the markers."""
+    if depth > MAX_UNWRAP:
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if text[:1] in ("{", "["):
+            try:
+                return _find(json.loads(text), markers, depth + 1)
+            except ValueError:
+                return value
+        return value
+    if isinstance(value, dict):
+        if any(marker in value for marker in markers):
+            return value
+        for key in ("output", "data", "response", "result"):
+            if key in value:
+                return _find(value[key], markers, depth + 1)
+    return value
+
+
+def _sources(raw: Any) -> list[dict[str, str]]:
+    out: list[dict[str, str]] = []
+    for item in raw if isinstance(raw, list) else []:
+        if isinstance(item, dict) and item.get("url"):
+            out.append({"title": str(item.get("title", "")), "url": str(item["url"])})
+        elif isinstance(item, str) and item.startswith("http"):
+            out.append({"title": "", "url": item})
+    return out
+
+
+def parse_report(data: Any, settings: TavilySettings | None = None) -> TavilyReport:
+    found = _find(data, ("content", "report", "answer", "sources"))
+    if isinstance(found, dict) and any(key in found for key in ("content", "report", "answer", "sources")):
+        text = found.get("content") or found.get("report") or found.get("answer") or ""
+        return TavilyReport(str(text), _sources(found.get("sources") or found.get("results")))
+    if isinstance(found, str) and found.strip():  # a tool that answers with the report text itself
+        return TavilyReport(found.strip(), [])
+    message = _failure_message(data) or f"the reply had no research report (it held: {_keys(found)})"
+    raise TavilyToolError(_scrub(message, settings)[:300])
+
+
+def parse_pages(data: Any, settings: TavilySettings | None = None) -> TavilyPages:
+    found = _find(data, ("results", "failed_results"))
+    if isinstance(found, dict) and ("results" in found or "failed_results" in found):
+        raw_pages = found.get("results")
+        raw_failed = found.get("failed_results")
+        pages = [
+            {"url": str(item["url"]), "content": str(item.get("raw_content") or item.get("content") or "")}
+            for item in (raw_pages if isinstance(raw_pages, list) else [])
+            if isinstance(item, dict) and item.get("url")
+        ]
+        failed = [
+            str(item.get("url", item)) if isinstance(item, dict) else str(item)
+            for item in (raw_failed if isinstance(raw_failed, list) else [])
+        ]
+        return TavilyPages(pages, failed, str(found.get("base_url") or ""))
+    message = _failure_message(data) or f"the reply had no pages (it held: {_keys(found)})"
+    raise TavilyToolError(_scrub(message, settings)[:300])
+
+
+async def research(
+    settings: TavilySettings,
+    query: str,
+    topic: str = "General",
+    client_factory: Callable[[], httpx.AsyncClient] | None = None,
+) -> TavilyReport:
+    data = await _call(settings, {"query": query, "topic": topic}, client_factory)
+    return parse_report(data, settings)
+
+
+async def extract(
+    settings: TavilySettings, url: str, client_factory: Callable[[], httpx.AsyncClient] | None = None
+) -> TavilyPages:
+    return parse_pages(await _call(settings, {"url": url}, client_factory), settings)
+
+
+async def crawl(
+    settings: TavilySettings,
+    url: str,
+    max_depth: int = 1,
+    max_breadth: int = 20,
+    instructions: str = "",
+    chunks_per_source: int = 3,
+    client_factory: Callable[[], httpx.AsyncClient] | None = None,
+) -> TavilyPages:
+    args = {  # strings, as the platform's own test call sends them
+        "url": url,
+        "max_depth": str(max_depth),
+        "max_breadth": str(max_breadth),
+        "instructions": instructions,
+        "chunks_per_source": str(
+            chunks_per_source if instructions else 0
+        ),  # chunks only apply with instructions
+    }
+    return parse_pages(await _call(settings, args, client_factory), settings)

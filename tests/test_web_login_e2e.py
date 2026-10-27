@@ -389,7 +389,7 @@ def test_optional_tools_are_asked_before_they_are_tested(
         tesseract = drawer.locator("[role=group][aria-label='Is Tesseract installed on this computer?']")
         gemini = drawer.locator("[role=group][aria-label='Is Gemini enabled for you?']")
         tesseract.wait_for()
-        assert drawer.locator("text=Answer the question to test it.").count() == 4
+        assert drawer.locator("text=Answer the question to test it.").count() == 7
         assert calls == []  # nothing is tested until the user says yes
 
         tesseract.locator("button:has-text('Yes')").click()

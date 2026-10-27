@@ -137,6 +137,7 @@ def _interleave(groups: list[list[Candidate]], limit: int) -> list[Candidate]:
 
 class FindImage(Tool):
     name = "find_image"
+    sends_outside = True
     read_only = True
     description = (
         "Search pictures: the user's own files first (the project's brand-assets, assets/brand or brand folder; ids project:...), then free, licensed icons and vector clip art (Iconify: Lucide, Tabler, Material and others), photos and drawings "
@@ -241,6 +242,7 @@ async def subject_problem(context: ToolContext, data: bytes, subject: str) -> st
 
 class FetchImage(Tool):
     name = "fetch_image"
+    sends_outside = True
     read_only = False
     description = (
         "Download a picture found with find_image into the project and record its source and licence in NOTICES.md. Give the id and a "

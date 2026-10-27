@@ -699,6 +699,20 @@ class AgentLoop:
         return await self._execute(tool, args)
 
     async def _execute(self, tool: Tool, args: ToolArgs) -> ToolResult:
+        guard = self.context.egress
+        if guard is not None and tool.sends_outside:
+            problem = guard.check_arguments(tool.name, args.model_dump(mode="json"))
+            if problem:
+                await self.bus.publish(
+                    EventType.NOTICE, {"kind": "egress", "text": f"{tool.name} not sent: {problem}"}
+                )
+                return ToolResult(ok=False, content=f"Not sent: {problem}.")
+        result = await self._run_tool(tool, args)
+        if guard is not None and result.ok and not tool.sends_outside:
+            guard.remember(result.content)  # what a local tool showed the model counts as the user's code
+        return result
+
+    async def _run_tool(self, tool: Tool, args: ToolArgs) -> ToolResult:
         try:
             return await tool.run(args, self.context)
         except ForgeError as error:

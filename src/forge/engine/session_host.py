@@ -48,6 +48,7 @@ from forge.parity.skills import index_text as skills_index
 from forge.protocol.approvals import ApprovalBroker, QuestionBroker
 from forge.protocol.events import EventBus, EventType
 from forge.protocol.inputs import Answer, Approve, Interrupt, Reject, SendMessage, SlashCommand, UserInput
+from forge.safety.egress import EgressGuard
 from forge.safety.mcp_allow import McpAllowList
 from forge.safety.permissions import PermissionGate, PermissionMode
 from forge.safety.redact import default_redactor
@@ -60,6 +61,7 @@ from forge.toolkit.shell import ShellSession, execute
 from forge.tools.interaction import AskUser
 from forge.tools.modeb import modeb_tools
 from forge.tools.registry import ToolRegistry, db_tools, default_tools
+from forge.tools.tavily_tools import tavily_tools
 from forge.tools.test_quality import recover_interrupted_mutation
 from forge.tools.todo import PIN_SLOT as TODO_PIN_SLOT
 from forge.tools.todo import TodoItem
@@ -244,6 +246,7 @@ class SessionHost:
         self.extra_tools: list[Tool] = [
             *(modeb_tools() if workspace.mode_b else []),
             *(ocr_tools() if tesseract_ready(forge_home()) else []),  # D-203
+            *tavily_tools(self.secrets),  # D-504: only those whose number is in .env
         ]
         self.mcp_hub: McpHub | None = None
         settings = self.router.config.context
@@ -279,6 +282,8 @@ class SessionHost:
         context.ask_user = self._ask_user
         context.user_github_repos = lambda: self.user_github_repos
         context.user_urls = lambda: self.user_urls
+        context.egress = EgressGuard(workspace.repo_dir)
+        context.egress.user_addresses = lambda: self.user_urls
         context.skills_changed = self.refresh_instructions
         if workspace.mode_b:
             context.profile = self.host_profile()

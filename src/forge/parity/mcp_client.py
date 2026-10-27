@@ -184,6 +184,7 @@ def _wrap(hub: McpHub, server: str, mcp_tool: Any) -> Tool:
         description: ClassVar[str] = f"[MCP {server}] {tool_description}"
         read_only: ClassVar[bool] = False
         Args: ClassVar[type[ToolArgs]] = _AnyArgs
+        sends_outside = True
 
         def spec(self) -> ToolSpec:
             return ToolSpec(

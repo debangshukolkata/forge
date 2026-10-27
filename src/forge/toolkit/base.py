@@ -118,6 +118,9 @@ class ToolContext:
     web_archive: bool = True  # web.archive_fallback
     profile: Any = None  # forge.modeb.profile.HostProfile (Mode B)
     router: Any = None  # forge.llm.router.LLMRouter, for tools that run subagents
+    egress: Any = (
+        None  # forge.safety.egress.EgressGuard: refuses outbound text that repeats the user's code (D-503)
+    )
     sensitive_terms: tuple[str, ...] = ()  # Mode B: host-identifying words that must never reach a web search
     hosted_search: Callable[[str], Awaitable[tuple[str, list[dict[str, str]]]]] | None = None  # azure search
     interaction: Any = None  # the orchestrator (tools/interaction.Interaction), when orchestrated
@@ -259,6 +262,9 @@ class Tool:
     Args: ClassVar[type[ToolArgs]]
     read_only: ClassVar[bool] = False
     output_kind: ClassVar[OutputKind] = "tool"  # which token cap applies to its output
+    sends_outside: ClassVar[bool] = (
+        False  # talks to the internet: its text arguments pass the egress guard (D-503)
+    )
 
     async def run(self, args: Any, context: ToolContext) -> ToolResult:
         raise NotImplementedError

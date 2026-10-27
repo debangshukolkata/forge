@@ -25,6 +25,16 @@ SKILL = (
 )
 
 
+def with_gates(text: str, name: str) -> str:
+    """The catalogue systems are bare; the tool refuses a candidate without a composition and a Concept (D-486)."""
+    head, rest = text.split("\n---\n", 1)
+    concept = (
+        f"\n## Concept\nIdea: A page for a science museum in the manner of {name}, each design with its own idea.\n"
+        f"Signature visual: A drawn scene in the style of {name} filling the hero.\n"
+    )
+    return f"{head}\ncomposition: custom a museum page laid out in the manner of {name}\n---\n{concept}{rest}"
+
+
 async def test_the_critic_prefers_the_playful_system_for_a_childrens_museum(
     live: tuple[ForgeConfig, Secrets],  # noqa: F811
     tmp_path: Path,
@@ -38,7 +48,7 @@ async def test_the_critic_prefers_the_playful_system_for_a_childrens_museum(
     for letter, name in names.items():
         workspace.write_text(
             f".forge/candidates/{letter}/DESIGN.md",
-            (SKILL / f"{name}.design.md").read_text(encoding="utf-8"),
+            with_gates((SKILL / f"{name}.design.md").read_text(encoding="utf-8"), name),
             "x",
         )
     result = await DesignCandidates().run(

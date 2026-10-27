@@ -61,14 +61,22 @@ def main() -> int:
         "POSTGRES_USER": unquote(parts.username or ""),
         "POSTGRES_PASSWORD": unquote(parts.password or ""),
         "POSTGRES_DB": (parts.path or "/postgres").lstrip("/"),
+        "DATABASE_URL": url,  # newer template versions read one URL instead of the pieces above
         "FASTAPI_ENV": "development",
         "SECRET_KEY": secrets.token_hex(16),
         "FIRST_SUPERUSER": "admin@example.com",
         "FIRST_SUPERUSER_PASSWORD": secrets.token_hex(8),
         "PYTHONDONTWRITEBYTECODE": "1",
         "PYTHONIOENCODING": "utf-8",
+        "PYTHONUTF8": "1",  # the template reads its email templates with the Windows default encoding
     }
     try:
+        # The template's prestart.sh migrates before its tests run; the throw-away schema starts empty.
+        migrate = subprocess.run(
+            [args.python, "-m", "alembic", "upgrade", "head"], cwd=args.backend, env=env, check=False
+        )
+        if migrate.returncode != 0:
+            return migrate.returncode
         run = subprocess.run(
             [args.python, "-m", "pytest", "-q", "-p", "no:cacheprovider", *args.pytest_args],
             cwd=args.backend,

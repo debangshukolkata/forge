@@ -38,3 +38,9 @@ standard, a release note, a vendor's documentation.
 
 ## Gotchas
 - A search snippet is not a source: open the page. Two pages that copy each other are one source.
+
+## Tavily tools (only when they are offered)
+- `tavily_research`: a written report with sources for a question that needs several sources compared. Slower than `web_search`; use it once, not in a loop.
+- `tavily_extract`: the clean text of one public page when `web_fetch` fails or returns clutter.
+- `tavily_crawl`: a documentation site explored from a start address; keep depth and breadth small and say in `instructions` what to look for.
+- Never put the project's code in a query or in `instructions`: describe the problem in words. Such a call is refused.

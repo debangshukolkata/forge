@@ -160,6 +160,7 @@ def render(data: dict[str, object]) -> str:
 
 class LibraryApi(Tool):
     name = "library_api"
+    sends_outside = True
     read_only = True
     output_kind = "tool"
     description = (
