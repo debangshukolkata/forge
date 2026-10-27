@@ -24,18 +24,13 @@ from tests.conftest import REPO_ROOT
 pytestmark = pytest.mark.live
 playwright_api = pytest.importorskip("playwright.sync_api")
 
+# Small on purpose: this test checks the form, the attachment and the card clicking, not the model's coding.
 REQUIREMENT = (
     "Write payments/security/masking.py with exactly the signature in the attached file. mask_pan returns the PAN "
-    "with all but the last `visible` digits replaced by mask_char, keeping spaces and dashes in place, and raises "
-    "ValueError for fewer than 12 or more than 19 digits. After masking it calls the host's existing "
-    "payments.audit.log_event('pan_masked', digits=<number of digits>) — never with the PAN. Tests with pytest."
+    "with all but the last `visible` digits replaced by mask_char, keeping spaces and dashes in place. Add one small pytest test."
 )
-SIGNATURE = (
-    'def mask_pan(pan: str, visible: int = 4, mask_char: str = "*") -> str: ...\n\n'
-    "# existing in the host: payments/audit.py\n"
-    "def log_event(event: str, **fields: object) -> None: ...\n"
-)
-RUN_LIMIT_S = 45 * 60
+SIGNATURE = 'def mask_pan(pan: str, visible: int = 4, mask_char: str = "*") -> str: ...\n'
+RUN_LIMIT_S = 15 * 60
 USER_REPLY = "Use your recommended option for every open question, note the assumptions, and continue."
 
 
@@ -140,5 +135,3 @@ def test_a_requirement_through_the_react_ui(server: ServerSecurity, tmp_path: Pa
     assert masking.exists(), sorted(str(p) for p in (project / "output").rglob("*"))
     source = masking.read_text(encoding="utf-8")
     assert 'def mask_pan(pan: str, visible: int = 4, mask_char: str = "*") -> str' in source
-    assert "log_event" in source
-    assert not (project / "output" / "payments" / "audit.py").exists()  # the host's helper is never delivered

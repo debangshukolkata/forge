@@ -27,12 +27,12 @@ from tests.conftest import FIXTURE_BACKEND, FIXTURE_REPO, REPO_ROOT
 pytestmark = [pytest.mark.live, pytest.mark.e2e]
 playwright_api = pytest.importorskip("playwright.sync_api")
 FIXTURE_PYTHON = FIXTURE_BACKEND / "venv" / "Scripts" / "python.exe"
+# Deliberately tiny: this test checks the web UI (reload, tabs, download, stop), not how well the model builds a feature.
 REQUIREMENT = (
-    "Add GET /api/policies/{policy_id}/claims/count returning {policy_id, claim_count} for one policy "
-    "(404 if the policy doesn't exist). Follow the existing layering (repository with raw SQL, service, "
-    "route with marshmallow schemas) and add tests. No authentication changes."
+    "Add backend/claims_app/services/claim_labels.py with claim_label(count: int) -> str returning 'No claims', "
+    "'1 claim' or 'N claims'. Add one small pytest test file for it. Change nothing else."
 )
-RUN_TIMEOUT_S = 1500
+RUN_TIMEOUT_S = 600
 USER_REPLY = "Use your recommended option for every open question, note the assumptions, and continue."
 
 
@@ -143,7 +143,7 @@ def test_requirement_through_the_web_ui(server: ServerSecurity, workspace: Works
                 page.wait_for_selector("[data-card=approval]:not([data-pending])", timeout=30_000)
                 assert REQUIREMENT[:40] in page.inner_text("main")
                 reloaded = True
-            if "Done:" in text and "COPY_INSTRUCTIONS" in text:
+            if "Done:" in text and "copy instructions" in text.lower():
                 break
             time.sleep(2)
         else:
@@ -151,7 +151,12 @@ def test_requirement_through_the_web_ui(server: ServerSecurity, workspace: Works
                 f"the run did not finish through the web UI; evidence in {keep_evidence(page, workspace)}"
             )
 
-        assert reloaded
+        if (
+            not reloaded
+        ):  # the model needed no approval this time: reload now, the chat is rebuilt from the event log
+            page.reload()
+            page.wait_for_selector("textarea[aria-label=Message]")
+            assert REQUIREMENT[:40] in page.inner_text("main")
         page.click("[role=tab]:has-text('Tasks')")
         page.wait_for_selector("[role=tabpanel] span:text-is('done')")
         assert not page.query_selector("[role=tabpanel] span:text-is('pending')")
