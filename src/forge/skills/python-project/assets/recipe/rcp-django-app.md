@@ -72,6 +72,8 @@ class Ticket(models.Model):
 # tickets/views.py
 from django.views.generic import ListView
 
+from .models import Ticket
+
 
 class TicketList(ListView):
     paginate_by = 25
@@ -87,12 +89,17 @@ class TicketList(ListView):
 # tickets/urls.py
 from django.urls import path
 
+from .views import TicketList
+
 app_name = "tickets"
 urlpatterns = [path("", TicketList.as_view(), name="list")]
 
 # tickets/tests.py
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+
+from .models import Ticket
 
 
 class TicketListTests(TestCase):
@@ -106,7 +113,8 @@ class TicketListTests(TestCase):
         self.assertEqual(len(response.context["object_list"]), 1)
 ```
 
-Run with `DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test`. Add a login test and a permission test for
+The view needs its template, `tickets/templates/tickets/list.html` (a loop over `object_list`), and `Tag` is a model of its own in
+`tickets/models.py`. Run with `DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test`. Add a login test and a permission test for
 every view that is not public (`LoginRequiredMixin`, `UserPassesTestMixin`).
 
 Gotchas:

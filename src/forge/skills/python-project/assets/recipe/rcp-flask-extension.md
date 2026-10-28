@@ -85,6 +85,9 @@ def read(note_id: int):
 from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException
 
+from . import notes
+from .extensions import rate_note
+
 
 def create_app(overrides: dict | None = None) -> Flask:
     app = Flask(__name__)
@@ -103,6 +106,8 @@ def create_app(overrides: dict | None = None) -> Flask:
 
 # tests/test_notes.py
 import pytest
+
+from app import create_app
 
 
 @pytest.fixture
