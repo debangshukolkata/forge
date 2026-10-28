@@ -275,7 +275,172 @@ def check_w07(workspace: Path) -> dict[str, Any]:
     return {"delivered": True, **_report(passed)}
 
 
+def _workbook_cells(data: bytes) -> tuple[Any, list[Any]]:
+    import openpyxl
+
+    book = openpyxl.load_workbook(io.BytesIO(data))
+    return book, [
+        c for sheet in book.worksheets for row in sheet.iter_rows() for c in row if c.value is not None
+    ]
+
+
+def _is_formula(cell: Any) -> bool:
+    return isinstance(cell.value, str) and cell.value.startswith("=")
+
+
+def check_w08(workspace: Path) -> dict[str, Any]:
+    from forge.ooxml.validate import validate_package
+    from forge.sheets.check import check_workbook
+
+    file = workspace / "project" / "figures.xlsx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 6, "checks_failed": ["no workbook"]}
+    data = file.read_bytes()
+    _, cells = _workbook_cells(data)
+    numbers = [c.value for c in cells if isinstance(c.value, (int, float)) and not isinstance(c.value, bool)]
+    texts = " ".join(str(c.value) for c in cells if isinstance(c.value, str) and not c.value.startswith("="))
+    plain = texts.replace(",", "").replace(" ", "")
+    passed = {
+        "package valid": not validate_package(data),
+        "no formula errors": not [f for f in check_workbook(data) if f.level == "error"],
+        "the four quarters as numbers": all(n in numbers for n in (41200, 45800, 52300, 61900)),
+        "the order counts as numbers": all(n in numbers for n in (3100, 3380, 3790, 4410)),
+        "a total made of a formula": any("SUM" in str(c.value).upper() for c in cells if _is_formula(c)),
+        "the yearly total stated (201200)": "201200" in plain,
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+def check_w09(workspace: Path) -> dict[str, Any]:
+    from forge.pdfs.read import read_pdf
+
+    file = workspace / "project" / "pack.pdf"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 6, "checks_failed": ["no pdf"]}
+    info = read_pdf(file.read_bytes())
+    texts = [t.upper() for t in info.texts]
+    passed = {
+        "four pages": info.pages == 4,
+        "the cover first": len(texts) > 0 and "COVER SHEET" in texts[0],
+        "the terms second": len(texts) > 1 and "TERMS AND CONDITIONS" in texts[1],
+        "the annex pages third and fourth": len(texts) > 3
+        and "ANNEX A" in texts[2]
+        and "ANNEX B" in texts[3],
+        "the title is set": info.title.strip() == "Proposal pack",
+        "the text is kept as text": not info.scanned,
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+def check_w10(workspace: Path) -> dict[str, Any]:
+    from pypdf import PdfReader
+
+    file = workspace / "project" / "form-filled.pdf"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 6, "checks_failed": ["no pdf"]}
+    reader = PdfReader(io.BytesIO(file.read_bytes()))
+    fields = {name: str(field.get("/V") or "") for name, field in (reader.get_fields() or {}).items()}
+    passed = {
+        "the form fields are still there": {"full_name", "email", "postcode", "start_date"} <= set(fields),
+        "full name filled": fields.get("full_name", "") == "Priya Raman",
+        "e-mail filled": fields.get("email", "") == "priya.raman@example.org",
+        "postcode filled": fields.get("postcode", "") == "MB3 4QF",
+        "start date filled": fields.get("start_date", "") == "8 January 2027",
+        "the form text is kept": "Membership application" in (reader.pages[0].extract_text() or ""),
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+def check_w12(workspace: Path) -> dict[str, Any]:
+    from forge.documents.read import read_document
+    from forge.ooxml.validate import validate_package
+
+    file = workspace / "project" / "minutes-updated.docx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 7, "checks_failed": ["no document"]}
+    data = file.read_bytes()
+    markdown = read_document(data).markdown
+    passed = {
+        "package valid": not validate_package(data),
+        "the date changed in the first paragraph": "Meeting date: 10 March" in markdown
+        and "Meeting date: 3 March" not in markdown,
+        "the other 3 March left alone": "3 March next year" in markdown,
+        "the new action row": bool(
+            re.search(r"\|\s*Sam\s*\|\s*Send the notes\s*\|\s*14 March\s*\|", markdown)
+        ),
+        "the old action row kept": bool(
+            re.search(r"\|\s*Priya\s*\|\s*Order the new menu boards\s*\|\s*10 March\s*\|", markdown)
+        ),
+        "the decisions paragraph untouched": "The new menu starts in April. The delivery van is replaced before the summer."
+        in markdown,
+        "the three headings kept": all(
+            h in markdown for h in ("Minutes of the planning meeting", "Decisions", "Actions")
+        )
+        and markdown.count("#") >= 3,
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+def check_w13(workspace: Path) -> dict[str, Any]:
+    from forge.ooxml.validate import validate_package
+    from forge.sheets.check import check_workbook
+    from forge.sheets.read import package_extras
+
+    file = workspace / "project" / "sales-margin.xlsx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 8, "checks_failed": ["no workbook"]}
+    data = file.read_bytes()
+    book, _ = _workbook_cells(data)
+    sheet = book["Sales"] if "Sales" in book.sheetnames else book.worksheets[0]
+    charts, _, macros = package_extras(data)
+    margin = [sheet.cell(row=r, column=4) for r in range(2, 7)]
+    passed = {
+        "package valid": not validate_package(data),
+        "no formula errors": not [f for f in check_workbook(data) if f.level == "error"],
+        "a margin formula for each product": all(_is_formula(c) for c in margin[:4]),
+        "a margin in the total row": _is_formula(margin[4]),
+        "the original numbers untouched": sheet["B2"].value == 5200 and sheet["C5"].value == 1700,
+        "the existing chart kept": charts >= 1,
+        "the number format kept": sheet["B2"].number_format == "#,##0",
+        "the bold header kept": bool(sheet["A1"].font and sheet["A1"].font.bold) and not macros,
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+def check_w14(workspace: Path) -> dict[str, Any]:
+    from forge.ooxml.validate import validate_package
+    from forge.sheets.check import check_workbook
+    from forge.sheets.read import package_extras
+
+    file = workspace / "project" / "dashboard.xlsx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 7, "checks_failed": ["no workbook"]}
+    data = file.read_bytes()
+    book, cells = _workbook_cells(data)
+    numbers = [c.value for c in cells if isinstance(c.value, (int, float)) and not isinstance(c.value, bool)]
+    formulas = [str(c.value).upper() for c in cells if _is_formula(c)]
+    charts, _, macros = package_extras(data)
+    passed = {
+        "package valid": not validate_package(data),
+        "no formula errors": not [f for f in check_workbook(data) if f.level == "error"],
+        "the data as numbers": all(n in numbers for n in (41200, 52300, 310, 378)),
+        "total revenue and average customers as formulas": any("SUM" in f for f in formulas)
+        and any("AVERAGE" in f for f in formulas),
+        "a refund rate as a division": any("/" in f for f in formulas),
+        "two charts": charts >= 2,
+        "a conditional format": any(len(sheet.conditional_formatting) > 0 for sheet in book.worksheets)
+        and not macros,
+    }
+    return {"delivered": True, **_report(passed)}
+
+
 CHECKS = {
+    "w08_pdf_extract": check_w08,
+    "w09_pdf_merge": check_w09,
+    "w10_pdf_form": check_w10,
+    "w12_word_edit": check_w12,
+    "w13_excel_edit": check_w13,
+    "w14_excel_dashboard": check_w14,
     "w01_sales_report": check_w01,
     "w02_clean_and_chart": check_w02,
     "w03_handout": check_w03,
@@ -285,6 +450,12 @@ CHECKS = {
     "w07_tracker": check_w07,
 }
 OUTPUT = {
+    "w08_pdf_extract": "figures.xlsx",
+    "w09_pdf_merge": "pack.pdf",
+    "w10_pdf_form": "form-filled.pdf",
+    "w12_word_edit": "minutes-updated.docx",
+    "w13_excel_edit": "sales-margin.xlsx",
+    "w14_excel_dashboard": "dashboard.xlsx",
     "w01_sales_report": "sales-summary.docx",
     "w02_clean_and_chart": "orders.xlsx",
     "w03_handout": "handout.pdf",

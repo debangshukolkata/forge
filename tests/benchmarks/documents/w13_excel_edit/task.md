@@ -1,0 +1,1 @@
+project/sales.xlsx has revenue and cost by product, a total row and a chart. Add a Margin column D (revenue minus cost) as formulas, one for each product and one in the total row. Keep the existing chart, the number formats and the bold header row, and save the result as project/sales-margin.xlsx. Tell me what you changed.

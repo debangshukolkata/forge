@@ -1,0 +1,1 @@
+project/cover.pdf, project/annex.pdf and project/terms.pdf are three parts of one proposal. Combine them into project/pack.pdf in this order: the cover, then the terms, then the annex. Keep every page, and set the document title to "Proposal pack". Tell me the page order of the result.

@@ -67,8 +67,10 @@ def catalogue_hint(context: ToolContext, request: str) -> str:
     top_score = found[0][0]
     matches = [asset for score, asset in found if score >= max(HINT_MIN_FOLLOWER, top_score / 2)]
     return (
-        "Catalogue matches for this request, from a keyword search of the tested, ready-to-copy assets: use one if it fits (add_asset(id) copies it into the "
-        "project; find_asset searches for more) and ignore them if the request is about something else.\n"
+        "Catalogue matches for this request, from a keyword search of the tested, ready-to-copy assets. If the first one fits what was asked, call add_asset(id) "
+        "on it as your first building step, before you write that part from scratch: it brings the files, the licence note and a usage note you then adapt. "
+        "For a colour palette or a design system, add it and take the colours and tokens from what it returns. Research or a question first is fine; "
+        "skip the matches only when the request is about something else. find_asset searches for more.\n"
         + "\n".join(describe(asset) for asset in matches)
     )
 

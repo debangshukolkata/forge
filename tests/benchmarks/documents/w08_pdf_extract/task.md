@@ -1,0 +1,1 @@
+project/report.pdf is a short report with a table of quarterly sales. Write project/figures.xlsx from it: one sheet with the table (Quarter, Sales, Orders) as real numbers, a total row made of formulas, and below the table one sentence stating the total sales for the year. Use only the numbers in the PDF. Tell me anything you were unsure about.

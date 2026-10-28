@@ -206,3 +206,131 @@ def test_the_new_checks_fail_on_an_empty_workspace_and_pass_good_outputs(tmp_pat
         summary.cell(row=row, column=2, value=f"=COUNTIF(Tasks!C:C,A{row})")
     tracker.save(workspace / "project" / "tracker.xlsx")
     assert bench.check_w07(workspace)["checks_failed"] == []
+
+
+def test_the_edit_and_extract_checks_fail_on_an_empty_workspace_and_pass_good_outputs(tmp_path: Path) -> None:
+    """W5 (D-519): w08, w09 and w12 to w14 are proven without a model, from files built here."""
+    import datetime
+
+    import openpyxl
+    from docx import Document
+    from openpyxl.chart import BarChart, LineChart, Reference
+    from openpyxl.formatting.rule import CellIsRule
+    from openpyxl.styles import Font, PatternFill
+    from pypdf import PdfReader, PdfWriter
+
+    workspace = _workspace(tmp_path)
+    seeds = Path(__file__).resolve().parent / "benchmarks" / "documents"
+    for check in (
+        bench.check_w08,
+        bench.check_w09,
+        bench.check_w10,
+        bench.check_w12,
+        bench.check_w13,
+        bench.check_w14,
+    ):
+        assert not check(workspace)["delivered"]
+
+    # w08: the table from the PDF as an Excel sheet with a total formula and the yearly total in words
+    book = openpyxl.Workbook()
+    sheet = book.active
+    sheet.append(["Quarter", "Sales", "Orders"])
+    for row in [["Q1", 41200, 3100], ["Q2", 45800, 3380], ["Q3", 52300, 3790], ["Q4", 61900, 4410]]:
+        sheet.append(row)
+    sheet.append(["Total", "=SUM(B2:B5)", "=SUM(C2:C5)"])
+    sheet["A8"] = "Total sales for the year were 201,200 GBP."
+    book.save(workspace / "project" / "figures.xlsx")
+    assert bench.check_w08(workspace)["checks_failed"] == []
+
+    # w09: the three seed PDFs in the asked order with the title set
+    writer = PdfWriter()
+    for name in ("cover.pdf", "terms.pdf", "annex.pdf"):
+        for page in PdfReader(str(seeds / "w09_pdf_merge" / "seed" / name)).pages:
+            writer.add_page(page)
+    writer.add_metadata({"/Title": "Proposal pack"})
+    with open(workspace / "project" / "pack.pdf", "wb") as handle:
+        writer.write(handle)
+    assert bench.check_w09(workspace)["checks_failed"] == []
+
+    # w10: the seed form with its four fields filled
+    reader = PdfReader(str(seeds / "w10_pdf_form" / "seed" / "form.pdf"))
+    writer = PdfWriter()
+    writer.append(reader)
+    writer.update_page_form_field_values(
+        writer.pages[0],
+        {
+            "full_name": "Priya Raman",
+            "email": "priya.raman@example.org",
+            "postcode": "MB3 4QF",
+            "start_date": "8 January 2027",
+        },
+    )
+    with open(workspace / "project" / "form-filled.pdf", "wb") as handle:
+        writer.write(handle)
+    assert bench.check_w10(workspace)["checks_failed"] == []
+
+    # w12: the seed minutes with the first date changed and one row added
+    document = Document(str(seeds / "w12_word_edit" / "seed" / "minutes.docx"))
+    first = next(p for p in document.paragraphs if p.text.startswith("Meeting date"))
+    first.runs[0].text = first.runs[0].text.replace("3 March", "10 March")
+    row = document.tables[0].add_row()
+    for cell, text in zip(row.cells, ["Sam", "Send the notes", "14 March"], strict=True):
+        cell.text = text
+    document.save(workspace / "project" / "minutes-updated.docx")
+    assert bench.check_w12(workspace)["checks_failed"] == []
+
+    # w13: the workbook rebuilt with a margin column, its chart, number formats and bold header kept (openpyxl drops charts it reads, so build it whole)
+    book = openpyxl.Workbook()
+    sheet = book.active
+    sheet.title = "Sales"
+    sheet.append(["Product", "Revenue", "Cost", "Margin"])
+    for index, row in enumerate(
+        [["Kettle", 5200, 3100], ["Toaster", 3400, 2200], ["Blender", 4100, 2500], ["Grinder", 2900, 1700]],
+        start=2,
+    ):
+        sheet.append([*row, f"=B{index}-C{index}"])
+    sheet.append(["Total", "=SUM(B2:B5)", "=SUM(C2:C5)", "=B6-C6"])
+    for cell in sheet[1]:
+        cell.font = Font(bold=True)
+    for cells in sheet.iter_rows(min_row=2, min_col=2, max_col=4):
+        for cell in cells:
+            cell.number_format = "#,##0"
+    chart = BarChart()
+    chart.add_data(Reference(sheet, min_col=2, min_row=1, max_row=5), titles_from_data=True)
+    sheet.add_chart(chart, "F2")
+    book.save(workspace / "project" / "sales-margin.xlsx")
+    assert bench.check_w13(workspace)["checks_failed"] == []
+
+    # w14: data, KPI formulas, two charts and a conditional format
+    book = openpyxl.Workbook()
+    data = book.active
+    data.title = "Data"
+    data.append(["Month", "Revenue", "Customers", "Refunds"])
+    for index, (revenue, customers, refunds) in enumerate(
+        [
+            (41200, 310, 12),
+            (43800, 322, 9),
+            (47100, 340, 15),
+            (45200, 336, 11),
+            (49900, 361, 8),
+            (52300, 378, 10),
+        ],
+        start=1,
+    ):
+        data.append([datetime.date(2026, index, 1), revenue, customers, refunds])
+    data.conditional_formatting.add(
+        "D2:D7",
+        CellIsRule(operator="greaterThan", formula=["12"], fill=PatternFill("solid", start_color="FFC7CE")),
+    )
+    kpi = book.create_sheet("KPIs")
+    kpi["A1"], kpi["B1"] = "Total revenue", "=SUM(Data!B2:B7)"
+    kpi["A2"], kpi["B2"] = "Average customers", "=AVERAGE(Data!C2:C7)"
+    kpi["A3"], kpi["B3"] = "Refund rate", "=SUM(Data!D2:D7)/SUM(Data!C2:C7)"
+    bars = BarChart()
+    bars.add_data(Reference(data, min_col=2, min_row=1, max_row=7), titles_from_data=True)
+    kpi.add_chart(bars, "D2")
+    line = LineChart()
+    line.add_data(Reference(data, min_col=3, min_row=1, max_row=7), titles_from_data=True)
+    kpi.add_chart(line, "D20")
+    book.save(workspace / "project" / "dashboard.xlsx")
+    assert bench.check_w14(workspace)["checks_failed"] == []

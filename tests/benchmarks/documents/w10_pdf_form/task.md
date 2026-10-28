@@ -1,0 +1,1 @@
+project/form.pdf is a fillable membership form and project/details.txt has the member's details. Fill in the form fields from the details (full name, e-mail, postcode, start date), save the result as project/form-filled.pdf, keep the form's other content as it is, and tell me which field got which value.

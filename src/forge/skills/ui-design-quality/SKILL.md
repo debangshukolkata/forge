@@ -229,34 +229,10 @@ The machine-made page is a centred column: a hero with a gradient, three identic
   per control, focus rings that match the palette.
 
 ## 0i. Applications: start from a screen recipe, not a blank file
-For an application (dashboard, table, form, settings, inbox, calendar, record page, board) do not write the screen from nothing: that is thousands of output
-tokens and it looks generic. `find_asset` with type `section` and the tag `app screen` lists 38 complete screens in plain HTML and CSS with believable content, drawn
-charts (SVG shapes with HTML labels) and an icon sprite. Families: **dashboards** (sales KPIs, operations board, dark analytics, personal day view), **tables**
-(people table with filters and bulk actions, master and detail, kanban board, editable grid for fast entry), **forms** (multi-step wizard, invoice with line items,
-long form with an error summary, sign-in split screen, quick capture), **settings** (account and API keys, notification matrix, plan and billing, roles and
-permissions), **web-app screens** (inbox, chat, week calendar, customer record, map with a list, document editor, empty / error / offline / loading states) and **back-office screens** (approval queue with a decision panel, audit log with before and after, order fulfilment, stock levels with reorder, receivables ageing, support queue with reply deadlines, CSV import with column mapping, report builder, background jobs monitor, resource timeline with conflicts).
-- Forge reads the brief for you: `design_candidates` says whether it reads as an application screen or a brand page and names the three closest screens. For an application, name one as
-  `composition: app-...` (or `composition: custom <one line>` when none fits); the first page or screen is refused until `add_asset` has copied the screen you named, so run it
-  as soon as you have chosen, and build from the copy instead of from a blank file.
-- Pick by the job the user does on the screen, not by the product's industry; then `add_asset` copies the file (it lands in `screens/`) and `view_image` its
-  reference pictures. Name it in the candidate's front matter as `composition: app-dashboard-kpi` (or the id you chose).
-- Make it the product's own: replace the `:root` block with the tokens from `design_md_export css-variables`, fetch the fonts the tokens name, change every
-  word, name and number to the product's real content, delete what the product does not have, add what it does. Never ship the sample copy or numbers.
-- Reuse the shell: the other screens of the same app use the same classes (`.app`, `.side`, `.topbar`, `.card`, `.table-wrap`, `.field`, `.pill`), so copy
-  the first screen, then write only what differs; keep one shell for the whole app. Every list, search and fetch also needs its empty, no-results, error and
-  loading states: `app-empty-states` has them. **In a React project use the React version** (`app-react-<id>`: dashboard-kpi, table-data, form-wizard, settings-account, inbox: `Screen.tsx` + `screen.css` + `tokens.css`, type-checked and built with Vite) and split it into components; for the other screens copy the HTML recipe and convert it the same way.
-- Screens must work on a phone: the side navigation becomes a strip and tables scroll inside their frame. Check at 375 px with `browser_screenshot`.
+For an application (dashboard, table, form, settings, inbox, calendar, record page, board) do not write the screen from nothing: copy a complete screen and make it the product's own. `find_asset` with type `section` and the tag `app screen` lists them (for example `app-dashboard-kpi`; in a React project the `app-react-` version). Forge reads the brief for you: `design_candidates` says whether it is an application screen and you name `composition: app-...` (or `composition: custom <one line>`). **Before you build, call `load_skill` with name `ui-design-quality` and file `recipes/skill-applications.md`**: the families of screens, how to pick one, how to make it the product's own, how to reuse the shell and the phone rules.
 
 ## 0j. Back-office polish: the look of an office app that is finished
-For any tool people work in all day (approvals, queues, tables, records, settings, imports, reports) use the **office polish** rules; they are what separates a
-finished office app from a plain one. Read `recipes/back-office-polish.md` (the ten rules and one recipe per component, in plain HTML classes and in Tailwind) and start
-the design system from `ds-office-polish` (find_asset, type design-system, "office") unless the user supplied their own. When the user wants a dark app, use `ds-office-polish-dark` instead: it is its own set of dark tokens (raised surfaces by lightness, light accent with dark text on it), not the light file with overrides; `design_palette` detects a dark DESIGN.md and applies the light-accent variant of the chosen palette (`show` takes `theme: dark` for the pictures). In short: **one accent** (orange or the
-product's colour) for the main action, the active menu item and the counts, everything else neutral; **one recipe for every coloured label** (a pale tint, darker text of
-the same hue, a thin inner ring); white cards on an off-white page with a 1px border and one soft shadow; one family of corners; hierarchy by weight and grey, not many
-sizes; icons of one family, alone in a soft tinted square; motion of 200 to 300 ms (a lift on hover, a 98 percent press, a sliding tab underline); real loading, empty
-and error states; money and dates in the reader's convention. Keep contrast at 4.5 to 1 on tints too: filled controls use the deeper shade of the accent, the bright
-shade is for bars, underlines and rings. These rules apply on top of 0i: copy the closest screen, then make it follow them.
-**Start with the design system's own colour (the bright orange of `ds-office-polish`) and do not ask which palette they want** (D-502, the user's rule). Use `design_palette` only when the user says they are not happy with the colours, asks to change them, or asks what other colours there are: call `action: show` (four options drawn as pictures), put them to the user with ONE `ask_user` call (they can also type their own hex or ask for more), then `action: apply`. A colour the user named, a brand guide or a DESIGN.md they supplied is used as it is, without `design_palette`. If they pick a colour whose white text is below 4.5 to 1 (the bright orange), say so in one sentence and apply it anyway: it is recorded as `contrast-accepted`, and the lint and the audit leave their choice alone. For an existing project with a Tailwind 3 config, `design_md_from_project` reads `tailwind.config.js` and the shadcn-style CSS variables into a DESIGN.md.
+For any tool people work in all day (approvals, queues, tables, records, settings, imports, reports) use the office polish look. **Call `load_skill` with name `ui-design-quality` and file `recipes/skill-back-office.md`** (and read `recipes/back-office-polish.md`, the ten rules and one recipe per component); start from the design system `ds-office-polish` (find_asset, type design-system, "office") unless the user supplied their own.
 
 ## 1. Decide the design before writing markup (write it in 5 lines in your plan or the CSS file's top comment)
 - **Purpose and tone** of the product (a blood donation drive: warm, trustworthy, urgent but calm).
@@ -356,72 +332,16 @@ edits that could touch it (shared styles, layouts, components, the theme), take 
 planned: look at it, then approve it again. A change you did not plan is a regression: find the edit that caused it and fix it.
 
 ## 6. Several variants of one page (three designs, A/B, "options")
-Variants that look the same are a failed task, however polished each one is.
-- Build the variants at the same time, not one after another: call `build_variants` with the shared requirement and, per variant, a name, its own folder and its direction (the one-line brief you wrote for it). Each builder writes its own DESIGN.md in its folder and builds from its tokens, so the variants cannot share a stylesheet. Then verify each variant yourself, run `compare_designs` and have the whole reviewed once.
-- Write a one-line design brief per variant first (palette, fonts, layout idea, mood) and make them differ on all of
-  them: for example light and warm with a serif heading, dark and loud with huge type, clean product style with
-  cards. Different colours on the same layout do not count.
-- Build each variant in its OWN folder, from scratch (do not copy one project over another), with its own port and its
-  own `<title>` (for example "Eureka - Design A").
-- Prove each port serves its own folder: read the title and heading from `browser_open` for every port, and compare the
-  screenshots (each `view_image` prints a sha256; identical hashes mean identical pages) or hash the source files
-  (`Get-FileHash designs\*\src\App.tsx`). If two match, fix it before you report.
-- Then run `compare_designs` with one screenshot per variant (and each variant's folder, so the DESIGN.md files are compared too): it
-  reports the layout similarity of every pair. A pair marked TOO SIMILAR, or two DESIGN.md files naming the same first colour or font, is a
-  BLOCKER: change the layout (section order, grid, hero shape) and the typeface of the later variant, not just its colours.
-- Start each server with `start_background` and its own `cwd` (for example `cwd: designs/design-a`; without it the
-  process starts wherever an earlier `cd` left the shell and several servers end up serving one app). Check the
-  `[cwd: ...]` in the result, then `show_app` per server. If
-  `show_app` fails, read its message and fix the cause (it tries 127.0.0.1, localhost and [::1]); do not hand the
-  user commands to run instead of running them yourself.
+When the user asks for several designs, options or an A/B, call `build_variants` (each variant is built in its own folder with its own DESIGN.md and the results are shown side by side). **Call `load_skill` with name `ui-design-quality` and file `recipes/skill-variants.md` first** for the rules.
 
 ## 7. Improving a UI that already exists (when the user says it looks bad, or asks to restyle)
-Do not patch single classes and do not rewrite from scratch. Follow this order:
-1. **Scan**: framework, styling method, Tailwind version, current tokens, which screens exist.
-2. **Prove the styling works** (section 0). An unstyled-looking page is a setup bug, not a design problem.
-3. **Diagnose**: screenshot every screen at 1280 and 375, read the audit, and list every generic pattern, missing state,
-   inconsistency and weak spot you can name (at least ten, specific to elements).
-4. **Write or update DESIGN.md** with the target system.
-5. **Fix in priority order**, one pass each, checking the screenshot after every pass: (a) fonts, (b) colour cleanup and
-   one accent, (c) hover, focus and press states, (d) layout, spacing and hierarchy, (e) replace weak components,
-   (f) loading, empty and error states, (g) polish: tracking, alignment, shadows, copy. Keep the app working: run
-   its tests and flows after each pass.
-6. **Review** with `design-critic` and fix what it lists.
-If the user asks you to change the look a second time, the first attempt did not change enough: make the change large
-enough to be seen at a glance (palette, type and composition), and say what is now different.
+When the user says an existing UI looks bad or asks to restyle it, do not start by editing. **Call `load_skill` with name `ui-design-quality` and file `recipes/skill-improving.md`**: screenshot and audit it first, name what is wrong, change the tokens before the markup.
 
 ## 8. Matching the feel of a named product (reference styles)
-When the request names a product ("like Stripe", "Linear-style", "Airbnb feel"), look for its design system first
-instead of guessing. The community repository awesome-design-md holds a `DESIGN.md` per site (exact colours, type
-scale, radii, shadows, component specs, do's and don'ts), for example:
-`https://raw.githubusercontent.com/VoltAgent/awesome-design-md/main/design-md/<slug>/DESIGN.md` with slugs such as
-stripe, linear.app, airbnb, notion, apple, vercel, supabase, spotify, revolut, wise, shopify, figma, framer, raycast,
-resend, cal, posthog, claude, mistral.ai, tesla. Fetch it with `web_fetch` (it may be unreachable on a company
-network: then say so and work from what you know). Take the principles and token values that give the feel (type
-scale, spacing, depth, component shapes) and write them into the project's own DESIGN.md. Do not copy the brand's
-logo, name, imagery or exact identity: the result must still be this product, with its own palette decision and copy.
-Never ask the user which style to use: pick, say why in one line, build.
+When the user asks for the feel of a named product ("like Stripe", "like Linear"), **call `load_skill` with name `ui-design-quality` and file `recipes/skill-named-products.md`**: take the qualities, never the brand's own marks, fonts or copy.
 
 ## 9. Motion and effects: restraint wins
-Effect budget by the MOTION_INTENSITY dial (hover and focus effects are free; count only what moves on its own or on scroll): **1 to 2** none beyond a focus ring and one press state;
-**3 to 4** one entrance style for headings (`SplitText` or `Reveal`) and hover lifts; **5 to 6** plus one scroll effect (a progress bar or `PinnedSteps`) and one ambient background; **7 to 8**
-plus `Magnetic` on the main call to action, `ScrambleText` on one label, a parallax layer; **9 to 10** the page is an experience: several scroll effects, but every one still stops under
-`prefers-reduced-motion` and none carries text a person needs. React hooks for these live in `recipes/motion-hooks.tsx` (`find_asset` tag `react`, ids `fx-react-*`).
-Small controls (loaders, switches, buttons, inputs, cards) come ready-made: `find_asset` with the tag `micro-interaction` lists forty `mi-*` effects in one stylesheet (`motion-micro.css`).
-- Choose the effect budget from the MOTION_INTENSITY dial in DESIGN.md: 1-3 hover and focus only; 4-6 plus scroll reveals
-  and one signature effect; 7-10 plus scroll-driven or pinned sequences. One signature effect per page (a beam, an
-  aurora, a marquee, a count-up row), not all of them.
-- Every animation must explain something (where to look, what changed, that it is loading). Decoration without a reason
-  is noise. Keep motion off text a user is reading.
-- Reveal-on-scroll hides content until it is seen; `browser_screenshot` full_page scrolls through the page first so
-  you and the critic see the revealed result. Content must still be visible with no JavaScript and with reduced motion
-  (the kit guarantees it).
-- After adding motion, check `browser_console` for errors, take the screenshots again, and confirm the page is still
-  readable at 375 px and that nothing shifts layout while animating.
-- Showpiece effects (`motion-fancy.css`, or a library such as Magic UI): start with one core component and at most one
-  supporting effect per viewport; customise through props, classes and theme variables, never by editing a library's
-  internals; check semantic HTML and keyboard access (a dock or flip card must work with the keyboard), and check the page at
-  375 px for horizontal overflow after adding any decorative layer.
+Restraint wins: choose the effect budget from the MOTION_INTENSITY dial in DESIGN.md (hover and focus effects are free), one signature effect per page, everything off under `prefers-reduced-motion`. **For the budget table and the techniques, call `load_skill` with name `ui-design-quality` and file `recipes/skill-motion.md`**; the effects themselves are catalogue assets (`find_asset`, type effect).
 
 ## Gotchas
 - The design critic judges against the brief: do not add forms, flows or pages the brief did not ask for (speed-1: six review rounds for a contact form nobody wanted).
