@@ -324,3 +324,28 @@ async def test_a_failing_stop_hook_sends_the_model_back_to_work_once_and_then_le
     )
     kinds = [e.payload.get("kind") for e in host.bus.events_since(0) if e.type == EventType.NOTICE]
     assert "stop_hook" in kinds
+
+
+async def test_a_request_that_matches_the_catalogue_gets_the_matches_in_front_of_the_model(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """D-518: the first model call of a turn already carries the catalogue matches for the request, as a system note after the user's message."""
+    bodies: list[dict[str, object]] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        bodies.append(json.loads(request.content))
+        return reply(request, responses_body([text_output("Noted.")]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace)
+    runner = asyncio.create_task(host.run())
+    await host.submit(SendMessage(text="Build a warm landing page for a blood donation charity."))
+    for _ in range(100):
+        await asyncio.sleep(0.05)
+        if any(e.type == EventType.COST_UPDATED for e in host.bus.events_since(0)):
+            break
+    runner.cancel()
+
+    notes = [m for m in host.history if m.role == "system" and "Catalogue matches" in str(m.content)]
+    assert len(notes) == 1 and "tpl-landing-charity" in str(notes[0].content)
+    assert "tpl-landing-charity" in json.dumps(bodies[0])

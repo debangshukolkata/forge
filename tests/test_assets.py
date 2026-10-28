@@ -139,6 +139,23 @@ async def test_find_asset_tool(tmp_path: Path, original_repo: Path) -> None:
     assert not wrong.ok
 
 
+async def test_the_catalogue_hint_names_good_matches_and_stays_silent_otherwise(
+    tmp_path: Path, original_repo: Path
+) -> None:
+    """D-518: a request that matches the catalogue well gets its best matches put in front of the model; other requests get nothing."""
+    from forge.tools.assets import catalogue_hint
+
+    context = _context(tmp_path, original_repo)
+    hint = catalogue_hint(context, "Build a warm landing page for a blood donation charity.")
+    assert "tpl-landing-charity" in hint and "add_asset" in hint
+    assert "fx-count-up" in catalogue_hint(
+        context, "The stats section should have numbers that count up when they scroll into view."
+    )
+    assert catalogue_hint(context, "Fix the typo 'recieve' in the README.") == ""
+    assert catalogue_hint(context, "Rename the function get_policy to fetch_policy everywhere.") == ""
+    assert catalogue_hint(context, "x" * 5000) == ""  # only the start of a long message is searched
+
+
 async def test_add_asset_copies_files_records_the_licence_and_is_idempotent(
     tmp_path: Path, original_repo: Path
 ) -> None:

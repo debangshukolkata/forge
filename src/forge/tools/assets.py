@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import Field
 
-from forge.parity.assets import ASSET_TYPES, Asset, describe, load_catalogue, search
+from forge.parity.assets import ASSET_TYPES, Asset, describe, load_catalogue, search, search_scored
 from forge.parity.skills import Skill, discover
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.files import _save
@@ -41,6 +41,32 @@ def _catalogues(context: ToolContext) -> list[tuple[Skill, Asset]]:
     for skill in discover(*skill_roots(context)).values():
         found.extend((skill, asset) for asset in load_catalogue(skill.folder))
     return found
+
+
+HINT_MIN_SCORE = (
+    6  # measured on 12 design requests (all 6 to 17) and 8 others (2 to 4, one form-related request 11)
+)
+HINT_RESULTS = 3
+HINT_REQUEST_CHARS = 300  # a long message matches everything a little; its start says what is wanted
+
+
+def catalogue_hint(context: ToolContext, request: str) -> str:
+    """A note naming the catalogue assets that match a user's request well, or "" when none does (D-518).
+
+    A plain keyword search of the catalogue (no model call, nothing leaves the machine). The model rarely thinks of looking in the catalogue by itself
+    (1 run in 24, measured live), so the best matches are put in front of it with each request; it can use one or ignore them."""
+    entries = _catalogues(context)
+    if not entries:
+        return ""
+    found = search_scored([asset for _, asset in entries], request[:HINT_REQUEST_CHARS], None, HINT_RESULTS)
+    matches = [asset for score, asset in found if score >= HINT_MIN_SCORE]
+    if not matches:
+        return ""
+    return (
+        "Catalogue matches for this request, from a keyword search of the tested, ready-to-copy assets: use one if it fits (add_asset(id) copies it into the "
+        "project; find_asset searches for more) and ignore them if the request is about something else.\n"
+        + "\n".join(describe(asset) for asset in matches)
+    )
 
 
 class FindAsset(Tool):

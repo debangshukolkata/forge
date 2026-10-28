@@ -281,6 +281,13 @@ def search(
 ) -> list[Asset]:
     """Deterministic keyword search; no model call. Id and title words count most, then moods, products and tags,
     then the summary. Ties keep the catalogue order."""
+    return [asset for _, asset in search_scored(assets, query, asset_type, limit)]
+
+
+def search_scored(
+    assets: list[Asset], query: str, asset_type: str | None = None, limit: int = SEARCH_RESULTS
+) -> list[tuple[int, Asset]]:
+    """`search` with each match's score, so a caller can ignore weak matches."""
     words = _tokens(query)
     scored: list[tuple[int, int, Asset]] = []
     for position, asset in enumerate(assets):
@@ -293,7 +300,7 @@ def search(
         if score > 0 or not words:
             scored.append((score, -position, asset))
     scored.sort(key=lambda row: (row[0], row[1]), reverse=True)
-    return [asset for _, _, asset in scored[:limit]]
+    return [(score, asset) for score, _, asset in scored[:limit]]
 
 
 def describe(asset: Asset) -> str:

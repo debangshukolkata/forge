@@ -35,6 +35,7 @@ from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.folders import clean_folder, folders_disjoint
 from forge.toolkit.powershell import ps_quote
 from forge.toolkit.shell import execute
+from forge.tools.assets import catalogue_hint
 from forge.tools.registry import ToolRegistry
 from forge.workspace.workspace import Workspace
 
@@ -199,6 +200,15 @@ class AgentLoop:
             ]
         return rules
 
+    def _add_catalogue_hint(self, history: list[Message]) -> None:
+        """Put the catalogue assets that match the user's new request in front of the model (D-518); nothing when the last message is not a request or nothing matches."""
+        last = history[-1] if history else None
+        if last is None or last.role != "user" or not isinstance(last.content, str):
+            return
+        hint = catalogue_hint(self.context, last.content)
+        if hint:
+            history.append(Message.system(hint))
+
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
         continuations = 0
@@ -207,6 +217,10 @@ class AgentLoop:
         risk_nudges = 0
         stop_hook_rounds = 0
         self.hit_iteration_limit = False
+        if (
+            self.keep_full_output
+        ):  # the main agent only; a subagent works on a brief, not on the user's request
+            self._add_catalogue_hint(history)
         for _ in range(self.max_iterations):
             # After a cut-off reply, think less so the answer fits in the output limit (D-060).
             response = await self._chat(
