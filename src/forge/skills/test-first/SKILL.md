@@ -1,6 +1,6 @@
 ---
 name: test-first
-description: Use when you build a new function, module or feature, or fix a bug, and the work is more than a few lines - write the spec and a failing test first, then implement in small verified steps
+description: Use when a request says “add”, “implement”, “build” or “fix” code — like slugify, date-range merge, rate limiter, retry, parser — and you can write a spec and failing test before coding. Not for designing big abstractions (deep-modules) or fixing unknown failures (debugging).
 ---
 
 # Test first, in small verified steps

@@ -1,6 +1,6 @@
 ---
 name: verify-before-done
-description: Use before you say work is done, fixed, passing or working, before task_update(done), a commit or a summary - run the command that proves the claim in this turn, read its whole output, and report what it showed
+description: Use before you say work is done, fixed or passing, before task_update(done), a commit or a final summary, and when the user asks “is it fixed?”, “wrap it up” or “mark it complete”: run the command that proves the claim now, read its whole output, report what it showed. Not for UI walkthroughs (web-ui-verification).
 ---
 
 # Evidence before claims

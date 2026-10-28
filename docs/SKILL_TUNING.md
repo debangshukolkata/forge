@@ -56,3 +56,13 @@ description, 20 per candidate and one for the rewrite, about 120 calls with 4 ca
 ## Record of applied changes
 
 (`tune --apply` appends below.)
+
+- 2026-10-29 `test-first`: train recall 0/6, false triggers 0/6, accuracy 50% -> recall 5/6, false triggers 0/6, accuracy 92%; test recall 1/4, false triggers 0/4, accuracy 62% -> recall 3/4, false triggers 0/4, accuracy 88%.
+  - old: Use when you build a new function, module or feature, or fix a bug, and the work is more than a few lines - write the spec and a failing test first, then implement in small verified steps
+  - new: Use when a request says “add”, “implement”, “build” or “fix” code — like slugify, date-range merge, rate limiter, retry, parser — and you can write a spec and failing test before coding. Not for designing big abstractions (deep-modules) or fixing unknown failures (debugging).
+
+- 2026-10-29 `verify-before-done`: train recall 3/6, false triggers 0/6, accuracy 75% -> recall 6/6, false triggers 0/6, accuracy 100%; test recall 2/4, false triggers 0/4, accuracy 75% -> recall 4/4, false triggers 0/4, accuracy 100%.
+  - old: Use before you say work is done, fixed, passing or working, before task_update(done), a commit or a summary - run the command that proves the claim in this turn, read its whole output, and report what it showed
+  - new: Use when the user says things like “we’re finished”, “is it fixed now?”, “mark this complete”, or asks for a summary or status yes/no, even for small tasks: actually run the check command and describe its output; not for UI walkthroughs (use web-ui-verification).
+
+**2026-10-29, hand edit after the tuning above (D-535):** the applied `verify-before-done` candidate named only things the user says ("we're finished", "is it fixed?") and dropped the agent's own moment (before `task_update(done)`, a commit or a summary), which this eval cannot measure because it asks about user messages only. The description now names both; re-evaluated: 10/10 recall, 0/10 false triggers.
