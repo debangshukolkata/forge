@@ -23,7 +23,7 @@ def _pytest(folder: Path) -> subprocess.CompletedProcess[str]:
         text=True,
         encoding="utf-8",
         timeout=120,
-        env={**__import__("os").environ, "PYTHONPATH": str(folder)},
+        env={**__import__("os").environ, "PYTHONPATH": str(folder), "PYTHONIOENCODING": "utf-8"},
     )
 
 
@@ -73,7 +73,7 @@ def test_hidden_tests_fail_without_the_solution(task_id: str, tmp_path: Path) ->
         text=True,
         encoding="utf-8",
         timeout=120,
-        env={**__import__("os").environ, "PYTHONPATH": str(tmp_path)},
+        env={**__import__("os").environ, "PYTHONPATH": str(tmp_path), "PYTHONIOENCODING": "utf-8"},
     )
     assert hidden_only.returncode != 0
 
