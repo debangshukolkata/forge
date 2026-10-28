@@ -8,6 +8,7 @@ import asyncio
 import contextlib
 import io
 import json
+import os
 import secrets
 import zipfile
 from collections.abc import Awaitable, Callable
@@ -72,6 +73,16 @@ class OpenWorkspace(BaseModel):
 
 class ForgetLearnings(BaseModel):
     selections: dict[str, list[str]]  # group id -> item ids
+
+
+def find_by_name(root: Path, name: str) -> str | None:
+    """Posix path (relative to root) of the first file called name, or None; skips virtualenvs, caches and .git."""
+    skipped = {".git", "node_modules", "__pycache__", ".venv", "venv", ".forge"}
+    for folder, subfolders, files in os.walk(root):
+        subfolders[:] = sorted(d for d in subfolders if d not in skipped)
+        if name in files:
+            return (Path(folder) / name).relative_to(root).as_posix()
+    return None
 
 
 def create_app(
@@ -305,6 +316,36 @@ def create_app(
         if relative and workspace.is_secret(relative.replace("\\", "/")):
             raise HTTPException(403, "Secret files are never shown")
         return path
+
+    @app.get("/api/file-location")
+    async def file_location(path: str) -> dict[str, Any]:
+        """Absolute places of a file path shown in chat: the workspace copy and, in Mode A, the original repo.
+
+        Chat paths are relative to the repo root or to the app folder, so both are tried; a secret file is never named."""
+        workspace = current()
+        relative = path.strip().replace("\\", "/").lstrip("/")
+        if not relative or ".." in relative.split("/") or workspace.is_secret(relative):
+            raise HTTPException(400, "Not a file path inside the project")
+        candidates = [relative]
+        app_folder = workspace.info.app_subfolder.strip("/")
+        if app_folder and not relative.startswith(app_folder + "/"):
+            candidates.append(f"{app_folder}/{relative}")
+        chosen = next((c for c in candidates if (workspace.repo_dir / c).exists()), None)
+        if chosen is None and "/" not in relative:
+            # A bare file name in chat ("react_handler.py"): find it by name, skipping environments and caches.
+            chosen = find_by_name(workspace.repo_dir, relative)
+            if chosen is None:
+                raise HTTPException(404, "No file with that name in the project")
+        chosen = chosen or candidates[0]
+        original = None
+        if workspace.info.repo_path:
+            original = str(Path(workspace.info.repo_path) / chosen)
+        return {
+            "workspace": str(workspace.repo_dir / chosen),
+            "original": original,
+            "exists_in_workspace": (workspace.repo_dir / chosen).exists(),
+            "exists_in_original": bool(original and Path(original).exists()),
+        }
 
     @app.get("/api/tree")
     async def tree(root: str = "repo", dir: str = "") -> dict[str, Any]:

@@ -142,6 +142,24 @@ def test_file_endpoints_stay_in_the_workspace_and_hide_secrets(
     assert "claims_app" in names and "venv" not in names
 
 
+def test_file_location_names_workspace_and_original(
+    client: TestClient, security: ServerSecurity, workspace: Workspace
+) -> None:
+    login(client, security)
+    assert client.post("/api/open", json={"workspace": str(workspace.root)}).status_code == 200
+    found = client.get("/api/file-location", params={"path": "backend/README.md"}).json()
+    assert found["workspace"] == str(workspace.repo_dir / "backend" / "README.md")
+    assert found["original"] == str(Path(workspace.info.repo_path) / "backend" / "README.md")
+    assert found["exists_in_workspace"]
+    bare = client.get("/api/file-location", params={"path": "README.md"})
+    assert (
+        bare.status_code == 200 and bare.json()["workspace"] == found["workspace"]
+    )  # a bare name is found by name
+    assert client.get("/api/file-location", params={"path": "no_such_file.py"}).status_code == 404
+    for bad in ("../x.py", "backend/.env"):
+        assert client.get("/api/file-location", params={"path": bad}).status_code == 400, bad
+
+
 # --- API ---
 
 

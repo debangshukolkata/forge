@@ -62,10 +62,10 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
           const box = e.currentTarget;
           stick.current = box.scrollHeight - box.scrollTop - box.clientHeight < 160;
         }}
-        className="min-h-0 flex-1 overflow-y-auto"
+        className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
         aria-live="polite"
       >
-        <div className="mx-auto flex max-w-[760px] flex-col gap-4 px-6 py-6">
+        <div className="mx-auto flex max-w-[var(--chat-max,760px)] flex-col gap-4 px-6 py-6">
           {items.length === 0 && !forge.replaying && <Welcome forge={forge} onOpenEnvironment={onOpenEnvironment} />}
           {!forge.controls && (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-warn/40 bg-warn-soft px-4 py-2.5 text-[13px] text-warn">
@@ -75,17 +75,27 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
               </Button>
             </div>
           )}
-          {groupLookingRuns(items).map((row) =>
-            row.kind === "looking" ? (
-              <div key={row.items[0].key} data-seq={/^e\d+$/.test(row.items[0].key) ? row.items[0].key.slice(1) : undefined}>
-                <LookingGroup items={row.items} />
-              </div>
-            ) : (
-              <div key={row.item.key} data-seq={/^e\d+$/.test(row.item.key) ? row.item.key.slice(1) : undefined}>
-                <Item item={row.item} forge={forge} />
-              </div>
-            ),
-          )}
+          {groupIntoTurns(groupLookingRuns(items)).map((turn) => (
+            // One turn = your message plus everything DebCraft did for it. The message sticks to the top while that
+            // turn is on screen, so a scrolled-up reply always shows which prompt it answers.
+            <div key={turn.key} className="flex flex-col gap-4">
+              {turn.rows.map((row) =>
+                row.kind === "looking" ? (
+                  <div key={row.items[0].key} data-seq={/^e\d+$/.test(row.items[0].key) ? row.items[0].key.slice(1) : undefined}>
+                    <LookingGroup items={row.items} />
+                  </div>
+                ) : row.item.kind === "user" ? (
+                  <div key={row.item.key} data-seq={/^e\d+$/.test(row.item.key) ? row.item.key.slice(1) : undefined} className="sticky top-0 z-10 -mx-6 bg-bg/95 px-6 py-2 backdrop-blur">
+                    <StickyPrompt text={row.item.text} />
+                  </div>
+                ) : (
+                  <div key={row.item.key} data-seq={/^e\d+$/.test(row.item.key) ? row.item.key.slice(1) : undefined}>
+                    <Item item={row.item} forge={forge} />
+                  </div>
+                ),
+              )}
+            </div>
+          ))}
         </div>
       </div>
       <Composer forge={forge} attachments={attachments} />
@@ -94,6 +104,39 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
       )}
     </div>
     </QuestionPopup.Provider>
+  );
+}
+
+type ChatRow = ReturnType<typeof groupLookingRuns>[number];
+
+/** Split rows at each user message; rows before the first message form a turn of their own. */
+function groupIntoTurns(rows: ChatRow[]): Array<{ key: string; rows: ChatRow[] }> {
+  const turns: Array<{ key: string; rows: ChatRow[] }> = [];
+  for (const row of rows) {
+    const startsTurn = row.kind === "single" && row.item.kind === "user";
+    if (startsTurn || turns.length === 0) turns.push({ key: row.kind === "looking" ? row.items[0].key : row.item.key, rows: [] });
+    turns[turns.length - 1].rows.push(row);
+  }
+  return turns;
+}
+
+/** Your message, long ones cut to three lines while pinned; click to read all of it. */
+function StickyPrompt({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex justify-end">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        title={open ? "Show less" : "Show the whole message"}
+        className={cx(
+          "max-w-[85%] cursor-pointer whitespace-pre-wrap break-words rounded-[20px] bg-accent-soft px-4 py-2.5 text-left text-[13.5px] leading-[1.5]",
+          !open && "line-clamp-3",
+        )}
+      >
+        {text}
+      </button>
+    </div>
   );
 }
 

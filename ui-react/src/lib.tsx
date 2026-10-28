@@ -51,6 +51,12 @@ export function Markdown({ text, className }: { text: string; className?: string
     const root = ref.current;
     if (!root) return;
     root.querySelectorAll("pre code").forEach((block) => hljs.highlightElement(block as HTMLElement));
+    // A file path in chat looks clickable: it opens the card with its absolute location.
+    root.querySelectorAll("code").forEach((code) => {
+      if (code.closest("pre") || !filePathOf(code.textContent ?? "")) return;
+      code.classList.add("md-file");
+      code.title = "Click to see the full path on disk";
+    });
     // A copy button beside every code block. The wrapper (not the scrolling <pre>) holds it, so it stays put while a long line scrolls.
     root.querySelectorAll("pre").forEach((pre) => {
       if (pre.parentElement?.classList.contains("md-code")) return;
@@ -68,6 +74,14 @@ export function Markdown({ text, className }: { text: string; className?: string
     });
   }, [html]);
   const onClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.tagName === "CODE" && !target.closest("pre")) {
+      const file = filePathOf(target.textContent ?? "");
+      if (file) {
+        void showFileLocation(target, file);
+        return;
+      }
+    }
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>(".md-copy");
     if (!button) return;
     const text = button.parentElement?.querySelector("pre")?.textContent ?? "";
@@ -81,6 +95,80 @@ export function Markdown({ text, className }: { text: string; className?: string
     });
   };
   return <div ref={ref} onClick={onClick} className={cx("md", className)} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+// Extensions that make inline code a file name; `json.loads` or `ast.literal_eval` must not look like files.
+const FILE_EXTENSIONS = "py|pyi|js|jsx|ts|tsx|json|yaml|yml|toml|ini|cfg|md|txt|sql|html|css|scss|ps1|sh|bat|csv|xml|lock|java|go|rs|rb|php|c|h|cpp|cs|vue|svelte|ipynb|rst|log";
+const FILE_PATH = new RegExp(String.raw`^([\w.\-@+]+(?:[\\/][\w.\-@+ ]+)*\.(?:${FILE_EXTENSIONS}))(?::\d+(?:[,-]\d+)*)?$`, "i");
+
+/** `file.py`, `dir/file.py` or `dir/file.py:31,36` as written in chat; null for anything that is not a project file. */
+function filePathOf(text: string): string | null {
+  const match = FILE_PATH.exec(text.trim());
+  return match ? match[1] : null;
+}
+
+interface FileLocation {
+  workspace: string;
+  original: string | null;
+  exists_in_workspace: boolean;
+  exists_in_original: boolean;
+}
+
+let openPopover: HTMLElement | null = null;
+function closePopover() {
+  openPopover?.remove();
+  openPopover = null;
+}
+
+/** A small card under a clicked file path: the absolute path in the workspace copy and in the original repo, each one click to copy. */
+async function showFileLocation(anchor: HTMLElement, file: string) {
+  closePopover();
+  let location: FileLocation;
+  try {
+    location = await api<FileLocation>(`/api/file-location?path=${encodeURIComponent(file)}`);
+  } catch {
+    location = { workspace: "", original: null, exists_in_workspace: false, exists_in_original: false };
+  }
+  const card = document.createElement("div");
+  card.className = "file-location";
+  const rows: Array<[string, string, boolean]> = location.workspace
+    ? [["Workspace copy", location.workspace, location.exists_in_workspace]]
+    : [["Not found", `No file called ${file} in this project's workspace.`, true]];
+  if (location.original) rows.push(["Original repo", location.original, location.exists_in_original]);
+  for (const [label, path, exists] of rows) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.title = "Click to copy";
+    const heading = document.createElement("span");
+    heading.className = "file-location-label";
+    heading.textContent = exists ? label : `${label} (not there yet)`;
+    const value = document.createElement("span");
+    value.className = "file-location-path";
+    value.textContent = path;
+    row.append(heading, value);
+    row.onclick = () => {
+      void navigator.clipboard.writeText(path).then(() => {
+        heading.textContent = "Copied";
+        window.setTimeout(closePopover, 700);
+      });
+    };
+    card.appendChild(row);
+  }
+  document.body.appendChild(card);
+  const box = anchor.getBoundingClientRect();
+  card.style.top = `${window.scrollY + box.bottom + 6}px`;
+  card.style.left = `${Math.max(8, Math.min(window.scrollX + box.left, window.innerWidth - card.offsetWidth - 8))}px`;
+  openPopover = card;
+  const dismiss = (event: Event) => {
+    if (card.contains(event.target as Node)) return;
+    closePopover();
+    document.removeEventListener("mousedown", dismiss);
+    document.removeEventListener("keydown", dismiss);
+  };
+  window.setTimeout(() => {
+    document.addEventListener("mousedown", dismiss);
+    document.addEventListener("keydown", dismiss);
+  }, 0);
 }
 
 // The lucide "copy" and "check" icons as fixed strings: the buttons live inside Markdown HTML that React does not render.

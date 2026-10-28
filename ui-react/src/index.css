@@ -137,8 +137,8 @@ body {
    The standard ones are only set where ::-webkit-scrollbar is unsupported, because Chromium ignores the
    pseudo-elements on any element that has scrollbar-color or scrollbar-width. */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
@@ -147,7 +147,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   background-clip: padding-box;
-  border: 2px solid transparent;
+  border: 2px solid transparent; /* 8px bar, 4px thumb */
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -245,7 +245,8 @@ textarea:focus-visible {
   @apply bg-transparent p-0;
 }
 .md table {
-  @apply w-full border-collapse text-[13px];
+  /* A table wider than the column scrolls inside itself instead of widening the page. */
+  @apply block w-full max-w-full overflow-x-auto border-collapse text-[13px];
 }
 .md th,
 .md td {
@@ -621,4 +622,31 @@ kbd,
 }
 @media (prefers-reduced-motion: reduce) {
   .drawer-panel, .drawer-backdrop { animation: none; }
+}
+
+/* File paths in chat open a card with their absolute location (lib.tsx showFileLocation). */
+.md code.md-file {
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.md code.md-file:hover {
+  @apply bg-raised;
+}
+.file-location {
+  position: absolute;
+  z-index: 60;
+  display: flex;
+  max-width: min(640px, calc(100vw - 16px));
+  flex-direction: column;
+  @apply rounded-lg border border-border bg-surface p-1 text-[12px] shadow-lg;
+}
+.file-location button {
+  @apply flex flex-col items-start gap-0.5 rounded-md px-2.5 py-1.5 text-left hover:bg-raised;
+}
+.file-location-label {
+  @apply text-[11px] font-medium text-fg-muted;
+}
+.file-location-path {
+  @apply break-all font-mono text-[12px] text-fg;
 }

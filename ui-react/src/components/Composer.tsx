@@ -201,7 +201,7 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
     <div className="shrink-0 bg-bg px-6 pb-4 pt-2">
       <RunTotals forge={forge} />
       <ActivityLine forge={forge} />
-      <div className="relative mx-auto max-w-[760px]">
+      <div className="relative mx-auto max-w-[var(--chat-max,760px)]">
         {suggestions.length > 0 && (
           <ul role="listbox" aria-label={mention !== null ? "Files" : "Commands"} className="absolute bottom-full mb-2 max-w-full min-w-72 overflow-hidden rounded-lg border border-border bg-surface py-1 shadow-lg">
             {suggestions.map((s, index) => (

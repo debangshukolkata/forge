@@ -154,7 +154,11 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
     <div className="flex h-full flex-col">
       <TopBar forge={forge} theme={theme} onToggleTheme={onToggleTheme} onHome={() => setView("hub")} onQuit={quit} user={user} onSignOut={onSignOut} onEnvironment={() => setEnvOpen((open) => !open)} onAccount={() => setView("account")} onOpenProject={open} onNewProject={() => showView("new")} onProjectDeleted={projectDeleted} />
       <div className="flex min-h-0 flex-1">
-        <main className="flex min-w-0 flex-1 flex-col">
+        {/* The conversation column grows into the room a closed side panel leaves, so wide tables and code fit. */}
+        <main
+          className="flex min-w-0 flex-1 flex-col"
+          style={{ "--chat-max": panelsCollapsed || envOpen || surface !== "chat" ? "1120px" : "760px" } as React.CSSProperties}
+        >
           {landing ? (
             <div className="min-h-0 flex-1 overflow-y-auto bg-bg">
               {view === "new" ? (
@@ -202,6 +206,9 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
 
 type Surface = "chat" | "map";
 
+// The Chat / Run map tabs are hidden for now (the chat is the only view in use). The Run map code stays; flip this to bring the tabs back.
+const SHOW_VIEW_TABS = false;
+
 function ViewSwitch({
   surface,
   onChange,
@@ -228,12 +235,15 @@ function ViewSwitch({
       {label}
     </button>
   );
+  if (!SHOW_VIEW_TABS && panelsCollapsed === null) return null;
   return (
     <div className="flex items-center border-b border-border px-4 py-1.5">
-      <div role="tablist" aria-label="View" className="inline-flex gap-0.5 rounded-lg bg-raised p-0.5">
-        {tab("chat", <MessagesSquare className="h-3.5 w-3.5" aria-hidden />, "Chat")}
-        {tab("map", <Network className="h-3.5 w-3.5" aria-hidden />, "Run map")}
-      </div>
+      {SHOW_VIEW_TABS && (
+        <div role="tablist" aria-label="View" className="inline-flex gap-0.5 rounded-lg bg-raised p-0.5">
+          {tab("chat", <MessagesSquare className="h-3.5 w-3.5" aria-hidden />, "Chat")}
+          {tab("map", <Network className="h-3.5 w-3.5" aria-hidden />, "Run map")}
+        </div>
+      )}
       {panelsCollapsed !== null && (
         <IconButton
           label={panelsCollapsed ? "Show the side panel" : "Hide the side panel"}
