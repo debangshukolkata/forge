@@ -80,3 +80,4 @@ Total lines are kept as data and flagged: replace them with a total row of formu
 ## Gotchas
 - One chart per question. A chart's `data` range covers the header and the data rows, never the total row (a total towers over its parts and spoils the scale). Look at every
   chart in `preview_file`: a series that shows one category, or two charts that answer the same question, is a mistake to fix before you finish.
+- (2026-10-29, doc-3 w07 w14) Every number a reader sees gets a format: rates as 0.0%, money and counts with thousands separators (#,##0), and that includes formula results on a KPI or summary sheet (in doc-3 w14 the refund rate showed as 0.0331...). A sheet meant to be read starts with what it is: a title the reader understands, or a header row whose names say it (w07 read as raw data).
