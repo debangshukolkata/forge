@@ -117,10 +117,25 @@ def verify(key: bytes, cookie: str) -> dict:
     return data
 
 
-for hostile in ("javascript:alert(1)", " JaVaScRiPt:x", "java\tscript:x", "data:text/html,x", "//evil.example", "/relative", "https://"):
+for hostile in (
+    "javascript:alert(1)",
+    " JaVaScRiPt:x",
+    "java\tscript:x",
+    "data:text/html,x",
+    "//evil.example",
+    "/relative",
+    "https://",
+):
     assert safe_link(hostile) is None, hostile
 assert safe_link("https://example.org/a?b=1") == "https://example.org/a?b=1"
-for hostile in ("//evil.example", "/\\evil.example", "\\\\evil.example", "https://evil.example", "evil.example", "/x\x00"):
+for hostile in (
+    "//evil.example",
+    "/\\evil.example",
+    "\\\\evil.example",
+    "https://evil.example",
+    "evil.example",
+    "/x\x00",
+):
     assert safe_redirect(hostile) == "/", hostile
 assert safe_redirect("/orders?page=2") == "/orders?page=2"
 key = b"k" * 32
