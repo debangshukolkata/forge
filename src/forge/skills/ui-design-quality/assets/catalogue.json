@@ -12521,6 +12521,50 @@
    "size": 5332
   },
   {
+   "id": "sec-download-list",
+   "type": "section",
+   "title": "Download list",
+   "summary": "Documents as rows with title, one-line description, file type and size, and a download link that says what it is.",
+   "moods": [
+    "practical",
+    "plain",
+    "tidy"
+   ],
+   "products": [
+    "forms",
+    "reports",
+    "price list",
+    "policy",
+    "documents",
+    "charity",
+    "council",
+    "school"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "downloads",
+    "documents",
+    "files",
+    "list"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/DownloadList.tsx",
+     "to": "src/sections/DownloadList.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-download-list.jpg",
+   "path": "assets/section/sec-download-list.md",
+   "size": 2956
+  },
+  {
    "id": "sec-faq-list",
    "type": "section",
    "title": "FAQ accordion",
@@ -13795,6 +13839,90 @@
    "preview": "assets/preview/sec-newsletter-band.jpg",
    "path": "assets/section/sec-newsletter-band.md",
    "size": 3157
+  },
+  {
+   "id": "sec-notice-banner",
+   "type": "section",
+   "title": "Site notice",
+   "summary": "A slim dismissible band at the top for something every visitor should know: holiday hours, a price change, an interruption.",
+   "moods": [
+    "calm",
+    "informative",
+    "light"
+   ],
+   "products": [
+    "notice",
+    "announcement",
+    "opening hours",
+    "holiday",
+    "price change",
+    "maintenance"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "banner",
+    "notice",
+    "status",
+    "dismiss"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/NoticeBanner.tsx",
+     "to": "src/sections/NoticeBanner.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-notice-banner.jpg",
+   "path": "assets/section/sec-notice-banner.md",
+   "size": 2138
+  },
+  {
+   "id": "sec-page-header",
+   "type": "section",
+   "title": "Inner page header",
+   "summary": "Breadcrumbs, the page's own h1, a one-sentence introduction and an optional line of facts such as the updated date.",
+   "moods": [
+    "clear",
+    "orderly",
+    "plain"
+   ],
+   "products": [
+    "service page",
+    "article",
+    "policy",
+    "product page",
+    "documentation",
+    "inner page"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "header",
+    "breadcrumb",
+    "title",
+    "navigation"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/PageHeader.tsx",
+     "to": "src/sections/PageHeader.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-page-header.jpg",
+   "path": "assets/section/sec-page-header.md",
+   "size": 3146
   },
   {
    "id": "sec-pricing-table",

@@ -156,6 +156,53 @@ async def test_the_catalogue_hint_names_good_matches_and_stays_silent_otherwise(
     assert catalogue_hint(context, "x" * 5000) == ""  # only the start of a long message is searched
 
 
+async def test_the_hint_for_each_live_retrieval_request_contains_an_acceptable_asset(
+    tmp_path: Path, original_repo: Path
+) -> None:
+    """D-518: the 12 plain requests of the live retrieval tests each get a hint with at least one acceptable asset in it, so a change to the search or the
+    catalogue that would hide the right asset fails here, in seconds, before a live run is spent on it."""
+    from forge.tools.assets import catalogue_hint
+    from tests.test_live_asset_retrieval import SCENARIOS
+
+    context = _context(tmp_path, original_repo)
+    for name, (request, acceptable) in SCENARIOS.items():
+        hint = catalogue_hint(context, request)
+        assert any(f"- {asset_id} (" in hint for asset_id in acceptable), (name, hint)
+
+
+async def test_the_hint_also_serves_code_document_and_spreadsheet_requests(
+    tmp_path: Path, original_repo: Path
+) -> None:
+    """D-518: requests for a recipe, a skeleton or a document template find them too (measured by hand on 13 requests; these are the clear ones)."""
+    from forge.tools.assets import catalogue_hint
+
+    context = _context(tmp_path, original_repo)
+    expected = {
+        "Add logging to the service.": "rcp-logging",
+        "Create an Excel budget tracker with monthly totals and a chart.": "rcp-xl-budget",
+        "Our app crashes with a stack trace in the payment code, find the cause.": "rcp-stack-trace-fixing",
+        "Write a script that cleans messy data with pandas.": "rcp-data-pandas-polars",
+        "Write a typer command line tool that renames files.": "rcp-typer-click",
+        "Write a Word report with a title page and a table of contents.": "tpl-doc-report-clean",
+    }
+    for request, asset_id in expected.items():
+        assert f"- {asset_id} (" in catalogue_hint(context, request), request
+
+
+async def test_unrelated_requests_get_no_catalogue_hint(tmp_path: Path, original_repo: Path) -> None:
+    from forge.tools.assets import catalogue_hint
+
+    context = _context(tmp_path, original_repo)
+    for request in (
+        "Fix the typo 'recieve' in the README.",
+        "Our claims endpoint returns a 500 for some inputs. Find out why.",
+        "Explain how this repository is structured.",
+        "Rename the function get_policy to fetch_policy everywhere.",
+        "Why is the test suite slow?",
+    ):
+        assert catalogue_hint(context, request) == "", request
+
+
 async def test_add_asset_copies_files_records_the_licence_and_is_idempotent(
     tmp_path: Path, original_repo: Path
 ) -> None:

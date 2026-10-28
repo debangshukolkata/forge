@@ -141,11 +141,157 @@ def check_w03(workspace: Path) -> dict[str, Any]:
     return {"delivered": True, **_report(passed)}
 
 
-CHECKS = {"w01_sales_report": check_w01, "w02_clean_and_chart": check_w02, "w03_handout": check_w03}
+def check_w04(workspace: Path) -> dict[str, Any]:
+    from forge.documents.check import check_document
+    from forge.documents.read import read_document
+    from forge.ooxml.validate import validate_package
+
+    file = workspace / "project" / "proposal.docx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 9, "checks_failed": ["no document"]}
+    data = file.read_bytes()
+    info = read_document(data)
+    markdown = info.markdown
+    plain = markdown.replace(",", "").replace(" ", "")
+    prices = ("1200", "2800", "3500", "900", "8400")
+    passed = {
+        "package valid": not validate_package(data),
+        "no structure or accessibility problems": not check_document(data),
+        "client named": "Harbour Street Bakery" in markdown or "Dana Whitfield" in markdown,
+        "every phase price and the total": all(price in plain for price in prices),
+        "a table": "|" in markdown,
+        "the three dates": all(date in markdown for date in ("3 March", "21 March", "18 April")),
+        "deliverables as bullet points": markdown.count("\n- ") >= 3,
+        "three headings or more": markdown.count("#") >= 3,
+        "no invented price": all(
+            n in prices for n in re.findall(r"(?<![\d.])\d{3,5}(?![\d.])", plain) if n not in ("2026", "2027")
+        ),
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+def check_w05(workspace: Path) -> dict[str, Any]:
+    from forge.documents.check import check_document
+    from forge.documents.read import read_document
+    from forge.ooxml.validate import validate_package
+
+    file = workspace / "project" / "letter.docx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 9, "checks_failed": ["no document"]}
+    data = file.read_bytes()
+    info = read_document(data)
+    markdown = info.markdown
+    passed = {
+        "package valid": not validate_package(data),
+        "no structure or accessibility problems": not check_document(data),
+        "the date": "12 November 2026" in markdown,
+        "the recipient": "Admissions Office" in markdown and "8 Harbour Street" in markdown,
+        "the sender's address": "14 Elm Court" in markdown,
+        "the child named in the subject and the body": markdown.count("Anika") >= 2,
+        "the trial dates": "20" in markdown and "27 November" in markdown,
+        "the reply details": "priya.raman@example.org" in markdown and "07700 900 456" in markdown,
+        "a closing and the name": "Yours" in markdown and markdown.count("Priya Raman") >= 2,
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+MONTHS = ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
+
+
+def check_w06(workspace: Path) -> dict[str, Any]:
+    from forge.ooxml.validate import validate_package
+    from forge.sheets.check import check_workbook
+    from forge.sheets.read import package_extras
+
+    file = workspace / "project" / "budget.xlsx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 7, "checks_failed": ["no workbook"]}
+    import openpyxl
+
+    data = file.read_bytes()
+    book = openpyxl.load_workbook(io.BytesIO(data))
+    cells = [c for sheet in book.worksheets for row in sheet.iter_rows() for c in row if c.value is not None]
+    formulas = [c for c in cells if isinstance(c.value, str) and c.value.startswith("=")]
+    numbers = [c.value for c in cells if isinstance(c.value, (int, float)) and not isinstance(c.value, bool)]
+    months = [
+        c
+        for c in cells
+        if isinstance(c.value, str) and c.value.strip().lower()[:3] in MONTHS and not c.value.startswith("=")
+    ]
+    errors = [f for f in check_workbook(data) if f.level == "error"]
+    charts, _, macros = package_extras(data)
+    passed = {
+        "package valid": not validate_package(data),
+        "no formula errors": not errors,
+        "twelve month columns": len({c.column for c in months}) >= 12,
+        "the figures are numbers (2850 present)": 2850 in numbers,
+        "totals made of formulas": sum("SUM" in str(c.value).upper() for c in formulas) >= 2,
+        "what is left each month is a formula": len(formulas) >= 12,
+        "a chart": charts >= 1 and not macros,
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+def check_w07(workspace: Path) -> dict[str, Any]:
+    from forge.ooxml.validate import validate_package
+    from forge.sheets.check import check_workbook
+    from forge.sheets.read import package_extras
+
+    file = workspace / "project" / "tracker.xlsx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 7, "checks_failed": ["no workbook"]}
+    import datetime
+
+    import openpyxl
+
+    data = file.read_bytes()
+    book = openpyxl.load_workbook(io.BytesIO(data))
+    first = book.worksheets[0]
+    cells = [c for sheet in book.worksheets for row in sheet.iter_rows() for c in row if c.value is not None]
+    dates = [
+        c for c in first.iter_rows() for c in c if isinstance(c.value, (datetime.date, datetime.datetime))
+    ]
+    lists = [str(rule.formula1) for rule in first.data_validations.dataValidation if rule.type == "list"]
+    summary_formulas = [
+        c
+        for sheet in book.worksheets[1:]
+        for row in sheet.iter_rows()
+        for c in row
+        if isinstance(c.value, str) and c.value.upper().startswith("=COUNTIF")
+    ]
+    errors = [f for f in check_workbook(data) if f.level == "error"]
+    _, _, macros = package_extras(data)
+    passed = {
+        "package valid": not validate_package(data),
+        "no formula errors": not errors,
+        "a status drop-down with the four statuses": any(
+            "In progress" in rule and "Blocked" in rule for rule in lists
+        ),
+        "real dates (ten or more)": len(dates) >= 10,
+        "the header stays in view": bool(first.freeze_panes),
+        "a second sheet counting each status": len(book.worksheets) >= 2 and len(summary_formulas) >= 4,
+        "no macros": not macros and bool(cells),
+    }
+    return {"delivered": True, **_report(passed)}
+
+
+CHECKS = {
+    "w01_sales_report": check_w01,
+    "w02_clean_and_chart": check_w02,
+    "w03_handout": check_w03,
+    "w04_proposal": check_w04,
+    "w05_letter": check_w05,
+    "w06_budget": check_w06,
+    "w07_tracker": check_w07,
+}
 OUTPUT = {
     "w01_sales_report": "sales-summary.docx",
     "w02_clean_and_chart": "orders.xlsx",
     "w03_handout": "handout.pdf",
+    "w04_proposal": "proposal.docx",
+    "w05_letter": "letter.docx",
+    "w06_budget": "budget.xlsx",
+    "w07_tracker": "tracker.xlsx",
 }
 
 

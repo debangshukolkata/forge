@@ -1,0 +1,1 @@
+project/details.txt has the facts for a formal letter. Write it as a one-page Word document (project/letter.docx): the sender's address block, the date, the recipient's block, a subject line, a short body of three paragraphs, a closing and the sender's name. Use only the names, dates and facts in the file. Look at the document with a preview before you finish.

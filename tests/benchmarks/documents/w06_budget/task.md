@@ -1,0 +1,1 @@
+project/notes.csv lists a household's monthly income and expenses. Build an Excel workbook project/budget.xlsx: one sheet with the income and the expense categories, a column for each of the twelve months, totals made of formulas (not typed numbers), a row with what is left each month, and one chart of the monthly balance. Real numbers, not text. Tell me what you assumed.

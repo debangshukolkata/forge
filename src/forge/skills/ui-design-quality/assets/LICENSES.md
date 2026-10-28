@@ -310,6 +310,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-craft-band` | original | authored for DebCraft (section library, D-434) |
 | `sec-cta-band` | original | authored for DebCraft (section library, D-273) |
 | `sec-docs-shell` | original | authored for DebCraft (section library, D-385) |
+| `sec-download-list` | original | authored for DebCraft (section library, D-511) |
 | `sec-faq-list` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-alternating` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-bento` | original | authored for DebCraft (section library, D-273) |
@@ -342,6 +343,8 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-nav-bar` | original | authored for DebCraft (section library, D-273) |
 | `sec-nav-centered` | original | authored for DebCraft (section library, D-511) |
 | `sec-newsletter-band` | original | authored for DebCraft (section library, D-511) |
+| `sec-notice-banner` | original | authored for DebCraft (section library, D-511) |
+| `sec-page-header` | original | authored for DebCraft (section library, D-511) |
 | `sec-pricing-table` | original | authored for DebCraft (section library, D-511) |
 | `sec-pricing-tiers` | original | authored for DebCraft (section library, D-273) |
 | `sec-product-grid` | original | authored for DebCraft (section library, D-385) |

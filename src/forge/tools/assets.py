@@ -47,6 +47,7 @@ HINT_MIN_SCORE = (
     6  # measured on 12 design requests (all 6 to 17) and 8 others (2 to 4, one form-related request 11)
 )
 HINT_RESULTS = 3
+HINT_MIN_FOLLOWER = 5
 HINT_REQUEST_CHARS = 300  # a long message matches everything a little; its start says what is wanted
 
 
@@ -59,9 +60,12 @@ def catalogue_hint(context: ToolContext, request: str) -> str:
     if not entries:
         return ""
     found = search_scored([asset for _, asset in entries], request[:HINT_REQUEST_CHARS], None, HINT_RESULTS)
-    matches = [asset for score, asset in found if score >= HINT_MIN_SCORE]
-    if not matches:
+    if not found or found[0][0] < HINT_MIN_SCORE:
         return ""
+    # The best match has cleared the bar; the next ones are shown when they are nearly as good (at least 5 and half of the best), so a request that fits
+    # a recipe and a skeleton (logging) shows both, while a weak tail of loosely related assets stays out.
+    top_score = found[0][0]
+    matches = [asset for score, asset in found if score >= max(HINT_MIN_FOLLOWER, top_score / 2)]
     return (
         "Catalogue matches for this request, from a keyword search of the tested, ready-to-copy assets: use one if it fits (add_asset(id) copies it into the "
         "project; find_asset searches for more) and ignore them if the request is about something else.\n"

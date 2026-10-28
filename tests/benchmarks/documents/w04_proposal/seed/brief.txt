@@ -1,0 +1,6 @@
+Client: Harbour Street Bakery (owner: Dana Whitfield)
+Job: a new website with an online order form for pre-ordering bread.
+Phases and prices: Discovery GBP 1,200; Design GBP 2,800; Build GBP 3,500; Launch and training GBP 900.
+Total: GBP 8,400, excluding VAT.
+Timeline: start 3 March, design approved by 21 March, site live by 18 April.
+Needs from the client: the logo files, 20 product photographs, the weekly price list, and one named person to approve each phase within three working days.

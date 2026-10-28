@@ -1,7 +1,7 @@
 """Live (real Azure model, TODO L0 g): does the model find and bring in the right catalogue asset from a plain request?
 
 Each scenario is a request a user might type, without naming a tool. The run stops at the first tool that is not reading, planning or looking
-(a file write, a command): by then the model has either used find_asset and add_asset or has not. A run passes when the first asset it adds is one
+(a file write, a command) or when the turn ends: by then the model has either used find_asset and add_asset or has not. A run passes when the first asset it adds is one
 of the acceptable ids; it fails when it adds a different one or never uses the catalogue. The deterministic search is tested in tests/test_assets.py;
 this tests the model's use of it. Run with: pytest -m live -s -n 4 tests/test_live_asset_retrieval.py (RETRIEVAL_RUNS sets the repeats, default 2);
 RETRIEVAL_LOG=<file> appends one JSON line per run."""
@@ -17,24 +17,18 @@ import pytest
 from forge.engine.headless import auto_reply
 from forge.protocol.events import EventType
 from forge.protocol.inputs import SendMessage
+from forge.tools.registry import default_tools
 from tests.test_live_agent import make_host  # noqa: F401  (a fixture)
 
 pytestmark = pytest.mark.live
 RUNS = int(os.environ.get("RETRIEVAL_RUNS", "2"))
-LOOKING_TOOLS = (
-    "ask_user",
-    "todo_write",
-    "list_dir",
-    "read_file",
-    "search",
-    "grep",
-    "glob",
-    "load_skill",
-    "find_asset",
-    "design_kb_search",
-    "library_api",
-    "memory_write",
-    "spawn_subagent",
+# Every read-only tool counts as looking, not building: the tool list changes, so it is read from the registry (a hand-kept list was missing code_outline,
+# design_md_from_project and web_search, which ended runs early).
+LOOKING_TOOLS = tuple(
+    sorted(
+        {tool.name for tool in default_tools() if tool.read_only}
+        | {"ask_user", "todo_write", "load_skill", "find_asset", "memory_write", "spawn_subagent"}
+    )
 )
 
 # (request, acceptable asset ids)
@@ -118,7 +112,10 @@ async def test_asset_retrieval(scenario: str, run: int, make_host) -> None:  # t
                     elif name not in LOOKING_TOOLS:
                         stopped_on = name
                         break
-                if event.type in (EventType.MESSAGE_DONE, EventType.COST_UPDATED, EventType.ERROR):
+                if event.type in (
+                    EventType.COST_UPDATED,
+                    EventType.ERROR,
+                ):  # the turn is over; a message on its way to a tool call is not
                     break
     finally:
         subscription.close()

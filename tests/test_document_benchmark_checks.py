@@ -98,3 +98,111 @@ def test_a_good_workbook_and_a_pdf_pass(tmp_path: Path) -> None:
         build_pdf(parse_pdf_spec(json.dumps(spec)), lambda n: b"")
     )
     assert bench.check_w03(workspace)["checks_failed"] == []
+
+
+def test_the_new_checks_fail_on_an_empty_workspace_and_pass_good_outputs(tmp_path: Path) -> None:
+    """W5 (D-519): w04 to w07 are proven here without a model: an empty workspace is not delivered, and files built with the tools (or openpyxl) pass."""
+    import datetime
+
+    import openpyxl
+    from openpyxl.chart import BarChart, Reference
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    from forge.documents.build import build_document
+    from forge.documents.spec import parse_document
+
+    workspace = _workspace(tmp_path)
+    for check in (bench.check_w04, bench.check_w05, bench.check_w06, bench.check_w07):
+        assert not check(workspace)["delivered"]
+
+    proposal = {
+        "title": "Website proposal for Harbour Street Bakery",
+        "blocks": [
+            {"type": "heading", "text": "Summary"},
+            {
+                "type": "paragraph",
+                "text": "A new website with an online order form for Dana Whitfield, live by 18 April.",
+            },
+            {"type": "heading", "text": "Scope"},
+            {
+                "type": "bullets",
+                "items": ["Discovery workshop", "Design of five pages", "Build and order form"],
+            },
+            {"type": "heading", "text": "Price"},
+            {
+                "type": "table",
+                "header": ["Phase", "Price"],
+                "rows": [
+                    ["Discovery", "GBP 1,200"],
+                    ["Design", "GBP 2,800"],
+                    ["Build", "GBP 3,500"],
+                    ["Launch and training", "GBP 900"],
+                    ["Total", "GBP 8,400"],
+                ],
+            },
+            {"type": "heading", "text": "Timeline"},
+            {"type": "paragraph", "text": "Start 3 March, design approved by 21 March, live by 18 April."},
+        ],
+    }
+    (workspace / "project" / "proposal.docx").write_bytes(
+        build_document(parse_document(json.dumps(proposal)), lambda n: b"")
+    )
+    assert bench.check_w04(workspace)["checks_failed"] == []
+
+    letter = {
+        "title": "Place for Anika in the January term",
+        "blocks": [
+            {"type": "paragraph", "text": "Priya Raman, 14 Elm Court, Millbridge MB3 4QF"},
+            {"type": "paragraph", "text": "12 November 2026"},
+            {
+                "type": "paragraph",
+                "text": "The Admissions Office, Harbour Music School, 8 Harbour Street, Millbridge MB1 2AA",
+            },
+            {
+                "type": "paragraph",
+                "text": "Dear Admissions Office, my daughter Anika (age 9) has played piano for three years.",
+            },
+            {
+                "type": "paragraph",
+                "text": "We can attend a trial lesson on 20 or 27 November. Please write to priya.raman@example.org or 07700 900 456.",
+            },
+            {"type": "paragraph", "text": "Yours faithfully, Priya Raman"},
+        ],
+    }
+    (workspace / "project" / "letter.docx").write_bytes(
+        build_document(parse_document(json.dumps(letter)), lambda n: b"")
+    )
+    assert bench.check_w05(workspace)["checks_failed"] == []
+
+    book = openpyxl.Workbook()
+    sheet = book.active
+    sheet.title = "Budget"
+    names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    sheet.append(["Item", *names])
+    sheet.append(["Salary", *[2850] * 12])
+    sheet.append(["Rent", *[1050] * 12])
+    sheet.append(["Total income", *[f"=SUM({chr(66 + i)}2:{chr(66 + i)}2)" for i in range(12)]])
+    sheet.append(["Total expenses", *[f"=SUM({chr(66 + i)}3:{chr(66 + i)}3)" for i in range(12)]])
+    sheet.append(["Left", *[f"={chr(66 + i)}4-{chr(66 + i)}5" for i in range(12)]])
+    chart = BarChart()
+    chart.add_data(Reference(sheet, min_col=2, max_col=13, min_row=6), from_rows=True, titles_from_data=False)
+    sheet.add_chart(chart, "B9")
+    book.save(workspace / "project" / "budget.xlsx")
+    assert bench.check_w06(workspace)["checks_failed"] == []
+
+    tracker = openpyxl.Workbook()
+    tasks = tracker.active
+    tasks.title = "Tasks"
+    tasks.append(["Task", "Owner", "Status", "Due date", "Notes"])
+    for number in range(10):
+        tasks.append([f"Task {number}", "Sam", "In progress", datetime.date(2026, 12, 1 + number), ""])
+    rule = DataValidation(type="list", formula1='"Not started,In progress,Blocked,Done"', allow_blank=False)
+    tasks.add_data_validation(rule)
+    rule.add("C2:C11")
+    tasks.freeze_panes = "A2"
+    summary = tracker.create_sheet("Summary")
+    for row, status in enumerate(["Not started", "In progress", "Blocked", "Done"], start=1):
+        summary.cell(row=row, column=1, value=status)
+        summary.cell(row=row, column=2, value=f"=COUNTIF(Tasks!C:C,A{row})")
+    tracker.save(workspace / "project" / "tracker.xlsx")
+    assert bench.check_w07(workspace)["checks_failed"] == []

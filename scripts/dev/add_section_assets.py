@@ -230,6 +230,33 @@ SECTIONS: dict[str, tuple[str, str, str, str, str, str, str]] = {
         "balanced",
         "`items` is a list of figure, title and text. Use it only when each point can be backed by a real figure; otherwise use `FeaturesRuled` or `FeaturesIconRow`.",
     ),
+    "PageHeader": (
+        "Inner page header",
+        "Breadcrumbs, the page's own h1, a one-sentence introduction and an optional line of facts such as the updated date.",
+        "clear, orderly, plain",
+        "service page, article, policy, product page, documentation, inner page",
+        "header, breadcrumb, title, navigation",
+        "airy",
+        "`crumbs` ends with the current page (no href), announced as the current page. Use it at the top of any page that is not the home page.",
+    ),
+    "NoticeBanner": (
+        "Site notice",
+        "A slim dismissible band at the top for something every visitor should know: holiday hours, a price change, an interruption.",
+        "calm, informative, light",
+        "notice, announcement, opening hours, holiday, price change, maintenance",
+        "banner, notice, status, dismiss",
+        "balanced",
+        "A status region (announced politely, never an alert) with a real Dismiss button; dismissed for the visit only. One notice, one sentence, one optional link.",
+    ),
+    "DownloadList": (
+        "Download list",
+        "Documents as rows with title, one-line description, file type and size, and a download link that says what it is.",
+        "practical, plain, tidy",
+        "forms, reports, price list, policy, documents, charity, council, school",
+        "downloads, documents, files, list",
+        "balanced",
+        "`items` is a list of title, text, type, size and href; give the real type and size. The link text says what the file is (Download PDF).",
+    ),
 }
 
 
