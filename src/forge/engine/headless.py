@@ -30,7 +30,10 @@ PROCEED = (
     "Nobody is available to answer questions in this headless run. Use your best judgement, state your "
     "assumptions in REQUIREMENTS.md, and continue."
 )
-MAX_PROCEED_NUDGES = 2
+MAX_PROCEED_NUDGES = 2  # in a row without progress: a model that does nothing after two nudges is stuck
+MAX_TOTAL_NUDGES = 40  # runaway guard over the whole run
+# A long build ends many turns while tasks are still open; the first version allowed two nudges per RUN, so the BO6 support-desk
+# run (2026-10-29) stopped after 30 minutes with 4 of 7 tasks open although the model's last words were "I'll continue now" (D-538).
 EXIT_OK, EXIT_FAILED, EXIT_BLOCKED = 0, 1, 2
 EXIT_TIMEBOX = 3  # the time box ended the run (wrapped up, or stopped at the hard limit) and the work is not finished (D-460)
 
@@ -146,8 +149,12 @@ async def run_headless(
     if auto_approve:  # --auto-approve is the free-hand cadence (D-130) for the whole run
         host.orchestrator.set_cadence("free_hand")
 
+    progress = [0]  # tool calls finished since the last nudge
+
     async def respond() -> None:
         async for event in subscription:
+            if event.type == EventType.TOOL_CALL_FINISHED:
+                progress[0] += 1
             if event.type == EventType.ERROR:
                 errors.append(str(event.payload.get("message")))
             if allow_installs and event.type == EventType.APPROVAL_REQUESTED:
@@ -167,7 +174,8 @@ async def run_headless(
     try:
         if requirement:
             await host.submit(SendMessage(text=requirement))
-        for nudge in range(MAX_PROCEED_NUDGES + 1):
+        idle_nudges = 0
+        for _ in range(MAX_TOTAL_NUDGES + 1):
             await _wait_until_idle(host)
             if box_state.wrapping and not box_state.wrap_sent.is_set():
                 await (
@@ -176,9 +184,14 @@ async def run_headless(
                 await _wait_until_idle(host)
             if box_state.wrap_sent.is_set() or box_state.hard_stopped:
                 break  # the time box decided
-            if host.orchestrator.state.exported or errors or nudge == MAX_PROCEED_NUDGES:
+            idle_nudges = 0 if progress[0] else idle_nudges + 1
+            progress[0] = 0
+            if host.orchestrator.state.exported or errors or idle_nudges > MAX_PROCEED_NUDGES:
                 break
-            await host.submit(SendMessage(text=PROCEED))  # the model asked something in plain text
+            # The model asked something in plain text, or ended a turn with tasks still open.
+            await host.submit(SendMessage(text=_proceed_text(host)))
+        else:
+            errors.append(f"stopped after {MAX_TOTAL_NUDGES} nudges to continue (runaway guard)")
         # Background work started by the orchestrator never blocks the user's turn; wait for it explicitly
         # here so a caller sees the settled state instead of racing it at close().
         if box_state.hard_stopped:
@@ -210,6 +223,16 @@ async def run_headless(
         ended = "stopped at the hard limit" if box_state.hard_stopped else "wrapped up"
         summary = f"Time box: {ended}; the work is not finished. {summary}"
     return HeadlessResult(code, summary, tasks, errors, installs)
+
+
+def _proceed_text(host: SessionHost) -> str:
+    """The nudge; it names the open planned tasks so the model picks up the next one instead of summarising again."""
+    assert host.orchestrator is not None
+    open_tasks = [t for t in host.orchestrator.state.tasks if t.status in ("pending", "in_progress")]
+    if not open_tasks:
+        return PROCEED
+    listed = "; ".join(f"{t.id} {t.title}" for t in open_tasks[:4])
+    return f"{PROCEED} Tasks still open: {listed}. Work on them now with tools; do not stop to summarise until they are done or blocked."
 
 
 async def _wait_until_idle(host: SessionHost) -> None:
