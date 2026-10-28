@@ -323,3 +323,24 @@ def test_retrieval_finds_the_expected_asset_for_at_least_90_percent_of_prompts()
     ]
     hit_rate = 1 - len(missed) / len(RETRIEVAL_PROMPTS)
     assert hit_rate >= 0.9, f"hit rate {hit_rate:.0%}; missed: {missed}"
+
+
+async def test_back_end_requests_get_no_screen_or_page_hints(tmp_path: Path, original_repo: Path) -> None:
+    """RH1, D-528: words such as form, table and log matched application screens, so 10 of 15 back-end requests were offered UI assets."""
+    from forge.tools.assets import catalogue_hint
+
+    context = _context(tmp_path, original_repo)
+    for request in (
+        "Add a validation rule to the claims form, test first",
+        "Write a migration that adds a status column to the claims table",
+        "The login form throws a 500 when the password is empty, fix it",
+        "Add an audit log table and write to it on every claim change",
+        "Make the report export run in the background",
+        "Add a CSV import for customers with validation errors per row",
+    ):
+        hint = catalogue_hint(context, request)
+        assert "app-" not in hint and "tpl-" not in hint and "sec-" not in hint, (request, hint)
+    assert "app-approval-queue" in catalogue_hint(context, "Design an approval screen for expense claims")
+    assert "app-form-long" in catalogue_hint(
+        context, "Make the claims form look better and easier to fill in"
+    )

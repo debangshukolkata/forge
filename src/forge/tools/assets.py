@@ -52,6 +52,48 @@ REFERENCE_SHOTS = frozenset(
 )  # the picture names build_reference_shots.py and the specimen script make
 HINT_MIN_FOLLOWER = 5
 HINT_REQUEST_CHARS = 300  # a long message matches everything a little; its start says what is wanted
+# Visual assets are hinted only for a request that is about what people see (RH1, D-528): measured on 15 back-end requests, 10 got screens or
+# sections ("write a migration that adds a status column" named the bulk-list screen) because words such as form, table and log match their tags.
+VISUAL_TYPES = frozenset(
+    {
+        "direction",
+        "effect",
+        "component",
+        "design-system",
+        "section",
+        "font",
+        "font-pairing",
+        "palette",
+        "css-technique",
+    }
+)
+UI_REQUEST = re.compile(
+    r"\b(pages?|screens?|ui|ux|looks?|looking|design\w*|layouts?|styl\w*|css|themes?|colou?rs?|palettes?|fonts?|typography|sections?|hero|"
+    r"landing|website|site|front[- ]?end|animat\w*|motion|effects?|scroll\w*|hover|buttons?|toggles?|accordion|modal|dialog|menu|nav\w*|sidebar|"
+    r"cards?|grid|bento|dashboards?|charts?|icons?|logo|poster|portfolio|inputs?|labels?|focus\w*|sortable|searchable|responsive|mobile|"
+    r"dark mode|visual\w*|views?|tabs|widgets?|components?|display)\b",
+    re.IGNORECASE,
+)
+DOCUMENT_REQUEST = re.compile(r"\b(word|documents?|docx|memo|proposal|letter|handout)\b", re.IGNORECASE)
+
+
+def _hint_pool(assets: list[Asset], request: str) -> list[Asset]:
+    """The assets a request may be hinted: visual ones (and web page templates) only for a request about what people see, Word templates only
+    for a request that names a document; recipes and skeletons always."""
+    visual = bool(UI_REQUEST.search(request))
+    document = bool(DOCUMENT_REQUEST.search(request))
+    pool = []
+    for asset in assets:
+        tags = {tag.lower() for tag in asset.tags}
+        if asset.type in VISUAL_TYPES or (asset.type == "template" and "page" in tags):
+            if visual:
+                pool.append(asset)
+        elif asset.type == "template" and "word" in tags:
+            if document:
+                pool.append(asset)
+        else:
+            pool.append(asset)
+    return pool
 
 
 def catalogue_hint(context: ToolContext, request: str) -> str:
@@ -62,7 +104,8 @@ def catalogue_hint(context: ToolContext, request: str) -> str:
     entries = _catalogues(context)
     if not entries:
         return ""
-    found = search_scored([asset for _, asset in entries], request[:HINT_REQUEST_CHARS], None, HINT_RESULTS)
+    start = request[:HINT_REQUEST_CHARS]
+    found = search_scored(_hint_pool([asset for _, asset in entries], start), start, None, HINT_RESULTS)
     if not found or found[0][0] < HINT_MIN_SCORE:
         return ""
     # The best match has cleared the bar; the next ones are shown when they are nearly as good (at least 5 and half of the best), so a request that fits
