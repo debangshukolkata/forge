@@ -100,7 +100,7 @@ def make_techniques() -> int:
         header = (
             f'---\nid: {asset_id}\ntype: css-technique\ntitle: "{title}"\n'
             f'summary: "Snippets for {title.lower()}."\n'
-            f"moods: [{', '.join(moods)}]\nproducts: [web, landing, app, dashboard]\ntags: [css, html, native, no dependency]\n"
+            f"moods: [{', '.join(moods)}]\nproducts: [stylesheet]\ntags: [css, technique]\n"
             f'density: any\ndependencies: []\nlicence: original\nsource: "authored for DebCraft (recipes/css-techniques.md)"\n'
             f"tested: snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)\n---\n\n"
         )
@@ -109,5 +109,29 @@ def make_techniques() -> int:
     return count
 
 
+def make_library_notes() -> int:
+    """One `recipe` asset per `##` section of recipes/component-libraries.md: when to use a library, and the tested quickstart of each."""
+    text = (RECIPES / "component-libraries.md").read_text(encoding="utf-8")
+    count = 0
+    for block in re.split(r"^## ", text, flags=re.M)[1:]:
+        title, _, body = block.partition("\n")
+        title = re.sub(r"\s*\(.*?\)\s*$", "", title.strip()) or title.strip()
+        asset_id = f"lib-{slug(title)}"[:60].rstrip("-")
+        header = (
+            f'---\nid: {asset_id}\ntype: recipe\ntitle: "{title}"\n'
+            f'summary: "Component-library mode: {title.lower()}."\n'
+            "moods: [practical]\nproducts: [internal tool, admin]\n"
+            "tags: [component library, daisyui, mui, shadcn, tabler, quickstart]\n"
+            "density: any\ndependencies: []\nlicence: original\n"
+            'source: "authored for DebCraft (recipes/component-libraries.md, D-437)"\n'
+            'tested: "quickstarts were built and audited when the recipe was written (D-251, D-437); not re-run for this asset"\n---\n\n'
+        )
+        write(ASSETS / "recipe" / f"{asset_id}.md", header + f"## {title}\n{body.rstrip()}\n")
+        count += 1
+    return count
+
+
 if __name__ == "__main__":
-    print(f"{make_palettes()} palettes, {make_techniques()} CSS technique assets written")
+    print(
+        f"{make_palettes()} palettes, {make_techniques()} CSS technique assets, {make_library_notes()} component-library notes written"
+    )

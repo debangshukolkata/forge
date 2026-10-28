@@ -23,6 +23,15 @@ TEMPLATES = [
     "tpl-event-conference",
     "tpl-docs-product",
     "tpl-pricing-invoicing",
+    "tpl-landing-restaurant",
+    "tpl-landing-clinic",
+    "tpl-launch-waitlist",
+    "tpl-landing-agency",
+    "tpl-directory-search",
+    "tpl-about-story",
+    "tpl-form-flow",
+    "tpl-account-signin",
+    "tpl-feedback-page",
 ]
 SECTION_NAMES = sorted(p.stem for p in (RECIPES / "sections").glob("*.tsx"))
 

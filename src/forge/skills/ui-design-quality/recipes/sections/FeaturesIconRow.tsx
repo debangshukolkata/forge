@@ -9,6 +9,8 @@ const CLOCK = (<svg {...base}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3
 const SHIELD = (<svg {...base}><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>);
 const CHAT = (<svg {...base}><path d="M4 5h16v11H9l-5 4z" /><path d="M8 9h8M8 12h5" /></svg>);
 const LEAF = (<svg {...base}><path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15" /><path d="M5 19c3-5 6-8 10-10" /></svg>);
+// An item without its own `icon` gets the next one of these four, so a list is never four copies of the same picture.
+const DEFAULT_ICONS = [CHAT, SHIELD, CLOCK, LEAF];
 
 export default function FeaturesIconRow({
   eyebrow = "Why people stay",
@@ -29,9 +31,9 @@ export default function FeaturesIconRow({
       <p className="eyebrow">{eyebrow}</p>
       <h2 className="mt-3 max-w-2xl text-3xl font-semibold sm:text-4xl">{title}</h2>
       <ul className="mt-10 grid gap-y-10 border-t border-ink-900 pt-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0 lg:divide-x lg:divide-ink-200">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <li key={item.title} className="lg:px-6 lg:first:pl-0 lg:last:pr-0">
-            <span className="text-brand-600">{item.icon ?? CHAT}</span>
+            <span className="text-brand-600">{item.icon ?? DEFAULT_ICONS[index % DEFAULT_ICONS.length]}</span>
             <h3 className="mt-4 text-lg font-semibold">{item.title}</h3>
             <p className="mt-2 text-ink-700">{item.text}</p>
           </li>
