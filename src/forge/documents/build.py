@@ -5,12 +5,14 @@ from __future__ import annotations
 import contextlib
 import importlib
 import io
+import re
 from collections.abc import Callable
 from typing import Any
 
 from forge.brand.kit import Resolved
 from forge.documents.spec import (
     Bullets,
+    Callout,
     DocumentError,
     DocumentSpec,
     Heading,
@@ -110,10 +112,35 @@ def _paragraph(document: Any, block: Paragraph) -> None:
             if run.footnote:
                 add_footnote(document, paragraph, run.footnote)
     else:
-        paragraph.add_run(block.text)
+        lines = block.text.split("\n")
+        for index, line in enumerate(lines):
+            run = paragraph.add_run(line)
+            if index < len(lines) - 1:
+                run.add_break()
+
+
+NUMBER = re.compile(r"^[-+(]?[^\d\s]{0,4}\s?[\d.,]+\s?[%)]?[^\d\s]{0,4}$")
+TABLE_WIDTH_IN = 6.3
+DEFAULT_HEADER_FILL = "1F3864"
+ROW_FILL = "F2F4F7"
+
+
+def _column_widths(block: Table, columns: int) -> list[float]:
+    """Widths from the longest text per column, so a description column is not as narrow as a price column."""
+    header = [len(block.header[i]) + 2 if i < len(block.header) else 6 for i in range(columns)]
+    longest = list(header)
+    for row in block.rows:
+        for index, text in enumerate(row[:columns]):
+            longest[index] = max(
+                longest[index], min(len(text), 36)
+            )  # long text wraps; short headers must not
+    weights = [max(6, length) for length in longest]
+    return [TABLE_WIDTH_IN * weight / sum(weights) for weight in weights]
 
 
 def _table(document: Any, block: Table, brand: Resolved) -> None:
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
     from docx.shared import Inches, RGBColor
 
     if block.caption:
@@ -121,25 +148,63 @@ def _table(document: Any, block: Table, brand: Resolved) -> None:
         caption.paragraph_format.keep_with_next = True
     columns = max(len(block.header), *(len(r) for r in block.rows)) if block.rows else len(block.header)
     table = document.add_table(rows=1, cols=columns)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
     with contextlib.suppress(KeyError):  # a template without that style keeps its default
         table.style = "Table Grid"
+    numeric = [
+        bool(block.rows)
+        and all(NUMBER.match(row[i].strip()) for row in block.rows if i < len(row) and row[i].strip())
+        for i in range(columns)
+    ]
+    fill = brand.header_fill or DEFAULT_HEADER_FILL
     for index, text in enumerate(block.header):
         cell = table.rows[0].cells[index]
         cell.text = text
         for run in cell.paragraphs[0].runs:
             run.bold = True
-            if brand.header_fill and brand.header_text:
-                run.font.color.rgb = RGBColor.from_string(brand.header_text)
-        if brand.header_fill:
-            _shade(cell, brand.header_fill)
+            run.font.color.rgb = RGBColor.from_string(brand.header_text or "FFFFFF")
+        if numeric[index]:
+            cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        _shade(cell, fill)
     _repeat_header(table.rows[0])
-    for row in block.rows:
+    for number, row in enumerate(block.rows):
         cells = table.add_row().cells
+        total = bool(row) and row[0].strip().lower().startswith("total")
         for index, text in enumerate(row):
             cells[index].text = text
-    for index, width in enumerate(block.widths_in[:columns]):
+            paragraph = cells[index].paragraphs[0]
+            paragraph.paragraph_format.space_after = 0
+            if numeric[index]:
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            if total:
+                for run in paragraph.runs:
+                    run.bold = True
+            if total or number % 2:
+                _shade(cells[index], ROW_FILL)
+    widths = block.widths_in[:columns] or _column_widths(block, columns)
+    for index, width in enumerate(widths):
         for row in table.rows:
             row.cells[index].width = Inches(width)
+    document.add_paragraph()
+
+
+def _callout(document: Any, block: Callout, brand: Resolved) -> None:
+    """A one-cell shaded box: the label small, the figure large and bold, an optional note below."""
+    from docx.shared import Pt, RGBColor
+
+    box = document.add_table(rows=1, cols=1)
+    cell = box.rows[0].cells[0]
+    _shade(cell, ROW_FILL)
+    label = cell.paragraphs[0]
+    label.add_run(block.label).font.size = Pt(10)
+    label.paragraph_format.space_after = 0
+    value = cell.add_paragraph()
+    value_run = value.add_run(block.value)
+    value_run.bold, value_run.font.size = True, Pt(20)
+    value_run.font.color.rgb = RGBColor.from_string(brand.heading or DEFAULT_HEADER_FILL)
+    value.paragraph_format.space_after = Pt(2)
+    if block.note:
+        cell.add_paragraph().add_run(block.note).font.size = Pt(9)
     document.add_paragraph()
 
 
@@ -173,6 +238,55 @@ def _apply_brand(document: Any, brand: Resolved) -> None:
         normal.font.name = brand.body_font
     if brand.text:
         normal.font.color.rgb = RGBColor.from_string(brand.text)
+
+
+DATE_LINE = re.compile(
+    r"^(\d{1,2}(st|nd|rd|th)? [A-Z][a-z]+ \d{4}|[A-Z][a-z]+ \d{1,2},? \d{4}|\d{4}-\d{2}-\d{2})$"
+)
+CLOSINGS = (
+    "yours sincerely",
+    "yours faithfully",
+    "kind regards",
+    "best regards",
+    "with best wishes",
+    "regards",
+)
+
+
+def _is_block_line(text: str) -> bool:
+    """A line of an address or a sender block: short, and not a sentence or a salutation."""
+    text = text.strip()
+    return 0 < len(text) <= 45 and not text.endswith((".", ",", ":", "?", "!")) and "\n" not in text
+
+
+def _letter_spacing(document: Any) -> None:
+    """Models write one paragraph per address line (doc-2 w05); tighten such runs and leave room for the signature."""
+    from docx.shared import Pt
+
+    paragraphs = document.paragraphs
+    for index, paragraph in enumerate(paragraphs):
+        following = paragraphs[index + 1] if index + 1 < len(paragraphs) else None
+        if DATE_LINE.match(paragraph.text.strip()):
+            paragraph.paragraph_format.space_before = paragraph.paragraph_format.space_after = Pt(12)
+        elif (
+            following is not None
+            and _is_block_line(paragraph.text)
+            and _is_block_line(following.text)
+            and not DATE_LINE.match(following.text.strip())
+        ):
+            paragraph.paragraph_format.space_after = Pt(0)
+        if following is not None and paragraph.text.strip().lower().rstrip(",") in CLOSINGS:
+            following.paragraph_format.space_before = Pt(36)
+
+
+def _title_size(document: Any) -> None:
+    """Word's default Title is 28 pt, which the judge read as oversized on letters and short proposals."""
+    from docx.shared import Pt
+
+    with contextlib.suppress(KeyError):
+        title = document.styles["Title"]
+        if title.font.size is None or title.font.size > Pt(22):
+            title.font.size = Pt(22)
 
 
 def _repeat_header(row: Any) -> None:
@@ -250,10 +364,12 @@ def build_document(spec: DocumentSpec, load: Callable[[str], bytes], template: b
         footer = section.footer.paragraphs[0]
         if spec.footer:
             footer.text = spec.footer + ("    " if spec.page_numbers else "")
-        if spec.page_numbers:
+        if spec.page_numbers and (spec.kind != "letter" or "page_numbers" in spec.model_fields_set):
             footer.add_run("Page ")
             _field(footer, "PAGE", "1")
-        document.add_heading(spec.title, level=0)
+        _title_size(document)
+        if spec.kind != "letter":
+            document.add_heading(spec.title, level=0)
         if spec.toc:
             _field(
                 document.add_paragraph(),
@@ -279,6 +395,10 @@ def build_document(spec: DocumentSpec, load: Callable[[str], bytes], template: b
                 document.add_paragraph(block.text, style="Intense Quote")
             elif isinstance(block, PageBreak):
                 document.add_page_break()
+            elif isinstance(block, Callout):
+                _callout(document, block, brand)
+        if spec.kind == "letter":
+            _letter_spacing(document)
     except DocumentError:
         raise
     except KeyError as error:

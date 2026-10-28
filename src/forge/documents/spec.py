@@ -31,7 +31,9 @@ class Heading(BaseModel):
 
 class Paragraph(BaseModel):
     type: Literal["paragraph"] = "paragraph"
-    text: str = ""
+    text: str = Field(
+        default="", description="A newline is a line break inside the paragraph (an address block)"
+    )
     runs: list[Run] = Field(default_factory=list, description="Use instead of text for bold, italic or links")
 
 
@@ -70,13 +72,27 @@ class PageBreak(BaseModel):
     type: Literal["page_break"] = "page_break"
 
 
+class Callout(BaseModel):
+    """The one figure or decision the reader must not miss (a total price, a deadline), in a shaded box."""
+
+    type: Literal["callout"] = "callout"
+    label: str = Field(description="What the figure is, e.g. 'Total price (excluding VAT)'")
+    value: str = Field(description="The figure itself, e.g. 'GBP 8,400'")
+    note: str = ""
+
+
 Block = Annotated[
-    Heading | Paragraph | Bullets | Numbered | Table | Image | Quote | PageBreak, Field(discriminator="type")
+    Heading | Paragraph | Bullets | Numbered | Table | Image | Quote | PageBreak | Callout,
+    Field(discriminator="type"),
 ]
 
 
 class DocumentSpec(BaseModel):
     title: str
+    kind: Literal["document", "letter"] = Field(
+        default="document",
+        description="'letter': no visible title (it stays in the file properties) and no page numbers unless asked",
+    )
     author: str = ""
     language: str = "en-GB"
     header: str = ""

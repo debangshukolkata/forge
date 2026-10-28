@@ -241,3 +241,58 @@ def test_word_exports_the_document_to_pdf_when_installed() -> None:
     if not (word_available() or libreoffice()):
         pytest.skip("neither Word nor LibreOffice here")
     assert to_pdf(_built()).startswith(b"%PDF")
+
+
+def _opened(outline: dict) -> object:
+    return docx.Document(io.BytesIO(build_document(parse_document(json.dumps(outline)), lambda path: b"")))
+
+
+def test_a_letter_has_no_title_tight_address_blocks_and_room_to_sign() -> None:
+    """W8, doc-2 w05: the letter had a large title and a gap after every address line."""
+    lines = ["Priya Raman", "14 Elm Court", "12 November 2026", "Harbour Music School", "8 Harbour Street"]
+    blocks = [{"type": "paragraph", "text": line} for line in lines]
+    blocks += [
+        {"type": "paragraph", "text": t} for t in ("Dear Sir,", "A sentence.", "Yours sincerely,", "Priya")
+    ]
+    opened = _opened({"title": "Letter", "kind": "letter", "blocks": blocks})
+    paragraphs = opened.paragraphs
+    assert all(p.style.name != "Title" for p in paragraphs) and opened.core_properties.title == "Letter"
+    assert paragraphs[0].paragraph_format.space_after == 0 and paragraphs[3].paragraph_format.space_after == 0
+    assert paragraphs[2].paragraph_format.space_before.pt == 12  # the date stands apart
+    assert paragraphs[-1].paragraph_format.space_before.pt == 36
+    assert "Page" not in opened.sections[0].footer.paragraphs[0].text
+
+
+def test_a_newline_is_a_line_break_and_a_callout_shows_the_figure() -> None:
+    opened = _opened(
+        {
+            "title": "Proposal",
+            "blocks": [
+                {"type": "paragraph", "text": "8 Harbour Street\nMillbridge"},
+                {"type": "callout", "label": "Total price", "value": "GBP 8,400", "note": "excluding VAT"},
+            ],
+        }
+    )
+    address = next(p for p in opened.paragraphs if "Harbour" in p.text)
+    assert "<w:br/>" in address._p.xml and address.text == "8 Harbour Street\nMillbridge"
+    box = opened.tables[0].rows[0].cells[0]
+    assert [p.text for p in box.paragraphs] == ["Total price", "GBP 8,400", "excluding VAT"]
+    assert box.paragraphs[1].runs[0].bold and box.paragraphs[1].runs[0].font.size.pt == 20
+
+
+def test_tables_get_a_shaded_header_right_aligned_numbers_and_a_bold_total() -> None:
+    """W8, doc-2 w04: a plain grid with the total price no different from any other row."""
+    table = {
+        "type": "table",
+        "header": ["Phase", "Description", "Price (GBP)"],
+        "rows": [["Design", "Page layouts and a visual design", "2,800"], ["Total", "All phases", "8,400"]],
+    }
+    opened = _opened({"title": "Proposal", "blocks": [table]})
+    made = opened.tables[0]
+    assert 'w:fill="1F3864"' in made.rows[0].cells[0]._tc.xml
+    assert (
+        made.rows[1].cells[2].paragraphs[0].alignment == 2
+        and made.rows[1].cells[0].paragraphs[0].alignment is None
+    )
+    assert made.rows[2].cells[2].paragraphs[0].runs[0].bold
+    assert made.rows[1].cells[1].width > made.rows[1].cells[2].width

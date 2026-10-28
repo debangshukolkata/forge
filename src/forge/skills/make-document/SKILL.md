@@ -32,9 +32,17 @@ specification, the python-docx documentation and our own tests with Word.
   {"type": "numbered", "items": ["first", "second"]},
   {"type": "table", "header": ["Region", "Q1"], "rows": [["North", "100"]], "caption": "Table 1: Sales"},
   {"type": "image", "path": "docs/chart.png", "alt": "Bar chart of sales by region", "width_in": 5.5, "caption": "Figure 1"},
+  {"type": "callout", "label": "Total price (excluding VAT)", "value": "GBP 8,400", "note": "valid until 31 March"},
   {"type": "quote", "text": "..."}, {"type": "page_break"}]}
 ```
-Plain text goes in `text`; use `runs` only for bold, italic or links (https, http or mailto only). The table of contents and page numbers are Word
+Plain text goes in `text`; a newline in `text` is a line break inside the paragraph (one paragraph per address, not one per line). Use `runs`
+only for bold, italic or links (https, http or mailto only).
+**The one figure that matters** (a proposal's total price, a quote's deadline, a report's headline number) goes in a `callout` near the top or
+right after its table, so it is not one more row. Tables already get a shaded header, right-aligned numbers, a bold row that starts with
+"Total" and widths fitted to their text; give `widths_in` only when that is not right.
+**A letter:** set `"kind": "letter"`: no title is printed (it stays in the file's properties) and there are no page numbers unless you set
+`page_numbers`. Order: sender's address (one paragraph with line breaks), the date, the recipient's address, a bold subject line, the
+salutation, the body, the closing ("Yours sincerely,"), then the name (room to sign is left for you). The table of contents and page numbers are Word
 fields: Word fills them when the file is opened (the user may be asked to press F9 / Update field).
 
 ## Work loop
@@ -62,4 +70,4 @@ fields: Word fills them when the file is opened (the user may be asked to press 
   table headers and fonts follow it; a colour that would be unreadable on white is darkened. The same file works for decks, workbooks and PDFs.
 
 ## Gotchas
-- The outline's `title` is printed as the document's title for you. Start `blocks` with the first section heading: repeating the title as a heading shows it twice.
+- The outline's `title` is printed as the document's title for you (not on a `letter`). Start `blocks` with the first section heading: repeating the title as a heading shows it twice.
