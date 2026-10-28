@@ -151,7 +151,7 @@ def test_the_jump_to_latest_button_appears_when_scrolled_up_and_takes_the_reader
     """UI1 follow-up (D-521, option A): a round arrow button above the message box shows only when the reader has scrolled away from the newest message,
     carries a dot when something new arrived meanwhile, and takes the reader back to the bottom."""
     reply = "\n\n".join(
-        f"Paragraph {n}: " + "the reply keeps going so the chat has to scroll. " * 6 for n in range(10)
+        f"Paragraph {n}: " + "the reply keeps going so the chat has to scroll. " * 6 for n in range(24)
     )
     shots = REPO_ROOT / "test-artifacts" / "react-ui"
     shots.mkdir(parents=True, exist_ok=True)
@@ -159,7 +159,7 @@ def test_the_jump_to_latest_button_appears_when_scrolled_up_and_takes_the_reader
         browser, page = open_in_edge(p, live_server, workspace)
         live_server.publish(EventType.USER_MESSAGE, {"text": "First question"})
         live_server.publish(EventType.MESSAGE_DONE, {"text": reply})
-        page.wait_for_selector("text=Paragraph 9")
+        page.wait_for_selector("text=Paragraph 23")
         page.wait_for_timeout(500)
         button = page.locator("button[title='Jump to the latest message']")
         assert button.count() == 0  # at the bottom: no button

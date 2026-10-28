@@ -47,6 +47,9 @@ HINT_MIN_SCORE = (
     6  # measured on 12 design requests (all 6 to 17) and 8 others (2 to 4, one form-related request 11)
 )
 HINT_RESULTS = 3
+REFERENCE_SHOTS = frozenset(
+    {"desktop", "mobile", "phone", "specimen"}
+)  # the picture names build_reference_shots.py and the specimen script make
 HINT_MIN_FOLLOWER = 5
 HINT_REQUEST_CHARS = 300  # a long message matches everything a little; its start says what is wanted
 
@@ -221,7 +224,12 @@ REFERENCE_FOLDER = ".forge/reference"
 
 def _previews(skill_folder: Path, asset_id: str) -> list[Path]:
     """Reference pictures of an asset (a desktop and a phone picture, made by scripts/dev/build_reference_shots.py), if it has them."""
-    return sorted((skill_folder / "assets" / "preview").glob(f"{asset_id}-*.jpg"))
+    # Only the shot suffixes: `<id>-*.jpg` alone also matched the picture of a different asset whose id starts with this one (fx-marquee and fx-marquee-vertical).
+    return sorted(
+        picture
+        for picture in (skill_folder / "assets" / "preview").glob(f"{asset_id}-*.jpg")
+        if picture.stem[len(asset_id) + 1 :] in REFERENCE_SHOTS
+    )
 
 
 async def _copy_previews(context: ToolContext, skill: Skill, asset: Asset) -> list[str]:

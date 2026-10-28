@@ -86,7 +86,7 @@ async def test_rewind_without_an_id_lists_the_points_and_a_missing_id_is_said(
     workspace.write_text("backend/claims_app/a.py", "a = 1\n")
     outputs = await run_commands(workspace, "/rewind", "/rewind 99")
     assert "write backend/claims_app/a.py" in outputs[0] and "/rewind <id>" in outputs[1]
-    assert outputs[2] == "No checkpoint 99. See /checkpoints."
+    assert outputs[2] == "No checkpoint with id 99"
 
 
 async def test_after_an_undo_or_rewind_the_model_is_told_which_files_went_back(

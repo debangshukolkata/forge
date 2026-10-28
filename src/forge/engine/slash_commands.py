@@ -191,9 +191,6 @@ class SlashCommandHandler:
             await self._say("Usage: /rewind <checkpoint id>  (see /checkpoints)")
             return
         undone = self._workspace().rewind(int(args[0]))
-        if not undone:
-            await self._say(f"No checkpoint {args[0]}. See /checkpoints.")
-            return
         await self._say(f"Rewound {len(undone)} checkpoint(s): " + ", ".join(cp.label for cp in undone))
         self._tell_the_model_files_went_back(undone)
 

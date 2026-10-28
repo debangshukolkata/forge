@@ -31,16 +31,32 @@ def test_runnable_blocks_run(recipe: Path, tmp_path: Path) -> None:
     for number, code in enumerate(BLOCK.findall(recipe.read_text(encoding="utf-8")), 1):
         script = tmp_path / f"block{number}.py"
         script.write_text(code, encoding="utf-8")
-        run = subprocess.run(
-            [sys.executable, str(script)],
-            cwd=tmp_path,
-            # the outer pytest-xdist worker's variables would leak into the nested pytest run
-            env={
-                key: value for key, value in os.environ.items() if not key.startswith(("PYTEST_", "XDIST_"))
-            },
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            timeout=300,
+        # A recipe's own example test uses pytest's tmp_path, so the nested pytest creates and prunes folders in the system Temp area that the outer workers
+        # (and the browser tests) use at the same time; a folder that vanishes mid-scan is a FileNotFoundError that has nothing to do with the recipe. The nested
+        # run gets a private temp folder, and that one error is still retried as a second guard.
+        private_temp = tmp_path / "nested-temp"
+        private_temp.mkdir(exist_ok=True)
+        for _attempt in range(3):
+            run = subprocess.run(
+                [sys.executable, str(script)],
+                cwd=tmp_path,
+                # the outer pytest-xdist worker's variables would leak into the nested pytest run
+                env={
+                    **{
+                        key: value
+                        for key, value in os.environ.items()
+                        if not key.startswith(("PYTEST_", "XDIST_"))
+                    },
+                    "TEMP": str(private_temp),
+                    "TMP": str(private_temp),
+                },
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                timeout=300,
+            )
+            if run.returncode == 0 or "FileNotFoundError" not in run.stdout:
+                break
+        assert run.returncode == 0, (
+            f"{recipe.name} block {number} failed:\n{run.stdout[-1800:]}\n{run.stderr[-1500:]}"
         )
-        assert run.returncode == 0, f"{recipe.name} block {number} failed:\n{run.stderr[-1500:]}"

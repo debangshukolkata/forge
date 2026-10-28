@@ -172,7 +172,12 @@ def test_prompts_and_design_skill_tell_the_model_to_build_variants_side_by_side(
     for relative in ("agent/prompts/system.md", "agent/prompts/system_modeb.md"):
         text = (root / relative).read_text(encoding="utf-8")
         assert "built at the same time, not one after" in text
-    skill = (root / "skills/ui-design-quality/SKILL.md").read_text(encoding="utf-8")
+    skill_folder = (
+        root / "skills/ui-design-quality"
+    )  # the rules for variants moved to their own file (D-520); the pointer stays in SKILL.md
+    skill = (skill_folder / "SKILL.md").read_text(encoding="utf-8") + (
+        skill_folder / "recipes/skill-variants.md"
+    ).read_text(encoding="utf-8")
     assert "Build the variants at the same time" in skill
 
 
