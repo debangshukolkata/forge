@@ -14,7 +14,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from forge.agent.hints import variants_hint
+from forge.agent.hints import security_hint, variants_hint
 from forge.agent.hooks import EVENTS as HOOK_EVENTS
 from forge.agent.hooks import HookRunner
 from forge.agent.parallel import MAX_PARALLEL_COMMANDS, is_parallel_safe_command, is_test_command
@@ -212,6 +212,9 @@ class AgentLoop:
         several = variants_hint(last.content)  # BV1, D-527
         if several:
             history.append(Message.system(several))
+        security = security_hint(last.content)  # D-536
+        if security:
+            history.append(Message.system(security))
 
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""

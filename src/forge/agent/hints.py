@@ -37,3 +37,22 @@ def variants_hint(request: str) -> str:
     if not SEVERAL_DESIGNS.search(start) or not DESIGN_SUBJECT.search(start) or IN_WORDS.search(start):
         return ""
     return VARIANTS_NOTE
+
+
+SECURITY_REQUEST = re.compile(
+    r"\b(security|secure|vulnerab\w*|attacker|exploit\w*|injection|xss|ssrf|csrf|hardening|harden|pentest|threat model)\b",
+    re.IGNORECASE,
+)
+SECURITY_NOTE = (
+    "This request is a security review or fix. Work function by function, not file by file: (1) list every function that takes outside "
+    "input; (2) for each, name the sinks it reaches (HTML, link, redirect, file path, archive, SQL, shell, deserialiser, evaluator, outgoing "
+    "request, header, log line, token); (3) write one hostile test per function and sink, see it fail, then fix at the root by parsing and "
+    "allowing a short list, never by blocking example strings; (4) you are done only when every pair has a passing hostile test. "
+    "add_asset rcp-security gives tested checks for links, redirects, signed cookies, paths and SQL; rcp-threat-model-review gives the method."
+)
+
+
+def security_hint(request: str) -> str:
+    """The note for a security review or fix (D-536): in run c1-t15-23 neither security task opened the recipes the catalogue hint named,
+    and both stopped when the existing tests passed (t22 70/93, t23 47/53)."""
+    return SECURITY_NOTE if SECURITY_REQUEST.search(request[:HINT_REQUEST_CHARS]) else ""

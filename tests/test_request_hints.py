@@ -32,3 +32,12 @@ def test_a_request_for_several_designs_gets_the_note(request_text: str) -> None:
 @pytest.mark.parametrize("request_text", OTHER_REQUESTS)
 def test_other_requests_get_nothing(request_text: str) -> None:
     assert variants_hint(request_text) == ""
+
+
+def test_a_security_review_gets_the_function_by_function_note() -> None:
+    from forge.agent.hints import security_hint
+
+    assert "hostile test" in security_hint("Review `webapp.py` for security problems and fix them.")
+    assert "hostile test" in security_hint("Harden the upload endpoint against path traversal and injection")
+    assert security_hint("Add a CSV export to the orders page") == ""
+    assert security_hint("Fix the typo in the README") == ""
