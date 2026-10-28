@@ -26,10 +26,25 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
   const [dismissed, setDismissed] = useState<string[]>([]);
   const popupId = pending && forge.controls && !dismissed.includes(pending.key) ? pending.key : null;
 
+  const content = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const box = scroller.current;
     if (box && (stick.current || forge.replaying)) box.scrollTop = box.scrollHeight;
   }, [items, forge.replaying]);
+  // Things change height without a new message: a picture finishes loading, a code block is decorated, a card opens, or the activity line above the
+  // message box appears and the chat area gets shorter. Follow the bottom through those too, unless the reader has scrolled up.
+  useEffect(() => {
+    const box = scroller.current;
+    const inner = content.current;
+    if (!box || !inner || typeof ResizeObserver === "undefined") return;
+    const follow = () => {
+      if (stick.current) box.scrollTop = box.scrollHeight;
+    };
+    const observer = new ResizeObserver(follow);
+    observer.observe(inner);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <QuestionPopup.Provider value={{ popupId, reopen: (id) => setDismissed((list) => list.filter((x) => x !== id)) }}>
@@ -65,7 +80,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
         className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
         aria-live="polite"
       >
-        <div className="mx-auto flex max-w-[var(--chat-max,760px)] flex-col gap-4 px-6 py-6">
+        <div ref={content} className="mx-auto flex max-w-[var(--chat-max,760px)] flex-col gap-4 px-6 py-6">
           {items.length === 0 && !forge.replaying && <Welcome forge={forge} onOpenEnvironment={onOpenEnvironment} />}
           {!forge.controls && (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-warn/40 bg-warn-soft px-4 py-2.5 text-[13px] text-warn">
