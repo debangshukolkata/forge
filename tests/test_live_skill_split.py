@@ -127,10 +127,4 @@ async def test_the_moved_file_is_opened(scenario: str, run: int, make_host) -> N
                 + "\n"
             )
     print(f"\nSKILL-SPLIT {scenario} run={run}: followed={followed} loads={loads} stopped_on={stopped_on!r}")
-    if (
-        not followed and scenario == "variants"
-    ):  # the same with the unsplit skill (measured 2026-10-28, D-524), so not a split problem: open item in the TODO
-        pytest.xfail(
-            "the model ends this request without calling build_variants, with or without the split (TODO)"
-        )
     assert followed, f"opened {loads}, expected a file containing {expected_file}; stopped on {stopped_on!r}"

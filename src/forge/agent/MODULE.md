@@ -11,3 +11,4 @@ The main agent core: the loop (model call -> tool calls -> results -> repeat), n
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
 - **Hooks (D-501):** `hooks.py`: `pre_tool` (deny only), `post_tool`, `session_start`, `session_end`, `user_message` hooks run through the permission gate; a hook the gate would ask about is skipped, a hook cannot approve anything.
+- **Request hints (D-518, D-527):** with each new user request the loop adds the catalogue matches (`tools/assets.py`) and, for a request for several designs of one page, a note to build them with `build_variants` (`hints.py`); plain pattern matching, nothing leaves the machine.
