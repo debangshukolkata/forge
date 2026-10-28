@@ -45,3 +45,29 @@ Each task has its own checks in `scripts/benchmark/run_document_benchmark.py`, a
 What the first three runs showed (above) is still the only measured data; the other eleven have not been run. The next step is one run of all fourteen on the real model, read
 for what the checks and the judge name, not for small score differences. Not covered yet: a Word letter or report made from a template the user supplies, and anything that needs
 the user's own sample documents (the TODO asks for three to five).
+
+## Run doc-2 (2026-10-28): all fourteen tasks on the real model, one run each
+Checks: 13 of 14 tasks passed every check (105 of 106 checks); the one miss was my check, not the model (w08 wrote the yearly-total sentence as a formula, `="Total sales for the year were " & B6`,
+which is better than typed text; the check now accepts it). Cost about $1.77 for all fourteen, 47 s to 179 s each. The judge (blind, strict scale 1 to 5) gave 2 to 5; read the named problems, not the small differences.
+
+| Task | Checks | Judge s/r/t/p | The judge's worst problem |
+|---|---|---|---|
+| w01 sales report | 8/8 | 4/4/4/4 | a heading repeated above the table |
+| w02 clean and chart | 8/8 | 2/3/4/2 | two inconsistent charts instead of one amount-by-product chart (the same problem as doc-1) |
+| w03 handout | 7/7 | 4/4/5/3 | contact section awkwardly phrased |
+| w04 proposal | 9/9 | 4/5/4/4 | plain; the total price is not emphasised |
+| w05 letter | 9/9 | 4/4/5/4 | large title, plain styling for a formal letter |
+| w06 budget | 7/7 | 3/3/4/2 | charts misconfigured, the monthly balance is not clear |
+| w07 tracker | 7/7 | 3/4/2/3 | the table is split across two printed pages, columns separated |
+| w08 pdf extract | 5/6 (check fixed) | 2/3/3/2 | the total shown with odd digit grouping |
+| w09 pdf merge | 6/6 | 3/3/5/2 | pages bare (the inputs were bare) |
+| w10 pdf form | 6/6 | 4/4/3/3 | much empty space on the page |
+| w11 pdf ocr | 7/7 | 4/4/5/4 | very plain |
+| w12 word edit | 7/7 | 4/4/5/4 | plain, no advanced formatting |
+| w13 excel edit | 8/8 | 2/3/4/1 | the chart on the second page is clipped by the page margins |
+| w14 excel dashboard | 7/7 | 3/3/3/2 | months drawn as separate series, only part of the range shown |
+
+**What it shows.** The model uses the tools correctly and the files are valid and do what was asked (the checks). The craft problems repeat in three places and are fixable: (1) **charts**:
+w02, w06 and w14 each got a chart with the wrong series (months as separate series, or two charts where one was asked); (2) **printing**: w07's table splits across pages and w13's chart is cut by the margin,
+so a workbook needs a print setup (fit to one page wide, the chart inside the print area); (3) **plain Word and PDF output** (w04, w05, w11, w12) is correct but looks like a template.
+Limits: one run per task, a judge from the same model family, tasks written the day before. The three fixes are open as TODO W6 to W8.

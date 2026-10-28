@@ -244,6 +244,13 @@ def test_the_edit_and_extract_checks_fail_on_an_empty_workspace_and_pass_good_ou
     sheet["A8"] = "Total sales for the year were 201,200 GBP."
     book.save(workspace / "project" / "figures.xlsx")
     assert bench.check_w08(workspace)["checks_failed"] == []
+    # the same sentence built by a formula from the total (what the model did on the first live run) counts too; a sentence that names no total does not
+    sheet["A8"] = '="Total sales for the year were " & B6'
+    book.save(workspace / "project" / "figures.xlsx")
+    assert bench.check_w08(workspace)["checks_failed"] == []
+    sheet["A8"] = '="Good year" & A1'
+    book.save(workspace / "project" / "figures.xlsx")
+    assert bench.check_w08(workspace)["checks_failed"] != []
 
     # w09: the three seed PDFs in the asked order with the title set
     writer = PdfWriter()

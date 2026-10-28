@@ -124,7 +124,12 @@ def test_a_requirement_through_the_react_ui(server: ServerSecurity, tmp_path: Pa
         while time.monotonic() < deadline:
             clicked = answer_waiting_cards(page)
             state = page.evaluate("() => fetch('/api/state').then(r => r.json())")
-            if state.get("phase") in ("done", "handoff") and not state.get("busy"):
+            # "phase" is only a status line since D-128, never "done"; the work is finished when DebCraft is idle with nothing waiting and every task
+            # is done (or, with no task list, the delivered file exists).
+            tasks = state.get("tasks") or []
+            finished = bool(tasks) and all(t.get("status") == "done" for t in tasks)
+            delivered = (project / "output" / "payments" / "security" / "masking.py").exists()
+            if not state.get("busy") and not state.get("pending") and (finished or delivered):
                 done = True
                 break
             # DebCraft sometimes asks in plain text (no card) and goes idle: reply like a user would.

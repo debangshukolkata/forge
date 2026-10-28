@@ -300,13 +300,25 @@ def check_w08(workspace: Path) -> dict[str, Any]:
     numbers = [c.value for c in cells if isinstance(c.value, (int, float)) and not isinstance(c.value, bool)]
     texts = " ".join(str(c.value) for c in cells if isinstance(c.value, str) and not c.value.startswith("="))
     plain = texts.replace(",", "").replace(" ", "")
+    # The sentence may be a formula that builds it from the total (="Total sales were " & B6): better than typed text, because it stays right.
+    total_cells = {c.coordinate for c in cells if _is_formula(c) and "SUM" in str(c.value).upper()}
+    sentence_from_formula = any(
+        _is_formula(c)
+        and "&" in str(c.value)
+        and "total" in str(c.value).lower()
+        and any(
+            re.search(rf"(?<![A-Z]){re.escape(coordinate)}(?!\d)", str(c.value)) for coordinate in total_cells
+        )
+        for c in cells
+    )
     passed = {
         "package valid": not validate_package(data),
         "no formula errors": not [f for f in check_workbook(data) if f.level == "error"],
         "the four quarters as numbers": all(n in numbers for n in (41200, 45800, 52300, 61900)),
         "the order counts as numbers": all(n in numbers for n in (3100, 3380, 3790, 4410)),
         "a total made of a formula": any("SUM" in str(c.value).upper() for c in cells if _is_formula(c)),
-        "the yearly total stated (201200)": "201200" in plain,
+        "the yearly total stated (201200, typed or built by a formula from the total)": "201200" in plain
+        or sentence_from_formula,
     }
     return {"delivered": True, **_report(passed)}
 

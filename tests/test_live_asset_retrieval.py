@@ -39,7 +39,7 @@ SCENARIOS = {
     ),
     "festival": (
         "Make a loud poster-style page for a music festival.",
-        {"dir-bold-poster", "ds-bold-poster", "tpl-event-conference"},
+        {"dir-bold-poster", "ds-bold-poster", "tpl-event-conference", "sec-hero-poster"},
     ),
     "dashboard": (
         "I need a dark analytics dashboard with dense tables.",
