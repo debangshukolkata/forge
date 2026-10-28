@@ -155,12 +155,69 @@ def check_workbook(data: bytes) -> list[Finding]:
                 "colour them blue (the modelling convention) so a reader sees what may be changed; build_workbook does this by default",
             )
         )
+    for sheet in formulas_book.worksheets:
+        findings += chart_findings(sheet)
     for sheet_name, column, row in _cycles(graph):
         findings.append(
             Finding(
                 "error",
                 f"{sheet_name}!{_column_letters(column)}{row}",
                 "circular reference: this cell depends on itself",
+            )
+        )
+    return findings
+
+
+def _points(reference: str) -> int:
+    """How many cells a chart series reference such as 'Budget'!$C$2:$N$2 covers."""
+    from openpyxl.utils.cell import range_boundaries
+
+    cells = reference.rsplit("!", 1)[-1].replace("$", "")
+    try:
+        min_col, min_row, max_col, max_row = range_boundaries(cells)
+    except ValueError:
+        return 0
+    return int((max_col - min_col + 1) * (max_row - min_row + 1))
+
+
+def chart_findings(sheet: Any) -> list[Finding]:
+    """Chart faults however the workbook was made (W6, D-532): in run doc-3 a model wrote its own openpyxl script, and its monthly balance
+    chart came out as twelve one-value series, which no outline check could see."""
+    findings: list[Finding] = []
+    charts = list(getattr(sheet, "_charts", []))
+    for number, chart in enumerate(charts, start=1):
+        where = f"{sheet.title} chart {number}"
+        kind = type(chart).__name__
+        series = list(chart.series)
+        points = [
+            _points(s.val.numRef.f) if s.val is not None and s.val.numRef is not None else 0 for s in series
+        ]
+        if len(series) >= 3 and all(count == 1 for count in points):
+            findings.append(
+                Finding(
+                    "error",
+                    where,
+                    f"{len(series)} series of one value each: the data was read along the wrong direction (a row of values is ONE series). "
+                    "In build_workbook give the row as data; in openpyxl use add_data(ref, from_rows=True)",
+                )
+            )
+        if kind not in ("PieChart", "DoughnutChart") and len(series) == 1 and chart.varyColors is not False:
+            findings.append(
+                Finding(
+                    "hint",
+                    where,
+                    "one series without varyColors=False: Excel colours every point differently and lists the categories in the legend; "
+                    "set chart.varyColors = False and chart.legend = None (build_workbook does both)",
+                )
+            )
+    properties = sheet.sheet_properties.pageSetUpPr
+    if charts and not (properties is not None and properties.fitToPage):
+        findings.append(
+            Finding(
+                "hint",
+                sheet.title,
+                "the sheet has a chart but is not set to print one page wide, so the chart can be cut at the page edge: "
+                "sheet.sheet_properties.pageSetUpPr.fitToPage = True, page_setup.fitToWidth = 1, fitToHeight = 0 (build_workbook does this)",
             )
         )
     return findings

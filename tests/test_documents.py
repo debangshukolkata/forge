@@ -296,3 +296,22 @@ def test_tables_get_a_shaded_header_right_aligned_numbers_and_a_bold_total() -> 
     )
     assert made.rows[2].cells[2].paragraphs[0].runs[0].bold
     assert made.rows[1].cells[1].width > made.rows[1].cells[2].width
+
+
+def test_paragraphs_around_tables_and_a_bold_subject_line_are_not_problems() -> None:
+    """D-532, doc-3: a table, a callout and one empty paragraph were counted as a run of spacing, and a letter's bold subject as a fake heading."""
+    outline = {
+        "title": "Proposal",
+        "blocks": [
+            {"type": "table", "header": ["Phase", "Price"], "rows": [["Build", "3,500"]]},
+            {"type": "callout", "label": "Total", "value": "GBP 3,500"},
+            {"type": "paragraph", "text": ""},
+            {"type": "paragraph", "runs": [{"text": "Subject: a place for Anika", "bold": True}]},
+        ],
+    }
+    data = build_document(parse_document(json.dumps(outline)), lambda path: b"")
+    assert describe_problems(check_document(data)).startswith("No structure")
+    spacing = {"title": "T", "blocks": [{"type": "paragraph", "text": ""}] * 3}
+    assert "empty paragraphs" in describe_problems(
+        check_document(build_document(parse_document(json.dumps(spacing)), lambda path: b""))
+    )

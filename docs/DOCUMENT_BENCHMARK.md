@@ -71,3 +71,18 @@ which is better than typed text; the check now accepts it). Cost about $1.77 for
 w02, w06 and w14 each got a chart with the wrong series (months as separate series, or two charts where one was asked); (2) **printing**: w07's table splits across pages and w13's chart is cut by the margin,
 so a workbook needs a print setup (fit to one page wide, the chart inside the print area); (3) **plain Word and PDF output** (w04, w05, w11, w12) is correct but looks like a template.
 Limits: one run per task, a judge from the same model family, tasks written the day before. The three fixes are open as TODO W6 to W8.
+
+## Run doc-3 (2026-10-29): the nine tasks behind W6 to W8, after D-525 and D-526
+| Task | Checks | Judge s/r/t/p (doc-2 -> doc-3) | Worst problem now |
+|---|---|---|---|
+| w02 clean and chart | 8/8 | 2/3/4/2 -> 2/3/2/2 | the table: no title, a missing margin value (the chart complaint is gone) |
+| w04 proposal | 8/9 | 4/5/4/4 -> 4/4/4/3 | empty space on page 2; the failed check was the checker's own fault (D-532) |
+| w05 letter | 8/9 | 4/4/5/4 -> 4/4/5/4 | still plain; the failed check was the checker's own fault (D-532) |
+| w06 budget | 7/7 | 3/3/4/2 -> 2/3/2/2 | twelve one-value series: the model wrote its own openpyxl script after failing to write the long JSON outline, so the builder fix never ran |
+| w07 tracker | 7/7 | 3/4/2/3 -> 3/3/4/3 | no sheet title (the page split is gone) |
+| w11 pdf ocr | 7/7 | 4/4/5/4 -> 5/5/5/5 | white space |
+| w12 word edit | 7/7 | 4/4/5/4 -> 4/4/4/3 | plain (an edit of the user's document, so the builder does not apply) |
+| w13 excel edit | 8/8 | 2/3/4/1 -> 2/3/4/2 | the seed's own chart cropped (an edit keeps the user's page setup) |
+| w14 excel dashboard | 7/7 | 3/3/3/2 -> 3/3/4/2 | KPI values without percent or thousands formats (the chart complaint is gone) |
+
+**Reading:** where the model used the builders, the named problems moved on: the chart complaints of w02 and w14 and the page split of w07 are gone and w11 scored 5 on all four. Where it bypassed them (w06's own script) or edited a user's file (w12, w13), nothing changed, so `check_workbook` now reports chart faults whatever made the file (D-532). One run each and a judge that varies by a point between runs: read the named problems, not the small score moves.

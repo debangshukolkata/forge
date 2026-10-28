@@ -22,7 +22,15 @@ def check_document(data: bytes) -> list[str]:
         problems.append(f"{info.pictures_without_alt} picture(s) have no alt text.")
     last_level = 0
     empty_run = 0
-    for paragraph in document.paragraphs:
+    from docx.text.paragraph import Paragraph
+
+    for child in document.element.body.iterchildren():
+        if child.tag.endswith("}tbl"):
+            empty_run = 0  # paragraphs on either side of a table are not a run of spacing (D-532)
+            continue
+        if not child.tag.endswith("}p"):
+            continue
+        paragraph = Paragraph(child, document)
         style = (paragraph.style.name if paragraph.style is not None else "") or ""
         text = paragraph.text.strip()
         match = re.match(r"Heading (\d)", style)
@@ -40,6 +48,7 @@ def check_document(data: bytes) -> list[str]:
             and paragraph.runs
             and all(run.bold for run in paragraph.runs if run.text.strip())
             and style in ("Normal", "")
+            and not LABEL_LINE.match(text)
         ):
             problems.append(f"{text[:40]!r} looks like a heading made with bold text: use a Heading style.")
         empty_run = empty_run + 1 if not text and not paragraph._p.xpath(".//w:drawing") else 0
@@ -52,6 +61,10 @@ def check_document(data: bytes) -> list[str]:
         if len(table.rows) > 1 and not header:
             problems.append(f"Table {number} does not mark its first row as a header row.")
     return problems
+
+
+# A letter's bold subject line is a label, not a heading.
+LABEL_LINE = re.compile(r"^(subject|re|ref|reference|regarding|our ref|your ref)\s*:", re.IGNORECASE)
 
 
 def header_flag(row: object) -> list[object]:

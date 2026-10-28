@@ -307,3 +307,22 @@ def test_every_sheet_prints_one_page_wide_and_wide_sheets_turn_landscape() -> No
         }
     )
     assert wide.page_setup.orientation == "landscape"
+
+
+def test_the_check_finds_a_chart_drawn_one_series_per_value_however_the_file_was_made() -> None:
+    """D-532, doc-3 w06: a model's own openpyxl script drew a monthly balance as twelve one-value series."""
+    from openpyxl.chart import BarChart, Reference
+
+    book = openpyxl.Workbook()
+    sheet = book.active
+    sheet.append(["Balance"] + [100 + n for n in range(12)])
+    chart = BarChart()
+    chart.add_data(
+        Reference(sheet, min_col=2, max_col=13, min_row=1, max_row=1)
+    )  # columns, the wrong way for a row
+    sheet.add_chart(chart, "B4")
+    out = io.BytesIO()
+    book.save(out)
+    found = describe_findings(check_workbook(out.getvalue()))
+    assert "12 series of one value each" in found and "print one page wide" in found
+    assert "chart" not in describe_findings(check_workbook(_built()))
