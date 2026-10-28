@@ -970,6 +970,10 @@ def test_react_project_switcher_deletes_from_the_top_bar(
         page.wait_for_selector("[role=alertdialog]")
         page.click("button:has-text('Delete project')")
         page.wait_for_selector("text=Start something new.")  # the open project went, so back to Home
+        # The page can reach Home before the server has finished removing the folder; under a loaded parallel run that check failed once (FL1).
+        deadline = time.monotonic() + 15
+        while (tmp_path / "wss").exists() and time.monotonic() < deadline:
+            time.sleep(0.2)
         assert not (tmp_path / "wss").exists()
         browser.close()
     assert not problems, problems
