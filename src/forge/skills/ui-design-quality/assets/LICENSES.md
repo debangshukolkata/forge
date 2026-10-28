@@ -10,6 +10,14 @@ Generated from the assets' front-matter; do not edit by hand.
 | `cmp-skeleton-rows` | original | authored for DebCraft (components-native.tsx, D-251) |
 | `cmp-tabs` | original | authored for DebCraft (components-native.tsx, D-251) |
 | `cmp-toasts` | original | authored for DebCraft (components-native.tsx, D-251) |
+| `css-animation-techniques` | original | authored for DebCraft (recipes/css-techniques.md) |
+| `css-colour` | original | authored for DebCraft (recipes/css-techniques.md) |
+| `css-depth-surfaces-effects` | original | authored for DebCraft (recipes/css-techniques.md) |
+| `css-layout` | original | authored for DebCraft (recipes/css-techniques.md) |
+| `css-native-html-that-replaces-widgets` | original | authored for DebCraft (recipes/css-techniques.md) |
+| `css-responsive-and-accessibility-basics` | original | authored for DebCraft (recipes/css-techniques.md) |
+| `css-selectors-that-remove-javascript` | original | authored for DebCraft (recipes/css-techniques.md) |
+| `css-typography-details` | original | authored for DebCraft (recipes/css-techniques.md) |
 | `ds-bento` | original | authored for DebCraft (D-350) from dir-bento |
 | `ds-bold-poster` | original | authored for DebCraft (D-350) from dir-bold-poster |
 | `ds-claymorphism` | original | authored for DebCraft (D-350) from dir-claymorphism |
@@ -170,6 +178,13 @@ Generated from the assets' front-matter; do not edit by hand.
 | `pair-journal` | OFL-1.1 | bundled fonts Lora and Plus Jakarta Sans (Fontsource, 5.3.0) |
 | `pair-playful-rounded` | OFL-1.1 | bundled fonts Nunito and DM Sans (Fontsource, 5.3.0) |
 | `pair-warm-editorial` | OFL-1.1 | bundled fonts Fraunces and Inter (Fontsource, 5.3.0) |
+| `pal-bold-campaign` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
+| `pal-calm-clinical` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
+| `pal-dark-mode-product` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
+| `pal-fresh-and-friendly` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
+| `pal-modern-product` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
+| `pal-premium-editorial` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
+| `pal-warm-trust` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
 | `app-approval-queue` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-audit-log` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-calendar` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |

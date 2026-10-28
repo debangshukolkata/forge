@@ -241,6 +241,12 @@ RETRIEVAL_PROMPTS = [
     ("label that floats above the input when focused", "mi-input-float-label"),
     ("card that flips over on hover", "mi-card-flip"),
     ("checkbox with a drawn checkmark", "mi-checkbox-draw"),
+    ("colours for a clinic or hospital website", "pal-calm-clinical"),
+    ("dark mode palette for a developer analytics tool", "pal-dark-mode-product"),
+    ("palette for a food or grocery community site", "pal-fresh-and-friendly"),
+    ("container queries and subgrid for a responsive card layout", "css-layout"),
+    ("native dialog and popover instead of a javascript modal", "css-native-html-that-replaces-widgets"),
+    ("scroll driven animation and view transitions", "css-animation-techniques"),
 ]
 
 

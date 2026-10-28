@@ -218,6 +218,249 @@
    "size": 8362
   },
   {
+   "id": "css-animation-techniques",
+   "type": "css-technique",
+   "title": "Animation techniques",
+   "summary": "Snippets for animation techniques.",
+   "moods": [
+    "scroll",
+    "transitions"
+   ],
+   "products": [
+    "web",
+    "landing",
+    "app",
+    "dashboard"
+   ],
+   "tags": [
+    "css",
+    "html",
+    "native",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/css-techniques.md)",
+   "tested": "snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)",
+   "preview": null,
+   "path": "assets/css-technique/css-animation-techniques.md",
+   "size": 1778
+  },
+  {
+   "id": "css-colour",
+   "type": "css-technique",
+   "title": "Colour",
+   "summary": "Snippets for colour.",
+   "moods": [
+    "oklch"
+   ],
+   "products": [
+    "web",
+    "landing",
+    "app",
+    "dashboard"
+   ],
+   "tags": [
+    "css",
+    "html",
+    "native",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/css-techniques.md)",
+   "tested": "snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)",
+   "preview": null,
+   "path": "assets/css-technique/css-colour.md",
+   "size": 761
+  },
+  {
+   "id": "css-depth-surfaces-effects",
+   "type": "css-technique",
+   "title": "Depth, surfaces, effects",
+   "summary": "Snippets for depth, surfaces, effects.",
+   "moods": [
+    "shadows"
+   ],
+   "products": [
+    "web",
+    "landing",
+    "app",
+    "dashboard"
+   ],
+   "tags": [
+    "css",
+    "html",
+    "native",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/css-techniques.md)",
+   "tested": "snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)",
+   "preview": null,
+   "path": "assets/css-technique/css-depth-surfaces-effects.md",
+   "size": 1081
+  },
+  {
+   "id": "css-layout",
+   "type": "css-technique",
+   "title": "Layout",
+   "summary": "Snippets for layout.",
+   "moods": [
+    "responsive"
+   ],
+   "products": [
+    "web",
+    "landing",
+    "app",
+    "dashboard"
+   ],
+   "tags": [
+    "css",
+    "html",
+    "native",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/css-techniques.md)",
+   "tested": "snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)",
+   "preview": null,
+   "path": "assets/css-technique/css-layout.md",
+   "size": 1242
+  },
+  {
+   "id": "css-native-html-that-replaces-widgets",
+   "type": "css-technique",
+   "title": "Native HTML that replaces widgets",
+   "summary": "Snippets for native html that replaces widgets.",
+   "moods": [
+    "dialog",
+    "popover"
+   ],
+   "products": [
+    "web",
+    "landing",
+    "app",
+    "dashboard"
+   ],
+   "tags": [
+    "css",
+    "html",
+    "native",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/css-techniques.md)",
+   "tested": "snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)",
+   "preview": null,
+   "path": "assets/css-technique/css-native-html-that-replaces-widgets.md",
+   "size": 601
+  },
+  {
+   "id": "css-responsive-and-accessibility-basics",
+   "type": "css-technique",
+   "title": "Responsive and accessibility basics",
+   "summary": "Snippets for responsive and accessibility basics.",
+   "moods": [
+    "focus",
+    "contrast"
+   ],
+   "products": [
+    "web",
+    "landing",
+    "app",
+    "dashboard"
+   ],
+   "tags": [
+    "css",
+    "html",
+    "native",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/css-techniques.md)",
+   "tested": "snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)",
+   "preview": null,
+   "path": "assets/css-technique/css-responsive-and-accessibility-basics.md",
+   "size": 443
+  },
+  {
+   "id": "css-selectors-that-remove-javascript",
+   "type": "css-technique",
+   "title": "Selectors that remove JavaScript",
+   "summary": "Snippets for selectors that remove javascript.",
+   "moods": [
+    "selectors"
+   ],
+   "products": [
+    "web",
+    "landing",
+    "app",
+    "dashboard"
+   ],
+   "tags": [
+    "css",
+    "html",
+    "native",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/css-techniques.md)",
+   "tested": "snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)",
+   "preview": null,
+   "path": "assets/css-technique/css-selectors-that-remove-javascript.md",
+   "size": 651
+  },
+  {
+   "id": "css-typography-details",
+   "type": "css-technique",
+   "title": "Typography details",
+   "summary": "Snippets for typography details.",
+   "moods": [
+    "typesetting"
+   ],
+   "products": [
+    "web",
+    "landing",
+    "app",
+    "dashboard"
+   ],
+   "tags": [
+    "css",
+    "html",
+    "native",
+    "no dependency"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/css-techniques.md)",
+   "tested": "snippets follow current Chromium (Edge) behaviour; checked when the recipe was written (D-251)",
+   "preview": null,
+   "path": "assets/css-technique/css-typography-details.md",
+   "size": 680
+  },
+  {
    "id": "ds-bento",
    "type": "design-system",
    "title": "Bento and cards",
@@ -6284,6 +6527,204 @@
    "preview": "assets/preview/pair-warm-editorial.jpg",
    "path": "assets/font-pairing/pair-warm-editorial.md",
    "size": 90948
+  },
+  {
+   "id": "pal-bold-campaign",
+   "type": "palette",
+   "title": "Bold campaign",
+   "summary": "One accent and neutral surfaces for events, drives, sports.",
+   "moods": [
+    "bold",
+    "campaign"
+   ],
+   "products": [
+    "events",
+    "drives",
+    "sports"
+   ],
+   "tags": [
+    "palette",
+    "colour"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/palettes-and-fonts.md)",
+   "tested": "contrast pairs read from the recipe table; picture is the swatch sheet",
+   "preview": "assets/preview/pal-bold-campaign.jpg",
+   "path": "assets/palette/pal-bold-campaign.md",
+   "size": 356
+  },
+  {
+   "id": "pal-calm-clinical",
+   "type": "palette",
+   "title": "Calm clinical",
+   "summary": "One accent and neutral surfaces for hospital, wellness, insurance.",
+   "moods": [
+    "calm",
+    "clinical"
+   ],
+   "products": [
+    "hospital",
+    "wellness",
+    "insurance"
+   ],
+   "tags": [
+    "palette",
+    "colour"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/palettes-and-fonts.md)",
+   "tested": "contrast pairs read from the recipe table; picture is the swatch sheet",
+   "preview": "assets/preview/pal-calm-clinical.jpg",
+   "path": "assets/palette/pal-calm-clinical.md",
+   "size": 356
+  },
+  {
+   "id": "pal-dark-mode-product",
+   "type": "palette",
+   "title": "Dark mode product",
+   "summary": "One accent and neutral surfaces for developer, analytics, media.",
+   "moods": [
+    "dark",
+    "mode",
+    "product"
+   ],
+   "products": [
+    "developer",
+    "analytics",
+    "media"
+   ],
+   "tags": [
+    "palette",
+    "colour"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/palettes-and-fonts.md)",
+   "tested": "contrast pairs read from the recipe table; picture is the swatch sheet",
+   "preview": "assets/preview/pal-dark-mode-product.jpg",
+   "path": "assets/palette/pal-dark-mode-product.md",
+   "size": 376
+  },
+  {
+   "id": "pal-fresh-and-friendly",
+   "type": "palette",
+   "title": "Fresh and friendly",
+   "summary": "One accent and neutral surfaces for food, grocery, community.",
+   "moods": [
+    "fresh",
+    "and",
+    "friendly"
+   ],
+   "products": [
+    "food",
+    "grocery",
+    "community"
+   ],
+   "tags": [
+    "palette",
+    "colour"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/palettes-and-fonts.md)",
+   "tested": "contrast pairs read from the recipe table; picture is the swatch sheet",
+   "preview": "assets/preview/pal-fresh-and-friendly.jpg",
+   "path": "assets/palette/pal-fresh-and-friendly.md",
+   "size": 357
+  },
+  {
+   "id": "pal-modern-product",
+   "type": "palette",
+   "title": "Modern product",
+   "summary": "One accent and neutral surfaces for SaaS, dashboards, dev tools.",
+   "moods": [
+    "modern",
+    "product"
+   ],
+   "products": [
+    "SaaS",
+    "dashboards",
+    "dev tools"
+   ],
+   "tags": [
+    "palette",
+    "colour"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/palettes-and-fonts.md)",
+   "tested": "contrast pairs read from the recipe table; picture is the swatch sheet",
+   "preview": "assets/preview/pal-modern-product.jpg",
+   "path": "assets/palette/pal-modern-product.md",
+   "size": 385
+  },
+  {
+   "id": "pal-premium-editorial",
+   "type": "palette",
+   "title": "Premium editorial",
+   "summary": "One accent and neutral surfaces for boutique, travel, magazine.",
+   "moods": [
+    "premium",
+    "editorial"
+   ],
+   "products": [
+    "boutique",
+    "travel",
+    "magazine"
+   ],
+   "tags": [
+    "palette",
+    "colour"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/palettes-and-fonts.md)",
+   "tested": "contrast pairs read from the recipe table; picture is the swatch sheet",
+   "preview": "assets/preview/pal-premium-editorial.jpg",
+   "path": "assets/palette/pal-premium-editorial.md",
+   "size": 364
+  },
+  {
+   "id": "pal-warm-trust",
+   "type": "palette",
+   "title": "Warm trust (health, charity)",
+   "summary": "One accent and neutral surfaces for donation, clinic, NGO.",
+   "moods": [
+    "warm",
+    "trust"
+   ],
+   "products": [
+    "donation",
+    "clinic",
+    "NGO"
+   ],
+   "tags": [
+    "palette",
+    "colour"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/palettes-and-fonts.md)",
+   "tested": "contrast pairs read from the recipe table; picture is the swatch sheet",
+   "preview": "assets/preview/pal-warm-trust.jpg",
+   "path": "assets/palette/pal-warm-trust.md",
+   "size": 367
   },
   {
    "id": "app-approval-queue",
