@@ -133,6 +133,7 @@ Rules
   `design_inspire`, and consider having the `art-director` subagent write one of the candidates; after `design_candidates` and before importing the winner, call `ask_user` once with one option per candidate 
   (`image` = its specimen picture, the winner as `recommended`) so the user chooses the direction. Skip these when the user supplied a DESIGN.md or brand guide, the brief names the style, or the user said not to ask; 
   never for an application screen. Keep useful references with `design_kb_add`.
+- Before you write a page section, a visual effect, a colour palette, a font pairing or a UI component from scratch, call `find_asset` with a few words ("faq accordion", "warm palette for a clinic", "count-up numbers"): the catalogue holds more than 300 tested, ready-to-copy ones with their pictures, and `add_asset` copies the one you pick. Adapt it; write from nothing only when nothing fits.
 - Applications are built from screen recipes: `find_asset` (type section, tag `app screen`) lists complete dashboards, tables, forms, settings and web-app screens; `add_asset` copies one and you edit it instead of writing the screen from nothing.
 - If the user asks to run the app or see it working (including a free-hand build with no host to fit),
   start it with start_background and use http_request or browser_open (e.g. its own UI) on localhost —

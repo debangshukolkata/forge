@@ -12489,6 +12489,48 @@
    "size": 3079
   },
   {
+   "id": "sec-features-icon-row",
+   "type": "section",
+   "title": "Icon row",
+   "summary": "Three or four features side by side, each with a small line icon, a title and two sentences, divided by hairlines and not boxed.",
+   "moods": [
+    "friendly",
+    "clear",
+    "light"
+   ],
+   "products": [
+    "service",
+    "trades",
+    "saas",
+    "clinic",
+    "shop",
+    "local business"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "features",
+    "icons",
+    "row",
+    "inline svg"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FeaturesIconRow.tsx",
+     "to": "src/sections/FeaturesIconRow.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-features-icon-row.jpg",
+   "path": "assets/section/sec-features-icon-row.md",
+   "size": 3274
+  },
+  {
    "id": "sec-features-numbered",
    "type": "section",
    "title": "Numbered features",
@@ -12608,7 +12650,7 @@
    "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
    "preview": "assets/preview/sec-features-tabs.jpg",
    "path": "assets/section/sec-features-tabs.md",
-   "size": 4526
+   "size": 4510
   },
   {
    "id": "sec-footer-columns",
@@ -12883,6 +12925,46 @@
    "size": 2878
   },
   {
+   "id": "sec-hero-search",
+   "type": "section",
+   "title": "Search hero",
+   "summary": "A headline and one large search field with a button, and a line of popular searches under it that fill the field.",
+   "moods": [
+    "practical",
+    "open",
+    "helpful"
+   ],
+   "products": [
+    "directory",
+    "catalogue",
+    "listings",
+    "help centre",
+    "marketplace"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "hero",
+    "search",
+    "form"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/HeroSearch.tsx",
+     "to": "src/sections/HeroSearch.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-hero-search.jpg",
+   "path": "assets/section/sec-hero-search.md",
+   "size": 3009
+  },
+  {
    "id": "sec-hero-signup",
    "type": "section",
    "title": "Sign-up hero",
@@ -13153,6 +13235,47 @@
    "preview": "assets/preview/sec-newsletter-band.jpg",
    "path": "assets/section/sec-newsletter-band.md",
    "size": 3157
+  },
+  {
+   "id": "sec-pricing-table",
+   "type": "section",
+   "title": "Pricing table",
+   "summary": "Plans as columns of one real table, features as rows with ticks and rules, the price and a button in the header.",
+   "moods": [
+    "precise",
+    "businesslike",
+    "clear"
+   ],
+   "products": [
+    "saas",
+    "subscription",
+    "software",
+    "platform",
+    "membership"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "pricing",
+    "table",
+    "comparison",
+    "plans"
+   ],
+   "density": "dense",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/PricingTable.tsx",
+     "to": "src/sections/PricingTable.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-pricing-table.jpg",
+   "path": "assets/section/sec-pricing-table.md",
+   "size": 4395
   },
   {
    "id": "sec-pricing-tiers",
@@ -13451,6 +13574,90 @@
    "size": 2645
   },
   {
+   "id": "sec-team-roster",
+   "type": "section",
+   "title": "Team roster",
+   "summary": "People as rows between hairlines: a badge or photo, name and role, a one-line note and a contact link.",
+   "moods": [
+    "calm",
+    "trustworthy",
+    "plain"
+   ],
+   "products": [
+    "studio",
+    "practice",
+    "agency",
+    "clinic",
+    "firm",
+    "school"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "team",
+    "people",
+    "list",
+    "about"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/TeamRoster.tsx",
+     "to": "src/sections/TeamRoster.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-team-roster.jpg",
+   "path": "assets/section/sec-team-roster.md",
+   "size": 3299
+  },
+  {
+   "id": "sec-testimonial-columns",
+   "type": "section",
+   "title": "Testimonial columns",
+   "summary": "Three short quotes side by side as plain text between hairlines, with the name and role under each; no boxes, no stars.",
+   "moods": [
+    "warm",
+    "human",
+    "quiet"
+   ],
+   "products": [
+    "school",
+    "clinic",
+    "service",
+    "studio",
+    "shop",
+    "nonprofit"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "testimonial",
+    "quotes",
+    "columns",
+    "social proof"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/TestimonialColumns.tsx",
+     "to": "src/sections/TestimonialColumns.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-testimonial-columns.jpg",
+   "path": "assets/section/sec-testimonial-columns.md",
+   "size": 2635
+  },
+  {
    "id": "sec-testimonial-feature",
    "type": "section",
    "title": "Testimonial: one big quote",
@@ -13485,6 +13692,48 @@
    "preview": "assets/preview/sec-testimonial-feature.jpg",
    "path": "assets/section/sec-testimonial-feature.md",
    "size": 2044
+  },
+  {
+   "id": "sec-timeline-vertical",
+   "type": "section",
+   "title": "Vertical timeline",
+   "summary": "Dated entries down the page along a thin line, the year large on the left and the event on the right.",
+   "moods": [
+    "story",
+    "warm",
+    "steady"
+   ],
+   "products": [
+    "history",
+    "roadmap",
+    "programme",
+    "about",
+    "company",
+    "nonprofit"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "timeline",
+    "history",
+    "dates",
+    "vertical"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/TimelineVertical.tsx",
+     "to": "src/sections/TimelineVertical.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-timeline-vertical.jpg",
+   "path": "assets/section/sec-timeline-vertical.md",
+   "size": 2851
   },
   {
    "id": "tpl-docs-product",

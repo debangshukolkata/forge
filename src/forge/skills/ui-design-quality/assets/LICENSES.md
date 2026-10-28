@@ -307,6 +307,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-features-alternating` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-bento` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-comparison` | original | authored for DebCraft (section library, D-511) |
+| `sec-features-icon-row` | original | authored for DebCraft (section library, D-511) |
 | `sec-features-numbered` | original | authored for DebCraft (section library, D-511) |
 | `sec-features-ruled` | original | authored for DebCraft (section library, D-432) |
 | `sec-features-tabs` | original | authored for DebCraft (section library, D-511) |
@@ -317,6 +318,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-hero-numbers` | original | authored for DebCraft (section library, D-511) |
 | `sec-hero-photo` | original | authored for DebCraft (section library, D-435) |
 | `sec-hero-poster` | original | authored for DebCraft (section library, D-511) |
+| `sec-hero-search` | original | authored for DebCraft (section library, D-511) |
 | `sec-hero-signup` | original | authored for DebCraft (section library, D-511) |
 | `sec-hero-split` | original | authored for DebCraft (section library, D-273) |
 | `sec-hero-stacked` | original | authored for DebCraft (section library, D-511) |
@@ -324,6 +326,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-logo-strip` | original | authored for DebCraft (section library, D-273) |
 | `sec-nav-bar` | original | authored for DebCraft (section library, D-273) |
 | `sec-newsletter-band` | original | authored for DebCraft (section library, D-511) |
+| `sec-pricing-table` | original | authored for DebCraft (section library, D-511) |
 | `sec-pricing-tiers` | original | authored for DebCraft (section library, D-273) |
 | `sec-product-grid` | original | authored for DebCraft (section library, D-385) |
 | `sec-product-trio` | original | authored for DebCraft (section library, D-434) |
@@ -332,7 +335,10 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-split-band` | original | authored for DebCraft (section library, D-435) |
 | `sec-stats-row` | original | authored for DebCraft (section library, D-273) |
 | `sec-steps-timeline` | original | authored for DebCraft (section library, D-273) |
+| `sec-team-roster` | original | authored for DebCraft (section library, D-511) |
+| `sec-testimonial-columns` | original | authored for DebCraft (section library, D-511) |
 | `sec-testimonial-feature` | original | authored for DebCraft (section library, D-273) |
+| `sec-timeline-vertical` | original | authored for DebCraft (section library, D-511) |
 | `tpl-docs-product` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-event-conference` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-charity` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |

@@ -5,7 +5,7 @@ import { useRef, useState, type KeyboardEvent } from "react";
 export type FeatureTab = { label: string; title: string; text: string; points?: string[] };
 
 export default function FeaturesTabs({
-  eyebrow = "The studio, in three parts",
+  eyebrow = "The studio",
   title = "Everything under one roof.",
   tabs = [
     { label: "Classes", title: "Evening classes for beginners", text: "Six weeks, eight people, all clay and tools included. You leave with a set of glazed pieces and enough skill to keep going.", points: ["Tuesday and Thursday, 6:30 to 9", "No experience needed"] },
