@@ -14,6 +14,7 @@ from __future__ import annotations
 import contextlib
 import json
 import re
+import tempfile
 from collections.abc import Awaitable, Callable
 from typing import Any, ClassVar
 
@@ -87,15 +88,19 @@ class McpHub:
             params = StdioServerParameters(
                 command=server.command, args=list(server.args), env=env, cwd=server.cwd
             )
+            # The server's stderr goes to a file so a server that dies on start can say why (LT1: "Connection closed" alone hid an ImportError).
+            errlog: Any = self._stack.enter_context(
+                tempfile.TemporaryFile("w+", encoding="utf-8", errors="replace")  # noqa: SIM115 (the exit stack closes it)
+            )
             try:
-                read, write = await self._stack.enter_async_context(stdio_client(params))
+                read, write = await self._stack.enter_async_context(stdio_client(params, errlog=errlog))
                 session = await self._stack.enter_async_context(
                     ClientSession(read, write, read_timeout_seconds=CALL_TIMEOUT_S)
                 )
                 await session.initialize()
                 listed = await session.list_tools()
             except Exception as error:
-                self.errors[name] = f"{type(error).__name__}: {error}"
+                self.errors[name] = f"{type(error).__name__}: {error}" + _stderr_tail(errlog)
                 continue
             self.sessions[name] = session
             for tool in listed.tools:
@@ -165,6 +170,17 @@ class McpHub:
     async def close(self) -> None:
         with contextlib.suppress(Exception):
             await self._stack.aclose()
+
+
+def _stderr_tail(errlog: Any) -> str:
+    """The last lines the server wrote to stderr, for the error message."""
+    try:
+        errlog.flush()
+        errlog.seek(0)
+        text = errlog.read()[-600:].strip()
+    except (OSError, ValueError):
+        return ""
+    return f"; the server wrote: {text}" if text else ""
 
 
 def _wrap(hub: McpHub, server: str, mcp_tool: Any) -> Tool:

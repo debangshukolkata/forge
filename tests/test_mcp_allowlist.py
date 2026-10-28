@@ -61,7 +61,7 @@ def fake_mcp(monkeypatch: pytest.MonkeyPatch) -> type[FakeSession]:
     FakeSession.reply = "hello"
 
     @contextlib.asynccontextmanager
-    async def stdio_client(params: Any) -> AsyncIterator[tuple[None, None]]:
+    async def stdio_client(params: Any, errlog: Any = None) -> AsyncIterator[tuple[None, None]]:
         FakeSession.started.append(params.command)
         yield None, None
 

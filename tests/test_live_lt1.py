@@ -32,9 +32,12 @@ pytestmark = pytest.mark.live
 TURN_LIMIT_S = 600
 
 MCP_SERVER = '''
-from mcp.server.fastmcp import FastMCP
+try:  # mcp 2.x renamed FastMCP to MCPServer
+    from mcp.server.mcpserver import MCPServer as Server
+except ImportError:
+    from mcp.server.fastmcp import FastMCP as Server
 
-server = FastMCP("counter")
+server = Server("counter")
 
 
 @server.tool()
@@ -187,7 +190,7 @@ async def test_a_failing_stop_hook_brings_the_model_back(
     (folder / "conftest.py").write_text(
         "import sys, pathlib\nsys.path.insert(0, str(pathlib.Path(__file__).parent))\n"
     )
-    events = await _turn(host, "In tools_check/price.py, add a short docstring to with_vat. Nothing else.")
+    events = await _turn(host, "In tools_check/price.py, add a short docstring to with_vat.")
     stops = [e.payload for e in events if e.type == EventType.NOTICE and e.payload.get("kind") == "stop_hook"]
     text = (folder / "price.py").read_text(encoding="utf-8")
     _log(
