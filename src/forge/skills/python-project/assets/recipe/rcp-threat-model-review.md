@@ -75,3 +75,5 @@ Gotchas:
 - Errors and logs leak: stack traces, SQL, tokens in query strings.
 - Keep the model short and alive: update it when an entry point is added, not once a year.
 - Scores are for ordering, not precision; argue about the top three, not the decimals.
+- For the checks at each sink (HTML escaping, link schemes, redirects, signed cookies, paths, SQL, shell, deserialising) add `rcp-security`
+  too: this recipe finds where to look, that one says what a correct check looks like and has tested helpers.

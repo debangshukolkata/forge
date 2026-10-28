@@ -44,3 +44,6 @@ answers it and stop when it has.
 - Say what you could not check (needs the user's database, a server, a browser you cannot open) in the summary, plainly. An
   unchecked part is reported as unchecked, never as done.
 - Do not cheer before the output is read. State the result and the evidence.
+
+## Gotchas
+- (2026-10-29, t22_security_fix) A security review is not done when the existing tests pass: list every function that takes outside input, name the sinks it reaches (HTML, link, redirect, file, SQL, shell, deserialiser, evaluator) and write one hostile test per pair; the recipe rcp-security has the checks. In t22 one rewrite passed its 12 tests and missed javascript: links, open redirects and a signed non-dictionary cookie.

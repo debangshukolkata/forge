@@ -16,3 +16,4 @@ description: Use when you write or change tests in a pytest repository: reuse it
 ## Gotchas
 - A test that passes alone can fail in the suite through shared state: use `tmp_path` and fresh fixtures, never module globals.
 - Seen in the benchmarks: the model's own tests are left out when hidden tests score the code, so the code must pass the *spec*, not only its own tests.
+- (2026-10-29, t20_migration_script) A function that takes a file path is called with a pathlib.Path as often as with a str: call it with both in your tests and convert once at the top (path = Path(path)). In t20 every hidden test that passed a Path crashed on path + '.bak'.
