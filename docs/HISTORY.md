@@ -230,3 +230,28 @@ every decision has a number in docs/DECISIONS.md (D-362 to D-430).
 - I stopped every Python process once (it killed your `forge ui` on port 8765). I stop only the processes I started now.
 - The first design benchmark judged stale pages (fixed, D-391) and was rerun.
 - The gpt-5.4 benchmark first failed in seconds because the deployment name was not passed in; fixed and rerun.
+
+## Overnight run 2026-10-29 (D-525 to D-537)
+
+Agreed before the night: Azure spend up to about $40, local commits only (nothing pushed), a bug found by a live check is fixed and re-checked. Plan: TODO.md section 0f. Spent: about $24 (estimate from the run reports).
+
+### What was built and measured
+- **Workbooks (W6, W7; D-525, D-532).** The "wrong series" charts were builder faults: no `varyColors` (Excel then colours each point and lists the months as series) and row-shaped data read as columns. New `sheets/charts.py`: series along rows or columns from the ranges, one colour per series, straight lines, charts moved off each other, every sheet printed one page wide. `edit_workbook` no longer refuses a workbook with charts (openpyxl 3.1 keeps them; the old refusal made the model set `allow_loss` without asking). `check_workbook` now finds chart faults however the file was made.
+- **Word (W8; D-526, D-532).** `kind: "letter"`, table defaults (shaded header, right-aligned numbers, bold total, fitted widths), a `callout` block for the key figure. Two checker faults fixed (paragraphs either side of a table counted as empty spacing; a bold "Subject:" line taken for a fake heading).
+- **Document benchmark doc-3:** where the builders were used, the named problems moved on (chart complaints of w02 and w14 gone, w07 page split gone, w11 5/5/5/5); w06 still failed because the model wrote its own openpyxl script after failing to write a long JSON outline. Table in docs/DOCUMENT_BENCHMARK.md.
+- **"Three design options" (BV1; D-527).** The model answered in text with no tool at all; a per-request note now names `build_variants`: 0/3 before, 2/2 after.
+- **Catalogue hint (RH1; D-528).** Back-end requests offered UI screens: 10 of 15 before, 1 of 15 after; UI requests unchanged.
+- **C1b and coding tasks (D-529, D-531, D-536).** Why four coding tasks lost tests; the security recipe got a web section; new task t23 (a second security review). Rerun t15 to t23: 411/447 hidden tests. A security note helped little (t22 70 -> 76, t23 47 -> 46); the model never opens the security recipe (TODO SEC1).
+- **Recipes (D-530).** The five never-run recipes run for real in a scratch venv; Flask and Django lacked imports between their files (fixed).
+- **LT1 live checks (D-533, D-534).** MCP allow-list, stop hook, `code_outline`, forked skills, `--auto-approve --allow-installs` and the run report all work live. Fixed: an MCP server that dies on start now shows its stderr (it said only "Connection closed"); the run report no longer prints an empty "Totals:". Egress guard inconclusive live (the model never tried to send code).
+- **C14 (D-535).** Skill triggers: 10 of 12 skills at 85 to 100 %; test-first (1/10) and verify-before-done (4/10) retuned to 7/10 and 10/10, others unchanged.
+- **C16 (D-537).** Skill arms on three tasks: baseline 162/170, ours 167, Superpowers 168, mattpocock 166; ours cheapest of the three skill sets. One run each: a hint only.
+- **Small:** flaky browser test polls (FL1), scroll-progress preview (PX1), WU1 and WU2 confirmed live.
+
+### Tests
+Non-browser suite 1995 passed, 3 skipped (network-only and bandit); ruff, ruff format, mypy (348 files) and check_secrets clean. Browser suite: see the end of this entry.
+
+### What you may want to do
+- Say "push" when you have read this (19+ local commits).
+- Security-relevant changes for your review: the MCP client now writes each server's stderr to a temporary file and shows its last 600 characters in the error (it can contain whatever the server prints); the security note and recipe (advice only, no gate).
+- Decide whether SEC1 (attach the security recipe automatically for security requests) is worth a third security task.
