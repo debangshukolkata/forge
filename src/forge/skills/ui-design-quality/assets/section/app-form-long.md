@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/form-long.html
     to: screens/form-long.html
+preview: assets/preview/app-form-long-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: a form with many fields that must be easy to scan and correct: registrations, applications, records. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

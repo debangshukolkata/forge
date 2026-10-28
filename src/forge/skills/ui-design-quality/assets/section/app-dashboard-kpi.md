@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/dashboard-kpi.html
     to: screens/dashboard-kpi.html
+preview: assets/preview/app-dashboard-kpi-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: the home screen of a business app that answers 'how are we doing' with a few numbers, one trend and the latest records. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

@@ -18,6 +18,7 @@ files:
     to: src/screens/form-quick-capture/screen.css
   - from: recipes/app-react/form-quick-capture/tokens.css
     to: src/screens/form-quick-capture/tokens.css
+preview: assets/preview/app-form-quick-capture-desktop.jpg
 ---
 The React version of the HTML screen `app-form-quick-capture`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

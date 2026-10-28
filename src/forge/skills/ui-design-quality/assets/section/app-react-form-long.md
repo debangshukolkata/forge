@@ -18,6 +18,7 @@ files:
     to: src/screens/form-long/screen.css
   - from: recipes/app-react/form-long/tokens.css
     to: src/screens/form-long/tokens.css
+preview: assets/preview/app-form-long-desktop.jpg
 ---
 The React version of the HTML screen `app-form-long`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/record.html
     to: screens/record.html
+preview: assets/preview/app-record-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: everything known about one entity: a customer, a patient, a candidate, an asset; the header, tabs, timeline and facts are the pattern. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

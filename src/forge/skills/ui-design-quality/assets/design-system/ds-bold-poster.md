@@ -14,6 +14,7 @@ tested: "the DESIGN.md lints with no errors or warnings (design_md_lint) and a s
 files:
   - from: recipes/design-systems/ds-bold-poster.design.md
     to: DESIGN.md
+preview: assets/preview/ds-bold-poster-specimen.jpg
 ---
 A complete design system in the DESIGN.md format: exact colours, type, radii, spacing and components with the reasoning. Add it with add_asset, then
 adapt every value to the product (name, accent, fonts), run design_md_lint, and export the tokens with design_md_export. Do not use it unchanged for a

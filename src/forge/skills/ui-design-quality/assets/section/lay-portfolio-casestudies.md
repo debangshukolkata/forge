@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/compositions/portfolio-casestudies.html
     to: compositions/portfolio-casestudies.html
+preview: assets/preview/lay-portfolio-casestudies-desktop.jpg
 ---
 A complete, working composition in plain HTML and CSS with a drawn SVG motif (so the page has imagery that belongs to it). Open the file to see it,
 then lift the section and its CSS into your page: change the words to the product's real copy, redraw or replace the SVG with art that belongs to the

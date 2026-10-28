@@ -18,6 +18,7 @@ files:
     to: src/screens/map-list/screen.css
   - from: recipes/app-react/map-list/tokens.css
     to: src/screens/map-list/tokens.css
+preview: assets/preview/app-map-list-desktop.jpg
 ---
 The React version of the HTML screen `app-map-list`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/resource-timeline.html
     to: screens/resource-timeline.html
+preview: assets/preview/app-resource-timeline-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: deciding who or what is where and when: rooms, clinics, vehicles, staff rotas; see gaps and conflicts across resources at a glance. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

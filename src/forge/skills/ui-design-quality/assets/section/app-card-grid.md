@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/card-grid.html
     to: screens/card-grid.html
+preview: assets/preview/app-card-grid-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: comparing many things that each have a status, a budget and progress: projects, programmes, grants, campaigns, sites. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

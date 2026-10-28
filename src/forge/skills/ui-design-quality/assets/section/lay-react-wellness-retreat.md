@@ -18,5 +18,6 @@ files:
     to: src/compositions/wellness-retreat/composition.css
   - from: recipes/compositions-react/wellness-retreat/tokens.css
     to: src/compositions/wellness-retreat/tokens.css
+preview: assets/preview/lay-wellness-retreat-desktop.jpg
 ---
 The React version of the composition `lay-wellness-retreat`: the same layout, class names and drawn art as the HTML file, as a component with its own stylesheet and a token file. Copy the three files, replace `tokens.css` with the tokens exported from DESIGN.md (`design_md_export css-variables`), replace the sample words and redraw the SVG for the product, and render `<Composition />` from the app. Use it as the layout of one candidate in `design_candidates` (`composition: lay-react-wellness-retreat` is also accepted); do not ship it unchanged.

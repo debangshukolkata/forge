@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/dashboard-analytics.html
     to: screens/dashboard-analytics.html
+preview: assets/preview/app-dashboard-analytics-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: analysis work where the reader compares trends and drills in: dense, dark, numbers first. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

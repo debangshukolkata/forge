@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/table-editable-grid.html
     to: screens/table-editable-grid.html
+preview: assets/preview/app-table-editable-grid-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: repetitive data entry where speed matters: counts, timesheets, prices, scores; keyboard first, with a clear unsaved-changes bar. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

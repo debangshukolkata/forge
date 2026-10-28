@@ -18,6 +18,7 @@ files:
     to: src/screens/report-builder/screen.css
   - from: recipes/app-react/report-builder/tokens.css
     to: src/screens/report-builder/tokens.css
+preview: assets/preview/app-report-builder-desktop.jpg
 ---
 The React version of the HTML screen `app-report-builder`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

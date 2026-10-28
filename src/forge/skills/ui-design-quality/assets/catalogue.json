@@ -491,7 +491,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-bento",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-bento-specimen.jpg",
    "path": "assets/design-system/ds-bento.md",
    "size": 2896
   },
@@ -527,7 +527,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-bold-poster",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-bold-poster-specimen.jpg",
    "path": "assets/design-system/ds-bold-poster.md",
    "size": 2974
   },
@@ -562,7 +562,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-claymorphism",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-claymorphism-specimen.jpg",
    "path": "assets/design-system/ds-claymorphism.md",
    "size": 2867
   },
@@ -598,7 +598,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-clean-product",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-clean-product-specimen.jpg",
    "path": "assets/design-system/ds-clean-product.md",
    "size": 2935
   },
@@ -635,7 +635,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-dark-dashboard",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-dark-dashboard-specimen.jpg",
    "path": "assets/design-system/ds-dark-dashboard.md",
    "size": 2959
   },
@@ -670,7 +670,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-glass-aurora",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-glass-aurora-specimen.jpg",
    "path": "assets/design-system/ds-glass-aurora.md",
    "size": 2909
   },
@@ -705,7 +705,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-minimal-monochrome",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-minimal-monochrome-specimen.jpg",
    "path": "assets/design-system/ds-minimal-monochrome.md",
    "size": 2872
   },
@@ -740,7 +740,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-neo-brutalist",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-neo-brutalist-specimen.jpg",
    "path": "assets/design-system/ds-neo-brutalist.md",
    "size": 3031
   },
@@ -780,7 +780,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from the office design (D-489) as its own dark token set, not overrides of the light one (BO7)",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-office-polish-dark-specimen.jpg",
    "path": "assets/design-system/ds-office-polish-dark.md",
    "size": 4320
   },
@@ -820,7 +820,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from the design philosophy of a user-owned back-office app (D-489)",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-office-polish-specimen.jpg",
    "path": "assets/design-system/ds-office-polish.md",
    "size": 4706
   },
@@ -856,7 +856,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-playful-friendly",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-playful-friendly-specimen.jpg",
    "path": "assets/design-system/ds-playful-friendly.md",
    "size": 2932
   },
@@ -890,7 +890,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-retro-terminal",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-retro-terminal-specimen.jpg",
    "path": "assets/design-system/ds-retro-terminal.md",
    "size": 2893
   },
@@ -927,7 +927,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from dir-soft-editorial",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-soft-editorial-specimen.jpg",
    "path": "assets/design-system/ds-soft-editorial.md",
    "size": 3083
   },
@@ -964,7 +964,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from the charity template (recipes/templates/charity)",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-tpl-charity-specimen.jpg",
    "path": "assets/design-system/ds-tpl-charity.md",
    "size": 3028
   },
@@ -1000,7 +1000,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from the portfolio template (recipes/templates/portfolio)",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-tpl-portfolio-specimen.jpg",
    "path": "assets/design-system/ds-tpl-portfolio.md",
    "size": 2965
   },
@@ -1036,7 +1036,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-350) from the SaaS template (recipes/templates/saas)",
    "tested": "the DESIGN.md lints with no errors or warnings (design_md_lint) and a specimen picture was drawn and looked at (D-350)",
-   "preview": null,
+   "preview": "assets/preview/ds-tpl-saas-specimen.jpg",
    "path": "assets/design-system/ds-tpl-saas.md",
    "size": 2946
   },
@@ -6773,7 +6773,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-approval-queue-desktop.jpg",
    "path": "assets/section/app-approval-queue.md",
    "size": 26032
   },
@@ -6820,7 +6820,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-audit-log-desktop.jpg",
    "path": "assets/section/app-audit-log.md",
    "size": 26269
   },
@@ -6863,7 +6863,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-calendar-desktop.jpg",
    "path": "assets/section/app-calendar.md",
    "size": 22705
   },
@@ -6911,7 +6911,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-card-grid-desktop.jpg",
    "path": "assets/section/app-card-grid.md",
    "size": 32871
   },
@@ -6954,7 +6954,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-chat-desktop.jpg",
    "path": "assets/section/app-chat.md",
    "size": 22296
   },
@@ -7002,7 +7002,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-collection-switch-desktop.jpg",
    "path": "assets/section/app-collection-switch.md",
    "size": 26240
   },
@@ -7049,7 +7049,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-csv-import-desktop.jpg",
    "path": "assets/section/app-csv-import.md",
    "size": 23915
   },
@@ -7093,7 +7093,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-dashboard-analytics-desktop.jpg",
    "path": "assets/section/app-dashboard-analytics.md",
    "size": 26368
   },
@@ -7136,7 +7136,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-dashboard-kpi-desktop.jpg",
    "path": "assets/section/app-dashboard-kpi.md",
    "size": 27055
   },
@@ -7179,7 +7179,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-dashboard-ops-desktop.jpg",
    "path": "assets/section/app-dashboard-ops.md",
    "size": 22756
   },
@@ -7222,7 +7222,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-dashboard-personal-desktop.jpg",
    "path": "assets/section/app-dashboard-personal.md",
    "size": 23915
   },
@@ -7270,7 +7270,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-drawer-form-desktop.jpg",
    "path": "assets/section/app-drawer-form.md",
    "size": 24698
   },
@@ -7313,7 +7313,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-editor-desktop.jpg",
    "path": "assets/section/app-editor.md",
    "size": 21954
   },
@@ -7356,7 +7356,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-empty-states-desktop.jpg",
    "path": "assets/section/app-empty-states.md",
    "size": 22423
   },
@@ -7400,7 +7400,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-form-line-entry-desktop.jpg",
    "path": "assets/section/app-form-line-entry.md",
    "size": 22620
   },
@@ -7444,7 +7444,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-form-long-desktop.jpg",
    "path": "assets/section/app-form-long.md",
    "size": 22224
   },
@@ -7487,7 +7487,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-form-quick-capture-desktop.jpg",
    "path": "assets/section/app-form-quick-capture.md",
    "size": 20614
   },
@@ -7530,7 +7530,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-form-sign-in-desktop.jpg",
    "path": "assets/section/app-form-sign-in.md",
    "size": 20222
   },
@@ -7574,7 +7574,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-form-wizard-desktop.jpg",
    "path": "assets/section/app-form-wizard.md",
    "size": 22489
   },
@@ -7622,7 +7622,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-grouped-tasks-desktop.jpg",
    "path": "assets/section/app-grouped-tasks.md",
    "size": 25999
   },
@@ -7669,7 +7669,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-helpdesk-queue-desktop.jpg",
    "path": "assets/section/app-helpdesk-queue.md",
    "size": 23234
   },
@@ -7717,7 +7717,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-hierarchy-detail-desktop.jpg",
    "path": "assets/section/app-hierarchy-detail.md",
    "size": 29499
   },
@@ -7760,7 +7760,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-inbox-desktop.jpg",
    "path": "assets/section/app-inbox.md",
    "size": 24930
   },
@@ -7807,7 +7807,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-inventory-levels-desktop.jpg",
    "path": "assets/section/app-inventory-levels.md",
    "size": 23513
   },
@@ -7854,7 +7854,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-invoice-ageing-desktop.jpg",
    "path": "assets/section/app-invoice-ageing.md",
    "size": 24324
   },
@@ -7903,7 +7903,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-jobs-monitor-desktop.jpg",
    "path": "assets/section/app-jobs-monitor.md",
    "size": 24500
   },
@@ -7952,7 +7952,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-list-bulk-desktop.jpg",
    "path": "assets/section/app-list-bulk.md",
    "size": 28462
   },
@@ -7996,7 +7996,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-map-list-desktop.jpg",
    "path": "assets/section/app-map-list.md",
    "size": 23406
   },
@@ -8042,7 +8042,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-order-fulfilment-desktop.jpg",
    "path": "assets/section/app-order-fulfilment.md",
    "size": 25290
   },
@@ -8101,7 +8101,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-approval-queue-desktop.jpg",
    "path": "assets/section/app-react-approval-queue.md",
    "size": 26318
   },
@@ -8156,7 +8156,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-audit-log-desktop.jpg",
    "path": "assets/section/app-react-audit-log.md",
    "size": 26652
   },
@@ -8207,7 +8207,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-calendar-desktop.jpg",
    "path": "assets/section/app-react-calendar.md",
    "size": 23078
   },
@@ -8263,7 +8263,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-card-grid-desktop.jpg",
    "path": "assets/section/app-react-card-grid.md",
    "size": 33587
   },
@@ -8314,7 +8314,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-chat-desktop.jpg",
    "path": "assets/section/app-react-chat.md",
    "size": 22520
   },
@@ -8370,7 +8370,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-collection-switch-desktop.jpg",
    "path": "assets/section/app-react-collection-switch.md",
    "size": 26470
   },
@@ -8425,7 +8425,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-csv-import-desktop.jpg",
    "path": "assets/section/app-react-csv-import.md",
    "size": 24059
   },
@@ -8477,7 +8477,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-dashboard-analytics-desktop.jpg",
    "path": "assets/section/app-react-dashboard-analytics.md",
    "size": 26635
   },
@@ -8528,7 +8528,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-dashboard-kpi-desktop.jpg",
    "path": "assets/section/app-react-dashboard-kpi.md",
    "size": 27377
   },
@@ -8579,7 +8579,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-dashboard-ops-desktop.jpg",
    "path": "assets/section/app-react-dashboard-ops.md",
    "size": 23068
   },
@@ -8630,7 +8630,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-dashboard-personal-desktop.jpg",
    "path": "assets/section/app-react-dashboard-personal.md",
    "size": 24324
   },
@@ -8686,7 +8686,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-drawer-form-desktop.jpg",
    "path": "assets/section/app-react-drawer-form.md",
    "size": 24636
   },
@@ -8737,7 +8737,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-editor-desktop.jpg",
    "path": "assets/section/app-react-editor.md",
    "size": 22102
   },
@@ -8788,7 +8788,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-empty-states-desktop.jpg",
    "path": "assets/section/app-react-empty-states.md",
    "size": 22250
   },
@@ -8840,7 +8840,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-form-line-entry-desktop.jpg",
    "path": "assets/section/app-react-form-line-entry.md",
    "size": 22895
   },
@@ -8892,7 +8892,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-form-long-desktop.jpg",
    "path": "assets/section/app-react-form-long.md",
    "size": 22174
   },
@@ -8943,7 +8943,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-form-quick-capture-desktop.jpg",
    "path": "assets/section/app-react-form-quick-capture.md",
    "size": 20534
   },
@@ -8994,7 +8994,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-form-sign-in-desktop.jpg",
    "path": "assets/section/app-react-form-sign-in.md",
    "size": 20020
   },
@@ -9046,7 +9046,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-form-wizard-desktop.jpg",
    "path": "assets/section/app-react-form-wizard.md",
    "size": 22661
   },
@@ -9102,7 +9102,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-grouped-tasks-desktop.jpg",
    "path": "assets/section/app-react-grouped-tasks.md",
    "size": 26191
   },
@@ -9157,7 +9157,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-helpdesk-queue-desktop.jpg",
    "path": "assets/section/app-react-helpdesk-queue.md",
    "size": 23304
   },
@@ -9213,7 +9213,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-hierarchy-detail-desktop.jpg",
    "path": "assets/section/app-react-hierarchy-detail.md",
    "size": 30221
   },
@@ -9264,7 +9264,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-inbox-desktop.jpg",
    "path": "assets/section/app-react-inbox.md",
    "size": 25479
   },
@@ -9319,7 +9319,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-inventory-levels-desktop.jpg",
    "path": "assets/section/app-react-inventory-levels.md",
    "size": 23737
   },
@@ -9374,7 +9374,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-invoice-ageing-desktop.jpg",
    "path": "assets/section/app-react-invoice-ageing.md",
    "size": 24517
   },
@@ -9431,7 +9431,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-jobs-monitor-desktop.jpg",
    "path": "assets/section/app-react-jobs-monitor.md",
    "size": 24673
   },
@@ -9488,7 +9488,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-list-bulk-desktop.jpg",
    "path": "assets/section/app-react-list-bulk.md",
    "size": 28796
   },
@@ -9540,7 +9540,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-map-list-desktop.jpg",
    "path": "assets/section/app-react-map-list.md",
    "size": 23679
   },
@@ -9594,7 +9594,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-order-fulfilment-desktop.jpg",
    "path": "assets/section/app-react-order-fulfilment.md",
    "size": 26020
   },
@@ -9646,7 +9646,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-record-desktop.jpg",
    "path": "assets/section/app-react-record.md",
    "size": 23098
   },
@@ -9703,7 +9703,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-report-builder-desktop.jpg",
    "path": "assets/section/app-react-report-builder.md",
    "size": 23129
   },
@@ -9758,7 +9758,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-resource-timeline-desktop.jpg",
    "path": "assets/section/app-react-resource-timeline.md",
    "size": 29736
   },
@@ -9809,7 +9809,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-settings-account-desktop.jpg",
    "path": "assets/section/app-react-settings-account.md",
    "size": 24039
   },
@@ -9860,7 +9860,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-settings-billing-desktop.jpg",
    "path": "assets/section/app-react-settings-billing.md",
    "size": 22496
   },
@@ -9910,7 +9910,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-settings-notifications-desktop.jpg",
    "path": "assets/section/app-react-settings-notifications.md",
    "size": 23110
   },
@@ -9961,7 +9961,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-settings-roles-desktop.jpg",
    "path": "assets/section/app-react-settings-roles.md",
    "size": 24448
   },
@@ -10013,7 +10013,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-table-data-desktop.jpg",
    "path": "assets/section/app-react-table-data.md",
    "size": 23807
   },
@@ -10065,7 +10065,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-table-editable-grid-desktop.jpg",
    "path": "assets/section/app-react-table-editable-grid.md",
    "size": 23308
   },
@@ -10116,7 +10116,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-table-kanban-desktop.jpg",
    "path": "assets/section/app-react-table-kanban.md",
    "size": 28908
   },
@@ -10168,7 +10168,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_app_screens_react.py, D-377)",
-   "preview": null,
+   "preview": "assets/preview/app-table-master-detail-desktop.jpg",
    "path": "assets/section/app-react-table-master-detail.md",
    "size": 25289
   },
@@ -10212,7 +10212,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-record-desktop.jpg",
    "path": "assets/section/app-record.md",
    "size": 22893
   },
@@ -10261,7 +10261,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-report-builder-desktop.jpg",
    "path": "assets/section/app-report-builder.md",
    "size": 22945
   },
@@ -10308,7 +10308,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-resource-timeline-desktop.jpg",
    "path": "assets/section/app-resource-timeline.md",
    "size": 28540
   },
@@ -10351,7 +10351,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-settings-account-desktop.jpg",
    "path": "assets/section/app-settings-account.md",
    "size": 23860
   },
@@ -10394,7 +10394,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-settings-billing-desktop.jpg",
    "path": "assets/section/app-settings-billing.md",
    "size": 22395
   },
@@ -10436,7 +10436,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-settings-notifications-desktop.jpg",
    "path": "assets/section/app-settings-notifications.md",
    "size": 22728
   },
@@ -10479,7 +10479,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-settings-roles-desktop.jpg",
    "path": "assets/section/app-settings-roles.md",
    "size": 24164
   },
@@ -10523,7 +10523,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-table-data-desktop.jpg",
    "path": "assets/section/app-table-data.md",
    "size": 23763
   },
@@ -10567,7 +10567,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-table-editable-grid-desktop.jpg",
    "path": "assets/section/app-table-editable-grid.md",
    "size": 23155
   },
@@ -10610,7 +10610,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-table-kanban-desktop.jpg",
    "path": "assets/section/app-table-kanban.md",
    "size": 27661
   },
@@ -10654,7 +10654,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-366, application screens for plain HTML apps)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_app_screens.py, D-366)",
-   "preview": null,
+   "preview": "assets/preview/app-table-master-detail-desktop.jpg",
    "path": "assets/section/app-table-master-detail.md",
    "size": 24479
   },
@@ -10696,7 +10696,7 @@
    "licence": "original",
    "source": "authored for DebCraft (BO9, 2026-10-27)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
-   "preview": null,
+   "preview": "assets/preview/lay-boutique-hotel-desktop.jpg",
    "path": "assets/section/lay-boutique-hotel.md",
    "size": 14462
   },
@@ -10737,7 +10737,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
-   "preview": null,
+   "preview": "assets/preview/lay-editorial-split-desktop.jpg",
    "path": "assets/section/lay-editorial-split.md",
    "size": 4592
   },
@@ -10781,7 +10781,7 @@
    "licence": "original",
    "source": "authored for DebCraft (BO9, 2026-10-27)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
-   "preview": null,
+   "preview": "assets/preview/lay-event-lineup-desktop.jpg",
    "path": "assets/section/lay-event-lineup.md",
    "size": 16782
   },
@@ -10821,7 +10821,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
-   "preview": null,
+   "preview": "assets/preview/lay-fullbleed-blocks-desktop.jpg",
    "path": "assets/section/lay-fullbleed-blocks.md",
    "size": 4063
   },
@@ -10869,7 +10869,7 @@
    "licence": "original",
    "source": "authored for DebCraft (BO9, 2026-10-27)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
-   "preview": null,
+   "preview": "assets/preview/lay-local-trades-desktop.jpg",
    "path": "assets/section/lay-local-trades.md",
    "size": 10371
   },
@@ -10909,7 +10909,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
-   "preview": null,
+   "preview": "assets/preview/lay-menu-list-desktop.jpg",
    "path": "assets/section/lay-menu-list.md",
    "size": 5080
   },
@@ -10953,7 +10953,7 @@
    "licence": "original",
    "source": "authored for DebCraft (BO9, 2026-10-27)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
-   "preview": null,
+   "preview": "assets/preview/lay-nonprofit-appeal-desktop.jpg",
    "path": "assets/section/lay-nonprofit-appeal.md",
    "size": 14464
   },
@@ -10994,7 +10994,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
-   "preview": null,
+   "preview": "assets/preview/lay-notebook-grid-desktop.jpg",
    "path": "assets/section/lay-notebook-grid.md",
    "size": 5216
   },
@@ -11040,7 +11040,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-439, after the user's own Fernhill Bakery page)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing apart from the placeholder drawings, looked at (tests/test_compositions.py, D-439)",
-   "preview": null,
+   "preview": "assets/preview/lay-photo-led-story-desktop.jpg",
    "path": "assets/section/lay-photo-led-story.md",
    "size": 16949
   },
@@ -11084,7 +11084,7 @@
    "licence": "original",
    "source": "authored for DebCraft (BO9, 2026-10-27)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
-   "preview": null,
+   "preview": "assets/preview/lay-portfolio-casestudies-desktop.jpg",
    "path": "assets/section/lay-portfolio-casestudies.md",
    "size": 11243
   },
@@ -11124,7 +11124,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
-   "preview": null,
+   "preview": "assets/preview/lay-poster-hero-desktop.jpg",
    "path": "assets/section/lay-poster-hero.md",
    "size": 5201
   },
@@ -11172,7 +11172,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-boutique-hotel-desktop.jpg",
    "path": "assets/section/lay-react-boutique-hotel.md",
    "size": 14955
   },
@@ -11220,7 +11220,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-editorial-split-desktop.jpg",
    "path": "assets/section/lay-react-editorial-split.md",
    "size": 4706
   },
@@ -11268,7 +11268,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-event-lineup-desktop.jpg",
    "path": "assets/section/lay-react-event-lineup.md",
    "size": 17747
   },
@@ -11315,7 +11315,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-fullbleed-blocks-desktop.jpg",
    "path": "assets/section/lay-react-fullbleed-blocks.md",
    "size": 4054
   },
@@ -11366,7 +11366,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-local-trades-desktop.jpg",
    "path": "assets/section/lay-react-local-trades.md",
    "size": 10695
   },
@@ -11413,7 +11413,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-menu-list-desktop.jpg",
    "path": "assets/section/lay-react-menu-list.md",
    "size": 5247
   },
@@ -11462,7 +11462,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-nonprofit-appeal-desktop.jpg",
    "path": "assets/section/lay-react-nonprofit-appeal.md",
    "size": 15099
   },
@@ -11510,7 +11510,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-notebook-grid-desktop.jpg",
    "path": "assets/section/lay-react-notebook-grid.md",
    "size": 5304
   },
@@ -11561,7 +11561,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-photo-led-story-desktop.jpg",
    "path": "assets/section/lay-react-photo-led-story.md",
    "size": 16700
   },
@@ -11609,7 +11609,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-portfolio-casestudies-desktop.jpg",
    "path": "assets/section/lay-react-portfolio-casestudies.md",
    "size": 11676
   },
@@ -11656,7 +11656,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-poster-hero-desktop.jpg",
    "path": "assets/section/lay-react-poster-hero.md",
    "size": 5282
   },
@@ -11704,7 +11704,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-saas-product-tour-desktop.jpg",
    "path": "assets/section/lay-react-saas-product-tour.md",
    "size": 20595
   },
@@ -11752,7 +11752,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-school-courses-desktop.jpg",
    "path": "assets/section/lay-react-school-courses.md",
    "size": 15188
   },
@@ -11799,7 +11799,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-ticket-stub-desktop.jpg",
    "path": "assets/section/lay-react-ticket-stub.md",
    "size": 5333
   },
@@ -11846,7 +11846,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-vertical-type-desktop.jpg",
    "path": "assets/section/lay-react-vertical-type.md",
    "size": 4921
   },
@@ -11896,7 +11896,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354 compositions, converted to React in D-398)",
    "tested": "built with Vite and React (type-checked), rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions_react.py, D-398)",
-   "preview": null,
+   "preview": "assets/preview/lay-wellness-retreat-desktop.jpg",
    "path": "assets/section/lay-react-wellness-retreat.md",
    "size": 10009
   },
@@ -11940,7 +11940,7 @@
    "licence": "original",
    "source": "authored for DebCraft (BO9, 2026-10-27)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
-   "preview": null,
+   "preview": "assets/preview/lay-saas-product-tour-desktop.jpg",
    "path": "assets/section/lay-saas-product-tour.md",
    "size": 19419
   },
@@ -11982,7 +11982,7 @@
    "licence": "original",
    "source": "authored for DebCraft (BO9, 2026-10-27)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
-   "preview": null,
+   "preview": "assets/preview/lay-school-courses-desktop.jpg",
    "path": "assets/section/lay-school-courses.md",
    "size": 14460
   },
@@ -12022,7 +12022,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
-   "preview": null,
+   "preview": "assets/preview/lay-ticket-stub-desktop.jpg",
    "path": "assets/section/lay-ticket-stub.md",
    "size": 5248
   },
@@ -12062,7 +12062,7 @@
    "licence": "original",
    "source": "authored for DebCraft (D-354, compositions for plain HTML pages)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing, looked at (tests/test_compositions.py, D-354)",
-   "preview": null,
+   "preview": "assets/preview/lay-vertical-type-desktop.jpg",
    "path": "assets/section/lay-vertical-type.md",
    "size": 4884
   },
@@ -12109,7 +12109,7 @@
    "licence": "original",
    "source": "authored for DebCraft (BO9, 2026-10-27)",
    "tested": "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audit reports nothing (tests/test_compositions.py, BO9)",
-   "preview": null,
+   "preview": "assets/preview/lay-wellness-retreat-desktop.jpg",
    "path": "assets/section/lay-wellness-retreat.md",
    "size": 9527
   },
@@ -13188,7 +13188,7 @@
    "licence": "original (fonts: OFL-1.1)",
    "source": "authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them",
    "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-385)",
-   "preview": null,
+   "preview": "assets/preview/tpl-docs-product-desktop.jpg",
    "path": "assets/template/tpl-docs-product.md",
    "size": 107479
   },
@@ -13289,7 +13289,7 @@
    "licence": "original (fonts: OFL-1.1)",
    "source": "authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them",
    "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-385)",
-   "preview": null,
+   "preview": "assets/preview/tpl-event-conference-desktop.jpg",
    "path": "assets/template/tpl-event-conference.md",
    "size": 103287
   },
@@ -13396,7 +13396,7 @@
    "licence": "original (fonts: OFL-1.1)",
    "source": "authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/tpl-landing-charity-desktop.jpg",
    "path": "assets/template/tpl-landing-charity.md",
    "size": 113791
   },
@@ -13491,7 +13491,7 @@
    "licence": "original (fonts: OFL-1.1)",
    "source": "authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/tpl-landing-portfolio-desktop.jpg",
    "path": "assets/template/tpl-landing-portfolio.md",
    "size": 103939
   },
@@ -13598,7 +13598,7 @@
    "licence": "original (fonts: OFL-1.1)",
    "source": "authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them",
    "tested": "built with Vite + Tailwind v4 with the three template palettes, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-273)",
-   "preview": null,
+   "preview": "assets/preview/tpl-landing-saas-desktop.jpg",
    "path": "assets/template/tpl-landing-saas.md",
    "size": 105987
   },
@@ -13695,7 +13695,7 @@
    "licence": "original (fonts: OFL-1.1)",
    "source": "authored for DebCraft (templates, D-389); fonts from Fontsource, see the OFL texts copied with them",
    "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-389)",
-   "preview": null,
+   "preview": "assets/preview/tpl-pricing-invoicing-desktop.jpg",
    "path": "assets/template/tpl-pricing-invoicing.md",
    "size": 84522
   },
@@ -13800,7 +13800,7 @@
    "licence": "original (fonts: OFL-1.1)",
    "source": "authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them",
    "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-385)",
-   "preview": null,
+   "preview": "assets/preview/tpl-shop-craft-desktop.jpg",
    "path": "assets/template/tpl-shop-craft.md",
    "size": 97884
   }

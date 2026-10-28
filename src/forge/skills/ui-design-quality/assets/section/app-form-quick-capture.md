@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/form-quick-capture.html
     to: screens/form-quick-capture.html
+preview: assets/preview/app-form-quick-capture-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: something people do many times a day: a log entry, a note, a ticket, a check-in; fewer fields, big targets, keyboard shortcut. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

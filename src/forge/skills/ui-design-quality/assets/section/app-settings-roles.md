@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/settings-roles.html
     to: screens/settings-roles.html
+preview: assets/preview/app-settings-roles-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: access control: which role may do what; the grid is easier to audit than a list of toggles. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

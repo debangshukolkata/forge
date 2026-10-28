@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/inventory-levels.html
     to: screens/inventory-levels.html
+preview: assets/preview/app-inventory-levels-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: knowing what is running out and ordering it: stock rooms, kitchens, shops, spare parts, supplies. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

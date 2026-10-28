@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/table-master-detail.html
     to: screens/table-master-detail.html
+preview: assets/preview/app-table-master-detail-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: work where someone moves through many records and acts on each: approvals, tickets, orders, candidates. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

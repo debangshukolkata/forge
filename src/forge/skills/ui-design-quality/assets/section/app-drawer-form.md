@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/drawer-form.html
     to: screens/drawer-form.html
+preview: assets/preview/app-drawer-form-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: creating or editing a record without leaving the list: new project, new contact, new ticket; long forms folded into sections. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

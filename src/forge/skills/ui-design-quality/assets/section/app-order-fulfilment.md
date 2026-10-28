@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/order-fulfilment.html
     to: screens/order-fulfilment.html
+preview: assets/preview/app-order-fulfilment-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: the people who pick, pack and ship: warehouse, e-commerce back office, service dispatch; stage counters, one order at a time. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/form-sign-in.html
     to: screens/form-sign-in.html
+preview: assets/preview/app-form-sign-in-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: the door of an application: sign in, sign up, reset; the panel can carry the product's promise. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

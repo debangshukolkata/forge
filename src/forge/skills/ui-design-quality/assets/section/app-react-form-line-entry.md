@@ -18,6 +18,7 @@ files:
     to: src/screens/form-line-entry/screen.css
   - from: recipes/app-react/form-line-entry/tokens.css
     to: src/screens/form-line-entry/tokens.css
+preview: assets/preview/app-form-line-entry-desktop.jpg
 ---
 The React version of the HTML screen `app-form-line-entry`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

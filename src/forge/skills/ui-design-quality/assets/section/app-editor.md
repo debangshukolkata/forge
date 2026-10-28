@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/editor.html
     to: screens/editor.html
+preview: assets/preview/app-editor-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: writing and reviewing long content: documents, wikis, runbooks; the page stays wide and calm, tools sit at the edges. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

@@ -18,6 +18,7 @@ files:
     to: src/screens/audit-log/screen.css
   - from: recipes/app-react/audit-log/tokens.css
     to: src/screens/audit-log/tokens.css
+preview: assets/preview/app-audit-log-desktop.jpg
 ---
 The React version of the HTML screen `app-audit-log`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

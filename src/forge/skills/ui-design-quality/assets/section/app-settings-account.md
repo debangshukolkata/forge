@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/settings-account.html
     to: screens/settings-account.html
+preview: assets/preview/app-settings-account-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: the settings of any product: profile, security, keys; the section menu, setting rows with switches and the danger zone are the pattern. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

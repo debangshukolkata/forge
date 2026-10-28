@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/dashboard-ops.html
     to: screens/dashboard-ops.html
+preview: assets/preview/app-dashboard-ops-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: a live board where someone decides what needs attention now: counters first, then the items that are off plan. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

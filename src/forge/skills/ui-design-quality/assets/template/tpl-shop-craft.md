@@ -48,6 +48,7 @@ files:
     to: src/fonts/plus-jakarta-sans.css
   - from: fonts/plus-jakarta-sans/plus-jakarta-sans-OFL.txt
     to: public/fonts/plus-jakarta-sans-OFL.txt
+preview: assets/preview/tpl-shop-craft-desktop.jpg
 ---
 
 ## Shop: craft goods

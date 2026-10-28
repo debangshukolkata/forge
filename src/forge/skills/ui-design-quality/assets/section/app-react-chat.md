@@ -18,6 +18,7 @@ files:
     to: src/screens/chat/screen.css
   - from: recipes/app-react/chat/tokens.css
     to: src/screens/chat/tokens.css
+preview: assets/preview/app-chat-desktop.jpg
 ---
 The React version of the HTML screen `app-chat`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

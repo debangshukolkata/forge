@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/audit-log.html
     to: screens/audit-log.html
+preview: assets/preview/app-audit-log-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: proving who changed what and when: security, compliance, admin consoles, any product with roles and sensitive data. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

@@ -48,6 +48,7 @@ files:
     to: src/fonts/inter.css
   - from: fonts/inter/inter-OFL.txt
     to: public/fonts/inter-OFL.txt
+preview: assets/preview/tpl-landing-charity-desktop.jpg
 ---
 
 ## Landing page: charity or community drive

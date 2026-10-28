@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/form-wizard.html
     to: screens/form-wizard.html
+preview: assets/preview/app-form-wizard-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: a task with several parts that people should finish in order: onboarding, checkout, applications, setup. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

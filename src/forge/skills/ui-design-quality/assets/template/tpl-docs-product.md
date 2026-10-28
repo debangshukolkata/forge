@@ -34,6 +34,7 @@ files:
     to: src/fonts/jetbrains-mono.css
   - from: fonts/jetbrains-mono/jetbrains-mono-OFL.txt
     to: public/fonts/jetbrains-mono-OFL.txt
+preview: assets/preview/tpl-docs-product-desktop.jpg
 ---
 
 ## Docs: product documentation

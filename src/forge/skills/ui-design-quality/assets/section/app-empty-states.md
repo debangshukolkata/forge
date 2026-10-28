@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/empty-states.html
     to: screens/empty-states.html
+preview: assets/preview/app-empty-states-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: the screens people see when there is nothing to show or something went wrong: copy them into every list, search and fetch. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

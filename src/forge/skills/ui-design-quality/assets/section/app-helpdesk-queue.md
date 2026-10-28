@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/helpdesk-queue.html
     to: screens/helpdesk-queue.html
+preview: assets/preview/app-helpdesk-queue-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: working through a queue against a clock: support desks, IT service desks, claims, requests with service levels. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

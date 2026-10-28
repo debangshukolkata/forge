@@ -44,6 +44,7 @@ files:
     to: src/fonts/outfit.css
   - from: fonts/outfit/outfit-OFL.txt
     to: public/fonts/outfit-OFL.txt
+preview: assets/preview/tpl-pricing-invoicing-desktop.jpg
 ---
 
 ## Pricing page

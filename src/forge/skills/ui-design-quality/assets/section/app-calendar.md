@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/calendar.html
     to: screens/calendar.html
+preview: assets/preview/app-calendar-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: anything placed in time: meetings, appointments, shifts, bookings. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

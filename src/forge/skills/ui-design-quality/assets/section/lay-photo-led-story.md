@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/compositions/photo-led-story.html
     to: compositions/photo-led-story.html
+preview: assets/preview/lay-photo-led-story-desktop.jpg
 ---
 A complete, working composition in plain HTML and CSS for a business whose product is seen: food, craft, a place. The story is the order of the bands: desire (the product to the
 page edge, the headline on its fade), trust (hours, address, delivery with thin line icons, no boxes), exploration (three product photographs), craft (a dark band beside a photograph

@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/table-data.html
     to: screens/table-data.html
+preview: assets/preview/app-table-data-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: any list of records people manage in bulk: users, customers, orders, assets; the table, its filters and the bulk bar are the pattern. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

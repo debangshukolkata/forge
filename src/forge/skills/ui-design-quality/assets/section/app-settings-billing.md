@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/settings-billing.html
     to: screens/settings-billing.html
+preview: assets/preview/app-settings-billing-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: showing what someone pays for and how much they have used: plan, limits, payment method, invoices. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

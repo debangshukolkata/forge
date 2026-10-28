@@ -18,6 +18,7 @@ files:
     to: src/screens/invoice-ageing/screen.css
   - from: recipes/app-react/invoice-ageing/tokens.css
     to: src/screens/invoice-ageing/tokens.css
+preview: assets/preview/app-invoice-ageing-desktop.jpg
 ---
 The React version of the HTML screen `app-invoice-ageing`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

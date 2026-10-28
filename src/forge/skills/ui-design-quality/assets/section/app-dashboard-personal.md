@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/dashboard-personal.html
     to: screens/dashboard-personal.html
+preview: assets/preview/app-dashboard-personal-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: a person's own start-of-day screen: what is on, what they are working towards, how the week is going. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

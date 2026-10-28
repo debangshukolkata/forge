@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/report-builder.html
     to: screens/report-builder.html
+preview: assets/preview/app-report-builder-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: asking a question of the data and sending the answer on a schedule: reporting tools, finance, sales ops, admin consoles. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

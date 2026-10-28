@@ -18,6 +18,7 @@ files:
     to: src/screens/order-fulfilment/screen.css
   - from: recipes/app-react/order-fulfilment/tokens.css
     to: src/screens/order-fulfilment/tokens.css
+preview: assets/preview/app-order-fulfilment-desktop.jpg
 ---
 The React version of the HTML screen `app-order-fulfilment`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

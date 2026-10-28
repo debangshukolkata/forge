@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/csv-import.html
     to: screens/csv-import.html
+preview: assets/preview/app-csv-import-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: bringing a spreadsheet into the product: user lists, products, contacts, transactions; map, validate, then commit. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

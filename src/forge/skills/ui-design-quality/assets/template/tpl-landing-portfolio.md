@@ -42,6 +42,7 @@ files:
     to: src/fonts/dm-sans.css
   - from: fonts/dm-sans/dm-sans-OFL.txt
     to: public/fonts/dm-sans-OFL.txt
+preview: assets/preview/tpl-landing-portfolio-desktop.jpg
 ---
 
 ## Landing page: portfolio

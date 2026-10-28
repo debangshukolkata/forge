@@ -18,6 +18,7 @@ files:
     to: src/screens/table-data/screen.css
   - from: recipes/app-react/table-data/tokens.css
     to: src/screens/table-data/tokens.css
+preview: assets/preview/app-table-data-desktop.jpg
 ---
 The React version of the HTML screen `app-table-data`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

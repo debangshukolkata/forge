@@ -18,6 +18,7 @@ files:
     to: src/screens/dashboard-personal/screen.css
   - from: recipes/app-react/dashboard-personal/tokens.css
     to: src/screens/dashboard-personal/tokens.css
+preview: assets/preview/app-dashboard-personal-desktop.jpg
 ---
 The React version of the HTML screen `app-dashboard-personal`: `Screen.tsx` holds the same structure and class names with the same sample content, `screen.css` the stylesheet (one plain
 file, class names as in the HTML recipe), `tokens.css` the `:root` token block of the example. Copy the files, then:

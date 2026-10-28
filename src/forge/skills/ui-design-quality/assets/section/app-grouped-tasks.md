@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/grouped-tasks.html
     to: screens/grouped-tasks.html
+preview: assets/preview/app-grouped-tasks-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: a work list people clear every day: tasks, follow-ups, cases, requests; grouped by how urgent they are. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.

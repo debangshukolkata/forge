@@ -14,6 +14,7 @@ tested: "rendered in Edge at 1280 and 375 px: no sideways scroll, the style audi
 files:
   - from: recipes/app-screens/form-line-entry.html
     to: screens/form-line-entry.html
+preview: assets/preview/app-form-line-entry-desktop.jpg
 ---
 A complete, working application screen in plain HTML and CSS: entering a document made of repeated lines: invoices, quotes, purchase orders, expense reports. Open the file to see it, then bring it into the project and make it the
 product's own. Do not ship it as it is.
