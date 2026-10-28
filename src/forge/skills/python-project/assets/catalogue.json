@@ -188,7 +188,7 @@
    "tested": "not executed (django is not installed in the build venv); the code follows the documented Django 5 API",
    "preview": null,
    "path": "assets/recipe/rcp-django-app.md",
-   "size": 4587
+   "size": 4873
   },
   {
    "id": "rcp-error-handling",
@@ -247,7 +247,7 @@
    "tested": "not executed (flask is not installed in the build venv); follows the documented Flask 3 API",
    "preview": null,
    "path": "assets/recipe/rcp-flask-extension.md",
-   "size": 4223
+   "size": 4306
   },
   {
    "id": "rcp-hypothesis",
@@ -460,7 +460,7 @@
    "id": "rcp-security",
    "type": "recipe",
    "title": "Security checklist for Python code",
-   "summary": "Input validation, injection, paths, subprocess, secrets, deserialisation, passwords, requests.",
+   "summary": "Input validation, injection, paths, subprocess, secrets, deserialisation, passwords, requests; web output, links, redirects, signed cookies; one hostile test per function and sink.",
    "moods": [
     "secure"
    ],
@@ -474,7 +474,11 @@
     "injection",
     "path traversal",
     "secrets",
-    "owasp"
+    "owasp",
+    "xss",
+    "open redirect",
+    "cookies",
+    "security review"
    ],
    "density": "any",
    "dependencies": [],
@@ -484,7 +488,7 @@
    "tested": "runnable examples are executed by tests/test_python_recipes.py",
    "preview": null,
    "path": "assets/recipe/rcp-security.md",
-   "size": 2024
+   "size": 6010
   },
   {
    "id": "rcp-settings",
@@ -675,7 +679,7 @@
    "tested": "runnable examples are executed by tests/test_python_recipes.py",
    "preview": null,
    "path": "assets/recipe/rcp-threat-model-review.md",
-   "size": 3602
+   "size": 3852
   },
   {
    "id": "rcp-typer-click",
