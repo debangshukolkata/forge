@@ -74,3 +74,40 @@ async def test_workspace_commands_without_a_workspace_explain_how() -> None:
     runner.cancel()
 
     assert "--workspace" in host.bus.events_since(0)[-1].payload["text"]
+
+
+async def test_rewind_without_an_id_lists_the_points_and_a_missing_id_is_said(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """D-521 (option C): /rewind alone shows where one can go back to and how; an id that is not there is named, not silently accepted."""
+    from forge.workspace.create import create_workspace
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    workspace.write_text("backend/claims_app/a.py", "a = 1\n")
+    outputs = await run_commands(workspace, "/rewind", "/rewind 99")
+    assert "write backend/claims_app/a.py" in outputs[0] and "/rewind <id>" in outputs[1]
+    assert outputs[2] == "No checkpoint 99. See /checkpoints."
+
+
+async def test_after_an_undo_or_rewind_the_model_is_told_which_files_went_back(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """D-521: the model's memory of its own edits is wrong after an undo; a system note names the files so it reads them again before editing."""
+    from forge.workspace.create import create_workspace
+
+    def unreachable(request: object) -> object:
+        raise AssertionError("no LLM call expected")
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    workspace.write_text("backend/claims_app/a.py", "a = 1\n")
+    host = SessionHost(mocked_router(unreachable), EventBus(redactor=Redactor()), workspace=workspace)  # type: ignore[arg-type]
+    runner = asyncio.create_task(host.run())
+    await host.submit(SlashCommand(text="/undo"))
+    await asyncio.sleep(0.2)
+    runner.cancel()
+    notes = [m for m in host.history if m.role == "system" and "undid your recent changes" in str(m.content)]
+    assert (
+        len(notes) == 1
+        and "backend/claims_app/a.py" in str(notes[0].content)
+        and "Read a file again" in str(notes[0].content)
+    )

@@ -19,3 +19,29 @@ deterministic checks and a blind vision judgement of the printed pages (strict a
 
 ## Limits
 One run per task, a vision judge of the same model family, three tasks. Read the facts (which checks failed, what the judge names) rather than small score differences.
+
+## The fourteen tasks (2026-10-28, D-519 and D-520; w04 to w14 written and proven offline, not yet run on the model)
+`tests/benchmarks/documents/<id>/` holds `task.md` (what DebCraft is asked), `task.json` and `seed/` (the files it starts from, built by `scripts/dev/make_document_seeds.py`).
+Each task has its own checks in `scripts/benchmark/run_document_benchmark.py`, and `tests/test_document_benchmark_checks.py` proves every check on files built without a model
+(an empty workspace is "not delivered", a good file passes), so a failed check on a real run means the model's work.
+
+| Id | Asked | Output | Main checks |
+|---|---|---|---|
+| w01_sales_report | one-page Word summary of a CSV | sales-summary.docx | total and best region stated, table, bullets, no invented figure |
+| w02_clean_and_chart | messy export to a clean workbook | orders.xlsx | real numbers, total by formula, one chart, duplicate and title lines gone |
+| w03_handout | PDF handout | handout.pdf | place, date, schedule rows, contact line |
+| w04_proposal | two-page Word proposal from a brief | proposal.docx | every phase price and the total, the three dates, bullets, no invented price |
+| w05_letter | formal one-page letter | letter.docx | date, both address blocks, subject and body naming the child, trial dates, contact details, closing |
+| w06_budget | household budget workbook | budget.xlsx | twelve month columns, totals and "left" by formula, a chart, numbers not text |
+| w07_tracker | task tracker workbook | tracker.xlsx | status drop-down, real dates, frozen header, a summary sheet that counts by formula |
+| w08_pdf_extract | table from a PDF into Excel | figures.xlsx | the four quarters and orders as numbers, a total formula, the yearly total in words |
+| w09_pdf_merge | merge three PDFs in a given order | pack.pdf | four pages, the order, the title set, text kept as text |
+| w10_pdf_form | fill a fillable PDF form | form-filled.pdf | the four fields still there and filled with the right values, form text kept |
+| w11_pdf_ocr | type out a scanned page | delivery-note.docx | note number, customer, date, items, signer in a table |
+| w12_word_edit | three exact edits in a Word file | minutes-updated.docx | the right date changed, the other one left alone, the new row, the old row and headings untouched |
+| w13_excel_edit | extend a workbook and keep what was there | sales-margin.xlsx | margin formulas, the chart, the number format and the bold header kept |
+| w14_excel_dashboard | KPI sheet, two charts, a conditional format | dashboard.xlsx | KPI formulas, a refund rate as a division, two charts, a conditional format |
+
+What the first three runs showed (above) is still the only measured data; the other eleven have not been run. The next step is one run of all fourteen on the real model, read
+for what the checks and the judge name, not for small score differences. Not covered yet: a Word letter or report made from a template the user supplies, and anything that needs
+the user's own sample documents (the TODO asks for three to five).

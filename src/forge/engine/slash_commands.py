@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from forge.config import ROLES, forge_home
 from forge.engine.skill_command import run_skill_command
 from forge.errors import ConfigError
+from forge.llm.base import Message
 from forge.llm.cost import format_money
 from forge.memory.scope import scope_of
 from forge.memory.store import CommandStore, MemoryStore
@@ -32,7 +33,7 @@ HELP_TEXT = """Available commands:
   /compact [focus]          summarise earlier conversation now (optionally what to focus on)
   /checkpoints              list checkpoints (workspace sessions)
   /undo                     undo the last file change
-  /rewind <id>              undo every change back to and including checkpoint <id>
+  /rewind [<id>]            list the points to go back to; /rewind <id> undoes every change back to and including that checkpoint
   /export                   rebuild output/ (only new and modified files, plus instructions)
   /mode [plan|default|auto] show or change the permission mode
   /requirements | /plan | /tasks   the approved requirements, the plan, the task board
@@ -173,16 +174,43 @@ class SlashCommandHandler:
 
     async def _undo(self, args: list[str]) -> None:
         checkpoint = self._workspace().undo()
-        await self._say(
-            f"Undid checkpoint {checkpoint.id}: {checkpoint.label}" if checkpoint else "Nothing to undo."
-        )
+        if checkpoint is None:
+            await self._say("Nothing to undo.")
+            return
+        await self._say(f"Undid checkpoint {checkpoint.id}: {checkpoint.label}")
+        self._tell_the_model_files_went_back([checkpoint])
 
     async def _rewind(self, args: list[str]) -> None:
+        if not args:  # nothing given: show where one can go back to, then the way to do it
+            await self._checkpoints([])
+            await self._say(
+                "Go back to a point with /rewind <id> (that checkpoint and every later one are undone), or undo only the last with /undo."
+            )
+            return
         if len(args) != 1 or not args[0].isdigit():
             await self._say("Usage: /rewind <checkpoint id>  (see /checkpoints)")
             return
         undone = self._workspace().rewind(int(args[0]))
+        if not undone:
+            await self._say(f"No checkpoint {args[0]}. See /checkpoints.")
+            return
         await self._say(f"Rewound {len(undone)} checkpoint(s): " + ", ".join(cp.label for cp in undone))
+        self._tell_the_model_files_went_back(undone)
+
+    def _tell_the_model_files_went_back(self, undone: list) -> None:  # type: ignore[type-arg]
+        """After an undo or a rewind the model's memory of its own edits is wrong; say which files went back so it reads them again before editing (D-521)."""
+        paths = sorted({path for checkpoint in undone for path in checkpoint.files})
+        listing = ", ".join(paths[:30]) + (f" and {len(paths) - 30} more" if len(paths) > 30 else "")
+        self.host.history.append(
+            Message.system(
+                "The user undid your recent changes (the checkpoints: "
+                + ", ".join(cp.label for cp in undone)
+                + "). These files are back to how they were before, "
+                "so what you remember writing is no longer there: "
+                + (listing or "none recorded")
+                + ". Read a file again before you edit it."
+            )
+        )
 
     async def _requirements(self, args: list[str]) -> None:
         await self._show_document("REQUIREMENTS.md", "No approved requirements yet.")

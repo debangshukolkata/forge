@@ -1,0 +1,1 @@
+project/scan.pdf is a scanned delivery note: a picture of a page with no text layer. Read it and type it out as a clean Word document, project/delivery-note.docx: a title with the note number, and a small table of field and value for the customer, the date, the items and who signed. Do not add anything that is not on the page. Tell me how sure you are of each value.

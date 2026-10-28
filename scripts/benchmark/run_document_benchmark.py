@@ -351,6 +351,28 @@ def check_w10(workspace: Path) -> dict[str, Any]:
     return {"delivered": True, **_report(passed)}
 
 
+def check_w11(workspace: Path) -> dict[str, Any]:
+    from forge.documents.check import check_document
+    from forge.documents.read import read_document
+    from forge.ooxml.validate import validate_package
+
+    file = workspace / "project" / "delivery-note.docx"
+    if not file.is_file():
+        return {"delivered": False, "checks_passed": 0, "checks_total": 7, "checks_failed": ["no document"]}
+    data = file.read_bytes()
+    markdown = read_document(data).markdown
+    passed = {
+        "package valid": not validate_package(data),
+        "no structure or accessibility problems": not check_document(data),
+        "the note number in the title": "4471" in markdown,
+        "the customer": "Harbour Street Bakery" in markdown,
+        "the date": "18 November 2026" in markdown,
+        "the items": "40 loaves" in markdown and "12 trays" in markdown,
+        "the signer in a table": "Whitfield" in markdown and "|" in markdown,
+    }
+    return {"delivered": True, **_report(passed)}
+
+
 def check_w12(workspace: Path) -> dict[str, Any]:
     from forge.documents.read import read_document
     from forge.ooxml.validate import validate_package
@@ -438,6 +460,7 @@ CHECKS = {
     "w08_pdf_extract": check_w08,
     "w09_pdf_merge": check_w09,
     "w10_pdf_form": check_w10,
+    "w11_pdf_ocr": check_w11,
     "w12_word_edit": check_w12,
     "w13_excel_edit": check_w13,
     "w14_excel_dashboard": check_w14,
@@ -453,6 +476,7 @@ OUTPUT = {
     "w08_pdf_extract": "figures.xlsx",
     "w09_pdf_merge": "pack.pdf",
     "w10_pdf_form": "form-filled.pdf",
+    "w11_pdf_ocr": "delivery-note.docx",
     "w12_word_edit": "minutes-updated.docx",
     "w13_excel_edit": "sales-margin.xlsx",
     "w14_excel_dashboard": "dashboard.xlsx",

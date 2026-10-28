@@ -1,5 +1,5 @@
 import {
-  AlertOctagon, Check, ChevronDown, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload,
+  AlertOctagon, ArrowDown, Check, ChevronDown, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload,
 } from "lucide-react";
 import { useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
@@ -16,6 +16,17 @@ import { Badge, Button, CopyButton, Textarea } from "./ui";
 export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment?: () => void }) {
   const scroller = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
+  // Scrolled away from the newest message (the "jump to latest" button shows) and whether something new arrived meanwhile (a dot on the button).
+  const [away, setAway] = useState(false);
+  const [unread, setUnread] = useState(false);
+  const jumpToLatest = () => {
+    const box = scroller.current;
+    if (!box) return;
+    stick.current = true;
+    setAway(false);
+    setUnread(false);
+    box.scrollTo({ top: box.scrollHeight, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
   const { items } = forge.timeline;
   const attachments = useAttachments();
   const [dragging, setDragging] = useState(false);
@@ -30,6 +41,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
   useLayoutEffect(() => {
     const box = scroller.current;
     if (box && (stick.current || forge.replaying)) box.scrollTop = box.scrollHeight;
+    else if (box && items.length > 0) setUnread(true); // the reader is looking at older messages and something new came in
   }, [items, forge.replaying]);
   // Things change height without a new message: a picture finishes loading, a code block is decorated, a card opens, or the activity line above the
   // message box appears and the chat area gets shorter. Follow the bottom through those too, unless the reader has scrolled up.
@@ -71,11 +83,14 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
           <span className="font-medium">Drop files or images to attach them</span>
         </div>
       )}
+      <div className="relative flex min-h-0 flex-1 flex-col">
       <div
         ref={scroller}
         onScroll={(e) => {
           const box = e.currentTarget;
           stick.current = box.scrollHeight - box.scrollTop - box.clientHeight < 160;
+          setAway(!stick.current);
+          if (stick.current) setUnread(false);
         }}
         className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
         aria-live="polite"
@@ -112,6 +127,19 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
             </div>
           ))}
         </div>
+      </div>
+      {away && (
+        <button
+          type="button"
+          onClick={jumpToLatest}
+          title="Jump to the latest message"
+          aria-label={unread ? "Jump to the latest message, new messages below" : "Jump to the latest message"}
+          className="absolute bottom-4 right-6 z-20 grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-fg shadow-lg transition hover:bg-raised focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <ArrowDown className="h-4 w-4" aria-hidden />
+          {unread && <span aria-hidden="true" className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-surface" />}
+        </button>
+      )}
       </div>
       <Composer forge={forge} attachments={attachments} />
       {pending && popupId && (

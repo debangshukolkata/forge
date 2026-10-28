@@ -142,3 +142,43 @@ def test_chat_follows_the_newest_reply_and_leaves_a_scrolled_up_reader_alone(
         assert scroller.evaluate("e => e.scrollTop") < 400
         assert page.problems == [], page.problems  # type: ignore[attr-defined]
         browser.close()
+
+
+def test_the_jump_to_latest_button_appears_when_scrolled_up_and_takes_the_reader_back(
+    live_server: LiveServer,  # noqa: F811
+    workspace: Workspace,  # noqa: F811
+) -> None:
+    """UI1 follow-up (D-521, option A): a round arrow button above the message box shows only when the reader has scrolled away from the newest message,
+    carries a dot when something new arrived meanwhile, and takes the reader back to the bottom."""
+    reply = "\n\n".join(
+        f"Paragraph {n}: " + "the reply keeps going so the chat has to scroll. " * 6 for n in range(10)
+    )
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        browser, page = open_in_edge(p, live_server, workspace)
+        live_server.publish(EventType.USER_MESSAGE, {"text": "First question"})
+        live_server.publish(EventType.MESSAGE_DONE, {"text": reply})
+        page.wait_for_selector("text=Paragraph 9")
+        page.wait_for_timeout(500)
+        button = page.locator("button[title='Jump to the latest message']")
+        assert button.count() == 0  # at the bottom: no button
+
+        scroller = page.locator("[aria-live=polite]").first
+        scroller.evaluate("e => { e.scrollTop = 0; }")
+        page.wait_for_selector("button[title='Jump to the latest message']")
+        assert (
+            page.locator("button[title='Jump to the latest message'] span").count() == 0
+        )  # nothing new yet: no dot
+
+        live_server.publish(EventType.USER_MESSAGE, {"text": "Second question"})
+        live_server.publish(EventType.MESSAGE_DONE, {"text": "A short answer to the second question."})
+        page.wait_for_selector("button[title='Jump to the latest message'] span")  # the dot
+        page.screenshot(path=str(shots / "chat-jump-to-latest.png"))
+
+        button.click()
+        page.wait_for_timeout(900)
+        assert _distance_from_bottom(page) < 40, _distance_from_bottom(page)
+        assert button.count() == 0
+        assert page.problems == [], page.problems  # type: ignore[attr-defined]
+        browser.close()

@@ -219,6 +219,9 @@ def test_the_edit_and_extract_checks_fail_on_an_empty_workspace_and_pass_good_ou
     from openpyxl.styles import Font, PatternFill
     from pypdf import PdfReader, PdfWriter
 
+    from forge.documents.build import build_document
+    from forge.documents.spec import parse_document
+
     workspace = _workspace(tmp_path)
     seeds = Path(__file__).resolve().parent / "benchmarks" / "documents"
     for check in (
@@ -268,6 +271,27 @@ def test_the_edit_and_extract_checks_fail_on_an_empty_workspace_and_pass_good_ou
     with open(workspace / "project" / "form-filled.pdf", "wb") as handle:
         writer.write(handle)
     assert bench.check_w10(workspace)["checks_failed"] == []
+
+    # w11: the delivery note typed out in Word with a table of field and value
+    note = {
+        "title": "Delivery note 4471",
+        "blocks": [
+            {
+                "type": "table",
+                "header": ["Field", "Value"],
+                "rows": [
+                    ["Customer", "Harbour Street Bakery"],
+                    ["Date", "18 November 2026"],
+                    ["Items", "40 loaves, 12 trays of rolls"],
+                    ["Signed by", "D. Whitfield"],
+                ],
+            }
+        ],
+    }
+    (workspace / "project" / "delivery-note.docx").write_bytes(
+        build_document(parse_document(json.dumps(note)), lambda n: b"")
+    )
+    assert bench.check_w11(workspace)["checks_failed"] == []
 
     # w12: the seed minutes with the first date changed and one row added
     document = Document(str(seeds / "w12_word_edit" / "seed" / "minutes.docx"))

@@ -99,6 +99,29 @@ def main() -> None:
         encoding="utf-8",
         newline="\n",
     )
+    # w11: a scanned page (text drawn into a picture, no text layer) to read with OCR
+    from PIL import Image, ImageDraw, ImageFont
+
+    folder = BENCH / "w11_pdf_ocr" / "seed"
+    folder.mkdir(parents=True, exist_ok=True)
+    page = Image.new("RGB", (1240, 1754), "white")
+    draw = ImageDraw.Draw(page)
+    try:
+        big = ImageFont.truetype("arial.ttf", 54)
+        body = ImageFont.truetype("arial.ttf", 38)
+    except OSError:
+        big = body = ImageFont.load_default()
+    draw.text((120, 140), "Delivery note 4471", fill="black", font=big)
+    for index, line in enumerate(
+        [
+            "Customer: Harbour Street Bakery",
+            "Date: 18 November 2026",
+            "Items: 40 loaves, 12 trays of rolls",
+            "Signed by: D. Whitfield",
+        ]
+    ):
+        draw.text((120, 300 + index * 80), line, fill="black", font=body)
+    page.save(folder / "scan.pdf", "PDF", resolution=150)
     # w12: meeting minutes to edit
     folder = BENCH / "w12_word_edit" / "seed"
     folder.mkdir(parents=True, exist_ok=True)
