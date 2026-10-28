@@ -9,7 +9,8 @@ from pathlib import Path
 
 import httpx2
 
-from forge.agent.loop import CUT_OFF_NOTE, FAILURE_HEAD_CHARS, FAILURE_TAIL_CHARS, _preview
+from forge.agent.hooks import HookOutcome
+from forge.agent.loop import CUT_OFF_NOTE, FAILURE_HEAD_CHARS, FAILURE_TAIL_CHARS, STOP_HOOK_NOTE, _preview
 from forge.engine.session_host import SessionHost
 from forge.protocol.events import EventBus, EventType
 from forge.protocol.inputs import SendMessage
@@ -273,3 +274,46 @@ async def test_plan_mode_asks_the_planner_role_and_normal_mode_the_coder(
     assert loop.active_role == "planner"
     loop.role = "reviewer"  # a subagent keeps its own role in any mode
     assert loop.active_role == "reviewer"
+
+
+class _StopHooks:
+    """Stands in for the hook runner: a stop hook that fails the first time it runs and passes afterwards."""
+
+    def __init__(self) -> None:
+        self.runs = 0
+
+    def has(self, event: str) -> bool:
+        return event == "stop"
+
+    async def run(self, event: str, tool: str = "", file: str = "") -> list[HookOutcome]:
+        self.runs += 1
+        return [HookOutcome("pytest -x", True, self.runs > 1, "" if self.runs > 1 else "FAILED tests/test_a.py::test_one")]
+
+
+async def test_a_failing_stop_hook_sends_the_model_back_to_work_once_and_then_lets_it_finish(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """C12 a (D-515): the first stop-hook run fails, so the model gets its output and answers again; the second passes and the turn ends."""
+    bodies: list[dict[str, object]] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        bodies.append(json.loads(request.content))
+        return reply(request, responses_body([text_output("Done: the change is in.")]))
+
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    host = SessionHost(mocked_router(handler), EventBus(redactor=Redactor()), workspace=workspace)
+    assert host.agent is not None
+    hooks = _StopHooks()
+    host.agent.hooks = hooks  # type: ignore[assignment]
+    runner = asyncio.create_task(host.run())
+    await host.submit(SendMessage(text="Change the thing."))
+    for _ in range(100):
+        await asyncio.sleep(0.05)
+        if any(e.type == EventType.COST_UPDATED for e in host.bus.events_since(0)):
+            break
+    runner.cancel()
+
+    assert hooks.runs == 2 and len(bodies) == 2
+    assert any(m.role == "system" and str(m.content).startswith(STOP_HOOK_NOTE) and "test_one" in str(m.content) for m in host.history)
+    kinds = [e.payload.get("kind") for e in host.bus.events_since(0) if e.type == EventType.NOTICE]
+    assert "stop_hook" in kinds

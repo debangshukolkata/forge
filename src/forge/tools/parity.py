@@ -127,6 +127,15 @@ class LoadSkill(Tool):
             )
         if args.file:
             return read_skill_file(skill, args.file)
+        if skill.fork:
+            return ToolResult(
+                ok=True,
+                content=(
+                    f"The skill {skill.name!r} runs in a context of its own, so its long instructions and working notes stay out of this conversation. "
+                    f"Call spawn_subagent with agent \"skill:{skill.name}\" and a `task` that holds everything it needs (it sees only that text, "
+                    "and it can only read and search); you get its conclusion back."
+                ),
+            )
         if skill.own_design:
             context.design_exempt = True
         return ToolResult(ok=True, content=skill.body() + skill_files_note(skill))

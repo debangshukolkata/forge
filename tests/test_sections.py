@@ -32,6 +32,11 @@ TEMPLATES = [
     "tpl-form-flow",
     "tpl-account-signin",
     "tpl-feedback-page",
+    "tpl-landing-school",
+    "tpl-landing-consultant",
+    "tpl-landing-fitness",
+    "tpl-landing-hotel",
+    "tpl-landing-newsletter",
 ]
 SECTION_NAMES = sorted(p.stem for p in (RECIPES / "sections").glob("*.tsx"))
 

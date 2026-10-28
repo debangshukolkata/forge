@@ -22,6 +22,7 @@ class Skill:
     path: Path
     pack: str = ""  # the install this skill came from (D-480); skills of one pack share one line in the index
     own_design: bool = False  # it brings its own style guide (a diagram skill): the page design gate stands aside while it is loaded (D-483)
+    fork: bool = False  # `context: fork` in its front matter: it runs in a subagent of its own and only its conclusion comes back (C12 c, D-515)
 
     @property
     def folder(self) -> Path:
@@ -41,7 +42,8 @@ def _parse(path: Path) -> Skill | None:
         meta.get("description", text.strip().splitlines()[0] if text.strip() else "").strip().strip("\"'")
     )
     own_design = meta.get("own_design", "").strip().lower() in ("true", "yes")
-    return Skill(name, description, path, _pack_of(path, meta), own_design) if name else None
+    fork = meta.get("context", "").strip().lower() == "fork"
+    return Skill(name, description, path, _pack_of(path, meta), own_design, fork) if name else None
 
 
 PACK_FILE = ".pack"

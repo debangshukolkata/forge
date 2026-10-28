@@ -42,7 +42,8 @@ from forge.subagents.subagent import (
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.folders import clean_folder
 from forge.toolkit.shell import RunCommand, ShellSession
-from forge.tools.parity import BUILT_IN_TYPES
+from forge.parity.skills import discover
+from forge.tools.parity import BUILT_IN_TYPES, skill_roots
 from forge.tools.registry import ToolRegistry, default_tools
 
 
@@ -102,6 +103,7 @@ class SpawnSubagent(Tool):
         "there, runs its own checks and ends with a STATUS line; several builders with different folders given in "
         "the same turn run in parallel: use it for independent variants, screens or services, see the parallel-builders "
         "skill). "
+        "a skill that runs in its own context (load_skill tells you) is started with agent \"skill:<name>\"; "
         "Give it everything it needs in `task`; you get its report back."
     )
 
@@ -133,6 +135,12 @@ class SpawnSubagent(Tool):
         if router is None:
             return ToolResult(ok=False, content="Subagents aren't available in this context.")
         read_only = [t for t in default_tools() if t.read_only]
+        if args.agent.startswith("skill:"):  # a forked skill (C12 c): its text is the subagent's prompt, only the conclusion comes back
+            skill = discover(*skill_roots(context)).get(args.agent[len("skill:") :].strip())
+            if skill is None or not skill.fork:
+                return ToolResult(ok=False, content=f"{args.agent!r} is not an installed skill that runs in its own context.")
+            report = await _run_subagent(router, context, ToolRegistry(read_only), skill.body(), args.task, 25, "coder")
+            return ToolResult(ok=True, content=f"[skill {skill.name}, run in its own context]\n{report}")
         if args.agent == "explore":
             report = await _run_subagent(
                 router, context, ToolRegistry(read_only), EXPLORE_PROMPT, args.task, 25, "coder"

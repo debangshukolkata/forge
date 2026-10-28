@@ -150,3 +150,14 @@ def test_tool_patterns_limit_a_hook_and_user_text_is_never_filled_in() -> None:
 def test_session_events_ignore_the_tool_pattern(event: str) -> None:
     runner = HookRunner({event: ["echo x"]}, FakeContext(), FakeGate("allow"), FakeBus())  # type: ignore[arg-type]
     assert runner._commands(event, "", "") == ["echo x"]
+
+
+def test_the_stop_event_is_known_everywhere_and_ignores_the_tool_pattern() -> None:
+    """C12 a (D-515): a stop hook runs when the model is about to finish; the loop's behaviour is covered by tests/test_agent_loop.py."""
+    from forge.agent.hooks import EVENTS
+    from forge.parity.plugins import HOOK_EVENTS
+
+    assert "stop" in HOOK_EVENTS and "stop" in EVENTS
+    assert HooksConfig(stop=["pytest -x"]).stop == ["pytest -x"]
+    runner = HookRunner({"stop": ["pytest -x"]}, FakeContext(), FakeGate("allow"), FakeBus())  # type: ignore[arg-type]
+    assert runner._commands("stop", "", "") == ["pytest -x"]

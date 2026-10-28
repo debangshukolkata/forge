@@ -1,10 +1,12 @@
 """Hooks around tool calls and the session (TODO plugins step 4, D-501; docs/DESIGN_PLUGINS_MCP_LSP.md section 1).
 
-Events: `pre_tool`, `post_tool`, `session_start`, `session_end`, `user_message` (config.yaml `hooks.*`, and hooks a plugin brings). A hook is a shell
+Events: `pre_tool`, `post_tool`, `session_start`, `session_end`, `user_message`, `stop` (config.yaml `hooks.*`, and hooks a plugin brings). A hook is a shell
 command, or `{match: <tool name pattern>, command: ...}` to limit it to some tools. Rules that keep it safe:
 - A hook command goes through the same permission gate and sandbox as a command the model runs. A hook the gate would ask about is NOT run and nobody is
   asked: a hook cannot approve anything. A hook the gate denies is not run either.
 - A `pre_tool` hook may only DENY: a failing exit code blocks the tool call and its output is the reason. It can never allow a call the gate refused.
+- A `stop` hook runs when the model is about to end its turn (C12 a): if it fails, its output is given back to the model and the turn goes on, at most
+  twice per turn, so a hook that always fails cannot trap the loop. Use it for the checks a job must pass (tests, a linter) before it counts as done.
 - Only `{tool}` and `{file}` are filled into a command, quoted; the user's message or a tool's output is never put into a command line.
 - Hook output is untrusted text: capped, shown to the model with the injection check, redacted with every event."""
 
@@ -24,7 +26,7 @@ from forge.toolkit.shell import execute
 
 HOOK_TIMEOUT_S = 120
 OUTPUT_CHARS = 1500
-EVENTS = ("pre_tool", "post_tool", "session_start", "session_end", "user_message")
+EVENTS = ("pre_tool", "post_tool", "session_start", "session_end", "user_message", "stop")
 
 
 @dataclass

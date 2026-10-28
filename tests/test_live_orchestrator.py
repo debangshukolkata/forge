@@ -28,11 +28,9 @@ from tests.conftest import FIXTURE_BACKEND, FIXTURE_REPO, REPO_ROOT
 
 pytestmark = pytest.mark.live
 REQUIREMENT = (
-    "Add a paginated GET /api/policies/ endpoint that lists all policies, newest start_date first, with "
-    "page and page_size query parameters and the same response shape as the claims list (items, total, "
-    "page, page_size). Follow the existing layering: a raw-SQL repository function, a service function, the "
-    "route with marshmallow schemas, and tests. No authentication changes."
-)
+    "Add a GET /api/policies/count endpoint that returns {\"total\": n}, the number of policies. Follow the existing layering: "
+    "a raw-SQL repository function, a service function, the route with a marshmallow schema, and a test. No authentication changes."
+)  # small on purpose (D-505, WU3): the test is about the stages (clarify, plan, build, verify, export, restructure), not the size of the feature
 FIXTURE_PYTHON = FIXTURE_BACKEND / "venv" / "Scripts" / "python.exe"
 
 
@@ -77,7 +75,7 @@ async def test_requirement_runs_from_clarify_to_export_then_restructures(
     workspace = create_workspace(FIXTURE_REPO, tmp_path / "ws", "backend")
     host = build_session(workspace=workspace)
 
-    result = await asyncio.wait_for(run_headless(host, REQUIREMENT, auto_approve=True), timeout=1500)
+    result = await asyncio.wait_for(run_headless(host, REQUIREMENT, auto_approve=True), timeout=900)
 
     assert result.exit_code == EXIT_OK, (result.activity, result.tasks, result.errors)
     assert host.orchestrator is not None and host.orchestrator.state.exported
@@ -109,12 +107,12 @@ async def test_requirement_runs_from_clarify_to_export_then_restructures(
     await host.submit(
         SlashCommand(
             text=(
-                "/restructure Move the new policies service code into its own module "
+                "/restructure Move the new policy count service function into its own module "
                 "claims_app/services/policies_service.py and update the imports."
             )
         )
     )
-    async with asyncio.timeout(1200):
+    async with asyncio.timeout(700):
         # The command is queued first: wait for the restructure to start (exported flips back to False,
         # D-132), then for it to finish (exported again, and the run is idle).
         while host.orchestrator is None or host.orchestrator.state.exported:

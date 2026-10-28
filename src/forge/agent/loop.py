@@ -88,6 +88,8 @@ def system_prompt(workspace: Workspace) -> str:
 
 MAX_QUESTION_NUDGES = 1
 MAX_TODO_NUDGES = 2
+MAX_STOP_HOOK_ROUNDS = 2
+STOP_HOOK_NOTE = "You are about to finish, but a stop hook set up for this project failed. Fix what it reports and then finish; do not just report it.\n"
 RISK_NOTE = (
     "Before you finish: the code you worked with has risks you have not told the user about. Add a short 'Noticed, not changed' list to your final reply (file and line, what could go "
     "wrong, a one-line suggestion) and do not fix them unless the user asked. What the scan found:\n"
@@ -203,6 +205,7 @@ class AgentLoop:
         question_nudges = 0
         todo_nudges = 0
         risk_nudges = 0
+        stop_hook_rounds = 0
         self.hit_iteration_limit = False
         for _ in range(self.max_iterations):
             # After a cut-off reply, think less so the answer fits in the output limit (D-060).
@@ -278,6 +281,17 @@ class AgentLoop:
                                 "kind": "risk_notes",
                                 "text": "Asking for the risks in the code to be named before finishing.",
                             },
+                        )
+                        continue
+                # the main agent only: a subagent runs with keep_full_output off, and a test run at the end of each subagent would cost far more than it checks
+                if stop_hook_rounds < MAX_STOP_HOOK_ROUNDS and self.keep_full_output and self.hooks.has("stop"):
+                    stop_hook_rounds += 1
+                    failed = HookRunner.blocked_by(await self.hooks.run("stop"))
+                    if failed is not None:
+                        history.append(Message.system(STOP_HOOK_NOTE + failed.note("stop")))
+                        await self.bus.publish(
+                            EventType.NOTICE,
+                            {"kind": "stop_hook", "text": "A stop hook failed; asking the model to fix it before finishing."},
                         )
                         continue
                 return

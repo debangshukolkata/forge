@@ -103,3 +103,24 @@ async def test_a_skill_with_its_own_style_guide_lifts_the_page_design_gate_once_
     context.design_gate_rounds = 0
     await LoadSkill().run(LoadSkill.Args(name="drawer"), context)
     assert design_gate(context, "diagram.html") == ""
+
+
+async def test_a_forked_skill_is_not_loaded_into_the_conversation_but_pointed_to_a_subagent(
+    original_repo: Path, tmp_path: Path, isolated_forge_home: Path
+) -> None:
+    """C12 c (D-515): `context: fork` in the front matter keeps the skill's long text out of the main conversation; load_skill says how to run it."""
+    from forge.toolkit.base import ToolContext
+    from forge.tools.parity import LoadSkill
+    from forge.workspace.create import create_workspace
+
+    folder = make_skill(isolated_forge_home / "skills", "noisy")
+    (folder / "SKILL.md").write_text(
+        "---\nname: noisy\ncontext: fork\ndescription: Use when a long scan is needed\n---\nTHE LONG SECRET BODY\n", encoding="utf-8"
+    )
+    make_skill(isolated_forge_home / "skills", "plain")
+    assert discover(isolated_forge_home / "skills")["noisy"].fork
+    assert not discover(isolated_forge_home / "skills")["plain"].fork
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    result = await LoadSkill().run(LoadSkill.Args(name="noisy"), context)
+    assert result.ok and 'agent "skill:noisy"' in result.content and "LONG SECRET BODY" not in result.content
+    assert "body of plain" in (await LoadSkill().run(LoadSkill.Args(name="plain"), context)).content

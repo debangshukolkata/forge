@@ -20,7 +20,7 @@ from typing import Any
 from forge.errors import ConfigError
 
 NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,48}$")
-HOOK_EVENTS = ("pre_tool", "post_tool", "session_start", "session_end", "user_message")
+HOOK_EVENTS = ("pre_tool", "post_tool", "session_start", "session_end", "user_message", "stop")
 
 
 @dataclass

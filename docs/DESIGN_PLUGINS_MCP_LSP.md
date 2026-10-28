@@ -23,7 +23,7 @@ plus `pre_compact`/`post_compact` since D-176). There is no project-level folder
 2. *Plugins*: `plugin.json` (name, version, description, what it adds). A plugin is **off until the user enables it**; the
    prompt lists exactly what it adds (commands, agents, skills, hooks, MCP servers). Mode B: a plugin may only come from
    DebCraft Home, never from a folder inside the workspace.
-3. *Hooks*: events `pre_tool`, `post_tool`, `session_start`, `session_end`, `user_message`, plus the existing compaction hooks.
+3. *Hooks*: events `pre_tool`, `post_tool`, `session_start`, `session_end`, `user_message`, `stop` (D-515: runs when the model is about to end its turn; a failure goes back to the model, at most twice), plus the existing compaction hooks.
    A hook command runs through **the same shell classifier, permission gate and sandbox as any command the model runs**;
    its output is untrusted text (injection markers apply) and is capped and redacted. A hook cannot approve anything.
 

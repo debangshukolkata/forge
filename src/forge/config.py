@@ -277,6 +277,8 @@ class HooksConfig(_Strict):
     session_start: list[str | HookRule] = []
     session_end: list[str | HookRule] = []
     user_message: list[str | HookRule] = []
+    # Runs when the model is about to end its turn; a failing command sends its output back to the model and the turn continues (at most twice, C12 a).
+    stop: list[str | HookRule] = []
 
 
 class LearningConfig(_Strict):

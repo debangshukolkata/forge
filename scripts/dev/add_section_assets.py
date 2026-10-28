@@ -212,6 +212,24 @@ SECTIONS: dict[str, tuple[str, str, str, str, str, str, str]] = {
         "balanced",
         "`slots` lists the times and `maxGuests` the largest party. The date cannot be in the past. `onSubmit({ date, time, guests })`.",
     ),
+    "HeroQuote": (
+        "Quote hero",
+        "One large statement as the headline with who said it underneath, a short rule above and one button.",
+        "personal, confident, plain",
+        "consultant, coach, writer, practice, small firm, freelancer",
+        "hero, quote, statement, big type",
+        "airy",
+        "`quote` is one or two sentences you would stand behind; a quote from a real client needs their permission. Choose it when a person's view is the product.",
+    ),
+    "FeaturesFigures": (
+        "Features with figures",
+        "Two to four points that each lead with a large figure or short word, then a title and one sentence, between hairlines.",
+        "proof, precise, steady",
+        "service, agency, consultancy, clinic, supplier, school",
+        "features, figures, numbers, proof",
+        "balanced",
+        "`items` is a list of figure, title and text. Use it only when each point can be backed by a real figure; otherwise use `FeaturesRuled` or `FeaturesIconRow`.",
+    ),
 }
 
 
