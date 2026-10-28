@@ -231,9 +231,9 @@ every decision has a number in docs/DECISIONS.md (D-362 to D-430).
 - The first design benchmark judged stale pages (fixed, D-391) and was rerun.
 - The gpt-5.4 benchmark first failed in seconds because the deployment name was not passed in; fixed and rerun.
 
-## Overnight run 2026-10-29 (D-525 to D-537)
+## Overnight run 2026-10-29 (D-525 to D-539)
 
-Agreed before the night: Azure spend up to about $40, local commits only (nothing pushed), a bug found by a live check is fixed and re-checked. Plan: TODO.md section 0f. Spent: about $24 (estimate from the run reports).
+Agreed before the night: Azure spend up to about $40, local commits only (nothing pushed), a bug found by a live check is fixed and re-checked. Plan: TODO.md section 0f. Spent: about $30 of the $40 (estimate from the run reports).
 
 ### What was built and measured
 - **Workbooks (W6, W7; D-525, D-532).** The "wrong series" charts were builder faults: no `varyColors` (Excel then colours each point and lists the months as series) and row-shaped data read as columns. New `sheets/charts.py`: series along rows or columns from the ranges, one colour per series, straight lines, charts moved off each other, every sheet printed one page wide. `edit_workbook` no longer refuses a workbook with charts (openpyxl 3.1 keeps them; the old refusal made the model set `allow_loss` without asking). `check_workbook` now finds chart faults however the file was made.
@@ -246,12 +246,14 @@ Agreed before the night: Azure spend up to about $40, local commits only (nothin
 - **LT1 live checks (D-533, D-534).** MCP allow-list, stop hook, `code_outline`, forked skills, `--auto-approve --allow-installs` and the run report all work live. Fixed: an MCP server that dies on start now shows its stderr (it said only "Connection closed"); the run report no longer prints an empty "Totals:". Egress guard inconclusive live (the model never tried to send code).
 - **C14 (D-535).** Skill triggers: 10 of 12 skills at 85 to 100 %; test-first (1/10) and verify-before-done (4/10) retuned to 7/10 and 10/10, others unchanged.
 - **C16 (D-537).** Skill arms on three tasks: baseline 162/170, ours 167, Superpowers 168, mattpocock 166; ours cheapest of the three skill sets. One run each: a hint only.
+- **BO6 support desk (D-538, D-539).** The first rerun stopped after 30 minutes with tasks open: the headless driver allowed only two "continue" nudges per run. Now it keeps nudging while the model makes progress (two idle nudges in a row stop it, 40 in total is the runaway guard). The second rerun finished in 61 minutes for $4.70 with exit code 0: a working FastAPI support desk, the helpdesk screen copied, DESIGN.md with a Concept; one of its own nine tests (a Playwright status-update flow) still failed and the summary said so. It needed no nudge, so D-538 is proven by unit tests only. Also fixed: a full path into a built-in skill now tells the model to use `load_skill(..., file=...)`.
 - **Small:** flaky browser test polls (FL1), scroll-progress preview (PX1), WU1 and WU2 confirmed live.
 
 ### Tests
-Non-browser suite 1995 passed, 3 skipped (network-only and bandit); ruff, ruff format, mypy (348 files) and check_secrets clean. Browser suite: see the end of this entry.
+Non-browser suite 1995 passed, 3 skipped (network-only and bandit); ruff, ruff format, mypy (348 files) and check_secrets clean. Browser suite 337 passed, 2 skipped (the hidden Run map tab).
 
 ### What you may want to do
-- Say "push" when you have read this (19+ local commits).
+- Say "push" when you have read this (22 local commits).
 - Security-relevant changes for your review: the MCP client now writes each server's stderr to a temporary file and shows its last 600 characters in the error (it can contain whatever the server prints); the security note and recipe (advice only, no gate).
+- BO6 is not closed: the Stillwater landing rerun is not done, and the support-desk run has not been looked at in a browser by a person.
 - Decide whether SEC1 (attach the security recipe automatically for security requests) is worth a third security task.

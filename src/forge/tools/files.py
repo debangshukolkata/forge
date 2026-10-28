@@ -42,7 +42,13 @@ class ReadFile(Tool):
 
     async def run(self, args: ReadFile.Args, context: ToolContext) -> ToolResult:
         workspace = context.workspace
-        path = workspace.input_path(args.path) or workspace.path_of(args.path)
+        try:
+            path = workspace.input_path(args.path) or workspace.path_of(args.path)
+        except ForgeError as error:
+            pointer = _skill_file_pointer(context, args.path)
+            if pointer is None:
+                raise
+            return ToolResult(ok=False, content=f"{error} {pointer}")
         if not path.is_file():
             return ToolResult(
                 ok=False, content=f"{args.path} does not exist.{_similar_hint(context, args.path)}"
@@ -80,6 +86,23 @@ class ReadFile(Tool):
             content="\n".join(numbered) + footer,
             meta={"lines": len(lines), "newline": file_format.newline},
         )
+
+
+def _skill_file_pointer(context: ToolContext, path: str) -> str | None:
+    """A full path into a skill's folder is refused by the workspace jail; name the call that reads it instead
+    (BO6 2026-10-29: the model tried read_file on a recipe of ui-design-quality and moved on without it)."""
+    from forge.parity.skills import discover
+    from forge.tools.parity import skill_roots
+
+    target = Path(path)
+    if not target.is_absolute():
+        return None
+    for skill in discover(*skill_roots(context)).values():
+        folder = skill.folder.resolve()
+        if folder in target.resolve().parents:
+            relative = target.resolve().relative_to(folder).as_posix()
+            return f'Files of a skill are read with load_skill(name="{skill.name}", file="{relative}").'
+    return None
 
 
 class WriteFile(Tool):

@@ -162,3 +162,17 @@ async def test_slash_commands_list_grant_and_revoke(granting: Workspace, library
     assert said[-1] == "Removed." and not granting.read_grants.allows(library.resolve())
     await handler.handle(f"/allow-read {Path.home()}")
     assert "whole profile" in said[-1]
+
+
+async def test_a_full_path_into_a_built_in_skill_points_to_load_skill(granting: Workspace) -> None:
+    from forge.parity.skills import discover
+
+    recipe = discover()["ui-design-quality"].folder / "recipes" / "design-md-template.md"
+    result = await ReadFile().run(ReadFile.Args(path=str(recipe)), ToolContext(workspace=granting))
+    assert not result.ok
+    assert 'load_skill(name="ui-design-quality", file="recipes/design-md-template.md")' in result.content
+
+
+async def test_a_full_path_elsewhere_is_still_refused_plainly(granting: Workspace, library: Path) -> None:
+    with pytest.raises(JailViolationError):
+        await ReadFile().run(ReadFile.Args(path=str(library / "spec.md")), ToolContext(workspace=granting))
