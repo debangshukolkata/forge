@@ -121,6 +121,9 @@ def _task_section(events: list[Event]) -> list[str]:
         out.append(f"- [{task.get('status')}] {task.get('title')} (attempts {task.get('attempts', 0)})")
         if task.get("blocked_reason"):
             out.append(f"  - blocked: {str(task['blocked_reason'])[:PREVIEW_CHARS]}")
+    if not counts:  # a free-hand run plans no tasks; an empty "Totals:" read like a fault (LT1)
+        out += ["No planned tasks (the run worked free hand).", ""]
+        return out
     out += ["", "Totals: " + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())), ""]
     return out
 
