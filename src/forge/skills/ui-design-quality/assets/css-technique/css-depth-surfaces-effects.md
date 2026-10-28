@@ -4,8 +4,8 @@ type: css-technique
 title: "Depth, surfaces, effects"
 summary: "Snippets for depth, surfaces, effects."
 moods: [shadows]
-products: [web, landing, app, dashboard]
-tags: [css, html, native, no dependency]
+products: [stylesheet]
+tags: [css, technique]
 density: any
 dependencies: []
 licence: original

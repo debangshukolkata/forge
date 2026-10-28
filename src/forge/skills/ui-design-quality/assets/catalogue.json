@@ -227,16 +227,11 @@
     "transitions"
    ],
    "products": [
-    "web",
-    "landing",
-    "app",
-    "dashboard"
+    "stylesheet"
    ],
    "tags": [
     "css",
-    "html",
-    "native",
-    "no dependency"
+    "technique"
    ],
    "density": "any",
    "dependencies": [],
@@ -257,16 +252,11 @@
     "oklch"
    ],
    "products": [
-    "web",
-    "landing",
-    "app",
-    "dashboard"
+    "stylesheet"
    ],
    "tags": [
     "css",
-    "html",
-    "native",
-    "no dependency"
+    "technique"
    ],
    "density": "any",
    "dependencies": [],
@@ -287,16 +277,11 @@
     "shadows"
    ],
    "products": [
-    "web",
-    "landing",
-    "app",
-    "dashboard"
+    "stylesheet"
    ],
    "tags": [
     "css",
-    "html",
-    "native",
-    "no dependency"
+    "technique"
    ],
    "density": "any",
    "dependencies": [],
@@ -317,16 +302,11 @@
     "responsive"
    ],
    "products": [
-    "web",
-    "landing",
-    "app",
-    "dashboard"
+    "stylesheet"
    ],
    "tags": [
     "css",
-    "html",
-    "native",
-    "no dependency"
+    "technique"
    ],
    "density": "any",
    "dependencies": [],
@@ -348,16 +328,11 @@
     "popover"
    ],
    "products": [
-    "web",
-    "landing",
-    "app",
-    "dashboard"
+    "stylesheet"
    ],
    "tags": [
     "css",
-    "html",
-    "native",
-    "no dependency"
+    "technique"
    ],
    "density": "any",
    "dependencies": [],
@@ -379,16 +354,11 @@
     "contrast"
    ],
    "products": [
-    "web",
-    "landing",
-    "app",
-    "dashboard"
+    "stylesheet"
    ],
    "tags": [
     "css",
-    "html",
-    "native",
-    "no dependency"
+    "technique"
    ],
    "density": "any",
    "dependencies": [],
@@ -409,16 +379,11 @@
     "selectors"
    ],
    "products": [
-    "web",
-    "landing",
-    "app",
-    "dashboard"
+    "stylesheet"
    ],
    "tags": [
     "css",
-    "html",
-    "native",
-    "no dependency"
+    "technique"
    ],
    "density": "any",
    "dependencies": [],
@@ -439,16 +404,11 @@
     "typesetting"
    ],
    "products": [
-    "web",
-    "landing",
-    "app",
-    "dashboard"
+    "stylesheet"
    ],
    "tags": [
     "css",
-    "html",
-    "native",
-    "no dependency"
+    "technique"
    ],
    "density": "any",
    "dependencies": [],
@@ -6727,6 +6687,186 @@
    "size": 367
   },
   {
+   "id": "lib-daisyui-v5-on-tailwind-v4",
+   "type": "recipe",
+   "title": "daisyUI v5 on Tailwind v4",
+   "summary": "Component-library mode: daisyui v5 on tailwind v4.",
+   "moods": [
+    "practical"
+   ],
+   "products": [
+    "internal tool",
+    "admin"
+   ],
+   "tags": [
+    "component library",
+    "daisyui",
+    "mui",
+    "shadcn",
+    "tabler",
+    "quickstart"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/component-libraries.md, D-437)",
+   "tested": "quickstarts were built and audited when the recipe was written (D-251, D-437); not re-run for this asset",
+   "preview": null,
+   "path": "assets/recipe/lib-daisyui-v5-on-tailwind-v4.md",
+   "size": 2846
+  },
+  {
+   "id": "lib-decide-the-mode",
+   "type": "recipe",
+   "title": "Decide the mode",
+   "summary": "Component-library mode: decide the mode.",
+   "moods": [
+    "practical"
+   ],
+   "products": [
+    "internal tool",
+    "admin"
+   ],
+   "tags": [
+    "component library",
+    "daisyui",
+    "mui",
+    "shadcn",
+    "tabler",
+    "quickstart"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/component-libraries.md, D-437)",
+   "tested": "quickstarts were built and audited when the recipe was written (D-251, D-437); not re-run for this asset",
+   "preview": null,
+   "path": "assets/recipe/lib-decide-the-mode.md",
+   "size": 1242
+  },
+  {
+   "id": "lib-mui",
+   "type": "recipe",
+   "title": "MUI",
+   "summary": "Component-library mode: mui.",
+   "moods": [
+    "practical"
+   ],
+   "products": [
+    "internal tool",
+    "admin"
+   ],
+   "tags": [
+    "component library",
+    "daisyui",
+    "mui",
+    "shadcn",
+    "tabler",
+    "quickstart"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/component-libraries.md, D-437)",
+   "tested": "quickstarts were built and audited when the recipe was written (D-251, D-437); not re-run for this asset",
+   "preview": null,
+   "path": "assets/recipe/lib-mui.md",
+   "size": 2258
+  },
+  {
+   "id": "lib-shadcn-ui",
+   "type": "recipe",
+   "title": "shadcn/ui",
+   "summary": "Component-library mode: shadcn/ui.",
+   "moods": [
+    "practical"
+   ],
+   "products": [
+    "internal tool",
+    "admin"
+   ],
+   "tags": [
+    "component library",
+    "daisyui",
+    "mui",
+    "shadcn",
+    "tabler",
+    "quickstart"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/component-libraries.md, D-437)",
+   "tested": "quickstarts were built and audited when the recipe was written (D-251, D-437); not re-run for this asset",
+   "preview": null,
+   "path": "assets/recipe/lib-shadcn-ui.md",
+   "size": 3005
+  },
+  {
+   "id": "lib-tabler",
+   "type": "recipe",
+   "title": "Tabler",
+   "summary": "Component-library mode: tabler.",
+   "moods": [
+    "practical"
+   ],
+   "products": [
+    "internal tool",
+    "admin"
+   ],
+   "tags": [
+    "component library",
+    "daisyui",
+    "mui",
+    "shadcn",
+    "tabler",
+    "quickstart"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/component-libraries.md, D-437)",
+   "tested": "quickstarts were built and audited when the recipe was written (D-251, D-437); not re-run for this asset",
+   "preview": null,
+   "path": "assets/recipe/lib-tabler.md",
+   "size": 411
+  },
+  {
+   "id": "lib-what-each-library-is-best-for-the-user-s-list-d-437-and",
+   "type": "recipe",
+   "title": "What each library is best for (the user's list, D-437) and how DebCraft uses it",
+   "summary": "Component-library mode: what each library is best for (the user's list, d-437) and how debcraft uses it.",
+   "moods": [
+    "practical"
+   ],
+   "products": [
+    "internal tool",
+    "admin"
+   ],
+   "tags": [
+    "component library",
+    "daisyui",
+    "mui",
+    "shadcn",
+    "tabler",
+    "quickstart"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [],
+   "licence": "original",
+   "source": "authored for DebCraft (recipes/component-libraries.md, D-437)",
+   "tested": "quickstarts were built and audited when the recipe was written (D-251, D-437); not re-run for this asset",
+   "preview": null,
+   "path": "assets/recipe/lib-what-each-library-is-best-for-the-user-s-list-d-437-and.md",
+   "size": 1330
+  },
+  {
    "id": "app-approval-queue",
    "type": "section",
    "title": "App screen: Approvals: queue with decision panel",
@@ -12489,6 +12629,48 @@
    "size": 3079
   },
   {
+   "id": "sec-features-figures",
+   "type": "section",
+   "title": "Features with figures",
+   "summary": "Two to four points that each lead with a large figure or short word, then a title and one sentence, between hairlines.",
+   "moods": [
+    "proof",
+    "precise",
+    "steady"
+   ],
+   "products": [
+    "service",
+    "agency",
+    "consultancy",
+    "clinic",
+    "supplier",
+    "school"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "features",
+    "figures",
+    "numbers",
+    "proof"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FeaturesFigures.tsx",
+     "to": "src/sections/FeaturesFigures.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-features-figures.jpg",
+   "path": "assets/section/sec-features-figures.md",
+   "size": 2532
+  },
+  {
    "id": "sec-features-icon-row",
    "type": "section",
    "title": "Icon row",
@@ -12528,7 +12710,7 @@
    "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
    "preview": "assets/preview/sec-features-icon-row.jpg",
    "path": "assets/section/sec-features-icon-row.md",
-   "size": 3274
+   "size": 3490
   },
   {
    "id": "sec-features-numbered",
@@ -12653,6 +12835,46 @@
    "size": 4510
   },
   {
+   "id": "sec-footer-centered",
+   "type": "section",
+   "title": "Centred footer",
+   "summary": "A large brand name, one sentence, a single row of links and the legal line, all centred.",
+   "moods": [
+    "calm",
+    "confident",
+    "editorial"
+   ],
+   "products": [
+    "studio",
+    "shop",
+    "event",
+    "restaurant",
+    "boutique"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "footer",
+    "centred",
+    "brand"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FooterCentered.tsx",
+     "to": "src/sections/FooterCentered.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-footer-centered.jpg",
+   "path": "assets/section/sec-footer-centered.md",
+   "size": 2185
+  },
+  {
    "id": "sec-footer-columns",
    "type": "section",
    "title": "Footer with link columns",
@@ -12684,6 +12906,215 @@
    "preview": "assets/preview/sec-footer-columns.jpg",
    "path": "assets/section/sec-footer-columns.md",
    "size": 2581
+  },
+  {
+   "id": "sec-footer-minimal",
+   "type": "section",
+   "title": "Minimal footer",
+   "summary": "One line: brand and legal text on the left, a few plain links on the right; nothing else.",
+   "moods": [
+    "quiet",
+    "light",
+    "plain"
+   ],
+   "products": [
+    "one-page site",
+    "portfolio",
+    "landing page",
+    "short page"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "footer",
+    "minimal",
+    "links"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FooterMinimal.tsx",
+     "to": "src/sections/FooterMinimal.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-footer-minimal.jpg",
+   "path": "assets/section/sec-footer-minimal.md",
+   "size": 1979
+  },
+  {
+   "id": "sec-form-booking",
+   "type": "section",
+   "title": "Booking bar",
+   "summary": "A compact horizontal form for a date, a time slot and a party size with one button and a confirmation line.",
+   "moods": [
+    "practical",
+    "quick",
+    "clear"
+   ],
+   "products": [
+    "restaurant",
+    "class",
+    "appointment",
+    "salon",
+    "clinic",
+    "venue"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "form",
+    "booking",
+    "date",
+    "time",
+    "reservation"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FormBooking.tsx",
+     "to": "src/sections/FormBooking.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-form-booking.jpg",
+   "path": "assets/section/sec-form-booking.md",
+   "size": 4498
+  },
+  {
+   "id": "sec-form-feedback",
+   "type": "section",
+   "title": "Feedback form",
+   "summary": "A one-to-five rating as real radio buttons, a comment box with a character count and an optional reply e-mail.",
+   "moods": [
+    "friendly",
+    "simple",
+    "open"
+   ],
+   "products": [
+    "feedback",
+    "review",
+    "survey",
+    "support",
+    "restaurant",
+    "event"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "form",
+    "rating",
+    "radio",
+    "comment",
+    "validation"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FormFeedback.tsx",
+     "to": "src/sections/FormFeedback.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-form-feedback.jpg",
+   "path": "assets/section/sec-form-feedback.md",
+   "size": 4992
+  },
+  {
+   "id": "sec-form-login",
+   "type": "section",
+   "title": "Sign-in form",
+   "summary": "A narrow form: e-mail, password with a show and hide button, remember me, a forgotten-password link and one button.",
+   "moods": [
+    "plain",
+    "trustworthy",
+    "focused"
+   ],
+   "products": [
+    "app",
+    "account",
+    "members area",
+    "saas",
+    "portal"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "form",
+    "login",
+    "sign in",
+    "password",
+    "validation"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FormLogin.tsx",
+     "to": "src/sections/FormLogin.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-form-login.jpg",
+   "path": "assets/section/sec-form-login.md",
+   "size": 5085
+  },
+  {
+   "id": "sec-form-stepper",
+   "type": "section",
+   "title": "Multi-step form",
+   "summary": "Three short steps with a progress line, Back and Next, a check on each step and a review before sending.",
+   "moods": [
+    "guided",
+    "calm",
+    "clear"
+   ],
+   "products": [
+    "booking",
+    "application",
+    "registration",
+    "onboarding",
+    "survey"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "form",
+    "steps",
+    "wizard",
+    "validation",
+    "progress"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/FormStepper.tsx",
+     "to": "src/sections/FormStepper.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-form-stepper.jpg",
+   "path": "assets/section/sec-form-stepper.md",
+   "size": 6709
   },
   {
    "id": "sec-gallery-mosaic",
@@ -12923,6 +13354,48 @@
    "preview": "assets/preview/sec-hero-poster.jpg",
    "path": "assets/section/sec-hero-poster.md",
    "size": 2878
+  },
+  {
+   "id": "sec-hero-quote",
+   "type": "section",
+   "title": "Quote hero",
+   "summary": "One large statement as the headline with who said it underneath, a short rule above and one button.",
+   "moods": [
+    "personal",
+    "confident",
+    "plain"
+   ],
+   "products": [
+    "consultant",
+    "coach",
+    "writer",
+    "practice",
+    "small firm",
+    "freelancer"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "hero",
+    "quote",
+    "statement",
+    "big type"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/HeroQuote.tsx",
+     "to": "src/sections/HeroQuote.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-hero-quote.jpg",
+   "path": "assets/section/sec-hero-quote.md",
+   "size": 2400
   },
   {
    "id": "sec-hero-search",
@@ -13194,6 +13667,48 @@
    "preview": "assets/preview/sec-nav-bar.jpg",
    "path": "assets/section/sec-nav-bar.md",
    "size": 2781
+  },
+  {
+   "id": "sec-nav-centered",
+   "type": "section",
+   "title": "Centred navigation",
+   "summary": "The brand in the middle of the bar, links split to its left and right, one call to action at the far right; a native menu on a phone.",
+   "moods": [
+    "calm",
+    "symmetrical",
+    "refined"
+   ],
+   "products": [
+    "restaurant",
+    "studio",
+    "shop",
+    "boutique",
+    "hotel",
+    "salon"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "tokens only",
+    "navigation",
+    "header",
+    "centred",
+    "sticky"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/sections/NavCentered.tsx",
+     "to": "src/sections/NavCentered.tsx"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (section library, D-511)",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshot looked at (tests/test_sections.py, D-511)",
+   "preview": "assets/preview/sec-nav-centered.jpg",
+   "path": "assets/section/sec-nav-centered.md",
+   "size": 3501
   },
   {
    "id": "sec-newsletter-band",
@@ -13736,6 +14251,285 @@
    "size": 2851
   },
   {
+   "id": "tpl-about-story",
+   "type": "template",
+   "title": "About page: company or family story",
+   "summary": "Editorial opening, a dated timeline, the principles, the people, one long quote and a closing invitation, in deep navy.",
+   "moods": [
+    "editorial",
+    "trustworthy",
+    "heritage"
+   ],
+   "products": [
+    "about",
+    "company",
+    "family business",
+    "workshop",
+    "firm",
+    "charity history"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "about",
+    "timeline",
+    "offline fonts"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/about/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/about/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroEditorial.tsx",
+     "to": "src/sections/HeroEditorial.tsx"
+    },
+    {
+     "from": "recipes/sections/TimelineVertical.tsx",
+     "to": "src/sections/TimelineVertical.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesNumbered.tsx",
+     "to": "src/sections/FeaturesNumbered.tsx"
+    },
+    {
+     "from": "recipes/sections/TeamRoster.tsx",
+     "to": "src/sections/TeamRoster.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialFeature.tsx",
+     "to": "src/sections/TestimonialFeature.tsx"
+    },
+    {
+     "from": "recipes/sections/CtaBand.tsx",
+     "to": "src/sections/CtaBand.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterMinimal.tsx",
+     "to": "src/sections/FooterMinimal.tsx"
+    },
+    {
+     "from": "fonts/lora/lora-latin-wght-normal.woff2",
+     "to": "public/fonts/lora-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/lora/lora.css",
+     "to": "src/fonts/lora.css"
+    },
+    {
+     "from": "fonts/lora/lora-OFL.txt",
+     "to": "public/fonts/lora-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-about-story-desktop.jpg",
+   "path": "assets/template/tpl-about-story.md",
+   "size": 116303
+  },
+  {
+   "id": "tpl-account-signin",
+   "type": "template",
+   "title": "Sign-in page",
+   "summary": "Only a sign-in form and a quiet footer: e-mail, password with show and hide, remember me and a forgotten-password link.",
+   "moods": [
+    "plain",
+    "focused",
+    "trustworthy"
+   ],
+   "products": [
+    "login",
+    "sign in",
+    "account",
+    "members area",
+    "portal",
+    "app"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "login",
+    "form",
+    "offline fonts"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/signin/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/launch/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/FormLogin.tsx",
+     "to": "src/sections/FormLogin.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterMinimal.tsx",
+     "to": "src/sections/FooterMinimal.tsx"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
+     "to": "public/fonts/space-grotesk-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk.css",
+     "to": "src/fonts/space-grotesk.css"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-OFL.txt",
+     "to": "public/fonts/space-grotesk-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); uses the launch palette and fonts; fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-account-signin-desktop.jpg",
+   "path": "assets/template/tpl-account-signin.md",
+   "size": 86606
+  },
+  {
+   "id": "tpl-directory-search",
+   "type": "template",
+   "title": "Directory or help centre",
+   "summary": "A big search field first, then category tiles, figures that show the listings are kept current, how they are checked, questions and a newsletter band.",
+   "moods": [
+    "practical",
+    "open",
+    "helpful"
+   ],
+   "products": [
+    "directory",
+    "help centre",
+    "listings",
+    "community",
+    "catalogue",
+    "services"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "search",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/directory/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/directory/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroSearch.tsx",
+     "to": "src/sections/HeroSearch.tsx"
+    },
+    {
+     "from": "recipes/sections/CategoryTiles.tsx",
+     "to": "src/sections/CategoryTiles.tsx"
+    },
+    {
+     "from": "recipes/sections/StatsRow.tsx",
+     "to": "src/sections/StatsRow.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesNumbered.tsx",
+     "to": "src/sections/FeaturesNumbered.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/NewsletterBand.tsx",
+     "to": "src/sections/NewsletterBand.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    },
+    {
+     "from": "fonts/nunito/nunito-latin-wght-normal.woff2",
+     "to": "public/fonts/nunito-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/nunito/nunito.css",
+     "to": "src/fonts/nunito.css"
+    },
+    {
+     "from": "fonts/nunito/nunito-OFL.txt",
+     "to": "public/fonts/nunito-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-directory-search-desktop.jpg",
+   "path": "assets/template/tpl-directory-search.md",
+   "size": 116451
+  },
+  {
    "id": "tpl-docs-product",
    "type": "template",
    "title": "Docs: product documentation",
@@ -13914,6 +14708,280 @@
    "size": 103287
   },
   {
+   "id": "tpl-feedback-page",
+   "type": "template",
+   "title": "Feedback page",
+   "summary": "A one-to-five rating and a comment first, then what other guests said, with a centred navigation and footer.",
+   "moods": [
+    "warm",
+    "friendly",
+    "simple"
+   ],
+   "products": [
+    "feedback",
+    "review",
+    "survey",
+    "restaurant",
+    "event",
+    "support"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "feedback",
+    "form",
+    "offline fonts"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/feedback/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/restaurant/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavCentered.tsx",
+     "to": "src/sections/NavCentered.tsx"
+    },
+    {
+     "from": "recipes/sections/FormFeedback.tsx",
+     "to": "src/sections/FormFeedback.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialColumns.tsx",
+     "to": "src/sections/TestimonialColumns.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterCentered.tsx",
+     "to": "src/sections/FooterCentered.tsx"
+    },
+    {
+     "from": "fonts/lora/lora-latin-wght-normal.woff2",
+     "to": "public/fonts/lora-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/lora/lora.css",
+     "to": "src/fonts/lora.css"
+    },
+    {
+     "from": "fonts/lora/lora-OFL.txt",
+     "to": "public/fonts/lora-OFL.txt"
+    },
+    {
+     "from": "fonts/nunito/nunito-latin-wght-normal.woff2",
+     "to": "public/fonts/nunito-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/nunito/nunito.css",
+     "to": "src/fonts/nunito.css"
+    },
+    {
+     "from": "fonts/nunito/nunito-OFL.txt",
+     "to": "public/fonts/nunito-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); uses the restaurant palette and fonts; fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-feedback-page-desktop.jpg",
+   "path": "assets/template/tpl-feedback-page.md",
+   "size": 98298
+  },
+  {
+   "id": "tpl-form-flow",
+   "type": "template",
+   "title": "Form flow: booking, application or registration",
+   "summary": "A short page whose one job is a three-step form with progress and review, then what happens next and a few answers.",
+   "moods": [
+    "calm",
+    "guided",
+    "clear"
+   ],
+   "products": [
+    "booking",
+    "application",
+    "registration",
+    "onboarding",
+    "sign-up form"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "form",
+    "wizard",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/formflow/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/clinic/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/FormStepper.tsx",
+     "to": "src/sections/FormStepper.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesIconRow.tsx",
+     "to": "src/sections/FeaturesIconRow.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterMinimal.tsx",
+     "to": "src/sections/FooterMinimal.tsx"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/plus-jakarta-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans.css",
+     "to": "src/fonts/plus-jakarta-sans.css"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-OFL.txt",
+     "to": "public/fonts/plus-jakarta-sans-OFL.txt"
+    },
+    {
+     "from": "fonts/manrope/manrope-latin-wght-normal.woff2",
+     "to": "public/fonts/manrope-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/manrope/manrope.css",
+     "to": "src/fonts/manrope.css"
+    },
+    {
+     "from": "fonts/manrope/manrope-OFL.txt",
+     "to": "public/fonts/manrope-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); uses the clinic palette and fonts; fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-form-flow-desktop.jpg",
+   "path": "assets/template/tpl-form-flow.md",
+   "size": 79093
+  },
+  {
+   "id": "tpl-landing-agency",
+   "type": "template",
+   "title": "Landing page: design or marketing agency",
+   "summary": "Loud poster hero in vermilion, a numbered way of working, a work gallery, one big client quote, the people and a contact block.",
+   "moods": [
+    "bold",
+    "loud",
+    "confident"
+   ],
+   "products": [
+    "agency",
+    "studio",
+    "design",
+    "marketing",
+    "consultancy",
+    "creative"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "poster",
+    "offline fonts"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/agency/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/agency/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroPoster.tsx",
+     "to": "src/sections/HeroPoster.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesNumbered.tsx",
+     "to": "src/sections/FeaturesNumbered.tsx"
+    },
+    {
+     "from": "recipes/sections/GalleryMosaic.tsx",
+     "to": "src/sections/GalleryMosaic.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialFeature.tsx",
+     "to": "src/sections/TestimonialFeature.tsx"
+    },
+    {
+     "from": "recipes/sections/TeamRoster.tsx",
+     "to": "src/sections/TeamRoster.tsx"
+    },
+    {
+     "from": "recipes/sections/ContactSplit.tsx",
+     "to": "src/sections/ContactSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterCentered.tsx",
+     "to": "src/sections/FooterCentered.tsx"
+    },
+    {
+     "from": "fonts/archivo/archivo-latin-wght-normal.woff2",
+     "to": "public/fonts/archivo-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/archivo/archivo.css",
+     "to": "src/fonts/archivo.css"
+    },
+    {
+     "from": "fonts/archivo/archivo-OFL.txt",
+     "to": "public/fonts/archivo-OFL.txt"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/dm-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans.css",
+     "to": "src/fonts/dm-sans.css"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-OFL.txt",
+     "to": "public/fonts/dm-sans-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-landing-agency-desktop.jpg",
+   "path": "assets/template/tpl-landing-agency.md",
+   "size": 106461
+  },
+  {
    "id": "tpl-landing-charity",
    "type": "template",
    "title": "Landing page: charity or community drive",
@@ -14021,6 +15089,495 @@
    "size": 113791
   },
   {
+   "id": "tpl-landing-clinic",
+   "type": "template",
+   "title": "Landing page: clinic or health practice",
+   "summary": "Calm teal page: a hero that proves its claim with figures, services, the people, patient quotes, questions, and a contact block with address and hours.",
+   "moods": [
+    "calm",
+    "trustworthy",
+    "clear"
+   ],
+   "products": [
+    "clinic",
+    "health",
+    "practice",
+    "dentist",
+    "therapy",
+    "wellbeing"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "trust",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/clinic/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/clinic/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroNumbers.tsx",
+     "to": "src/sections/HeroNumbers.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesIconRow.tsx",
+     "to": "src/sections/FeaturesIconRow.tsx"
+    },
+    {
+     "from": "recipes/sections/TeamRoster.tsx",
+     "to": "src/sections/TeamRoster.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialColumns.tsx",
+     "to": "src/sections/TestimonialColumns.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/ContactSplit.tsx",
+     "to": "src/sections/ContactSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterMinimal.tsx",
+     "to": "src/sections/FooterMinimal.tsx"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/plus-jakarta-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans.css",
+     "to": "src/fonts/plus-jakarta-sans.css"
+    },
+    {
+     "from": "fonts/plus-jakarta-sans/plus-jakarta-sans-OFL.txt",
+     "to": "public/fonts/plus-jakarta-sans-OFL.txt"
+    },
+    {
+     "from": "fonts/manrope/manrope-latin-wght-normal.woff2",
+     "to": "public/fonts/manrope-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/manrope/manrope.css",
+     "to": "src/fonts/manrope.css"
+    },
+    {
+     "from": "fonts/manrope/manrope-OFL.txt",
+     "to": "public/fonts/manrope-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-landing-clinic-desktop.jpg",
+   "path": "assets/template/tpl-landing-clinic.md",
+   "size": 87816
+  },
+  {
+   "id": "tpl-landing-consultant",
+   "type": "template",
+   "title": "Landing page: consultant, coach or small practice",
+   "summary": "Green page led by one clear statement, a numbered way of working, figures, one client quote, questions and a contact block.",
+   "moods": [
+    "personal",
+    "plain",
+    "confident"
+   ],
+   "products": [
+    "consultant",
+    "coach",
+    "freelancer",
+    "practice",
+    "adviser",
+    "writer"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/consultant/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/directory/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroQuote.tsx",
+     "to": "src/sections/HeroQuote.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesNumbered.tsx",
+     "to": "src/sections/FeaturesNumbered.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesFigures.tsx",
+     "to": "src/sections/FeaturesFigures.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialFeature.tsx",
+     "to": "src/sections/TestimonialFeature.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/ContactSplit.tsx",
+     "to": "src/sections/ContactSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterMinimal.tsx",
+     "to": "src/sections/FooterMinimal.tsx"
+    },
+    {
+     "from": "fonts/nunito/nunito-latin-wght-normal.woff2",
+     "to": "public/fonts/nunito-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/nunito/nunito.css",
+     "to": "src/fonts/nunito.css"
+    },
+    {
+     "from": "fonts/nunito/nunito-OFL.txt",
+     "to": "public/fonts/nunito-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-landing-consultant-desktop.jpg",
+   "path": "assets/template/tpl-landing-consultant.md",
+   "size": 117252
+  },
+  {
+   "id": "tpl-landing-fitness",
+   "type": "template",
+   "title": "Landing page: gym, studio or sports club",
+   "summary": "Vermilion poster hero, what makes the place different, the class timetable, membership plans, questions and a trial-class booking bar.",
+   "moods": [
+    "energetic",
+    "bold",
+    "friendly"
+   ],
+   "products": [
+    "gym",
+    "fitness",
+    "studio",
+    "sports club",
+    "yoga",
+    "classes"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/fitness/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/agency/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroPoster.tsx",
+     "to": "src/sections/HeroPoster.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesIconRow.tsx",
+     "to": "src/sections/FeaturesIconRow.tsx"
+    },
+    {
+     "from": "recipes/sections/ScheduleList.tsx",
+     "to": "src/sections/ScheduleList.tsx"
+    },
+    {
+     "from": "recipes/sections/PricingTable.tsx",
+     "to": "src/sections/PricingTable.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/FormBooking.tsx",
+     "to": "src/sections/FormBooking.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterCentered.tsx",
+     "to": "src/sections/FooterCentered.tsx"
+    },
+    {
+     "from": "fonts/archivo/archivo-latin-wght-normal.woff2",
+     "to": "public/fonts/archivo-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/archivo/archivo.css",
+     "to": "src/fonts/archivo.css"
+    },
+    {
+     "from": "fonts/archivo/archivo-OFL.txt",
+     "to": "public/fonts/archivo-OFL.txt"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-latin-wght-normal.woff2",
+     "to": "public/fonts/dm-sans-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans.css",
+     "to": "src/fonts/dm-sans.css"
+    },
+    {
+     "from": "fonts/dm-sans/dm-sans-OFL.txt",
+     "to": "public/fonts/dm-sans-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-landing-fitness-desktop.jpg",
+   "path": "assets/template/tpl-landing-fitness.md",
+   "size": 108557
+  },
+  {
+   "id": "tpl-landing-hotel",
+   "type": "template",
+   "title": "Landing page: small hotel, guesthouse or retreat",
+   "summary": "Terracotta page: picture band, practical facts, rooms as tabs, a gallery, guest words and a booking bar.",
+   "moods": [
+    "warm",
+    "welcoming",
+    "calm"
+   ],
+   "products": [
+    "hotel",
+    "guesthouse",
+    "bed and breakfast",
+    "retreat",
+    "holiday let",
+    "inn"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/hotel/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/restaurant/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavCentered.tsx",
+     "to": "src/sections/NavCentered.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroStacked.tsx",
+     "to": "src/sections/HeroStacked.tsx"
+    },
+    {
+     "from": "recipes/sections/InfoStrip.tsx",
+     "to": "src/sections/InfoStrip.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesTabs.tsx",
+     "to": "src/sections/FeaturesTabs.tsx"
+    },
+    {
+     "from": "recipes/sections/GalleryMosaic.tsx",
+     "to": "src/sections/GalleryMosaic.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialColumns.tsx",
+     "to": "src/sections/TestimonialColumns.tsx"
+    },
+    {
+     "from": "recipes/sections/FormBooking.tsx",
+     "to": "src/sections/FormBooking.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterCentered.tsx",
+     "to": "src/sections/FooterCentered.tsx"
+    },
+    {
+     "from": "fonts/lora/lora-latin-wght-normal.woff2",
+     "to": "public/fonts/lora-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/lora/lora.css",
+     "to": "src/fonts/lora.css"
+    },
+    {
+     "from": "fonts/lora/lora-OFL.txt",
+     "to": "public/fonts/lora-OFL.txt"
+    },
+    {
+     "from": "fonts/nunito/nunito-latin-wght-normal.woff2",
+     "to": "public/fonts/nunito-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/nunito/nunito.css",
+     "to": "src/fonts/nunito.css"
+    },
+    {
+     "from": "fonts/nunito/nunito-OFL.txt",
+     "to": "public/fonts/nunito-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-landing-hotel-desktop.jpg",
+   "path": "assets/template/tpl-landing-hotel.md",
+   "size": 112848
+  },
+  {
+   "id": "tpl-landing-newsletter",
+   "type": "template",
+   "title": "Landing page: newsletter or publication sign-up",
+   "summary": "Indigo page: one e-mail field first, what you get each week, what readers say and a second sign-up at the bottom.",
+   "moods": [
+    "focused",
+    "plain",
+    "modern"
+   ],
+   "products": [
+    "newsletter",
+    "publication",
+    "blog",
+    "podcast",
+    "substack",
+    "mailing list"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/newsletter/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/launch/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/HeroSignup.tsx",
+     "to": "src/sections/HeroSignup.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesNumbered.tsx",
+     "to": "src/sections/FeaturesNumbered.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialColumns.tsx",
+     "to": "src/sections/TestimonialColumns.tsx"
+    },
+    {
+     "from": "recipes/sections/NewsletterBand.tsx",
+     "to": "src/sections/NewsletterBand.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterMinimal.tsx",
+     "to": "src/sections/FooterMinimal.tsx"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
+     "to": "public/fonts/space-grotesk-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk.css",
+     "to": "src/fonts/space-grotesk.css"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-OFL.txt",
+     "to": "public/fonts/space-grotesk-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-landing-newsletter-desktop.jpg",
+   "path": "assets/template/tpl-landing-newsletter.md",
+   "size": 93746
+  },
+  {
    "id": "tpl-landing-portfolio",
    "type": "template",
    "title": "Landing page: portfolio",
@@ -14114,6 +15671,107 @@
    "preview": "assets/preview/tpl-landing-portfolio-desktop.jpg",
    "path": "assets/template/tpl-landing-portfolio.md",
    "size": 103939
+  },
+  {
+   "id": "tpl-landing-restaurant",
+   "type": "template",
+   "title": "Landing page: restaurant or cafe",
+   "summary": "Warm, quiet one-page site: centred navigation, picture band, opening hours, kitchen values, plate gallery, guest quotes, booking bar, centred footer.",
+   "moods": [
+    "warm",
+    "quiet",
+    "welcoming"
+   ],
+   "products": [
+    "restaurant",
+    "cafe",
+    "bakery",
+    "bistro",
+    "bar",
+    "hospitality"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "booking",
+    "offline fonts"
+   ],
+   "density": "airy",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/restaurant/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/restaurant/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavCentered.tsx",
+     "to": "src/sections/NavCentered.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroStacked.tsx",
+     "to": "src/sections/HeroStacked.tsx"
+    },
+    {
+     "from": "recipes/sections/InfoStrip.tsx",
+     "to": "src/sections/InfoStrip.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesIconRow.tsx",
+     "to": "src/sections/FeaturesIconRow.tsx"
+    },
+    {
+     "from": "recipes/sections/GalleryMosaic.tsx",
+     "to": "src/sections/GalleryMosaic.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialColumns.tsx",
+     "to": "src/sections/TestimonialColumns.tsx"
+    },
+    {
+     "from": "recipes/sections/FormBooking.tsx",
+     "to": "src/sections/FormBooking.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterCentered.tsx",
+     "to": "src/sections/FooterCentered.tsx"
+    },
+    {
+     "from": "fonts/lora/lora-latin-wght-normal.woff2",
+     "to": "public/fonts/lora-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/lora/lora.css",
+     "to": "src/fonts/lora.css"
+    },
+    {
+     "from": "fonts/lora/lora-OFL.txt",
+     "to": "public/fonts/lora-OFL.txt"
+    },
+    {
+     "from": "fonts/nunito/nunito-latin-wght-normal.woff2",
+     "to": "public/fonts/nunito-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/nunito/nunito.css",
+     "to": "src/fonts/nunito.css"
+    },
+    {
+     "from": "fonts/nunito/nunito-OFL.txt",
+     "to": "public/fonts/nunito-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-landing-restaurant-desktop.jpg",
+   "path": "assets/template/tpl-landing-restaurant.md",
+   "size": 111908
   },
   {
    "id": "tpl-landing-saas",
@@ -14221,6 +15879,215 @@
    "preview": "assets/preview/tpl-landing-saas-desktop.jpg",
    "path": "assets/template/tpl-landing-saas.md",
    "size": 105987
+  },
+  {
+   "id": "tpl-landing-school",
+   "type": "template",
+   "title": "Landing page: school, course or training",
+   "summary": "Navy page for a school or training provider: hero with key facts, figures, the timetable, teachers, parents' words and a contact block.",
+   "moods": [
+    "trustworthy",
+    "editorial",
+    "calm"
+   ],
+   "products": [
+    "school",
+    "course",
+    "training",
+    "music school",
+    "tuition",
+    "academy"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/school/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/about/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroSplit.tsx",
+     "to": "src/sections/HeroSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/ArtTile.tsx",
+     "to": "src/sections/ArtTile.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesFigures.tsx",
+     "to": "src/sections/FeaturesFigures.tsx"
+    },
+    {
+     "from": "recipes/sections/ScheduleList.tsx",
+     "to": "src/sections/ScheduleList.tsx"
+    },
+    {
+     "from": "recipes/sections/TeamRoster.tsx",
+     "to": "src/sections/TeamRoster.tsx"
+    },
+    {
+     "from": "recipes/sections/TestimonialColumns.tsx",
+     "to": "src/sections/TestimonialColumns.tsx"
+    },
+    {
+     "from": "recipes/sections/ContactSplit.tsx",
+     "to": "src/sections/ContactSplit.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterColumns.tsx",
+     "to": "src/sections/FooterColumns.tsx"
+    },
+    {
+     "from": "fonts/lora/lora-latin-wght-normal.woff2",
+     "to": "public/fonts/lora-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/lora/lora.css",
+     "to": "src/fonts/lora.css"
+    },
+    {
+     "from": "fonts/lora/lora-OFL.txt",
+     "to": "public/fonts/lora-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-landing-school-desktop.jpg",
+   "path": "assets/template/tpl-landing-school.md",
+   "size": 123368
+  },
+  {
+   "id": "tpl-launch-waitlist",
+   "type": "template",
+   "title": "Landing page: product launch or waiting list",
+   "summary": "One e-mail field in the first view, then press logos, tabbed how-it-works, a before and after, a plan table, questions and a newsletter band.",
+   "moods": [
+    "focused",
+    "modern",
+    "crisp"
+   ],
+   "products": [
+    "app",
+    "saas",
+    "waiting list",
+    "launch",
+    "startup",
+    "software"
+   ],
+   "tags": [
+    "react",
+    "tailwind v4",
+    "page",
+    "landing",
+    "sign-up",
+    "offline fonts"
+   ],
+   "density": "balanced",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/templates/launch/App.tsx",
+     "to": "src/App.tsx"
+    },
+    {
+     "from": "recipes/templates/launch/index.css",
+     "to": "src/index.css"
+    },
+    {
+     "from": "recipes/sections/NavBar.tsx",
+     "to": "src/sections/NavBar.tsx"
+    },
+    {
+     "from": "recipes/sections/HeroSignup.tsx",
+     "to": "src/sections/HeroSignup.tsx"
+    },
+    {
+     "from": "recipes/sections/LogoStrip.tsx",
+     "to": "src/sections/LogoStrip.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesTabs.tsx",
+     "to": "src/sections/FeaturesTabs.tsx"
+    },
+    {
+     "from": "recipes/sections/FeaturesComparison.tsx",
+     "to": "src/sections/FeaturesComparison.tsx"
+    },
+    {
+     "from": "recipes/sections/PricingTable.tsx",
+     "to": "src/sections/PricingTable.tsx"
+    },
+    {
+     "from": "recipes/sections/FaqList.tsx",
+     "to": "src/sections/FaqList.tsx"
+    },
+    {
+     "from": "recipes/sections/NewsletterBand.tsx",
+     "to": "src/sections/NewsletterBand.tsx"
+    },
+    {
+     "from": "recipes/sections/FooterMinimal.tsx",
+     "to": "src/sections/FooterMinimal.tsx"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-latin-wght-normal.woff2",
+     "to": "public/fonts/space-grotesk-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk.css",
+     "to": "src/fonts/space-grotesk.css"
+    },
+    {
+     "from": "fonts/space-grotesk/space-grotesk-OFL.txt",
+     "to": "public/fonts/space-grotesk-OFL.txt"
+    },
+    {
+     "from": "fonts/inter/inter-latin-wght-normal.woff2",
+     "to": "public/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "from": "fonts/inter/inter.css",
+     "to": "src/fonts/inter.css"
+    },
+    {
+     "from": "fonts/inter/inter-OFL.txt",
+     "to": "public/fonts/inter-OFL.txt"
+    }
+   ],
+   "licence": "original (fonts: OFL-1.1)",
+   "source": "authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them",
+   "tested": "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)",
+   "preview": "assets/preview/tpl-launch-waitlist-desktop.jpg",
+   "path": "assets/template/tpl-launch-waitlist.md",
+   "size": 105970
   },
   {
    "id": "tpl-pricing-invoicing",

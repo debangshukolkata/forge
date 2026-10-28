@@ -4,8 +4,8 @@ type: css-technique
 title: "Selectors that remove JavaScript"
 summary: "Snippets for selectors that remove javascript."
 moods: [selectors]
-products: [web, landing, app, dashboard]
-tags: [css, html, native, no dependency]
+products: [stylesheet]
+tags: [css, technique]
 density: any
 dependencies: []
 licence: original

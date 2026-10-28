@@ -17,7 +17,7 @@ export default function App() {
         cta={{ label: "Book a table", href: "#book" }}
       />
       <main>
-        <FormFeedback title="How was your evening?" text="Two minutes of your time helps us decide what to fix first." />
+        <FormFeedback heading="h1" title="How was your evening?" text="Two minutes of your time helps us decide what to fix first." />
         <TestimonialColumns
           eyebrow="What others said"
           title="Recent comments."

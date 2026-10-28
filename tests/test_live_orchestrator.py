@@ -28,7 +28,7 @@ from tests.conftest import FIXTURE_BACKEND, FIXTURE_REPO, REPO_ROOT
 
 pytestmark = pytest.mark.live
 REQUIREMENT = (
-    "Add a GET /api/policies/count endpoint that returns {\"total\": n}, the number of policies. Follow the existing layering: "
+    'Add a GET /api/policies/count endpoint that returns {"total": n}, the number of policies. Follow the existing layering: '
     "a raw-SQL repository function, a service function, the route with a marshmallow schema, and a test. No authentication changes."
 )  # small on purpose (D-505, WU3): the test is about the stages (clarify, plan, build, verify, export, restructure), not the size of the feature
 FIXTURE_PYTHON = FIXTURE_BACKEND / "venv" / "Scripts" / "python.exe"

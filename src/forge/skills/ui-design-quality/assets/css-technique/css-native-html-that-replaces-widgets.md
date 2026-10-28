@@ -4,8 +4,8 @@ type: css-technique
 title: "Native HTML that replaces widgets"
 summary: "Snippets for native html that replaces widgets."
 moods: [dialog, popover]
-products: [web, landing, app, dashboard]
-tags: [css, html, native, no dependency]
+products: [stylesheet]
+tags: [css, technique]
 density: any
 dependencies: []
 licence: original

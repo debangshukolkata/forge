@@ -6,10 +6,12 @@ const LABELS = ["Poor", "Fair", "Good", "Very good", "Excellent"];
 
 export default function FormFeedback({
   title = "How was your visit?",
+  heading: Heading = "h2",
   text = "Two minutes of your time helps us decide what to fix first.",
   maxLength = 500,
   onSubmit,
 }: {
+  heading?: "h1" | "h2"; // use "h1" when the form is the main thing on the page
   title?: string;
   text?: string;
   maxLength?: number;
@@ -32,7 +34,7 @@ export default function FormFeedback({
   };
   return (
     <section className="mx-auto max-w-xl px-4 py-16 sm:px-6 md:py-24">
-      <h2 className="text-3xl font-semibold sm:text-4xl">{title}</h2>
+      <Heading className="text-3xl font-semibold sm:text-4xl">{title}</Heading>
       <p className="mt-3 text-ink-700">{text}</p>
       {done ? (
         <p role="status" className="mt-8 text-lg font-semibold text-ok">Thank you. Every comment is read by a person on the team.</p>

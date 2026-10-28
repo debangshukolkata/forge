@@ -123,7 +123,9 @@ def test_chat_follows_the_newest_reply_and_leaves_a_scrolled_up_reader_alone(
         )
         page.wait_for_timeout(400)
         assert _distance_from_bottom(page) < 40, ("content grew", _distance_from_bottom(page))
-        page.locator("[aria-live=polite]").first.evaluate("e => { e.style.height = (e.clientHeight - 120) + 'px'; e.style.flex = 'none'; }")
+        page.locator("[aria-live=polite]").first.evaluate(
+            "e => { e.style.height = (e.clientHeight - 120) + 'px'; e.style.flex = 'none'; }"
+        )
         page.wait_for_timeout(400)
         assert _distance_from_bottom(page) < 40, ("viewport shrank", _distance_from_bottom(page))
 

@@ -185,6 +185,12 @@ Generated from the assets' front-matter; do not edit by hand.
 | `pal-modern-product` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
 | `pal-premium-editorial` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
 | `pal-warm-trust` | original | authored for DebCraft (recipes/palettes-and-fonts.md) |
+| `lib-daisyui-v5-on-tailwind-v4` | original | authored for DebCraft (recipes/component-libraries.md, D-437) |
+| `lib-decide-the-mode` | original | authored for DebCraft (recipes/component-libraries.md, D-437) |
+| `lib-mui` | original | authored for DebCraft (recipes/component-libraries.md, D-437) |
+| `lib-shadcn-ui` | original | authored for DebCraft (recipes/component-libraries.md, D-437) |
+| `lib-tabler` | original | authored for DebCraft (recipes/component-libraries.md, D-437) |
+| `lib-what-each-library-is-best-for-the-user-s-list-d-437-and` | original | authored for DebCraft (recipes/component-libraries.md, D-437) |
 | `app-approval-queue` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-audit-log` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
 | `app-calendar` | original | authored for DebCraft (D-366, application screens for plain HTML apps) |
@@ -307,17 +313,25 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-features-alternating` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-bento` | original | authored for DebCraft (section library, D-273) |
 | `sec-features-comparison` | original | authored for DebCraft (section library, D-511) |
+| `sec-features-figures` | original | authored for DebCraft (section library, D-511) |
 | `sec-features-icon-row` | original | authored for DebCraft (section library, D-511) |
 | `sec-features-numbered` | original | authored for DebCraft (section library, D-511) |
 | `sec-features-ruled` | original | authored for DebCraft (section library, D-432) |
 | `sec-features-tabs` | original | authored for DebCraft (section library, D-511) |
+| `sec-footer-centered` | original | authored for DebCraft (section library, D-511) |
 | `sec-footer-columns` | original | authored for DebCraft (section library, D-273) |
+| `sec-footer-minimal` | original | authored for DebCraft (section library, D-511) |
+| `sec-form-booking` | original | authored for DebCraft (section library, D-511) |
+| `sec-form-feedback` | original | authored for DebCraft (section library, D-511) |
+| `sec-form-login` | original | authored for DebCraft (section library, D-511) |
+| `sec-form-stepper` | original | authored for DebCraft (section library, D-511) |
 | `sec-gallery-mosaic` | original | authored for DebCraft (section library, D-432) |
 | `sec-hero-centered` | original | authored for DebCraft (section library, D-273) |
 | `sec-hero-editorial` | original | authored for DebCraft (section library, D-432) |
 | `sec-hero-numbers` | original | authored for DebCraft (section library, D-511) |
 | `sec-hero-photo` | original | authored for DebCraft (section library, D-435) |
 | `sec-hero-poster` | original | authored for DebCraft (section library, D-511) |
+| `sec-hero-quote` | original | authored for DebCraft (section library, D-511) |
 | `sec-hero-search` | original | authored for DebCraft (section library, D-511) |
 | `sec-hero-signup` | original | authored for DebCraft (section library, D-511) |
 | `sec-hero-split` | original | authored for DebCraft (section library, D-273) |
@@ -325,6 +339,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-info-strip` | original | authored for DebCraft (section library, D-433) |
 | `sec-logo-strip` | original | authored for DebCraft (section library, D-273) |
 | `sec-nav-bar` | original | authored for DebCraft (section library, D-273) |
+| `sec-nav-centered` | original | authored for DebCraft (section library, D-511) |
 | `sec-newsletter-band` | original | authored for DebCraft (section library, D-511) |
 | `sec-pricing-table` | original | authored for DebCraft (section library, D-511) |
 | `sec-pricing-tiers` | original | authored for DebCraft (section library, D-273) |
@@ -339,10 +354,24 @@ Generated from the assets' front-matter; do not edit by hand.
 | `sec-testimonial-columns` | original | authored for DebCraft (section library, D-511) |
 | `sec-testimonial-feature` | original | authored for DebCraft (section library, D-273) |
 | `sec-timeline-vertical` | original | authored for DebCraft (section library, D-511) |
+| `tpl-about-story` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-account-signin` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); uses the launch palette and fonts; fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-directory-search` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-docs-product` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-event-conference` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-feedback-page` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); uses the restaurant palette and fonts; fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-form-flow` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); uses the clinic palette and fonts; fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-agency` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-charity` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-clinic` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-consultant` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-fitness` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-hotel` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-newsletter` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-portfolio` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-restaurant` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-landing-saas` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-273); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-landing-school` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-515); fonts from Fontsource, see the OFL texts copied with them |
+| `tpl-launch-waitlist` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-pricing-invoicing` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-389); fonts from Fontsource, see the OFL texts copied with them |
 | `tpl-shop-craft` | original (fonts: OFL-1.1) | authored for DebCraft (templates, D-385); fonts from Fontsource, see the OFL texts copied with them |

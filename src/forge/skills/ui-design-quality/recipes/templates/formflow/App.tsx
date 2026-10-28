@@ -19,7 +19,7 @@ export default function App() {
         cta={{ label: "Start", href: "#contact" }}
       />
       <main>
-        <FormStepper eyebrow="Book a visit" title="Tell us when you would like to come." />
+        <FormStepper heading="h1" eyebrow="Book a visit" title="Tell us when you would like to come." />
         <FeaturesIconRow
           eyebrow="What happens next"
           title="After you send the form."

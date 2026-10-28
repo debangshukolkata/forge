@@ -115,7 +115,8 @@ async def test_a_forked_skill_is_not_loaded_into_the_conversation_but_pointed_to
 
     folder = make_skill(isolated_forge_home / "skills", "noisy")
     (folder / "SKILL.md").write_text(
-        "---\nname: noisy\ncontext: fork\ndescription: Use when a long scan is needed\n---\nTHE LONG SECRET BODY\n", encoding="utf-8"
+        "---\nname: noisy\ncontext: fork\ndescription: Use when a long scan is needed\n---\nTHE LONG SECRET BODY\n",
+        encoding="utf-8",
     )
     make_skill(isolated_forge_home / "skills", "plain")
     assert discover(isolated_forge_home / "skills")["noisy"].fork

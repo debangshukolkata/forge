@@ -4,8 +4,8 @@ type: css-technique
 title: "Colour"
 summary: "Snippets for colour."
 moods: [oklch]
-products: [web, landing, app, dashboard]
-tags: [css, html, native, no dependency]
+products: [stylesheet]
+tags: [css, technique]
 density: any
 dependencies: []
 licence: original

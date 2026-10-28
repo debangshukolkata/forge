@@ -287,7 +287,11 @@ class _StopHooks:
 
     async def run(self, event: str, tool: str = "", file: str = "") -> list[HookOutcome]:
         self.runs += 1
-        return [HookOutcome("pytest -x", True, self.runs > 1, "" if self.runs > 1 else "FAILED tests/test_a.py::test_one")]
+        return [
+            HookOutcome(
+                "pytest -x", True, self.runs > 1, "" if self.runs > 1 else "FAILED tests/test_a.py::test_one"
+            )
+        ]
 
 
 async def test_a_failing_stop_hook_sends_the_model_back_to_work_once_and_then_lets_it_finish(
@@ -314,6 +318,9 @@ async def test_a_failing_stop_hook_sends_the_model_back_to_work_once_and_then_le
     runner.cancel()
 
     assert hooks.runs == 2 and len(bodies) == 2
-    assert any(m.role == "system" and str(m.content).startswith(STOP_HOOK_NOTE) and "test_one" in str(m.content) for m in host.history)
+    assert any(
+        m.role == "system" and str(m.content).startswith(STOP_HOOK_NOTE) and "test_one" in str(m.content)
+        for m in host.history
+    )
     kinds = [e.payload.get("kind") for e in host.bus.events_since(0) if e.type == EventType.NOTICE]
     assert "stop_hook" in kinds

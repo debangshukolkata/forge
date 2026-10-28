@@ -15,9 +15,11 @@ const DEFAULT_STEPS: Step[] = [
 export default function FormStepper({
   eyebrow = "Book a visit",
   title = "Three short steps.",
+  heading: Heading = "h2",
   steps = DEFAULT_STEPS,
   onSubmit,
 }: {
+  heading?: "h1" | "h2"; // use "h1" when the form is the main thing on the page
   eyebrow?: string;
   title?: string;
   steps?: Step[];
@@ -51,7 +53,7 @@ export default function FormStepper({
   return (
     <section id="contact" className="mx-auto max-w-2xl px-4 py-16 sm:px-6 md:py-24">
       <p className="eyebrow">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">{title}</h2>
+      <Heading className="mt-3 text-3xl font-semibold sm:text-4xl">{title}</Heading>
       {done ? (
         <p role="status" className="mt-8 text-lg font-semibold text-ok">Thank you. We have your details and will confirm by e-mail within a day.</p>
       ) : (

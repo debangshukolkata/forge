@@ -4,8 +4,8 @@ type: css-technique
 title: "Responsive and accessibility basics"
 summary: "Snippets for responsive and accessibility basics."
 moods: [focus, contrast]
-products: [web, landing, app, dashboard]
-tags: [css, html, native, no dependency]
+products: [stylesheet]
+tags: [css, technique]
 density: any
 dependencies: []
 licence: original

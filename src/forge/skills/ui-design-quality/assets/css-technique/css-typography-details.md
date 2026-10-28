@@ -4,8 +4,8 @@ type: css-technique
 title: "Typography details"
 summary: "Snippets for typography details."
 moods: [typesetting]
-products: [web, landing, app, dashboard]
-tags: [css, html, native, no dependency]
+products: [stylesheet]
+tags: [css, technique]
 density: any
 dependencies: []
 licence: original

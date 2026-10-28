@@ -284,14 +284,21 @@ class AgentLoop:
                         )
                         continue
                 # the main agent only: a subagent runs with keep_full_output off, and a test run at the end of each subagent would cost far more than it checks
-                if stop_hook_rounds < MAX_STOP_HOOK_ROUNDS and self.keep_full_output and self.hooks.has("stop"):
+                if (
+                    stop_hook_rounds < MAX_STOP_HOOK_ROUNDS
+                    and self.keep_full_output
+                    and self.hooks.has("stop")
+                ):
                     stop_hook_rounds += 1
                     failed = HookRunner.blocked_by(await self.hooks.run("stop"))
                     if failed is not None:
                         history.append(Message.system(STOP_HOOK_NOTE + failed.note("stop")))
                         await self.bus.publish(
                             EventType.NOTICE,
-                            {"kind": "stop_hook", "text": "A stop hook failed; asking the model to fix it before finishing."},
+                            {
+                                "kind": "stop_hook",
+                                "text": "A stop hook failed; asking the model to fix it before finishing.",
+                            },
                         )
                         continue
                 return

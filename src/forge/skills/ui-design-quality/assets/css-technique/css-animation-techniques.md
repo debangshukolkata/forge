@@ -4,8 +4,8 @@ type: css-technique
 title: "Animation techniques"
 summary: "Snippets for animation techniques."
 moods: [scroll, transitions]
-products: [web, landing, app, dashboard]
-tags: [css, html, native, no dependency]
+products: [stylesheet]
+tags: [css, technique]
 density: any
 dependencies: []
 licence: original

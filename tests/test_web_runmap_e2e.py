@@ -35,7 +35,9 @@ TASKS = [
 ]
 
 
-@pytest.mark.skip(reason="The Run map tab is hidden in the UI for now (SHOW_VIEW_TABS in ui-react/src/App.tsx)")
+@pytest.mark.skip(
+    reason="The Run map tab is hidden in the UI for now (SHOW_VIEW_TABS in ui-react/src/App.tsx)"
+)
 def test_run_map_grows_from_the_events(
     live_server: LiveServer,  # noqa: F811
     workspace: Workspace,  # noqa: F811
@@ -348,7 +350,9 @@ def test_a_new_request_that_reuses_an_old_id_can_still_be_answered(
         browser.close()
 
 
-@pytest.mark.skip(reason="The Run map tab is hidden in the UI for now (SHOW_VIEW_TABS in ui-react/src/App.tsx)")
+@pytest.mark.skip(
+    reason="The Run map tab is hidden in the UI for now (SHOW_VIEW_TABS in ui-react/src/App.tsx)"
+)
 def test_the_run_map_shows_where_the_time_went(
     live_server: LiveServer,  # noqa: F811
     workspace: Workspace,  # noqa: F811

@@ -25,7 +25,7 @@ export default function App() {
       <main>
         <HeroSplit
           eyebrow="Lessons for ages 6 to 18"
-          title="Learn an instrument with teachers who still perform."
+          title="Learn an instrument from working musicians."
           text="Individual and small-group lessons in piano, violin, guitar and voice. Every pupil plays in a concert each term, from their first term."
           primary={{ label: "Book a trial lesson", href: "#contact" }}
           secondary={{ label: "See the timetable", href: "#programme" }}

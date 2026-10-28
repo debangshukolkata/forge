@@ -10,7 +10,7 @@ density: airy
 dependencies: []
 licence: "original (fonts: OFL-1.1)"
 source: "authored for DebCraft (templates, D-514); fonts from Fontsource, see the OFL texts copied with them"
-tested: "NOT RUN YET (written 2026-10-28 without building; the gallery and template tests in tests/test_sections.py must pass before this is relied on)"
+tested: "built with Vite + Tailwind v4, type-checked (tsc strict), audit clean at 1280 and 375 px, screenshots looked at (tests/test_sections.py, D-514, D-515)"
 files:
   - from: recipes/templates/restaurant/App.tsx
     to: src/App.tsx
@@ -44,6 +44,7 @@ files:
     to: src/fonts/nunito.css
   - from: fonts/nunito/nunito-OFL.txt
     to: public/fonts/nunito-OFL.txt
+preview: assets/preview/tpl-landing-restaurant-desktop.jpg
 ---
 
 ## Landing page: restaurant or cafe
