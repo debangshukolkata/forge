@@ -9,7 +9,8 @@ from datetime import date
 from typing import Any
 
 from forge.brand.kit import Resolved
-from forge.sheets.spec import ChartSpec, Conditional, SheetSpec, WorkbookError, WorkbookSpec
+from forge.sheets.charts import place_charts, print_setup
+from forge.sheets.spec import Conditional, SheetSpec, WorkbookError, WorkbookSpec
 
 INVALID_TITLE = re.compile(r"[\[\]:*?/\\]")
 HEADER_FILL = "1F3864"
@@ -34,55 +35,6 @@ def _check_names(spec: WorkbookSpec) -> None:
         seen.add(sheet.name.lower())
     if not spec.sheets:
         raise WorkbookError("The workbook needs at least one sheet")
-
-
-def _chart(sheet: Any, chart: ChartSpec) -> Any:
-    from openpyxl.chart import AreaChart, BarChart, LineChart, PieChart, Reference, ScatterChart, Series
-
-    data = sheet[chart.data]
-    first, last = data[0][0], data[-1][-1]
-    values = Reference(sheet, min_col=first.column, max_col=last.column, min_row=first.row, max_row=last.row)
-    kinds: dict[str, Any] = {
-        "column": BarChart,
-        "bar": BarChart,
-        "line": LineChart,
-        "pie": PieChart,
-        "area": AreaChart,
-        "scatter": ScatterChart,
-    }
-    made = kinds[chart.type]()
-    if chart.type == "bar":
-        made.type = "bar"
-    elif chart.type == "column":
-        made.type = "col"
-    made.title = chart.title or None
-    if chart.type == "scatter":
-        for column in range(first.column + 1, last.column + 1):
-            xs = Reference(sheet, min_col=first.column, min_row=first.row + 1, max_row=last.row)
-            ys = Reference(sheet, min_col=column, min_row=first.row, max_row=last.row)
-            made.series.append(Series(ys, xs, title_from_data=True))
-    else:
-        made.add_data(values, titles_from_data=True)
-        if chart.categories:
-            cats = sheet[chart.categories]
-            made.set_categories(
-                Reference(
-                    sheet,
-                    min_col=cats[0][0].column,
-                    max_col=cats[-1][-1].column,
-                    min_row=cats[0][0].row,
-                    max_row=cats[-1][-1].row,
-                )
-            )
-    if chart.type != "pie":
-        if chart.x_title:
-            made.x_axis.title = chart.x_title
-        if chart.y_title:
-            made.y_axis.title = chart.y_title
-        made.x_axis.delete = False  # recent openpyxl versions hide the axes unless told otherwise
-        made.y_axis.delete = False
-    made.width, made.height = 18, 9
-    return made
 
 
 def _conditional(sheet: Any, rule: Conditional) -> None:
@@ -119,7 +71,7 @@ def _conditional(sheet: Any, rule: Conditional) -> None:
     sheet.conditional_formatting.add(rule.range, made)
 
 
-def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -> None:
+def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -> list[str]:
     from openpyxl.comments import Comment
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import column_index_from_string, get_column_letter
@@ -208,18 +160,22 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
         _conditional(sheet, rule)
     for reference, text in spec.notes.items():
         sheet[reference].comment = Comment(text, "DebCraft")
-    for chart in spec.charts:
-        sheet.add_chart(_chart(sheet, chart), chart.anchor)
+    notes = place_charts(sheet, spec.charts)
+    print_setup(sheet, has_header=bool(spec.columns))
+    return notes
 
 
-def build_workbook(spec: WorkbookSpec) -> bytes:
+def build_workbook(spec: WorkbookSpec, notes: list[str] | None = None) -> bytes:
+    """The .xlsx bytes; `notes` collects what the builder changed on its own (a chart moved off another)."""
     openpyxl = load_openpyxl()
     _check_names(spec)
     workbook = openpyxl.Workbook()
     brand = Resolved(spec.brand)
     try:
         for index, sheet in enumerate(spec.sheets):
-            _build_sheet(workbook, sheet, index == 0, brand)
+            moved = _build_sheet(workbook, sheet, index == 0, brand)
+            if notes is not None:
+                notes.extend(moved)
         from openpyxl.workbook.defined_name import DefinedName
 
         for name, target in spec.names.items():

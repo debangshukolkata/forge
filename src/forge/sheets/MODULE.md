@@ -1,7 +1,8 @@
 # sheets
 
 Excel workbooks (TODO W2, D-339): an outline (`spec.py`, JSON or YAML) becomes a real .xlsx (`build.py`, openpyxl, optional extra `forge[docs]`) with real
-formulas, named ranges, number and date formats, tables, conditional formatting, data validation, frozen panes, column widths and native charts.
+formulas, named ranges, number and date formats, tables, conditional formatting, data validation, frozen panes, column widths and native charts
+(`charts.py`: series along rows or columns, one colour per series, charts kept off each other, every sheet printed one page wide; W6, W7).
 `read.py` reads a workbook with its formulas and its last calculated values; `edit.py` changes cells, formulas, formats and sheets in an existing one;
 `check.py` finds formula faults without a spreadsheet program (error values, references to sheets or names that do not exist, circular references,
 formulas that return text where numbers are expected, hard-coded numbers beside formulas); `excel.py` has Excel itself recalculate the file when Excel

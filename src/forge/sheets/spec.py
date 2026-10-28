@@ -43,11 +43,18 @@ class Conditional(BaseModel):
 class ChartSpec(BaseModel):
     type: Literal["column", "bar", "line", "pie", "area", "scatter"] = "column"
     title: str = ""
-    data: str = Field(description="Range of the values including the header row, e.g. B1:D13")
-    categories: str | None = Field(
-        default=None, description="Range of the category labels without header, e.g. A2:A13"
+    data: str = Field(
+        description="Range of the values with its one header cell, e.g. B1:D13 (one series per column); "
+        "a single row such as B14:M14 is one series along the row"
     )
-    anchor: str = "H2"
+    categories: str | None = Field(
+        default=None,
+        description="Range of the category labels without header, e.g. A2:A13, or a row such as B1:M1; "
+        "it must hold as many cells as each series has values",
+    )
+    anchor: str = Field(
+        default="H2", description="Top-left cell; a chart that would cover another moves below it"
+    )
     x_title: str = ""
     y_title: str = ""
 

@@ -72,7 +72,8 @@ class BuildWorkbook(Tool):
             kit = load_brand_file(context, args.brand_file)
             if kit is not None:
                 spec.brand = kit
-            data = await asyncio.to_thread(build_workbook, spec)
+            notes: list[str] = []
+            data = await asyncio.to_thread(build_workbook, spec, notes)
             context.workspace.write_bytes(args.output, data, args.reason or "workbook built from an outline")
         except (ForgeError, OSError, ValueError) as error:
             return ToolResult(ok=False, content=str(error))
@@ -81,7 +82,9 @@ class BuildWorkbook(Tool):
         faults = validate_package(data)
         return ToolResult(
             ok=True,
-            content=f"Wrote {args.output}: {len(spec.sheets)} sheet(s).\n{describe_findings(findings)}"
+            content=f"Wrote {args.output}: {len(spec.sheets)} sheet(s), each printing one page wide.\n"
+            + "".join(f"Note: {note}\n" for note in notes)
+            + describe_findings(findings)
             + _package_faults(faults),
         )
 
@@ -115,8 +118,9 @@ class EditWorkbook(Tool):
     read_only = False
     description = (
         "Change an existing Excel workbook: set cells (a value or a '=formula'), append rows, format a range, add, rename or delete a sheet, "
-        "define a named range, set a column width. Formulas stay formulas. A workbook with charts, pictures or macros is refused unless "
-        "allow_loss is true, because the editing library would drop them: ask the user first. Run check_workbook afterwards."
+        "define a named range, set a column width. Formulas stay formulas; charts and pictures are kept. If the save would drop something "
+        "(macros, Excel's chart styling) the edit is refused and names it; set allow_loss only after the user said that loss is fine. "
+        "Run check_workbook afterwards."
     )
 
     class Args(ToolArgs):
@@ -126,7 +130,7 @@ class EditWorkbook(Tool):
             default="", description="Where to write the result; empty = change the file in place"
         )
         allow_loss: bool = Field(
-            default=False, description="Accept that charts, pictures or macros are dropped"
+            default=False, description="Only after the user agreed: accept the loss the refusal named"
         )
         reason: str = Field(default="", description="One line saying why; shown to the user in CHANGES.md.")
 

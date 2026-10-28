@@ -1,12 +1,15 @@
 """Change an existing workbook and keep its formulas (D-339).
 
-openpyxl drops charts, pictures and macros when it saves a workbook it loaded. `edit_workbook` therefore refuses a workbook that has any of
-them unless the caller says the loss is fine (`allow_loss`), and the message names what would be lost. Formulas stay formulas: a cell is
-only given a value when the operation says so."""
+openpyxl (3.1) reads charts and pictures back and writes them again, but drops macros and the chart style and colour parts Excel adds.
+`edit_workbook` therefore compares the package before and after the save and refuses only a real loss, unless the caller says the loss is
+fine (`allow_loss`); the message names what would be lost. Refusing every workbook with a chart up front (the first version) pushed the
+model to set `allow_loss` for a chart that was in fact kept (doc-2 w13). Formulas stay formulas: a cell is only given a value when the
+operation says so."""
 
 from __future__ import annotations
 
 import io
+import zipfile
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -110,32 +113,45 @@ def _apply(workbook: Any, operation: Operation) -> str:
     raise WorkbookError(f"Unknown operation {kind}")
 
 
+def _chart_styling(data: bytes) -> int:
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        return sum(
+            1 for name in archive.namelist() if name.startswith(("xl/charts/style", "xl/charts/colors"))
+        )
+
+
 def edit_workbook(
     data: bytes, operations: list[Operation], allow_loss: bool = False
 ) -> tuple[bytes, list[str]]:
-    charts, pictures, macros = package_extras(data)
-    lost = [
-        text
-        for text, count in (
-            (f"{charts} chart(s)", charts),
-            (f"{pictures} picture(s)", pictures),
-            ("macros", macros),
-        )
-        if count
-    ]
-    if lost and not allow_loss:
-        raise WorkbookError(
-            "This workbook has "
-            + " and ".join(lost)
-            + ", which the library used for editing would drop when saving. Ask the user whether losing them is fine, "
-            "then call again with allow_loss=true; or make the change in a copy built from an outline (build_workbook)."
-        )
     workbook = open_workbook(data)
     done = []
     for operation in operations:
         done.append(_apply(workbook, operation))
-    if lost:
-        done.append("LOST on save: " + " and ".join(lost))
     out = io.BytesIO()
     workbook.save(out)
-    return out.getvalue(), done
+    edited = out.getvalue()
+    charts, pictures, macros = package_extras(data)
+    kept_charts, kept_pictures, _ = package_extras(edited)
+    styling = _chart_styling(data) - _chart_styling(edited)
+    lost = [
+        text
+        for text, count in (
+            (f"{charts - kept_charts} chart(s)", charts - kept_charts),
+            (f"{pictures - kept_pictures} picture(s)", pictures - kept_pictures),
+            ("macros", macros),
+            (f"the Excel styling of {styling} chart part(s) (colours and style sets)", styling),
+        )
+        if count > 0
+    ]
+    if lost and not allow_loss:
+        raise WorkbookError(
+            "Saving this workbook would drop "
+            + " and ".join(lost)
+            + " (the editing library cannot keep them). Ask the user whether that is fine, "
+            "then call again with allow_loss=true; or make the change in a copy built from an outline (build_workbook)."
+        )
+    if lost:
+        done.append("LOST on save: " + " and ".join(lost))
+    elif charts or pictures:
+        done.append(f"kept {charts} chart(s) and {pictures} picture(s)")
+    return edited, done

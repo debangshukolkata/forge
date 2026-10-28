@@ -53,9 +53,11 @@ formula; to store text that starts with `=`, begin it with an apostrophe-free sp
 3. Without Excel the static check still finds missing sheets, circular references, error text in formulas and text results in number-formatted cells.
    Say in your answer that the values were not calculated by Excel.
 4. Look at it: `preview_file` prints the workbook with Excel (when installed) and gives page pictures and a contact sheet; check column widths (no `####`),
-   charts, header rows and page breaks. `critique_document` gives an independent review for workbooks that go to other people.
-5. Changing an existing workbook: `read_workbook` first, then `edit_workbook`. Charts, pictures and macros in an existing file would be lost by
-   the editing library, so the tool refuses until you have asked the user and set `allow_loss`. Renaming a sheet does not update the formulas in other
+   charts, header rows and page breaks. `build_workbook` already prints every sheet one page wide (landscape when wide) and moves a chart
+   that would cover another; a chart's `data` may be a column block (one series per column) or a single row (one series along the row),
+   and its `categories` must hold as many cells as each series has values. `critique_document` gives an independent review for workbooks that go to other people.
+5. Changing an existing workbook: `read_workbook` first, then `edit_workbook`. Charts and pictures are kept; macros and Excel's own
+   chart styling are not, so the tool refuses when the save would drop them and names what: ask the user, and only then set `allow_loss`. Renaming a sheet does not update the formulas in other
    sheets: check them.
 
 ## Do not

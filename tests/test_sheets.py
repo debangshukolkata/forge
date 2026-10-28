@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -104,7 +105,7 @@ def test_check_finds_missing_sheet_circular_reference_and_typed_numbers() -> Non
     )
 
 
-def test_edit_keeps_formulas_but_refuses_to_silently_drop_a_chart() -> None:
+def test_edit_keeps_formulas_and_charts_and_refuses_a_real_loss() -> None:
     plain = build_workbook(parse_workbook(json.dumps({"sheets": [{"name": "S", "rows": [[1, "=A1*2"]]}]})))
     edited, done = edit_workbook(
         plain,
@@ -120,12 +121,23 @@ def test_edit_keeps_formulas_but_refuses_to_silently_drop_a_chart() -> None:
         book["S"]["B1"].value == "=A1*2" and book["S"]["A1"].value == 5 and book["S"]["B2"].value == "=A2*2"
     )
     assert book["S"]["A1"].number_format == "0.00" and "New" in book.sheetnames and len(done) == 4
-    with pytest.raises(WorkbookError, match="1 chart"):
-        edit_workbook(_built(), [Operation(op="set_cells", sheet="Sales", cells={"B2": 1})])
-    kept, notes = edit_workbook(
-        _built(), [Operation(op="set_cells", sheet="Sales", cells={"B2": 1})], allow_loss=True
+    kept, notes = edit_workbook(_built(), [Operation(op="set_cells", sheet="Sales", cells={"B2": 1})])
+    assert (
+        "kept 1 chart(s)" in notes[-1] and len(openpyxl.load_workbook(io.BytesIO(kept))["Sales"]._charts) == 1
     )
-    assert any("LOST" in n for n in notes) and kept
+    styled = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(_built())) as source, zipfile.ZipFile(styled, "w") as target:
+        for item in source.infolist():
+            target.writestr(item, source.read(item.filename))
+        target.writestr(
+            "xl/charts/style1.xml", "<cs:chartStyle/>"
+        )  # Excel's style part, which openpyxl drops
+    with pytest.raises(WorkbookError, match="Excel styling of 1 chart part"):
+        edit_workbook(styled.getvalue(), [Operation(op="set_cells", sheet="Sales", cells={"B2": 1})])
+    _, notes = edit_workbook(
+        styled.getvalue(), [Operation(op="set_cells", sheet="Sales", cells={"B2": 1})], allow_loss=True
+    )
+    assert any("LOST" in n for n in notes)
     with pytest.raises(WorkbookError, match="No sheet called"):
         edit_workbook(plain, [Operation(op="set_cells", sheet="Zzz", cells={"A1": 1})])
 
@@ -146,13 +158,13 @@ async def test_the_tools(original_repo: Path, tmp_path: Path) -> None:
     assert read.ok and "Sales" in read.content
     checked = await CheckWorkbook().run(CheckWorkbook.Args(path="docs/b.xlsx"), context)
     assert checked.ok
-    refused = await EditWorkbook().run(
+    edited = await EditWorkbook().run(
         EditWorkbook.Args(
             path="docs/b.xlsx", operations=[Operation(op="set_cells", sheet="Sales", cells={"B2": 1})]
         ),
         context,
     )
-    assert not refused.ok and "allow_loss" in refused.content
+    assert edited.ok and "kept 1 chart(s)" in edited.content
     missing = await ReadWorkbook().run(ReadWorkbook.Args(path="docs/none.xlsx"), context)
     assert not missing.ok
 
@@ -204,3 +216,94 @@ def test_numbers_that_formulas_depend_on_are_marked_as_inputs_and_unmarked_ones_
     )
     plain = build_workbook(parse_workbook(json.dumps({**outline, "mark_inputs": False})))
     assert "not styled as inputs" in describe_findings(check_workbook(plain))
+
+
+def _chart_book(sheet: dict) -> object:
+    data = build_workbook(parse_workbook(json.dumps({"sheets": [sheet]})))
+    return openpyxl.load_workbook(io.BytesIO(data))[sheet["name"]]
+
+
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def test_a_row_of_monthly_values_is_one_series_not_twelve() -> None:
+    """W6, doc-2 w06: a balance row with the month headers as categories was drawn as one series per month."""
+    sheet = {
+        "name": "Budget",
+        "columns": [{"header": "Category"}] + [{"header": month} for month in MONTHS],
+        "rows": [
+            ["Income"] + [3000] * 12,
+            ["Rent"] + [1200] * 12,
+            ["Balance"] + [f"={c}2-{c}3" for c in "BCDEFGHIJKLM"],
+        ],
+        "charts": [
+            {
+                "type": "column",
+                "title": "Monthly balance",
+                "data": "B4:M4",
+                "categories": "B1:M1",
+                "anchor": "B6",
+            }
+        ],
+    }
+    chart = _chart_book(sheet)._charts[0]
+    assert len(chart.series) == 1 and chart.varyColors is False and chart.legend is None
+    assert chart.series[0].tx.v == "Balance"
+    assert chart.series[0].cat.numRef is not None or chart.series[0].cat.strRef is not None
+
+
+def test_one_measure_by_month_is_one_colour_and_a_straight_line() -> None:
+    """W6, doc-2 w14: one series per chart, no colour per point, an unsmoothed line; the second chart moves off the first."""
+    sheet = {
+        "name": "Data",
+        "columns": [{"header": "Month"}, {"header": "Revenue"}, {"header": "Customers"}],
+        "rows": [[f"2026-0{n}", 40000 + n, 300 + n] for n in range(1, 7)],
+        "charts": [
+            {
+                "type": "column",
+                "title": "Revenue by month",
+                "data": "B1:B7",
+                "categories": "A2:A7",
+                "anchor": "F2",
+            },
+            {
+                "type": "line",
+                "title": "Customers by month",
+                "data": "C1:C7",
+                "categories": "A2:A7",
+                "anchor": "F10",
+            },
+        ],
+    }
+    column, line = _chart_book(sheet)._charts
+    assert [len(column.series), len(line.series)] == [1, 1]
+    assert column.varyColors is False and line.varyColors is False and line.series[0].smooth is False
+    assert line.anchor._from.row > column.anchor._from.row + 15  # moved below, not on top
+
+
+def test_categories_that_do_not_match_the_values_are_a_clear_error() -> None:
+    sheet = {
+        "name": "Data",
+        "columns": [{"header": "Month"}, {"header": "Revenue"}],
+        "rows": [["a", 1], ["b", 2], ["c", 3]],
+        "charts": [{"type": "column", "data": "B1:B4", "categories": "A1:A4"}],
+    }
+    with pytest.raises(WorkbookError, match=r"4 categories .* but 3 value"):
+        _chart_book(sheet)
+
+
+def test_every_sheet_prints_one_page_wide_and_wide_sheets_turn_landscape() -> None:
+    """W7, doc-2 w07 and w13: a table split across pages and a chart cut by the margin."""
+    narrow = _chart_book({"name": "A", "columns": [{"header": "x"}], "rows": [[1]]})
+    assert narrow.page_setup.fitToWidth == 1 and narrow.page_setup.fitToHeight == 0
+    assert narrow.sheet_properties.pageSetUpPr.fitToPage and narrow.page_setup.orientation == "portrait"
+    assert narrow.print_title_rows == "$1:$1"
+    wide = _chart_book(
+        {
+            "name": "B",
+            "columns": [{"header": "Month"}, {"header": "Revenue"}],
+            "rows": [["a", 1], ["b", 2]],
+            "charts": [{"type": "column", "data": "B1:B3", "categories": "A2:A3", "anchor": "F2"}],
+        }
+    )
+    assert wide.page_setup.orientation == "landscape"
