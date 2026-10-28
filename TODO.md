@@ -419,6 +419,8 @@ Honest starting point: the model is weaker on deep reasoning, whole-codebase und
 - [ ] **W7 Workbooks print badly** (doc-2; w07, w13): a table split across two printed pages and a chart clipped by the margin. Give the builder a print setup (fit to one page wide, landscape for wide sheets, the chart inside the print area) and test it on the two tasks.
 - [ ] **W8 Plain Word and PDF output** (doc-2; w04, w05, w11, w12): valid and correct but "like a template" for a formal letter, a proposal or a form. Candidate: stronger hierarchy for the key figure, a smaller letter title, less empty space on a form; measure with the judge.
 
+- [ ] **BV1 "Three design options" does not call `build_variants`** (measured 2026-10-28, D-524): with a request such as "give me three different design options for the homepage of a small bakery", the model ends its turn in text without calling `build_variants` (2 of 2 runs, with the old skill and the split one alike). The system prompts and the skill both say to call it. Find what the model does instead (read the reply: a question, three text options, an `ask_user`), then decide whether the prompt, the tool description or the hint should change; discuss before changing behaviour.
+
 ## 6. Parked (not started; your choice when)
 - [ ] PARKED (user, 2026-10-04): one-click install from the GitHub zip (starter script -> venv + pip install -> .env template -> `forge doctor` -> open UI -> shortcut).
   Waiting on the user's probe of what the office laptop allows (script run, pip reach, Python 3.13) and a choice: `.cmd` starter vs signed `.exe`, bundled embeddable Python or not.
