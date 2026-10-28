@@ -52,7 +52,7 @@ export function AnimatedBeam({
   if (!geometry) return null;
   const moving = !reducedMotion();
   return (
-    <svg className="beam" aria-hidden="true" width={geometry.width} height={geometry.height} viewBox={`0 0 ${geometry.width} ${geometry.height}`} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+    <svg className="animated-beam" aria-hidden="true" width={geometry.width} height={geometry.height} viewBox={`0 0 ${geometry.width} ${geometry.height}`} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <path d={geometry.d} fill="none" stroke="currentColor" strokeOpacity={0.18} strokeWidth={2} />
       {moving && (
         <path d={geometry.d} fill="none" stroke={token("--color-primary", "#4f46e5")} strokeWidth={2.5} strokeLinecap="round" pathLength={100} strokeDasharray="18 82" className="beam-light">

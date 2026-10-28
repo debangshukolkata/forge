@@ -83,7 +83,8 @@ async def test_requirement_runs_from_clarify_to_export_then_restructures(
     forge = workspace.forge_dir
     # PLAN.md and REQUIREMENTS.md are optional records since D-128 (the model writes them when it judges
     # them useful), and there is no separate review report since D-132.
-    for name in ("tasks.json", "PROGRESS.md", "reports/final.md"):
+    # PROGRESS.md is written when a task is recorded; a job as small as the example may be done without a task list (D-505, WU3).
+    for name in ("tasks.json", "reports/final.md", *(("PROGRESS.md",) if result.tasks else ())):
         assert (forge / name).exists(), name
     manifest = json.loads((workspace.output_dir / "MANIFEST.json").read_text(encoding="utf-8"))
     changed = {f["path"] for f in manifest["files"]}

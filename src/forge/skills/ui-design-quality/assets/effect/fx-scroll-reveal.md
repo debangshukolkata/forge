@@ -14,6 +14,7 @@ tested: "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, redu
 files:
   - {from: recipes/motion.css, to: src/motion.css}
   - {from: recipes/motion.tsx, to: src/motion.tsx}
+preview: assets/preview/fx-scroll-reveal.jpg
 ---
 
 ## Scroll reveal with stagger

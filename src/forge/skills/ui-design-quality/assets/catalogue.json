@@ -34,7 +34,7 @@
    "licence": "original",
    "source": "authored for DebCraft (components-native.tsx, D-251)",
    "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
-   "preview": null,
+   "preview": "assets/preview/cmp-data-table.jpg",
    "path": "assets/component/cmp-data-table.md",
    "size": 8380
   },
@@ -70,7 +70,7 @@
    "licence": "original",
    "source": "authored for DebCraft (components-native.tsx, D-251)",
    "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
-   "preview": null,
+   "preview": "assets/preview/cmp-dialog.jpg",
    "path": "assets/component/cmp-dialog.md",
    "size": 8359
   },
@@ -106,7 +106,7 @@
    "licence": "original",
    "source": "authored for DebCraft (components-native.tsx, D-251)",
    "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
-   "preview": null,
+   "preview": "assets/preview/cmp-empty-state.jpg",
    "path": "assets/component/cmp-empty-state.md",
    "size": 8335
   },
@@ -141,7 +141,7 @@
    "licence": "original",
    "source": "authored for DebCraft (components-native.tsx, D-251)",
    "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
-   "preview": null,
+   "preview": "assets/preview/cmp-skeleton-rows.jpg",
    "path": "assets/component/cmp-skeleton-rows.md",
    "size": 8357
   },
@@ -177,7 +177,7 @@
    "licence": "original",
    "source": "authored for DebCraft (components-native.tsx, D-251)",
    "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
-   "preview": null,
+   "preview": "assets/preview/cmp-tabs.jpg",
    "path": "assets/component/cmp-tabs.md",
    "size": 8366
   },
@@ -213,7 +213,7 @@
    "licence": "original",
    "source": "authored for DebCraft (components-native.tsx, D-251)",
    "tested": "built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)",
-   "preview": null,
+   "preview": "assets/preview/cmp-toasts.jpg",
    "path": "assets/component/cmp-toasts.md",
    "size": 8362
   },
@@ -1358,7 +1358,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-aurora.jpg",
    "path": "assets/effect/fx-aurora.md",
    "size": 7869
   },
@@ -1392,7 +1392,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
    "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
-   "preview": null,
+   "preview": "assets/preview/fx-avatar-stack.jpg",
    "path": "assets/effect/fx-avatar-stack.md",
    "size": 6898
   },
@@ -1427,7 +1427,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-bg-dots.jpg",
    "path": "assets/effect/fx-bg-dots.md",
    "size": 12278
   },
@@ -1460,7 +1460,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-bg-fade-edges.jpg",
    "path": "assets/effect/fx-bg-fade-edges.md",
    "size": 12305
   },
@@ -1495,7 +1495,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-bg-grid.jpg",
    "path": "assets/effect/fx-bg-grid.md",
    "size": 12326
   },
@@ -1530,7 +1530,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-bg-mesh.jpg",
    "path": "assets/effect/fx-bg-mesh.md",
    "size": 12329
   },
@@ -1564,7 +1564,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-border-beam.jpg",
    "path": "assets/effect/fx-border-beam.md",
    "size": 7794
   },
@@ -1596,7 +1596,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-button-shine.jpg",
    "path": "assets/effect/fx-button-shine.md",
    "size": 7796
   },
@@ -1630,7 +1630,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-check-draw.jpg",
    "path": "assets/effect/fx-check-draw.md",
    "size": 12353
   },
@@ -1668,7 +1668,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-count-up.jpg",
    "path": "assets/effect/fx-count-up.md",
    "size": 12889
   },
@@ -1702,7 +1702,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
    "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
-   "preview": null,
+   "preview": "assets/preview/fx-dock.jpg",
    "path": "assets/effect/fx-dock.md",
    "size": 6896
   },
@@ -1735,7 +1735,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-drift-shapes.jpg",
    "path": "assets/effect/fx-drift-shapes.md",
    "size": 12313
   },
@@ -1770,7 +1770,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
    "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
-   "preview": null,
+   "preview": "assets/preview/fx-flickering-grid.jpg",
    "path": "assets/effect/fx-flickering-grid.md",
    "size": 6936
   },
@@ -1804,7 +1804,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-flip-card.jpg",
    "path": "assets/effect/fx-flip-card.md",
    "size": 12436
   },
@@ -1836,7 +1836,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-float.jpg",
    "path": "assets/effect/fx-float.md",
    "size": 7773
   },
@@ -1870,7 +1870,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-glass-surface.jpg",
    "path": "assets/effect/fx-glass-surface.md",
    "size": 7865
   },
@@ -1904,7 +1904,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-grain.jpg",
    "path": "assets/effect/fx-grain.md",
    "size": 7792
   },
@@ -1938,7 +1938,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-grid-pulse.jpg",
    "path": "assets/effect/fx-grid-pulse.md",
    "size": 12290
   },
@@ -1972,7 +1972,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-hover-dim-siblings.jpg",
    "path": "assets/effect/fx-hover-dim-siblings.md",
    "size": 12294
   },
@@ -2006,7 +2006,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-hover-glow.jpg",
    "path": "assets/effect/fx-hover-glow.md",
    "size": 12321
   },
@@ -2040,7 +2040,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-hover-lift.jpg",
    "path": "assets/effect/fx-hover-lift.md",
    "size": 12300
   },
@@ -2073,7 +2073,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-hover-slide-underline.jpg",
    "path": "assets/effect/fx-hover-slide-underline.md",
    "size": 12304
   },
@@ -2107,7 +2107,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-hover-zoom.jpg",
    "path": "assets/effect/fx-hover-zoom.md",
    "size": 12317
   },
@@ -2142,7 +2142,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-in-blur.jpg",
    "path": "assets/effect/fx-in-blur.md",
    "size": 12330
   },
@@ -2176,7 +2176,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-in-clip-reveal.jpg",
    "path": "assets/effect/fx-in-clip-reveal.md",
    "size": 12301
   },
@@ -2210,7 +2210,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-in-fade.jpg",
    "path": "assets/effect/fx-in-fade.md",
    "size": 12329
   },
@@ -2243,7 +2243,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-in-flip.jpg",
    "path": "assets/effect/fx-in-flip.md",
    "size": 12291
   },
@@ -2277,7 +2277,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-in-scale.jpg",
    "path": "assets/effect/fx-in-scale.md",
    "size": 12301
   },
@@ -2311,7 +2311,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-in-slide.jpg",
    "path": "assets/effect/fx-in-slide.md",
    "size": 12346
   },
@@ -2343,7 +2343,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-link-underline.jpg",
    "path": "assets/effect/fx-link-underline.md",
    "size": 7808
   },
@@ -2378,7 +2378,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-marker-highlight.jpg",
    "path": "assets/effect/fx-marker-highlight.md",
    "size": 12376
   },
@@ -2412,7 +2412,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-marquee-vertical.jpg",
    "path": "assets/effect/fx-marquee-vertical.md",
    "size": 12388
   },
@@ -2450,7 +2450,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-marquee.jpg",
    "path": "assets/effect/fx-marquee.md",
    "size": 12893
   },
@@ -2484,7 +2484,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-nudge-arrow.jpg",
    "path": "assets/effect/fx-nudge-arrow.md",
    "size": 12298
   },
@@ -2519,7 +2519,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
    "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
-   "preview": null,
+   "preview": "assets/preview/fx-orbiting-circles.jpg",
    "path": "assets/effect/fx-orbiting-circles.md",
    "size": 6999
   },
@@ -2551,7 +2551,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-page-entrance.jpg",
    "path": "assets/effect/fx-page-entrance.md",
    "size": 7839
   },
@@ -2584,7 +2584,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-parallax.jpg",
    "path": "assets/effect/fx-parallax.md",
    "size": 12377
   },
@@ -2618,7 +2618,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-pop.jpg",
    "path": "assets/effect/fx-pop.md",
    "size": 12278
   },
@@ -2651,7 +2651,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-press.jpg",
    "path": "assets/effect/fx-press.md",
    "size": 12284
   },
@@ -2685,7 +2685,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-progress-ring.jpg",
    "path": "assets/effect/fx-progress-ring.md",
    "size": 12381
   },
@@ -2720,7 +2720,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-pulse-ring.jpg",
    "path": "assets/effect/fx-pulse-ring.md",
    "size": 12307
   },
@@ -2755,7 +2755,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
    "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
-   "preview": null,
+   "preview": "assets/preview/fx-rainbow-border-button.jpg",
    "path": "assets/effect/fx-rainbow-border-button.md",
    "size": 6921
   },
@@ -2792,9 +2792,9 @@
    "licence": "original",
    "source": "authored for DebCraft (canvas and SVG showpiece effects, D-384)",
    "tested": "built with Vite and React (type-checked); in Edge the beam draws a path with a moving light, the canvases paint and keep changing, and under reduced motion they are drawn once (tests/test_motion_canvas.py, D-384)",
-   "preview": null,
+   "preview": "assets/preview/fx-react-animated-beam.jpg",
    "path": "assets/effect/fx-react-animated-beam.md",
-   "size": 9017
+   "size": 9026
   },
   {
    "id": "fx-react-globe-lite",
@@ -2830,9 +2830,9 @@
    "licence": "original",
    "source": "authored for DebCraft (canvas and SVG showpiece effects, D-384)",
    "tested": "built with Vite and React (type-checked); in Edge the beam draws a path with a moving light, the canvases paint and keep changing, and under reduced motion they are drawn once (tests/test_motion_canvas.py, D-384)",
-   "preview": null,
+   "preview": "assets/preview/fx-react-globe-lite.jpg",
    "path": "assets/effect/fx-react-globe-lite.md",
-   "size": 8940
+   "size": 8949
   },
   {
    "id": "fx-react-magnetic",
@@ -2871,7 +2871,7 @@
    "licence": "original",
    "source": "authored for DebCraft (React motion hooks, D-383)",
    "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
-   "preview": null,
+   "preview": "assets/preview/fx-react-magnetic.jpg",
    "path": "assets/effect/fx-react-magnetic.md",
    "size": 10925
   },
@@ -2912,7 +2912,7 @@
    "licence": "original",
    "source": "authored for DebCraft (React motion hooks, D-383)",
    "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
-   "preview": null,
+   "preview": "assets/preview/fx-react-parallax.jpg",
    "path": "assets/effect/fx-react-parallax.md",
    "size": 10960
   },
@@ -2949,9 +2949,9 @@
    "licence": "original",
    "source": "authored for DebCraft (canvas and SVG showpiece effects, D-384)",
    "tested": "built with Vite and React (type-checked); in Edge the beam draws a path with a moving light, the canvases paint and keep changing, and under reduced motion they are drawn once (tests/test_motion_canvas.py, D-384)",
-   "preview": null,
+   "preview": "assets/preview/fx-react-particles.jpg",
    "path": "assets/effect/fx-react-particles.md",
-   "size": 8995
+   "size": 9004
   },
   {
    "id": "fx-react-pinned-steps",
@@ -2990,7 +2990,7 @@
    "licence": "original",
    "source": "authored for DebCraft (React motion hooks, D-383)",
    "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
-   "preview": null,
+   "preview": "assets/preview/fx-react-pinned-steps.jpg",
    "path": "assets/effect/fx-react-pinned-steps.md",
    "size": 10973
   },
@@ -3031,7 +3031,7 @@
    "licence": "original",
    "source": "authored for DebCraft (React motion hooks, D-383)",
    "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
-   "preview": null,
+   "preview": "assets/preview/fx-react-scramble-text.jpg",
    "path": "assets/effect/fx-react-scramble-text.md",
    "size": 10948
   },
@@ -3072,9 +3072,54 @@
    "licence": "original",
    "source": "authored for DebCraft (React motion hooks, D-383)",
    "tested": "built with Vite and React (type-checked); in Edge the text appears, the scramble settles on the real text, the magnet moves, the pinned step follows the scroll, nothing animates under reduced motion (tests/test_motion_hooks.py, D-383)",
-   "preview": null,
+   "preview": "assets/preview/fx-react-split-text.jpg",
    "path": "assets/effect/fx-react-split-text.md",
    "size": 10987
+  },
+  {
+   "id": "fx-react-view-transition",
+   "type": "effect",
+   "title": "Shared-element and page transitions (React)",
+   "summary": "A page or state change that cross-fades, and elements that morph from one place to another, such as a card into its detail view.",
+   "moods": [
+    "polished",
+    "modern",
+    "smooth"
+   ],
+   "products": [
+    "app",
+    "portfolio",
+    "shop",
+    "gallery",
+    "dashboard"
+   ],
+   "tags": [
+    "animation",
+    "motion",
+    "react",
+    "transition",
+    "view transition",
+    "shared element",
+    "route"
+   ],
+   "density": "any",
+   "dependencies": [],
+   "files": [
+    {
+     "from": "recipes/motion-transitions.tsx",
+     "to": "src/motion-transitions.tsx"
+    },
+    {
+     "from": "recipes/motion-transitions.css",
+     "to": "src/motion-transitions.css"
+    }
+   ],
+   "licence": "original",
+   "source": "authored for DebCraft (React view transitions, D-517)",
+   "tested": "built with Vite and React (type-checked); in Edge the change runs inside a view transition and the state updates; with reduced motion no transition starts and the state still updates (tests/test_motion_transitions.py, D-517)",
+   "preview": null,
+   "path": "assets/effect/fx-react-view-transition.md",
+   "size": 3926
   },
   {
    "id": "fx-scroll-progress",
@@ -3144,7 +3189,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-scroll-reveal.jpg",
    "path": "assets/effect/fx-scroll-reveal.md",
    "size": 13086
   },
@@ -3183,7 +3228,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-shake.jpg",
    "path": "assets/effect/fx-shake.md",
    "size": 12379
   },
@@ -3216,7 +3261,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-shimmer-text.jpg",
    "path": "assets/effect/fx-shimmer-text.md",
    "size": 7887
   },
@@ -3250,7 +3295,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
    "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
-   "preview": null,
+   "preview": "assets/preview/fx-shiny-button.jpg",
    "path": "assets/effect/fx-shiny-button.md",
    "size": 6841
   },
@@ -3283,7 +3328,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-skeleton.jpg",
    "path": "assets/effect/fx-skeleton.md",
    "size": 7836
   },
@@ -3318,7 +3363,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
    "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
-   "preview": null,
+   "preview": "assets/preview/fx-sparkles.jpg",
    "path": "assets/effect/fx-sparkles.md",
    "size": 6888
   },
@@ -3351,7 +3396,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-spinner.jpg",
    "path": "assets/effect/fx-spinner.md",
    "size": 12324
   },
@@ -3397,7 +3442,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-spotlight-card.jpg",
    "path": "assets/effect/fx-spotlight-card.md",
    "size": 12871
   },
@@ -3430,7 +3475,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-stack-3d.jpg",
    "path": "assets/effect/fx-stack-3d.md",
    "size": 12344
   },
@@ -3463,7 +3508,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-text-gradient.jpg",
    "path": "assets/effect/fx-text-gradient.md",
    "size": 12329
   },
@@ -3498,7 +3543,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-text-sweep.jpg",
    "path": "assets/effect/fx-text-sweep.md",
    "size": 12362
   },
@@ -3535,7 +3580,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit, D-251)",
    "tested": "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)",
-   "preview": null,
+   "preview": "assets/preview/fx-tilt-card.jpg",
    "path": "assets/effect/fx-tilt-card.md",
    "size": 12861
   },
@@ -3568,7 +3613,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-toast-in.jpg",
    "path": "assets/effect/fx-toast-in.md",
    "size": 12304
   },
@@ -3609,7 +3654,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-type-writer.jpg",
    "path": "assets/effect/fx-type-writer.md",
    "size": 12404
   },
@@ -3644,7 +3689,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 3, in the spirit of public UI-effect catalogues, no code copied, D-270)",
    "tested": "demo page in Edge: animation runs, positions or scales as described, no console errors, off under reduced motion (tests/test_motion_fancy.py, D-270)",
-   "preview": null,
+   "preview": "assets/preview/fx-warp-background.jpg",
    "path": "assets/effect/fx-warp-background.md",
    "size": 6867
   },
@@ -3678,7 +3723,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-words-rise.jpg",
    "path": "assets/effect/fx-words-rise.md",
    "size": 12397
   },
@@ -3715,7 +3760,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-arrow-slide.jpg",
    "path": "assets/effect/mi-btn-arrow-slide.md",
    "size": 28461
   },
@@ -3752,7 +3797,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-border-draw.jpg",
    "path": "assets/effect/mi-btn-border-draw.md",
    "size": 28451
   },
@@ -3789,7 +3834,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-fill-sweep.jpg",
    "path": "assets/effect/mi-btn-fill-sweep.md",
    "size": 28483
   },
@@ -3826,7 +3871,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-glow-pulse.jpg",
    "path": "assets/effect/mi-btn-glow-pulse.md",
    "size": 28463
   },
@@ -3863,7 +3908,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-icon-spin.jpg",
    "path": "assets/effect/mi-btn-icon-spin.md",
    "size": 28515
   },
@@ -3900,7 +3945,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-lift-shadow.jpg",
    "path": "assets/effect/mi-btn-lift-shadow.md",
    "size": 28433
   },
@@ -3937,7 +3982,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-loading.jpg",
    "path": "assets/effect/mi-btn-loading.md",
    "size": 28574
   },
@@ -3974,7 +4019,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-press-3d.jpg",
    "path": "assets/effect/mi-btn-press-3d.md",
    "size": 28473
   },
@@ -4011,7 +4056,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-ripple.jpg",
    "path": "assets/effect/mi-btn-ripple.md",
    "size": 28470
   },
@@ -4048,7 +4093,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-btn-shine.jpg",
    "path": "assets/effect/mi-btn-shine.md",
    "size": 28418
   },
@@ -4085,7 +4130,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-card-border-gradient.jpg",
    "path": "assets/effect/mi-card-border-gradient.md",
    "size": 28532
   },
@@ -4122,7 +4167,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-card-corner-fold.jpg",
    "path": "assets/effect/mi-card-corner-fold.md",
    "size": 28482
   },
@@ -4159,7 +4204,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-card-flip.jpg",
    "path": "assets/effect/mi-card-flip.md",
    "size": 28591
   },
@@ -4196,7 +4241,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-card-image-zoom.jpg",
    "path": "assets/effect/mi-card-image-zoom.md",
    "size": 28753
   },
@@ -4233,7 +4278,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-card-lift.jpg",
    "path": "assets/effect/mi-card-lift.md",
    "size": 28532
   },
@@ -4270,7 +4315,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-card-reveal-overlay.jpg",
    "path": "assets/effect/mi-card-reveal-overlay.md",
    "size": 28589
   },
@@ -4307,7 +4352,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-card-stack-fan.jpg",
    "path": "assets/effect/mi-card-stack-fan.md",
    "size": 28510
   },
@@ -4344,7 +4389,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-card-tilt.jpg",
    "path": "assets/effect/mi-card-tilt.md",
    "size": 28510
   },
@@ -4381,7 +4426,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-checkbox-draw.jpg",
    "path": "assets/effect/mi-checkbox-draw.md",
    "size": 28549
   },
@@ -4418,7 +4463,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-chip-toggle.jpg",
    "path": "assets/effect/mi-chip-toggle.md",
    "size": 28515
   },
@@ -4455,7 +4500,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-input-float-label.jpg",
    "path": "assets/effect/mi-input-float-label.md",
    "size": 28550
   },
@@ -4492,7 +4537,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-input-glow.jpg",
    "path": "assets/effect/mi-input-glow.md",
    "size": 28482
   },
@@ -4529,7 +4574,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-input-invalid-shake.jpg",
    "path": "assets/effect/mi-input-invalid-shake.md",
    "size": 28613
   },
@@ -4566,7 +4611,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-input-prefix-focus.jpg",
    "path": "assets/effect/mi-input-prefix-focus.md",
    "size": 28577
   },
@@ -4603,7 +4648,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-input-ring.jpg",
    "path": "assets/effect/mi-input-ring.md",
    "size": 28458
   },
@@ -4640,7 +4685,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-input-search-expand.jpg",
    "path": "assets/effect/mi-input-search-expand.md",
    "size": 28625
   },
@@ -4677,7 +4722,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-input-underline-grow.jpg",
    "path": "assets/effect/mi-input-underline-grow.md",
    "size": 28554
   },
@@ -4714,7 +4759,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-loader-bars.jpg",
    "path": "assets/effect/mi-loader-bars.md",
    "size": 28480
   },
@@ -4751,7 +4796,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-loader-bounce.jpg",
    "path": "assets/effect/mi-loader-bounce.md",
    "size": 28530
   },
@@ -4788,7 +4833,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-loader-flip.jpg",
    "path": "assets/effect/mi-loader-flip.md",
    "size": 28459
   },
@@ -4825,7 +4870,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-loader-heartbeat.jpg",
    "path": "assets/effect/mi-loader-heartbeat.md",
    "size": 28677
   },
@@ -4862,7 +4907,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-loader-orbit.jpg",
    "path": "assets/effect/mi-loader-orbit.md",
    "size": 28477
   },
@@ -4899,7 +4944,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-loader-ring.jpg",
    "path": "assets/effect/mi-loader-ring.md",
    "size": 28446
   },
@@ -4936,7 +4981,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-loader-ripple.jpg",
    "path": "assets/effect/mi-loader-ripple.md",
    "size": 28467
   },
@@ -4973,7 +5018,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-loader-stripes.jpg",
    "path": "assets/effect/mi-loader-stripes.md",
    "size": 28537
   },
@@ -5010,7 +5055,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-radio-pop.jpg",
    "path": "assets/effect/mi-radio-pop.md",
    "size": 28502
   },
@@ -5047,7 +5092,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-segmented-slide.jpg",
    "path": "assets/effect/mi-segmented-slide.md",
    "size": 28751
   },
@@ -5084,7 +5129,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-select-arrow.jpg",
    "path": "assets/effect/mi-select-arrow.md",
    "size": 28552
   },
@@ -5121,7 +5166,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-toggle-slide.jpg",
    "path": "assets/effect/mi-toggle-slide.md",
    "size": 28554
   },
@@ -5158,7 +5203,7 @@
    "licence": "original",
    "source": "authored for DebCraft (micro-interaction kit, D-382)",
    "tested": "demo page in Edge: the action (hover, focus, check, press or invalid) changes the probed property or the animation runs, and it is switched off under reduced motion (tests/test_micro_effects.py, D-382)",
-   "preview": null,
+   "preview": "assets/preview/mi-toggle-sunmoon.jpg",
    "path": "assets/effect/mi-toggle-sunmoon.md",
    "size": 28535
   },

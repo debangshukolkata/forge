@@ -95,6 +95,7 @@ Generated from the assets' front-matter; do not edit by hand.
 | `fx-react-pinned-steps` | original | authored for DebCraft (React motion hooks, D-383) |
 | `fx-react-scramble-text` | original | authored for DebCraft (React motion hooks, D-383) |
 | `fx-react-split-text` | original | authored for DebCraft (React motion hooks, D-383) |
+| `fx-react-view-transition` | original | authored for DebCraft (React view transitions, D-517) |
 | `fx-scroll-progress` | original | authored for DebCraft (motion kit part 2, D-269) |
 | `fx-scroll-reveal` | original | authored for DebCraft (motion kit, D-251) |
 | `fx-shake` | original | authored for DebCraft (motion kit part 2, D-269) |

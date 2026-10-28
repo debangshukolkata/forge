@@ -13,6 +13,7 @@ source: "authored for DebCraft (motion kit, D-251)"
 tested: "kit built with Vite + Tailwind v4, audit clean at 1280 and 375 px, reduced-motion safe (D-251)"
 files:
   - {from: recipes/motion.css, to: src/motion.css}
+preview: assets/preview/fx-link-underline.jpg
 ---
 
 ## Animated link underline

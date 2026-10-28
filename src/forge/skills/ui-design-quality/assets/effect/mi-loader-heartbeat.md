@@ -14,6 +14,7 @@ tested: "demo page in Edge: the action (hover, focus, check, press or invalid) c
 files:
   - from: recipes/motion-micro.css
     to: src/motion-micro.css
+preview: assets/preview/mi-loader-heartbeat.jpg
 ---
 
 ## Heartbeat

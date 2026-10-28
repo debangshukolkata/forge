@@ -5,6 +5,7 @@ Run with: pytest -m live tests/test_live_web_react.py"""
 
 from __future__ import annotations
 
+import subprocess
 import threading
 import time
 from collections.abc import Iterator
@@ -38,6 +39,15 @@ USER_REPLY = "Use your recommended option for every open question, note the assu
 def server(isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[ServerSecurity]:
     monkeypatch.setenv("FORGE_ENV_FILE", str(REPO_ROOT / ".env"))
     monkeypatch.delenv("FORGE_SKIP_TEST_RUNNER_INSTALL")  # a real project gets pytest installed
+    # tests/conftest.py swaps the workspace venv for one without pip (faster); pytest cannot be installed into that, so every task blocked here
+    # (WU2, found 2026-10-28). A real project gets a real venv.
+    from forge.modeb import workspace as modeb_workspace
+
+    def real_venv(folder: Path, base_python: str) -> Path:
+        subprocess.run([base_python, "-m", "venv", str(folder)], check=True, capture_output=True, timeout=300)
+        return modeb_workspace.venv_python(folder)
+
+    monkeypatch.setattr(modeb_workspace, "_create_venv", real_venv)
     if not load_secrets(isolated_forge_home).get("AZURE_OPENAI_API_KEY"):
         pytest.skip("AZURE_OPENAI_* not configured in .env")
     port = free_port(8797)

@@ -14,6 +14,7 @@ tested: "built with Vite and React (type-checked); in Edge the beam draws a path
 files:
   - from: recipes/motion-canvas.tsx
     to: src/motion-canvas.tsx
+preview: assets/preview/fx-react-globe-lite.jpg
 ---
 
 ## Globe (React)

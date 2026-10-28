@@ -16,6 +16,7 @@ files:
     to: src/motion-hooks.tsx
   - from: recipes/motion-hooks.css
     to: src/motion-hooks.css
+preview: assets/preview/fx-react-parallax.jpg
 ---
 
 ## Parallax layer (React)

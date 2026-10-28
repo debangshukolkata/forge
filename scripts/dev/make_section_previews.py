@@ -1,6 +1,6 @@
 """A reference picture for every page section of the ui-design-quality skill (TODO L10, D-395).
 
-    python scripts/dev/make_section_previews.py
+    python scripts/dev/make_section_previews.py [SectionName ...]
 
 Builds the sections together on the charity template's tokens (the same build as tests/test_sections.py), photographs each one on its own at 1280 px with Edge and writes
 assets/preview/sec-<name>.jpg, and sets `preview:` in the section's asset file. Directions get the picture of the design system they pair with. Needs ui-react/node_modules,
@@ -64,12 +64,21 @@ def main() -> int:
         browser = playwright.chromium.launch(channel="msedge", headless=True)
         page = browser.new_page(viewport={"width": 1280, "height": 900})
         page.goto(url)
+        # A sticky navigation bar would be drawn over every section photographed after it (the element is scrolled into view first).
+        page.add_style_tag(
+            content="*{scroll-behavior:auto!important} header,[class*='sticky'],[class*='fixed']{position:static!important}"
+        )
         page.wait_for_timeout(600)
         roots = page.locator("#root > *")
         if roots.count() != len(names):
             print(f"expected {len(names)} section roots, found {roots.count()}")
             return 1
+        wanted = set(
+            sys.argv[1:]
+        )  # names given on the command line: only those sections are photographed again
         for index, name in enumerate(names):
+            if wanted and name not in wanted:
+                continue
             target = PREVIEW / f"sec-{kebab(name)}.jpg"
             asset = SKILL / "assets" / "section" / f"sec-{kebab(name)}.md"
             image = Image.open(BytesIO(roots.nth(index).screenshot())).convert("RGB")

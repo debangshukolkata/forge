@@ -67,10 +67,10 @@ async def run(site: str, reduced: bool) -> dict[str, object]:
         page.on("pageerror", lambda e: errors.append(str(e)))
         await page.goto(site)
         await page.wait_for_timeout(700)
-        out["paths"] = await page.evaluate("document.querySelectorAll('svg.beam path').length")
-        out["animates"] = await page.evaluate("document.querySelectorAll('svg.beam animate').length")
+        out["paths"] = await page.evaluate("document.querySelectorAll('svg.animated-beam path').length")
+        out["animates"] = await page.evaluate("document.querySelectorAll('svg.animated-beam animate').length")
         out["aria"] = await page.evaluate(
-            "[...document.querySelectorAll('svg.beam, canvas')].every(e => e.getAttribute('aria-hidden') === 'true')"
+            "[...document.querySelectorAll('svg.animated-beam, canvas')].every(e => e.getAttribute('aria-hidden') === 'true')"
         )
         # The first read of a canvas makes the browser move it from the graphics card to the CPU, and the pixels read afterwards differ by rounding: read once and
         # throw that away, so that two real reads of a still canvas are equal.

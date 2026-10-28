@@ -14,6 +14,7 @@ tested: "demo page in Edge: animation runs, positions or scales as described, no
 files:
   - from: recipes/motion-fancy.css
     to: src/motion-fancy.css
+preview: assets/preview/fx-sparkles.jpg
 ---
 
 ## Sparkles

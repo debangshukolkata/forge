@@ -14,6 +14,7 @@ tested: "demo page in Edge: the class animates or transitions as described, no c
 files:
   - from: recipes/motion-more.css
     to: src/motion-more.css
+preview: assets/preview/fx-text-sweep.jpg
 ---
 
 ## Text light sweep

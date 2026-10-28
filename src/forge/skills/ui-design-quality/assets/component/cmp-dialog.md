@@ -13,6 +13,7 @@ source: "authored for DebCraft (components-native.tsx, D-251)"
 tested: built with Vite + Tailwind v4 and looked at; keyboard behaviour checked by hand (D-251)
 files:
   - {from: recipes/components-native.tsx, to: src/components-native.tsx}
+preview: assets/preview/cmp-dialog.jpg
 ---
 
 ## Accessible dialog
