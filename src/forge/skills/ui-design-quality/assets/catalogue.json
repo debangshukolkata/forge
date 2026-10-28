@@ -3151,7 +3151,7 @@
    "licence": "original",
    "source": "authored for DebCraft (motion kit part 2, D-269)",
    "tested": "demo page in Edge: the class animates or transitions as described, no console errors, switched off under reduced motion (tests/test_motion_more.py, D-269)",
-   "preview": null,
+   "preview": "assets/preview/fx-scroll-progress.jpg",
    "path": "assets/effect/fx-scroll-progress.md",
    "size": 12363
   },

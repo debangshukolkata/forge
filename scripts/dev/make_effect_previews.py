@@ -35,6 +35,7 @@ BASE = (
     ":root{--color-brand-50:#eef2ff;--color-brand-100:#e0e7ff;--color-brand-200:#c7d2fe;--color-brand-500:#6366f1;--color-brand-600:#4f46e5;--color-brand-700:#3730a3;"
     "--color-ink-100:#f4f4f5;--color-ink-200:#e4e4e7;--color-ink-500:#71717a;--color-ink-700:#3f3f46;--color-ink-900:#18181b}"
 )
+ACTIONS = {"fx-scroll-progress": "scroll"}  # effects that need something done before the picture
 # Demo snippets for the first motion kit (motion.css), which has no demo page of its own. The key is the effect id.
 DEMOS: dict[str, str] = {
     "fx-bg-fade-edges": '<div class="bg-grid bg-fade-edges" style="width:340px;height:170px;border-radius:10px"></div>',
@@ -53,6 +54,18 @@ DEMOS: dict[str, str] = {
     "fx-skeleton": '<div style="width:300px"><div class="skeleton" style="height:18px;border-radius:6px;width:60%"></div><div class="skeleton" style="height:14px;border-radius:6px;margin-top:12px"></div><div class="skeleton" style="height:14px;border-radius:6px;margin-top:10px;width:85%"></div></div>',
     "fx-toast-in": '<div class="toast-in" style="padding:14px 18px;border-radius:12px;background:#18181b;color:#fff;box-shadow:0 12px 30px -12px rgba(0,0,0,.5)">Saved. Your changes are live.</div>',
     "fx-aurora": '<div style="position:relative;isolation:isolate;width:420px;height:200px;overflow:hidden;border-radius:14px;background:#fff;display:grid;place-items:center"><div class="aurora"><i></i><i></i></div><b>Hero section</b></div>',
+    # A bar that fills only while the page scrolls: a long article, scrolled part way before the shot (PX1).
+    "fx-scroll-progress": '<div class="scroll-progress" style="height:6px"></div><article style="width:440px">'
+    + "".join(
+        f'<div style="height:12px;margin:14px 0;border-radius:6px;background:#cbd5e1;width:{70 + (n * 37) % 30}%"></div>'
+        + (
+            '<h3 style="margin:26px 0 8px;font:700 20px system-ui">Section ' + str(n // 6 + 1) + "</h3>"
+            if n % 6 == 5
+            else ""
+        )
+        for n in range(90)
+    )
+    + "</article>",
     "fx-border-beam": '<div class="beam" style="width:300px;height:130px;border-radius:16px;background:#0f172a;color:#fff;display:grid;place-items:center">Beam</div>',
 }
 
@@ -139,6 +152,8 @@ def photograph(page: object, html: str, action: str = "none", probe: str = "") -
             (root.locator(probe).first if probe else root).focus()
         elif action == "check":
             root.locator("input").first.check(force=True)
+        elif action == "scroll":
+            page.evaluate("window.scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * 0.55)")  # type: ignore[attr-defined]
         elif action == "press":
             root.hover()
             page.mouse.down()  # type: ignore[attr-defined]
@@ -187,6 +202,7 @@ def main(wanted: list[str]) -> None:
                     skipped.append(path.stem)
                     continue
                 html = f'<style>{css}</style><style>{BASE}</style><style>{style}</style><div class="row">{snippet}</div>'
+                action = ACTIONS.get(path.stem, action)
             picture = Image.open(BytesIO(photograph(page, html, action, probe))).convert("RGB")
             PREVIEW.mkdir(parents=True, exist_ok=True)
             picture.save(PREVIEW / f"{path.stem}.jpg", quality=85)
