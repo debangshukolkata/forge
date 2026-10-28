@@ -1,7 +1,7 @@
 # Coding benchmark (TODO C1)
 
 Measures how good the code DebCraft writes is, on the real model, so every change in TODO section 5b can be judged by numbers.
-Status 2026-10-13: ten tasks and the runner are built and validated offline; the first full baseline is below. Written 2026-10-27, **not yet validated or run**: tasks t15 to t22 and the judge `scripts/benchmark/judge_code.py` (testing is scheduled after development; their references were only checked against their hidden tests in a scratch copy).
+Status 2026-10-13: ten tasks and the runner are built and validated offline; the first full baseline is below. Written 2026-10-27, run for the first time 2026-10-28 (results at the end of this file; the judge scored them but does not discriminate): tasks t15 to t22 and the judge `scripts/benchmark/judge_code.py` (testing is scheduled after development; their references were only checked against their hidden tests in a scratch copy).
 
 ## Tasks (`tests/benchmarks/tasks/<id>/`)
 | Id | Tier | What it asks for |
@@ -180,3 +180,23 @@ New gates for review (all are one reminder, never a trap, and only in real sessi
 (`tools/baseline_gate.py`); a `write_file` that replaces most of an existing source file of 30 lines or more is refused once until a test has been written; before a turn ends the loop asks once for
 the risks the scan found in the files it read (`safety/risk_scan.py`) if the reply does not name them; `design_candidates` refuses a composition that is not a catalogue id (D-406).
 Limits: c08 shows that a gate asks for a test but cannot judge how complete the pinning is; one run per challenge is a hint, not a measurement.
+
+### Run 2026-10-28: tasks t15 to t22 for the first time (current main at a00281c, real model, `--parallel 3`)
+Run names: `c1-t15-t22-2026-10-28` (seven tasks) and `probe-t17` (t17 alone, 3 in parallel was not used for it). Tokens and cost are as the runner reports them.
+
+| Task | Hidden tests | Wall | Model calls | Cost | Judge overall |
+|---|---|---|---|---|---|
+| t15_rest_inventory_api | 44/47 | 212s | 6 | $0.368 | 5 |
+| t16_mode_a_repo_feature | 18/18 | 304s | 11 | $0.483 | 5 |
+| t17_mode_b_no_host_code | 39/42 | 364s | 11 | $0.573 | not judged |
+| t18_large_multifile_feature | 24/24 | 226s | 8 | $0.483 | 5 |
+| t19_bug_hunt_concurrency | 17/19 | 362s | 11 | $0.528 | 5 |
+| t20_migration_script | 80/86 | 232s | 8 | $0.319 | 5 |
+| t21_text_diff_patch | 63/65 | 344s | 3 | $0.461 | 4 |
+| t22_security_fix | 81/93 | 368s | 14 | $0.446 | 5 |
+
+Fully passed: 2 of 8 tasks (t16, t18); hidden tests 366/394 (93 %). The failed tests per task (names in `results.json`, `tail`): t15 two 404 path cases and a bad-pagination case; t19 a stale worker completing a reassigned job and completion by a stranger or on a queued job; t20 six, including the log being appended not overwritten and the all-records-bad case; t21 a lone carriage return and a start beyond the text; t22 twelve, among them redirects containing a newline or a NUL.
+
+**The judge does not discriminate.** It gave 5 of 5 to five tasks that failed hidden tests (mean 4.9). It sees the pass count only as context and reads the code without running it. Treat the hidden tests as the measure and the judge as a readability check; do not use its overall score to compare changes.
+**Not checked.** Whether a failing hidden test asks for something the task text does not say (these eight tasks and their hidden tests were written on 2026-10-27 and had only been checked against their own reference solution); read two or three failures against the task text before drawing conclusions about the model. One run per task; no repeat.
+**Mistake in the process.** The first launch was lost because the shell ended; a second, overlapping run was spoilt when its folder was deleted while it ran (all tasks then ended in 25 s with nothing delivered). Those two runs are void and not reported.
