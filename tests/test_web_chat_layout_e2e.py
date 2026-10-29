@@ -231,3 +231,24 @@ def test_the_status_line_starts_where_the_messages_start(
             assert status.bounding_box()["x"] <= text["x"] + 1, panel  # type: ignore[index]
         page.screenshot(path=str(shots / "chat-status-line-aligned.png"))
         browser.close()
+
+
+def test_the_rewind_button_restores_a_file_from_its_checkpoint(
+    live_server: LiveServer,  # noqa: F811
+    workspace: Workspace,  # noqa: F811
+) -> None:
+    """C12 (d), D-558: the visible rewind of a failed attempt, clicked in the UI, not only the /rewind command."""
+    original = workspace.path_of("backend/README.md").read_text(encoding="utf-8")
+    workspace.write_text("backend/README.md", "a failed attempt\n", "test")  # makes checkpoint 1 first
+    with playwright_api.sync_playwright() as p:
+        browser, page = open_in_edge(p, live_server, workspace)
+        page.on("dialog", lambda dialog: dialog.accept())
+        page.click("[role=tab]:has-text('Diffs')")
+        page.wait_for_selector("[role=tabpanel] button:has-text('Rewind')")
+        page.click("[role=tabpanel] button:has-text('Rewind')")
+        for _ in range(50):  # the command runs on the server
+            if workspace.path_of("backend/README.md").read_text(encoding="utf-8") == original:
+                break
+            page.wait_for_timeout(200)
+        assert workspace.path_of("backend/README.md").read_text(encoding="utf-8") == original
+        browser.close()

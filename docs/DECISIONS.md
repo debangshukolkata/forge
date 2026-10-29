@@ -4504,3 +4504,6 @@ Inside a project, clicking the logo and name in the top bar now goes to the firs
 ## D-557 — C14's per-skill A/B loop parked; stale TODO markers corrected (2026-10-29)
 The user asked to take up the remaining work. C14's trigger tuning is done (D-535); its per-skill A/B loop is Phase G (lowest priority) and C16 (D-550) found no skill gain to tune toward, so it is parked, to be picked up if a later skill change needs measuring. Eight TODO items still read "BUILT, TO TEST" although they were checked live on 2026-10-29 (MCP and hooks, allow-installs, the twelve recipes, `code_outline`, the template suite, the run-report timeline, the egress guard) or partly on the office laptop (Tavily); their markers now say what was measured. Reversible: one line each.
 
+## D-558 — C12 closed: every parity gap is built; the Rewind button is now tested (2026-10-29)
+C12's status still listed (a) hooks, (c) forked skills and (d) rewind in the UI as open. (a) and (c) were built in D-515 and used live in D-533. (d) existed: the Diffs panel lists the checkpoints with a Rewind button each (`/rewind <id>` after a confirm), but no test clicked it. New browser test `test_the_rewind_button_restores_a_file_from_its_checkpoint`: a write makes a checkpoint, the button is clicked in Edge, the file is back to its earlier content. No product change.
+
