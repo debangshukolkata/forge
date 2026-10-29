@@ -277,6 +277,7 @@ class TavilyPages:
     pages: list[dict[str, str]]
     failed: list[str]
     base_url: str = ""
+    note: str = ""  # the platform's own words when it answers in plain text, e.g. "No crawl results found for ..." (D-553)
 
 
 def kind_settings(secrets: Any, kind: str) -> TavilySettings | None:
@@ -344,6 +345,10 @@ def parse_pages(data: Any, settings: TavilySettings | None = None) -> TavilyPage
     found = _find(data, ("results", "failed_results", "final_url", "error"))
     if isinstance(found, dict) and "final_url" in found and "results" not in found:
         return _single_page(found, settings)
+    if isinstance(found, str) and found.strip() and found.strip()[:1] not in ("{", "["):
+        # The platform's Crawl answers in plain text when it found nothing ("No crawl results found for '...'. Suggestions: ...",
+        # office laptop 2026-10-29, D-553): an answer, not a failure, and its suggestions are worth passing on.
+        return TavilyPages([], [], "", _scrub(found.strip(), settings)[:1000])
     if isinstance(found, dict) and found.get("error") and "results" not in found:
         # Show the tool's own words: the bare key name ("it held: error") hid why the crawl failed (office laptop, 2026-10-29, D-547).
         raise TavilyToolError(_scrub(f"the Tavily tool reported an error: {found['error']}", settings)[:400])

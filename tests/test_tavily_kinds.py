@@ -320,3 +320,18 @@ async def test_an_unreachable_platform_is_logged_without_a_reply(isolated_forge_
         await extract(SETTINGS, "https://example.com", client_for(refuse))
     log = Path(str(caught.value).split("Details: ", 1)[1].rstrip("."))
     assert "No reply: the request did not complete" in log.read_text(encoding="utf-8")
+
+
+async def test_a_plain_text_crawl_answer_is_an_answer_not_a_failure(isolated_forge_home: Path) -> None:
+    """D-553, office laptop: Crawl answered {"output": "No crawl results found for 'https://example.com'. Suggestions: ..."}."""
+    calls: list[dict[str, Any]] = []
+    said = "No crawl results found for 'https://example.com'. Suggestions: try a deeper crawl."
+
+    def platform(request: httpx.Request) -> httpx.Response:
+        calls.append(json.loads(request.content)["args"])
+        return httpx.Response(200, json={"output": said, "logs": []})
+
+    pages = await crawl(SETTINGS, "https://example.com", 1, 1, client_factory=client_for(platform))
+    assert pages.pages == [] and pages.note == said
+    assert len(calls) == 1  # an answer: the second shape is not tried
+    assert not (isolated_forge_home / "logs").exists()  # nothing failed, nothing logged

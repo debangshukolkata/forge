@@ -139,6 +139,9 @@ class Outcome:
         return data
 
 
+CRAWL_TEST_URL = "https://docs.python.org/3/"  # small, public, stable, with links to follow
+
+
 def not_in_use(check_id: str, said_no: bool) -> Outcome:
     """What a row shows until the user says yes: nothing is tested (D-201)."""
     detail = "Not in use." if said_no else "Answer the question to test it."
@@ -427,9 +430,11 @@ def check_tavily_kind(kind: str) -> Outcome:
             pages = asyncio.run(tavily_extract(settings, "https://example.com"))
             detail = f"The extract tool answered ({len(pages.pages)} page, {len(pages.failed)} failed)."
         else:
-            pages = asyncio.run(tavily_crawl(settings, "https://example.com", max_depth=1, max_breadth=1))
+            # A site with links, so a working crawl returns pages (example.com has none: "No crawl results", D-553).
+            pages = asyncio.run(tavily_crawl(settings, CRAWL_TEST_URL, max_depth=1, max_breadth=3))
             detail = (
                 f"The crawl tool answered ({len(pages.pages)} page{'s' if len(pages.pages) != 1 else ''})."
+                + (f" It said: {pages.note[:200]}" if pages.note else "")
             )
     except TavilyAuthError as error:
         return Outcome(

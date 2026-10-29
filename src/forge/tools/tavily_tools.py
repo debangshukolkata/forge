@@ -54,7 +54,8 @@ def _address_problem(url: str, context: ToolContext) -> str | None:
 def _present_pages(kind: str, result: TavilyPages) -> ToolResult:
     if not result.pages:
         failed = f" Failed: {', '.join(result.failed[:5])}." if result.failed else ""
-        return ToolResult(ok=False, content=f"Tavily {kind} returned no pages.{failed}")
+        said = f" The tool said: {result.note}" if result.note else ""
+        return ToolResult(ok=False, content=f"{UNTRUSTED}\nTavily {kind} returned no pages.{failed}{said}")
     lines = [
         UNTRUSTED,
         f"Tavily {kind}: {len(result.pages)} page(s)"
