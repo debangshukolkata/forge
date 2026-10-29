@@ -80,6 +80,11 @@ class SheetSpec(BaseModel):
     validations: list[Validation] = Field(default_factory=list)
     conditional: list[Conditional] = Field(default_factory=list)
     charts: list[ChartSpec] = Field(default_factory=list)
+    formats: dict[str, str] = Field(
+        default_factory=dict,
+        description="Number formats for single cells or ranges where one column holds different kinds of value, "
+        "e.g. a KPI column: {'B2': '#,##0', 'B4': '0.0%'}",
+    )
     notes: dict[str, str] = Field(
         default_factory=dict, description="Cell comments, e.g. {'B1': 'Source: ...'}"
     )

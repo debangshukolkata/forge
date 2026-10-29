@@ -115,6 +115,12 @@ def test_resume_summary_is_honest_without_a_phase() -> None:
     summary = mid.resume_summary()
     assert "1 done" in summary and "1 pending" in summary and "T2" in summary and "ask every step" in summary
 
+    # D-546: without a task list the status says what is true, not "understanding the requirement" after a finished run.
+    free = OrchestratorState(started=True, cadence="free_hand")
+    assert free.resume_summary() == "Working without a task list; cadence: free hand."
+    free.exported = True
+    assert free.resume_summary() == "Delivered; cadence: free hand."
+
 
 def test_requirement_instructions_have_every_section() -> None:
     sections = requirement_instructions()

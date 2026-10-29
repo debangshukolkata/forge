@@ -19,7 +19,7 @@ specification, the openpyxl documentation and our own tests with Excel.
    `check_workbook` hints at any such number that is not styled that way.
 3. **One header row, one record per row, one kind of value per column.** No blank rows or columns inside the data, no merged cells in the data, no
    units inside numbers ("12 kg"): put the unit in the header.
-4. **Formats say what a number is.** Currency `#,##0.00`, percentages `0.0%` (store 0.2, not 20), dates `yyyy-mm-dd`, counts `#,##0`. Dates are real
+4. **Formats say what a number is.** Currency `#,##0.00`, percentages `0.0%` (store 0.2, not 20), dates `yyyy-mm-dd`, counts `#,##0`. A column that mixes kinds (a KPI column with a total, an average and a rate) gets `formats` per cell: `{"B2": "#,##0", "B4": "0.0%"}`. Dates are real
    dates, not text.
 5. **Make it readable:** a `title` on every sheet a person reads (and a `subtitle`: period, unit or source), a header row that stands out, widths that fit (`width` per column), the header row frozen (default), a total row
    (`total_row`), an Excel table (`table: true`) for data people will filter and sort.

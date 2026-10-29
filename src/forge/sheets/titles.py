@@ -97,6 +97,7 @@ def _shift_sheet(sheet: SheetSpec, moved: dict[str, int]) -> SheetSpec:
                 for c in sheet.charts
             ],
             "notes": {address(cell) or cell: text for cell, text in sheet.notes.items()},
+            "formats": {address(cell) or cell: shape for cell, shape in sheet.formats.items()},
         }
     )
 

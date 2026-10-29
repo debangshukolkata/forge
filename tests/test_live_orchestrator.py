@@ -146,25 +146,27 @@ def test_killed_run_resumes_the_same_task(live_env: Path, tmp_path: Path) -> Non
     process = subprocess.Popen(command, env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     store = StateStore(workspace)
     killed_during: str | None = None
+    killed = False
     deadline = time.monotonic() + 1200
     while time.monotonic() < deadline and process.poll() is None:
         time.sleep(3)
         if not store.path.exists():
             continue
         state = store.load()
-        # Kill once the agent is part-way through a task. How many tasks the model makes is its own call
-        # (D-128), so don't require a finished one first.
+        # Kill once the agent is part-way through the work. Whether it plans tasks at all is its own call (D-128): a small
+        # request is often built without a task list, so the kill no longer waits for a current task (D-546).
         events_path = workspace.forge_dir / "transcripts" / "events.jsonl"
         worked = (
             events_path.exists() and events_path.read_text(encoding="utf-8").count("tool_call_finished") >= 8
         )
-        if state.current_task and worked:
+        if worked:
+            killed = True
             killed_during = state.current_task
             for child in psutil.Process(process.pid).children(recursive=True):
                 child.kill()
             process.kill()
             break
-    assert killed_during is not None, "the run finished before it could be killed mid-task"
+    assert killed, "the run finished before it could be killed mid-work"
     process.wait(timeout=30)
     before = store.load()
     finished_before = {t.id for t in before.tasks if t.status == "done"}
@@ -199,8 +201,13 @@ def test_killed_run_resumes_the_same_task(live_env: Path, tmp_path: Path) -> Non
     resume_notices = [
         e for e in events if e["type"] == EventType.NOTICE.value and e["payload"].get("kind") == "resume"
     ]
-    assert resume_notices and f"on {killed_during}" in resume_notices[0]["payload"]["text"]
-    progress = (workspace.forge_dir / "PROGRESS.md").read_text(encoding="utf-8")
-    for task_id in finished_before:  # finished tasks were not redone after the restart
-        assert progress.count(f"{task_id} ") == 1, task_id
+    assert resume_notices, "the restarted run did not say it was resuming"
+    if killed_during:  # with a task list, the same task is picked up
+        assert f"on {killed_during}" in resume_notices[0]["payload"]["text"]
+    if (
+        finished_before
+    ):  # PROGRESS.md exists only with a task list; finished tasks were not redone after the restart
+        progress = (workspace.forge_dir / "PROGRESS.md").read_text(encoding="utf-8")
+        for task_id in finished_before:
+            assert progress.count(f"{task_id} ") == 1, task_id
     assert workspace_tests_pass(workspace)

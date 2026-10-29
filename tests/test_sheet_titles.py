@@ -117,3 +117,30 @@ def test_a_sheet_with_charts_a_little_over_one_page_is_fitted_on_one_and_a_long_
     )
     assert book["D"].page_setup.fitToHeight == 1
     assert book["L"].page_setup.fitToHeight == 0  # many pages of table stay readable, one page wide
+
+
+def test_single_cell_formats_follow_the_title_and_unformatted_calculations_are_hinted() -> None:
+    """D-546, doc-5c w14: a KPI column held a total, an average and a rate; the rate showed as 0.0331... in General format."""
+    from forge.sheets.check import describe_findings
+
+    kpi = {
+        "name": "KPI",
+        "title": "Key figures",
+        "columns": [{"header": "Metric"}, {"header": "Value"}],
+        "rows": [
+            ["Revenue", 1200],
+            ["Refunds", 40],
+            ["Refund rate", "=B3/B2"],
+            ["Average", "=AVERAGE(B2:B3)"],
+        ],
+    }
+    plain = build_workbook(parse_workbook(json.dumps({"sheets": [kpi]})))
+    hint = describe_findings(check_workbook(plain))
+    assert "2 calculated number(s) have no number format (KPI!B7, KPI!B8)" in hint
+    kpi["formats"] = {"B4": "0.0%", "B5": "#,##0.0"}
+    made = build_workbook(parse_workbook(json.dumps({"sheets": [kpi]})))
+    sheet = openpyxl.load_workbook(io.BytesIO(made))["KPI"]
+    assert (
+        sheet["B7"].number_format == "0.0%" and sheet["B8"].number_format == "#,##0.0"
+    )  # moved below the title
+    assert "no number format" not in describe_findings(check_workbook(made))

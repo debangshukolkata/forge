@@ -21,6 +21,12 @@ MAGIC_NUMBER = re.compile(r"(?<![\w.$:!'])(\d+\.\d+|\d{2,})(?![\w.!:(])")
 NUMBER_FORMAT = re.compile(r"[0#]")
 
 
+# A formula that computes a number: a division, or an aggregate. Text formulas (CONCAT, IF on labels) stay quiet.
+CALCULATION = re.compile(
+    r"(?<![<>=])/|\b(SUM|AVERAGE|AVERAGEIFS?|SUMIFS?|SUMPRODUCT|MEDIAN|STDEV\w*|ROUND\w*)\s*\(", re.IGNORECASE
+)
+
+
 @dataclass
 class Finding:
     level: str  # "error" or "hint"
@@ -102,6 +108,9 @@ def check_workbook(data: bytes) -> list[Finding]:
     sheet_names = {s.title for s in formulas_book.worksheets}
     names = set(formulas_book.defined_names.keys())
     findings: list[Finding] = []
+    unformatted: list[
+        str
+    ] = []  # calculated numbers shown in the General format (doc-5c w14: a refund rate with many decimals)
     graph: dict[tuple[str, int, int], set[tuple[str, int, int]]] = {}
     for sheet in formulas_book.worksheets:
         stored = values_book[sheet.title]
@@ -134,6 +143,8 @@ def check_workbook(data: bytes) -> list[Finding]:
                         )
                     )
                 stripped = re.sub(r'"[^"]*"', '""', value)
+                if (cell.number_format or "General") == "General" and CALCULATION.search(stripped):
+                    unformatted.append(where)
                 stripped = re.sub(r"\$?[A-Z]{1,3}\$?\d+", "", stripped)
                 if MAGIC_NUMBER.search(stripped):
                     findings.append(
@@ -143,6 +154,16 @@ def check_workbook(data: bytes) -> list[Finding]:
                             f"a number is typed inside the formula ({value[:60]}): put it in a labelled cell or a named range",
                         )
                     )
+    if unformatted:
+        findings.append(
+            Finding(
+                "hint",
+                unformatted[0],
+                f"{len(unformatted)} calculated number(s) have no number format ({', '.join(unformatted[:4])}{', ...' if len(unformatted) > 4 else ''}): "
+                "Excel then shows a rate as 0.0331... Give each a format: 0.0% for rates and shares, #,##0 for money and counts, #,##0.0 "
+                "for averages. In a build_workbook outline use the column's `format`, or `formats` for single cells ({'B4': '0.0%'})",
+            )
+        )
     from forge.sheets.inputs import unmarked_inputs
 
     loose = unmarked_inputs(formulas_book)

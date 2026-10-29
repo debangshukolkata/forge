@@ -66,7 +66,10 @@ class OrchestratorState(BaseModel):
         current = f", currently on {self.current_task}" if self.current_task else ""
         cadence_note = "" if self.cadence == "default" else f"; cadence: {self.cadence.replace('_', ' ')}"
         if not self.tasks:
-            return f"Understanding the requirement{cadence_note}."
+            # A small request is often built without a task list (D-128): "understanding the requirement" here read as if nothing
+            # had happened, also after a finished 61-minute run (D-546).
+            done_note = "delivered" if self.exported else "working without a task list"
+            return f"{done_note[0].upper()}{done_note[1:]}{cadence_note}."
         return f"{', '.join(bits)}{current}{cadence_note}."
 
     def task(self, task_id: str) -> Task | None:

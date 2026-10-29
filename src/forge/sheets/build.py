@@ -198,6 +198,14 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
         sheet.add_data_validation(made)
     for rule in spec.conditional:
         _conditional(sheet, rule)
+    for (
+        reference,
+        shape,
+    ) in spec.formats.items():  # after the column formats and the total row, so a single cell wins
+        cells = sheet[reference]
+        for row in cells if isinstance(cells, tuple) else ((cells,),):
+            for cell in row if isinstance(row, tuple) else (row,):
+                cell.number_format = shape
     for reference, text in spec.notes.items():
         sheet[reference].comment = Comment(text, "DebCraft")
     return header_row if spec.columns else None
