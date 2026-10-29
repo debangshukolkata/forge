@@ -220,3 +220,43 @@ def test_the_environment_check_reports_missing_values_and_success(
 def test_the_new_checks_are_known_and_asked() -> None:
     wanted = {"tavily_research", "tavily_extract", "tavily_crawl"}
     assert wanted <= set(checks.KNOWN_IDS) and wanted <= set(checks.ASKED_IDS)
+
+
+def test_the_platforms_single_page_extract_reply_is_read() -> None:
+    """D-547, office laptop: Extract answered {ok, status_code, final_url, text, errors, fetch_timestamp}, not Tavily's results list."""
+    reply = {
+        "data": {
+            "output": json.dumps(
+                {
+                    "ok": True,
+                    "status_code": 200,
+                    "final_url": "https://example.com/",
+                    "text": "Example Domain. This domain is for use in examples.",
+                    "errors": [],
+                    "fetch_timestamp": "2026-10-29T12:16:00Z",
+                }
+            )
+        }
+    }
+    pages = parse_pages(reply, SETTINGS)
+    assert pages.pages == [
+        {"url": "https://example.com/", "content": "Example Domain. This domain is for use in examples."}
+    ]
+    with pytest.raises(TavilyToolError, match=r"could not be fetched: .*timeout"):
+        parse_pages(
+            {
+                "ok": False,
+                "status_code": 504,
+                "final_url": "https://x.example",
+                "text": "",
+                "errors": ["timeout"],
+            },
+            SETTINGS,
+        )
+
+
+def test_a_tools_error_text_is_shown_not_just_its_key() -> None:
+    """D-547: Crawl answered {"error": ...}; the message said only "it held: error"."""
+    with pytest.raises(TavilyToolError, match="reported an error: max_depth must be an integer") as caught:
+        parse_pages({"output": {"error": "max_depth must be an integer (token tok-123)"}}, SETTINGS)
+    assert "tok-123" not in str(caught.value)

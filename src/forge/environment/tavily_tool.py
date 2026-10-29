@@ -319,7 +319,12 @@ def parse_report(data: Any, settings: TavilySettings | None = None) -> TavilyRep
 
 
 def parse_pages(data: Any, settings: TavilySettings | None = None) -> TavilyPages:
-    found = _find(data, ("results", "failed_results"))
+    found = _find(data, ("results", "failed_results", "final_url", "error"))
+    if isinstance(found, dict) and "final_url" in found and "results" not in found:
+        return _single_page(found, settings)
+    if isinstance(found, dict) and found.get("error") and "results" not in found:
+        # Show the tool's own words: the bare key name ("it held: error") hid why the crawl failed (office laptop, 2026-10-29, D-547).
+        raise TavilyToolError(_scrub(f"the Tavily tool reported an error: {found['error']}", settings)[:400])
     if isinstance(found, dict) and ("results" in found or "failed_results" in found):
         raw_pages = found.get("results")
         raw_failed = found.get("failed_results")
@@ -335,6 +340,18 @@ def parse_pages(data: Any, settings: TavilySettings | None = None) -> TavilyPage
         return TavilyPages(pages, failed, str(found.get("base_url") or ""))
     message = _failure_message(data) or f"the reply had no pages (it held: {_keys(found)})"
     raise TavilyToolError(_scrub(message, settings)[:300])
+
+
+def _single_page(found: dict[str, Any], settings: TavilySettings | None) -> TavilyPages:
+    """The company platform's Extract answers with one fetched page, not Tavily's `results` list:
+    {"ok", "status_code", "final_url", "text", "errors", "fetch_timestamp"} (seen on the office laptop, 2026-10-29, D-547)."""
+    url = str(found.get("final_url") or "")
+    status = found.get("status_code")
+    failed = found.get("ok") is False or (isinstance(status, int) and status >= 400)
+    if failed:
+        reason = found.get("errors") or (f"HTTP {status}" if status else "no reason given")
+        raise TavilyToolError(_scrub(f"the page {url} could not be fetched: {reason}", settings)[:400])
+    return TavilyPages([{"url": url, "content": str(found.get("text") or "")}], [], "")
 
 
 async def research(
