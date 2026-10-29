@@ -47,3 +47,4 @@ answers it and stop when it has.
 
 ## Gotchas
 - (2026-10-29, t22_security_fix) A security review is not done when the existing tests pass: list every function that takes outside input, name the sinks it reaches (HTML, link, redirect, file, SQL, shell, deserialiser, evaluator) and write one hostile test per pair; the recipe rcp-security has the checks. In t22 one rewrite passed its 12 tests and missed javascript: links, open redirects and a signed non-dictionary cookie.
+- (2026-10-29, TI3 2026-10-29, D-559) When an existing test fails after your change, decide whether its old expectation is still right before you edit it. A changed expected value needs a reason from the requirement; check what the old value protected (uniqueness, ordering, an id sequence). In TI3 a count change made new claim numbers repeat an existing one, and the test was edited to expect the duplicate; the right fix was in the code that derived the number.

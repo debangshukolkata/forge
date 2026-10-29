@@ -28,7 +28,10 @@ SLOW_TESTS = "import time\n\nimport pytest\n\n\n@pytest.mark.parametrize('n', ra
 
 def command_of(event) -> str:  # type: ignore[no-untyped-def]
     arguments = event.payload.get("arguments") or {}
-    return str(arguments.get("command") or "")
+    if arguments.get("command"):
+        return str(arguments["command"])
+    # python_run passes its arguments separately ("-m pytest"); without this every python_run test call was missed (D-559).
+    return f"python {arguments['args']}" if arguments.get("args") else ""
 
 
 @pytest.mark.parametrize("repeat", [1, 2, 3])
