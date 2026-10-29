@@ -183,7 +183,7 @@ def _logged(
     return type(error)(f"{error}.{where}")
 
 
-def _body(settings: TavilySettings, args: dict[str, str]) -> dict[str, Any]:
+def _body(settings: TavilySettings, args: dict[str, Any]) -> dict[str, Any]:
     try:
         tool_id = int(settings.tool_id)
     except ValueError as error:
@@ -406,15 +406,33 @@ async def crawl(
     chunks_per_source: int = 3,
     client_factory: Callable[[], httpx.AsyncClient] | None = None,
 ) -> TavilyPages:
-    args = {  # strings, as the platform's own test call sends them
+    # Numbers as numbers: the platform's Crawl compares them ("'<' not supported between instances of 'str' and 'int'" on the
+    # office laptop, 2026-10-29, D-551; the strings came from its sample payload). Tavily documents chunks_per_source (1 to 5)
+    # only together with instructions, so the first try leaves it out without them; if the platform refuses that shape, the
+    # second try sends it anyway. Each failed try writes its own log (D-548).
+    base: dict[str, Any] = {
         "url": url,
-        "max_depth": str(max_depth),
-        "max_breadth": str(max_breadth),
+        "max_depth": max_depth,
+        "max_breadth": max_breadth,
         "instructions": instructions,
-        "chunks_per_source": str(
-            chunks_per_source if instructions else 0
-        ),  # chunks only apply with instructions
     }
-    return await _exchange(
-        "crawl", settings, _body(settings, args), client_factory, lambda data: parse_pages(data, settings)
+    shapes = (
+        [{**base, "chunks_per_source": chunks_per_source}]
+        if instructions
+        else [base, {**base, "chunks_per_source": chunks_per_source}]
     )
+    failures: list[str] = []
+    for args in shapes:
+        try:
+            return await _exchange(
+                "crawl",
+                settings,
+                _body(settings, args),
+                client_factory,
+                lambda data: parse_pages(data, settings),
+            )
+        except TavilyAuthError:
+            raise  # another shape will not help
+        except TavilyToolError as error:
+            failures.append(str(error))
+    raise TavilyToolError(" Then: ".join(failures))

@@ -4,6 +4,7 @@ its number is set, the guards, and the environment checks. No network: the trans
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -87,13 +88,37 @@ async def test_extract_and_crawl_payloads() -> None:
     await crawl(SETTINGS, "https://docs.example", 2, 5, "find the auth guide", 3, client_for(handler))
     assert handler.seen[1]["body"]["args"] == {
         "url": "https://docs.example",
-        "max_depth": "2",
-        "max_breadth": "5",
+        "max_depth": 2,  # numbers, D-551: the platform compares them
+        "max_breadth": 5,
         "instructions": "find the auth guide",
-        "chunks_per_source": "3",
+        "chunks_per_source": 3,
     }
     await crawl(SETTINGS, "https://docs.example", client_factory=client_for(handler))
-    assert handler.seen[2]["body"]["args"]["chunks_per_source"] == "0"  # chunks only apply with instructions
+    assert "chunks_per_source" not in handler.seen[2]["body"]["args"]  # documented only with instructions
+
+
+async def test_a_refused_crawl_shape_is_retried_with_chunks_and_both_tries_are_logged(
+    isolated_forge_home: Path,
+) -> None:
+    """D-551: the first shape (no chunks_per_source without instructions) may be refused; the second sends it."""
+    seen: list[dict[str, Any]] = []
+
+    def platform(request: httpx.Request) -> httpx.Response:
+        args = json.loads(request.content)["args"]
+        seen.append(args)
+        if "chunks_per_source" not in args:
+            return httpx.Response(200, json={"output": {"error": "chunks_per_source is required"}})
+        return httpx.Response(200, json={"output": PAGES})
+
+    pages = await crawl(SETTINGS, "https://docs.example", client_factory=client_for(platform))
+    assert pages.pages and len(seen) == 2 and seen[1]["chunks_per_source"] == 3
+    assert len(list((isolated_forge_home / "logs").glob("tavily-crawl-*.log"))) == 1  # the refused first try
+
+    def always_refuse(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"error": "'<' not supported between instances of 'str' and 'int'"})
+
+    with pytest.raises(TavilyToolError, match=r"not supported.*Then: .*not supported"):
+        await crawl(SETTINGS, "https://docs.example", client_factory=client_for(always_refuse))
 
 
 # --- the platform's wrapping ---
@@ -276,11 +301,13 @@ async def test_a_failed_call_writes_a_log_of_what_was_sent_and_what_came_back(
         await crawl(SETTINGS, "https://example.com", max_depth=1, max_breadth=1, client_factory=platform)
     message = str(caught.value)
     assert "Details: " in message
-    log = Path(message.split("Details: ", 1)[1].rstrip("."))
+    logs = [Path(found) for found in re.findall(r"Details: (\S+?\.log)", message)]
+    assert len(logs) == 2  # both crawl shapes were tried (D-551), each with its own log
+    log = logs[0]
     assert log.parent == isolated_forge_home / "logs" and log.name.startswith("tavily-crawl-")
     text = log.read_text(encoding="utf-8")
     assert "Endpoint: https://platform.example/execute-tool" in text and "Tool number: 2362" in text
-    assert '"chunks_per_source": "0"' in text and "HTTP status: 200" in text
+    assert '"max_depth": 1' in text and "HTTP status: 200" in text
     assert "output (JSON text): object with error, echo" in text  # the reply's structure, opened up
     assert "tok-123" not in text and "tok-123" not in message
 
