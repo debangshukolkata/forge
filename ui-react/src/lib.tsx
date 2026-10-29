@@ -53,6 +53,7 @@ export function Markdown({ text, className }: { text: string; className?: string
     root.querySelectorAll("pre code").forEach((block) => hljs.highlightElement(block as HTMLElement));
     // A file path in chat looks clickable: it opens the card with its absolute location.
     root.querySelectorAll("code").forEach((code) => {
+      if (code.closest("td, th") && !code.closest("pre")) allowBreaks(code);
       if (code.closest("pre") || !filePathOf(code.textContent ?? "")) return;
       code.classList.add("md-file");
       code.title = "Click to see the full path on disk";
@@ -102,6 +103,20 @@ const FILE_EXTENSIONS = "py|pyi|js|jsx|ts|tsx|json|yaml|yml|toml|ini|cfg|md|txt|
 const FILE_PATH = new RegExp(String.raw`^([\w.\-@+]+(?:[\\/][\w.\-@+ ]+)*\.(?:${FILE_EXTENSIONS}))(?::\d+(?:[,-]\d+)*)?$`, "i");
 
 /** `file.py`, `dir/file.py` or `dir/file.py:31,36` as written in chat; null for anything that is not a project file. */
+/** A path in a table cell has no spaces, so the browser could not wrap it: the column took the width, the last column was cut
+ * off and its rows grew tall (office screenshot 2026-10-29). <wbr> after / \ _ lets it wrap there; the text itself is unchanged,
+ * so copying and the file-location click still read the real path. Built from DOM nodes, never HTML strings. */
+function allowBreaks(code: Element): void {
+  if (code.querySelector("wbr") || code.children.length) return;
+  const parts = (code.textContent ?? "").split(/(?<=[/\\_])/);
+  if (parts.length < 2) return;
+  code.textContent = "";
+  parts.forEach((part, index) => {
+    code.appendChild(document.createTextNode(part));
+    if (index < parts.length - 1) code.appendChild(document.createElement("wbr"));
+  });
+}
+
 function filePathOf(text: string): string | null {
   const match = FILE_PATH.exec(text.trim());
   return match ? match[1] : null;

@@ -1,4 +1,4 @@
-"""Chat layout in headless Edge (D-507): the column follows the side panel, a wide table scrolls inside itself, the newest prompt stays
+"""Chat layout in headless Edge (D-507): the column follows the side panel, a table of long paths fits the column, the newest prompt stays
 pinned while its reply scrolls, a file path in chat opens a card with its absolute location, and the Chat / Run map tabs are gone.
 Screenshots go to test-artifacts/react-ui/."""
 
@@ -62,6 +62,12 @@ def test_chat_layout_follows_the_panel_pins_the_prompt_and_shows_paths(
         scroller = page.locator("[aria-live=polite]").first
         sizes = scroller.evaluate("e => [e.scrollWidth, e.clientWidth]")
         assert sizes[0] <= sizes[1] + 1, sizes
+        # A table of long paths fits the column: the paths wrap after / and _ instead of pushing the last column off screen
+        # (office screenshot 2026-10-29, D-549); the break points do not change the path's text.
+        table = page.locator(".md table").first
+        fit = table.evaluate("t => [t.scrollWidth, t.clientWidth]")
+        assert fit[0] <= fit[1] + 1, fit
+        assert page.locator(f"td code:has-text('{LONG_PATH[:30]}')").first.text_content() == LONG_PATH
 
         # The newest prompt stays at the top of the chat while its reply is read.
         scroller.evaluate("e => { e.scrollTop = e.scrollHeight / 2; }")
