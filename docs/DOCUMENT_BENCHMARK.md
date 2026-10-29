@@ -117,3 +117,10 @@ Cost $1.79 for the fourteen, 21 minutes. **Reading:** the model used `build_work
 
 **Reading:** with titles the judge stopped naming a missing title; the two faults the titles exposed (a chart across a page break, charts reading the wrong sheet) are fixed. Next lever: number formats on summary values (w14) and the total row's look (w02). One run each.
 
+## Run doc-6 (2026-10-29): total row and negative bars (D-556)
+| Task | Checks | Judge s/r/t/p | Worst problem now |
+|---|---|---|---|
+| w02 clean and chart | 8/8 | 4/4/5/3 | a negative bar drawn white and outlined (fixed after this run, D-556) |
+| w06 budget | 7/7 | 4/3/4/3 | blank space on the page |
+| w14 excel dashboard | 7/7 | 4/3/3/3 | "2,79,500": Excel's Indian digit grouping on this machine's region, not a file fault |
+

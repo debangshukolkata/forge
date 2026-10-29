@@ -405,3 +405,38 @@ def test_a_chart_on_a_summary_sheet_can_draw_another_sheets_numbers_and_an_empty
     with pytest.raises(WorkbookError, match="names a sheet that does not exist"):
         summary["charts"] = [{"type": "column", "data": "Sales!B1:B7", "anchor": "D2"}]
         build_workbook(parse_workbook(json.dumps({"sheets": [summary, data_sheet]})))
+
+
+def test_the_total_row_is_one_band_with_rules_and_formatted_numbers() -> None:
+    """D-556, doc-5c w02: the judge called the total row unfinished: only the named cells bold, no rule, sums in General."""
+    sheet = _chart_book(
+        {
+            "name": "Orders",
+            "columns": [{"header": "Item"}, {"header": "Qty"}, {"header": "Amount"}, {"header": "Note"}],
+            "rows": [["Kettle", 2, 19.5], ["Toaster", 1, 24.0]],
+            "total_row": {"A": "Total", "B": "SUM", "C": "SUM"},
+        }
+    )
+    row = [sheet.cell(row=4, column=column) for column in range(1, 5)]
+    assert all(
+        cell.font.bold and cell.fill.fgColor.rgb.endswith("F2F2F2") for cell in row
+    )  # the Note column too
+    assert all(cell.border.top.style == "thin" and cell.border.bottom.style == "double" for cell in row)
+    assert (
+        row[1].number_format == "#,##0" and row[2].number_format == "#,##0.00"
+    )  # whole numbers, then money-like
+
+
+def test_a_negative_bar_keeps_its_colour_and_the_labels_sit_below_the_chart() -> None:
+    """D-556, doc-6 w02: a negative amount was drawn as a white outlined box and 'Toaster' was printed inside it."""
+    sheet = _chart_book(
+        {
+            "name": "Orders",
+            "columns": [{"header": "Product"}, {"header": "Amount"}],
+            "rows": [["Kettle", 1200.5], ["Toaster", -300], ["Blender", 950]],
+            "charts": [{"type": "column", "data": "B1:B4", "categories": "A2:A4", "anchor": "D2"}],
+        }
+    )
+    chart = sheet._charts[0]
+    assert all(series.invertIfNegative is False for series in chart.series)
+    assert chart.x_axis.tickLblPos == "low"

@@ -126,6 +126,12 @@ def build_chart(sheet: Any, chart: ChartSpec) -> Any:
             made.x_axis.title = chart.x_title
         if chart.y_title:
             made.y_axis.title = chart.y_title
+        if chart.type in ("column", "bar"):
+            # A negative bar kept its colour only with invertIfNegative off (Excel drew it white and outlined, read as a stray
+            # selection box), and the category labels sit at the bottom, not on the zero line inside the negative bars (doc-6 w02, D-556).
+            for series in made.series:
+                series.invertIfNegative = False
+            made.x_axis.tickLblPos = "low"
         made.x_axis.delete = False  # recent openpyxl versions hide the axes unless told otherwise
         made.y_axis.delete = False
         if made.y_axis.majorGridlines is not None:
