@@ -476,3 +476,26 @@ async def test_a_colour_the_owner_accepted_below_the_contrast_guideline_is_not_r
     finally:
         await BrowserClose().run(BrowserClose.Args(), context)
         server.shutdown()
+
+
+@pytest.mark.e2e
+async def test_a_broken_svg_image_is_reported_with_its_usual_cause(
+    site: str, tmp_path: Path, original_repo: Path
+) -> None:
+    """D-540: an SVG without the SVG namespace loads but draws nothing; the model saw only "broken image" and left it."""
+    pytest.importorskip("playwright.async_api")
+    root = tmp_path / "site"
+    (root / "bare.svg").write_text(
+        '<svg viewBox="0 0 10 10"><rect width="10" height="10"/></svg>', encoding="utf-8"
+    )
+    (root / "svg.html").write_text(
+        STYLED.replace("<main>", '<main><img src="bare.svg" alt="hero">'), encoding="utf-8"
+    )
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+    try:
+        assert (await BrowserOpen().run(BrowserOpen.Args(url=f"{site}/svg.html"), context)).ok
+        shot = await BrowserScreenshot().run(BrowserScreenshot.Args(), context)
+        assert "Broken images: bare.svg." in shot.content, shot.content
+        assert 'lacks xmlns="http://www.w3.org/2000/svg"' in shot.content
+    finally:
+        await BrowserClose().run(BrowserClose.Args(), context)

@@ -1,0 +1,1 @@
+Design a one-page landing page for Stillwater, a yoga studio in Lisbon, with a booking section. Write real copy. Put it in project/index.html with project/style.css (plain HTML and CSS, no build step). It must work on a phone. Look at it in a browser at desktop and phone width before you finish.

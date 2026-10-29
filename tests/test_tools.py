@@ -127,6 +127,25 @@ async def test_write_file_reports_syntax_errors(context: ToolContext) -> None:
     assert result.ok and "Syntax check FAILED" in result.content
 
 
+async def test_write_file_reports_an_svg_that_will_not_show_as_an_image(context: ToolContext) -> None:
+    """D-540: without the SVG namespace the file loads but draws nothing in <img>; the audit only said "broken image"."""
+    bare = await call(
+        WriteFile(),
+        context,
+        path="web/hero.svg",
+        content='<svg viewBox="0 0 10 10"><rect width="10" height="10"/></svg>',
+    )
+    good = await call(
+        WriteFile(),
+        context,
+        path="web/ok.svg",
+        content='<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"/>',
+    )
+
+    assert bare.ok and 'no xmlns="http://www.w3.org/2000/svg"' in bare.content
+    assert good.ok and "SVG check" not in good.content
+
+
 async def test_write_file_refuses_to_overwrite_unread_file(context: ToolContext) -> None:
     result = await call(WriteFile(), context, path=ERRORS, content="x = 1\n")
 

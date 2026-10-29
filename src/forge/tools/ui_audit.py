@@ -166,7 +166,11 @@ AUDIT_SCRIPT = r"""
     && Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim()));
   if (tiny.length) findings.push('Text smaller than 12px: ' + sample(tiny) + '.');
   const broken = Array.from(document.images).filter((i) => i.complete && i.naturalWidth === 0);
-  if (broken.length) findings.push('Broken images: ' + broken.slice(0, 4).map((i) => i.getAttribute('src')).join(', ') + '.');
+  if (broken.length) {
+    const sources = broken.slice(0, 4).map((i) => i.getAttribute('src') || '');
+    const svg = sources.some((src) => /\.svg($|[?#])/i.test(src));  // D-540: the usual cause of a broken SVG that loads fine
+    findings.push('Broken images: ' + sources.join(', ') + '.' + (svg ? ' An SVG file that loads but does not show usually lacks xmlns="http://www.w3.org/2000/svg" on its <svg> tag; check that first.' : ''));
+  }
   const noAlt = Array.from(document.images).filter((i) => !i.hasAttribute('alt'));
   if (noAlt.length) findings.push(noAlt.length + ' image(s) without alt text (accessibility): ' + noAlt.slice(0, 4).map((i) => { const s = i.getAttribute('src') || ''; return !s || s.indexOf('data:') === 0 ? 'an inline image' : s.split('/').pop().slice(0, 40); }).join(', ') +
     '. Add alt text that says what each picture shows to someone who cannot see it; alt="" only when it is purely decorative.');

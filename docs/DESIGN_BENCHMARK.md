@@ -64,6 +64,15 @@ What it showed:
 - AS1 did not work in two of three application briefs: the model named invented compositions (`app-northline-bright-logistics`, `app-kestrel-booking-wizard`, `lay-admin-table`) that are not in the catalogue, so the real screens (`app-dashboard-ops`, `app-form-wizard`) were never copied and the pages were written from a blank file. Fix: `design_candidates` now refuses a composition that is not a catalogue id (naming the nearest real ones) and tells the winner to `add_asset` it (D-406). The effect is measured in the next benchmark run.
 - The judge's worst problem in d04 and d05 is the same in each: "generic SaaS" look that does not reflect the product's world; d01 "generic rounded cards and gradients". The pipeline makes pages competent, not yet characterful.
 
+## Run stillwater-2026-10-29 (BO6: the landing brief of the D-485 comparison, after the Concept step D-486)
+New brief `d07_stillwater` (the yoga-studio landing page of the seven-skill comparison, written down so it can be repeated).
+
+| Brief | Wall | Cost | Ladder | DESIGN.md lint (err/warn) | Differs from default in | Audit left (desktop / phone) | Sideways scroll | Judge (type/dist/hier/harm/fit/polish) |
+|---|---|---|---|---|---|---|---|---|
+| d07_stillwater | 1004s | 1.34 | yes | 0/0 | 3 | 1 / 1 | no | 5/4/5/5/5/5 |
+
+**Reading:** the Concept step did its job: DESIGN.md names an idea ("morning practice above the Tagus") and a signature visual (a drawn riverfront at first light filling the right half of the hero), the composition is an editorial split, the type is a serif display with an italic accent, and the page is no longer a headline, a card and three columns. But the drawn hero never showed: the SVG lacked `xmlns`, so `<img>` drew nothing and the page shipped an empty teal arch with its alt text. The audit said "Broken images" twice; the model fetched the file (it loaded) and moved on. Fixed in D-540. The judge still scored 5/4/5/5/5/5 and named the "cropped, empty" arch as the worst problem: it does not punish a missing hero picture enough. One run.
+
 ## Limits of this measurement
 Two briefs, one run each, a vision model as judge (the same family as the builder, calibrated only at the bottom of the scale). Do not read small
 differences as signal; read the tool-use facts (ladder used, fonts loaded) and the worst problem the judge names.
