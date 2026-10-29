@@ -231,3 +231,15 @@ t15 45/47, t16 18/18, t17 42/42, t18 24/24, t19 19/19, t20 84/86 (was 80/86), t2
 
 **Reading:** gpt-4.1 gave every task 5 of 5 and called t22's code thorough on security although 23 of its 93 hidden tests fail: useless as a judge. gpt-5.1 gave 5 overall exactly to the four tasks that pass all hidden tests and 3 or 4 to the five that do not, each with a concrete, checkable fault. It still scores security 5 on t22 and t23 (it cannot see the attacks it misses), so it is a second opinion next to the hidden tests, never instead of them. gpt-5.1 is the builder's own family (lenient by the literature, MODEL_ROLES.md); on the office laptop the judge is Gemini 4 Argon. The judge does not record its cost (nine calls, one per task).
 
+### C16 skill arms, larger repeat (2026-10-29, D-550)
+`run_skill_arms.py c16b-2026-10-29`, the five tasks where some hidden tests fail (t15, t20, t21, t22, t23), two runs per arm, default model. Superpowers run 1 lost t15, t20 and t21 to a workspace setup timeout (`python -m venv` over 300 s while other heavy jobs shared the machine), rerun as `c16b-fill-2026-10-29`.
+
+| Arm | Run 1 | Run 2 | Mean (of 344) | Cost per run of five tasks |
+|---|---|---|---|---|
+| baseline (workflow skills off) | 314 | 320 | 317 | $2.58, $2.22 |
+| distilled (DebCraft as shipped) | 311 | 319 | 315 | $2.25, $2.41 |
+| superpowers | 317 | 305 | 311 | $5.07, $4.36 |
+| mattpocock | 320 | 310 | 315 | $2.54, $2.12 |
+
+Per task the spread inside one arm is larger than between arms: t22 runs from 70 to 82 of 93 within the same arm. Superpowers costs about twice as much and runs longest (its t15 took 26 minutes and 73 model calls). **Reading:** on these harder tasks no workflow skill set scores measurably above the baseline; the first run's gain on t20 (D-537) is not confirmed here (baseline 79 and 84, distilled 86 and 85, a small edge at most). Our set costs the same as the baseline. Nothing in this argues for importing either external set.
+
