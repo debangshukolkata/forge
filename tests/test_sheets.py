@@ -368,3 +368,40 @@ def test_constant_date_formulas_in_a_date_column_become_real_dates() -> None:
     assert sheet["A2"].value == datetime(2026, 11, 4) and sheet["A3"].value == datetime(2026, 11, 6)
     assert sheet["B2"].value == "=DATE(2026,11,4)"  # not a date column: left alone
     assert sheet["A4"].value == "=DATE(2026,13,1)" and sheet["A5"].value == "=TODAY()"
+
+
+def test_a_chart_on_a_summary_sheet_can_draw_another_sheets_numbers_and_an_empty_range_is_caught() -> None:
+    """D-543, doc-5b w14: the charts sat on the KPI sheet, their ranges did not name the Data sheet, and they drew empty cells."""
+    months = [[month, 100 + n] for n, month in enumerate(MONTHS[:6])]
+    summary = {
+        "name": "KPI",
+        "title": "Summary",
+        "columns": [{"header": "KPI"}, {"header": "Value"}],
+        "rows": [["Best", "=MAX(Data!B2:B7)"]],
+        "charts": [{"type": "column", "data": "Data!B1:B7", "categories": "Data!A2:A7", "anchor": "D2"}],
+    }
+    data_sheet = {
+        "name": "Data",
+        "title": "Monthly data",
+        "columns": [{"header": "Month"}, {"header": "Revenue"}],
+        "rows": months,
+    }
+    made = build_workbook(
+        parse_workbook(json.dumps({"sheets": [summary, data_sheet]}))
+    )  # the chart's sheet comes first
+    chart = openpyxl.load_workbook(io.BytesIO(made))["KPI"]._charts[0]
+    assert chart.series[0].val.numRef.f == "'Data'!$B$5:$B$10"  # moved below the Data sheet's title too
+    categories = (
+        chart.series[0].cat.numRef or chart.series[0].cat.strRef
+    )  # openpyxl writes numRef for any range
+    assert categories.f == "'Data'!$A$5:$A$10"
+    assert "holds no numbers" not in describe_findings(check_workbook(made))
+
+    summary["charts"] = [
+        {"type": "column", "data": "C2:C7", "categories": "A2:A7", "anchor": "D2"}
+    ]  # as in w14
+    blank = build_workbook(parse_workbook(json.dumps({"sheets": [summary, data_sheet]})))
+    assert "holds no numbers" in describe_findings(check_workbook(blank))
+    with pytest.raises(WorkbookError, match="names a sheet that does not exist"):
+        summary["charts"] = [{"type": "column", "data": "Sales!B1:B7", "anchor": "D2"}]
+        build_workbook(parse_workbook(json.dumps({"sheets": [summary, data_sheet]})))

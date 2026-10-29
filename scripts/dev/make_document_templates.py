@@ -90,11 +90,15 @@ WORKBOOK_BUDGET = {
     "sheets": [
         {
             "name": "Assumptions",
+            "title": "Budget assumptions",
+            "subtitle": "Change these values; the budget follows",
             "columns": [{"header": "Item", "width": 28}, {"header": "Value", "format": "0.0%"}],
             "rows": [["Growth per month", 0.03], ["Tax rate", 0.2], ["Cost growth per month", 0.01]],
         },
         {
             "name": "Budget",
+            "title": "Budget, first quarter",
+            "subtitle": "Monthly revenue, costs, profit and tax",
             "columns": [
                 {"header": "Month", "width": 14},
                 {"header": "Revenue", "format": "#,##0"},
@@ -131,6 +135,8 @@ WORKBOOK_TRACKER = {
     "sheets": [
         {
             "name": "Tasks",
+            "title": "Task tracker",
+            "subtitle": "Owner, status, due date and priority of every task",
             "table": True,
             "columns": [
                 {"header": "Task", "width": 36},

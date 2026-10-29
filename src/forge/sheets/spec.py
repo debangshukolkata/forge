@@ -45,11 +45,11 @@ class ChartSpec(BaseModel):
     title: str = ""
     data: str = Field(
         description="Range of the values with its one header cell, e.g. B1:D13 (one series per column); "
-        "a single row such as B14:M14 is one series along the row"
+        "a single row such as B14:M14 is one series along the row; Data!B1:B13 reads another sheet"
     )
     categories: str | None = Field(
         default=None,
-        description="Range of the category labels without header, e.g. A2:A13, or a row such as B1:M1; "
+        description="Range of the category labels without header, e.g. A2:A13 or Data!A2:A13, or a row such as B1:M1; "
         "it must hold as many cells as each series has values",
     )
     anchor: str = Field(
@@ -61,6 +61,12 @@ class ChartSpec(BaseModel):
 
 class SheetSpec(BaseModel):
     name: str
+    title: str = Field(
+        default="",
+        description="A title shown above the table (row 1); the table then starts at row 4. Keep writing every address "
+        "as if the header were row 1: the builder moves them",
+    )
+    subtitle: str = Field(default="", description="One line under the title: period, source or purpose")
     columns: list[Column] = Field(default_factory=list)
     rows: list[list[Any]] = Field(default_factory=list)
     table: bool = Field(

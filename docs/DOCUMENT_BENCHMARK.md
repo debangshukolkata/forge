@@ -107,3 +107,13 @@ Limits: one run per task, a judge from the same model family, tasks written the 
 
 Cost $1.79 for the fourteen, 21 minutes. **Reading:** the model used `build_workbook` and `build_document` in every task that builds a file, w06 included; the chart and page-split complaints did not come back. Three faults found and fixed (D-541) and re-checked live on w05, w07, w14: a checker false positive on letters, text cut off by the model's own column widths, and dates written as `=DATE()` formulas. The judge's commonest complaint is now a missing title above a sheet's table (w02, w06, w07, w08, w14): next lever, not changed tonight (a title row moves the header off row 1, which the table, the freeze and the print titles rely on). One run each.
 
+## Runs doc-5, doc-5b, doc-5c (2026-10-29): sheet titles (D-543), the four workbook tasks
+| Task | doc-4 | doc-5 (titles) | after the fixes (doc-5c) | Worst problem now |
+|---|---|---|---|---|
+| w02 clean and chart | 8/8, 2/3/4/3 | 8/8, 3/4/4/4 (no title: the clean_table outline had none) | 8/8, 4/4/4/3 | default Excel look, total row formatting |
+| w06 budget | 7/7, 3/4/4/3 | 7/7, 4/3/4/4 | - | small print |
+| w07 tracker | 7/7, 3/4/5/4 | 7/7, 4/5/5/5 | - | white space |
+| w14 excel dashboard | 7/7, 3/3/3/3 | 7/7, 2/3/2/2 (a chart cut by the page break; charts drew the wrong sheet) | 7/7, 4/4/4/3 | refund rate without a percent format |
+
+**Reading:** with titles the judge stopped naming a missing title; the two faults the titles exposed (a chart across a page break, charts reading the wrong sheet) are fixed. Next lever: number formats on summary values (w14) and the total row's look (w02). One run each.
+

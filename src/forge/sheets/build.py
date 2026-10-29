@@ -12,9 +12,11 @@ from typing import Any
 from forge.brand.kit import Resolved
 from forge.sheets.charts import place_charts, print_setup
 from forge.sheets.spec import Conditional, SheetSpec, WorkbookError, WorkbookSpec
+from forge.sheets.titles import TITLE_ROWS, moved_spec
 
 INVALID_TITLE = re.compile(r"[\[\]:*?/\\]")
 HEADER_FILL = "1F3864"
+SUBTITLE_GREY = "595959"
 ISO_DATE = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
 DATE_FORMULA = re.compile(r"=DATE\((\d{4}),(\d{1,2}),(\d{1,2})\)", re.IGNORECASE)
 MAX_FITTED_WIDTH = 50.0  # a column sized from its content stops here; longer text wraps
@@ -78,7 +80,8 @@ def _conditional(sheet: Any, rule: Conditional) -> None:
     sheet.conditional_formatting.add(rule.range, made)
 
 
-def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -> list[str]:
+def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -> int | None:
+    """Fills one sheet; returns its header row (None without columns). Charts come later, once every sheet exists."""
     from openpyxl.comments import Comment
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import column_index_from_string, get_column_letter
@@ -92,8 +95,21 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
     fill_colour = brand.header_fill or HEADER_FILL
     header_font = Font(bold=True, color=brand.header_text or "FFFFFF", name=brand.body_font)
     header_fill = PatternFill(start_color=fill_colour, end_color=fill_colour, fill_type="solid")
+    header_row = 1 + (
+        TITLE_ROWS if spec.title else 0
+    )  # the outline's addresses were moved to match (titles.py)
+    if spec.title:
+        title = sheet.cell(row=1, column=1, value=spec.title)
+        title.font = Font(
+            bold=True, size=16, name=brand.title_font or brand.body_font, color=brand.heading or fill_colour
+        )
+        sheet.row_dimensions[1].height = 24
+        if spec.subtitle:
+            sheet.cell(row=2, column=1, value=spec.subtitle).font = Font(
+                size=11, italic=True, name=brand.body_font, color=SUBTITLE_GREY
+            )
     for index, column in enumerate(spec.columns, start=1):
-        cell = sheet.cell(row=1, column=index, value=column.header)
+        cell = sheet.cell(row=header_row, column=index, value=column.header)
         if not spec.table:
             cell.font, cell.fill = header_font, header_fill
         cell.alignment = Alignment(vertical="center", wrap_text=True)
@@ -109,7 +125,9 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
         sheet.column_dimensions[get_column_letter(index)].width = column.width or max(
             10.0, min(MAX_FITTED_WIDTH, longest + 4.0)
         )
-    first_row = 2 if spec.columns else 1  # the header takes row 1 only when there is one
+    first_row = (
+        header_row + 1 if spec.columns else header_row
+    )  # the header takes its row only when there is one
     for row_number, row in enumerate(spec.rows, start=first_row):
         for index, value in enumerate(row, start=1):
             if (
@@ -145,14 +163,14 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
                 cell = sheet.cell(row=total, column=index, value=what)
             cell.font = Font(bold=True)
     if spec.table and spec.columns and spec.rows:
-        reference = f"A1:{get_column_letter(len(spec.columns))}{last_row}"
+        reference = f"A{header_row}:{get_column_letter(len(spec.columns))}{last_row}"
         table = Table(displayName=re.sub(r"\W", "_", spec.name)[:30] or "Table1", ref=reference)
         table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
         sheet.add_table(table)
     if spec.freeze:
         sheet.freeze_panes = spec.freeze
     elif spec.columns:
-        sheet.freeze_panes = "A2"
+        sheet.freeze_panes = f"A{header_row + 1}"
     for validation in spec.validations:
         if validation.choices:
             made = DataValidation(
@@ -182,9 +200,7 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
         _conditional(sheet, rule)
     for reference, text in spec.notes.items():
         sheet[reference].comment = Comment(text, "DebCraft")
-    notes = place_charts(sheet, spec.charts)
-    print_setup(sheet, has_header=bool(spec.columns))
-    return notes
+    return header_row if spec.columns else None
 
 
 def build_workbook(spec: WorkbookSpec, notes: list[str] | None = None) -> bytes:
@@ -194,8 +210,14 @@ def build_workbook(spec: WorkbookSpec, notes: list[str] | None = None) -> bytes:
     workbook = openpyxl.Workbook()
     brand = Resolved(spec.brand)
     try:
-        for index, sheet in enumerate(spec.sheets):
-            moved = _build_sheet(workbook, sheet, index == 0, brand)
+        spec = moved_spec(spec)  # a titled sheet's table starts below its title
+        header_rows = [
+            _build_sheet(workbook, sheet, index == 0, brand) for index, sheet in enumerate(spec.sheets)
+        ]
+        for sheet, header_row in zip(spec.sheets, header_rows, strict=True):
+            made = workbook[sheet.name]
+            moved = place_charts(made, sheet.charts)
+            print_setup(made, header_row=header_row)
             if notes is not None:
                 notes.extend(moved)
         from openpyxl.workbook.defined_name import DefinedName

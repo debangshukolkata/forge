@@ -365,3 +365,30 @@ def test_the_edit_and_extract_checks_fail_on_an_empty_workspace_and_pass_good_ou
     kpi.add_chart(line, "D20")
     book.save(workspace / "project" / "dashboard.xlsx")
     assert bench.check_w14(workspace)["checks_failed"] == []
+
+
+def test_the_exports_title_lines_may_be_the_sheet_title_but_not_data(tmp_path: Path) -> None:
+    """D-543: clean_table now keeps "Quarterly export" as the sheet title; left among the rows it still fails."""
+    from forge.sheets.build import build_workbook
+    from forge.sheets.spec import parse_workbook
+
+    def failed(sheet: dict[str, object]) -> list[str]:
+        folder = tmp_path / str(len(list(tmp_path.iterdir())))  # one workspace per case
+        folder.mkdir()
+        workspace = _workspace(folder)
+        (workspace / "project" / "orders.xlsx").write_bytes(
+            build_workbook(parse_workbook(json.dumps({"sheets": [sheet]})))
+        )
+        return list(bench.check_w02(workspace)["checks_failed"])
+
+    columns = [{"header": "Product"}, {"header": "Amount"}]
+    titled = {
+        "name": "Orders",
+        "title": "Quarterly export",
+        "subtitle": "Generated 03/01/2026",
+        "columns": columns,
+        "rows": [["Kettle", 1]],
+    }
+    left_in = {"name": "Orders", "columns": columns, "rows": [["Quarterly export", None], ["Kettle", 1]]}
+    assert "title lines removed" not in failed(titled)
+    assert "title lines removed" in failed(left_in)

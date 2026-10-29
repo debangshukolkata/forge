@@ -108,10 +108,27 @@ async def test_the_tool_writes_a_workbook_with_real_dates_numbers_and_a_report(
     assert done.ok and "What was changed" in done.content and "duplicate row" in done.content
     book = openpyxl.load_workbook(io.BytesIO(workspace.path_of("data/clean.xlsx").read_bytes()))
     sheet = book["Data"]
-    assert (sheet["A1"].value == "Region" and isinstance(sheet["B2"].value, (date,))) or hasattr(
-        sheet["B2"].value, "year"
-    )
-    assert sheet["C2"].value == 1200.5 and sheet["D2"].number_format == "0.0%" and sheet.freeze_panes == "A2"
+    # The export's title lines are the sheet's title and subtitle; the table starts at row 4 (D-543).
+    assert sheet["A1"].value == "Quarterly sales export" and sheet["A2"].value == "Generated 03/01/2026"
+    assert sheet["A4"].value == "Region" and hasattr(sheet["B5"].value, "year")
+    assert sheet["C5"].value == 1200.5 and sheet["D5"].number_format == "0.0%" and sheet.freeze_panes == "A5"
     assert workspace.path_of("data/clean.json").is_file()
     bad = await CleanTable().run(CleanTable.Args(path="data/export.csv", output="data/clean.csv"), context)
     assert not bad.ok
+
+
+def test_an_exports_title_lines_become_the_sheet_title_and_subtitle() -> None:
+    """D-543, doc-5 w02: the title lines were dropped and the rebuilt sheet had no title at all."""
+    result = clean_table(
+        [
+            ["Quarterly export", None],
+            ["Generated 03/01/2026", None],
+            ["Region", "Revenue"],
+            ["North", "5"],
+            ["South", "6"],
+        ]
+    )
+    sheet = result.outline("Orders")["sheets"][0]
+    assert sheet["title"] == "Quarterly export" and sheet["subtitle"] == "Generated 03/01/2026"
+    assert result.rows == [["North", 5], ["South", 6]]
+    assert sheet["title"] == "" or clean_table([["A", "B"], ["1", "2"]]).outline()["sheets"][0]["title"] == ""

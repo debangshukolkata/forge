@@ -7,6 +7,8 @@
   "sheets": [
     {
       "name": "Tasks",
+      "title": "Task tracker",
+      "subtitle": "Owner, status, due date and priority of every task",
       "table": true,
       "columns": [
         {

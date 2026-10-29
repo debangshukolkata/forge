@@ -47,6 +47,9 @@ class CleanResult:
     columns: list[dict[str, Any]]
     rows: list[list[Any]]
     report: list[str] = field(default_factory=list)
+    title_lines: list[str] = field(
+        default_factory=list
+    )  # the export's own title lines, dropped from the data
 
     def outline(self, sheet_name: str = "Data", title: str = "") -> dict[str, Any]:
         """A workbook outline for `build_workbook`: one sheet, an Excel table, the cleaned columns and formats."""
@@ -55,6 +58,9 @@ class CleanResult:
             "sheets": [
                 {
                     "name": sheet_name[:31],
+                    # The export's title lines become the sheet's title and subtitle (D-543, doc-5 w02).
+                    "title": self.title_lines[0][:120] if self.title_lines else "",
+                    "subtitle": " / ".join(self.title_lines[1:])[:160],
                     "columns": self.columns,
                     "rows": self.rows,
                     "table": bool(self.rows),
@@ -102,7 +108,9 @@ def _filled(row: list[Any]) -> int:
     return sum(1 for c in row if _text(c).lower() not in EMPTY_WORDS)
 
 
-def _header_and_body(rows: list[list[Any]], report: list[str]) -> tuple[list[str], list[list[Any]]]:
+def _header_and_body(
+    rows: list[list[Any]], report: list[str], title_lines: list[str]
+) -> tuple[list[str], list[list[Any]]]:
     kept = [r for r in rows if _filled(r) > 0]
     if len(kept) < len(rows):
         report.append(f"{len(rows) - len(kept)} blank row(s) were dropped")
@@ -111,9 +119,10 @@ def _header_and_body(rows: list[list[Any]], report: list[str]) -> tuple[list[str
     enough = max(2, (width + 1) // 2)
     start = next((i for i, r in enumerate(rows) if _filled(r) >= enough), 0)
     if start:
+        title_lines.extend(" ".join(_text(c) for c in r if _text(c)) for r in rows[:start])
         report.append(
-            f"{start} title line(s) above the table were dropped: "
-            + " / ".join(_text(c) for r in rows[:start] for c in r if _text(c))[:140]
+            f"{start} title line(s) above the table were moved out of the data into the outline's title and subtitle: "
+            + " / ".join(title_lines)[:140]
         )
     header_rows = [rows[start]]
     follower = start + 1
@@ -223,7 +232,8 @@ def clean_table(rows: list[list[Any]]) -> CleanResult:
     if not rows or not any(_filled(r) for r in rows):
         raise WorkbookError("The sheet has no data")
     report: list[str] = []
-    names, body = _header_and_body(rows, report)
+    title_lines: list[str] = []
+    names, body = _header_and_body(rows, report, title_lines)
     width = len(names)
     grid = [[(r[i] if i < len(r) else None) for i in range(width)] for r in body]
     keep = [i for i in range(width) if any(_text(r[i]).lower() not in EMPTY_WORDS for r in grid)]
@@ -332,4 +342,5 @@ def clean_table(rows: list[list[Any]]) -> CleanResult:
             for r in unique
         ],
         report,
+        title_lines,
     )

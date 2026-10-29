@@ -34,7 +34,7 @@
    "tested": "built into a workbook, checked with check_workbook and calculated by Excel with no error cells (D-347)",
    "preview": null,
    "path": "assets/recipe/rcp-xl-budget.md",
-   "size": 2132
+   "size": 2330
   },
   {
    "id": "rcp-xl-tracker",
@@ -69,7 +69,7 @@
    "tested": "built into a workbook, checked with check_workbook and calculated by Excel with no error cells (D-347)",
    "preview": null,
    "path": "assets/recipe/rcp-xl-tracker.md",
-   "size": 1663
+   "size": 1766
   }
  ]
 }

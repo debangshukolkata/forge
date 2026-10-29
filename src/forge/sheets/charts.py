@@ -16,6 +16,9 @@ CHART_WIDTH_CM, CHART_HEIGHT_CM = 18.0, 9.0
 PIXELS_PER_CM = 96 / 2.54
 DEFAULT_COLUMN_CHARS, DEFAULT_ROW_PIXELS = 8.43, 20.0
 PORTRAIT_PRINTABLE_PIXELS = 680  # A4 or Letter minus the margins
+LANDSCAPE_PRINTABLE_PIXELS = 1000
+PRINTABLE_HEIGHT_PIXELS = {"portrait": 950, "landscape": 620}  # A4 or Letter minus the top and bottom margins
+ONE_PAGE_UP_TO = 1.5  # a sheet with charts at most this many pages tall is fitted on one page
 GRIDLINE = "D9D9D9"
 
 
@@ -36,13 +39,29 @@ def _span(cells: Any) -> tuple[int, int, int, int]:
     return first.row, first.column, last.row, last.column
 
 
+def _source(sheet: Any, reference: str) -> tuple[Any, str]:
+    """The sheet a chart range reads from and the bare address: "Data!B1:B7" reads the Data sheet (a dashboard's charts sit
+    beside the summary while the numbers live on a data sheet; doc-5b w14, D-543), "B1:B7" the chart's own sheet."""
+    name, mark, address = reference.rpartition("!")
+    if not mark:
+        return sheet, reference
+    name = name.strip("'").replace("''", "'")
+    if name not in sheet.parent.sheetnames:
+        raise WorkbookError(
+            f"Chart range {reference!r} names a sheet that does not exist; the sheets are: {', '.join(sheet.parent.sheetnames)}"
+        )
+    return sheet.parent[name], address
+
+
 def build_chart(sheet: Any, chart: ChartSpec) -> Any:
     from openpyxl.chart import AreaChart, BarChart, LineChart, PieChart, Reference, ScatterChart, Series
     from openpyxl.chart.series import SeriesLabel
     from openpyxl.chart.shapes import GraphicalProperties
     from openpyxl.drawing.line import LineProperties
 
-    top, left, bottom, right = _span(sheet[chart.data])
+    chart_sheet = sheet
+    sheet, data_address = _source(chart_sheet, chart.data)  # from here on `sheet` is where the values live
+    top, left, bottom, right = _span(sheet[data_address])
     kinds: dict[str, Any] = {
         "column": BarChart,
         "bar": BarChart,
@@ -63,7 +82,10 @@ def build_chart(sheet: Any, chart: ChartSpec) -> Any:
             ys = Reference(sheet, min_col=column, min_row=top, max_row=bottom)
             made.series.append(Series(ys, xs, title_from_data=True))
     else:
-        categories = _span(sheet[chart.categories]) if chart.categories else None
+        category_sheet, category_address = (
+            _source(chart_sheet, chart.categories) if chart.categories else (sheet, "")
+        )
+        categories = _span(category_sheet[category_address]) if chart.categories else None
         horizontal_categories = (
             categories is not None and categories[0] == categories[2] and categories[1] < categories[3]
         )
@@ -87,7 +109,7 @@ def build_chart(sheet: Any, chart: ChartSpec) -> Any:
                 )
             made.set_categories(
                 Reference(
-                    sheet,
+                    category_sheet,
                     min_row=categories[0],
                     min_col=categories[1],
                     max_row=categories[2],
@@ -163,24 +185,31 @@ def place_charts(sheet: Any, charts: list[ChartSpec]) -> list[str]:
     return notes
 
 
-def print_setup(sheet: Any, has_header: bool) -> None:
-    """One page wide, as many pages tall as needed; landscape when the table and charts are wider than a portrait page."""
+def print_setup(sheet: Any, header_row: int | None) -> None:
+    """One page wide, as many pages tall as needed; landscape when the table and charts are wider than a portrait page.
+    A sheet with charts that would run a little over one page is fitted on one: otherwise the page break cuts a chart and the
+    second page holds a strip of it under the repeated header (doc-5 w14, D-543)."""
     from openpyxl.utils.cell import column_index_from_string, coordinate_from_string
     from openpyxl.worksheet.properties import PageSetupProperties
 
     right = _left_pixels(sheet, (sheet.max_column or 1) + 1)
+    bottom = (sheet.max_row or 1) * DEFAULT_ROW_PIXELS
     for chart in sheet._charts:
         anchor = chart.anchor  # a cell name until the workbook is saved
-        column = (
-            column_index_from_string(coordinate_from_string(anchor)[0])
-            if isinstance(anchor, str)
-            else anchor._from.col + 1
-        )
+        if isinstance(anchor, str):
+            letters, row = coordinate_from_string(anchor)
+            column = column_index_from_string(letters)
+        else:
+            column, row = anchor._from.col + 1, anchor._from.row + 1
         right = max(right, _left_pixels(sheet, column) + chart.width * PIXELS_PER_CM)
+        bottom = max(bottom, (row - 1) * DEFAULT_ROW_PIXELS + chart.height * PIXELS_PER_CM)
+    orientation = "landscape" if right > PORTRAIT_PRINTABLE_PIXELS else "portrait"
+    width = PORTRAIT_PRINTABLE_PIXELS if orientation == "portrait" else LANDSCAPE_PRINTABLE_PIXELS
+    pages_tall = bottom * min(1.0, width / right) / PRINTABLE_HEIGHT_PIXELS[orientation]
     sheet.sheet_properties.pageSetUpPr = PageSetupProperties(fitToPage=True)
     sheet.page_setup.fitToWidth = 1
-    sheet.page_setup.fitToHeight = 0
-    sheet.page_setup.orientation = "landscape" if right > PORTRAIT_PRINTABLE_PIXELS else "portrait"
+    sheet.page_setup.fitToHeight = 1 if sheet._charts and pages_tall <= ONE_PAGE_UP_TO else 0
+    sheet.page_setup.orientation = orientation
     sheet.page_margins.left = sheet.page_margins.right = 0.5
-    if has_header:
-        sheet.print_title_rows = "1:1"  # a table longer than a page repeats its header
+    if header_row is not None:
+        sheet.print_title_rows = f"{header_row}:{header_row}"  # a table longer than a page repeats its header

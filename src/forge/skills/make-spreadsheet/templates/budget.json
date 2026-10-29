@@ -7,6 +7,8 @@
   "sheets": [
     {
       "name": "Assumptions",
+      "title": "Budget assumptions",
+      "subtitle": "Change these values; the budget follows",
       "columns": [
         {
           "header": "Item",
@@ -34,6 +36,8 @@
     },
     {
       "name": "Budget",
+      "title": "Budget, first quarter",
+      "subtitle": "Monthly revenue, costs, profit and tax",
       "columns": [
         {
           "header": "Month",

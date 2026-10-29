@@ -21,11 +21,11 @@ specification, the openpyxl documentation and our own tests with Excel.
    units inside numbers ("12 kg"): put the unit in the header.
 4. **Formats say what a number is.** Currency `#,##0.00`, percentages `0.0%` (store 0.2, not 20), dates `yyyy-mm-dd`, counts `#,##0`. Dates are real
    dates, not text.
-5. **Make it readable:** a header row that stands out, widths that fit (`width` per column), the header row frozen (default), a total row
+5. **Make it readable:** a `title` on every sheet a person reads (and a `subtitle`: period, unit or source), a header row that stands out, widths that fit (`width` per column), the header row frozen (default), a total row
    (`total_row`), an Excel table (`table: true`) for data people will filter and sort.
 6. **Guard the inputs:** `validations` with `choices` for category columns, `whole` or `decimal` limits for quantities. `conditional` formatting
    to flag what needs attention (`greater_than`, `less_than`, `between`, `text_contains`, `color_scale`, `data_bar`).
-7. **Native charts** (`charts`: type, `data` range with its header row, `categories` range, `anchor`), titled, one message per chart.
+7. **Native charts** (`charts`: type, `data` range with its header row, `categories` range, `anchor`), titled, one message per chart. A chart on a summary sheet that shows another sheet's numbers names that sheet in both ranges: `"data": "Data!B1:B13", "categories": "Data!A2:A13"`.
 8. **Say where facts came from:** `notes` gives cell comments ("Source: finance report, page 4").
 
 ## Outline format (JSON or YAML)
@@ -33,7 +33,7 @@ specification, the openpyxl documentation and our own tests with Excel.
 {"title": "Budget",
  "sheets": [
   {"name": "Assumptions", "columns": [{"header": "Item"}, {"header": "Value", "format": "0.0%"}], "rows": [["Tax rate", 0.2]]},
-  {"name": "Sales",
+  {"name": "Sales", "title": "Sales by region", "subtitle": "Q1 2026, in GBP",
    "columns": [{"header": "Region", "width": 18}, {"header": "Q1", "format": "#,##0"}, {"header": "Tax", "format": "#,##0"}],
    "rows": [["North", 100, "=B2*TaxRate"], ["South", 80, "=B3*TaxRate"]],
    "total_row": {"A": "Total", "B": "SUM", "C": "SUM"},
@@ -42,7 +42,7 @@ specification, the openpyxl documentation and our own tests with Excel.
    "charts": [{"type": "column", "title": "Sales by region", "data": "B1:B3", "categories": "A2:A3", "anchor": "F2"}]}],
  "names": {"TaxRate": "Assumptions!$B$2"}}
 ```
-Row 1 is the header when `columns` is given; the data starts in row 2 (row 1 when there are no columns). A text value starting with `=` is a
+Write every address as if row 1 were the header when `columns` is given (the data from row 2; row 1 when there are no columns). A sheet with a `title` shows it in row 1 and the `subtitle` in row 2, and its table starts at row 4: the builder moves every address of the outline (formulas on any sheet, ranges, charts, names) to match, so do not add the 3 rows yourself. The result says where each table landed; later edits (`edit_workbook`) use those real rows. Avoid whole-column references such as `A:A` on a titled sheet: they include the title. A text value starting with `=` is a
 formula; to store text that starts with `=`, begin it with an apostrophe-free space.
 
 ## Work loop

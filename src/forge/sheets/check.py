@@ -180,6 +180,28 @@ def _points(reference: str) -> int:
     return int((max_col - min_col + 1) * (max_row - min_row + 1))
 
 
+def _holds_numbers(sheet: Any, reference: str) -> bool:
+    """Whether a chart's value range has at least one number or formula (doc-5b w14, D-543: a chart on the KPI sheet read the KPI
+    sheet's own empty cells because its range did not name the Data sheet)."""
+    name, mark, address = reference.rpartition("!")
+    name = name.strip("'").replace("''", "'")
+    book = sheet.parent
+    source = book[name] if mark and name in book.sheetnames else sheet
+    try:
+        cells = source[address.replace("$", "")]
+    except ValueError:
+        return True  # not an address this check understands: say nothing
+    rows = cells if isinstance(cells, tuple) else ((cells,),)
+    for row in rows:
+        for cell in row if isinstance(row, tuple) else (row,):
+            value = cell.value
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                return True
+            if isinstance(value, str) and value.startswith("="):
+                return True
+    return False
+
+
 def chart_findings(sheet: Any) -> list[Finding]:
     """Chart faults however the workbook was made (W6, D-532): in run doc-3 a model wrote its own openpyxl script, and its monthly balance
     chart came out as twelve one-value series, which no outline check could see."""
@@ -199,6 +221,20 @@ def chart_findings(sheet: Any) -> list[Finding]:
                     where,
                     f"{len(series)} series of one value each: the data was read along the wrong direction (a row of values is ONE series). "
                     "In build_workbook give the row as data; in openpyxl use add_data(ref, from_rows=True)",
+                )
+            )
+        empty = [
+            s.val.numRef.f
+            for s in series
+            if s.val is not None and s.val.numRef is not None and not _holds_numbers(sheet, s.val.numRef.f)
+        ]
+        if empty:
+            findings.append(
+                Finding(
+                    "error",
+                    where,
+                    f"draws from {', '.join(empty[:3])}, which holds no numbers, so the chart is blank or plots the wrong thing. "
+                    "A chart on one sheet that shows another sheet's numbers names that sheet in its ranges (Data!B1:B13)",
                 )
             )
         if kind not in ("PieChart", "DoughnutChart") and len(series) == 1 and chart.varyColors is not False:

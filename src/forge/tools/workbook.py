@@ -17,6 +17,7 @@ from forge.sheets.clean import clean_table, read_rows
 from forge.sheets.edit import Operation, edit_workbook
 from forge.sheets.read import describe_workbook, read_workbook
 from forge.sheets.spec import WorkbookError, WorkbookSpec, parse_workbook
+from forge.sheets.titles import TITLE_ROWS
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.brand_file import BRAND_FILE_DESCRIPTION, load_brand_file
 from forge.tools.vision import image_path
@@ -46,7 +47,7 @@ class BuildWorkbook(Tool):
     read_only = False
     description = (
         "Make an Excel workbook (.xlsx) from an outline file you wrote (JSON or YAML; load the `make-spreadsheet` skill for its format). "
-        "A cell value starting with '=' is a real formula. The outline can hold column formats and widths, an Excel table, frozen panes, a "
+        "A cell value starting with '=' is a real formula. The outline can hold a title and subtitle per sheet, column formats and widths, an Excel table, frozen panes, a "
         "total row, named ranges, data validation, conditional formatting, cell notes and native charts. Always run check_workbook afterwards."
     )
 
@@ -83,10 +84,26 @@ class BuildWorkbook(Tool):
         return ToolResult(
             ok=True,
             content=f"Wrote {args.output}: {len(spec.sheets)} sheet(s), each printing one page wide.\n"
+            + _title_lines(spec)
             + "".join(f"Note: {note}\n" for note in notes)
             + describe_findings(findings)
             + _package_faults(faults),
         )
+
+
+def _title_lines(spec: WorkbookSpec) -> str:
+    """Where titled tables landed (the addresses moved, D-543), and the sheets a reader meets without a title."""
+    titled = [sheet.name for sheet in spec.sheets if sheet.title]
+    untitled = [sheet.name for sheet in spec.sheets if not sheet.title and sheet.columns]
+    lines = ""
+    if titled:
+        lines += (
+            f"Titled: {', '.join(titled)}: title in row 1, header in row {1 + TITLE_ROWS}, data from row {2 + TITLE_ROWS}; "
+            f"every address of the outline moved down {TITLE_ROWS} rows with it. Later edits use the real rows.\n"
+        )
+    if untitled:
+        lines += f"No title: {', '.join(untitled)}. A sheet a person reads starts with a `title` (and `subtitle`) in the outline.\n"
+    return lines
 
 
 class ReadWorkbook(Tool):

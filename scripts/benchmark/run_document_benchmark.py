@@ -115,7 +115,13 @@ def check_w02(workspace: Path) -> dict[str, Any]:
         "a total made of formulas": any("SUM" in str(c.value).upper() for c in formulas),
         "a chart": charts >= 1,
         "duplicate row removed": sum(1 for t in texts if t.strip().lower() == "kettle") == 1,
-        "title lines removed": not any("Quarterly export" in t or "Generated" in t for t in texts),
+        # The export's own lines may stay as the sheet's title and subtitle (A1, A2 above an empty row 3, D-543), never inside the data.
+        "title lines removed": not any(
+            ("Quarterly export" in str(c.value) or "Generated" in str(c.value))
+            and not (c.coordinate in ("A1", "A2") and not any(x.value for x in c.parent[3]))
+            for c in cells
+            if isinstance(c.value, str)
+        ),
         "no macros": not macros,
     }
     return {"delivered": True, **_report(passed)}
