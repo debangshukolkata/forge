@@ -4495,3 +4495,6 @@ After D-551 the platform accepted the crawl (numbers as numbers, no `chunks_per_
 ## D-554 — The DebCraft logo goes to the first screen (2026-10-29, user request)
 Inside a project, clicking the logo and name in the top bar now goes to the first screen ("Start something new"), the same as the Home button; the project stays open in the background as with Home. The logo is a real button (`aria-label="DebCraft home"`, focus ring, cursor). Test: `test_new_project_form_in_edge` now uses the logo to leave the project.
 
+## D-555 — The status line starts where the messages start (2026-10-29, office screenshot)
+"Waiting for your approval" and the other live status lines sat indented toward the middle: they had a fixed width (`max-w-3xl`, 768 px) centred under a chat column that is wider and follows the side panel (D-507, `--chat-max`). Both lines above the composer (the activity line and the run totals) now use the chat column's width and padding, so the loader and label start at the messages' left edge and the timers end at their right edge, with the side panel open or closed. Test: `test_the_status_line_starts_where_the_messages_start` (tests/test_web_chat_layout_e2e.py, both panel states; screenshot checked).
+

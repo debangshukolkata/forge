@@ -199,8 +199,11 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
 
   return (
     <div className="shrink-0 bg-bg px-6 pb-4 pt-2">
-      <RunTotals forge={forge} />
-      <ActivityLine forge={forge} />
+      {/* Same width and padding as the chat column (Chat.tsx), so the status lines start where the messages start (D-555). */}
+      <div className="-mx-6">
+        <RunTotals forge={forge} />
+        <ActivityLine forge={forge} />
+      </div>
       <div className="relative mx-auto max-w-[var(--chat-max,760px)]">
         {suggestions.length > 0 && (
           <ul role="listbox" aria-label={mention !== null ? "Files" : "Commands"} className="absolute bottom-full mb-2 max-w-full min-w-72 overflow-hidden rounded-lg border border-border bg-surface py-1 shadow-lg">

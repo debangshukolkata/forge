@@ -79,7 +79,7 @@ export function RunTotals({ forge }: { forge: Forge }) {
   const bucket = forge.cost?.project?.total;
   if (!bucket) return null;
   return (
-    <div className="mx-auto mb-1 flex max-w-3xl items-center justify-end gap-2 px-1 text-[11px] text-fg-muted">
+    <div className="mx-auto mb-1 flex max-w-[var(--chat-max,760px)] items-center justify-end gap-2 px-6 text-[11px] text-fg-muted">
       <span>Project total</span>
       <UsageBadge bucket={bucket} limits={forge.costColors?.task} compact />
       <span className="font-mono tabular-nums" title="Time since this run started">
@@ -165,7 +165,7 @@ export function ActivityLine({ forge }: { forge: Forge }) {
     : undefined;
   const taskStartedAt = task ? currentTaskStartedAt(forge) : null;
   return (
-    <div role="status" aria-live="polite" className="mx-auto mb-2 flex max-w-3xl items-center gap-3 px-1">
+    <div role="status" aria-live="polite" className="mx-auto mb-2 flex max-w-[var(--chat-max,760px)] items-center gap-3 px-6">
       <Loader style={loader} />
       <div className="min-w-0 flex-1 overflow-hidden text-[13px]">
         {/* One truncating line: `truncate` only clips inline text when it is on the block that holds it, so a long

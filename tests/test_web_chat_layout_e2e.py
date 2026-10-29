@@ -188,3 +188,46 @@ def test_the_jump_to_latest_button_appears_when_scrolled_up_and_takes_the_reader
         assert button.count() == 0
         assert page.problems == [], page.problems  # type: ignore[attr-defined]
         browser.close()
+
+
+def test_the_status_line_starts_where_the_messages_start(
+    live_server: LiveServer,  # noqa: F811
+    workspace: Workspace,  # noqa: F811
+) -> None:
+    """D-555, office screenshot: "Waiting for your approval" sat indented toward the middle of a wide chat column."""
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
+    with playwright_api.sync_playwright() as p:
+        browser, page = open_in_edge(p, live_server, workspace)
+        live_server.publish(EventType.USER_MESSAGE, {"text": "can you check the file"})
+        live_server.publish(EventType.MESSAGE_DONE, {"text": "I will run it to check the imports."})
+        live_server.publish(
+            EventType.APPROVAL_REQUESTED,
+            {
+                "id": "A9",
+                "tool": "python_run",
+                "summary": "python -c 'import x'",
+                "command": "python -c 'import x'",
+                "reason": "'python' is not on the allowlist",
+                "can_remember_prefix": "python -c",
+                "always_ask": False,
+            },
+        )
+        status = page.locator("[role=status][aria-live=polite]:has-text('Waiting for your approval')")
+        status.wait_for()
+        reply = page.locator(".md:has-text('I will run it to check the imports.')").first
+        for panel in ("open", "closed"):
+            if panel == "closed":
+                page.click("button[aria-label='Hide the side panel']")
+                page.wait_for_timeout(300)
+            label = status.locator("span.font-medium").first.bounding_box()
+            text = reply.bounding_box()
+            assert label is not None and text is not None
+            assert abs(label["x"] - text["x"]) < 40, (
+                panel,
+                label["x"],
+                text["x"],
+            )  # the loader icon sits before the label
+            assert status.bounding_box()["x"] <= text["x"] + 1, panel  # type: ignore[index]
+        page.screenshot(path=str(shots / "chat-status-line-aligned.png"))
+        browser.close()
