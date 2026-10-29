@@ -255,7 +255,7 @@ Agreed before the night: Azure spend up to about $40, local commits only (nothin
 Non-browser suite 1995 passed, 3 skipped (network-only and bandit); ruff, ruff format, mypy (348 files) and check_secrets clean. Browser suite 337 passed, 2 skipped (the hidden Run map tab).
 
 ### What you may want to do
-- Say "push" when you have read this (22 local commits).
+- Say "push" when you have read this (25 local commits).
 - Security-relevant changes for your review: the MCP client now writes each server's stderr to a temporary file and shows its last 600 characters in the error (it can contain whatever the server prints); the security note and recipe (advice only, no gate).
 - BO6 is not closed: the Stillwater landing rerun is not done, and the support-desk run has not been looked at in a browser by a person.
 - Decide whether SEC1 (attach the security recipe automatically for security requests) is worth a third security task.
