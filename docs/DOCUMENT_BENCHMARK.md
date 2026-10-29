@@ -86,3 +86,24 @@ Limits: one run per task, a judge from the same model family, tasks written the 
 | w14 excel dashboard | 7/7 | 3/3/3/2 -> 3/3/4/2 | KPI values without percent or thousands formats (the chart complaint is gone) |
 
 **Reading:** where the model used the builders, the named problems moved on: the chart complaints of w02 and w14 and the page split of w07 are gone and w11 scored 5 on all four. Where it bypassed them (w06's own script) or edited a user's file (w12, w13), nothing changed, so `check_workbook` now reports chart faults whatever made the file (D-532). One run each and a judge that varies by a point between runs: read the named problems, not the small score moves.
+
+## Run doc-4 (2026-10-29): all fourteen tasks after the W6 to W8 builders and the D-532 checks
+| Task | Checks | Judge s/r/t/p (doc-2 -> doc-4) | Worst problem now |
+|---|---|---|---|
+| w01 sales report | 8/8 | -> 5/5/5/4 | a repeated heading |
+| w02 clean and chart | 8/8 | -> 2/3/4/3 | no title above the table and chart |
+| w03 handout | 7/7 | -> 4/4/4/4 | plain |
+| w04 proposal | 9/9 | 4/5/4/4 -> 5/5/5/4 | a heading separated from its list by a page break |
+| w05 letter | 8/9, 9/9 after D-541 | 4/4/5/4 -> 4/5/5/4 | plain; the failed check was the checker's (a bold subject line without "Re:") |
+| w06 budget | 7/7 | 3/3/4/2 -> 3/4/4/3 | no sheet title; the builder was used this time (doc-3: the model's own script) |
+| w07 tracker | 7/7, 7/7 after D-541 | 3/4/2/3 -> 3/4/5/4 | a task cut off by a narrow column (fixed: long text wraps); no sheet title |
+| w08 pdf extract | 6/6 | -> 3/4/4/3 | no title above the table |
+| w09 pdf merge | 6/6 | -> 3/4/5/3 | sparse |
+| w10 pdf form | 6/6 | -> 4/4/4/4 | white space |
+| w11 pdf ocr | 7/7 | 4/4/5/4 -> 4/4/5/4 | white space |
+| w12 word edit | 7/7 | 4/4/5/4 -> 3/3/3/3 | plain (an edit of the user's document) |
+| w13 excel edit | 8/8 | 2/3/4/1 -> 3/4/4/2 | the seed's own chart split across pages (an edit keeps the user's page setup) |
+| w14 excel dashboard | 7/7 | 3/3/3/2 -> 3/3/3/3 after D-541 | a KPI label cut off (fixed: long text wraps); no titles, empty space |
+
+Cost $1.79 for the fourteen, 21 minutes. **Reading:** the model used `build_workbook` and `build_document` in every task that builds a file, w06 included; the chart and page-split complaints did not come back. Three faults found and fixed (D-541) and re-checked live on w05, w07, w14: a checker false positive on letters, text cut off by the model's own column widths, and dates written as `=DATE()` formulas. The judge's commonest complaint is now a missing title above a sheet's table (w02, w06, w07, w08, w14): next lever, not changed tonight (a title row moves the header off row 1, which the table, the freeze and the print titles rely on). One run each.
+

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib
 import io
 import re
@@ -14,6 +15,12 @@ from forge.sheets.spec import Conditional, SheetSpec, WorkbookError, WorkbookSpe
 
 INVALID_TITLE = re.compile(r"[\[\]:*?/\\]")
 HEADER_FILL = "1F3864"
+ISO_DATE = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
+DATE_FORMULA = re.compile(r"=DATE\((\d{4}),(\d{1,2}),(\d{1,2})\)", re.IGNORECASE)
+MAX_FITTED_WIDTH = 50.0  # a column sized from its content stops here; longer text wraps
+CHAR_WIDTH = (
+    1.1  # column-width units per character of body text (Calibri 11 runs a little wider than one unit)
+)
 
 
 def load_openpyxl() -> Any:
@@ -90,8 +97,17 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
         if not spec.table:
             cell.font, cell.fill = header_font, header_fill
         cell.alignment = Alignment(vertical="center", wrap_text=True)
+        longest = max(
+            [len(column.header)]
+            + [
+                len(str(row[index - 1]))
+                for row in spec.rows
+                if index <= len(row)
+                and not str(row[index - 1]).startswith("=")  # a formula's text is not what shows
+            ]
+        )
         sheet.column_dimensions[get_column_letter(index)].width = column.width or max(
-            10.0, min(40.0, len(column.header) + 4.0)
+            10.0, min(MAX_FITTED_WIDTH, longest + 4.0)
         )
     first_row = 2 if spec.columns else 1  # the header takes row 1 only when there is one
     for row_number, row in enumerate(spec.rows, start=first_row):
@@ -100,14 +116,20 @@ def _build_sheet(workbook: Any, spec: SheetSpec, first: bool, brand: Resolved) -
                 isinstance(value, str)
                 and index <= len(spec.columns)
                 and "yy" in (spec.columns[index - 1].format or "")
-                and re.fullmatch(r"\d{4}-\d{2}-\d{2}", value)
+                and (iso := ISO_DATE.fullmatch(value) or DATE_FORMULA.fullmatch(value.replace(" ", "")))
             ):
-                value = date.fromisoformat(value)  # a date column's ISO text becomes a real date
+                # A date column's ISO text or constant =DATE(y,m,d) becomes a real date (doc-4b w07, D-541).
+                with contextlib.suppress(ValueError):  # an impossible date stays as written
+                    value = date(int(iso.group(1)), int(iso.group(2)), int(iso.group(3)))
             cell = sheet.cell(row=row_number, column=index, value=value)
             if brand.body_font:
                 cell.font = Font(name=brand.body_font, color=brand.text)
             if index <= len(spec.columns) and spec.columns[index - 1].format:
                 cell.number_format = spec.columns[index - 1].format
+            width = sheet.column_dimensions[get_column_letter(index)].width or 10.0
+            if isinstance(value, str) and not value.startswith("=") and len(value) * CHAR_WIDTH > width:
+                # Text longer than its column wraps instead of being cut off on screen and in print (doc-4 w07, w14; D-541).
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
     last_row = len(spec.rows) + first_row - 1
     if spec.total_row and spec.columns:
         total = last_row + 1

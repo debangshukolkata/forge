@@ -24,6 +24,7 @@ def check_document(data: bytes) -> list[str]:
     empty_run = 0
     from docx.text.paragraph import Paragraph
 
+    bold_line: str | None = None
     for child in document.element.body.iterchildren():
         if child.tag.endswith("}tbl"):
             empty_run = 0  # paragraphs on either side of a table are not a run of spacing (D-532)
@@ -50,12 +51,26 @@ def check_document(data: bytes) -> list[str]:
             and style in ("Normal", "")
             and not LABEL_LINE.match(text)
         ):
-            problems.append(f"{text[:40]!r} looks like a heading made with bold text: use a Heading style.")
+            if bold_line is not None:
+                problems.append(
+                    f"{bold_line[:40]!r} looks like a heading made with bold text: use a Heading style."
+                )
+            bold_line = text  # judged at the next paragraph: a subject line stands just above "Dear ..."
+            empty_run = 0
+            continue
+        if text and bold_line is not None:
+            if not SALUTATION.match(text):
+                problems.append(
+                    f"{bold_line[:40]!r} looks like a heading made with bold text: use a Heading style."
+                )
+            bold_line = None
         empty_run = empty_run + 1 if not text and not paragraph._p.xpath(".//w:drawing") else 0
         if empty_run == 3:
             problems.append(
                 "Several empty paragraphs in a row are used as spacing: set paragraph spacing instead."
             )
+    if bold_line is not None:
+        problems.append(f"{bold_line[:40]!r} looks like a heading made with bold text: use a Heading style.")
     for number, table in enumerate(document.tables, start=1):
         header = table.rows[0]._tr.trPr is not None and bool(header_flag(table.rows[0]))
         if len(table.rows) > 1 and not header:
@@ -63,7 +78,8 @@ def check_document(data: bytes) -> list[str]:
     return problems
 
 
-# A letter's bold subject line is a label, not a heading.
+# A letter's bold subject line is a label, not a heading; so is an unlabelled one just above the salutation (doc-4 w05, D-541).
+SALUTATION = re.compile(r"^(dear|to whom it may concern|hello|hi)\b", re.IGNORECASE)
 LABEL_LINE = re.compile(r"^(subject|re|ref|reference|regarding|our ref|your ref)\s*:", re.IGNORECASE)
 
 

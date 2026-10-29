@@ -315,3 +315,28 @@ def test_paragraphs_around_tables_and_a_bold_subject_line_are_not_problems() -> 
     assert "empty paragraphs" in describe_problems(
         check_document(build_document(parse_document(json.dumps(spacing)), lambda path: b""))
     )
+
+
+def test_an_unlabelled_bold_subject_above_the_salutation_is_not_a_fake_heading() -> None:
+    """D-541, doc-4 w05: a British letter puts its bold subject line just above "Dear ..." without "Re:"."""
+
+    def problems(blocks: list[dict[str, object]]) -> str:
+        outline = {"title": "Letter", "kind": "letter", "blocks": blocks}
+        return describe_problems(
+            check_document(build_document(parse_document(json.dumps(outline)), lambda path: b""))
+        )
+
+    subject = {"type": "paragraph", "runs": [{"text": "Place for my daughter Anika", "bold": True}]}
+    assert problems([subject, {"type": "paragraph", "text": "Dear Admissions Office,"}]).startswith(
+        "No structure"
+    )
+    assert "looks like a heading" in problems(
+        [subject, {"type": "paragraph", "text": "Our school opened in 1990."}]
+    )
+    assert "looks like a heading" in problems(
+        [{"type": "paragraph", "text": "Intro."}, subject]
+    )  # the last paragraph
+    assert (
+        problems([subject, subject, {"type": "paragraph", "text": "Dear Sir,"}]).count("looks like a heading")
+        == 1
+    )

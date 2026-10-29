@@ -249,6 +249,8 @@ Agreed before the night: Azure spend up to about $40, local commits only (nothin
 - **BO6 support desk (D-538, D-539).** The first rerun stopped after 30 minutes with tasks open: the headless driver allowed only two "continue" nudges per run. Now it keeps nudging while the model makes progress (two idle nudges in a row stop it, 40 in total is the runaway guard). The second rerun finished in 61 minutes for $4.70 with exit code 0: a working FastAPI support desk, the helpdesk screen copied, DESIGN.md with a Concept; one of its own nine tests (a Playwright status-update flow) still failed and the summary said so. It needed no nudge, so D-538 is proven by unit tests only. Also fixed: a full path into a built-in skill now tells the model to use `load_skill(..., file=...)`.
 - **Small:** flaky browser test polls (FL1), scroll-progress preview (PX1), WU1 and WU2 confirmed live.
 
+- **Morning follow-up (D-540, D-541).** Stillwater landing rerun (17 min, $1.34): the Concept step gave an editorial page with a planned drawn hero, but the SVG lacked `xmlns` and never showed; a written SVG without it is now reported, and so is the cause of a broken SVG in the audit. Document run doc-4 (all fourteen, $1.79): 97/98 checks, builders used in every build task; fixed a letter-subject false positive, text cut off by narrow columns, dates written as `=DATE()`; re-checked live.
+
 ### Tests
 Non-browser suite 1995 passed, 3 skipped (network-only and bandit); ruff, ruff format, mypy (348 files) and check_secrets clean. Browser suite 337 passed, 2 skipped (the hidden Run map tab).
 

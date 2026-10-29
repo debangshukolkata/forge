@@ -326,3 +326,45 @@ def test_the_check_finds_a_chart_drawn_one_series_per_value_however_the_file_was
     found = describe_findings(check_workbook(out.getvalue()))
     assert "12 series of one value each" in found and "print one page wide" in found
     assert "chart" not in describe_findings(check_workbook(_built()))
+
+
+def test_long_text_wraps_in_a_narrow_column_and_unsized_columns_fit_their_content() -> None:
+    """D-541, doc-4 w07 and w14: the model's own widths cut a task description and a KPI label off on the printout."""
+    long_task = "Confirm the venue booking and send the floor plan to catering"
+    sheet = _chart_book(
+        {
+            "name": "Tasks",
+            "columns": [{"header": "Task", "width": 20}, {"header": "Owner"}, {"header": "Note"}],
+            "rows": [
+                [long_task, "Asha", "ok"],
+                ["Short", "Bartholomew Featherstonehaugh", "ok"],
+                ["=CONCATENATE(A2, A3, A2, A3, A2, A3, A2, A3)", "x", "=1"],
+            ],
+        }
+    )
+    assert sheet["A2"].alignment.wrap_text and not sheet["A3"].alignment.wrap_text
+    assert sheet.column_dimensions["A"].width == 20  # the model's width is kept
+    assert sheet.column_dimensions["B"].width >= len("Bartholomew Featherstonehaugh")
+    assert sheet.column_dimensions["C"].width == 10 and not sheet["C2"].alignment.wrap_text
+    assert not sheet["A4"].alignment.wrap_text  # a formula is not text to wrap
+
+
+def test_constant_date_formulas_in_a_date_column_become_real_dates() -> None:
+    """D-541, doc-4b w07: the model wrote every due date as =DATE(2026,11,4); a reader of the file saw formulas, not dates."""
+    from datetime import datetime
+
+    sheet = _chart_book(
+        {
+            "name": "Tasks",
+            "columns": [{"header": "Due", "format": "yyyy-mm-dd"}, {"header": "Other"}],
+            "rows": [
+                ["=DATE(2026,11,4)", "=DATE(2026,11,4)"],
+                ["2026-11-06", "x"],
+                ["=DATE(2026,13,1)", "x"],
+                ["=TODAY()", "x"],
+            ],
+        }
+    )
+    assert sheet["A2"].value == datetime(2026, 11, 4) and sheet["A3"].value == datetime(2026, 11, 6)
+    assert sheet["B2"].value == "=DATE(2026,11,4)"  # not a date column: left alone
+    assert sheet["A4"].value == "=DATE(2026,13,1)" and sheet["A5"].value == "=TODAY()"
