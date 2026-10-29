@@ -63,6 +63,10 @@ def main() -> int:
         "POSTGRES_DB": (parts.path or "/postgres").lstrip("/"),
         "DATABASE_URL": url,  # newer template versions read one URL instead of the pieces above
         "FASTAPI_ENV": "development",
+        # A delivered copy has no .env (Forge never copies secret files), and the template reads its required PROJECT_NAME from there.
+        "PROJECT_NAME": "Forge template suite",
+        "SMTP_HOST": "localhost",  # the password-recovery test needs email configured; it mocks the sending
+        "EMAILS_FROM_EMAIL": "info@example.com",
         "SECRET_KEY": secrets.token_hex(16),
         "FIRST_SUPERUSER": "admin@example.com",
         "FIRST_SUPERUSER_PASSWORD": secrets.token_hex(8),
