@@ -53,7 +53,8 @@ def test_default_plan_when_everything_answers() -> None:
     plan = by_role(propose_plan(config, BOTH, {}))
     assert plan["coder"]["model"] == config.llm.roles.coder
     assert plan["reviewer"]["model"] == config.llm.roles.reviewer
-    assert all(entry["reason"] == "Default for this role" for entry in plan.values())
+    assert all(entry["reason"] == "Default for this role" for role, entry in plan.items() if role != "judge")
+    assert plan["judge"]["model"] == "gpt51"  # D-545: gpt-5.1 judges before the configured gpt-4.1
 
 
 def test_a_model_that_does_not_answer_is_replaced() -> None:
@@ -73,7 +74,9 @@ def test_no_model_answering_leaves_roles_empty() -> None:
 def test_saved_choice_is_kept_and_unknown_keys_ignored() -> None:
     plan = by_role(propose_plan(default_config(), BOTH, {"reviewer": "gpt51", "judge": "gone"}))
     assert plan["reviewer"]["model"] == "gpt51" and plan["reviewer"]["reason"] == "Your earlier choice"
-    assert plan["judge"]["reason"] == "Default for this role"
+    assert (
+        plan["judge"]["model"] == "gpt51"
+    )  # the unknown saved key is ignored; the judge preference applies (D-545)
 
 
 def test_database_note_only_when_it_is_not_ok() -> None:
@@ -290,7 +293,7 @@ def test_the_critic_is_the_coders_model_until_a_critic_is_chosen() -> None:
 
 def test_no_gemini_test_or_a_failed_one_keeps_the_azure_defaults() -> None:
     config = default_config()
-    assert by_role(propose_plan(config, BOTH, {}))["judge"]["model"] == config.llm.roles.judge
+    assert by_role(propose_plan(config, BOTH, {}))["judge"]["model"] == "gpt51"  # D-545, not Gemini
     failed = {
         "gemini": {
             "status": "fail",

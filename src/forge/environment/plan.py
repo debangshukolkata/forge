@@ -28,7 +28,8 @@ PREFERENCE: dict[str, tuple[str, ...]] = {
     "vision": ("gpt54",),
     "planner": ("gemini4argon", "gemini31pro"),
     "critic": ("gemini4argon", "gemini31pro", "gpt52"),
-    "judge": ("gemini4argon", "gemini31pro", "gpt52"),
+    # gpt-5.1 before the configured gpt-4.1: on the C1 run gpt-4.1 scored every task 5 of 5, gpt-5.1 tracked the hidden tests (D-545)
+    "judge": ("gemini4argon", "gemini31pro", "gpt52", "gpt51"),
     "reviewer": ("gemini4argon", "gemini31pro", "gpt52"),
     "fallback": ("gemini31pro", "gpt54", "gpt52", "gpt51"),
 }

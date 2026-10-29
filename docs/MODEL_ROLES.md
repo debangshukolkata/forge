@@ -22,7 +22,7 @@ The user asked for a Claude Code-like Forge, left the roles to me, and asked for
 |---|---|---|
 | coder (the main loop) | gpt-5.1 (changed by D-414: gpt-5.4 passed the same 13 of 14 tasks, 39 percent slower and 2.9 times the cost) | The research favoured 5.4 on public benchmarks; our own run did not. 5.4 stays selectable in the panel. |
 | planner (plan mode and the `planner` subagent) | Gemini 4 Argon, else Gemini 3.1 Pro, else the coder | Used on demand for large, ambiguous or many-file work, like Claude Code's plan mode. No planning stage in front of small tasks: the evidence shows no quality gain for strong executors and a cost in time. |
-| critic (design critic, candidate vote), judge, reviewer | Gemini 4 Argon, else Gemini 3.1 Pro, else gpt-5.2 (D-413), else gpt-4.1 | Another family than the builder. The independence the prompts claimed was not real while the critic ran on the coder's model (D-409). |
+| critic (design critic, candidate vote), judge, reviewer | Gemini 4 Argon, else Gemini 3.1 Pro, else gpt-5.2 (D-413), else gpt-4.1 (the judge: gpt-5.1 before gpt-4.1, D-545) | Another family than the builder. The independence the prompts claimed was not real while the critic ran on the coder's model (D-409). |
 | knowledge builder, summariser, vision | gpt-5.1 | High-volume reading work where speed counts. A 5.4-mini would suit it if it is deployed (OpenAI positions it for high-volume agent work). |
 | fallback | Gemini 3.1 Pro when Gemini answered, else gpt-5.4 or gpt-5.2 from the second Azure resource, else gpt-4o (the default config) | A rate limit or an outage usually hits one provider: the router prefers a model of another provider, and a Gemini model that fails falls back to the coder's Azure model. |
 

@@ -215,3 +215,19 @@ t15 45/47, t16 18/18, t17 42/42, t18 24/24, t19 19/19, t20 84/86 (was 80/86), t2
 
 ### C16 skill arms, first run (2026-10-29, D-537)
 `run_skill_arms.py c16-2026-10-29`, tasks t19, t20, t21, one run per arm, default model. Hidden tests: baseline (workflow skills off) 162/170, $1.10; distilled (DebCraft as shipped) 167/170, $1.61; superpowers (obra/superpowers, MIT, cloned 2026-10-29) 168/170, $1.90; mattpocock (mattpocock/skills engineering set without its setup skill, MIT) 166/170, $1.56. Every arm fully passed only t19. The difference is t20 (migration): 79/86 without workflow skills, 84 to 85 with any set. The three skill sets are within noise of each other; ours costs less than Superpowers for the same result. One run per arm on three tasks: a hint, not a verdict; repeat with `--repeat 3` on more tasks before deciding anything.
+
+## Judge on run c1-t15-23-2026-10-29 (2026-10-29, D-545): first use of `judge_code.py`
+| Task | Hidden tests | gpt-4.1 (the configured judge) overall | gpt-5.1 correctness / edge / errors / tests / security / simplicity / readability, overall | gpt-5.1's worst problem |
+|---|---|---|---|---|
+| t15 REST inventory API | 45/47 | 5 | 3/4/4/3/5/5/5, 4 | POST/PUT/PATCH without Content-Type accepted instead of 415 |
+| t16 Mode A repo feature | 18/18 | 5 | 5/5/5/5/5/5/5, 5 | none |
+| t17 Mode B no host code | 42/42 | 5 | 5/5/5/4/5/5/5, 5 | tests expect another redaction marker than the spec's |
+| t18 large multi-file feature | 24/24 | 5 | 5/5/5/5/5/5/5, 5 | none |
+| t19 concurrency bug hunt | 19/19 | 5 | 5/5/5/5/5/5/5, 5 | none |
+| t20 migration script | 84/86 | 5 | 4/4/4/5/5/4/5, 4 | malformed version-2 files raise instead of passing |
+| t21 text diff/patch | 62/65 | 5 | 3/3/3/4/5/4/5, 3 | an empty line inside a hunk raises TypeError |
+| t22 security fix | 70/93 | 5 | 4/4/5/5/5/5/5, 4 | the required list of issues found is missing |
+| t23 file-share security | 47/53 | 5 | 4/4/4/4/5/5/5, 4 | resolver errors escape instead of FetchRefused |
+
+**Reading:** gpt-4.1 gave every task 5 of 5 and called t22's code thorough on security although 23 of its 93 hidden tests fail: useless as a judge. gpt-5.1 gave 5 overall exactly to the four tasks that pass all hidden tests and 3 or 4 to the five that do not, each with a concrete, checkable fault. It still scores security 5 on t22 and t23 (it cannot see the attacks it misses), so it is a second opinion next to the hidden tests, never instead of them. gpt-5.1 is the builder's own family (lenient by the literature, MODEL_ROLES.md); on the office laptop the judge is Gemini 4 Argon. Judge cost about $0.60 for the nine tasks with gpt-5.1.
+
