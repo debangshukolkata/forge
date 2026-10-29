@@ -35,12 +35,19 @@ export function TopBar({
   const workspace = state.workspace;
   return (
     <header className="relative z-30 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur-xl">
-      <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-action text-accent-fg">
+      {/* The logo goes to the first screen, like Home (user request 2026-10-29, D-554). */}
+      <button
+        type="button"
+        onClick={onHome}
+        aria-label="DebCraft home"
+        title="Home"
+        className="flex cursor-pointer items-center gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-action text-accent-fg">
           <Anvil className="h-4 w-4" aria-hidden />
-        </div>
+        </span>
         <span className="font-mono text-[14px] font-semibold tracking-tight">DebCraft</span>
-      </div>
+      </button>
       <div className="mx-1 h-5 w-px bg-border" />
       {workspace ? (
         <div className="flex min-w-0 items-center gap-2">

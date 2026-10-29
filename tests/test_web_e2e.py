@@ -156,7 +156,9 @@ def test_new_project_form_in_edge(page, server: ServerSecurity, tmp_path: Path, 
     page.keyboard.press("Escape")
     menu.wait_for(state="detached")
 
-    page.click("button:has-text('Home')")
+    # D-554: inside a project the logo goes to the first screen, like Home.
+    page.click("header button[aria-label='DebCraft home']")
+    page.wait_for_selector("text=Start something new.")
     page.click("button:has-text('New project')")
     page.wait_for_selector("text=Create and open")
     page.click("[role=radio]:has-text('From an existing repository')")
