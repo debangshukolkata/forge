@@ -892,7 +892,9 @@ def test_react_project_list_shows_what_forge_remembers(
         held[0].abort()  # type: ignore[attr-defined]
         page.wait_for_selector("[role=status]:has-text('Opening')", state="detached")
         page.unroute("**/api/open")
-        problems[:] = [m for m in problems if "ERR_FAILED" not in m]  # the request this test failed on purpose
+        problems[:] = [
+            m for m in problems if "ERR_FAILED" not in m
+        ]  # the request this test failed on purpose
         # D-226: deleting asks first, then removes the project's folder and its row.
         page.click("button[aria-label^='Delete ']")
         page.wait_for_selector("[role=alertdialog]")
