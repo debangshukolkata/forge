@@ -87,6 +87,12 @@ async def test_a_hidden_coupling_is_caught_before_done(fixture_host: SessionHost
         for e in events
         if e.type == EventType.TOOL_CALL_FINISHED
     )
+    warned = sum(
+        "expectation(s) in an existing test" in str(e.payload.get("preview", ""))
+        for e in events
+        if e.type == EventType.TOOL_CALL_FINISHED
+    )  # D-560
+    explains = bool(re.search(r"test_claims_api|00004|claim number|expectation", final, re.IGNORECASE))
     suite = subprocess.run(
         [str(FIXTURE_PYTHON), "-m", "pytest", "-q", "-p", "no:cacheprovider"],
         cwd=host.workspace.repo_dir / "backend",  # type: ignore[union-attr]
@@ -98,6 +104,7 @@ async def test_a_hidden_coupling_is_caught_before_done(fixture_host: SessionHost
     said_works = bool(CLAIMS_WORKS.search(final)) and not re.search(r"\bfail", final, re.IGNORECASE)
     print(
         f"\nTI3 run={repeat} seconds={elapsed:.0f} pytest_commands={len(calls)} full_after_last_edit={len(full_after)} "
-        f"suite_failed={failed} final_says_works={said_works} no_pytest_calls={could_not_test} touched={sorted({p for _, p in edits})}"
+        f"suite_failed={failed} final_says_works={said_works} no_pytest_calls={could_not_test} warned={warned} "
+        f"final_explains_test_change={explains} touched={sorted({p for _, p in edits})}"
     )
     assert calls, "the model ran no pytest command"

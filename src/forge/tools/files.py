@@ -13,6 +13,9 @@ from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.baseline_gate import baseline_gate, rewrite_gate
 from forge.tools.diagnostics import diagnose_file
+from forge.workspace.test_expectations import changed_assertions, is_existing_test
+from forge.workspace.test_expectations import note as test_change_note
+from forge.workspace.test_expectations import record as record_test_changes
 from forge.workspace.text_format import decode_text, detect_format
 
 DEFAULT_READ_LIMIT = 2000
@@ -544,7 +547,12 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
     if mangled:
         return ToolResult(ok=False, content=mangled)
     created = not path.is_file()
+    changed_tests = (
+        changed_assertions(before, text) if not created and is_existing_test(workspace, relative) else []
+    )
     workspace.write_text(relative, text, reason=reason)
+    if changed_tests:
+        record_test_changes(workspace, relative, changed_tests)
     context.note_edit(relative)
     context.reads.record(relative, Path(path).read_bytes())  # the model now knows the current content
     diff = "".join(
@@ -562,6 +570,8 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
             note = candidate_composition_note(text) or concept_problem(text)
             if note:
                 message += "\n" + note
+    if changed_tests:
+        message += "\n" + test_change_note(relative, changed_tests)  # D-560
     problem = await diagnose_file(workspace, relative)
     return ToolResult(
         ok=True, content=message + (f"\n{problem}" if problem else ""), meta={"diagnostics_ok": not problem}

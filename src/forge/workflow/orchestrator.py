@@ -54,6 +54,8 @@ from forge.workflow.reports import closing_message, final_report
 from forge.workflow.scheduler import explain, plan_batch
 from forge.workflow.state import Cadence, StateStore, Task
 from forge.workspace.output import build_output
+from forge.workspace.test_expectations import report_lines as test_change_lines
+from forge.workspace.test_expectations import take_all as take_test_changes
 
 if TYPE_CHECKING:
     from forge.engine.session_host import SessionHost
@@ -423,6 +425,9 @@ class Orchestrator:
         gated REVIEW step (D-132): DebCraft has already verified as it went; this just packages the result."""
         output = build_modeb_output(self.workspace) if self.workspace.mode_b else build_output(self.workspace)
         report = final_report(self.state, self._requirement_text(), output, self.workspace, self.host.db)
+        changed_tests = take_test_changes(self.workspace)
+        if changed_tests:  # D-560: changed expectations in the user's own tests, listed for review
+            report += "\n\n" + "\n".join(test_change_lines(changed_tests))
         if self._restructure_baseline is not None:
             passed_before, _ = self._restructure_baseline
             passed_after, summary_after = await self._run_tests()
@@ -434,9 +439,13 @@ class Orchestrator:
             )
             self._restructure_baseline = None
         self.store.write_document("reports/final.md", report)
-        await self.host.bus.publish(
-            EventType.MESSAGE_DONE, {"text": closing_message(self.state, output), "model": "forge"}
-        )
+        closing = closing_message(self.state, output)
+        if changed_tests:
+            closing += (
+                f"\n\n**Check:** {len(changed_tests)} assertion(s) in your existing tests were changed or removed; "
+                'they are listed under "Changed test expectations" in reports/final.md.'
+            )
+        await self.host.bus.publish(EventType.MESSAGE_DONE, {"text": closing, "model": "forge"})
         self.state.change_request, self.state.restructuring = "", False
         self.state.exported = True
         self._export_step = self.context.step
