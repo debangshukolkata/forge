@@ -7,7 +7,7 @@ import type { ProjectEntry } from "../types";
 import { Headline, Tagline } from "./landing";
 import { Badge, Button, Empty, Input, Spinner } from "./ui";
 
-export function ProjectList({ onBack, onOpen, onLearned }: { onBack: () => void; onOpen: (path: string) => void; onLearned: () => void }) {
+export function ProjectList({ onBack, onOpen, onLearned }: { onBack: () => void; onOpen: (path: string) => Promise<void> | void; onLearned: () => void }) {
   const [projects, setProjects] = useState<ProjectEntry[] | null>(null);
   const [filter, setFilter] = useState("");
   const [error, setError] = useState("");
@@ -19,6 +19,18 @@ export function ProjectList({ onBack, onOpen, onLearned }: { onBack: () => void;
         setProjects([]);
       });
   }, []);
+  // Opening starts the project's session on the server before the chat shows, which takes a few seconds: the card says so
+  // and further clicks wait (office screenshot 2026-10-29, D-552).
+  const [opening, setOpening] = useState<string | null>(null);
+  async function openProject(path: string) {
+    if (opening) return;
+    setOpening(path);
+    try {
+      await onOpen(path);
+    } finally {
+      setOpening(null);
+    }
+  }
   const [confirming, setConfirming] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   async function remove(path: string) {
@@ -99,9 +111,11 @@ export function ProjectList({ onBack, onOpen, onLearned }: { onBack: () => void;
               <button
                 hidden={confirming === project.path}
                 type="button"
-                onClick={() => onOpen(project.path)}
+                onClick={() => void openProject(project.path)}
+                disabled={opening !== null}
+                aria-busy={opening === project.path}
                 title={project.path}
-                className="group flex w-full cursor-pointer items-center gap-4 rounded-[18px] border border-border bg-surface p-5 text-left transition-colors duration-150 hover:border-accent active:scale-[0.995]"
+                className="group flex w-full cursor-pointer items-center gap-4 rounded-[18px] border border-border bg-surface p-5 text-left transition-colors duration-150 hover:border-accent active:scale-[0.995] disabled:cursor-wait aria-busy:border-accent [&:disabled:not([aria-busy=true])]:opacity-60"
               >
                 {project.mode === "B" ? (
                   <Layers className="h-5 w-5 shrink-0 text-fg-muted" aria-hidden />
@@ -145,7 +159,14 @@ export function ProjectList({ onBack, onOpen, onLearned }: { onBack: () => void;
                     {timeAgo(project.last_activity)} · {project.path}
                   </span>
                 </span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-fg-muted transition-colors group-hover:text-accent" aria-hidden />
+                {opening === project.path ? (
+                  <span className="flex shrink-0 items-center gap-2 text-[13px] text-accent" role="status">
+                    <Spinner />
+                    Opening…
+                  </span>
+                ) : (
+                  <ChevronRight className="h-5 w-5 shrink-0 text-fg-muted transition-colors group-hover:text-accent" aria-hidden />
+                )}
               </button>
             </li>
           ))}

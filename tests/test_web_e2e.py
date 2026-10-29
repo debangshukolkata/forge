@@ -880,6 +880,19 @@ def test_react_project_list_shows_what_forge_remembers(
         page.wait_for_selector("text=No match")
         page.fill("input[aria-label='Search projects']", "")
         page.screenshot(path=str(shots / "projects-memory-light.png"))
+        # D-552: opening a project takes a few seconds on the server; the card says so. The open request is held, then failed,
+        # so the test stays on the list (the alert is accepted) and the card is usable again.
+        held: list[object] = []
+        page.route("**/api/open", lambda route: held.append(route))
+        page.on("dialog", lambda dialog: dialog.accept())
+        page.click("li:has([data-testid=project-state]) button[aria-busy]")
+        page.wait_for_selector("[role=status]:has-text('Opening')")
+        assert page.locator("li:has([data-testid=project-state]) button[aria-busy=true]").count() == 1
+        page.screenshot(path=str(shots / "projects-opening-light.png"))
+        held[0].abort()  # type: ignore[attr-defined]
+        page.wait_for_selector("[role=status]:has-text('Opening')", state="detached")
+        page.unroute("**/api/open")
+        problems[:] = [m for m in problems if "ERR_FAILED" not in m]  # the request this test failed on purpose
         # D-226: deleting asks first, then removes the project's folder and its row.
         page.click("button[aria-label^='Delete ']")
         page.wait_for_selector("[role=alertdialog]")

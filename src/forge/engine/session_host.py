@@ -115,6 +115,8 @@ class SessionHost:
         self._streamed: list[str] = []
         self._commands = SlashCommandHandler(self)
         self.closed = False
+        # Set by `forge run` without a prompt (D-552): continue open planned tasks too, not only an interrupted turn.
+        self.resume_open_work = False
         # Orchestrated sessions run the requirement workflow (spec §7); otherwise messages go straight to
         # the tool-using agent ("direct" mode).
         self.orchestrator: Orchestrator | None = Orchestrator(self) if orchestrated and self.agent else None
@@ -443,7 +445,9 @@ class SessionHost:
         await self._run_hooks("session_start")
         if self.workspace is not None and self.orchestrator is None and not self.workspace.mode_b:
             await self._prepare_database_quietly()
-        if self.orchestrator is not None and self.orchestrator.needs_resume:
+        if self.orchestrator is not None and (
+            self.orchestrator.has_unfinished_work if self.resume_open_work else self.orchestrator.needs_resume
+        ):
             await self._run_turn(self.orchestrator.resume)
         while not self.closed:
             user_input = await self._inputs.get()

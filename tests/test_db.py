@@ -378,7 +378,7 @@ def _orchestrated_host(workspace: Workspace, secrets: Secrets | None) -> Session
 
 def test_resolving_a_db_request_unblocks_only_the_tasks_waiting_on_it(workspace: Workspace) -> None:
     """No phase to reset any more (D-131): unblocking makes the task pending again, and clears `exported`
-    so the workspace is correctly seen as not-yet-resume-safe (needs_resume) until it's re-exported."""
+    so the workspace is correctly seen as having unfinished work until it's re-exported."""
     host = _orchestrated_host(workspace, None)
     assert host.orchestrator is not None
     state = host.orchestrator.state
@@ -390,7 +390,9 @@ def test_resolving_a_db_request_unblocks_only_the_tasks_waiting_on_it(workspace:
     assert host.orchestrator.db_request_resolved("DBR-1", done=False, note="no DBA today")
     assert state.tasks[0].status == "pending" and "no DBA today" in state.tasks[0].description
     assert state.tasks[1].status == "blocked"
-    assert state.exported is False and host.orchestrator.needs_resume
+    assert (
+        state.exported is False and host.orchestrator.has_unfinished_work
+    )  # /db continues the work itself (D-552)
     assert not host.orchestrator.db_request_resolved("DBR-9", done=True, note="")
 
 
@@ -507,3 +509,36 @@ async def test_read_tools_check_the_databases_themselves_when_the_session_has_no
     read = await DbQuery().run(DbQuery.Args(sql="SELECT 1 AS one"), context)
     assert read.ok and "1" in read.content, read.content
     assert db.reports and db.reports["local"].level != AccessLevel.NONE
+
+
+async def test_a_turn_that_ended_is_not_resumed_on_reopen_but_a_killed_one_is(workspace: Workspace) -> None:
+    """D-552, office screenshot: a project used for questions never exports, so every reopen answered the last question again."""
+    host = _orchestrated_host(workspace, None)
+    orchestrator = host.orchestrator
+    assert orchestrator is not None
+    orchestrator.state.started = True
+    seen: list[bool] = []
+
+    async def answered() -> None:
+        seen.append(orchestrator.state.turn_open)  # open while the model works, and saved so
+
+    orchestrator._advance = answered  # type: ignore[method-assign]
+    await orchestrator.advance()
+    assert seen == [True] and orchestrator.state.turn_open is False and not orchestrator.needs_resume
+
+    async def stopped() -> None:
+        raise RuntimeError("the user pressed Stop")
+
+    orchestrator._advance = stopped  # type: ignore[method-assign]
+    with pytest.raises(RuntimeError):
+        await orchestrator.advance()
+    assert not orchestrator.needs_resume  # ended, even by an error or Stop
+
+    killed = type(orchestrator.state).model_validate({**orchestrator.state.model_dump(), "turn_open": True})
+    orchestrator.state = killed  # what a process killed mid-turn leaves on disk
+    assert orchestrator.needs_resume and orchestrator.has_unfinished_work
+
+    orchestrator.state = type(killed).model_validate({**killed.model_dump(), "turn_open": False})
+    orchestrator.state.tasks = [Task(id="T1", title="open", status="pending")]
+    assert not orchestrator.needs_resume  # waiting for the user: reopening does not call the model
+    assert orchestrator.has_unfinished_work  # but `forge run` without a prompt continues the open task

@@ -200,7 +200,16 @@ class Orchestrator:
 
     @property
     def needs_resume(self) -> bool:
-        return self.state.started and not self.state.exported
+        return self.state.started and not self.state.exported and self.state.turn_open
+
+    @property
+    def has_unfinished_work(self) -> bool:
+        """For `forge run` without a prompt, where the user asks to continue: an interrupted turn or planned tasks still open."""
+        return (
+            self.state.started
+            and not self.state.exported
+            and (self.state.turn_open or self._has_open_tasks())
+        )
 
     async def handle_message(self, text: str) -> None:
         cadence = detect_cadence(text)
@@ -260,6 +269,20 @@ class Orchestrator:
         when to check in, until it ends its turn to wait for the user or every task is settled."""
         if not self.state.started:
             return
+        self._set_turn_open(True)
+        try:
+            await self._advance()
+        finally:
+            # Ended in any way (an answer, an error, the user's Stop): nothing to resume, except a turn cut at the step cap.
+            # A killed process never gets here, so its turn stays open and resumes (D-552).
+            self._set_turn_open(self._stopped_at_the_step_cap())
+
+    def _set_turn_open(self, value: bool) -> None:
+        if self.state.turn_open != value:
+            self.state.turn_open = value
+            self._save()
+
+    async def _advance(self) -> None:
         first_brief = not self._briefed()
         kind = self._change_kind()
         if first_brief and not kind and not self.workspace.mode_b:

@@ -50,6 +50,10 @@ class OrchestratorState(BaseModel):
     change_request: str = ""  # set while a change request or restructure is being worked on
     restructuring: bool = False
     cadence: Cadence = "default"  # D-130/D-132: persisted, set only by the user saying so in chat
+    # A turn is under way (D-552): saved True when the model starts and False when the turn ends in any way, so only a run that
+    # was killed mid-turn (or stopped at the step cap) resumes on reopen. Without it a project used for questions, which never
+    # exports, answered its last question again every time it was opened (office screenshot 2026-10-29).
+    turn_open: bool = False
     updated: str = ""
 
     def resume_summary(self) -> str:

@@ -356,7 +356,8 @@ async def _run(
         console.print(f"Cannot start: {error}", markup=False)
         return EXIT_FAILED
     assert host.orchestrator is not None
-    if not requirement and not host.orchestrator.needs_resume:
+    host.resume_open_work = not requirement  # the user asked to continue this workspace (D-552)
+    if not requirement and not host.orchestrator.has_unfinished_work:
         console.print(
             "Nothing to do: give --requirement-file/-p, or a workspace with an unfinished run.", markup=False
         )
