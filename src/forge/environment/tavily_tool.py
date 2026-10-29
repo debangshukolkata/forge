@@ -19,14 +19,17 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeVar
 
 import httpx
+
+from forge.environment.tavily_log import write_failure_log
 
 TAVILY_NAMES = ("TAVILY_TOOL_URL", "TAVILY_TOOL_ID", "TAVILY_BEARER_TOKEN")
 TIMEOUT_S = 65.0  # the platform's own limit for the call is 60 s
 FALLBACK_TOPIC = "News"  # known to work on the platform; tried if the configured topic is refused
 MAX_UNWRAP = 6
+Parsed = TypeVar("Parsed")
 
 
 class TavilyToolError(ValueError):
@@ -109,7 +112,9 @@ async def search(
             "tool_instance_id": tool_id,
         }
         try:
-            return await _post(settings, body, client_factory)
+            return await _exchange(
+                "search", settings, body, client_factory, lambda data: parse_reply(data, settings)
+            )
         except TavilyAuthError:
             raise  # another topic will not help
         except _Refused as refused:
@@ -117,15 +122,30 @@ async def search(
     raise TavilyToolError("; ".join(refusals) or "the search failed")
 
 
-async def _post(
+async def _exchange(
+    kind: str,
     settings: TavilySettings,
     body: dict[str, Any],
     client_factory: Callable[[], httpx.AsyncClient] | None,
-) -> TavilyReply:
-    client = client_factory() if client_factory else httpx.AsyncClient(timeout=TIMEOUT_S)
-    headers = {"Authorization": f"Bearer {settings.token}", "Content-Type": "application/json"}
-    async with client:
-        response = await client.post(settings.url, json=body, headers=headers)
+    parse: Callable[[Any], Parsed],
+) -> Parsed:
+    """One POST to the platform and the parse of its reply; any failure writes a log of what was sent and what came back
+    and names it in the error, because the platform's replies can only be seen on the office laptop (D-548)."""
+    response: httpx.Response | None = None
+    try:
+        client = client_factory() if client_factory else httpx.AsyncClient(timeout=TIMEOUT_S)
+        headers = {"Authorization": f"Bearer {settings.token}", "Content-Type": "application/json"}
+        async with client:
+            response = await client.post(settings.url, json=body, headers=headers)
+        return parse(_reply_data(response, settings))
+    except TavilyToolError as error:
+        raise _logged(error, kind, settings, body, response) from error
+    except httpx.HTTPError as error:
+        failure = TavilyToolError(f"the platform could not be reached: {type(error).__name__}: {error}")
+        raise _logged(failure, kind, settings, body, None) from error
+
+
+def _reply_data(response: httpx.Response, settings: TavilySettings) -> Any:
     if response.status_code in (401, 403):
         raise TavilyAuthError(
             f"the platform rejected the bearer token (HTTP {response.status_code}); it has probably "
@@ -135,10 +155,40 @@ async def _post(
         shown = _scrub(response.text, settings)[:200]
         raise _Refused(f"the platform answered HTTP {response.status_code}: {shown}")
     try:
-        data = response.json()
+        return response.json()
     except ValueError as error:
         raise TavilyToolError("the platform's reply was not JSON") from error
-    return parse_reply(data, settings)
+
+
+def _logged(
+    error: TavilyToolError,
+    kind: str,
+    settings: TavilySettings,
+    body: dict[str, Any],
+    response: httpx.Response | None,
+) -> TavilyToolError:
+    """The same kind of error, its message ending with where the log is."""
+    path = write_failure_log(
+        kind,
+        settings.url,
+        settings.tool_id,
+        body,
+        response.status_code if response is not None else None,
+        response.headers.get("content-type", "") if response is not None else "",
+        response.text if response is not None else None,
+        str(error),
+        settings.token,
+    )
+    where = f" Details: {path}" if path is not None else ""
+    return type(error)(f"{error}.{where}")
+
+
+def _body(settings: TavilySettings, args: dict[str, str]) -> dict[str, Any]:
+    try:
+        tool_id = int(settings.tool_id)
+    except ValueError as error:
+        raise TavilyToolError("the Tavily tool number in .env must be a number, for example 2362") from error
+    return {"args": args, "tool_instance_id": tool_id}
 
 
 def parse_reply(data: Any, settings: TavilySettings | None = None) -> TavilyReply:
@@ -248,34 +298,6 @@ def missing_kind_names(secrets: Any, kind: str) -> list[str]:
     return [name for name in wanted if secrets is None or not secrets.get(name)]
 
 
-async def _call(
-    settings: TavilySettings, args: dict[str, str], client_factory: Callable[[], httpx.AsyncClient] | None
-) -> Any:
-    try:
-        tool_id = int(settings.tool_id)
-    except ValueError as error:
-        raise TavilyToolError("the Tavily tool number in .env must be a number, for example 2362") from error
-    client = client_factory() if client_factory else httpx.AsyncClient(timeout=TIMEOUT_S)
-    headers = {"Authorization": f"Bearer {settings.token}", "Content-Type": "application/json"}
-    async with client:
-        response = await client.post(
-            settings.url, json={"args": args, "tool_instance_id": tool_id}, headers=headers
-        )
-    if response.status_code in (401, 403):
-        raise TavilyAuthError(
-            f"the platform rejected the bearer token (HTTP {response.status_code}); it has probably "
-            "expired: put a fresh one in TAVILY_BEARER_TOKEN in the .env file"
-        )
-    if response.status_code >= 400:
-        raise TavilyToolError(
-            f"the platform answered HTTP {response.status_code}: {_scrub(response.text, settings)[:200]}"
-        )
-    try:
-        return response.json()
-    except ValueError as error:
-        raise TavilyToolError("the platform's reply was not JSON") from error
-
-
 def _find(value: Any, markers: tuple[str, ...], depth: int = 0) -> Any:
     """Unwraps the platform's wrapping (JSON inside JSON, output/data/response/result) down to the dict that holds one of the markers."""
     if depth > MAX_UNWRAP:
@@ -360,14 +382,19 @@ async def research(
     topic: str = "General",
     client_factory: Callable[[], httpx.AsyncClient] | None = None,
 ) -> TavilyReport:
-    data = await _call(settings, {"query": query, "topic": topic}, client_factory)
-    return parse_report(data, settings)
+    body = _body(settings, {"query": query, "topic": topic})
+    return await _exchange(
+        "research", settings, body, client_factory, lambda data: parse_report(data, settings)
+    )
 
 
 async def extract(
     settings: TavilySettings, url: str, client_factory: Callable[[], httpx.AsyncClient] | None = None
 ) -> TavilyPages:
-    return parse_pages(await _call(settings, {"url": url}, client_factory), settings)
+    body = _body(settings, {"url": url})
+    return await _exchange(
+        "extract", settings, body, client_factory, lambda data: parse_pages(data, settings)
+    )
 
 
 async def crawl(
@@ -388,4 +415,6 @@ async def crawl(
             chunks_per_source if instructions else 0
         ),  # chunks only apply with instructions
     }
-    return parse_pages(await _call(settings, args, client_factory), settings)
+    return await _exchange(
+        "crawl", settings, _body(settings, args), client_factory, lambda data: parse_pages(data, settings)
+    )

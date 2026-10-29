@@ -7,10 +7,12 @@ database, Gemini (one real call per Gemini model after a yes, with the region; a
 Shown by the web UI's Environment drawer (D-186); the confirmed plan is applied to the router whenever a session starts, and
 `tesseract_ready` decides whether the `ocr_image` tool is offered (D-203).
 
+A failed Tavily call writes `<home>/logs/tavily-<tool>-<time>.log` (`tavily_log.py`: request body, status, reply structure and text, never the token) and its error names the file (D-548).
+
 - **Depends on:** config, doctor, errors, llm, net, safety, vision
 - **Invariants:** no secret value is ever stored or returned (details are redacted, only env var *names* appear); the saved file only
   holds check results and role -> model keys; a stale or unknown model key in it is ignored, never fatal.
-- **Tests:** test_environment.py, test_setup_guide.py, test_ocr.py
-- **Decisions:** docs/DECISIONS.md D-186, D-201, D-203, D-204.
+- **Tests:** test_environment.py, test_setup_guide.py, test_ocr.py, test_tavily_tool.py, test_tavily_kinds.py
+- **Decisions:** docs/DECISIONS.md D-186, D-201, D-203, D-204, D-547, D-548.
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.

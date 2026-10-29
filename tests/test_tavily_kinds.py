@@ -260,3 +260,36 @@ def test_a_tools_error_text_is_shown_not_just_its_key() -> None:
     with pytest.raises(TavilyToolError, match="reported an error: max_depth must be an integer") as caught:
         parse_pages({"output": {"error": "max_depth must be an integer (token tok-123)"}}, SETTINGS)
     assert "tok-123" not in str(caught.value)
+
+
+async def test_a_failed_call_writes_a_log_of_what_was_sent_and_what_came_back(
+    isolated_forge_home: Path,
+) -> None:
+    """D-548: the platform's replies can only be seen on the office laptop, so a failure leaves a log the error message names."""
+    reply = {
+        "data": {
+            "output": json.dumps({"error": "chunks_per_source must be between 1 and 5", "echo": "tok-123"})
+        }
+    }
+    platform = client_for(lambda request: httpx.Response(200, json=reply))
+    with pytest.raises(TavilyToolError, match="reported an error: chunks_per_source") as caught:
+        await crawl(SETTINGS, "https://example.com", max_depth=1, max_breadth=1, client_factory=platform)
+    message = str(caught.value)
+    assert "Details: " in message
+    log = Path(message.split("Details: ", 1)[1].rstrip("."))
+    assert log.parent == isolated_forge_home / "logs" and log.name.startswith("tavily-crawl-")
+    text = log.read_text(encoding="utf-8")
+    assert "Endpoint: https://platform.example/execute-tool" in text and "Tool number: 2362" in text
+    assert '"chunks_per_source": "0"' in text and "HTTP status: 200" in text
+    assert "output (JSON text): object with error, echo" in text  # the reply's structure, opened up
+    assert "tok-123" not in text and "tok-123" not in message
+
+
+async def test_an_unreachable_platform_is_logged_without_a_reply(isolated_forge_home: Path) -> None:
+    def refuse(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("proxy refused", request=request)
+
+    with pytest.raises(TavilyToolError, match="could not be reached: ConnectError") as caught:
+        await extract(SETTINGS, "https://example.com", client_for(refuse))
+    log = Path(str(caught.value).split("Details: ", 1)[1].rstrip("."))
+    assert "No reply: the request did not complete" in log.read_text(encoding="utf-8")
