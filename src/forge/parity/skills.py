@@ -22,6 +22,9 @@ class Skill:
     path: Path
     pack: str = ""  # the install this skill came from (D-480); skills of one pack share one line in the index
     own_design: bool = False  # it brings its own style guide (a diagram skill): the page design gate stands aside while it is loaded (D-483)
+    tools: tuple[
+        str, ...
+    ] = ()  # `tools:` in its front matter: deferred tools (or groups of them) loaded together with the skill (D-561)
     fork: bool = False  # `context: fork` in its front matter: it runs in a subagent of its own and only its conclusion comes back (C12 c, D-515)
 
     @property
@@ -33,17 +36,44 @@ class Skill:
         return FRONT.sub("", text, count=1).strip()
 
 
+BLOCK_MARKS = (">", ">-", ">+", "|", "|-", "|+")
+
+
+def header_fields(header: str) -> dict[str, str]:
+    """The `key: value` lines of a SKILL.md header. A YAML block value (`description: >-` followed by indented
+    lines, as the taste skill writes it) becomes one line; before D-562 such a description was read as '>-'."""
+    fields: dict[str, str] = {}
+    lines = header.splitlines()
+    index = 0
+    while index < len(lines):
+        match = re.match(r"^([\w-]+):\s*(.*)$", lines[index])
+        index += 1
+        if match is None:
+            continue
+        value = match.group(2).strip()
+        if value in BLOCK_MARKS:
+            block: list[str] = []
+            while index < len(lines) and (lines[index][:1] in (" ", "\t") or not lines[index].strip()):
+                block.append(lines[index].strip())
+                index += 1
+            value = " ".join(part for part in block if part)
+        if value:
+            fields[match.group(1)] = value
+    return fields
+
+
 def _parse(path: Path) -> Skill | None:
     text = path.read_text(encoding="utf-8")
     match = FRONT.match(text)
-    meta = dict(re.findall(r"^(\w+):\s*(.+)$", match.group(1), re.M)) if match else {}
+    meta = header_fields(match.group(1)) if match else {}
     name = meta.get("name", path.parent.name).strip()
     description = (
         meta.get("description", text.strip().splitlines()[0] if text.strip() else "").strip().strip("\"'")
     )
     own_design = meta.get("own_design", "").strip().lower() in ("true", "yes")
     fork = meta.get("context", "").strip().lower() == "fork"
-    return Skill(name, description, path, _pack_of(path, meta), own_design, fork) if name else None
+    tools = tuple(part.strip() for part in meta.get("tools", "").split(",") if part.strip())
+    return Skill(name, description, path, _pack_of(path, meta), own_design, tools, fork) if name else None
 
 
 PACK_FILE = ".pack"
@@ -118,9 +148,10 @@ def pack_listing(pack: str, members: list[Skill]) -> str:
     )
 
 
-def index_text(skills: dict[str, Skill]) -> str | None:
+def index_text(skills: dict[str, Skill], downloadable: str = "") -> str | None:
+    """`downloadable`: the lines for known skills that are not on the machine yet (parity/skill_sources.py)."""
     if not skills:
-        return None
+        return downloadable or None
     grouped = packs(skills)
     inside = {s.name for members in grouped.values() for s in members}
     lines = [
@@ -137,4 +168,8 @@ def index_text(skills: dict[str, Skill]) -> str | None:
             f"- {pack} (pack of {len(names)} skills: {shown}): load_skill('{pack}') lists them with their descriptions, "
             "or load one of them by name."
         )
-    return "Skills (load one with load_skill when a task matches):\n" + "\n".join(lines)
+    return (
+        "Skills (load one with load_skill when a task matches):\n"
+        + "\n".join(lines)
+        + (f"\n\n{downloadable}" if downloadable else "")
+    )

@@ -9,8 +9,10 @@ from typing import Any
 from forge.config import forge_home
 from forge.memory.scope import repo_level_dir
 from forge.parity.plugins import plugin_skill_roots
+from forge.parity.skill_sources import load_sources, loading_note
 from forge.parity.skills import Skill, discover, pack_listing, packs
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.tools.skill_install_tool import approve_and_install
 
 BUILT_IN_TYPES = {
     "explore": "Read-only exploration of the codebase for a question; returns relevant files and conventions.",
@@ -115,6 +117,26 @@ class LoadSkill(Tool):
         skill = skills.get(args.name.strip())
         if skill is None and not args.file and args.name.strip() in (grouped := packs(skills)):
             return ToolResult(ok=True, content=pack_listing(args.name.strip(), grouped[args.name.strip()]))
+        sources, _ = load_sources(forge_home())
+        if skill is None and (listed := sources.get(args.name.strip())) is not None:
+            # A known source that is not on this machine yet (D-562): fetched once, after the user approves.
+            installed, text = await approve_and_install(
+                listed.source,
+                f"Download the skill {listed.name} from GitHub? It is on DebCraft's list of known skill "
+                "sources and stays installed for later use.",
+                context,
+            )
+            if not installed:
+                return ToolResult(
+                    ok=False,
+                    content=f"{text} Carry on without {listed.name}, and do not ask for it again in this session.",
+                )
+            skill = discover(*skill_roots(context)).get(listed.name)
+            if skill is None:
+                return ToolResult(
+                    ok=False,
+                    content=f"The source was installed but holds no skill named {listed.name!r}:\n{text}",
+                )
         if skill is None:
             return ToolResult(
                 ok=False,
@@ -136,6 +158,12 @@ class LoadSkill(Tool):
                     "and it can only read and search); you get its conclusion back."
                 ),
             )
-        if skill.own_design:
+        listed = sources.get(skill.name)  # what the list of known sources adds to the skill's own header
+        if skill.own_design or (listed is not None and listed.own_design):
             context.design_exempt = True
-        return ToolResult(ok=True, content=skill.body() + skill_files_note(skill))
+        tools = [*skill.tools, *(listed.tools if listed is not None else [])]
+        return ToolResult(
+            ok=True,
+            content=skill.body() + skill_files_note(skill) + (loading_note(listed) if listed else ""),
+            meta={"attach_tools": tools} if tools else {},
+        )

@@ -150,6 +150,11 @@ class ToolContext:
     write_only_under: str | None = (
         None  # a subagent that may write only below this folder (the verifier, a builder)
     )
+    # The repository's topic notes (D-566): what this session did with them, and the two one-time reminders.
+    knowledge_looked: bool = False
+    knowledge_written: bool = False
+    knowledge_look_asked: bool = False
+    knowledge_write_asked: bool = False
     design_first: bool = (
         True  # D4: the first page or style file of a project waits for a DESIGN.md (the design concept)
     )

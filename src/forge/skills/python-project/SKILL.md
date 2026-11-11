@@ -1,6 +1,7 @@
 ---
 name: python-project
 description: Use when you start a Python project (library, command line tool, async worker, REST service) or need a short recipe for errors, logging, settings, typing, async, tests, SQL, security, performance, Django, Flask, Typer or Click, pandas or polars, SQLAlchemy and Alembic, property tests, profiling, code review of a diff, a failing CI run, a stack trace or a threat model
+tools: code_intel, find_asset, add_asset
 ---
 # Python projects that start clean, and recipes for the usual problems
 

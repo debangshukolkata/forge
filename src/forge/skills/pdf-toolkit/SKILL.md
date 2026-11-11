@@ -1,6 +1,7 @@
 ---
 name: pdf-toolkit
 description: Read, change and create PDF files: extract text and form fields, merge, split, rotate, crop, delete pages, watermark, page numbers, fill forms, encrypt and decrypt, extract pictures, build a PDF from an outline, and handle scanned PDFs with OCR. Use whenever the task involves a .pdf.
+tools: pdf, preview_file, critique_document, find_asset, add_asset
 ---
 
 # PDF toolkit

@@ -34,7 +34,7 @@ from forge.memory.scope import repo_level_dir, scope_of
 from forge.memory.store import combined_index
 from forge.modeb.profile import HostProfile, ProfileError, ProfileStore, host_identifying_terms
 from forge.modeb.workspace import profile_ref
-from forge.parity import skill_install
+from forge.parity import skill_install, skill_sources
 from forge.parity.history import History
 from forge.parity.instructions import InstructionFile, instruction_files
 from forge.parity.instructions import append_line as append_instruction
@@ -58,9 +58,10 @@ from forge.toolkit.app_keys import apply_grant
 from forge.toolkit.background import BackgroundManager
 from forge.toolkit.base import Tool, ToolContext
 from forge.toolkit.shell import ShellSession, execute
+from forge.tools.code_map_tool import repository_map_pin
 from forge.tools.interaction import AskUser
 from forge.tools.modeb import modeb_tools
-from forge.tools.registry import ToolRegistry, db_tools, default_tools
+from forge.tools.registry import ToolRegistry, db_tools, session_tools
 from forge.tools.tavily_tools import tavily_tools
 from forge.tools.test_quality import recover_interrupted_mutation
 from forge.tools.todo import PIN_SLOT as TODO_PIN_SLOT
@@ -140,6 +141,8 @@ class SessionHost:
 
             contracts = ContractRegister(profile).essentials()
             essentials = profile.essentials() + (f"\n\n{contracts}" if contracts else "")
+        elif self.workspace is not None:
+            essentials = repository_map_pin(self.workspace)  # the map kept between projects (KL1, D-563)
         self.context_manager.pinned.set("kb_essentials", essentials)
 
     def host_profile(self) -> HostProfile | None:
@@ -302,10 +305,11 @@ class SessionHost:
                     SpawnSubagent(),
                     BuildVariants(),
                     AskUser(),
-                    *default_tools(),
+                    *session_tools(workspace.mode_b),
                     *(db_tools() if context.db else []),
                     *self.extra_tools,
-                ]
+                ],
+                defer=True,
             ),
             context,
             gate,
@@ -570,7 +574,9 @@ class SessionHost:
         level = self.repo_level_dir()
         if level is not None:
             roots.append(level / "skills")
-        self.context_manager.pinned.set("skills", skills_index(discover(*roots)))
+        installed = discover(*roots)
+        waiting = skill_sources.index_lines(skill_sources.available(forge_home(), installed))
+        self.context_manager.pinned.set("skills", skills_index(installed, waiting))
 
     async def _prepare_message(self, text: str) -> str | None:
         """'# note' saves an instruction (after asking where); 'think hard:' raises the effort for this turn;

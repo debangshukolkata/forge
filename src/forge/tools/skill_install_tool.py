@@ -56,41 +56,48 @@ class InstallSkill(Tool):
                     "/skill add <link>."
                 ),
             )
-        skills_root = forge_home() / "skills"
-        shown: list[str] = []
-
-        def look(candidate: skill_install.Candidate) -> bool:
-            shown.append(skill_install.summary(candidate))
-            return False
-
-        try:
-            await asyncio.to_thread(skill_install.add_from_source, source, skills_root, look, False)
-        except ForgeError as error:
-            return ToolResult(ok=False, content=f"Could not read the repository: {error}")
-        answer = await context.ask_user(
-            f"Install the skills from github.com/{repo}?",
-            "\n".join(shown)[:CARD_CHARS],
-            [
-                OptionSpec(label=INSTALL, description="Install them now; they are ready to use right away."),
-                OptionSpec(label=DECLINE, description="Install nothing."),
-            ],
-            None,
+        installed, text = await approve_and_install(
+            source, f"Install the skills from github.com/{repo}?", context
         )
-        if not answer.startswith(f"The user chose: {INSTALL}"):
-            return ToolResult(
-                ok=True,
-                content=f"The user did not approve the installation ({answer}). Nothing was installed.",
-            )
-        try:
-            lines = await asyncio.to_thread(
-                skill_install.add_from_source, source, skills_root, lambda candidate: True, False
-            )
-        except ForgeError as error:
-            return ToolResult(ok=False, content=f"The installation failed: {error}")
-        if context.skills_changed is not None:
-            context.skills_changed()
-        return ToolResult(
-            ok=True,
-            content="\n".join(lines)
-            + "\nThe skills are ready: load one with load_skill(name) and follow it.",
+        if installed:
+            text += "\nThe skills are ready: load one with load_skill(name) and follow it."
+        return ToolResult(ok=installed or text.startswith("The user did not approve"), content=text)
+
+
+async def approve_and_install(source: str, question: str, context: ToolContext) -> tuple[bool, str]:
+    """Reads the source, shows the user what it holds and installs it only after a click on Install.
+    Returns (installed, what happened). Shared by install_skill (a link the user typed) and load_skill
+    (a skill from the list of known sources, D-562): the card and the click are the same in both."""
+    if context.ask_user is None:
+        return False, "Cannot ask the user here, so nothing was installed."
+    skills_root = forge_home() / "skills"
+    shown: list[str] = []
+
+    def look(candidate: skill_install.Candidate) -> bool:
+        shown.append(skill_install.summary(candidate))
+        return False
+
+    try:
+        await asyncio.to_thread(skill_install.add_from_source, source, skills_root, look, False)
+    except ForgeError as error:
+        return False, f"Could not read the repository: {error}"
+    answer = await context.ask_user(
+        question,
+        "\n".join(shown)[:CARD_CHARS],
+        [
+            OptionSpec(label=INSTALL, description="Install them now; they are ready to use right away."),
+            OptionSpec(label=DECLINE, description="Install nothing."),
+        ],
+        None,
+    )
+    if not answer.startswith(f"The user chose: {INSTALL}"):
+        return False, f"The user did not approve the installation ({answer}). Nothing was installed."
+    try:
+        lines = await asyncio.to_thread(
+            skill_install.add_from_source, source, skills_root, lambda candidate: True, False
         )
+    except ForgeError as error:
+        return False, f"The installation failed: {error}"
+    if context.skills_changed is not None:
+        context.skills_changed()
+    return True, "\n".join(lines)

@@ -76,7 +76,7 @@ are folded into the spec itself as amendments (§0.2, tags `[A-n]`) and listed h
 
 - **§5.2 roles (D-446):** the model plan proposes gpt-5.4 for coder, summariser and vision once it has answered its test; `config.yaml` still lists gpt-5.1 as the default, for machines without the second Azure resource.
 - **§5.3 retries and fallback (D-465):** with another model in `llm.rotation` available, a rate-limited call waits once (two attempts) and switches; the failing model rests two minutes (or its `Retry-After`); the chat shows a notice when it switches and when the model returns. Without an alternative all six retries are still used.
-- **§9 tools (D-462):** a model request carries at most 128 tools (the Azure limit); over that, `LEAVE_OUT_FIRST` names the tools that are left out first.
+- **§9 tools (D-462):** a model request carries at most 128 tools (the Azure limit); since D-561 only the core tools are sent and the others are loaded on demand with `tool_search`, so the limit is a hard stop that is rarely reached.
 - **§9.1 reading (D-469):** `read_file` and `list_dir` may open `.forge/inputs/` and `.forge/tool_outputs/` (attachments and saved full tool results), read only.
 - **§10.4 compaction (D-467):** nine required summary sections (adds "Assumptions to verify"); when the model's summary is incomplete twice a facts-only summary is written in code instead of keeping the whole history.
 - **§13B skills (D-468):** installing from a link unpacks only the requested folder or the folders holding a SKILL.md; the download limit is 150 MB (was 50 MB).

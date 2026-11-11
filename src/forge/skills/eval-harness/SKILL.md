@@ -1,6 +1,7 @@
 ---
 name: eval-harness
 description: Use when you build or change an ML or LLM feature and need to measure it: set up an eval set (labelled samples), metrics with targets, a per-sample report and a regression gate
+tools: evals
 ---
 # Eval harness
 

@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 import httpx
 
 from forge.errors import ForgeError
-from forge.parity.skills import FRONT, set_pack
+from forge.parity.skills import FRONT, header_fields, set_pack
 
 MAX_DOWNLOAD_BYTES = (
     150 * 1024 * 1024
@@ -55,7 +55,10 @@ def github_zip_url(source: str) -> tuple[str, str]:
     if match is None:
         raise SkillInstallError(f"{source!r} is not a github.com repository link or an existing folder.")
     owner, repo, branch = match["owner"], match["repo"], match["branch"]
-    reference = f"refs/heads/{branch}" if branch else "HEAD"
+    if branch and re.fullmatch(r"[0-9a-f]{40}", branch):
+        reference = branch  # a full commit id pins the version (the known skill sources use it, D-562)
+    else:
+        reference = f"refs/heads/{branch}" if branch else "HEAD"
     return f"https://codeload.github.com/{owner}/{repo}/zip/{reference}", (match["path"] or "").strip("/")
 
 
@@ -207,7 +210,7 @@ def _describe(skill_file: Path) -> Candidate:
     text = skill_file.read_text(encoding="utf-8", errors="replace")
     match = FRONT.match(text)
     header = match.group(1) if match else ""
-    meta = dict(re.findall(r"^([\w-]+):\s*(.+)$", header, re.M))
+    meta = header_fields(header)
     folder = skill_file.parent
     files = sorted(p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file())
     return Candidate(

@@ -78,7 +78,7 @@ def inherit_web_settings(parent: ToolContext, child: ToolContext) -> None:
 async def run_explore(router: LLMRouter, context: ToolContext, requirement: str) -> str:
     """Runs a read-only exploration with its own history and event bus; returns the condensed report."""
     bus = EventBus(redactor=default_redactor)  # private: the main UI only sees the report
-    tools = ToolRegistry([t for t in default_tools() if t.read_only])
+    tools = ToolRegistry([t for t in default_tools() if t.read_only], defer=True)
     sub_context = ToolContext(
         workspace=context.workspace,
         shell=context.shell,
@@ -209,7 +209,7 @@ If the requirement or a test itself looks wrong, say so plainly."""
 async def run_debugger(router: LLMRouter, context: ToolContext, problem: str) -> str:
     """A fresh-context diagnosis (spec §13.3 step 2), on the reviewer role's model: a second model catches
     different mistakes. Read-only tools plus the shell (to run tests)."""
-    tools = ToolRegistry([*(t for t in default_tools() if t.read_only), RunCommand()])
+    tools = ToolRegistry([*(t for t in default_tools() if t.read_only), RunCommand()], defer=True)
     return await _run_subagent(
         router, context, tools, DEBUGGER_PROMPT, problem, DEBUGGER_ITERATIONS, "reviewer"
     )

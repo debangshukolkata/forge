@@ -1,0 +1,39 @@
+# Known skill sources (D-562): skills DebCraft may download from GitHub when a task needs one.
+# Nothing here is part of DebCraft: only the link is. A skill is downloaded the first time it is loaded, after
+# the user approves once, and then stays in <DebCraft Home>/skills for later sessions.
+# Add your own or change these in <DebCraft Home>/skill_sources.yaml (same format; an entry with the same
+# name replaces the one here, `enabled: false` hides it).
+#   name      the skill's own name (the `name:` in its SKILL.md); load_skill uses it
+#   source    https://github.com/<owner>/<repo>/tree/<branch or commit>/<folder holding SKILL.md>
+#             a full commit id pins the version: an update happens only when you change it
+#   use_when  one line for the skills index: what it is for and when to pick it
+#   needs     what its scripts need on the machine (shown to the model with the skill)
+#   tools     deferred DebCraft tools or groups loaded together with it
+#   own_design  true = it sets the look of a page itself, so DebCraft's own DESIGN.md gate stands aside
+sources:
+  - name: impeccable
+    source: https://github.com/pbakaus/impeccable/tree/c1e0e5492fbb524f5df84d635ecfae7dc438ec45/.claude/skills/impeccable
+    use_when: Design skill (Apache-2.0). Use to design, redesign, critique, audit or polish a website, landing page, dashboard or app screen, with sub-commands such as shape, audit, critique, polish, typeset, layout.
+    needs: Node for its scripts/ folder.
+    tools: [pictures, find_font, fetch_font]
+    own_design: true
+  - name: design-taste-frontend
+    source: https://github.com/leonxlnx/taste-skill/tree/f6b76575f949707b4e3c37cd86cb44b0b98643e8/skills/taste-skill
+    use_when: The "taste skill" (tasteskill, MIT). Use to build or redesign a company, product, shop or landing page that must not look generic or AI-made; brings its own section library, photographs and page checker (about 37 MB).
+    needs: Node 22 or newer for its scripts; its checker starts Chrome or Edge itself.
+    tools: [pictures, find_font, fetch_font]
+    own_design: true
+  - name: unslop
+    source: https://github.com/heydamir/unslop/tree/97daa3eb365670ea3f87ed85356cbfcee18105a5/skills/unslop
+    use_when: Clean-up skill (CC BY 4.0, credit Damir Sokolovsky). Use on an EXISTING screen that looks AI-generated (purple gradients, glows, gradient text, generic cards) to give it a direction and fix spacing, colour, type and layout in order.
+    needs: Node for two optional scripts.
+    tools: [pictures]
+    own_design: true
+  - name: extract-design
+    source: https://github.com/Manavarya09/design-extract/tree/189d5ea0aed63977f4e6d9495b9d9cf4524fae49/skills/extract-design
+    use_when: Design tokens from a live website (MIT). Use when the user wants the colours, fonts, spacing or a Tailwind or shadcn theme taken from a URL.
+    needs: npm (it runs `npx designlang <url>`, which downloads the package and starts a headless browser).
+  - name: playwright-cli
+    source: https://github.com/microsoft/playwright-cli/tree/8297c9b12432ea12c1707cd64995fc96768bdb70/skills/playwright-cli
+    use_when: Microsoft's browser command line (Apache-2.0). Use only when the user asks for playwright-cli or for Playwright test files; for looking at a page DebCraft's own browser tools are already loaded.
+    needs: npm (`npm install -g @playwright/cli`); it starts a browser itself.

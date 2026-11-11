@@ -1,6 +1,7 @@
 ---
 name: ui-design-quality
 description: Make every screen look and feel professionally designed, and prove it. Use whenever you create or change a website, landing page, dashboard, page, screen, component or stylesheet, and whenever the user asks for a good looking site or says the UI looks bad or asks to improve the UI or UX.
+tools: design, find_image, fetch_image, generate_image, find_icon
 ---
 # Designing screens that look good, and checking them
 

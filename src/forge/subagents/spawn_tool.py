@@ -56,7 +56,7 @@ async def run_builder(context: ToolContext, *, folder: str, name: str, task: str
     # Its own shell session: the working directory belongs to the session, and two builders must not move each other's.
     shell = ShellSession(workspace)
     shell.cwd = workspace.path_of(folder)
-    tools = ToolRegistry([t for t in default_tools() if t.name not in ("ask_user",)])
+    tools = ToolRegistry([t for t in default_tools() if t.name not in ("ask_user",)], defer=True)
     brief = (
         f"Your folder: {folder}/ (you can write only there; your commands start there).\n"
         f"Your name: {name}.\n\nBRIEF:\n{task}"
@@ -145,16 +145,16 @@ class SpawnSubagent(Tool):
                     content=f"{args.agent!r} is not an installed skill that runs in its own context.",
                 )
             report = await _run_subagent(
-                router, context, ToolRegistry(read_only), skill.body(), args.task, 25, "coder"
+                router, context, ToolRegistry(read_only, defer=True), skill.body(), args.task, 25, "coder"
             )
             return ToolResult(ok=True, content=f"[skill {skill.name}, run in its own context]\n{report}")
         if args.agent == "explore":
             report = await _run_subagent(
-                router, context, ToolRegistry(read_only), EXPLORE_PROMPT, args.task, 25, "coder"
+                router, context, ToolRegistry(read_only, defer=True), EXPLORE_PROMPT, args.task, 25, "coder"
             )
         elif args.agent == "planner":
             report = await _run_subagent(
-                router, context, ToolRegistry(read_only), PLANNER_PROMPT, args.task, 25, "planner"
+                router, context, ToolRegistry(read_only, defer=True), PLANNER_PROMPT, args.task, 25, "planner"
             )
         elif args.agent == "art-director":
             everything = {t.name: t for t in default_tools()}
@@ -162,7 +162,7 @@ class SpawnSubagent(Tool):
             report = await _run_subagent(
                 router,
                 context,
-                ToolRegistry([*read_only, *(t for t in looking if t not in read_only)]),
+                ToolRegistry([*read_only, *(t for t in looking if t not in read_only)], defer=True),
                 ART_DIRECTOR_PROMPT,
                 args.task,
                 ART_DIRECTOR_ITERATIONS,
@@ -173,7 +173,7 @@ class SpawnSubagent(Tool):
                 report = await _run_subagent(
                     router,
                     context,
-                    ToolRegistry(read_only),
+                    ToolRegistry(read_only, defer=True),
                     RESEARCHER_PROMPT,
                     args.task,
                     RESEARCHER_ITERATIONS,
@@ -187,7 +187,7 @@ class SpawnSubagent(Tool):
                     "a narrower question."
                 )
         elif args.agent == "debugger":
-            tools = ToolRegistry([*read_only, RunCommand()])
+            tools = ToolRegistry([*read_only, RunCommand()], defer=True)
             report = await _run_subagent(router, context, tools, DEBUGGER_PROMPT, args.task, 20, "reviewer")
         elif args.agent == "builder":
             return await self._run_builder(args, context, read_only)
@@ -212,7 +212,7 @@ class SpawnSubagent(Tool):
                 )
             ]
             tools = ToolRegistry(
-                [*read_only, *(everything[n] for n in wanted if everything[n] not in read_only)]
+                [*read_only, *(everything[n] for n in wanted if everything[n] not in read_only)], defer=True
             )
             report = await _run_subagent(
                 router,
@@ -240,7 +240,7 @@ class SpawnSubagent(Tool):
             report = await _run_subagent(
                 router,
                 context,
-                ToolRegistry([*read_only, *(t for t in looking if t not in read_only)]),
+                ToolRegistry([*read_only, *(t for t in looking if t not in read_only)], defer=True),
                 CRITIC_PROMPT,
                 args.task,
                 CRITIC_ITERATIONS,
@@ -271,11 +271,23 @@ class SpawnSubagent(Tool):
             context.review_ship = "VERDICT: SHIP" in report
         elif args.agent == "security-auditor":
             report = await _run_subagent(
-                router, context, ToolRegistry(read_only), SECURITY_AUDITOR_PROMPT, args.task, 20, "reviewer"
+                router,
+                context,
+                ToolRegistry(read_only, defer=True),
+                SECURITY_AUDITOR_PROMPT,
+                args.task,
+                20,
+                "reviewer",
             )
         elif args.agent == "reviewer":
             report = await _run_subagent(
-                router, context, ToolRegistry(read_only), REVIEWER_PROMPT, args.task, 20, "reviewer"
+                router,
+                context,
+                ToolRegistry(read_only, defer=True),
+                REVIEWER_PROMPT,
+                args.task,
+                20,
+                "reviewer",
             )
         else:
             custom = load_agents(forge_home()).get(args.agent)

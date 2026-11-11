@@ -1,6 +1,7 @@
 ---
 name: make-spreadsheet
 description: Build, read, edit and check Excel workbooks (.xlsx) with real formulas, named ranges, formats, tables, validation, conditional formatting and charts. Use when the user wants a spreadsheet, a budget, a model, a tracker or a data table in Excel.
+tools: spreadsheets, preview_file, critique_document, find_asset, add_asset
 ---
 
 # Making Excel workbooks

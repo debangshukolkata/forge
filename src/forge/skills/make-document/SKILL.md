@@ -1,6 +1,7 @@
 ---
 name: make-document
 description: Build, read, edit and check Word documents (.docx): reports, memos, proposals, letters. Use when the user wants a Word document or wants an existing one changed.
+tools: documents, read_source_document, find_asset, add_asset, find_image, fetch_image, generate_image
 ---
 
 # Making Word documents

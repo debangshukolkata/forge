@@ -1,6 +1,7 @@
 ---
 name: vision-document-pipeline
 description: Use when you build a pipeline that reads documents or images (OCR, handwriting, forms, signatures, boxes) with a vision LLM: preprocessing, structured output, confidence, evals
+tools: evals, pictures, pdf_render, ocr_pdf
 ---
 # Vision / document pipelines (spec §13A.6)
 

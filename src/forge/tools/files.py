@@ -13,6 +13,7 @@ from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.baseline_gate import baseline_gate, rewrite_gate
 from forge.tools.diagnostics import diagnose_file
+from forge.tools.knowledge_tools import reading_note
 from forge.workspace.test_expectations import changed_assertions, is_existing_test
 from forge.workspace.test_expectations import note as test_change_note
 from forge.workspace.test_expectations import record as record_test_changes
@@ -86,7 +87,7 @@ class ReadFile(Tool):
         )
         return ToolResult(
             ok=True,
-            content="\n".join(numbered) + footer,
+            content="\n".join(numbered) + footer + reading_note(context),
             meta={"lines": len(lines), "newline": file_format.newline},
         )
 
@@ -523,8 +524,8 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
         )
     if context.design_first and context.write_only_under is None:
         asked = design_gate(context, relative)
-        if asked:
-            return ToolResult(ok=False, content=asked)
+        if asked:  # the refusal names design tools, which are deferred: they are loaded with it (D-561)
+            return ToolResult(ok=False, content=asked, meta={"attach_tools": ["design"]})
     path = workspace.path_of(relative)
     if context.write_only_under is None:
         asked = baseline_gate(context, relative, path.is_file())

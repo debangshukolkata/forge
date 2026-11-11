@@ -1,6 +1,7 @@
 ---
 name: make-presentation
 description: Use when the user asks for slides, a deck, a presentation or a .pptx (new, edited, restyled or built on a company template): plan the story, build it, look at every slide and fix what is wrong
+tools: presentations, pictures, find_font, fetch_font, preview_file, critique_document
 ---
 
 # Making a presentation

@@ -1,6 +1,7 @@
 ---
 name: theme-inspiration
 description: Use when the user likes a theme, template or site and wants a page or app that feels like it (a WordPress theme name or link, a GitHub theme repository, a demo address, or only a look such as "a minimal portfolio theme"): find it, study it read-only, show what was learned, then write an original page that shares no code with it
+tools: theme_search, design_inspire, find_font, fetch_font
 ---
 
 # Theme inspiration

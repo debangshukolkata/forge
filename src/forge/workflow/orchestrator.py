@@ -47,7 +47,7 @@ from forge.tools.interaction import (
     UpdatePlan,
 )
 from forge.tools.quality_gates import gate_findings, gate_note, load_config
-from forge.tools.registry import ToolRegistry, db_tools, default_tools
+from forge.tools.registry import ToolRegistry, db_tools, session_tools
 from forge.tools.ui_audit import tailwind_setup_problem
 from forge.tools.weakened_bar import weakened_bar_findings
 from forge.workflow.reports import closing_message, final_report
@@ -367,9 +367,10 @@ class Orchestrator:
     # --- helpers used by the loop ---
 
     def _tools(self) -> ToolRegistry:
+        agent = self.host.agent
         return ToolRegistry(
             [
-                *default_tools(),
+                *session_tools(self.workspace.mode_b),
                 SpawnSubagent(),
                 BuildVariants(),
                 *self._db_tools(),
@@ -381,7 +382,11 @@ class Orchestrator:
                 RunReadyTasks(),
                 TaskUpdate(),
                 RequestUserAction(),
-            ]
+            ],
+            defer=True,
+            loaded=agent.tools.loaded()
+            if agent is not None
+            else (),  # what earlier turns loaded stays loaded (D-561)
         )
 
     def _db_tools(self) -> list[Tool]:

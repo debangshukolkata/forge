@@ -14,6 +14,7 @@ from forge.memory.scope import scope_of
 from forge.memory.store import CommandStore, MemoryStore
 from forge.parity.plugins import plugin_command_folders
 from forge.protocol.events import EventType
+from forge.tools.knowledge_tools import learn_request, learning_status
 from forge.workspace.output import build_output
 from forge.workspace.read_grants import ReadGrantError
 from forge.workspace.workspace import Workspace, WorkspaceError
@@ -52,6 +53,8 @@ HELP_TEXT = """Available commands:
   /contracts [pin <seam> <signature> | forget <seam|id>]   Mode B: user-pinned interface contracts (D-129)
   /forget-snippet <id>      Mode B: remove a pasted snippet (exemplar) from the profile
   /init                     draft the repository-level FORGE.md (instructions DebCraft always follows)
+  /learn [what to focus on] explore the repository and write down what is found, for every later project on it
+                            (/learn status shows what is known and what is open)
   # <text>                  (a message starting with #) save an instruction to a FORGE.md
   /effort [low|medium|high] reasoning effort for this session ('think hard: ...' raises it for one message)
   /style [concise|explanatory|learning]   how much DebCraft explains while working
@@ -117,6 +120,7 @@ class SlashCommandHandler:
             "/handoff": self._handoff,
             "/profile": self._profile,
             "/init": self._init,
+            "/learn": self._learn,
             "/effort": self._effort,
             "/style": self._style,
             "/skills": self._skills,
@@ -495,6 +499,18 @@ class SlashCommandHandler:
             "the conventions to follow, and things never to do here. Keep it under 40 lines and base every "
             "line on what you actually read."
         )
+
+    async def _learn(self, args: list[str]) -> None:
+        """Free-time exploration (KL3, D-566): DebCraft reads the repository and writes topic notes that every
+        later project on it starts with. `/learn status` only reports; anything else is the focus."""
+        workspace = self.host.workspace
+        if workspace is None or workspace.mode_b:
+            await self._say("/learn works in a project on an existing repository.")
+            return
+        if args[:1] == ["status"]:
+            await self._say(learning_status(workspace))
+            return
+        await self.host.run_message(learn_request(" ".join(args)))
 
     async def _effort(self, args: list[str]) -> None:
         agent = self.host.agent

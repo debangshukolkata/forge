@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import json
 import os
 import re
 import time
@@ -176,6 +177,9 @@ class AgentLoop:
         self.on_thinking: TextDeltaCallback | None = None  # set by the session host (D-174)
         self.on_progress: ProgressCallback | None = (
             None  # a call in flight: what it is doing and how much (D-361)
+        )
+        self._tools_restored: ToolRegistry | None = (
+            None  # the registry that got back the deferred tools used earlier (D-561)
         )
         self._last_step_read_only = False  # the previous step only read things and nothing failed
         self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
@@ -405,6 +409,11 @@ class AgentLoop:
     async def _chat(
         self, history: list[Message], on_text_delta: TextDeltaCallback, reasoning_effort: str | None = None
     ) -> LLMResponse:
+        if (
+            self._tools_restored is not self.tools
+        ):  # a reopened session, or a new registry: the deferred tools used before are loaded again
+            self.tools.attach(call.name for message in history for call in message.tool_calls)
+            self._tools_restored = self.tools
         tools = self.tools.specs(read_only_only=self.gate.mode == "plan")
         started = time.perf_counter()
         first_token_s: list[float] = []  # time to the first streamed token, for the run log
@@ -577,10 +586,21 @@ class AgentLoop:
             )
         if call.parse_error is not None:
             return parse_error_result(call)
+        # A deferred tool called without tool_search first (D-561): it is loaded now, and runs if the guessed
+        # arguments happen to be right; otherwise the model gets the schema it never saw.
+        was_waiting = self.tools.is_waiting(call.name)
+        if was_waiting:
+            self.tools.attach([call.name])
         try:
             args = tool.Args.model_validate(call.arguments or {})
         except ValidationError as error:
-            return Message.tool_result(call.id, f"Error: invalid arguments for {call.name}: {error}")
+            schema = (
+                f"\n{call.name} was not loaded, so you could not see its arguments. It is loaded now; its "
+                f"arguments (JSON schema): {json.dumps(tool.spec().parameters, separators=(',', ':'))}"
+                if was_waiting
+                else ""
+            )
+            return Message.tool_result(call.id, f"Error: invalid arguments for {call.name}: {error}{schema}")
         summary = tool.summary(args)
         self.context.step += 1
         command = tool.command(args, self.context)
@@ -632,6 +652,7 @@ class AgentLoop:
                 note = self.path_rules.note_for(touched) if isinstance(touched, str) else ""
                 if note:
                     result = result.model_copy(update={"content": result.content + note})
+        result = self._load_tools_named_by(result)
         elapsed = time.perf_counter() - started
         waited = elapsed if tool.name in USER_WAIT_TOOLS else sum(waits)
         preview = _preview(result.content, result.ok)
@@ -739,6 +760,16 @@ class AgentLoop:
         if answer.scope == "prefix" and decision.command_prefix:
             self.gate.allow_prefix(decision.command_prefix)
         return await self._execute(tool, args)
+
+    def _load_tools_named_by(self, result: ToolResult) -> ToolResult:
+        """A loaded skill names the deferred tools it works with (`tools:` in its header), and so does a gate
+        that asks for one (D-561): they are loaded with the result, which says so, so the model need not search."""
+        wanted = result.meta.get("attach_tools")
+        loaded = self.tools.attach(wanted) if wanted else []
+        if not loaded:
+            return result
+        note = f"\n\n[Tools loaded with this, in your tool list from your next step: {', '.join(loaded)}]"
+        return result.model_copy(update={"content": result.content + note})
 
     async def _execute(self, tool: Tool, args: ToolArgs) -> ToolResult:
         guard = self.context.egress

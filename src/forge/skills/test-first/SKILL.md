@@ -1,6 +1,7 @@
 ---
 name: test-first
 description: Use when a request says “add”, “implement”, “build” or “fix” code — like slugify, date-range merge, rate limiter, retry, parser — and you can write a spec and failing test before coding. Not for designing big abstractions (deep-modules) or fixing unknown failures (debugging).
+tools: mutation_check
 ---
 
 # Test first, in small verified steps
