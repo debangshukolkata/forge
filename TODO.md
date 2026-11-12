@@ -9,7 +9,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task 
 - 0g. Trim-down: a light core, everything else on demand (D-561, D-562): **8 open**
 - 0h. Knowledge layer for an existing repository (D-563 to D-566): **5 open**
 - 0i. Check, do not guess; debug until resolved (D-567): **2 open**
-- 0j. Solving a requirement against the running system (D-568 to D-572): **8 open**
+- 0j. Solving a requirement against the running system (D-568 to D-573): **9 open**
 - 1. Waiting on you (your actions and decisions): **4 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **14 open**
 - 3. Parallel work and speed: **3 open**
@@ -242,6 +242,8 @@ The user finds DebCraft too heavy: less weight on presentations, PDF and the pag
 - [ ] `RS11` **The user retries on the office laptop** (project `automated-3rd-party-integration`): with the token and the Infisical names in `C:\Users\<you>\.forge\.env`, DebCraft should call the agent endpoint without asking to restart, to remove `Bearer` or to copy anything; one card asks whether the commands may use the Infisical names. Report any question that still sends you somewhere.
 - [x] `RS14` **(done 2026-11-12, D-571)** `app.env`, facts about the installation in the system prompt, the token form remembered per project, the hand-off review by the reviewer model, a free answer on the step card.
 - [x] `RS17` **(done 2026-11-12, D-572)** A second window that only watched left the user stuck (dead message box, a click on a card ignored): the window the user acts in now drives.
+- [x] `RS18` **(done 2026-11-12, D-573)** Opening a project froze the server (the session was built on the event loop) and the own-name check re-read `config.yaml` for every name: both fixed.
+- [ ] `RS19` **Opening a project on the office laptop is still slow?** Not reproduced on the build machine (0.75 s for a 30-file repository). If it is slow there, profile the open: the repository index of a 500-file repository is refreshed at every open (D-563) and the 46 skill files are read at every open (0.5 s here); both could be cached by modified time or done after the first screen.
 - [ ] `RS15` **Measure the hand-off review where it runs for real:** on the office laptop, with the reviewer model set there, note every step card that still reaches you needlessly and every one held back wrongly (the chat shows "A step for you was held back"). `tests/test_live_handoff_review.py` on the laptop gives the 8-card result for that model.
 - [ ] `RS16` **Review `ask_user` questions too?** Only hand-offs of work are reviewed today. Decide after `RS15` whether questions the user has already answered are still asked.
 - [ ] `RS13` **A token the application wants in another place** (a query parameter, a cookie, a body field): `http_request` only sets a header today.

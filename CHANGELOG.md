@@ -2,10 +2,11 @@
 
 Newest first. Decision numbers (D-nnn) refer to docs/DECISIONS.md.
 
-## Unreleased — 2026-11-11 to 2026-11-12 (D-561 to D-572)
+## Unreleased — 2026-11-11 to 2026-11-12 (D-561 to D-573)
 - **Direction:** DebCraft solves requirements against an existing running system: it runs the application, calls it through its API with a token it never sees (`http_request`, `token_env`), copies the rows it needs into its own database, finds the cause, fixes it and runs the same check again (D-568). A light core of 44 tools, the rest loaded on demand (D-561); skills from known sources (D-562); a structure index and topic notes per repository (D-563 to D-566); "check, do not guess" (D-567).
 - **The user's `.env` is used without care from the user (D-569 to D-571):** `request_app_secret` hands values to commands after one click; a second file `app.env` whose values reach every command without a question; `http_request` accepts a token saved with `Bearer` and tries the form the API takes, remembering it per project; the model is told the facts about its installation in the system prompt; questions that send the user to restart, copy or paste a secret are refused in the tool; every step card is first checked by the reviewer model, and the step card has a free answer ("Send my answer").
 - **Web:** a window the user acts in takes over from another; the "/learn" command is suggested; the settings guide shows the path of `app.env` (D-571, D-572).
+- **Speed:** opening a project no longer freezes the server (the session is built beside the event loop, so the model list and the connection tests answer while it opens), and the check for DebCraft's own variable names is cached (D-573).
 
 ## Unreleased — 2026-10-05 to 2026-10-22 (D-205 to D-469)
 - **Models and limits:** a second Azure resource as the fallback (D-206); Gemini 3 and Gemini 4 Argon next to the Azure models (D-403, D-407); a model plan per role that the user confirms, with gpt-5.4 proposed for building and reading (D-446); on a rate limit Forge switches to the next model in `llm.rotation` and lets the busy one rest two minutes, saying so in the chat (D-465); no request carries more than the 128 tools Azure accepts (D-462); the project cost in the top bar moves with every model call (D-463).
