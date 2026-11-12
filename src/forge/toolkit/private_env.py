@@ -49,7 +49,19 @@ def _configured(home: str) -> frozenset[str]:
 
 def configured_names() -> frozenset[str]:
     """The names DebCraft's configuration reads for its models, without what else is in the .env file."""
-    return _configured(str(forge_home()))
+    # Asked once for every name of the .env, every command and every card: it must not parse the YAML each time
+    # (about 20 ms on the build machine, several times that on a company laptop; the project opened slowly).
+    home = forge_home()
+    try:
+        mtime = (home / "config.yaml").stat().st_mtime_ns
+    except OSError:
+        mtime = 0
+    return _configured_cached(str(home), mtime)
+
+
+@lru_cache(maxsize=8)
+def _configured_cached(home: str, config_mtime: int) -> frozenset[str]:
+    return _configured(home)
 
 
 def private_names() -> frozenset[str]:

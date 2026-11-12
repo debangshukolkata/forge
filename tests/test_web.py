@@ -360,3 +360,38 @@ def test_file_search_for_mentions(client: TestClient, security: ServerSecurity, 
     found = client.get("/api/files", params={"q": "claims_service"}).json()
     assert found and all("claims_service" in path for path in found)
     assert not [p for p in client.get("/api/files", params={"q": ".env"}).json() if p.endswith(".env")]
+
+
+async def test_opening_a_project_does_not_freeze_the_server(
+    workspace: Workspace, isolated_forge_home: Path
+) -> None:
+    # Reported from the office laptop: while a project opened (skills, memory and the repository index are read),
+    # the model list and the connection tests waited. Building the session now runs beside the event loop.
+    import asyncio
+    import time
+
+    ticks: list[float] = []
+
+    def slow_factory(opened: Workspace) -> SessionHost:
+        time.sleep(0.6)  # stands in for reading hundreds of files
+        return SessionHost(
+            mocked_router(lambda request: None),  # type: ignore[arg-type,return-value]
+            EventBus(opened.forge_dir / "events.jsonl", redactor=Redactor()),
+            workspace=opened,
+        )
+
+    manager = WebSessionManager(isolated_forge_home, slow_factory)
+
+    async def heartbeat() -> None:
+        while True:
+            ticks.append(time.monotonic())
+            await asyncio.sleep(0.05)
+
+    beat = asyncio.create_task(heartbeat())
+    started = time.monotonic()
+    await manager.open_workspace(workspace.root)
+    waited = time.monotonic() - started
+    beat.cancel()
+    await manager.close_session()
+    assert waited >= 0.6
+    assert len(ticks) >= 8, f"the event loop was blocked while the project opened ({len(ticks)} ticks)"

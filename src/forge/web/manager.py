@@ -44,7 +44,10 @@ class WebSessionManager:
         workspace = Workspace.open(path)
         await self.close_session()
         self.workspace = workspace
-        self.host = self.session_factory(workspace)
+        # Building a session reads the skills, the memory and the repository index (hundreds of files on a large
+        # repository): on the event loop it froze every other request, the model list and the connection tests
+        # included, until the project had opened.
+        self.host = await asyncio.to_thread(self.session_factory, workspace)
         self._runner = asyncio.create_task(self.host.run())
         self._remember(workspace)
         return workspace
