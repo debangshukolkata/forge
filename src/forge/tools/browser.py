@@ -8,14 +8,12 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
-import json
 import re
 import secrets
 import time
-from typing import Any, Literal
+from typing import Any
 from urllib.parse import urlparse
 
-import httpx
 from pydantic import Field
 
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
@@ -421,52 +419,9 @@ class BrowserClose(Tool):
         return ToolResult(ok=True, content="Browser closed.")
 
 
-class HttpRequest(Tool):
-    name = "http_request"
-    description = (
-        "Call the locally running app's API (smoke test): method, URL on localhost, optional JSON body and "
-        "headers. Returns status, headers and the (truncated) body."
-    )
-
-    class Args(ToolArgs):
-        method: Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] = "GET"
-        url: str
-        json_body: Any = Field(default=None, alias="json")
-        headers: dict[str, str] = Field(default_factory=dict)
-
-    def summary(self, args: HttpRequest.Args) -> str:
-        return f"{args.method} {args.url}"
-
-    async def run(self, args: HttpRequest.Args, context: ToolContext) -> ToolResult:
-        problem = local_url(args.url)
-        if problem:
-            return ToolResult(
-                ok=False,
-                content=f"Not sent: {problem.replace('browser tools only open', 'http_request only calls')}.",
-            )
-        try:
-            async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_S) as client:
-                response = await client.request(
-                    args.method, args.url, json=args.json_body, headers=args.headers
-                )
-        except httpx.HTTPError as error:
-            return ToolResult(
-                ok=False, content=f"Request failed: {type(error).__name__}: {error}. Is the app running?"
-            )
-        body = response.text
-        try:
-            body = json.dumps(response.json(), indent=1)[:6000]
-        except ValueError:
-            body = body[:6000]
-        interesting = {
-            k: v for k, v in response.headers.items() if k.lower() in ("content-type", "location", "allow")
-        }
-        return ToolResult(
-            ok=response.status_code < 500, content=f"HTTP {response.status_code}\n{interesting}\n{body}"
-        )
-
-
 def browser_tools() -> list[Tool]:
+    from forge.tools.http_request import HttpRequest  # it imports local_url from this module
+
     return [
         BrowserOpen(),
         BrowserSnapshot(),

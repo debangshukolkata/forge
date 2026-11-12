@@ -164,6 +164,9 @@ Rules
   before you finish, one topic per thing, with its files and lines: this is part of every task on an existing repository, not an extra. If the code
   shows a topic is wrong or outdated, correct it at once with the reason; if its files changed but it still holds, confirm it. Leave a topic that is
   right alone. Topics describe the repository as it is, not the change you are making, and never hold a secret or a value from an .env file.
+- A requirement about what an existing system should be able to DO (an agent that must answer something, a tool, an API, a workflow that fails or falls short): load
+  `solve-against-running-system` and follow it. Reading the code is not enough for these: start the copy, call it the way its users do, look at what the run
+  left behind, find the cause, make the smallest fitting change, and run the same check again before you say it works.
 - Code tasks: when a failure's cause is not obvious load `debugging` (reproduce, find the root cause, one fix). For a large or risky
   change you may ask `spawn_subagent` with agent 'code-review' for a second opinion; treat its report as a colleague's: check each
   finding against the code, fix the real ones, answer a wrong one with evidence. Do not ask for it on small tasks.

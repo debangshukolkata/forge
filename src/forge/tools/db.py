@@ -10,7 +10,9 @@ from pydantic import Field
 
 from forge.db.access import AccessLevel
 from forge.db.connection import connect
+from forge.db.copy_rows import MAX_COPY_ROWS, copy_table
 from forge.db.introspect import describe, introspect
+from forge.db.scratch import ScratchError
 from forge.safety.sql_guard import SqlGuardError, check_read_only
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.workspace.server_checks import ServerRunCheck, add_check
@@ -216,3 +218,112 @@ def _table(columns: list[str], rows: list[tuple[object, ...]], limit: int) -> st
     lines += [" | ".join("NULL" if v is None else str(v)[:80] for v in row) for row in rows]
     more = f"\n[showing at most {limit} rows]" if len(rows) >= limit else ""
     return "\n".join(lines) + more
+
+
+class DbCopyTable(Tool):
+    name = "db_copy_table"
+    description = (
+        "Copy a table (its columns, primary key and rows) from a database you may only read into your scratch "
+        "schema, so a copy of the application can run on its own data without touching the real database. "
+        "`table`: `schema.table` or a table of `public`. `where`: an optional SQL condition to copy only the rows "
+        "you need (for example `agent_id = 12`). `limit`: at most this many rows (default 5000). The rows go "
+        "straight from one database to the other; you do not see them (look with db_query on the scratch table "
+        "afterwards if you need to). Copying the same table again replaces the earlier copy. Tables that hold "
+        "credentials are refused. A column of a type that exists only in the source (an enum) becomes text."
+    )
+
+    class Args(ToolArgs):
+        table: str
+        where: str = ""
+        limit: int = Field(default=5000, ge=1, le=MAX_COPY_ROWS)
+        source: Literal["local", "dev"] | None = None
+
+    def summary(self, args: DbCopyTable.Args) -> str:
+        return f"copy table {args.table}" + (f" where {args.where[:60]}" if args.where else "")
+
+    async def run(self, args: DbCopyTable.Args, context: ToolContext) -> ToolResult:
+        await _ensure_checked(context)
+        db = context.db
+        if db is None or db.scratch is None:
+            return ToolResult(
+                ok=False,
+                content="No scratch schema is available, so nothing was copied. "
+                + (db.status_line() if db else ""),
+            )
+        # The development database first: that is where the application's real data is.
+        order = [args.source] if args.source else ["dev", *[name for name in db.targets if name != "dev"]]
+        source = next((n for n in order if n in db.reports and db.reports[n].level != AccessLevel.NONE), None)
+        if source is None:
+            return ToolResult(ok=False, content="No reachable database to copy from. " + db.status_line())
+        schema, _, table = args.table.strip().rpartition(".")
+        try:
+            result = await asyncio.to_thread(
+                copy_table, db.scratch, db.targets[source], schema or "public", table, args.where, args.limit
+            )
+        except (SqlGuardError, ScratchError, ValueError) as error:
+            return ToolResult(ok=False, content=str(error))
+        except psycopg.Error as error:
+            return ToolResult(ok=False, content=f"Copy failed: {str(error).splitlines()[0]}")
+        notes = []
+        if result.capped:
+            notes.append(
+                f"More rows matched than the limit of {args.limit}; only the first {result.rows} were copied."
+            )
+        if result.as_text:
+            notes.append(
+                f"Stored as text (their type exists only in the source): {', '.join(result.as_text)}."
+            )
+        if result.numbered:
+            notes.append(f"New rows continue the numbering of: {', '.join(result.numbered)}.")
+        return ToolResult(
+            ok=True,
+            content=f"Copied {result.rows} row(s) of {source} {schema or 'public'}.{table} into the scratch table "
+            f"{result.table} ({len(result.columns)} columns: {', '.join(result.columns[:30])}). "
+            + " ".join(notes)
+            + " Foreign keys, indexes and triggers are not copied.",
+        )
+
+
+class UseScratchDatabase(Tool):
+    name = "use_scratch_database"
+    description = (
+        "Point the copy of the application at your scratch database, so that starting it here uses the tables "
+        "you copied and never the real database. `variables` maps each setting the APPLICATION reads for its "
+        "database (find them with code_map action env) to the part of the scratch connection it should get: "
+        "`url`, `host`, `port`, `user`, `password`, `database` or `schema`; `url:<scheme>` gives the URL with "
+        'another scheme (for example `url:postgresql+psycopg2` for SQLAlchemy). Example: {"DATABASE_URL": "url"} '
+        'or {"DB_HOST": "host", "DB_PORT": "port", "DB_USER": "user", "DB_PASSWORD": "password", '
+        '"DB_NAME": "database"}. From then on every command and background process you start has these set '
+        "(and the search path set to the scratch schema); you never see the values. Start the application "
+        "after this call, not before. An empty `variables` takes them out again."
+    )
+
+    class Args(ToolArgs):
+        variables: dict[str, str]
+
+    def summary(self, args: UseScratchDatabase.Args) -> str:
+        return f"point the app at the scratch database: {', '.join(args.variables) or '(remove)'}"
+
+    async def run(self, args: UseScratchDatabase.Args, context: ToolContext) -> ToolResult:
+        db = context.db
+        if db is None or db.scratch is None:
+            return ToolResult(
+                ok=False, content="No scratch schema is available. " + (db.status_line() if db else "")
+            )
+        try:
+            db.set_app_variables(args.variables)
+        except ValueError as error:
+            return ToolResult(ok=False, content=str(error))
+        if context.shell is not None:
+            context.shell.extra_env = db.command_environment()
+        if not args.variables:
+            return ToolResult(
+                ok=True, content="The application's database settings are no longer overridden."
+            )
+        return ToolResult(
+            ok=True,
+            content=f"Set for every command from now on: {', '.join(args.variables)} (values hidden), with the "
+            f"search path on the scratch schema {db.scratch.schema}. A process that is already running keeps its "
+            "old settings: stop it and start it again. If the application names a schema itself (public.table) "
+            "or sets its own search path, it will not find the copied tables: check its database code.",
+        )

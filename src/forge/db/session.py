@@ -4,7 +4,10 @@ use the scratch schema only (A-5)."""
 
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 import psycopg
 
@@ -15,6 +18,10 @@ from forge.db.requests import DbRequest, DbRequests
 from forge.db.scratch import ScratchRegistry, ScratchSchema, pgoptions, scratch_name_for
 from forge.safety.sql_guard import SqlGuardError, check_read_only
 from forge.workspace.workspace import Workspace
+
+APP_ENV_FILE = "db_app_env.json"  # in the workspace's .forge folder: setting names only, never a value
+APP_VARIABLE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,80}$")
+CONNECTION_PARTS = ("url", "host", "port", "user", "password", "database", "schema")
 
 
 class DbSession:
@@ -77,8 +84,51 @@ class DbSession:
         return scratch
 
     def command_environment(self) -> dict[str, str]:
-        """Added to every command DebCraft runs once the scratch schema is ready."""
-        return {"PGOPTIONS": pgoptions(self.scratch.schema)} if self.scratch else {}
+        """Added to every command DebCraft runs once the scratch schema is ready: the search path, and the
+        application's own database settings pointed at the scratch database when the model asked for that."""
+        if self.scratch is None:
+            return {}
+        return {"PGOPTIONS": pgoptions(self.scratch.schema), **self._app_values()}
+
+    # --- the application copy pointed at the scratch database (D-568) ---
+
+    def app_variables(self) -> dict[str, str]:
+        """The application's setting names and which part of the scratch connection each gets (names only)."""
+        try:
+            data = json.loads((self.workspace.forge_dir / APP_ENV_FILE).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        return {str(name): str(part) for name, part in data.items()} if isinstance(data, dict) else {}
+
+    def set_app_variables(self, variables: dict[str, str]) -> None:
+        for name, part in variables.items():
+            if not APP_VARIABLE.match(name):
+                raise ValueError(f"{name!r} is not a plain environment variable name.")
+            if part.partition(":")[0] not in CONNECTION_PARTS:
+                raise ValueError(f"{part!r} is not one of {', '.join(CONNECTION_PARTS)} (or url:<scheme>).")
+        target = self.workspace.jail.check(self.workspace.forge_dir / APP_ENV_FILE)
+        target.write_text(json.dumps(variables, indent=1), encoding="utf-8")
+
+    def _app_values(self) -> dict[str, str]:
+        variables = self.app_variables()
+        url = self.scratch.target.url(self.secrets) if self.scratch and variables else None
+        if not url or self.scratch is None:
+            return {}
+        parsed = urlsplit(url)
+        parts = {
+            "url": url,
+            "host": parsed.hostname or "",
+            "port": str(parsed.port or 5432),
+            "user": unquote(parsed.username or ""),
+            "password": unquote(parsed.password or ""),
+            "database": parsed.path.lstrip("/"),
+            "schema": self.scratch.schema,
+        }
+        values: dict[str, str] = {}
+        for name, part in variables.items():
+            kind, _, scheme = part.partition(":")
+            values[name] = url.replace(parsed.scheme, scheme, 1) if kind == "url" and scheme else parts[kind]
+        return values
 
     def status_line(self) -> str:
         if not self.reports:

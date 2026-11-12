@@ -16,7 +16,15 @@ from forge.tools.browser import browser_tools
 from forge.tools.code_intel import code_intel_tools
 from forge.tools.code_map_tool import CodeMapTool
 from forge.tools.code_outline import code_outline_tools
-from forge.tools.db import DbQuery, DbRequestTool, DbSchema, MarkServerRun, ScratchExec
+from forge.tools.db import (
+    DbCopyTable,
+    DbQuery,
+    DbRequestTool,
+    DbSchema,
+    MarkServerRun,
+    ScratchExec,
+    UseScratchDatabase,
+)
 from forge.tools.deferred import expand, is_deferrable
 from forge.tools.design_candidates import design_candidate_tools
 from forge.tools.design_inspire import design_inspire_tools
@@ -134,7 +142,7 @@ def session_tools(mode_b: bool) -> list[Tool]:
 
 def db_tools() -> list[Tool]:
     """Only offered when a database is configured (M7)."""
-    return [DbSchema(), DbQuery(), ScratchExec(), DbRequestTool()]
+    return [DbSchema(), DbQuery(), ScratchExec(), DbRequestTool(), DbCopyTable(), UseScratchDatabase()]
 
 
 class ToolRegistry:

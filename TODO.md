@@ -8,6 +8,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task 
 - 0g. Trim-down: a light core, everything else on demand (D-561, D-562): **8 open**
 - 0h. Knowledge layer for an existing repository (D-563 to D-566): **5 open**
 - 0i. Check, do not guess; debug until resolved (D-567): **2 open**
+- 0j. Solving a requirement against the running system (D-568): **4 open**
 - 1. Waiting on you (your actions and decisions): **8 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **20 open**
 - 3. Parallel work and speed: **5 open**
@@ -222,6 +223,21 @@ The user finds DebCraft too heavy: less weight on presentations, PDF and the pag
 - [x] `DB1` **(done 2026-11-12, D-567)** Two prompt rules (check before naming a cause; a failure is yours until it is resolved) and the settings report (`code_map` action `env`: what the code reads, where, default or not, set in the env files or not). Before: 10 of 10 live runs already named the exact missing setting, so the user's case was not reproduced; the one weakness seen (a value invented to make a run pass) improved from 0 of 2 to 2 of 2.
 - [ ] `DB2` **Reproduce the user's real case.** Needs the run report of the session where DebCraft guessed (`debcraft run-report --workspace <project>` on the office laptop), or the same request tried again there after pulling D-567. Then decide with evidence whether a failed command should carry an automatic note (which D-155 removed).
 - [ ] `DB3` **Settings classes:** read pydantic `BaseSettings` fields (and their `env_prefix`) as environment names in the settings report; FastAPI services usually keep their settings there.
+
+## 0j. Solving a requirement against the running system (requirement from the user 2026-11-12; design under discussion, nothing built)
+**The requirement in the user's words (ArgoCD is one example, not the target):** DebCraft understands a requirement, the existing system and its capabilities (the agent, its native tools, the APIs behind them; tools and their API details are stored in a table), runs the agent through its API, observes how it uses its capabilities, finds what stops it (example: a tool's API answer larger than the agent's context), finds the cause, chooses the fix (a new custom tool, an enhanced tool, a filtered API response, a changed agent prompt, a new skill, or something else), implements it, runs the requirement again through the agent API and confirms it is now fulfilled. Where the API needs a token that only the frontend issues, DebCraft recognises that and asks the user for it. DebCraft must not be limited to reading code.
+**The 12 steps:** understand the requirement; analyse the codebase; find how the agent is run through the API; find whether authentication is needed; ask the user for a token if only they can get one; call the agent API; observe; find the cause; choose the solution; implement; run again; validate.
+**What exists:** the repository map and topic notes (0h), `http_request` (localhost only, any headers), background processes, read-only database tools and a scratch schema for writes, `request_user_action`, the debugging rules (D-567).
+**What is missing (to design with the user):**
+- [x] `RS1` **(done 2026-11-12, D-568)** A token the model never sees: `http_request` takes the NAME of a variable in DebCraft's .env (`DEVELOPMENT_INSTANCE_TOKEN`; more names through `FORGE_REQUEST_TOKEN_NAMES`), sends the value, masks it, and asks the user itself when it is missing.
+- [x] `RS3` **(done 2026-11-12, D-568)** The changed copy is what gets tested: `db_copy_table` copies the tables the application needs from the read-only database into the scratch schema; `use_scratch_database` points the application's own database settings at it.
+- [x] `RS4` **(first step done 2026-11-12, D-568)** `http_request` reports the size of an answer in characters and tokens and its JSON parts by size, and keeps the whole body in a file; the skill tells the model to read the run log and the process output before naming a cause.
+- [x] `RS5` **(done 2026-11-12, D-568)** Skill `solve-against-running-system` and the pointer in the system prompt.
+- [x] `RS6` **(done 2026-11-12, D-568)** Test bed `tests/fixtures/agent_platform` and `tests/test_live_running_system.py`: 10 of 10 live runs fixed the agent; after two corrections 4 of 4 went through the API and 2 of 2 asked for the missing token.
+- [ ] `RS2` **Calling a system that is not on this machine** (a shared development server, or the API behind a tool such as ArgoCD): addresses the user allows for this project. Not needed for the user's case today (the agent runs on the laptop).
+- [ ] `RS7` **The user tries it on WisdomNext** (office laptop): a real requirement on a LangChain agent, with `DEVELOPMENT_INSTANCE_TOKEN` in the .env, the application started from the copy and its tool tables copied from the development database. Report what happens; the run report helps (`debcraft run-report --workspace <project>`).
+- [ ] `RS8` **A second test bed closer to the real thing:** a LangChain agent with a real model and tools stored in PostgreSQL, so `db_copy_table` and `use_scratch_database` are exercised inside a live run, and a case where the right fix is a prompt change, not a tool.
+- [ ] `RS9` **Streamed agent answers** read event by event (tool calls as they happen), and the run's rows in the database gathered with the answer into one account.
 
 ## 1. Waiting on you (your actions and decisions)
 Things only you can do or decide. Everything else below can be built without you.
