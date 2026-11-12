@@ -119,9 +119,16 @@ debcraft run --workspace <project folder> -p "Learn this repository: load the le
 starts a copy of the application, calls it through its API, looks at what the run left behind, makes a change and
 runs the same check again. Two things it may need from you:
 
-- **A token only you can get** (from the application's login page or console). Add it to DebCraft's `.env` file:
-  `DEVELOPMENT_INSTANCE_TOKEN=<the token>`. DebCraft asks for it when it is missing and tells you the file. Do not
-  paste it into the chat. It is sent only to the application on this computer; replace the value when it expires.
+- **A token only you can get** (from the application's login page or console). Add it to `app.env` (or DebCraft's
+  `.env`): `DEVELOPMENT_INSTANCE_TOKEN=<the token>`, as you copied it, with or without `Bearer `. DebCraft asks for
+  it when it is missing and tells you the file. Do not paste it into the chat. It is sent only to the application
+  on this computer, in the form the application accepts; replace the value when it expires. No restart is needed.
+- **Other values the application needs** (a token for another service, the settings of a secret store such as
+  Infisical): put them in **`%USERPROFILE%\.forgepp.env`**, a second file next to `.env` (the setup guide shows
+  its path). Everything in it reaches the commands DebCraft runs, without a question, and is read each time, so
+  changing it needs no restart and no copying. DebCraft's own keys stay in `.env` and are never handed to a
+  command. Values you leave in `.env` instead are handed over after one click per project.
+- **Two DebCraft windows:** only one drives at a time. Typing or answering a card in the other one takes over.
 - **A database.** DebCraft reads the development database and writes only to its own (`LOCAL_PG_URL`); it copies
   the tables the application needs into its own database and starts the copy on those.
 
@@ -151,7 +158,8 @@ Remove the PATH entry.
 | Company proxy blocks Azure | Set `HTTPS_PROXY` for your user; ask IT for the proxy address |
 | You forgot the DebCraft password | Delete `%USERPROFILE%\.forge\account.json` and start `forge ui` again: it offers to create a new account. Your projects and settings are kept |
 | The setup guide says a name is missing but you filled it in | Press "Check the file" after saving; check the path shown on the page (it may come from the `FORGE_ENV_FILE` variable) |
-| Edits to `.env` do not seem to apply | A project that is already open keeps the keys it started with: open the project again (or restart `forge ui`). The Environment panel's tests always read the file fresh |
+| Edits to `.env` do not seem to apply | The model keys: a project that is already open keeps the keys it started with: open the project again (or restart `forge ui`). The Environment panel's tests always read the file fresh. Values for the application (`app.env`, the API token) are read on every call and never need a restart |
+| The message box is dead and the header says "Watching" | Another DebCraft window has the project open. Type in this one or click "Watching · take over"; it takes over |
 
 ## Check this computer: double-click Debcraft-Doctor.cmd
 
