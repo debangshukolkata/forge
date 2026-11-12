@@ -1009,3 +1009,39 @@ def test_react_project_switcher_deletes_from_the_top_bar(
         assert not (tmp_path / "wss").exists()
         browser.close()
     assert not problems, problems
+
+
+def test_a_watching_window_takes_over_when_the_user_acts_in_it(
+    server: ServerSecurity, workspace: Workspace
+) -> None:
+    # Reported from the office laptop: two DebCraft tabs, the second only "watched", its message box was dead
+    # and a click on a card did nothing. The window the user acts in now drives.
+    with playwright_api.sync_playwright() as p:
+        try:
+            browser = p.chromium.launch(channel="msedge", headless=True)
+        except Exception as error:
+            pytest.skip(f"headless Edge not available: {error}")
+        context = browser.new_context(viewport={"width": 1440, "height": 900})
+        first = context.new_page()
+        first.goto(server.url())
+        first.wait_for_selector("text=Start something new.")
+        first.evaluate(
+            "p => fetch('/api/open', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({workspace: p})})",
+            str(workspace.root),
+        )
+        first.reload()
+        first.locator("textarea[aria-label=Message]").wait_for()
+        second = context.new_page()
+        second.goto(server.url())
+        second.locator("textarea[aria-label=Message]").wait_for()
+        second.wait_for_selector("button:has-text('take over')")
+        box = second.locator("textarea[aria-label=Message]")
+        assert box.is_enabled()  # it can be typed into although the other window drives
+        box.fill("/help")
+        box.press("Enter")
+        second.wait_for_selector("button:has-text('take over')", state="detached")
+        first.wait_for_selector("button:has-text('take over')")  # the other window watches now
+        shots = REPO_ROOT / "test-artifacts" / "react-ui"
+        shots.mkdir(parents=True, exist_ok=True)
+        first.screenshot(path=str(shots / "watching-window.png"))
+        browser.close()

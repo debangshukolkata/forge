@@ -224,10 +224,18 @@ def test_websocket_replays_accepts_inputs_and_has_one_controller(
             assert second.receive_json()["controls"] is False  # watches only
             replayed = events_until(second, lambda e: e["seq"] == help_seq)
             assert replayed[-1]["payload"]["kind"] == "command_output"  # a reconnect gets the history
+            # Acting in the watching window makes it the driver, and the other window is told it now watches.
             second.send_json({"type": "input", "input": {"kind": "slash_command", "text": "/help"}})
-            assert second.receive_json()["type"] == "rejected"
-            second.send_json({"type": "take_control"})
             assert second.receive_json() == {"type": "control", "controls": True}
+            told = first.receive_json()
+            while told["type"] == "event":
+                told = first.receive_json()
+            assert told == {"type": "control", "controls": False}
+            first.send_json({"type": "take_control"})
+            taken = first.receive_json()
+            while taken["type"] == "event":
+                taken = first.receive_json()
+            assert taken == {"type": "control", "controls": True}
 
         first.send_json({"type": "input", "input": {"kind": "bogus"}})
         rejected = first.receive_json()

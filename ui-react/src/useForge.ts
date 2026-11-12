@@ -192,6 +192,10 @@ export function useForge(): Forge {
   const [timeline, dispatch] = useReducer(reducer, initial);
   const [connected, setConnected] = useState(false);
   const [controls, setControls] = useState(true);
+  const controlsRef = useRef(true); // read inside send(), which must not be rebuilt on every change
+  useEffect(() => {
+    controlsRef.current = controls;
+  }, [controls]);
   const [replaying, setReplaying] = useState(false);
   const [waiting, setWaiting] = useState<string | null>(null);
   const [context, setContext] = useState<ContextInfo | null>(null);
@@ -405,6 +409,13 @@ export function useForge(): Forge {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       dispatch({ type: "local", item: { key: `x${Date.now()}`, kind: "error", text: "Not connected to DebCraft; reconnecting…" } });
       return;
+    }
+    // One person, several windows: the window they act in is the one that drives. Without this a watching window
+    // took a click on a card, showed "answered" and then nothing happened, because the server refused the input.
+    if (!controlsRef.current) {
+      socket.send(JSON.stringify({ type: "take_control" }));
+      controlsRef.current = true;
+      setControls(true);
     }
     socket.send(JSON.stringify({ type: "input", input }));
   }, []);

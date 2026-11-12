@@ -29,6 +29,9 @@ class WebSessionManager:
     host: SessionHost | None = None
     workspace: Workspace | None = None
     controller: str | None = None
+    sockets: dict[str, Any] = field(
+        default_factory=dict, repr=False
+    )  # client -> its websocket, to tell a window it now watches
     _runner: asyncio.Task[None] | None = field(default=None, repr=False)
     # The current phase label while new_workspace/new_standalone is running (spec: Home.tsx polls this
     # instead of showing one static "Setting up…" label for the whole call). Written from a worker thread

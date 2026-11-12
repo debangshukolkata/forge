@@ -63,7 +63,11 @@ export function TopBar({
             <Badge>Idle</Badge>
           )}
           {!connected && !replaying && <Badge tone="danger">Reconnecting…</Badge>}
-          {!controls && <Badge tone="warn">Watching (read-only)</Badge>}
+          {!controls && (
+            <button type="button" onClick={forge.takeControl} title="Another window has this project open. Click to take over here." className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+              <Badge tone="warn">Watching · take over</Badge>
+            </button>
+          )}
         </div>
       ) : (
         <span className="text-fg-muted">No project open</span>

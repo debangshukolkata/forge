@@ -535,8 +535,21 @@ def create_app(
             pass
         finally:
             manager.release(client)
+            manager.sockets.pop(client, None)
 
     return app
+
+
+async def _take_over(socket: WebSocket, manager: WebSessionManager, client: str) -> None:
+    """The window the user acts in drives; the one that drove before is told that it now watches. Without
+    this a second tab showed a card, took the click and nothing happened (reported from the office laptop)."""
+    previous = manager.controller
+    manager.claim_control(client, take_over=True)
+    await socket.send_json({"type": "control", "controls": True})
+    other = manager.sockets.get(previous) if previous and previous != client else None
+    if other is not None:
+        with contextlib.suppress(Exception):  # that window may be closing
+            await other.send_json({"type": "control", "controls": False})
 
 
 async def _serve(socket: WebSocket, manager: WebSessionManager, client: str, since: int) -> None:
@@ -547,6 +560,7 @@ async def _serve(socket: WebSocket, manager: WebSessionManager, client: str, sin
         await socket.receive_json()  # wait for the page to reconnect after opening a workspace
         return
     controls = manager.claim_control(client)
+    manager.sockets[client] = socket
     await socket.send_json({"type": "hello", "controls": controls, "last_seq": host.bus.last_seq})
     subscription = host.bus.subscribe(since_seq=since)
 
@@ -559,14 +573,12 @@ async def _serve(socket: WebSocket, manager: WebSessionManager, client: str, sin
         while True:
             message = await socket.receive_json()
             if message.get("type") == "take_control":
-                manager.claim_control(client, take_over=True)
-                await socket.send_json({"type": "control", "controls": True})
+                await _take_over(socket, manager, client)
                 continue
             if message.get("type") != "input":
                 continue
-            if manager.controller != client:
-                await socket.send_json({"type": "rejected", "reason": "Another window controls this session"})
-                continue
+            if manager.controller != client:  # one user, several windows: acting in one makes it the driver
+                await _take_over(socket, manager, client)
             try:
                 await host.submit(parse_user_input(message.get("input") or {}))
             except ValidationError as error:

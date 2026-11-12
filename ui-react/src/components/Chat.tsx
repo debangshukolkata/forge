@@ -74,7 +74,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
       onDrop={(e) => {
         e.preventDefault();
         setDragging(false);
-        if (e.dataTransfer.files.length && forge.controls) void attachments.add(e.dataTransfer.files);
+        if (e.dataTransfer.files.length) void attachments.add(e.dataTransfer.files);
       }}
     >
       {dragging && (
@@ -99,7 +99,7 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
           {items.length === 0 && !forge.replaying && <Welcome forge={forge} onOpenEnvironment={onOpenEnvironment} />}
           {!forge.controls && (
             <div className="flex items-center justify-between gap-3 rounded-lg border border-warn/40 bg-warn-soft px-4 py-2.5 text-[13px] text-warn">
-              Another window controls this project; this one watches.
+              Another window has this project open, so this one only watches. Typing or answering here takes over.
               <Button size="sm" onClick={forge.takeControl}>
                 Take control
               </Button>

@@ -195,7 +195,7 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
     }
   };
 
-  const ready = !attachments.uploading && forge.controls;
+  const ready = !attachments.uploading; // a watching window takes over when it sends (useForge.send)
 
   return (
     <div className="shrink-0 bg-bg px-6 pb-4 pt-2">
@@ -244,7 +244,7 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
             </div>
           )}
           <div className="flex items-end gap-2">
-            <IconButton label="Attach files or images" onClick={() => picker.current?.click()} disabled={!forge.controls}>
+            <IconButton label="Attach files or images" onClick={() => picker.current?.click()}>
               <Paperclip className="h-4 w-4" />
             </IconButton>
             <input
@@ -274,7 +274,6 @@ export function Composer({ forge, attachments }: { forge: Forge; attachments: At
                   void attachments.add(pasted);
                 }
               }}
-              disabled={!forge.controls}
               placeholder="Message DebCraft. / for commands, @ for files"
               aria-label="Message"
               className="max-h-60 min-h-[40px] flex-1 resize-none appearance-none border-0 bg-transparent px-1 py-2 text-[14px] leading-relaxed text-fg placeholder:text-fg-muted/70 focus:outline-none focus:ring-0"
