@@ -6,7 +6,10 @@ date (only files whose content changed are parsed again), so the model always ge
 
 from __future__ import annotations
 
+import asyncio
+import os
 import re
+import threading
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,6 +19,7 @@ from forge.config import forge_home
 from forge.knowledge.code_map import BY_NAME, CodeMap, cap
 from forge.knowledge.structure import SKIPPED_FOLDERS, STRUCTURE_FILE, Refresh, fingerprint, load, refresh
 from forge.knowledge.topics import all_topics, index_lines
+from forge.knowledge.usage import load_usage
 from forge.memory.scope import project_dir, scope_of
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.workspace.workspace import Workspace
@@ -23,6 +27,8 @@ from forge.workspace.workspace import Workspace
 Action = Literal[
     "overview", "find", "file", "endpoints", "endpoint", "callers", "callees", "tables", "table", "env"
 ]
+_VIEW_LOCK = threading.RLock()
+SLOW_UPDATE_SECONDS = 1.0
 OVERVIEW_FOLDERS = 30
 CHANGES_SHOWN = 15
 
@@ -65,17 +71,27 @@ def project_view(workspace: Workspace) -> tuple[dict[str, Any], Refresh]:
     answered for (nothing saved); without it the copy itself keeps the index up to date. Files this project
     has changed keep their stored record: the index describes the user's repository, not unfinished work."""
     store = knowledge_store(workspace)
-    own = {change.path for change in workspace.changes()} | {
-        change.from_path for change in workspace.changes() if change.from_path
-    }
-    shown = Refresh()
-    live = live_root(workspace)
-    if live is not None and not (store / STRUCTURE_FILE).is_file():
-        shown = update_from_live(workspace) or shown
-    structure, report = refresh(
-        workspace.repo_dir, store, workspace.is_secret, own, as_of=workspace.info.created, keep=live is None
-    )
+    changes = workspace.changes()
+    own = {change.path for change in changes} | {change.from_path for change in changes if change.from_path}
+    with _VIEW_LOCK:  # calls in one batch run in threads: one update at a time, the next one finds it done
+        shown = Refresh()
+        live = live_root(workspace)
+        if live is not None and not (store / STRUCTURE_FILE).is_file():
+            shown = update_from_live(workspace) or shown
+        structure, report = refresh(
+            workspace.repo_dir,
+            store,
+            workspace.is_secret,
+            own,
+            as_of=workspace.info.created,
+            keep=live is None,
+        )
     return structure, (report if live is None else shown)
+
+
+async def project_view_async(workspace: Workspace) -> tuple[dict[str, Any], Refresh]:
+    """`project_view` off the event loop: walking a repository must not stop the web server (KP7, D-573)."""
+    return await asyncio.to_thread(project_view, workspace)
 
 
 def refreshed_map(workspace: Workspace) -> tuple[CodeMap, Refresh]:
@@ -124,13 +140,18 @@ def overview(code_map: CodeMap, report: Refresh | None = None) -> str:
     return "\n".join(lines)
 
 
-def repository_map_pin(workspace: Workspace, live: bool = True) -> str | None:
+def repository_map_pin(
+    workspace: Workspace, live: bool = True, structure: dict[str, Any] | None = None
+) -> str | None:
     """The pinned 'Codebase essentials' of a project on an existing repository: the short map, what changed in
     the repository since the map was last updated, and the index of topic notes. `live`: first bring the
-    index up to date from the user's own folder (at session start). None for an empty repository."""
+    index up to date from the user's own folder (at session start). `structure`: a view the caller just made,
+    so the repository is not walked again (KP3). None for an empty repository."""
     try:
         latest = update_from_live(workspace) if live else None
-        structure, report = project_view(workspace)
+        report = None
+        if structure is None:
+            structure, report = project_view(workspace)
     except OSError:
         return None
     code_map = CodeMap(structure)
@@ -154,7 +175,7 @@ def repository_map_pin(workspace: Workspace, live: bool = True) -> str | None:
         parts.append(
             "What is already written down about this repository (read one with knowledge_search before exploring "
             "that area again; correct it with knowledge_write when the code says otherwise):\n"
-            + "\n".join(index_lines(notes, marks))
+            + "\n".join(index_lines(notes, marks, usage=load_usage(knowledge_store(workspace))))
         )
     else:
         parts.append(
@@ -193,7 +214,8 @@ class CodeMapTool(Tool):
             return ToolResult(
                 ok=False, content="code_map describes an existing repository; this project has none."
             )
-        code_map, report = refreshed_map(context.workspace)
+        structure, report = await project_view_async(context.workspace)
+        code_map = CodeMap(structure)
         query = args.query.strip()
         if args.action != "overview" and args.action not in ("endpoints", "tables", "env") and not query:
             return ToolResult(ok=False, content=f"`{args.action}` needs a `query`.")
@@ -201,7 +223,8 @@ class CodeMapTool(Tool):
             lines = settings_report(context.workspace, code_map, query)
         else:
             lines = getattr(self, f"_{args.action}")(code_map, query)
-        note = f"\n\n[index updated: {report.line()}]" if report.touched else ""
+        slow = report.seconds >= SLOW_UPDATE_SECONDS  # a slow update must be visible, not guessed at
+        note = f"\n\n[index updated: {report.line()}]" if report.touched or slow else ""
         return ToolResult(ok=True, content=(cap(lines) if lines else f"Nothing found for {query!r}.") + note)
 
     def _overview(self, code_map: CodeMap, query: str) -> list[str]:
@@ -334,15 +357,20 @@ def env_files(workspace: Workspace) -> dict[str, dict[str, bool]]:
     path -> {key: has a value}. Only whether a value is there is looked at, never the value itself."""
     found: dict[str, dict[str, bool]] = {}
     root = workspace.repo_dir
-    for path in sorted(root.rglob("*")):
+    candidates: list[Path] = []
+    for folder, folders, names in os.walk(root):  # pruned: never descends into libraries or deep trees
+        depth = len(Path(folder).relative_to(root).parts)
+        folders[:] = (
+            [] if depth + 1 >= ENV_FILE_DEPTH else sorted(f for f in folders if f not in SKIPPED_FOLDERS)
+        )
+        candidates += [
+            Path(folder) / name
+            for name in names
+            if name == ".env" or name.startswith(".env.") or name.endswith(".env")
+        ]
+    for path in sorted(candidates):
         relative = path.relative_to(root)
-        if len(relative.parts) > ENV_FILE_DEPTH or any(
-            part in SKIPPED_FOLDERS for part in relative.parts[:-1]
-        ):
-            continue
         name = path.name
-        if not path.is_file() or not (name == ".env" or name.startswith(".env.") or name.endswith(".env")):
-            continue
         if name.endswith((".example", ".sample", ".template", ".dist")):
             continue  # a list of names for people to fill in, not what the app reads
         keys: dict[str, bool] = {}

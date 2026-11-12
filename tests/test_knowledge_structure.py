@@ -314,3 +314,47 @@ async def test_the_settings_report_names_what_the_code_needs_and_the_env_files_l
     assert "QUEUE_HOST: read in svc/settings.py:3 (no default); set in .env" in text
     assert "QUEUE_REGION: read in svc/settings.py:4 (has a default); NOT SET in any env file" in text
     assert secret_value not in text and "queue.internal" not in text  # names and states only, never a value
+
+
+def test_environments_and_ignored_folders_are_not_indexed(tmp_path: Path) -> None:
+    root, store = tmp_path / "repo", tmp_path / "store"
+    (root / "app").mkdir(parents=True)
+    (root / "app" / "main.py").write_text("def run():\n    return 1\n", encoding="utf-8")
+    for name in ("libs", ".vendor", "generated"):
+        (root / name).mkdir()
+        (root / name / "lib.py").write_text("X = 1\n", encoding="utf-8")
+    (root / "libs" / "pyvenv.cfg").write_text("home = x\n", encoding="utf-8")
+    (root / ".gitignore").write_text("# comment\ngenerated/\n*.pyc\n", encoding="utf-8")
+    structure, _ = refresh(root, store)
+    assert list(structure["files"]) == ["app/main.py"]
+
+
+def test_unchanged_files_are_neither_read_nor_parsed_again(tmp_path: Path, monkeypatch) -> None:
+    from forge.knowledge import structure as structure_module
+
+    root, store = tmp_path / "repo", tmp_path / "store"
+    root.mkdir()
+    for index in range(5):
+        (root / f"m{index}.py").write_text(f"def f{index}():\n    return {index}\n", encoding="utf-8")
+    refresh(root, store, keep=False)  # a copy that is only answered for: nothing stored
+    parsed: list[str] = []
+    real = structure_module._describe
+    monkeypatch.setattr(
+        structure_module, "_describe", lambda r, p, d: (parsed.append(p.name), real(r, p, d))[1]
+    )
+    _, report = refresh(root, store, keep=False)
+    assert parsed == [] and len(report.added) == 5  # nothing stored, yet nothing parsed again
+    (root / "m0.py").write_text("def f0():\n    return 'changed and longer'\n", encoding="utf-8")
+    _, report = refresh(root, store, keep=False)
+    assert parsed == ["m0.py"]
+
+
+def test_installed_libraries_are_not_delivered(tmp_path: Path) -> None:
+    from forge.workspace.ignore import IgnoreRules
+
+    (tmp_path / "tools" / "pyvenv_home").mkdir(parents=True)
+    (tmp_path / "tools" / "pyvenv_home" / "pyvenv.cfg").write_text("home = x\n", encoding="utf-8")
+    rules = IgnoreRules(tmp_path)
+    assert rules.is_ignored(".vendor", is_dir=True)
+    assert rules.is_ignored("tools/pyvenv_home", is_dir=True)
+    assert not rules.is_ignored("tools", is_dir=True)

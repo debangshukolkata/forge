@@ -11,10 +11,12 @@ from __future__ import annotations
 import os
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import yaml
+
+from forge.knowledge.usage import MAX_USE_BONUS, OUTDATED_PENALTY, PINNED_BY_USE, Usage, reads_of, use_order
 
 TOPICS_FOLDER = "topics"
 MAX_BODY_CHARS = 12_000
@@ -46,11 +48,31 @@ def _folder(store: Path) -> Path:
     return store / TOPICS_FOLDER
 
 
+_YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)  # the C parser when libyaml is installed
+_parsed: dict[str, tuple[tuple[int, int], Topic | None]] = {}
+
+
 def _parse(path: Path) -> Topic | None:
+    """A topic file, parsed once per version of the file (size and modified time) so listing, searching and
+    pinning do not open every file again (KP2). A copy is returned: callers edit topics."""
+    try:
+        status = path.stat()
+    except OSError:
+        return None
+    stamp = (status.st_size, status.st_mtime_ns)
+    cached = _parsed.get(str(path))
+    if cached is None or cached[0] != stamp:
+        cached = (stamp, _read(path))
+        _parsed[str(path)] = cached
+    topic = cached[1]
+    return None if topic is None else replace(topic, sources=dict(topic.sources), history=list(topic.history))
+
+
+def _read(path: Path) -> Topic | None:
     try:
         text = path.read_text(encoding="utf-8")
         match = FRONT.match(text)
-        meta = yaml.safe_load(match.group(1)) if match else None
+        meta = yaml.load(match.group(1), Loader=_YAML_LOADER) if match else None
     except (OSError, yaml.YAMLError):
         return None
     if not isinstance(meta, dict) or not meta.get("title"):
@@ -105,8 +127,17 @@ def delete_topic(store: Path, slug: str) -> bool:
     return True
 
 
-def index_lines(topics: list[Topic], current: dict[str, str], limit: int = 80) -> list[str]:
-    """One line per topic for the pinned index, with a mark on those whose sources changed."""
+def index_lines(
+    topics: list[Topic], current: dict[str, str], limit: int = 80, usage: Usage | None = None
+) -> list[str]:
+    """One line per topic for the pinned index, with a mark on those whose sources changed.
+
+    Once any topic has been read (KU2) only the most used ones get a line, the rest are counted: the pin stays
+    short however many topics the repository collects. With no use yet it lists them in order, as before."""
+    if usage and any(reads_of(usage, topic.slug) for topic in topics):
+        by_slug = {topic.slug: topic for topic in topics}
+        topics = [by_slug[slug] for slug in use_order(list(by_slug), usage)]
+        limit = min(limit, PINNED_BY_USE)
     lines = []
     for topic in topics[:limit]:
         changed = topic.outdated(current)
@@ -117,8 +148,17 @@ def index_lines(topics: list[Topic], current: dict[str, str], limit: int = 80) -
     return lines
 
 
-def search(topics: list[Topic], query: str, limit: int = 6) -> list[tuple[Topic, list[str]]]:
-    """The topics that match the words of a query best, each with the lines of its body that matched."""
+def ranked(
+    topics: list[Topic],
+    query: str,
+    limit: int = 6,
+    usage: Usage | None = None,
+    current: dict[str, str] | None = None,
+) -> list[tuple[int, Topic, list[str]]]:
+    """The topics that match the words of a query best: score, topic and the lines of its body that matched.
+
+    The words decide; use adds a little (KU3) and a topic whose source files changed loses a little, so of two
+    topics that fit equally the one that is read often and is still current comes first."""
     words = [word for word in re.findall(r"[a-z0-9_]+", query.lower()) if len(word) > 2]
     scored: list[tuple[int, Topic, list[str]]] = []
     for topic in topics:
@@ -131,9 +171,26 @@ def search(topics: list[Topic], query: str, limit: int = 6) -> list[tuple[Topic,
             for word in words
         )
         if score:
+            score += min(MAX_USE_BONUS, reads_of(usage or {}, topic.slug))
+            if current is not None and topic.outdated(current):
+                score = max(1, score - OUTDATED_PENALTY)
             scored.append((score, topic, hits[:4]))
     scored.sort(key=lambda item: (-item[0], item[1].slug))
-    return [(topic, hits) for _, topic, hits in scored[:limit]]
+    return scored[:limit]
+
+
+def search(topics: list[Topic], query: str, limit: int = 6) -> list[tuple[Topic, list[str]]]:
+    return [(topic, hits) for _, topic, hits in ranked(topics, query, limit)]
+
+
+def clear_winner(found: list[tuple[int, Topic, list[str]]]) -> Topic | None:
+    """The best topic when it is the only match or scores half as much again as the next (KP5, D-574): the reader
+    then needs no second call to read it."""
+    if not found:
+        return None
+    if len(found) == 1 or found[0][0] * 2 >= found[1][0] * 3:
+        return found[0][1]
+    return None
 
 
 def uncovered(folders: dict[str, int], topics: list[Topic], limit: int = 15) -> list[tuple[str, int]]:

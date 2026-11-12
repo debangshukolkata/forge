@@ -54,7 +54,7 @@ async def test_payloads_are_redacted_before_storage(tmp_path: Path) -> None:
     log = tmp_path / "events.jsonl"
     bus = EventBus(log, redactor=redactor)
 
-    await bus.publish(EventType.MESSAGE_DELTA, {"text": "leaked canary-secret-555555?"})
+    await bus.publish(EventType.MESSAGE_DONE, {"text": "leaked canary-secret-555555?"})
 
     assert "canary-secret-555555" not in log.read_text(encoding="utf-8")
     assert bus.events_since(0)[0].payload["text"] == "leaked [REDACTED:CANARY]?"
@@ -179,3 +179,22 @@ async def test_a_subagents_model_call_in_flight_is_relayed_to_the_session() -> N
         and steps[0]["chars"] == 900
     )
     assert steps[0]["agent"].startswith("agent-") and steps[0]["role"] == "builder"
+
+
+async def test_streamed_words_stay_out_of_the_log_and_the_replay_once_the_text_is_done(tmp_path) -> None:
+    """CV3: a day's log held one line per word; a reopened project replays only the finished text."""
+    from forge.protocol.events import EventBus, load_event_log
+
+    log = tmp_path / "events.jsonl"
+    bus = EventBus(log)
+    await bus.publish(EventType.MESSAGE_DELTA, {"text": "Hel"})
+    await bus.publish(EventType.MESSAGE_DELTA, {"text": "lo"})
+    mid_answer = [e.type for e in bus.events_since(0)]
+    await bus.publish(EventType.MESSAGE_DONE, {"text": "Hello"})
+    assert mid_answer == [
+        EventType.MESSAGE_DELTA,
+        EventType.MESSAGE_DELTA,
+    ]  # a window opened mid-answer sees it
+    assert [e.type for e in bus.events_since(0)] == [EventType.MESSAGE_DONE]
+    assert [e.type for e in load_event_log(log)] == [EventType.MESSAGE_DONE]
+    assert bus.last_seq == 3

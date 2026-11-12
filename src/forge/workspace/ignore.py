@@ -27,6 +27,11 @@ DEFAULT_EXCLUDES = [
     "*.egg-info/",
     "logs/",
     ".forge/",
+    # Libraries installed to run the application are never the requirement's delivery (KP8).
+    ".vendor/",
+    "site-packages/",
+    ".nox/",
+    ".eggs/",
 ]
 
 # Copied (the app needs them to run) but never shown to the LLM and never exported (spec §6.1).
@@ -53,6 +58,8 @@ class IgnoreRules:
         candidate = relative + "/" if is_dir else relative
         if self._defaults.match_file(candidate):
             return True
+        if is_dir and (self.repo_root / relative / "pyvenv.cfg").is_file():
+            return True  # a virtual environment, whatever it is called
         ignored = False
         path = PurePosixPath(relative)
         for directory in [PurePosixPath("."), *reversed(path.parents[:-1])]:

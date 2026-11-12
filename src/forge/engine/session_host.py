@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import re
+import threading
 import traceback
 from collections.abc import Awaitable, Callable
 from datetime import datetime
@@ -143,8 +144,25 @@ class SessionHost:
             contracts = ContractRegister(profile).essentials()
             essentials = profile.essentials() + (f"\n\n{contracts}" if contracts else "")
         elif self.workspace is not None:
-            essentials = repository_map_pin(self.workspace)  # the map kept between projects (KL1, D-563)
+            self._start_map_pin(self.workspace)
+            return
         self.context_manager.pinned.set("kb_essentials", essentials)
+
+    def _start_map_pin(self, workspace: Workspace) -> None:
+        """The map kept between projects (KL1, D-563) is read in a thread, so opening a project does not wait
+        for the walk of two folders (KP6). The first turn waits for it in `wait_for_map`."""
+
+        def work() -> None:
+            self.context_manager.pinned.set("kb_essentials", repository_map_pin(workspace))
+
+        thread = threading.Thread(target=work, name="repository-map", daemon=True)
+        self._map_thread = thread
+        thread.start()
+
+    async def wait_for_map(self) -> None:
+        thread = getattr(self, "_map_thread", None)
+        if thread is not None and thread.is_alive():
+            await asyncio.to_thread(thread.join)
 
     def host_profile(self) -> HostProfile | None:
         """Mode B: the profile this workspace uses (spec §6A.2)."""
@@ -176,6 +194,7 @@ class SessionHost:
     async def prepare_database(self, force: bool = False) -> None:
         """Spec §9.5.2 at the start of work: access level per database, then the scratch schema (created
         by DebCraft only when its role may and config allows; otherwise the agent writes a DB request)."""
+        await self.wait_for_map()
         db = self.db
         if db is None or (db.reports and not force):
             return
@@ -460,6 +479,7 @@ class SessionHost:
             self.orchestrator.has_unfinished_work if self.resume_open_work else self.orchestrator.needs_resume
         ):
             await self._run_turn(self.orchestrator.resume)
+        await self.wait_for_map()  # the first message is answered with the map in place (KP6)
         while not self.closed:
             user_input = await self._inputs.get()
             if isinstance(user_input, SendMessage):
@@ -691,9 +711,10 @@ class SessionHost:
         except asyncio.CancelledError:
             # Keep what the user already saw, so the conversation stays coherent after an interrupt.
             if self._streamed and self.history[-1].role != "assistant":
-                self.history.append(
-                    Message(role="assistant", content="".join(self._streamed) + " [interrupted]")
-                )
+                partial = "".join(self._streamed) + " [interrupted]"
+                self.history.append(Message(role="assistant", content=partial))
+                # The streamed words are not in the log (CV3), so the cut-off answer is written once here.
+                await self.bus.publish(EventType.MESSAGE_DONE, {"text": partial, "model": "forge"})
             await self.bus.publish(EventType.NOTICE, {"kind": "interrupted", "text": "Interrupted"})
             # An Interrupt cancels only the turn; if the session itself is being cancelled (shutdown),
             # swallowing it would keep run() looping forever and hang the event loop's shutdown.

@@ -73,6 +73,7 @@ class EventBus:
         self._log_path = log_path
         self._redactor = redactor
         self._events: list[Event] = []
+        self._streamed_words = 0
         self._subscribers: set[asyncio.Queue[Event]] = set()
         self.stamp: Callable[[], dict[str, str | None]] | None = None  # set by the session (phase/task)
         if log_path is not None:
@@ -96,8 +97,16 @@ class EventBus:
             payload=self._redactor.redact_data(payload or {}),
             where=self.stamp() if self.stamp is not None else None,
         )
+        if event_type == EventType.MESSAGE_DONE and self._streamed_words:
+            # The finished text carries the words; a window that opens later needs only that (CV3).
+            self._events = [e for e in self._events if e.type != EventType.MESSAGE_DELTA]
+            self._streamed_words = 0
         self._events.append(event)
-        if self._log_path is not None:
+        if event_type == EventType.MESSAGE_DELTA:
+            # Kept in memory so a window opened mid-answer sees the text so far; never written to the log, where
+            # one line per word made a day's log 2.9 MB that every open had to read, check and send.
+            self._streamed_words += 1
+        elif self._log_path is not None:
             with self._log_path.open("a", encoding="utf-8") as log:
                 log.write(event.model_dump_json() + "\n")
         for queue in list(self._subscribers):

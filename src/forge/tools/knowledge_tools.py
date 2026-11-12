@@ -8,33 +8,53 @@ in the topic's history."""
 
 from __future__ import annotations
 
+import asyncio
+import re
 import time
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import Field
 
+from forge.config import forge_home
 from forge.knowledge.code_map import CodeMap, cap
 from forge.knowledge.structure import load
+from forge.knowledge.topic_check import REVIEWER, rule_problem, verdict_of
 from forge.knowledge.topics import (
     MAX_BODY_CHARS,
     MAX_SOURCES,
     Topic,
     all_topics,
+    clear_winner,
     delete_topic,
+    ranked,
     read_topic,
     save_topic,
-    search,
     slug_of,
     uncovered,
 )
+from forge.knowledge.usage import load_usage
+from forge.knowledge.usage import record as count_use
+from forge.llm.base import ChatRequest, Message
+from forge.memory.scope import scope_of
+from forge.memory.store import MemoryStore
 from forge.safety.redact import default_redactor
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.code_map_tool import current_marks, knowledge_store, project_view, repository_map_pin
+from forge.tools.code_map_tool import (
+    current_marks,
+    knowledge_store,
+    project_view,
+    project_view_async,
+    repository_map_pin,
+)
 from forge.workspace.workspace import Workspace
 
 READS_BEFORE_REMINDER = 6  # files read without looking at what is already known
 READS_BEFORE_WRITE_REMINDER = 14  # files read without writing anything down
+WINNER_IN_FULL_CHARS = (
+    8000  # a search returns a clearly best topic whole when it is no longer than this (KP5)
+)
+MAX_READ_AT_ONCE = 4
 PIN_SLOT = "kb_essentials"
 NO_REPOSITORY = "This project has no existing repository to keep knowledge about."
 # The first things worth knowing about any service repository; the agenda lists the ones no topic covers yet.
@@ -66,7 +86,7 @@ class KnowledgeSearch(Tool):
     description = (
         "What earlier work wrote down about this repository (how agents, tools, orchestration, APIs and data "
         "fit together). Look here BEFORE exploring an area. action `search` (query = words: the best topics "
-        "with their matching lines), `read` (query = a topic's slug: the whole topic, and which of its source "
+        "with their matching lines; a topic that clearly answers the question comes back whole), `read` (query = a topic's slug, or several slugs separated by commas: the whole topics, and which of its source "
         "files changed since it was written), `list` (every topic in one line each), `agenda` (what is worth "
         "learning next: topics whose files changed, areas with nothing written, files changed in the "
         "repository since the last update)."
@@ -86,7 +106,7 @@ class KnowledgeSearch(Tool):
         context.knowledge_looked = True
         store = knowledge_store(workspace)
         notes = all_topics(store)
-        structure, _ = project_view(workspace)
+        structure, _ = await project_view_async(workspace)
         marks = current_marks(workspace, structure, {path for topic in notes for path in topic.sources})
         query = args.query.strip()
         if args.action == "list":
@@ -97,31 +117,65 @@ class KnowledgeSearch(Tool):
         if not query:
             return ToolResult(ok=False, content=f"`{args.action}` needs a `query`.")
         if args.action == "read":
-            topic = read_topic(store, query)
-            if topic is None:
-                names = ", ".join(note.slug for note in notes) or "none yet"
-                return ToolResult(ok=False, content=f"No topic {query!r}. Topics: {names}.")
-            sources = "\n".join(f"- {path}" for path in topic.sources)
-            history = ("\n\nCorrections so far:\n" + "\n".join(topic.history)) if topic.history else ""
-            return ToolResult(
-                ok=True,
-                content=f"# {topic.title}\n{topic.summary}\n\n{topic.body}\n\nSource files:\n{sources}{history}"
-                + _outdated_note(topic, topic.outdated(marks)),
-            )
-        found = search(notes, query)
+            slugs = [part for part in re.split(r"[\s,;]+", query) if part][:MAX_READ_AT_ONCE]
+            rendered = []
+            read_slugs = []
+            for slug in slugs:
+                topic = read_topic(store, slug)
+                if topic is None:
+                    names = ", ".join(note.slug for note in notes) or "none yet"
+                    rendered.append(f"No topic {slug!r}. Topics: {names}.")
+                else:
+                    rendered.append(_render_topic(topic, marks))
+                    read_slugs.append(topic.slug)
+            record_use(store, workspace, read=read_slugs)
+            if not any(not text.startswith("No topic ") for text in rendered):
+                return ToolResult(ok=False, content="\n\n".join(rendered))
+            return ToolResult(ok=True, content="\n\n---\n\n".join(rendered))
+        found = ranked(notes, query, usage=load_usage(store), current=marks)
         if not found:
             return ToolResult(
                 ok=True,
                 content=f"Nothing written down matches {query!r}. Work it out from the code (code_map first), "
                 "then record it with knowledge_write.",
             )
+        winner = clear_winner(found)
         lines = []
-        for topic, hits in found:
+        for _, topic, hits in found:
             changed = topic.outdated(marks)
             mark = f" [may be outdated: {len(changed)} of its files changed]" if changed else ""
             lines.append(f"{topic.slug}: {topic.title}. {topic.summary}{mark}")
-            lines += [f"    {hit[:200]}" for hit in hits]
+            if topic is not winner:
+                lines += [f"    {hit[:200]}" for hit in hits]
+        whole = winner is not None and len(winner.body) <= WINNER_IN_FULL_CHARS
+        record_use(
+            store,
+            workspace,
+            read=[winner.slug] if whole and winner is not None else [],
+            found=[topic.slug for _, topic, _ in found],
+        )
+        if winner is not None and whole:
+            # One topic clearly answers the question: give it whole, so no second call follows (KP5, D-574).
+            return ToolResult(
+                ok=True,
+                content="\n".join(lines)
+                + f"\n\nThe best match, {winner.slug}, in full:\n\n{_render_topic(winner, marks)}",
+            )
         return ToolResult(ok=True, content="\n".join(lines) + "\n\nRead one in full with action `read`.")
+
+
+def record_use(store: Path, workspace: Workspace, *, read: list[str], found: list[str] | None = None) -> None:
+    """KU1: counts per topic, keyed by this project's folder so 'in how many projects' can be told."""
+    count_use(store, str(workspace.root), read=read, found=found or [])
+
+
+def _render_topic(topic: Topic, marks: dict[str, str]) -> str:
+    sources = "\n".join(f"- {path}" for path in topic.sources)
+    history = ("\n\nCorrections so far:\n" + "\n".join(topic.history)) if topic.history else ""
+    return (
+        f"# {topic.title}\n{topic.summary}\n\n{topic.body}\n\nSource files:\n{sources}{history}"
+        + _outdated_note(topic, topic.outdated(marks))
+    )
 
 
 def _agenda(notes: list[Topic], marks: dict[str, str], structure: dict[str, Any], store: Path) -> str:
@@ -133,6 +187,13 @@ def _agenda(notes: list[Topic], marks: dict[str, str], structure: dict[str, Any]
         parts.append(
             "Topics to re-check (their source files changed):\n"
             + "\n".join(f"- {topic.slug}: {', '.join(changed[:6])}" for topic, changed in stale)
+        )
+    task_like = [topic for topic in notes if rule_problem(topic.title, topic.summary)]
+    if task_like:
+        parts.append(
+            "Topics that look like findings of a task, not knowledge of the repository (move to memory with "
+            "memory_write and delete, or rewrite for any task; never removed automatically):\n"
+            + "\n".join(f"- {topic.slug}: {topic.title[:90]}" for topic in task_like)
         )
     folders: dict[str, int] = {}
     for path, record in code_map.files.items():
@@ -193,10 +254,10 @@ class KnowledgeWrite(Tool):
         store = knowledge_store(workspace)
         slug = slug_of(args.slug or args.title)
         existing = read_topic(store, slug) if (args.slug or args.title) else None
-        structure, _ = project_view(workspace)
+        structure, _ = await project_view_async(workspace)
         if args.delete:
             done = delete_topic(store, slug)
-            self._repin(context)
+            await self._repin(context, structure)
             return ToolResult(ok=done, content=f"Topic {slug} removed." if done else f"No topic {slug!r}.")
         if args.confirm:
             if existing is None:
@@ -204,11 +265,14 @@ class KnowledgeWrite(Tool):
             existing.sources = current_marks(workspace, structure, existing.sources)
             existing.updated = time.strftime("%Y-%m-%d")
             save_topic(store, existing)
-            self._repin(context)
+            await self._repin(context, structure)
             return ToolResult(ok=True, content=f"Topic {slug} confirmed against the current files.")
         problem = self._problem(args)
         if problem:
             return ToolResult(ok=False, content=problem)
+        moved = await self._task_finding(args, slug, context)
+        if moved is not None:
+            return moved
         paths = [path.replace("\\", "/").strip().lstrip("./") for path in args.sources][:MAX_SOURCES]
         marks = current_marks(workspace, structure, paths)
         unknown = [path for path in paths if path not in marks]
@@ -234,7 +298,7 @@ class KnowledgeWrite(Tool):
                 history=history,
             ),
         )
-        self._repin(context)
+        await self._repin(context, structure)
         note = f" Not found, so not tracked: {', '.join(unknown)}." if unknown else ""
         verb = "corrected" if existing is not None else "written"
         return ToolResult(
@@ -259,9 +323,50 @@ class KnowledgeWrite(Tool):
         return ""
 
     @staticmethod
-    def _repin(context: ToolContext) -> None:
+    async def _task_finding(args: KnowledgeWrite.Args, slug: str, context: ToolContext) -> ToolResult | None:
+        """KU6: a note about this task is not repository knowledge. None: it is, go on and save the topic."""
+        title = args.title.strip() or args.slug
+        rule = rule_problem(title, args.summary)
+        if rule:
+            return ToolResult(ok=False, content=rule)
+        if context.router is None or (args.slug and not args.title):
+            return None
+        question = f"Title: {title}\nSummary: {args.summary}\n\n{args.body[:3000]}"
+        try:
+            response = await context.ask_model(
+                "reviewer",
+                ChatRequest(
+                    messages=[
+                        Message(role="system", content=REVIEWER),
+                        Message(role="user", content=question),
+                    ]
+                ),
+                "checking that the note is about the repository, not the task",
+            )
+            verdict = verdict_of(str(response.text))
+        except Exception:
+            verdict = None  # a failed review never blocks a note
+        if verdict is None or verdict[0] == "repository":
+            return None
+        memory = MemoryStore(forge_home(), scope_of(context.workspace)).save(
+            slug, " ".join(args.summary.split())[:200], "project", f"{title}\n\n{args.body.strip()}"
+        )
+        await context.emit(
+            "notice", {"kind": "memory", "text": f"Remembered ({memory.name}): {memory.description}"}
+        )
+        return ToolResult(
+            ok=True,
+            content=f"Not saved as a topic: a second model judged it to describe this task, not the repository "
+            f"({verdict[1]}). It is kept in this project's memory as {memory.name}. Write a topic only for what "
+            "is true of the repository for any task.",
+        )
+
+    @staticmethod
+    async def _repin(context: ToolContext, structure: dict[str, Any]) -> None:
+        """Re-pins the topic index from the view this call already made (KP3), off the event loop."""
         if context.pin is not None:
-            context.pin(PIN_SLOT, repository_map_pin(context.workspace, live=False))
+            pin = await asyncio.to_thread(repository_map_pin, context.workspace, False, structure)
+            context.pin(PIN_SLOT, pin)
 
 
 def reading_note(context: ToolContext) -> str:

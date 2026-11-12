@@ -40,6 +40,9 @@ SKIPPED_FOLDERS = {
     ".tox",
     ".angular",
     "coverage",
+    ".vendor",  # libraries installed into a project copy to run the application (KP7, KP8)
+    ".nox",
+    ".eggs",
 }
 SUFFIXES = (".py", ".sql", ".ts")
 MAX_FILE_BYTES = 800_000
@@ -120,11 +123,34 @@ def _describe(root: Path, path: Path, data: bytes) -> dict[str, Any]:
     }
 
 
+def ignored_folder_names(root: Path) -> set[str]:
+    """Plain folder names the repository's own .gitignore excludes (`build/`, `.cache`): no wildcards, no
+    paths, no negations. Whatever the repository's developers keep out of git is generated, not source."""
+    try:
+        lines = (root / ".gitignore").read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return set()
+    names: set[str] = set()
+    for line in lines:
+        entry = line.strip().rstrip("/")
+        if entry and not entry.startswith(("#", "!")) and not any(mark in entry for mark in "*?[/\\"):
+            names.add(entry)
+    return names
+
+
 def source_files(root: Path, skip: Callable[[str], bool] | None = None) -> Iterable[tuple[str, Path]]:
-    """(path relative to the root with '/', file) for every source file the index covers."""
+    """(path relative to the root with '/', file) for every source file the index covers. Folders of
+    installed libraries and environments are left out: a folder with a `pyvenv.cfg` is a virtual
+    environment whatever it is called."""
+    ignored = ignored_folder_names(root)
     for folder, folders, files in os.walk(root):
         folders[:] = sorted(
-            name for name in folders if name not in SKIPPED_FOLDERS and not name.endswith(".egg-info")
+            name
+            for name in folders
+            if name not in SKIPPED_FOLDERS
+            and name not in ignored
+            and not name.endswith(".egg-info")
+            and not os.path.isfile(os.path.join(folder, name, "pyvenv.cfg"))
         )
         for name in sorted(files):
             if not name.endswith(SUFFIXES) or name.endswith((".d.ts", ".spec.ts", ".min.js")):
@@ -135,15 +161,28 @@ def source_files(root: Path, skip: Callable[[str], bool] | None = None) -> Itera
                 yield relative, path
 
 
+_loaded: dict[str, tuple[tuple[int, int], dict[str, Any]]] = {}
+
+
 def load(store: Path) -> dict[str, Any]:
-    """The stored index, or an empty one when there is none, it is unreadable or its version is old."""
+    """The stored index, or an empty one when there is none, it is unreadable or its version is old. Parsed
+    once per version of the file (size and modified time): a 3 MB index was read up to three times a call (KP4).
+    Callers get a copy of the top level; they replace `files`, they do not edit it."""
+    target = store / STRUCTURE_FILE
     try:
-        data = json.loads((store / STRUCTURE_FILE).read_text(encoding="utf-8"))
+        status = target.stat()
+        stamp = (status.st_size, status.st_mtime_ns)
+        cached = _loaded.get(str(target))
+        if cached is not None and cached[0] == stamp:
+            return dict(cached[1])
+        data = json.loads(target.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        data = {}
+        data, stamp = {}, None
     if not isinstance(data, dict) or data.get("version") != STRUCTURE_VERSION:
         return {"version": STRUCTURE_VERSION, "files": {}}
-    return data
+    if stamp is not None:
+        _loaded[str(target)] = (stamp, data)
+    return dict(data)
 
 
 def save(store: Path, structure: dict[str, Any]) -> None:
@@ -152,6 +191,23 @@ def save(store: Path, structure: dict[str, Any]) -> None:
     scratch = target.with_suffix(".tmp")
     scratch.write_text(json.dumps(structure, separators=(",", ":")), encoding="utf-8")
     os.replace(scratch, target)  # never a half-written index
+    _loaded.pop(str(target), None)
+
+
+MAX_REMEMBERED_ROOTS = 8
+_remembered: dict[str, dict[str, tuple[tuple[int, int], str, dict[str, Any] | None]]] = {}
+
+
+def _seen_files(root: Path) -> dict[str, tuple[tuple[int, int], str, dict[str, Any] | None]]:
+    """What the last refresh of this folder saw per file: (size, modified time), fingerprint, parsed record
+    (None when the stored index already had it). Kept in memory for the life of the process, so a second
+    call costs one stat per file instead of a read and a parse (KP1, KP7)."""
+    key = str(root)
+    if key not in _remembered:
+        while len(_remembered) >= MAX_REMEMBERED_ROOTS:
+            _remembered.pop(next(iter(_remembered)))
+        _remembered[key] = {}
+    return _remembered[key]
 
 
 def refresh(
@@ -172,6 +228,7 @@ def refresh(
     `keep=False`: only answer for `root`, save nothing (a project's copy, when the index was just brought up
     to date from the user's own folder)."""
     started = time.perf_counter()
+    seen = _seen_files(root)
     structure = load(store)
     old: dict[str, Any] = structure["files"]
     kept_as_is = set(frozen)
@@ -183,19 +240,33 @@ def refresh(
                 new[relative] = old[relative]
                 report.unchanged += 1
             continue
+        before = old.get(relative)
         try:
-            if path.stat().st_size > MAX_FILE_BYTES:
+            status = path.stat()
+            if status.st_size > MAX_FILE_BYTES:
                 continue
-            data = path.read_bytes()
+            stamp = (status.st_size, status.st_mtime_ns)
+            remembered = seen.get(relative)
+            if remembered is not None and remembered[0] == stamp:
+                # Same size and modified time as at the last call: neither read nor parse it again (KP7).
+                mark, record = remembered[1], remembered[2]
+            else:
+                data = path.read_bytes()
+                mark = fingerprint(data)
+                record = None
+                if not (before is not None and before.get("fingerprint") == mark):
+                    record = {"fingerprint": mark, **_describe(root, path, data)}
+                seen[relative] = (stamp, mark, record)
         except OSError:
             continue
-        mark = fingerprint(data)
-        before = old.get(relative)
         if before is not None and before.get("fingerprint") == mark:
             new[relative] = before
             report.unchanged += 1
             continue
-        new[relative] = {"fingerprint": mark, **_describe(root, path, data)}
+        if record is None:  # the stored index moved on since this file was remembered: parse it now
+            record = {"fingerprint": mark, **_describe(root, path, path.read_bytes())}
+            seen[relative] = (seen[relative][0], mark, record)
+        new[relative] = record
         (report.changed if before is not None else report.added).append(relative)
     for relative in old:
         if relative not in new:

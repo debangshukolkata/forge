@@ -8,6 +8,10 @@ What DebCraft knows about an existing repository between projects (TODO section 
 
 - `topics.py` (KL2, D-566): topic notes, one Markdown file per topic under `knowledge/topics/` with a YAML header (title, summary, source files with fingerprints, updated, history of corrections); search, the pinned index lines with "may be outdated" marks, and the folders no topic covers.
 
+- `topic_check.py` (KU6, D-574): the rule checks (short title, no "I did", no DebCraft names) and the reviewer prompt and parser that decide whether a note is about the repository or about the task.
+
+- `usage.py` (KU1 to KU3, D-574): `usage.json` beside the topics: reads, last read, projects and search hits per topic; orders the pin and nudges the search ranking. Counts only.
+
 - **Depends on:** (nothing)
 - **Invariants:** Never writes into the user's repository or a workspace: only under DebCraft Home. Stores names, signatures, paths and line numbers; no code bodies and no values of environment variables. A link that is not proven by an import is labelled `by name`. The index describes the user's repository: files the project has changed keep their stored record.
 - **Tests:** test_knowledge_structure.py, test_knowledge_topics.py

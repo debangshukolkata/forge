@@ -176,6 +176,11 @@ class ShellSession:
         existing = variables.get("PYTEST_ADDOPTS", "")
         if "cacheprovider" not in existing:
             variables["PYTEST_ADDOPTS"] = f"{existing} -p no:cacheprovider".strip()
+        libraries = libraries_folder(self.workspace)
+        if libraries.is_dir():
+            variables["PYTHONPATH"] = os.pathsep.join(
+                part for part in (str(libraries), variables.get("PYTHONPATH", "")) if part
+            )
         variables.update(self.extra_env)
         variables.update(self.app_env)  # the model the user let the app use for testing (D-466)
         # What the user let this project's commands use from DebCraft's .env, read now: a value the user has
@@ -322,6 +327,36 @@ def withheld_names_note(command: str, shell: ShellSession) -> str:
     return f"[{' '.join(parts)}]" if parts else ""
 
 
+PIP_INSTALL = re.compile(r"\bpip3?(?:\.exe)?\s+install\b|-m\s+pip\s+install\b", re.IGNORECASE)
+PIP_TARGET = re.compile(r"(?:--target(?:=|\s+)|\s-t\s+)(?P<path>\"[^\"]+\"|'[^']+'|\S+)", re.IGNORECASE)
+LIBRARIES_FOLDER = "libs"
+
+
+def libraries_folder(workspace: Workspace) -> Path:
+    """Where libraries installed to run the application go: outside the repository copy, so neither the index nor
+    the delivery sees them (KP8). `PYTHONPATH` carries it into every command."""
+    return workspace.forge_dir / LIBRARIES_FOLDER
+
+
+def install_into_copy(workspace: Workspace, command: str, start_dir: Path) -> str | None:
+    """Refuses `pip install --target <folder inside the repository copy>`: on the office laptop that wrote 2,900
+    library files into the copy, which the index parsed on every call and the delivery then held (KP8)."""
+    if not PIP_INSTALL.search(command):
+        return None
+    for found in PIP_TARGET.finditer(command):
+        target = Path(found.group("path").strip("\"'"))
+        target = target if target.is_absolute() else start_dir / target
+        if is_within(real_path(target), real_path(workspace.repo_dir)):
+            libs = libraries_folder(workspace)
+            return (
+                f"Not run: `--target` would put the libraries inside the repository copy ({found.group('path')}), "
+                "and everything in the copy is delivered. Install them for the project's virtual environment with "
+                f'`python -m pip install <package>`, or into `--target "{libs}"`: that folder is on PYTHONPATH '
+                "in every command, so imports find them there."
+            )
+    return None
+
+
 async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str | None) -> ToolResult:
     shell = context.shell
     assert shell is not None
@@ -336,6 +371,9 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
             content=f"No such folder: {cwd!r} (cwd is relative to the repository root; in Mode B that is "
             f"project/ itself, so don't prefix it). Leave cwd out to stay in {shell.display(shell.cwd)}.",
         )
+    refused = install_into_copy(context.workspace, command, start_dir)
+    if refused:
+        return ToolResult(ok=False, content=refused)
     sandboxed = shell.prepare_sandbox()
 
     async def report(progress: dict[str, object]) -> None:
