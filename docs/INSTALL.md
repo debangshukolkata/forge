@@ -124,7 +124,8 @@ runs the same check again. Two things it may need from you:
   it when it is missing and tells you the file. Do not paste it into the chat. It is sent only to the application
   on this computer, in the form the application accepts; replace the value when it expires. No restart is needed.
 - **Other values the application needs** (a token for another service, the settings of a secret store such as
-  Infisical): put them in **`%USERPROFILE%\.forgepp.env`**, a second file next to `.env` (the setup guide shows
+  Infisical): put them in **`%USERPROFILE%\.forge\app.env`**, a second file next to `.env` (the setup guide shows
+  its path). DEBUG-MARK **`%USERPROFILE%\.forgepp.env`**, a second file next to `.env` (the setup guide shows
   its path). Everything in it reaches the commands DebCraft runs, without a question, and is read each time, so
   changing it needs no restart and no copying. DebCraft's own keys stay in `.env` and are never handed to a
   command. Values you leave in `.env` instead are handed over after one click per project.
