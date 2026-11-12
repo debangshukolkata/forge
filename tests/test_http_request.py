@@ -12,8 +12,10 @@ import shutil
 import socket
 import subprocess
 import sys
+import threading
 import time
 from collections.abc import Iterator
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
@@ -206,3 +208,73 @@ async def test_a_missing_token_is_asked_for_by_the_tool_itself(hub: tuple[str, T
     context.ask_user = user_says_added_but_did_not
     still = await _call(context, url=f"{base}/api/agents", token_env="DEVELOPMENT_INSTANCE_TOKEN")
     assert not still.ok and "is not set in" in still.content
+
+
+# --- D-570: the tool adapts to how the token is saved and to what the API expects; the user changes nothing
+
+
+async def test_a_token_saved_with_bearer_and_a_call_without_token_env_both_work(
+    hub: tuple[str, ToolContext, Path],
+) -> None:
+    base, context, env_file = hub
+    env_file.write_text(
+        f"DEVELOPMENT_INSTANCE_TOKEN=Bearer {TOKEN}\n", encoding="utf-8"
+    )  # as copied from a header
+    plain = await _call(context, url=f"{base}/api/agents")  # the model forgot token_env
+    assert plain.ok and "HTTP 200" in plain.content and TOKEN not in plain.content
+    assert "sent DEVELOPMENT_INSTANCE_TOKEN from the user's file itself" in plain.content
+    assert 'token_env="DEVELOPMENT_INSTANCE_TOKEN"' in plain.content
+
+    named = await _call(context, url=f"{base}/api/agents", token_env="DEVELOPMENT_INSTANCE_TOKEN")
+    assert named.ok and "HTTP 200" in named.content and TOKEN not in named.content
+
+    own = await _call(context, url=f"{base}/api/agents", headers={"Authorization": "Bearer something-else"})
+    assert "HTTP 401" in own.content  # a header the model set itself is not replaced
+
+    env_file.write_text("DEVELOPMENT_INSTANCE_TOKEN=an-expired-token\n", encoding="utf-8")
+    expired = await _call(context, url=f"{base}/api/agents")
+    assert "HTTP 401" in expired.content and "with and without `Bearer`" in expired.content
+    assert "a restart" in expired.content and str(env_file) in expired.content
+
+
+@pytest.fixture
+def bare_token_api() -> Iterator[str]:
+    """An API that wants `Authorization: <token>` with no scheme, like the user's agent endpoint."""
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            allowed = self.headers.get("Authorization") == TOKEN
+            body = json.dumps({"deployments": ["a", "b"]} if allowed else {"detail": "bad header"}).encode()
+            self.send_response(200 if allowed else 401)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args: object) -> None:
+            return
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{server.server_address[1]}"
+    server.shutdown()
+
+
+async def test_an_api_that_wants_the_bare_token_is_served_without_the_user_changing_the_line(
+    bare_token_api: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    env_file = tmp_path / "debcraft.env"
+    env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN=Bearer {TOKEN}\n", encoding="utf-8")
+    monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
+    monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
+    context = ToolContext(workspace=None)  # type: ignore[arg-type]
+    first = await _call(context, url=f"{bare_token_api}/x", token_env="DEVELOPMENT_INSTANCE_TOKEN")
+    assert first.ok and "HTTP 200" in first.content and "deployments" in first.content
+    assert "takes the token without `Bearer`" in first.content and 'token_prefix=""' in first.content
+    assert TOKEN not in first.content
+    told = await _call(
+        context, url=f"{bare_token_api}/x", token_env="DEVELOPMENT_INSTANCE_TOKEN", token_prefix=""
+    )
+    assert told.ok and "takes the token without" not in told.content
+    unnamed = await _call(context, url=f"{bare_token_api}/x")
+    assert unnamed.ok and "without `Bearer`" in unnamed.content and TOKEN not in unnamed.content

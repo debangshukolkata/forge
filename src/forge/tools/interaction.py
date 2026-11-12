@@ -5,6 +5,7 @@ when it judges a written-down requirement or plan is worth having, not on every 
 
 from __future__ import annotations
 
+import re
 from typing import Literal, Protocol
 
 from pydantic import Field
@@ -81,6 +82,70 @@ NOT_AVAILABLE = ToolResult(
 )
 
 
+# Seen on the office laptop: the model asked for a JWT "in your next message", the chat masked it (as it
+# must), and the model asked again, three times, with nowhere for the user to put the token. The question is
+# stopped here, in the tool, and the model is sent to the route that works.
+_SECRET_WORD = re.compile(r"(?i)\b(?:tokens?|jwts?|passwords?|secrets?|api[ _-]?keys?|credentials?)\b")
+_PASTE = re.compile(r"(?i)\b(?:paste|pasting|re-?send|re-?enter)\b")
+_GIVE = re.compile(r"(?i)\b(?:send|type|enter|provide|share|give|reply with|write)\b")
+_CHAT = re.compile(r"(?i)\b(?:chat|messages?|here|below|me)\b")
+# "Add the line to the .env file; do not paste the token into the chat" is the right question, not the wrong one.
+_NOT = re.compile(r"(?i)\b(?:do not|don't|never|not|without|instead of)\b")
+SECRET_IN_CHAT = (
+    "Not asked: this asks the user to put a secret into the chat. Anything secret typed there is replaced by "
+    "[REDACTED] before you see it, by design, so the answer could never reach you and asking again cannot "
+    "help. Use the route that works: for a command you run (a script, a test, the application itself), call "
+    "request_app_secret with the NAMES of the variables (for example ARGOCD_TOKEN): the user keeps the values in "
+    "DebCraft's .env file and your commands get them as environment variables. For a call to the application's "
+    "API on localhost, call http_request with `token_env`. If your question is about how the product you are "
+    "building should handle secrets, ask it again without telling the user to paste or send one."
+)
+
+
+# Also seen there (D-570): "Restart DebCraft so this session inherits DEVELOPMENT_INSTANCE_TOKEN", "set the
+# variable in the environment DebCraft commands inherit from". Neither is ever needed: the .env file is read on
+# every call, and request_app_secret hands its values to commands.
+_RESTART = re.compile(
+    r"(?i)\b(?:re-?start|reload|relaunch|re-?open|close)\b[^.\n]{0,60}\b(?:debcraft|forge|session)\b"
+    r"|\b(?:new|fresh)\s+(?:debcraft\s+)?(?:session|one)\b[^.\n]{0,80}\b(?:env|token|variable)"
+)
+_INHERIT = re.compile(
+    r"(?i)\b(?:inherits?|visible to|visible environment|available to|loaded into|can read it)\b"
+    r"[^.\n]{0,80}\b(?:debcraft|session|commands?|token|variables?|env)\b"
+    r"|\b(?:debcraft|session|commands?)\b[^.\n]{0,60}\b(?:inherits?|can read)\b"
+)
+ENV_NEEDS_NO_STEP = (
+    "Not asked: this sends the user to restart DebCraft or to put a variable where DebCraft or its commands "
+    "can see it. Neither is ever needed. DebCraft reads its .env file again on every call, so a value the user "
+    "has saved there is usable now. What you saw as missing in a command is by design: commands do not inherit "
+    "DebCraft's variables. Do it yourself instead: call request_app_secret with the names (the user confirms "
+    "with one click and edits nothing) and run the command again; for a call to the application's API on "
+    "localhost call http_request with `token_env` (it also tries the token with and without `Bearer`). Ask the "
+    "user only for a value that is really not in the file, through request_app_secret, which shows them the "
+    "line to add."
+)
+
+
+def asks_for_a_restart_or_copy(texts: list[str]) -> bool:
+    """True when the user is told to restart DebCraft or to make a variable visible to it."""
+    return any(_RESTART.search(text) or _INHERIT.search(text) for text in texts)
+
+
+def asks_for_a_secret_in_chat(texts: list[str]) -> bool:
+    """True when a sentence of the question or an option tells the user to paste or send a secret in the chat."""
+    for text in texts:
+        named_before = False  # "I need the token. Send it here.": the secret is named one sentence earlier
+        for sentence in re.split(r"(?<=[.?!])\s+|\n", text):
+            named = bool(_SECRET_WORD.search(sentence))
+            if not (named or named_before):
+                continue
+            named_before = named
+            verb = _PASTE.search(sentence) or (_CHAT.search(sentence) and _GIVE.search(sentence))
+            if verb and not _NOT.search(sentence[: verb.start()]):
+                return True
+    return False
+
+
 class AskUser(Tool):
     name = "ask_user"
     read_only = True  # asking changes nothing; it waits for the user
@@ -106,6 +171,12 @@ class AskUser(Tool):
         asker = interaction.ask_user if interaction is not None else context.ask_user
         if asker is None:
             return NOT_AVAILABLE
+        texts = [args.question, args.context]
+        texts += [f"{option.label}. {option.description}" for option in args.options]
+        if asks_for_a_secret_in_chat(texts):
+            return ToolResult(ok=False, content=SECRET_IN_CHAT)
+        if asks_for_a_restart_or_copy(texts):
+            return ToolResult(ok=False, content=ENV_NEEDS_NO_STEP)
         answer = await asker(args.question, args.context, args.options, args.recommended)
         return ToolResult(ok=True, content=answer)
 
@@ -231,13 +302,15 @@ class RequestUserAction(Tool):
     name = "request_user_action"
     read_only = True
     description = (
-        "Ask the user to do something you can't (grant a DB privilege, set an env var, install a program "
+        "Ask the user to do something you can't (grant a DB privilege, change a Windows setting, install a program "
         "outside the workspace, run a command you lack access for). Do not use it for anything you can run "
         "yourself: installing a package into the workspace's own virtual environment is yours to do with "
         "run_command (the user is asked to approve it); hand it to the user only if that was refused or "
         "failed. "
         "Give exact PowerShell steps and, if possible, a command that verifies it. "
-        "The user answers done / skip / can't; on can't, propose a workaround or code change."
+        "The user answers done / skip / can't; on can't, propose a workaround or code change. "
+        "Never for a value of DebCraft's .env file, a secret or a restart of DebCraft: the file is read on every "
+        "call and request_app_secret hands its values to your commands."
     )
 
     class Args(ToolArgs):
@@ -249,7 +322,17 @@ class RequestUserAction(Tool):
         return f"user action: {args.title}"
 
     async def run(self, args: RequestUserAction.Args, context: ToolContext) -> ToolResult:
+        texts = [args.title, *args.steps]
+        if asks_for_a_secret_in_chat(texts):
+            return ToolResult(ok=False, content=SECRET_IN_CHAT)
+        if asks_for_a_restart_or_copy(texts):
+            return ToolResult(ok=False, content=ENV_NEEDS_NO_STEP)
         interaction = _interaction(context)
         if interaction is None:
             return NOT_AVAILABLE
+        from forge.tools.handoff_review import review_hand_off  # here: that module imports this one
+
+        sent_back = await review_hand_off(args.title, args.steps, args.verify_command, context)
+        if sent_back:
+            return ToolResult(ok=False, content=sent_back)
         return await interaction.request_user_action(args.title, args.steps, args.verify_command, context)

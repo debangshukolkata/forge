@@ -834,6 +834,12 @@ class Orchestrator:
             return ToolResult(
                 ok=result.ok, content=f"The user says it's done. Verification: {result.content}"
             )
+        if choice == "other":  # the user wrote their own answer instead of doing the steps (D-571)
+            return ToolResult(
+                ok=True,
+                content=f"The user did not do the steps and answered instead: {answer.text or '(nothing)'}\nTake "
+                "this as the user's word on the matter: act on it yourself, and do not send the same steps again.",
+            )
         if choice == "cant":
             return ToolResult(
                 ok=True,

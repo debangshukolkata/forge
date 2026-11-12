@@ -111,6 +111,7 @@ class SessionHost:
             set()
         )  # web addresses the user typed: what design_md_import may fetch (D-349)
         self.user_github_repos: set[str] = set()  # repositories the user linked in this session (D-237)
+        self.recent_user_texts: list[str] = []  # the last few messages, for the hand-off review (D-571)
         self._inputs: asyncio.Queue[UserInput] = asyncio.Queue()
         self._current_turn: asyncio.Task[None] | None = None
         self._streamed: list[str] = []
@@ -287,6 +288,8 @@ class SessionHost:
         context.ask_user = self._ask_user
         context.user_github_repos = lambda: self.user_github_repos
         context.user_urls = lambda: self.user_urls
+        context.recent_user_messages = lambda: list(self.recent_user_texts)
+        context.tool_catalog = self._tool_catalog
         context.egress = EgressGuard(workspace.repo_dir)
         context.egress.user_addresses = lambda: self.user_urls
         context.skills_changed = self.refresh_instructions
@@ -357,6 +360,10 @@ class SessionHost:
                 user_input.text
             )  # what install_skill may use (D-237)
             await self.bus.publish(EventType.USER_MESSAGE, {"text": user_input.text})
+            self.recent_user_texts = [
+                *self.recent_user_texts,
+                default_redactor.redact(user_input.text)[:1500],
+            ][-6:]
             if not user_input.text.lstrip().startswith("/"):  # slash commands don't answer cards
                 await self._supersede_open_requests(user_input.text)
         if isinstance(user_input, SlashCommand) and user_input.text.split()[:1] == ["/mode"]:
@@ -563,6 +570,17 @@ class SessionHost:
             *([level / "rules"] if level is not None else []),
             workspace.forge_dir / "rules",
         ]
+
+    def _tool_catalog(self) -> list[str]:
+        """Every tool of the session as 'name: its first sentence', for the hand-off review (D-571)."""
+        if self.agent is None:
+            return []
+        lines: list[str] = []
+        for name in self.agent.tools.names():
+            tool = self.agent.tools.get(name)
+            if tool is not None:
+                lines.append(f"{name}: {tool.description.split('. ')[0][:220]}")
+        return lines
 
     def refresh_instructions(self) -> None:
         if self.agent is not None and self.agent.path_rules is not None:

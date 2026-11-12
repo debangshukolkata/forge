@@ -408,6 +408,13 @@ def env_file_path(home: Path | None = None) -> Path:
     return Path(configured) if configured else (home or forge_home()) / ".env"
 
 
+def app_env_file_path(home: Path | None = None) -> Path:
+    """The user's file for the application under test (D-571): what is in it goes to the commands DebCraft
+    runs. It is a second file so that DebCraft's own keys in `.env` never have to be near it."""
+    configured = os.environ.get("FORGE_APP_ENV_FILE")
+    return Path(configured) if configured else (home or forge_home()) / "app.env"
+
+
 def load_secrets(home: Path | None = None, redactor: Redactor = default_redactor) -> Secrets:
     path = env_file_path(home)
     raw = dotenv_values(path) if path.exists() else {}

@@ -148,6 +148,11 @@ async def test_a_requirement_is_solved_by_running_the_system(
         "answer_chars": len(answer_text),
         "names_found": names,
         "other_agent_still_ok": other.json().get("status"),
+        "asks": [
+            call[:260]
+            for call in calls
+            if call.startswith(("request_app_secret", "ask_user", "request_user_action"))
+        ],
         "tools": tools_used,
         "said": "\n".join(said)[-900:],
     }

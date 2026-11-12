@@ -33,6 +33,7 @@ from forge.protocol.approvals import ApprovalBroker
 from forge.protocol.events import EventBus, EventType
 from forge.safety.injection import flag
 from forge.safety.permissions import Decision, PermissionGate
+from forge.toolkit.app_keys import installation_facts
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.folders import clean_folder, folders_disjoint
 from forge.toolkit.powershell import ps_quote
@@ -86,7 +87,7 @@ def system_prompt(workspace: Workspace) -> str:
         app_subfolder=workspace.info.app_subfolder,
         interpreter=env.python if env else "none found yet (ask the user)",
         date=date.today().isoformat(),
-    )
+    ) + installation_facts(workspace)
 
 
 MAX_QUESTION_NUDGES = 1

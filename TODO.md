@@ -9,7 +9,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task 
 - 0g. Trim-down: a light core, everything else on demand (D-561, D-562): **8 open**
 - 0h. Knowledge layer for an existing repository (D-563 to D-566): **5 open**
 - 0i. Check, do not guess; debug until resolved (D-567): **2 open**
-- 0j. Solving a requirement against the running system (D-568): **4 open**
+- 0j. Solving a requirement against the running system (D-568 to D-571): **8 open**
 - 1. Waiting on you (your actions and decisions): **4 open**
 - 2. Design upgrades for apps DebCraft builds (D-245..D-252): **14 open**
 - 3. Parallel work and speed: **3 open**
@@ -237,6 +237,13 @@ The user finds DebCraft too heavy: less weight on presentations, PDF and the pag
 - [x] `RS4` **(first step done 2026-11-12, D-568)** `http_request` reports the size of an answer in characters and tokens and its JSON parts by size, and keeps the whole body in a file; the skill tells the model to read the run log and the process output before naming a cause.
 - [x] `RS5` **(done 2026-11-12, D-568)** Skill `solve-against-running-system` and the pointer in the system prompt.
 - [x] `RS6` **(done 2026-11-12, D-568)** Test bed `tests/fixtures/agent_platform` and `tests/test_live_running_system.py`: 10 of 10 live runs fixed the agent; after two corrections 4 of 4 went through the API and 2 of 2 asked for the missing token.
+- [x] `RS10` **(done 2026-11-12, D-569)** A secret for a command, not for the localhost API: `request_app_secret` (name of a variable in DebCraft's .env, card, environment of the project's commands); `ask_user` refuses to ask for a secret in the chat; DebCraft's own names can never be released. Live: `tests/test_live_app_secret.py`.
+- [x] `RS12` **(done 2026-11-12, D-570)** The .env file needs no care from the user: no restart, no copying, no second listing, no rewriting of the token line; the tools adapt and the wrong questions are refused.
+- [ ] `RS11` **The user retries on the office laptop** (project `automated-3rd-party-integration`): with the token and the Infisical names in `C:\Users\<you>\.forge\.env`, DebCraft should call the agent endpoint without asking to restart, to remove `Bearer` or to copy anything; one card asks whether the commands may use the Infisical names. Report any question that still sends you somewhere.
+- [x] `RS14` **(done 2026-11-12, D-571)** `app.env`, facts about the installation in the system prompt, the token form remembered per project, the hand-off review by the reviewer model, a free answer on the step card.
+- [ ] `RS15` **Measure the hand-off review where it runs for real:** on the office laptop, with the reviewer model set there, note every step card that still reaches you needlessly and every one held back wrongly (the chat shows "A step for you was held back"). `tests/test_live_handoff_review.py` on the laptop gives the 8-card result for that model.
+- [ ] `RS16` **Review `ask_user` questions too?** Only hand-offs of work are reviewed today. Decide after `RS15` whether questions the user has already answered are still asked.
+- [ ] `RS13` **A token the application wants in another place** (a query parameter, a cookie, a body field): `http_request` only sets a header today.
 - [ ] `RS2` **Calling a system that is not on this machine** (a shared development server, or the API behind a tool such as ArgoCD): addresses the user allows for this project. Not needed for the user's case today (the agent runs on the laptop).
 - [ ] `RS7` **The user tries it on WisdomNext** (office laptop): a real requirement on a LangChain agent, with `DEVELOPMENT_INSTANCE_TOKEN` in the .env, the application started from the copy and its tool tables copied from the development database. Report what happens; the run report helps (`debcraft run-report --workspace <project>`).
 - [ ] `RS8` **A second test bed closer to the real thing:** a LangChain agent with a real model and tools stored in PostgreSQL, so `db_copy_table` and `use_scratch_database` are exercised inside a live run, and a case where the right fix is a prompt change, not a tool.

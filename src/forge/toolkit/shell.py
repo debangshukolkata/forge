@@ -8,7 +8,7 @@ from pathlib import Path
 
 from pydantic import Field
 
-from forge.config import SandboxMode
+from forge.config import SandboxMode, env_file_path, forge_home, load_secrets
 from forge.net import (
     installed_node_version,
     looks_like_certificate_error,
@@ -20,6 +20,7 @@ from forge.safety.paths import is_within, real_path
 from forge.safety.sandbox import SandboxUnavailableError, has_low_label, label_low
 from forge.safety.sandbox import is_supported as sandbox_supported
 from forge.safety.shell_classifier import ShellScope
+from forge.toolkit.app_keys import is_debcrafts_own, secret_environment
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.powershell import ps_quote, run_powershell
 from forge.toolkit.private_env import without_private, without_store_aliases
@@ -177,6 +178,9 @@ class ShellSession:
             variables["PYTEST_ADDOPTS"] = f"{existing} -p no:cacheprovider".strip()
         variables.update(self.extra_env)
         variables.update(self.app_env)  # the model the user let the app use for testing (D-466)
+        # What the user let this project's commands use from DebCraft's .env, read now: a value the user has
+        # just added or replaced is there for the next command, without a restart (D-570).
+        variables.update(secret_environment(self.workspace, load_secrets(forge_home())))
         return variables
 
     def scope(self) -> ShellScope:
@@ -283,6 +287,41 @@ def hung_after_last_test(output: str) -> bool:
     return "[100%]" in output and not _PYTEST_SUMMARY.search(output)
 
 
+def withheld_names_note(command: str, shell: ShellSession) -> str:
+    """What to tell the model when a command looks for a name that is in DebCraft's .env but not in the
+    command's environment. On the office laptop it ran `os.getenv('DEVELOPMENT_INSTANCE_TOKEN')`, saw "missing",
+    decided the file was not loaded and sent the user to restart DebCraft and to copy values elsewhere, four
+    times (D-570). The command cannot see the name by design (D-202); the result has to say so."""
+    names = [
+        name
+        for name in load_secrets(forge_home()).names()
+        if re.search(rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])", command)
+    ]
+    if not names:
+        return ""
+    given = shell.environment()
+    own = [name for name in names if name not in given and is_debcrafts_own(name)]
+    held = [name for name in names if name not in given and name not in own]
+    parts: list[str] = []
+    if held:
+        listed = ", ".join(f'"{name}"' for name in held)
+        parts.append(
+            f"About {', '.join(held)}: set in DebCraft's .env file ({env_file_path(forge_home())}). Nothing is "
+            "missing and nothing needs a restart: DebCraft reads that file again on every call. A command does "
+            "not inherit DebCraft's variables, which is why a check with os.environ or $env: shows them as "
+            f"missing. To hand them to this project's commands, call request_app_secret with names=[{listed}]: "
+            "the user confirms with one click and edits nothing. For a call to the application's API on "
+            "localhost use http_request with `token_env`. Do not ask the user to restart DebCraft, to set the "
+            "variables somewhere else or to copy the file."
+        )
+    if own:
+        parts.append(
+            f"{', '.join(own)}: DebCraft's own settings, never handed to a command (for an app that calls an "
+            "Azure OpenAI model use request_app_keys)."
+        )
+    return f"[{' '.join(parts)}]" if parts else ""
+
+
 async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str | None) -> ToolResult:
     shell = context.shell
     assert shell is not None
@@ -343,6 +382,7 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
             )
     else:
         lines.append(f"[exit code {outcome.exit_code}]")
+    lines.append(withheld_names_note(command, shell))
     lines.append(f"[cwd: {shell.display(outcome.cwd)}]")
     if not passed and looks_like_certificate_error(outcome.output):
         lines.append(certificate_advice(shell))

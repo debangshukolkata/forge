@@ -28,6 +28,11 @@ def _names(home: str, env_file: str, env_file_mtime: int) -> frozenset[str]:
     path = Path(env_file)
     if path.exists():
         names |= {name.upper() for name in dotenv_values(path)}
+    return frozenset(names | _configured(home))
+
+
+def _configured(home: str) -> frozenset[str]:
+    names: set[str] = set(ALWAYS)
     try:
         config = load_config(Path(home))
     except ForgeError:
@@ -40,6 +45,11 @@ def _names(home: str, env_file: str, env_file_mtime: int) -> frozenset[str]:
     if gemini is not None:
         names |= {gemini.project_env, gemini.location_env}
     return frozenset(name.upper() for name in names)
+
+
+def configured_names() -> frozenset[str]:
+    """The names DebCraft's configuration reads for its models, without what else is in the .env file."""
+    return _configured(str(forge_home()))
 
 
 def private_names() -> frozenset[str]:

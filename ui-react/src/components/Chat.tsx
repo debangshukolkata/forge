@@ -542,7 +542,7 @@ function ActionCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: Forge
           DebCraft will check with <code className="rounded bg-muted px-1 font-mono">{p.verify_command}</code>
         </div>
       )}
-      <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Reason, or paste the output if it failed" />
+      <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Your own answer (for example: it is already done, or do it another way), or the output if it failed" />
       <div className="flex flex-wrap gap-2">
         <Button variant="primary" onClick={() => choose("done", "Done")}>
           Done
@@ -551,6 +551,9 @@ function ActionCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: Forge
         <Button onClick={() => choose("cant", "You can't do it")}>I can't</Button>
         <Button variant="danger" onClick={() => choose("failed", "It failed")}>
           It failed
+        </Button>
+        <Button disabled={!note.trim()} title="Send what you wrote above instead of doing the steps" onClick={() => choose("other", "You answered")}>
+          Send my answer
         </Button>
       </div>
     </AskCard>

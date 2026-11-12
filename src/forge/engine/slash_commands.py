@@ -567,7 +567,14 @@ class SlashCommandHandler:
 
     async def _app_keys(self, args: list[str]) -> None:
         """The user lets the app under development use an Azure OpenAI model for testing (D-466)."""
-        from forge.toolkit.app_keys import apply_grant, available_models, granted_model, save_grant
+        from forge.toolkit.app_keys import (
+            apply_grant,
+            available_models,
+            granted_model,
+            granted_secret_names,
+            save_grant,
+            save_secret_names,
+        )
 
         workspace = self.host.workspace
         agent = self.host.agent
@@ -580,14 +587,20 @@ class SlashCommandHandler:
             current = granted_model(workspace)
             models = available_models(config, secrets) if secrets is not None else []
             lines = [f"The app may use: {current}." if current else "The app may not use any of your models."]
+            released = granted_secret_names(workspace)
+            if released:  # names only; the values stay in the .env file (D-569)
+                lines.append(f"Commands also get from your .env file: {', '.join(released)}.")
             lines += [f"  /app-keys {model.key}   {model.label} ({model.resource})" for model in models]
             lines.append("  /app-keys off   take it back")
             await self._say("\n".join(lines))
             return
         if choice.lower() == "off":
             save_grant(workspace, None)
+            save_secret_names(workspace, [])
             apply_grant(agent.context.shell, workspace, config, secrets)
-            await self._say("Taken back: the app no longer gets a model's keys.")
+            await self._say(
+                "Taken back: commands no longer get a model's keys or any secret from your .env file."
+            )
             return
         if secrets is None or choice not in {model.key for model in available_models(config, secrets)}:
             await self._say(

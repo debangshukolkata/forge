@@ -1,7 +1,7 @@
 # toolkit
 
 Tool runtime primitives: Tool/ToolContext/ToolResult contract, shell and PowerShell runners, background processes, and
-`app_keys` (the Azure model the user lets the app under test use, D-466), `private_env` (the names DebCraft itself uses are removed from the environment commands inherit, D-202).
+`app_keys` (the Azure model the user lets the app under test use, D-466; any other value of the .env a command needs, by name, after one card and read when each command starts, never one of DebCraft's own names, D-569, D-570; `app.env`, the user's file whose values reach every command without a question, the facts about the installation that end the system prompt, and the token form remembered per project, D-571; `shell.py` adds a note to a command that looks for a name of the .env it was not given), `private_env` (the names DebCraft itself uses are removed from the environment commands inherit, D-202).
 
 - **Depends on:** config, errors, llm, net, safety, workspace
 - **Invariants:** Tools never write outside the workspace jail. Capabilities (verify, vision, parity) build on this, not on forge.tools.

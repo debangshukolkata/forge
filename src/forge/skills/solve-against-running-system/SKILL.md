@@ -52,6 +52,16 @@ Do this before you change anything: the first run through the API is the evidenc
   `ask_user`): say which file to put it in (the tool names it),
   the line to add, and where the token comes from in their application. When they answer, call again.
   A token expires: on a later 401 ask for a fresh one, do not give up.
+- **The token line needs no care from the user.** `http_request` reads DebCraft's .env on every call, sends a
+  value saved as `Bearer <token>` correctly, and tries the bare token when the API refuses `Bearer`. Never ask
+  the user to rewrite the line or to restart DebCraft.
+- **Settings the application itself needs** (the variables of a secret store such as Infisical, a gateway
+  address, a token for another service such as ArgoCD): when the user says they are in DebCraft's .env file,
+  call `request_app_secret` with all the names at once. The user confirms with one click and your commands,
+  including the application you start, get them as environment variables. A command that checks `os.environ`
+  before that shows them as missing: that is by design, not a fault, and no restart or copying fixes it.
+  Never ask the user to paste a token into the chat: it is hidden from you there, and `ask_user` and
+  `request_user_action` refuse such a question.
 
 ## 5. Observe before you explain
 

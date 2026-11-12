@@ -87,6 +87,8 @@ export interface SetupGuideInfo extends SetupStatus {
   path: string;
   exists: boolean;
   overridden: boolean; // the location comes from the FORGE_ENV_FILE variable
+  app_path?: string; // the second file, for the application under test (D-571)
+  app_exists?: boolean;
   groups: { title: string; note: string; required: boolean }[];
   variables: { name: string; group: string; expects: string; why: string; required: boolean; filled: boolean }[];
   template: string;

@@ -311,6 +311,17 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
                 "recommended": "Last 4 only",
             },
         )
+        await bus.publish(
+            EventType.USER_ACTION_REQUESTED,
+            {
+                "id": "U1",
+                "title": "Grant read access on the claims schema",
+                "steps": [
+                    "Ask your database administrator to run: GRANT SELECT ON SCHEMA claims TO forge_reader;"
+                ],
+                "verify_command": None,
+            },
+        )
 
     asyncio.run(script())
     shots = REPO_ROOT / "test-artifacts" / "react-ui"
@@ -335,6 +346,10 @@ def test_react_chat_cards_render(server: ServerSecurity, workspace: Workspace) -
         page.reload()
         page.wait_for_selector("text=Approve the plan?")
         page.wait_for_selector("text=Should masking keep the first 6 digits (BIN)?")
+        # A step for the user can be answered in the user's own words, not only done / skip / can't (D-571).
+        # (This is a reopened project, so the card is closed; the button and the box are there.)
+        assert page.locator("button:has-text('Send my answer')").count() == 1
+        assert page.locator("textarea[placeholder^='Your own answer']").count() == 1
         page.wait_for_selector("td:has-text('masking.py')")  # markdown table rendered (sanitised)
         # Every code block has a copy button beside it, and it copies the block's text (not the button's).
         block = page.locator(".md-code:has(pre:has-text('def mask_pan'))")

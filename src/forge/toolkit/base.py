@@ -133,6 +133,13 @@ class ToolContext:
         None  # web addresses the user typed in their own messages (D-349)
     )
     skills_changed: Callable[[], None] | None = None  # tells the host to re-read the installed skills
+    recent_user_messages: Callable[[], list[str]] | None = (
+        None  # the user's last messages, for the hand-off review (D-571)
+    )
+    tool_catalog: Callable[[], list[str]] | None = (
+        None  # 'name: what it does', every tool of the session (D-571)
+    )
+    handoff_refusals: int = 0  # hand-offs the review sent back in a row; the third is shown whatever it says
     end_turn: bool = False  # a phase tool finished its phase: the agent loop stops after this step
     step: int = 0  # increases with every tool call; used for 'no claim without evidence'
     last_edit_step: int = 0

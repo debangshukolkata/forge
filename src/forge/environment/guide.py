@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from forge.config import ForgeConfig, Secrets, env_file_path
+from forge.config import ForgeConfig, Secrets, app_env_file_path, env_file_path
 from forge.doctor import required_secret_names
 
 SEARCH_KEYS = (("SERPAPI_API_KEY", "<SerpAPI key>", "Web search through Google (SerpAPI)."),)
@@ -163,6 +163,8 @@ def build_guide(config: ForgeConfig, secrets: Secrets, home: Path) -> dict[str, 
         "path": str(path),
         "exists": path.exists(),
         "overridden": bool(os.environ.get("FORGE_ENV_FILE")),  # the location comes from FORGE_ENV_FILE
+        "app_path": str(app_env_file_path(home)),  # the user's file for the application under test (D-571)
+        "app_exists": app_env_file_path(home).exists(),
         "groups": [{"title": g.title, "note": g.note, "required": g.required} for g in groups],
         "variables": [
             {

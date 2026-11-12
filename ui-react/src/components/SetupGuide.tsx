@@ -90,6 +90,27 @@ export function SetupGuide({ first, onDone, onBack }: { first: boolean; onDone: 
         </p>
       </Card>
 
+      {guide.app_path && (
+        <Card className="mt-4 p-5">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-fg-muted" aria-hidden />
+            <h2 className="text-[15px] font-semibold">A second file, for the application you work on</h2>
+            {guide.app_exists ? <Badge tone="ok">File found</Badge> : <Badge>Optional</Badge>}
+          </div>
+          <div className="mt-3 rounded-lg bg-raised px-3 py-2">
+            <code data-testid="app-env-path" className="break-all font-mono text-[12.5px]">
+              {guide.app_path}
+            </code>
+          </div>
+          <p className="mt-2 text-[12.5px] text-fg-muted">
+            Put here what the application itself needs: its API token (DEVELOPMENT_INSTANCE_TOKEN), tokens for other services, the settings of its
+            secret store. Every command DebCraft runs gets these values without asking you; DebCraft never sees or shows them. The file is read
+            each time, so nothing needs a restart after you change it. DebCraft's own keys stay in the first file and are never handed to a
+            command.
+          </p>
+        </Card>
+      )}
+
       <div role="note" className="mt-4 flex gap-3 rounded-[18px] border border-info/40 bg-info-soft px-4 py-3 text-[13px]">
         <Lock className="mt-0.5 h-4 w-4 shrink-0 text-info" aria-hidden />
         <p>
