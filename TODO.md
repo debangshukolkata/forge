@@ -3,21 +3,24 @@
 Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task lives in this file and nowhere else** (consolidated 2026-10-12 from this file, `docs/PPT_PARITY.md` and `docs/TODO_LATER.md`). Add new tasks here, in the group they belong to. The other two files keep only background, decisions and sizing, and point back here. Finished work is in the history at the end.
 
 ## Contents (open items per group)
-- 0. Build order (read this first): **23 open**
-- 0e. Back-office design and theme inspiration (D-487 to D-495): **3 open**
+- 0. Build order (read this first): the phases; the current direction is at its top
+- 0d. Design Intelligence Engine: **8 open**
+- 0e. Back-office design and theme inspiration (D-487 to D-495): **2 open**
 - 0g. Trim-down: a light core, everything else on demand (D-561, D-562): **8 open**
 - 0h. Knowledge layer for an existing repository (D-563 to D-566): **5 open**
 - 0i. Check, do not guess; debug until resolved (D-567): **2 open**
 - 0j. Solving a requirement against the running system (D-568): **4 open**
-- 1. Waiting on you (your actions and decisions): **8 open**
-- 2. Design upgrades for apps DebCraft builds (D-245..D-252): **20 open**
-- 3. Parallel work and speed: **5 open**
+- 1. Waiting on you (your actions and decisions): **4 open**
+- 2. Design upgrades for apps DebCraft builds (D-245..D-252): **14 open**
+- 3. Parallel work and speed: **3 open**
 - 4. Presentations (match Claude's PowerPoint abilities): **11 open**
-- 5. Platform, runtime and coding competency: **19 open**
+- 5. Platform, runtime and coding competency: **6 open**
 - 6. Parked (not started; your choice when): **4 open**
-- **Total open: 92** (86 counted by script 2026-10-15, plus 16 added by hand on 2026-10-26: 14 in section 0e and 2 in section 1; `[~]` are partly done)
+- **Total open: 71** (counted by script on 2026-11-12: lines with `[ ]` or `[~]` outside section 7)
 
 ## 0. Build order (read this first)
+**Current direction (set by the user on 2026-11-11 and 2026-11-12; it comes before the phases below).** DebCraft is a coding agent that solves requirements against an existing system: it understands the system, runs it, finds what stops it, fixes it and proves the fix (section 0j). For that it keeps what it learns about a repository between projects (0h), checks instead of guessing (0i) and stays light: a small core, tools and skills loaded on demand, design skills downloaded from known sources and not shipped (0g). Presentations, PDF and the built-in page-design pipeline get no new weight unless the user asks (sections 2, 4, 0d and 0e are on hold in that sense). **Order of work:** (1) what the user reports from the office laptop: `RS7` a real requirement on WisdomNext, `KL6` the knowledge layer on WisdomNext, `DB2` the run report of a guessing session, `TR6` the tool-search round; (2) `TR8` the full test run and `TR9` the failing test; (3) `RS8` a LangChain and PostgreSQL test bed, `RS9` streamed answers, `KL1b`/`KL1c` map gaps, `KL3b`; (4) `TR2`, `TR7`, `TR4`, `TR5`, `TR3` the rest of the trim-down, each after its measurement or the user's decision.
+
 How to take the work up in the best order. Each phase says what it needs and when it is done. IDs refer to the items below (`D` design, `L` libraries, `X` parallel, `S` speed, `C` coding competency, `W` documents, `P0.x/P1.x/P2.x/P3.x` presentations). Do not start a later phase's big items before the earlier phase's measurements exist.
 
 **Phase A, measure and unblock** (small; needs your rerun and two laptop checks)

@@ -81,3 +81,8 @@ are folded into the spec itself as amendments (§0.2, tags `[A-n]`) and listed h
 - **§10.4 compaction (D-467):** nine required summary sections (adds "Assumptions to verify"); when the model's summary is incomplete twice a facts-only summary is written in code instead of keeping the whole history.
 - **§13B skills (D-468):** installing from a link unpacks only the requested folder or the folders holding a SKILL.md; the download limit is 150 MB (was 50 MB).
 - **§14 secrets (D-466):** the user may let the app being built use one Azure model: its endpoint, key, version and deployment are put into the environment of the commands DebCraft runs for that project, never shown to the model.
+- **§9 tools (D-561):** the model is sent the core tools only; 68 tools in nine groups are deferred and loaded on demand with `tool_search`.
+- **§13B skills (D-562):** design and other outside skills are downloaded from a list of known sources on first use; a skill may name the deferred tools it works with (`tools:`).
+- **§11 / §12 repository knowledge (D-563 to D-566, amends D-156):** a structure index and topic notes per repository under DebCraft Home, shared by every project on that repository; refreshed by file fingerprint, also from the user's own folder (read-only).
+- **§9.5 database (D-568):** `db_copy_table` copies a table from a read-only database into the scratch schema; `use_scratch_database` puts the scratch connection into the command environment under the application's own setting names.
+- **§9 `http_request` (D-568):** a token is sent by the name of a variable in DebCraft's .env (only released names, localhost only); the tool asks the user for a missing token; the answer is reported with its size.

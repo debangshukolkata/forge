@@ -90,11 +90,44 @@ Other commands (`forge --help` lists them):
 | `forge skill add <github link>` / `list` / `remove` | add, list or remove skills (instruction packs) |
 | `forge profile ...`, `forge sessions`, `forge label`, `forge template-probe` | Mode B host profiles; recent sessions; labelling eval samples; trying a company PowerPoint template |
 
-In the chat, type `/help` for the slash commands (for example `/model`, `/compact`, `/skill add`, `/allow-read`, `/app-keys`, `/bg`).
+In the chat, type `/help` for the slash commands (for example `/model`, `/compact`, `/learn`, `/skill add`, `/allow-read`, `/app-keys`, `/bg`).
 
 DebCraft works in a per-requirement workspace (the folder you pass to `--workspace`; your repository is only
 read, never written) and delivers the changed files plus `COPY_INSTRUCTIONS.md` in the workspace's
 `output\` folder. You copy them into your repository yourself.
+
+## Working on an existing repository
+
+**DebCraft remembers a repository between projects.** The first project on a repository builds a map of it
+(classes and functions, who calls whom, every API endpoint with its payload, auth and tables); later projects
+start with that map, and only files that changed are read again. The map and DebCraft's notes about the
+repository are kept in `%USERPROFILE%\.forge\memory\scopes\<repository>\knowledge\`, never in your repository.
+
+| In the chat | What it does |
+|---|---|
+| `/learn` | explore the repository and write down how it works, for every later project on it |
+| `/learn <what to focus on>` | the same, for one area (for example `/learn the orchestration layer`) |
+| `/learn status` | what is written down, what may be outdated, what is still open |
+
+To let it learn unattended with a time limit:
+
+```powershell
+debcraft run --workspace <project folder> -p "Learn this repository: load the learn-repository skill and follow it." --auto-approve --until 06:00
+```
+
+**Asking DebCraft to make the system do something** ("the ops agent should be able to answer ..."): DebCraft
+starts a copy of the application, calls it through its API, looks at what the run left behind, makes a change and
+runs the same check again. Two things it may need from you:
+
+- **A token only you can get** (from the application's login page or console). Add it to DebCraft's `.env` file:
+  `DEVELOPMENT_INSTANCE_TOKEN=<the token>`. DebCraft asks for it when it is missing and tells you the file. Do not
+  paste it into the chat. It is sent only to the application on this computer; replace the value when it expires.
+- **A database.** DebCraft reads the development database and writes only to its own (`LOCAL_PG_URL`); it copies
+  the tables the application needs into its own database and starts the copy on those.
+
+**Skills from GitHub.** Some skills are not installed with DebCraft but are known to it (the list is in
+`skill_sources.yaml`; add your own in `%USERPROFILE%\.forge\skill_sources.yaml`). The first time one is used
+DebCraft shows what it contains and asks once; after that it stays installed. Any other repository: `/skill add <link>`.
 
 ## Upgrading
 

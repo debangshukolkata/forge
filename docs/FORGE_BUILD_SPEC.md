@@ -107,6 +107,11 @@ Inline changes are tagged `[A-n]`. Details and rationale are in docs/DECISIONS.m
 | D-195 | The full result of a tool call is saved (redacted, capped) and shown on request; the event keeps a preview. |
 | D-201 / D-203 | Tesseract and Gemini are asked about first and tested only after a yes; Tesseract gives the model a read-only `ocr_image` tool. |
 | D-187 / D-202 | A read of DebCraft's `.env` by variable or quoted name always asks; commands the model runs do not inherit DebCraft's own variables. |
+| D-561 | Only the core tools are sent to the model; the rest are deferred and loaded with `tool_search`, by a skill's `tools:` line or on a direct call (§9 tools). |
+| D-562 | Outside skills are a list of pinned GitHub sources, downloaded on first use after one approval; they are not shipped (§13B). |
+| D-563 to D-566 | Amends D-156 for projects on an existing repository: a structure index and topic notes per repository are kept between projects (`code_map`, `knowledge_search`, `knowledge_write`, `/learn`); the index follows the user's own folder, read-only (§11, §12). |
+| D-567 | Prompt rules: check before naming a cause; a failure is the agent's until it is resolved (§7, §13.3). |
+| D-568 | Requirements are solved against the running system: `http_request` sends a user token by name (localhost only), tables are copied into the scratch schema and the application copy is pointed at it (§9.5, §14). |
 
 ---
 

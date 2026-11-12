@@ -8,6 +8,9 @@ Amendments agreed with the user are recorded in spec §0.2 and in [docs/DECISION
 A local, Windows-first coding agent in plain Python that behaves like Claude Code, powered by Azure OpenAI
 (model per role is configurable). It works in a per-requirement workspace, never in the user's repo, and
 delivers only changed files plus instructions. Mode A reads a repo copy; Mode B never sees the host code.
+**What it is for (the user, 2026-11-12, D-568):** solving requirements against an existing system, not only
+editing code to a description: understand the system and its capabilities, run it, find what stops it, fix
+it and prove the fix by running the same check again. Judge a new feature by whether it helps that loop.
 
 ## How we work with the user (collaboration protocol, spec §0.1)
 **Changed 2026-09-27 (DECISIONS D-051): build milestones one after another without waiting for approval
@@ -92,8 +95,9 @@ The rules below still describe what goes into briefs and summaries.
    @-mentioned; D-208). The model cannot grant; writes are never opened up.
 3. Secrets never reach the LLM, transcripts, memory files, events or the browser. Nothing in the web app can write the `.env`
    file or show a key (D-204); commands the model runs do not inherit Forge's own variables (D-202) and a read of the `.env`
-   by variable or quoted name always asks (D-187); saved tool outputs are redacted (D-195). The app being built may use an Azure model the user picked for it (`request_app_keys`, `/app-keys`; the values go into that app's commands only, never to the model, D-466).
-4. DB writes only happen in the scratch schema for the current requirement.
+   by variable or quoted name always asks (D-187); saved tool outputs are redacted (D-195). A token the user put into the `.env` for the application under test is sent by `http_request` by name, to localhost only, and only names the user released can be sent (D-568). The app being built may use an Azure model the user picked for it (`request_app_keys`, `/app-keys`; the values go into that app's commands only, never to the model, D-466).
+4. DB writes only happen in the scratch schema for the current requirement. Rows copied there from a read-only
+   database go from connection to connection, never through the model; credential tables are never copied (D-568).
 5. Forge cannot modify its own install folder or `config.yaml`.
 6. Actions Forge can't or mustn't do are handed to the user; if the user can't either, Forge proposes a
    workaround or code change (DECISIONS D-011).
@@ -113,9 +117,40 @@ Before changing how DebCraft designs or checks the pages it builds, read `src/fo
 The runtime copies Claude Code: a flat loop; the model improvises failure recovery (no stuck detector or
 escalation ladder, D-155); verification is whatever checks the model runs through the shell; memory is FORGE.md
 files + an auto-memory folder + skills; the repo is learned by on-demand search, not a built index (D-156).
+**Amended 2026-11-11 (D-563 to D-566):** for a project on an existing repository DebCraft does keep knowledge
+between projects (see "Direction since 2026-11-11" below); the rest of D-156 stands.
 The Forge-specific layer that stays: workspace isolation and delivery of changed files, Mode B, the safety
 invariants, the database rules. Where an older spec section conflicts, the §0.2 table and docs/DECISIONS.md win.
 The removals in D-156 are staged; check TODO.md for what is already gone before relying on a module.
+
+## Direction since 2026-11-11 (D-561 to D-568) — read before adding a tool, a skill or a prompt rule
+- **Light core (D-561).** A session sends only the core tools (44, about 8,000 tokens). Everything else is in a group in
+  `src/forge/tools/deferred.py` and is loaded by `tool_search`, by a skill's `tools:` header line, or when called directly.
+  **A new tool that most sessions do not need goes into a group there; a new skill names the tools it works with.** The
+  limit of 128 tools per request is only a hard stop now. Do not add weight to presentations, PDF or the built-in page
+  design pipeline unless the user asks (TODO 0g).
+- **Skills are not shipped (D-562).** Outside skills are links in `src/forge/defaults/skill_sources.yaml` (pinned to a
+  commit; the user adds more in `<DebCraft Home>/skill_sources.yaml`), downloaded on the first `load_skill` after one
+  approval and kept. A new outside skill is a line in that list, never files in this repository. One design skill
+  drives a page task.
+- **Knowledge per repository (D-563 to D-566).** Module `src/forge/knowledge/`: a structure index (symbols, links between
+  files, FastAPI and Flask endpoints with payload, auth and tables, environment names) and topic notes tied to their
+  source files, both under `<DebCraft Home>/memory/scopes/<repository>/knowledge/`, never in the user's repository.
+  Tools `code_map`, `knowledge_search`, `knowledge_write`; `/learn`; the index follows the user's own folder at session
+  start (read-only) and a project is answered for its own copy. Graphify was considered and dropped (D-564).
+- **Check, do not guess (D-567).** Two rules in both system prompts; `code_map` action `env` is the settings report.
+- **Requirements against the running system (D-568).** `http_request` takes a token by the NAME of a variable in
+  DebCraft's .env (`DEVELOPMENT_INSTANCE_TOKEN`; more through `FORGE_REQUEST_TOKEN_NAMES`), localhost only;
+  `db_copy_table` and `use_scratch_database` run the application copy on copied data; skill
+  `solve-against-running-system`; test bed `tests/fixtures/agent_platform`.
+- **What the live runs taught (apply it):** the model is weaker than Claude and takes shortcuts. It was told to ask
+  for a token and went on without the API; it proved a fix with a function call instead of the API. **Put a required
+  step into the tool where possible, not into instructions**, and measure with a live test before and after
+  (`tests/test_live_tool_search.py`, `test_live_skill_sources.py`, `test_live_code_map.py`, `test_live_learn.py`,
+  `test_live_debug_intent.py`, `test_live_running_system.py`).
+- **Patching source from the shell:** a Git Bash heredoc turns `\\n` and `\\b` inside Python strings into real
+  characters. Change Python source with the Edit tool, or write a patch script with the Write tool and run it; never
+  name a scratch script after a standard-library module (`types.py`).
 
 ## Modules (D-152)
 Forge is split into tiered modules; see [docs/MODULES.md](docs/MODULES.md). **Before changing a module, read its
