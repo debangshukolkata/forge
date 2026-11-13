@@ -85,7 +85,7 @@ Other commands (`forge --help` lists them):
 | `forge resume --workspace <ws>` | resume a workspace session where it stopped |
 | `forge cleanup --workspace <ws>` | drop the database objects DebCraft created in the workspace's scratch schema |
 | `forge diagnose` | after copying `output\` into your repo: check it and run its tests on a fresh copy |
-| `forge log-summary --workspace <ws>` | one page on where the time and tokens of a run went |
+| `forge log-summary --workspace <ws>` | one page on where the time and tokens of a run went, and what the knowledge layer did (searches, new topics, corrections, index and open times) |
 | `forge run-report --workspace <ws>` | a scrubbed report of a run you can send for analysis: no source code, no secrets |
 | `forge skill add <github link>` / `list` / `remove` | add, list or remove skills (instruction packs) |
 | `forge profile ...`, `forge sessions`, `forge label`, `forge template-probe` | Mode B host profiles; recent sessions; labelling eval samples; trying a company PowerPoint template |
