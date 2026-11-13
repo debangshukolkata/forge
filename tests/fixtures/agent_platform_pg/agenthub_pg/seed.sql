@@ -20,6 +20,14 @@ CREATE TABLE agent_tools (
     PRIMARY KEY (agent, tool)
 );
 
+-- Every run of an agent is recorded here, as a real platform does; a database that may only be read cannot take it.
+CREATE TABLE runs (
+    id BIGSERIAL PRIMARY KEY,
+    agent TEXT NOT NULL,
+    status TEXT NOT NULL,
+    at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- The deployment system's state. It is empty here: a real database holds the applications.
 CREATE TABLE applications (
     name TEXT PRIMARY KEY,

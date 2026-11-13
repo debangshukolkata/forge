@@ -16,7 +16,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from forge.agent.hints import security_hint, variants_hint
+from forge.agent.hints import name_resolution_note, read_only_database_note, security_hint, variants_hint
 from forge.agent.hooks import EVENTS as HOOK_EVENTS
 from forge.agent.hooks import HookRunner
 from forge.agent.parallel import MAX_PARALLEL_COMMANDS, is_parallel_safe_command, is_test_command
@@ -142,6 +142,12 @@ PROOF_NOTE = (
     "report what it answers (restart the application first if it does not reload by itself). If it cannot "
     "be run, say plainly in your reply that the change was not proven through the API and why."
 )
+NO_API_PROOF_NOTE = (
+    "You loaded the solve-against-running-system skill and changed code, but you called no API after your last "
+    "change. The check goes through the application's API, not through a function call: start or restart the "
+    "application and make the same call as before with http_request, then report what it answers. If the API "
+    "cannot be called, say plainly in your reply that the change was not proven through the API and why."
+)
 POINTER_TOOLS = frozenset(
     {"read_file", "grep", "glob", "list_dir", "code_map", "code_outline", "knowledge_search"}
 )
@@ -201,6 +207,8 @@ class AgentLoop:
         )
         self._last_step_read_only = False  # the previous step only read things and nothing failed
         self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
+        self._database_notes = 0  # how many read-only database notes were added to results (D-600)
+        self._network_notes = 0  # how many name-resolution notes were added (D-601)
         self.repeats = RepeatLedger()  # HW1: identical calls with identical answers
         self.after_step: Callable[[], Awaitable[None]] | None = None  # the session saves the history here
         self._history: list[Message] = []
@@ -334,9 +342,16 @@ class AgentLoop:
                         continue
                 if proof_nudges < 1 and self.keep_full_output and self.gate.mode != "plan":
                     unproven = self._calls_to_repeat_after_change(turn_start_step)
-                    if unproven:
+                    skipped = not unproven and self._skill_without_api_proof(turn_start_step)
+                    if unproven or skipped:
                         proof_nudges += 1
-                        history.append(Message.system(PROOF_NOTE.format(calls="; ".join(unproven))))
+                        history.append(
+                            Message.system(
+                                PROOF_NOTE.format(calls="; ".join(unproven))
+                                if unproven
+                                else NO_API_PROOF_NOTE
+                            )
+                        )
                         await self.bus.publish(
                             EventType.NOTICE,
                             {
@@ -403,6 +418,33 @@ class AgentLoop:
         """HW5: API calls made in this turn whose last run was before the last code change (at most 3)."""
         changed = self.context.last_code_edit_step
         return [key for key, step in self.context.api_calls.items() if turn_start_step < step < changed][:3]
+
+    def _with_database_note(self, tool_name: str, content: str) -> str:
+        """The result with the read-only-database note added when the output shows a refused write (D-600)."""
+        db = self.context.db
+        note = read_only_database_note(
+            tool_name,
+            content,
+            already_on_scratch=db is None or db.scratch is None or bool(db.app_variables()),
+            given=self._database_notes,
+        )
+        if note:
+            self._database_notes += 1
+            content = content + "\n" + note
+        network = name_resolution_note(tool_name, content, self._network_notes)  # D-601
+        if network:
+            self._network_notes += 1
+            content = content + "\n" + network
+        return content
+
+    def _skill_without_api_proof(self, turn_start_step: int) -> bool:
+        """D-600: the running-system skill was loaded in this turn, code was changed, and no API call was made after
+        the last change (the live run that proved a fix with a function call and never started the application)."""
+        context = self.context
+        changed = context.last_code_edit_step
+        if context.running_system_step < turn_start_step or changed <= turn_start_step:
+            return False
+        return not any(step > changed for step in context.api_calls.values())
 
     def _unreported_risks(self, reply: str) -> list[str]:
         """Risks in the source files read in this session (the model changed something) that the final reply does not name (D-410)."""
@@ -709,6 +751,7 @@ class AgentLoop:
         # Every result is capped here (spec §10.3), whatever the tool did itself.
         content, _ = self.context.cap_output(result.content, tool.output_kind)
         content, marker = flag(content)
+        content = self._with_database_note(tool.name, content)
         if rework:
             content += "\n" + rework
         content, repeat_of = self._answer_to_repeat(call, result.ok, content)

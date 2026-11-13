@@ -74,7 +74,10 @@ def copy_app(
     shutil.copytree(
         FIXTURE,
         target,
-        ignore=shutil.ignore_patterns("__pycache__", "venv", "logs", "*.log", "README.md", ".env"),
+        # sample_data.py stays out of every copy: it fills a test database, the application never has it
+        ignore=shutil.ignore_patterns(
+            "__pycache__", "venv", "logs", "*.log", "README.md", ".env", "sample_data.py"
+        ),
     )
     lines = [
         f"APP_DATABASE_URL={database_url}",
@@ -229,3 +232,47 @@ async def test_the_stream_endpoint_is_read_by_event_through_http_request(
     assert "tool_result list_deployments (" in result.content  # its size is in the account
     assert "Error event" in result.content and "the agent could not finish" in result.content
     assert TOKEN not in result.content
+
+
+def test_every_successful_run_is_recorded_in_the_runs_table_and_a_read_only_database_refuses_it(
+    hub: tuple[str, Path, tuple[str, str]],
+) -> None:
+    """RS8 (D-600): the platform writes a row per run, so running it on a database that may only be read fails."""
+    base, folder, (url, schema) = hub
+    httpx.post(
+        f"{base}/api/agents/billing/run", json={"question": "list the invoices"}, headers=AUTH, timeout=30
+    )
+    with psycopg.connect(url, options=f"-c search_path={schema}", autocommit=True) as connection:
+        assert connection.execute("SELECT agent, status FROM runs").fetchall() == [("billing", "ok")]
+        role = f"forge_hubpg_ro_{secrets.token_hex(3)}"
+        connection.execute(f"CREATE ROLE {role} LOGIN PASSWORD 'x'")
+        connection.execute(f'GRANT USAGE ON SCHEMA "{schema}" TO {role}')
+        connection.execute(f'GRANT SELECT ON ALL TABLES IN SCHEMA "{schema}" TO {role}')
+    try:
+        read_only = copy_app(
+            folder.parent / "ro",
+            url.replace(url.split("://")[1].split("@")[0], f"{role}:x"),
+            schema,
+            free_port(),
+            True,
+        )
+        port = int((read_only / ".env").read_text(encoding="utf-8").split("APP_PORT=")[1].split()[0])
+        process = start_app(read_only, port)
+        try:
+            answer = httpx.post(
+                f"http://127.0.0.1:{port}/api/agents/billing/run",
+                json={"question": "list the invoices"},
+                headers=AUTH,
+                timeout=30,
+            ).json()
+        finally:
+            process.kill()
+            process.wait(timeout=10)
+        assert answer == {"status": "failed", "error": "the agent could not finish"}
+        log = (read_only / "logs" / "runs.jsonl").read_text(encoding="utf-8")
+        assert "permission denied" in log  # the reason is only in the run log
+    finally:
+        with psycopg.connect(url, autocommit=True) as connection:
+            connection.execute(f'REVOKE ALL ON ALL TABLES IN SCHEMA "{schema}" FROM {role}')
+            connection.execute(f'REVOKE USAGE ON SCHEMA "{schema}" FROM {role}')
+            connection.execute(f"DROP ROLE {role}")

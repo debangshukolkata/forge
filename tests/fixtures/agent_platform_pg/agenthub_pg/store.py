@@ -46,6 +46,12 @@ def applications() -> list[object]:
         return [row[0] for row in connection.execute("SELECT doc FROM applications ORDER BY name")]
 
 
+def record_run(agent: str, status: str) -> None:
+    """One row per run in the `runs` table (a read-only database refuses it: the run then fails)."""
+    with connect() as connection:
+        connection.execute("INSERT INTO runs (agent, status) VALUES (%s, %s)", (agent, status))
+
+
 def agent_names() -> list[str]:
     with connect() as connection:
         return [row[0] for row in connection.execute("SELECT name FROM agents ORDER BY name")]

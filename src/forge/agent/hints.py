@@ -56,3 +56,52 @@ def security_hint(request: str) -> str:
     """The note for a security review or fix (D-536): in run c1-t15-23 neither security task opened the recipes the catalogue hint named,
     and both stopped when the existing tests passed (t22 70/93, t23 47/53)."""
     return SECURITY_NOTE if SECURITY_REQUEST.search(request[:HINT_REQUEST_CHARS]) else ""
+
+
+READ_ONLY_DATABASE_TOOLS = frozenset(
+    {"read_background", "monitor", "run_command", "python_run", "http_request", "start_background"}
+)
+DATABASE_REFUSED_WRITE = re.compile(
+    r"permission denied for (table|relation|schema|sequence)|InsufficientPrivilege|"
+    r"cannot execute (insert|update|delete|create|alter|drop|truncate)[^\n]{0,40}read-only|"
+    r"read-only transaction|must be owner of",
+    re.IGNORECASE,
+)
+READ_ONLY_DATABASE_NOTE = (
+    "[note: the database refused a write. The application is connected to a database DebCraft may only read. Do not "
+    "change the application to ignore or work around this error: copy the tables it needs into your scratch schema "
+    "(db_copy_table, from the development database), point the application's settings at it (use_scratch_database), "
+    "stop the application and start it again. Its writes then land in your copy.]"
+)
+
+
+def read_only_database_note(tool: str, content: str, already_on_scratch: bool, given: int) -> str:
+    """D-600: output of a command or call that shows the database refused a write, while the application is not yet
+    pointed at the scratch schema. In two live runs the model patched the application to swallow the error and ran it on the
+    real development data instead of using the scratch tools. At most twice per session (`given` counts the notes so far)."""
+    if already_on_scratch or given >= 2 or tool not in READ_ONLY_DATABASE_TOOLS:
+        return ""
+    return READ_ONLY_DATABASE_NOTE if DATABASE_REFUSED_WRITE.search(content) else ""
+
+
+NAME_RESOLUTION_FAILED = re.compile(
+    r"getaddrinfo failed|Name or service not known|Temporary failure in name resolution|"
+    r"nodename nor servname provided|No such host is known|could not resolve host|NameResolutionError|"
+    r"socket\.gaierror|\[Errno 11001\]",
+    re.IGNORECASE,
+)
+NAME_RESOLUTION_NOTE = (
+    "[note: a host name did not resolve from this machine. For an internal or company host that is usually the VPN or "
+    "the company DNS being off, not a fault in the code. Say that to the user first, in one sentence (check the VPN, "
+    "`nslookup <host>`), and ask them to tell you when the network is back. Do not hand them the call to run by hand "
+    "and do not work around it in the code.]"
+)
+
+
+def name_resolution_note(tool: str, content: str, given: int) -> str:
+    """D-601: output that shows a host name did not resolve. On the office laptop a run that had worked the day before
+    failed in `fetch_from_infisical` on `nonprod.wisdomnext.eng`; the model asked the user a five-step card and never
+    named the likely cause. At most twice per session; only for tools that run or call something."""
+    if given >= 2 or tool not in READ_ONLY_DATABASE_TOOLS:
+        return ""
+    return NAME_RESOLUTION_NOTE if NAME_RESOLUTION_FAILED.search(content) else ""

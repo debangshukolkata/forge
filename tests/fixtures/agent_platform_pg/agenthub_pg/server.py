@@ -70,6 +70,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             result = run(agent, question)
+            store.record_run(agent.name, "ok")
         except ContextOverflow as error:
             log_run(
                 {
@@ -119,6 +120,7 @@ class Handler(BaseHTTPRequestHandler):
         send({"type": "run_started", "agent": agent.name})
         try:
             result = run(agent, question, on_event=send)
+            store.record_run(agent.name, "ok")
         except ContextOverflow as error:
             log_run(
                 {

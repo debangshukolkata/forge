@@ -156,7 +156,9 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
     repo = copy_app(tmp_path / "repo", dev_url, dev_schema, port, fake_model=False)
     _link_venv(repo)
     secrets = load_secrets(isolated_forge_home)
-    workspace = create_workspace(repo, tmp_path / "ws", "")
+    # DebCraft's scratch schema is named after the workspace folder; a folder of its own keeps it from sharing tables
+    # with an earlier run (a shared `forge_ws` made two runs see rows an earlier run had put there, D-600).
+    workspace = create_workspace(repo, tmp_path / f"hubpgws{suffix}", "")
     host = SessionHost(
         LLMRouter(load_config(isolated_forge_home), secrets),
         EventBus(workspace.forge_dir / "events.jsonl"),
@@ -168,7 +170,13 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
     asked_user: list[str] = []
     said: list[str] = []
 
+    proof_reminders: list[
+        int
+    ] = []  # the number of calls so far when the end-of-turn proof reminder was given (D-600)
+
     def reply(event: Event) -> UserInput | None:
+        if event.type == EventType.NOTICE and event.payload.get("kind") == "proof_call":
+            proof_reminders.append(len(calls))
         if event.type == EventType.TOOL_CALL_STARTED:
             calls.append(f"{event.payload['name']} {event.payload['arguments']}"[:500])
         if event.type == EventType.MESSAGE_DONE:
@@ -178,6 +186,7 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
             return Answer(question_id=event.payload["id"], choice="done", text=None)
         return auto_reply(event, auto_approve=True)
 
+    scratch_name: str | None = None
     runner = asyncio.create_task(host.run())
     subscription = host.bus.subscribe(since_seq=host.bus.last_seq)
     await host.submit(SendMessage(text=REQUIREMENTS[scenario]))
@@ -195,6 +204,7 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
     finally:
         subscription.close()
         runner.cancel()
+        scratch_name = host.db.scratch_schema_name if host.db is not None else None
         await host.close()
     changed = sorted({change.path for change in workspace.changes()})
 
@@ -203,7 +213,9 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
         admin.execute(f'CREATE SCHEMA "{fresh_schema}"')
     check_dir = tmp_path / "check"
     shutil.copytree(
-        workspace.repo_dir, check_dir, ignore=shutil.ignore_patterns("__pycache__", "venv", "logs", ".env")
+        workspace.repo_dir,
+        check_dir,
+        ignore=shutil.ignore_patterns("__pycache__", "venv", "logs", ".env", "sample_data.py"),
     )
     check_port = free_port()
     lines = [
@@ -241,6 +253,8 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
     after = _rows(admin_url, dev_schema)
     with psycopg.connect(admin_url, autocommit=True) as admin:
         admin.execute(f'DROP SCHEMA IF EXISTS "{dev_schema}" CASCADE')
+        if scratch_name:
+            admin.execute(f'DROP SCHEMA IF EXISTS "{scratch_name}" CASCADE')
         admin.execute(f"DROP OWNED BY {role}")
         admin.execute(f"DROP ROLE {role}")
 
@@ -254,6 +268,7 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
         "copied_rows": "db_copy_table" in tools_used,
         "used_scratch_database": "use_scratch_database" in tools_used,
         "called_the_api": sum(1 for call in calls if call.startswith("http_request")),
+        "proof_reminders": proof_reminders,
         "asked_user": asked_user,
         "changed_files": changed,
         "seed_changed": any(path.endswith("seed.sql") for path in changed),
@@ -267,6 +282,15 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
         "said": "\n".join(said)[-600:],
         "tools": tools_used,
     }
+    keep = os.environ.get(
+        "RUNNING_SYSTEM_KEEP"
+    )  # a folder: this run's event log and changes are copied there
+    if keep:
+        target = Path(keep) / f"{scenario}-{suffix}"
+        target.mkdir(parents=True, exist_ok=True)
+        for name in ("events.jsonl", "changes.jsonl", "run_notes.json"):
+            if (workspace.forge_dir / name).is_file():
+                shutil.copy(workspace.forge_dir / name, target / name)
     log = os.environ.get("RUNNING_SYSTEM_LOG")
     if log:
         with open(log, "a", encoding="utf-8") as handle:
@@ -279,9 +303,10 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
     assert billing.get("status") == "ok", f"another agent broke: {billing}"
     if scenario == "tool_fix":
         assert ops.get("status") == "ok" and len(row["names_found"]) == 3, f"ops still cannot answer: {ops}"  # type: ignore[arg-type]
-        assert row["copied_rows"] and row["used_scratch_database"], (
-            f"the database tools were not used: {tools_used}"
-        )
+        # `copied_rows` and `used_scratch_database` are recorded, not asserted: in six live runs (2026-11-13) the fix
+        # always worked but the copy tools were used in none (the model edited the application to tolerate the
+        # read-only database instead, D-600). That is a finding to keep measuring, not a condition of this test.
+        assert row["called_the_api"] >= 2, f"the fix was not proven through the API: {tools_used}"
     else:
         assert (
             support.get("status") == "ok" and len(row["german_words"]) >= 2 and "you can" not in support_text

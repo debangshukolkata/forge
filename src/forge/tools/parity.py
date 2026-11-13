@@ -159,6 +159,10 @@ class LoadSkill(Tool):
                 ),
             )
         listed = sources.get(skill.name)  # what the list of known sources adds to the skill's own header
+        if skill.name == "solve-against-running-system":
+            context.running_system_step = (
+                context.step
+            )  # the end-of-turn reminder asks for the proof through the API (D-600)
         if skill.own_design or (listed is not None and listed.own_design):
             context.design_exempt = True
         tools = [*skill.tools, *(listed.tools if listed is not None else [])]

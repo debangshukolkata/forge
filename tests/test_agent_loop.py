@@ -492,3 +492,61 @@ async def test_http_request_notes_the_call_without_its_query_string() -> None:
     refused = ToolContext(workspace=None)  # type: ignore[arg-type]
     await HttpRequest().run(HttpRequest.Args(method="GET", url="https://example.com/x"), refused)
     assert refused.api_calls == {}  # a refused request is not an API call that ran
+
+
+def _skill_setup(host: SessionHost) -> None:
+    _edits_allowed(host)
+    assert host.agent is not None
+    host.agent.context.running_system_step = (
+        0  # the solve-against-running-system skill was loaded in this turn
+    )
+
+
+def _no_api_notes(host: SessionHost) -> list[str]:
+    return [m.content for m in host.history if m.role == "system" and "you called no API after" in m.content]
+
+
+async def test_the_skill_loaded_and_code_changed_without_any_api_call_asks_for_the_proof_once(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    """D-600: a live run proved its fix with a function call and never started the application."""
+    from tests.test_repeats import _run
+
+    host = await _run(
+        original_repo, tmp_path, _proof_steps("http://127.0.0.1:1/x", call=False), setup=_skill_setup
+    )
+
+    notes = _no_api_notes(host)
+    assert (
+        len(notes) == 1
+        and "solve-against-running-system" in notes[0]
+        and "not through a function call" in notes[0]
+    )
+    assert len(_proof_notices(host)) == 1
+
+
+async def test_no_reminder_when_the_api_was_called_after_the_change(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    from tests.test_repeats import _run
+
+    server = _Answering()
+    try:
+        host = await _run(
+            original_repo, tmp_path, _proof_steps(server.url, call=False, again=True), setup=_skill_setup
+        )
+    finally:
+        server.close()
+
+    assert _no_api_notes(host) == [] and _proof_notes(host) == []
+
+
+async def test_no_reminder_for_an_edit_when_the_skill_was_not_loaded(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    from tests.test_repeats import _run
+
+    host = await _run(
+        original_repo, tmp_path, _proof_steps("http://127.0.0.1:1/x", call=False), setup=_edits_allowed
+    )
+    assert _no_api_notes(host) == []
