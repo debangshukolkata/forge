@@ -161,7 +161,9 @@ async def test_a_step_that_cannot_complete_says_which_one_and_asks_for_a_visible
     site: Path, monkeypatch: pytest.MonkeyPatch, original_repo: Path, tmp_path: Path
 ) -> None:
     monkeypatch.setattr(app_login, "STEP_SECONDS_HEADLESS", 3)
-    monkeypatch.setattr(app_login, "STEP_SECONDS_VISIBLE", 3)  # the window that opens next is waited for as briefly
+    monkeypatch.setattr(
+        app_login, "STEP_SECONDS_VISIBLE", 3
+    )  # the window that opens next is waited for as briefly
     context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
     result = await AppLogin().run(AppLogin.Args(environment="broken"), context)
     if not result.ok and "No browser" in result.content:

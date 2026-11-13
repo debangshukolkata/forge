@@ -90,6 +90,12 @@ def build_parser() -> argparse.ArgumentParser:
     log_summary.add_argument(
         "--conversation", help="a conversation id of the workspace, like c2 (default: the active one)"
     )
+    facts = subcommands.add_parser(
+        "facts", help="the facts that close the open items, on three short screens you can photograph (D-607)"
+    )
+    facts.add_argument("--workspace", type=Path, dest="facts_workspace", help="default: the newest project")
+    facts.add_argument("--conversation", help="a conversation id, like c2 (default: the active one)")
+    facts.add_argument("--no-pause", action="store_true", help="print all three screens at once")
     run_report = subcommands.add_parser(
         "run-report", help="scrubbed report of a run you can send for analysis: no source code, no secrets"
     )
@@ -223,6 +229,10 @@ def main(argv: list[str] | None = None) -> int:
         return _log_summary(args.workspace, args.log, args.conversation)
     if args.command == "run-report":
         return _run_report(args.report_workspace, args.out, args.conversation)
+    if args.command == "facts":
+        from forge.engine.facts_report import show
+
+        return show(args.facts_workspace, args.conversation, pause=not args.no_pause)
     if args.command == "template-probe":
         return _template_probe(args.template, args.out, args.hide_text, args.max_samples)
     if args.command == "skill":
