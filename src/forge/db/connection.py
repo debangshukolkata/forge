@@ -10,6 +10,7 @@ from typing import Any
 import psycopg
 
 from forge.config import Secrets
+from forge.db.tunnel import TunnelError, ensure_tunnel
 
 CONNECT_TIMEOUT_S = 5
 IDLE_IN_TRANSACTION_S = 60
@@ -41,6 +42,10 @@ def connect(
     url = target.url(secrets)
     if not url:
         raise psycopg.OperationalError(f"{target.url_env} is not set in DebCraft's .env")
+    try:  # the development database is only reachable through the tunnel the user described (D-605)
+        ensure_tunnel(target.name)
+    except TunnelError as error:
+        raise psycopg.OperationalError(str(error)) from error
     options = [
         f"-c statement_timeout={target.statement_timeout_s * 1000}",
         f"-c lock_timeout={target.lock_timeout_s * 1000}",
@@ -65,7 +70,7 @@ def connect(
 def explain_connection_error(error: Exception) -> str:
     """A one-line, human reason for an L1 (no connection) result."""
     text = str(error).lower()
-    if "not set in forge" in text:
+    if "not set in forge" in text or "tunnel to" in text:
         return str(error)
     if (
         "could not translate host name" in text
