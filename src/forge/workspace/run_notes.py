@@ -68,7 +68,9 @@ class RunNotes:
         data["starts"] = [*[e for e in data["starts"] if e.get("name") != name][-(MAX_STARTS - 1) :], entry]
         self._save(data)
 
-    def record_call(self, method: str, url: str, body: Any, token_env: str, status: int) -> None:
+    def record_call(
+        self, method: str, url: str, body: Any, token_env: str, status: int, stream: bool = False
+    ) -> None:
         """An HTTP call that worked (a status below 400); the same method and address replace the earlier note."""
         address = url.split("?", 1)[0]
         text = ""
@@ -81,6 +83,7 @@ class RunNotes:
             "body": text,
             "token_env": token_env,
             "status": status,
+            "stream": stream,
             "at": _today(),
         }
         kept = [e for e in data["calls"] if (e.get("method"), e.get("url")) != (method, address)]
@@ -102,6 +105,7 @@ class RunNotes:
         for call in data["calls"]:
             token = f", token from {call['token_env']}" if call.get("token_env") else ""
             body = f" with {call['body']}" if call.get("body") else ""
+            body += " (a stream: stream=true)" if call.get("stream") else ""
             lines.append(
                 f"- Worked: {call['method']} {call['url']}{body}{token} (status {call['status']}, {call['at']})."
             )

@@ -52,7 +52,7 @@ class Handler(BaseHTTPRequestHandler):
         if not self._authorised():
             return
         parts = self.path.strip("/").split("/")
-        if len(parts) != 4 or parts[:2] != ["api", "agents"] or parts[3] != "run":
+        if len(parts) != 4 or parts[:2] != ["api", "agents"] or parts[3] not in ("run", "stream"):
             self._send(404, {"error": "not found"})
             return
         agent = store.load_agent(parts[2])
@@ -64,6 +64,9 @@ class Handler(BaseHTTPRequestHandler):
             question = str(json.loads(self.rfile.read(length) or b"{}")["question"])
         except (ValueError, KeyError):
             self._send(422, {"error": 'send {"question": "..."}'})
+            return
+        if parts[3] == "stream":
+            self._stream(agent, question)
             return
         try:
             result = run(agent, question)
@@ -101,6 +104,55 @@ class Handler(BaseHTTPRequestHandler):
             }
         )
         self._send(200, {"status": "ok", "tool": (result.tools or [""])[-1], "answer": result.answer})
+
+    def _stream(self, agent: store.Agent, question: str) -> None:
+        """The same run as `run`, but every step is sent as a server-sent event when it happens."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+
+        def send(event: dict[str, object]) -> None:
+            self.wfile.write(f"data: {json.dumps(event)}\n\n".encode())
+            self.wfile.flush()
+
+        send({"type": "run_started", "agent": agent.name})
+        try:
+            result = run(agent, question, on_event=send)
+        except ContextOverflow as error:
+            log_run(
+                {
+                    "agent": agent.name,
+                    "question": question,
+                    "status": "failed",
+                    "tool": error.tool,
+                    "tool_result_chars": error.size,
+                    "limit": error.limit,
+                }
+            )
+            send({"type": "error", "message": "the agent could not finish"})
+            return
+        except Exception as error:  # the reason goes to the run log only
+            log_run(
+                {
+                    "agent": agent.name,
+                    "question": question,
+                    "status": "failed",
+                    "error": f"{type(error).__name__}: {error}"[:500],
+                }
+            )
+            send({"type": "error", "message": "the agent could not finish"})
+            return
+        log_run(
+            {
+                "agent": agent.name,
+                "question": question,
+                "status": "ok",
+                "tools": result.tools,
+                "tool_result_chars": result.tool_result_chars,
+            }
+        )
+        send({"type": "final", "answer": result.answer})
 
     def log_message(self, format: str, *args: object) -> None:  # quiet: runs go to the run log
         return

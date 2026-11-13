@@ -26,6 +26,7 @@ Every call needs a token from the AgentHub console: `Authorization: Bearer <toke
 
 - `GET /api/agents` lists the agents (`ops`, `billing`, `support`).
 - `POST /api/agents/<name>/run` with `{"question": "..."}` runs an agent.
+- `POST /api/agents/<name>/stream` runs it the same way and answers as server-sent events, one per step (`run_started`, `tool_call`, `tool_result`, then `final` or `error`).
 
 Every run is written to `logs/runs.jsonl`.
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import importlib
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -71,13 +72,21 @@ def _model() -> Any:
     )
 
 
-def run(agent: Agent, question: str) -> RunResult:
+def run(
+    agent: Agent, question: str, on_event: Callable[[dict[str, object]], None] | None = None
+) -> RunResult:
     if not agent.tools:
         raise LookupError(f"agent {agent.name} has no tools")
     result = RunResult()
 
+    def emit(event: dict[str, object]) -> None:
+        if on_event is not None:
+            on_event(event)
+
     def guarded(tool: Tool) -> str:
+        emit({"type": "tool_call", "name": tool.name})
         text = call_tool(tool)
+        emit({"type": "tool_result", "name": tool.name, "chars": len(text)})
         result.tools.append(tool.name)
         result.tool_result_chars = len(text)
         if len(text) > agent.max_context_chars:

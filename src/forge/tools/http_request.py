@@ -13,8 +13,12 @@ secrets never reach the model:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
+import time
+import uuid
+from datetime import datetime
 from typing import Any, Literal
 from urllib.parse import quote
 
@@ -35,6 +39,7 @@ from forge.toolkit.app_keys import (
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.browser import local_url
 from forge.tools.interaction import OptionSpec
+from forge.tools.stream_summary import summarize_stream
 from forge.workspace.run_notes import RunNotes
 
 HTTP_TIMEOUT_S = 30
@@ -91,6 +96,61 @@ def _place_token(args: HttpRequest.Args, token: str, headers: dict[str, str], bo
     return args.url, {**(body or {}), field: token}
 
 
+MAX_STREAM_LINES = 50_000
+STREAM_SHOWN_CHARS = 1200
+
+
+async def _read_stream(
+    client: httpx.AsyncClient,
+    args: HttpRequest.Args,
+    url: str,
+    body: Any,
+    headers: dict[str, str],
+) -> tuple[httpx.Response, list[tuple[float, str]], bool]:
+    """Sends the request and reads the answer line by line with the second each line arrived, until the stream ends,
+    `timeout_s` passes (what arrived is kept) or an absurd number of lines is reached. The answer is rebuilt as a
+    response, so the rest of the tool treats it like any other."""
+    started = time.perf_counter()
+    items: list[tuple[float, str]] = []
+    status = 0
+    response_headers: dict[str, str] = {}
+    cut = False
+    try:
+        async with asyncio.timeout(args.timeout_s):
+            async with client.stream(args.method, url, json=body, headers=headers) as response:
+                status, response_headers = response.status_code, dict(response.headers)
+                async for line in response.aiter_lines():
+                    items.append((time.perf_counter() - started, line))
+                    if len(items) >= MAX_STREAM_LINES:
+                        cut = True
+                        break
+    except TimeoutError as error:
+        if not status:
+            raise httpx.ReadTimeout("no answer before the time limit") from error
+        cut = True
+    text = "\n".join(line for _, line in items)
+    response_headers.pop("content-encoding", None)  # the text below is already decoded
+    response_headers.pop("content-length", None)
+    return httpx.Response(status, headers=response_headers, content=text.encode("utf-8")), items, cut
+
+
+def _keep_stream(context: ToolContext, body: str) -> tuple[str, str | None]:
+    """The whole stream goes to a file the model can read in ranges; the call's result shows only its beginning."""
+    if context.workspace is None:
+        return body[:STREAM_SHOWN_CHARS], None
+    folder = context.workspace.jail.check(context.workspace.forge_dir / "tool_outputs")
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{datetime.now():%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}-stream.txt"
+    path.write_text(body, encoding="utf-8")
+    relative = path.relative_to(context.workspace.root).as_posix()
+    head = body[:STREAM_SHOWN_CHARS]
+    more = f" (first {len(head):,} of {len(body):,} characters)" if len(body) > len(head) else ""
+    return (
+        f"{head}\n\n[The whole stream{more} is in {relative}; read it in ranges with read_file offset/limit.]",
+        str(path),
+    )
+
+
 class HttpRequest(Tool):
     name = "http_request"
     description = (
@@ -107,7 +167,10 @@ class HttpRequest(Tool):
         "refuses the token with `Bearer`, the same call is tried with the bare token; when you gave no token and "
         "the API answers 401 or 403, DEVELOPMENT_INSTANCE_TOKEN is tried if the user has set it. The file is "
         "read on every call: a token the user has just saved is used at once, without a restart. `timeout_s`: "
-        "raise it for a call that runs an agent (up to 900)."
+        "raise it for a call that runs an agent (up to 900). `stream`: true for an API that streams its answer "
+        "(server-sent events or one JSON object per line): the call is read to its end and the result is an "
+        "account by event (the kinds, the tool events in order with their sizes, errors, the longest silence, "
+        "the final answer), with the whole stream kept in a file you can read in ranges."
     )
 
     class Args(ToolArgs):
@@ -122,6 +185,9 @@ class HttpRequest(Tool):
         # or JSON body field is `token_field`. The value is put there by the tool; the model never sees it.
         token_in: Literal["header", "query", "cookie", "body"] = "header"
         token_field: str = ""
+        # An API that streams its answer (server-sent events or one JSON object per line): the call is read to its
+        # end (or `timeout_s`) and returned as an account by event instead of one block of text (RS9, D-599).
+        stream: bool = False
         timeout_s: int = Field(default=HTTP_TIMEOUT_S, ge=1, le=MAX_TIMEOUT_S)
 
     def summary(self, args: HttpRequest.Args) -> str:
@@ -237,12 +303,19 @@ class HttpRequest(Tool):
         if not tries:
             tries.append((headers, "", ("", "", "")))
         adapted = ""
+        streamed: list[tuple[float, str]] | None = None
+        cut = False
         try:
             async with httpx.AsyncClient(timeout=args.timeout_s) as client:
                 for try_headers, note, form in tries:
-                    response = await client.request(
-                        args.method, sent_url, json=sent_json, headers=try_headers
-                    )
+                    if args.stream:
+                        response, streamed, cut = await _read_stream(
+                            client, args, sent_url, sent_json, try_headers
+                        )
+                    else:
+                        response = await client.request(
+                            args.method, sent_url, json=sent_json, headers=try_headers
+                        )
                     if response.status_code not in (401, 403):
                         adapted = note
                         if form[0] and workspace is not None:
@@ -263,7 +336,9 @@ class HttpRequest(Tool):
         if response.status_code < 400 and context.workspace is not None:
             # The call that worked is written down by the tool: a later session repeats it instead of searching again (D-597).
             notes = RunNotes(context.workspace)
-            notes.record_call(args.method, args.url, args.json_body, name, response.status_code)
+            notes.record_call(
+                args.method, args.url, args.json_body, name, response.status_code, stream=args.stream
+            )
             if context.pin is not None:
                 context.pin("run_notes", notes.render())
         body = response.text
@@ -280,15 +355,23 @@ class HttpRequest(Tool):
                 body = body.replace(token, "[token hidden]")
         except ValueError:
             pass
-        shown, full_path = (
-            context.cap_output(body, "tool") if context.workspace is not None else (body[:6000], None)
-        )
+        if streamed is not None:
+            if token:
+                streamed = [(at, line.replace(token, "[token hidden]")) for at, line in streamed]
+            shown, full_path = _keep_stream(context, body)
+        else:
+            shown, full_path = (
+                context.cap_output(body, "tool") if context.workspace is not None else (body[:6000], None)
+            )
         interesting = {k: v for k, v in response.headers.items() if k.lower() in SHOWN_HEADERS}
         lines = [
             f"HTTP {response.status_code}",
             str(interesting),
             f"Answer: {len(response.text):,} characters, about {count_text_tokens(response.text):,} tokens.",
         ]
+        if streamed is not None:
+            total = streamed[-1][0] if streamed else 0.0
+            lines += summarize_stream(streamed, total, cut)
         if shape:
             lines += ["Parts by size:", *shape]
         if adapted:

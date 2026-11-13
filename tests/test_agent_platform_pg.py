@@ -192,3 +192,40 @@ def test_the_support_prompt_tells_the_agent_to_answer_in_english(
     assert (
         answer["status"] == "ok" and answer["tool"] == "faq_lookup" and "Reset password" in answer["answer"]
     )
+
+
+async def test_the_stream_endpoint_is_read_by_event_through_http_request(
+    hub: tuple[str, Path, tuple[str, str]],
+    original_repo: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """RS9 (D-599): the ops agent's run, as a stream: the call that stalls is visible, the error comes in the middle."""
+    from forge.toolkit.base import ToolContext
+    from forge.tools.http_request import HttpRequest
+    from forge.workspace.create import create_workspace
+
+    base, _, _ = hub
+    env_file = tmp_path / "debcraft.env"
+    env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n", encoding="utf-8")
+    monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
+    monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
+    context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))
+
+    result = await HttpRequest().run(
+        HttpRequest.Args(
+            method="POST",
+            url=f"{base}/api/agents/ops/stream",
+            json={"question": QUESTION},
+            token_env="DEVELOPMENT_INSTANCE_TOKEN",
+            stream=True,
+            timeout_s=60,
+        ),
+        context,
+    )
+
+    assert result.ok and "HTTP 200" in result.content
+    assert "run_started x1" in result.content and "tool_call list_deployments" in result.content
+    assert "tool_result list_deployments (" in result.content  # its size is in the account
+    assert "Error event" in result.content and "the agent could not finish" in result.content
+    assert TOKEN not in result.content
