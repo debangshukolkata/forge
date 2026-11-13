@@ -16,6 +16,7 @@ from forge.safety.sandbox import SandboxedProcess, SandboxUnavailableError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.toolkit.powershell import build_script, kill_tree, start_process
 from forge.toolkit.progress import ProgressTracker
+from forge.workspace.run_notes import RunNotes
 
 READY_TIMEOUT_S = 60
 FAILURE_SIGNS = re.compile(
@@ -156,6 +157,12 @@ class StartBackground(Tool):
             return ToolResult(
                 ok=False, content=f"'{args.name}' exited with code {process.returncode}:\n{recent}"
             )
+        if ready and context.workspace is not None:
+            # Written down by the tool itself: a later session or conversation starts the application the same way (D-597).
+            notes = RunNotes(context.workspace)
+            notes.record_start(args.name, args.command, args.cwd, port, sorted(shell.extra_env))
+            if context.pin is not None:
+                context.pin("run_notes", notes.render())
         where = f" on http://127.0.0.1:{port}" if port else ""
         status = "ready" if ready else f"started but not confirmed ready after {args.timeout_s}s"
         # Name the folder: a process that silently started in the wrong one served the wrong app (D-248).

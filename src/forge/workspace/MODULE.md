@@ -12,3 +12,4 @@ Changed expectations in the user's existing tests are recorded for the delivery 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
 - **Attachments (D-469):** `Workspace.input_path` resolves `.forge/inputs/...` and `.forge/tool_outputs/...` for reading only; `read_file` and `list_dir` use it.
 - **Conversations (D-582):** `conversations.py`: `ConversationStore` (index, folder per conversation under `.forge/conversations/`, copy-migration of the old log and task state into `c1`, id check before any path is built) and `conversation_file` (where a log or state file is, read without changing anything).
+- **Run notes (D-597):** `run_notes.py`: `RunNotes` keeps in `.forge/run_notes.json` the processes that reached their ready state and the HTTP calls that worked (names of settings and token variables only, redacted); `render()` is the pinned block "How this project was run before".

@@ -18,6 +18,7 @@ SLOT_ORDER = [
     "todos",
     "compaction_summary",
     "database",
+    "run_notes",
     "kb_essentials",
     "files_modified",
     "memory_index",
@@ -33,6 +34,7 @@ SLOT_TITLES = {
         "them, then continue the task from its current state and next step directly, with tool calls; do not stop to announce it)"
     ),
     "database": "Databases (what DebCraft may do; DB-backed tests use the scratch schema via PGOPTIONS)",
+    "run_notes": "How this project was run before",
     "kb_essentials": "Codebase essentials",
     "instructions": "Instructions from FORGE.md files (always follow them)",
     "skills": "Skills",

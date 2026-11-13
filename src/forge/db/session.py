@@ -136,6 +136,7 @@ class DbSession:
         lines = [report.line() for report in self.reports.values()]
         lines.append(
             f"Scratch schema in use: {self.scratch.target.name} / {self.scratch.schema}"
+            + self._scratch_contents()
             if self.scratch
             else "No scratch schema in use: DebCraft can't run SQL or DB-backed tests here. For every new SQL "
             "script, call db_request (exact SQL + verification query; the user or their DBA runs it), and "
@@ -145,6 +146,24 @@ class DbSession:
         if pending:
             lines.append(f"Pending DB requests: {', '.join(pending)}")
         return "\n".join(lines)
+
+    def _scratch_contents(self) -> str:
+        """What an earlier session already put there: the tables copied or created, and the settings of the
+        application that point at it (they are applied again at every session start, D-597)."""
+        if self.scratch is None:
+            return ""
+        tables = [name for kind, name in self.scratch.registry.objects(self.scratch.key) if kind == "table"]
+        parts = []
+        if tables:
+            shown = ", ".join(tables[:25]) + (f" and {len(tables) - 25} more" if len(tables) > 25 else "")
+            parts.append(f"tables already in it (copied or created earlier, kept between sessions): {shown}")
+        variables = self.app_variables()
+        if variables:
+            parts.append(
+                f"the application's settings {', '.join(variables)} already point at it (applied automatically at "
+                "session start; no need to call use_scratch_database again unless the application changed)"
+            )
+        return (". " + "; ".join(parts)) if parts else ""
 
     def create_request(
         self, title: str, purpose: str, sql: str, verification_query: str, who: str = "you"

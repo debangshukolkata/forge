@@ -75,6 +75,7 @@ from forge.tools.web import azure_hosted_search
 from forge.tools.web_guard import WebPolicy
 from forge.workflow.orchestrator import Orchestrator
 from forge.workspace.read_grants import ReadGrants
+from forge.workspace.run_notes import RunNotes
 from forge.workspace.workspace import Workspace
 
 DEFAULT_SYSTEM_PROMPT = (
@@ -118,6 +119,9 @@ class SessionHost:
             self.conversations = SessionConversations(workspace)
             self.conversations.restore(self)
             self.conversations.pin_others(self)
+            self.context_manager.pinned.set(
+                "run_notes", RunNotes(workspace).render()
+            )  # D-597: how it was run before
             if self.agent is not None:
                 self.agent.after_step = self.save_conversation
         self.user_urls: set[str] = (

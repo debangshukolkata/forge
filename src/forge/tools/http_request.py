@@ -35,6 +35,7 @@ from forge.toolkit.app_keys import (
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.browser import local_url
 from forge.tools.interaction import OptionSpec
+from forge.workspace.run_notes import RunNotes
 
 HTTP_TIMEOUT_S = 30
 MAX_TIMEOUT_S = 900
@@ -259,6 +260,12 @@ class HttpRequest(Tool):
                 content=f"Request failed: {type(error).__name__}: {str(error).replace(token, '[token hidden]') if token else error}. Is the app running?",
             )
         context.api_calls[f"{args.method} {args.url.split('?', 1)[0]}"] = context.step
+        if response.status_code < 400 and context.workspace is not None:
+            # The call that worked is written down by the tool: a later session repeats it instead of searching again (D-597).
+            notes = RunNotes(context.workspace)
+            notes.record_call(args.method, args.url, args.json_body, name, response.status_code)
+            if context.pin is not None:
+                context.pin("run_notes", notes.render())
         body = response.text
         if token:
             body = body.replace(token, "[token hidden]")  # an API that echoes the header must not show it
