@@ -17,7 +17,7 @@ from forge.safety.redact import Redactor
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.deferred import DEFERRED_GROUPS, GROUP_OF, expand
 from forge.tools.parity import LoadSkill
-from forge.tools.registry import MAX_TOOLS_PER_REQUEST, ToolRegistry, default_tools
+from forge.tools.registry import MAX_TOOLS_PER_REQUEST, ToolRegistry, db_tools, default_tools
 from forge.tools.tool_search import ToolSearch
 from forge.tools.vision import ocr_tools
 from forge.workspace.create import create_workspace
@@ -72,9 +72,10 @@ def test_only_the_core_tools_are_sent_and_the_list_is_much_lighter() -> None:
 
 
 def test_every_deferred_name_is_a_real_tool_and_is_listed_for_the_model() -> None:
-    real = {tool.name for tool in [*default_tools(), *ocr_tools()]}
+    everything = [*default_tools(), *ocr_tools(), *db_tools()]  # the database tools come with a database
+    real = {tool.name for tool in everything}
     assert set(GROUP_OF) <= real, set(GROUP_OF) - real
-    registry = ToolRegistry([*default_tools(), *ocr_tools()], defer=True)
+    registry = ToolRegistry(everything, defer=True)
     description = next(spec for spec in registry.specs() if spec.name == "tool_search").description
     for group, (_, names) in DEFERRED_GROUPS.items():
         assert f"[{group}]" in description

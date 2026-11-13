@@ -119,7 +119,7 @@ def test_the_first_run_guide_and_the_drawer_after_it(
             "DebCraft database" in local.inner_text()
             and "Development database (read-only)" in dev.inner_text()
         )
-        assert "never writes" in dev.inner_text()
+        assert "red card" in dev.inner_text() and "never deletes" in dev.inner_text()  # D-608
 
         azure.locator("button:has-text('Test')").click()
         page.wait_for_selector("[data-check=azure] >> text=Connected")

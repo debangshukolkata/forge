@@ -402,14 +402,24 @@ function ImageThumb({ path }: { path: string }) {
 
 // --- cards that wait for the user ---
 
-function AskCard({ kind, icon, title, answered, children }: { kind: "approval" | "question" | "action"; icon: ReactNode; title: ReactNode; answered?: string; children: ReactNode }) {
+// `danger`: a red card (D-608), a change to something shared that the user approves each time.
+function AskCard({ kind, icon, title, answered, danger, children }: { kind: "approval" | "question" | "action"; icon: ReactNode; title: ReactNode; answered?: string; danger?: boolean; children: ReactNode }) {
+  const pending = answered === undefined;
   return (
-    <div data-card={kind} data-pending={answered === undefined ? "" : undefined} className={cx("rounded-xl border bg-surface p-4", answered === undefined ? "border-warn/60 shadow-[0_0_0_3px_var(--warn-soft)]" : "border-border opacity-80")}>
+    <div
+      data-card={kind}
+      data-danger={danger ? "" : undefined}
+      data-pending={pending ? "" : undefined}
+      className={cx(
+        "rounded-xl border bg-surface p-4",
+        pending && danger ? "border-2 border-danger shadow-[0_0_0_3px_var(--danger-soft)]" : pending ? "border-warn/60 shadow-[0_0_0_3px_var(--warn-soft)]" : danger ? "border-danger/40 opacity-80" : "border-border opacity-80",
+      )}
+    >
       <div className="mb-3 flex items-center gap-2">
-        <span className={cx("flex h-7 w-7 items-center justify-center rounded-full", answered === undefined ? "bg-warn-soft text-warn" : "bg-raised text-fg-muted")}>
+        <span className={cx("flex h-7 w-7 items-center justify-center rounded-full", pending && danger ? "bg-danger text-white" : pending ? "bg-warn-soft text-warn" : "bg-raised text-fg-muted")}>
           {icon}
         </span>
-        <h4 className="min-w-0 flex-1 break-words font-semibold">{title}</h4>
+        <h4 className={cx("min-w-0 flex-1 break-words font-semibold", pending && danger && "text-danger")}>{title}</h4>
         {answered !== undefined && (
           <span
             data-testid="answered-badge"
@@ -488,20 +498,21 @@ function ApprovalCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: For
 function QuestionCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: Forge }) {
   const answered = forge.timeline.answered[itemKey];
   const { popupId, reopen } = useContext(QuestionPopup);
-  const icon = <HelpCircle className="h-4 w-4" />;
+  const danger = Boolean(p.danger);
+  const icon = danger ? <AlertOctagon className="h-4 w-4" /> : <HelpCircle className="h-4 w-4" />;
   const given = forge.timeline.questionAnswers[p.id];
   if (answered !== undefined && given !== undefined) return <AnsweredQuestion p={p} given={given} />;
   if (answered === undefined && popupId === itemKey) {
     // The question is open as a pop-up: this card only marks the place in the conversation.
     return (
-      <AskCard kind="question" icon={icon} title={p.question} answered={undefined}>
+      <AskCard kind="question" icon={icon} title={p.question} answered={undefined} danger={danger}>
         <div className="text-[13px] text-fg-muted">Waiting for your answer in the pop-up.</div>
       </AskCard>
     );
   }
   return (
-    <AskCard kind="question" icon={icon} title={p.question} answered={answered}>
-      {p.context && <Markdown text={p.context} className="text-fg-muted" />}
+    <AskCard kind="question" icon={icon} title={p.question} answered={answered} danger={danger}>
+      {p.context && <Markdown text={p.context} className={danger ? "text-fg" : "text-fg-muted"} />}
       {answered === undefined && (
         <>
           <QuestionForm itemKey={itemKey} p={p} forge={forge} />
@@ -521,11 +532,11 @@ function AnsweredQuestion({ p, given }: { p: P; given: { choice: string | null; 
   const options: P[] = p.options || [];
   const own = given.choice === null ? given.text : null;
   return (
-    <div data-card="question" data-answered="" className="rounded-xl border border-border bg-surface p-4">
+    <div data-card="question" data-answered="" data-danger={p.danger ? "" : undefined} className={cx("rounded-xl border bg-surface p-4", p.danger ? "border-danger/50" : "border-border")}>
       <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="flex w-full cursor-pointer items-center gap-2 text-left">
-        <HelpCircle className="h-4 w-4 shrink-0 text-fg-muted" aria-hidden />
-        <span className="font-semibold">Question</span>
-        <span className="text-[12.5px] text-fg-muted">Answered · 1 question</span>
+        {p.danger ? <AlertOctagon className="h-4 w-4 shrink-0 text-danger" aria-hidden /> : <HelpCircle className="h-4 w-4 shrink-0 text-fg-muted" aria-hidden />}
+        <span className="font-semibold">{p.danger ? "Change to the shared database" : "Question"}</span>
+        <span className="text-[12.5px] text-fg-muted">{p.danger ? (given.choice === options[0]?.label ? "Approved by you" : "Not approved") : "Answered · 1 question"}</span>
         <ChevronDown className={cx("ml-auto h-4 w-4 shrink-0 text-fg-muted transition-transform duration-150", open && "rotate-180")} aria-hidden />
       </button>
       {open && (

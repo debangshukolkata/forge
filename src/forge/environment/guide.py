@@ -93,8 +93,10 @@ def _variables(config: ForgeConfig) -> tuple[list[Group], list[Variable]]:
         ),
         "dev": (
             "Development database (read-only)",
-            "An existing database DebCraft may read to see existing data. DebCraft never writes to it.",
-            "The existing development database. Read-only: DebCraft never writes to it.",
+            "An existing database DebCraft may read to see existing data. It adds or changes a row there only "
+            "after you approve that change on a red card, and never deletes.",
+            "The existing development database. DebCraft reads it; a row is added or changed only after you "
+            "approve it on a red card, and nothing is ever deleted.",
         ),
     }
     for key, connection in config.postgres.connections.items():

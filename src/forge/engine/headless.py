@@ -25,6 +25,10 @@ HEADLESS_REFUSAL = (
     "Running headless: this action is on the always-ask list and nobody is here to approve it. "
     "Do not retry it; mark the task blocked with the reason, or find another way."
 )
+HEADLESS_DANGER = (
+    "Running headless: nobody is here to approve a change to something shared, so it was not made. Do not "
+    "retry it; say in your answer what change is needed and why."
+)
 HEADLESS_CANT = "Running headless: nobody can do this right now."
 PROCEED = (
     "Nobody is available to answer questions in this headless run. Use your best judgement, state your "
@@ -75,6 +79,9 @@ def auto_reply(event: Event, auto_approve: bool, allow_installs: bool = False) -
         if payload.get("always_ask") or not auto_approve:
             return Reject(request_id=payload["id"], instruction=HEADLESS_REFUSAL)
         return Approve(request_id=payload["id"])
+    if event.type == EventType.QUESTION_ASKED and payload.get("danger"):
+        # A red card (D-608) is never approved by a run nobody watches, whatever --auto-approve says.
+        return Answer(question_id=payload["id"], choice=None, text=HEADLESS_DANGER)
     if event.type == EventType.QUESTION_ASKED:
         options = payload.get("options") or []
         choice = payload.get("recommended") or (options[0]["label"] if options else None)

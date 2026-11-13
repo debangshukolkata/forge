@@ -105,6 +105,11 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
         "Signing in to an environment of the user's web application (dev, SIT) and keeping the token",
         ("app_login", "app_token_status"),
     ),
+    "dev_database": (
+        "Adding or changing rows in the shared development database, each change approved by the user on a red "
+        "card; setting such a change back",
+        ("dev_db_write", "dev_db_undo"),
+    ),
     "conversations": (
         "Earlier conversations of this project: what was asked and answered in them",
         ("conversation_recall",),

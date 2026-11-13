@@ -47,6 +47,21 @@ WRITE_WORDS = {
     "execute",
     "set",
 }
+DEV_WRITE_REFUSED = {
+    "insert",
+    "update",
+    "delete",
+    "truncate",
+    "merge",
+    "drop",
+    "alter",
+    "create",
+    "grant",
+    "revoke",
+    "conflict",
+    "copy",
+    "call",
+}
 FORBIDDEN_IN_SCRATCH = [
     (("drop", "database"), "dropping a database"),
     (("create", "database"), "creating a database"),
@@ -223,6 +238,53 @@ def check_scratch(sql: str, scratch_schema: str, deny_tables: list[str]) -> list
                 )
         _check_common(statement, deny_tables)
     return statements
+
+
+@dataclass
+class DevWrite:
+    kind: str  # "insert" or "update"
+    table: str  # "schema.table" or "table", lower-cased unless it was quoted
+    text: str  # the statement without comments or a closing semicolon
+
+
+def check_dev_write(sql: str, deny_tables: list[str]) -> DevWrite:
+    """The one kind of statement DebCraft may send to the shared development database, after the user's
+    approval (D-608): a single INSERT or a single UPDATE with a WHERE. Nothing that removes rows or changes a
+    table passes, whatever the user would approve: the user's rule is that DebCraft never deletes there."""
+    statements = split_statements(sql)
+    if len(statements) != 1:
+        raise SqlGuardError("Give exactly one INSERT or UPDATE statement per call.")
+    statement = statements[0]
+    words = statement.words
+    kind = words[0] if words else ""
+    if kind not in ("insert", "update"):
+        raise SqlGuardError(
+            f"Only INSERT and UPDATE can be sent to the development database, not {kind.upper() or 'this'}. "
+            "DebCraft never deletes rows or changes tables there; if rows must go, tell the user which and why."
+        )
+    # Not the whole WRITE_WORDS list: a column may be called comment or lock. These are the words that remove
+    # rows or change objects, and the two ways a second write hides inside one statement.
+    others = sorted(set(words) & (DEV_WRITE_REFUSED - {kind}))
+    if others:
+        raise SqlGuardError(
+            f"A change to the development database can't contain {', '.join(w.upper() for w in others)}: "
+            "one plain INSERT or UPDATE only (no ON CONFLICT, no MERGE, nothing that deletes or changes a table)."
+        )
+    if "returning" in words:
+        raise SqlGuardError(
+            "Leave out RETURNING: DebCraft reads the changed rows itself for the approval card."
+        )
+    if kind == "update" and "where" not in words:
+        raise SqlGuardError("An UPDATE on the development database needs a WHERE that names the rows.")
+    anchor = "into" if kind == "insert" else "update"
+    following = [w for w in words[words.index(anchor) + 1 :] if w != "only"] if anchor in words else []
+    if not following:
+        raise SqlGuardError("The table to change could not be read from the statement.")
+    table = following[0]
+    if table.count(".") > 1 or table.split(".")[0] in SYSTEM_SCHEMAS:
+        raise SqlGuardError(f"'{table}' is not a table DebCraft may change.")
+    _check_common(statement, deny_tables)
+    return DevWrite(kind, table, statement.text)
 
 
 def _is_column_reference(qualified: str, statement: Statement) -> bool:

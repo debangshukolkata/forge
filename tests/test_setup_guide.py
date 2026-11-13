@@ -89,7 +89,8 @@ def test_it_names_what_forge_reads_and_what_is_required(isolated_forge_home: Pat
         and not variables["LOCAL_PG_URL"]["required"]
     )
     assert variables["DEV_PG_URL"]["group"] == "Development database (read-only)"
-    assert "never writes" in variables["DEV_PG_URL"]["why"]  # read-only, said in words
+    # D-608: no longer "never writes"; a change needs the user's approval each time and nothing is deleted
+    assert "red card" in variables["DEV_PG_URL"]["why"] and "deleted" in variables["DEV_PG_URL"]["why"]
     assert {"SERPAPI_API_KEY", "TAVILY_TOOL_URL", "TAVILY_TOOL_ID", "TAVILY_BEARER_TOKEN"} <= set(variables)
     assert "TAVILY_API_KEY" not in variables  # the key itself is not used (D-210)
     assert not any(variables[n]["required"] for n in variables if n.startswith("TAVILY"))

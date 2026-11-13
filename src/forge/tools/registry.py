@@ -33,6 +33,7 @@ from forge.tools.design_inspire import design_inspire_tools
 from forge.tools.design_knowledge import design_knowledge_tools
 from forge.tools.design_md import design_md_tools
 from forge.tools.design_palette import design_palette_tools
+from forge.tools.dev_db import dev_db_tools
 from forge.tools.document import document_tools
 from forge.tools.document_preview import document_preview_tools
 from forge.tools.files import DeleteFile, EditFile, MoveFile, MultiEdit, ReadFile, WriteFile
@@ -147,7 +148,15 @@ def session_tools(mode_b: bool) -> list[Tool]:
 
 def db_tools() -> list[Tool]:
     """Only offered when a database is configured (M7)."""
-    return [DbSchema(), DbQuery(), ScratchExec(), DbRequestTool(), DbCopyTable(), UseScratchDatabase()]
+    return [
+        DbSchema(),
+        DbQuery(),
+        ScratchExec(),
+        DbRequestTool(),
+        DbCopyTable(),
+        UseScratchDatabase(),
+        *dev_db_tools(),
+    ]
 
 
 class ToolRegistry:

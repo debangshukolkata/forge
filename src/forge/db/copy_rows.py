@@ -1,7 +1,8 @@
 """Copies a table's shape and rows from a database DebCraft may only read into its own scratch schema (D-568).
 
 To try a change against a running copy of the user's application, the application needs its data: the agents,
-the tools registered for them, their settings. DebCraft never writes to the development database, so the rows
+the tools registered for them, their settings. The development database is shared (a change there needs the
+user's approval each time, D-608), so the rows
 are copied into the scratch schema of DebCraft's own database and the application copy is pointed there.
 Rows go from one connection to the other with COPY: they never pass through the model. Tables that hold
 credentials are refused, like every other read of them.

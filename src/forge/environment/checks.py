@@ -64,7 +64,8 @@ CHECKS = (
         "postgres_dev",
         "Development database (read-only)",
         True,
-        "An existing database DebCraft may read for reference; it never writes to it (DEV_PG_URL)",
+        "An existing database DebCraft may read for reference; it changes a row there only after you approve "
+        "it on a red card and never deletes (DEV_PG_URL)",
     ),
     CheckInfo(
         "gemini",

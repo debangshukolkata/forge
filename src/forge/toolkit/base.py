@@ -126,6 +126,9 @@ class ToolContext:
     interaction: Any = None  # the orchestrator (tools/interaction.Interaction), when orchestrated
     # Chat sessions: asks the user through the host's question channel (clickable options + a text box).
     ask_user: Callable[[str, str, list[Any], str | None], Awaitable[str]] | None = None
+    # A red card (D-608): (question, what will change as markdown, label of the approving option) -> (approved,
+    # what the user typed). For a change to something shared that cannot be approved once and for all.
+    confirm_danger: Callable[[str, str, str], Awaitable[tuple[bool, str]]] | None = None
     user_github_repos: Callable[[], set[str]] | None = (
         None  # 'owner/repo' links in the user's own messages (D-237)
     )

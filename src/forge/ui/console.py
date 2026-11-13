@@ -143,9 +143,10 @@ def render_question(payload: dict[str, Any], console: Console, state: ConsoleSta
     state.pending_question = str(payload["id"])
     options = payload.get("options") or []
     state.question_options = [str(option.get("label")) for option in options]
-    console.print(Rule(str(payload.get("question")), style="cyan"))
+    danger = bool(payload.get("danger"))  # a red card (D-608): a change to something shared
+    console.print(Rule(str(payload.get("question")), style="bold red" if danger else "cyan"))
     if payload.get("context"):
-        console.print(Text(str(payload["context"]), style="dim"))
+        console.print(Text(str(payload["context"]), style="red" if danger else "dim"))
     for number, option in enumerate(options, start=1):
         star = "  (recommended)" if option.get("label") == payload.get("recommended") else ""
         console.print(Text(f"  {number}. {option.get('label')}{star}", style="bold"))

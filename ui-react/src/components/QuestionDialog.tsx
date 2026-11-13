@@ -1,7 +1,7 @@
 // The question a model asks the user (ask_user): a pop-up with the options as a radio list and a box for the
 // user's own answer. Choosing an option only selects it; the answer is sent with "Submit answer", so a stray
 // click sends nothing and the user sees exactly what will be sent (D-214).
-import { Check, HelpCircle, X } from "lucide-react";
+import { AlertOctagon, Check, HelpCircle, X } from "lucide-react";
 import { createContext, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Markdown, cx } from "../lib";
 import type { Forge } from "../useForge";
@@ -21,6 +21,8 @@ export function QuestionForm({ itemKey, p, forge }: { itemKey: string; p: P; for
   const [note, setNote] = useState("");
   const typed = note.trim();
   const ready = selected !== null || typed !== "";
+  // On a red card the first option is the approving one: the button that sends it is red and says what it does.
+  const approving = Boolean(p.danger) && selected !== null && selected === options[0]?.label;
   const submit = () => {
     if (!ready) return;
     const label = selected !== null ? `You chose: ${selected}${typed ? " (with a note)" : ""}` : `You answered: ${typed}`;
@@ -32,12 +34,13 @@ export function QuestionForm({ itemKey, p, forge }: { itemKey: string; p: P; for
   };
   const onKey = (event: KeyboardEvent<HTMLDivElement>) => {
     const inText = event.target instanceof HTMLTextAreaElement;
-    if (event.key === "Enter" && (event.ctrlKey || event.metaKey || !inText)) {
+    if (event.key === "Enter" && !p.danger && (event.ctrlKey || event.metaKey || !inText)) {
       event.preventDefault();
       submit();
       return;
     }
-    const option = options[Number(event.key) - 1];
+    // A red card is answered with the mouse only: no number key picks "approve" by accident.
+    const option = p.danger ? undefined : options[Number(event.key) - 1];
     if (!inText && option) setSelected(option.label);
   };
   const summary =
@@ -63,7 +66,9 @@ export function QuestionForm({ itemKey, p, forge }: { itemKey: string; p: P; for
               onClick={() => setSelected(checked ? null : option.label)}
               className={cx(
                 "flex w-full cursor-pointer gap-3 rounded-lg border p-3 text-left transition-colors duration-150",
-                checked
+                checked && p.danger && index === 0
+                  ? "border-danger bg-danger-soft ring-2 ring-danger/30"
+                  : checked
                   ? "border-accent bg-accent-soft ring-2 ring-accent/30"
                   : recommended
                     ? "border-accent/40 hover:border-accent"
@@ -115,9 +120,15 @@ export function QuestionForm({ itemKey, p, forge }: { itemKey: string; p: P; for
         <div data-testid="question-summary" aria-live="polite" className="min-w-0 flex-1 truncate text-[12.5px] text-fg-muted">
           {summary}
         </div>
-        <Button variant="primary" disabled={!ready} onClick={submit}>
-          Submit answer
-        </Button>
+        {approving ? (
+          <Button key="approve" variant="danger" data-testid="danger-submit" className="!border-danger !bg-danger !text-white hover:brightness-110" onClick={submit}>
+            Change the shared database
+          </Button>
+        ) : (
+          <Button key="send" variant="primary" disabled={!ready} onClick={submit}>
+            Submit answer
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -142,21 +153,25 @@ export function QuestionDialog({ itemKey, p, forge, onDismiss }: { itemKey: stri
         ref={box}
         role="dialog"
         aria-modal="true"
-        aria-label="Question from DebCraft"
+        aria-label={p.danger ? "Approval for a change to the shared database" : "Question from DebCraft"}
+        data-danger={p.danger ? "" : undefined}
         tabIndex={-1}
         onKeyDown={onKey}
-        className="max-h-[88vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-border bg-surface p-5 shadow-2xl outline-none"
+        className={cx(
+          "max-h-[88vh] w-full overflow-y-auto rounded-2xl border bg-surface p-5 shadow-2xl outline-none",
+          p.danger ? "max-w-2xl border-2 border-danger shadow-[0_0_0_4px_var(--danger-soft)]" : "max-w-xl border-border",
+        )}
       >
         <div className="mb-3 flex items-start gap-3">
-          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-warn-soft text-warn">
-            <HelpCircle className="h-4 w-4" aria-hidden />
+          <span className={cx("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full", p.danger ? "bg-danger text-white" : "bg-warn-soft text-warn")}>
+            {p.danger ? <AlertOctagon className="h-4 w-4" aria-hidden /> : <HelpCircle className="h-4 w-4" aria-hidden />}
           </span>
-          <h3 className="min-w-0 flex-1 text-[16px] font-semibold leading-snug">{p.question}</h3>
+          <h3 className={cx("min-w-0 flex-1 text-[16px] font-semibold leading-snug", p.danger && "text-danger")}>{p.question}</h3>
           <IconButton label="Answer later" onClick={onDismiss}>
             <X className="h-4 w-4" aria-hidden />
           </IconButton>
         </div>
-        {p.context && <Markdown text={p.context} className="mb-3 text-fg-muted" />}
+        {p.context && <Markdown text={p.context} className={cx("mb-3", p.danger ? "text-fg" : "text-fg-muted")} />}
         <QuestionForm itemKey={itemKey} p={p} forge={forge} />
       </div>
     </div>

@@ -79,6 +79,7 @@ from forge.workspace.read_grants import ReadGrants
 from forge.workspace.run_notes import RunNotes
 from forge.workspace.workspace import Workspace
 
+DANGER_DECLINE = "Do not change"  # the refusing option of a red card (D-608)
 DEFAULT_SYSTEM_PROMPT = (
     "You are DebCraft, a software engineering assistant running on the user's Windows laptop. "
     "Be concise and precise. If you are not sure about something, say so."
@@ -325,6 +326,7 @@ class SessionHost:
         context.summarise = self._summarise
         context.router = self.router
         context.ask_user = self._ask_user
+        context.confirm_danger = self._confirm_danger
         context.user_github_repos = lambda: self.user_github_repos
         context.user_urls = lambda: self.user_urls
         context.recent_user_messages = lambda: list(self.recent_user_texts)
@@ -692,6 +694,25 @@ class SessionHost:
             extra = f". They added: {answer.text}" if answer.text else ""
             return f"The user chose: {answer.choice}{extra}"
         return f"The user answered: {answer.text or '(no answer)'}"
+
+    async def _confirm_danger(self, question: str, details: str, approve_label: str) -> tuple[bool, str]:
+        """A red card (D-608): the user approves one change to something shared, having seen exactly what
+        changes. No option is recommended and nothing is remembered: the next change asks again. Only a click on
+        the approving option counts; a typed message, like any other answer, means no."""
+        answer = await self.questions.ask(
+            EventType.QUESTION_ASKED,
+            {
+                "question": question,
+                "context": details,
+                "danger": True,
+                "recommended": None,
+                "options": [
+                    {"label": approve_label, "description": "Exactly what is shown above, once."},
+                    {"label": DANGER_DECLINE, "description": "Nothing is changed."},
+                ],
+            },
+        )
+        return answer.choice == approve_label, answer.text or ""
 
     def _mention_lookup(self) -> dict[str, object]:
         def dbr(ident: str) -> str | None:
