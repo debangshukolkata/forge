@@ -101,6 +101,10 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
         ("run_eval", "synth_samples", "mutation_check"),
     ),
     "notebooks": ("Jupyter notebooks: read and edit cells", ("notebook_read", "notebook_edit_cell")),
+    "remote_apps": (
+        "Signing in to an environment of the user's web application (dev, SIT) and keeping the token",
+        ("app_login",),
+    ),
     "conversations": (
         "Earlier conversations of this project: what was asked and answered in them",
         ("conversation_recall",),

@@ -20,12 +20,13 @@ import time
 import uuid
 from datetime import datetime
 from typing import Any, Literal
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 import httpx
 from pydantic import Field
 
 from forge.config import env_file_path, forge_home, load_secrets
+from forge.errors import ConfigError
 from forge.llm.tokens import count_text_tokens
 from forge.safety.redact import default_redactor
 from forge.toolkit.app_keys import (
@@ -36,8 +37,10 @@ from forge.toolkit.app_keys import (
     remembered_auth,
     user_value,
 )
+from forge.toolkit.app_logins import EnvLogin, TokenStore, login_for_host, login_for_token
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.browser import local_url
+from forge.tools.app_login import renew
+from forge.tools.browser import LOCAL_HOSTS
 from forge.tools.interaction import OptionSpec
 from forge.tools.stream_summary import summarize_stream
 from forge.workspace.run_notes import RunNotes
@@ -151,6 +154,42 @@ def _keep_stream(context: ToolContext, body: str) -> tuple[str, str | None]:
     )
 
 
+REMOTE_HOSTS_FILE = "remote_hosts.json"
+
+
+async def _approve_host(login: EnvLogin, context: ToolContext) -> str:
+    """One card per host and project: the user says yes once; the answer is kept in the project's `.forge` folder."""
+    workspace = context.workspace
+    path = workspace.forge_dir / REMOTE_HOSTS_FILE if workspace is not None else None
+    approved: list[str] = []
+    if path is not None:
+        try:
+            approved = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            approved = []
+    if login.host in approved:
+        return ""
+    if context.ask_user is None:
+        return f"{login.host} has not been approved for this project (no way to ask the user here)"
+    answer = await context.ask_user(
+        f"May DebCraft call {login.host} ({login.name}) in this project?",
+        f"DebCraft will send HTTP requests to {login.host}, with the token it signed in for ({login.token_name}). "
+        "The token goes only to that host and is never shown to the model.",
+        [
+            OptionSpec(label="Allow", description=f"Calls to {login.host} are allowed in this project."),
+            OptionSpec(label="Do not allow", description="DebCraft does not call that host."),
+        ],
+        "Allow",
+    )
+    if not answer.startswith("The user chose: Allow"):
+        return f"the user did not allow calls to {login.host}"
+    if path is not None and workspace is not None:
+        target = workspace.jail.check(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps([*approved, login.host]), encoding="utf-8")
+    return ""
+
+
 class HttpRequest(Tool):
     name = "http_request"
     description = (
@@ -194,16 +233,25 @@ class HttpRequest(Tool):
         return f"{args.method} {args.url}" + (f" (token from {args.token_env})" if args.token_env else "")
 
     async def run(self, args: HttpRequest.Args, context: ToolContext) -> ToolResult:
-        problem = local_url(args.url)
-        if problem:
-            return ToolResult(
-                ok=False,
-                content=f"Not sent: {problem.replace('browser tools only open', 'http_request only calls')}.",
-            )
+        refusal = await self._host_refusal(args.url, context)
+        if refusal:
+            return ToolResult(ok=False, content=f"Not sent: {refusal}.")
         headers = dict(args.headers)
         sent_url, sent_json = args.url, args.json_body
         token = ""
         name = args.token_env.strip()
+        login_env = login_for_token(name) if name else None
+        if login_env is not None:
+            host = (urlparse(args.url).hostname or "").lower()
+            if host not in LOCAL_HOSTS and host != login_env.host:
+                return ToolResult(
+                    ok=False,
+                    content=f"Not sent: {name} is the token of {login_env.host}, not of {host or args.url}.",
+                )
+            if TokenStore().get(name) is None:  # none yet, or it ended: sign in again without a window
+                signed = await renew(login_env)
+                if not signed.ok:
+                    return ToolResult(ok=False, content=f"{name} is not available: {signed.message}")
         if name:
             token, refusal = self._token(name)
             if refusal and NOT_SET in refusal and context.ask_user is not None:
@@ -257,7 +305,7 @@ class HttpRequest(Tool):
             )  # no scheme to adapt: the API takes it where the model said
         elif token:
             tries.append((headers, "", (name, args.token_header, args.token_prefix)))
-            if args.token_prefix:
+            if args.token_prefix and login_env is None:  # a token DebCraft signed in for is always a bearer
                 tries.append(
                     (
                         {**headers, args.token_header: token},
@@ -321,6 +369,15 @@ class HttpRequest(Tool):
                         if form[0] and workspace is not None:
                             remember_auth(workspace, origin, *form)
                         break
+                if login_env is not None and response.status_code in (401, 403) and args.token_in == "header":
+                    fresh = await renew(
+                        login_env
+                    )  # the session ended: sign in again once and repeat the call
+                    if fresh.ok:
+                        token = fresh.token
+                        retry = {**headers, args.token_header: f"{args.token_prefix}{token}"}
+                        response = await client.request(args.method, sent_url, json=sent_json, headers=retry)
+                        adapted = f"The token of {login_env.name} had ended: DebCraft signed in again and repeated the call."
         except httpx.TimeoutException:
             return ToolResult(
                 ok=False,
@@ -396,9 +453,37 @@ class HttpRequest(Tool):
         )
 
     @staticmethod
+    async def _host_refusal(url: str, context: ToolContext) -> str:
+        """ "" when the call may go out. The local machine always may; any other host only when it is one of the
+        environments the user described in app_logins.yaml AND the user has approved it for this project (D-603)."""
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return "only http(s) URLs"
+        host = (parsed.hostname or "").lower()
+        if host in LOCAL_HOSTS:
+            return ""
+        try:
+            login = login_for_host(host)
+        except ConfigError as error:
+            return str(error)
+        if login is None:
+            return (
+                f"http_request calls the application on localhost, and the hosts the user listed in app_logins.yaml; "
+                f"{host or url} is neither"
+            )
+        return await _approve_host(login, context)
+
+    @staticmethod
     def _token(name: str) -> tuple[str, str]:
         """(the token, '') or ('', why it cannot be used). The .env is read at call time: a token expires and
         the user replaces it while the session is open; reading registers the value for masking everywhere."""
+        if login_for_token(name) is not None:  # a token DebCraft signed in for itself (D-603)
+            stored = TokenStore().get(name)
+            return (
+                (stored, "")
+                if stored
+                else ("", f"{name} is not signed in: call app_login for its environment.")
+            )
         secrets = load_secrets(forge_home())
         where = secrets.source or "DebCraft's .env file"
         if name not in allowed_token_names(secrets.get(TOKEN_NAMES_ENV)):
