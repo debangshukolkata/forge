@@ -13,6 +13,7 @@ from forge.errors import ForgeError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.baseline_gate import baseline_gate, rewrite_gate
 from forge.tools.diagnostics import diagnose_file
+from forge.tools.edit_match import EditError, apply_line_match
 from forge.tools.knowledge_tools import reading_note
 from forge.workspace.test_expectations import changed_assertions, is_existing_test
 from forge.workspace.test_expectations import note as test_change_note
@@ -156,10 +157,10 @@ class EditFile(Tool):
         if isinstance(loaded, ToolResult):
             return loaded
         try:
-            text = apply_edit(loaded, args.old_string, args.new_string, args.replace_all)
+            text, note = apply_edit_with_note(loaded, args.old_string, args.new_string, args.replace_all)
         except EditError as error:
             return ToolResult(ok=False, content=str(error))
-        return await _save(context, args.path, text, args.reason, "edit")
+        return _with_note(await _save(context, args.path, text, args.reason, "edit"), [note])
 
 
 class MultiEdit(Tool):
@@ -187,12 +188,15 @@ class MultiEdit(Tool):
         if isinstance(loaded, ToolResult):
             return loaded
         text = loaded
+        notes: list[str] = []
         for number, edit in enumerate(args.edits, start=1):
             try:
-                text = apply_edit(text, edit.old_string, edit.new_string, edit.replace_all)
+                text, note = apply_edit_with_note(text, edit.old_string, edit.new_string, edit.replace_all)
             except EditError as error:
                 return ToolResult(ok=False, content=f"Edit {number} failed, nothing was changed: {error}")
-        return await _save(context, args.path, text, args.reason, "edit")
+            if note:
+                notes.append(f"Edit {number}: {note}")
+        return _with_note(await _save(context, args.path, text, args.reason, "edit"), notes)
 
 
 class DeleteFile(Tool):
@@ -253,11 +257,13 @@ def _clip(line: str) -> str:
     return line if len(line) <= MAX_LINE_CHARS else line[:MAX_LINE_CHARS] + " …[line clipped]"
 
 
-class EditError(ForgeError):
-    pass
-
-
 def apply_edit(text: str, old: str, new: str, replace_all: bool) -> str:
+    return apply_edit_with_note(text, old, new, replace_all)[0]
+
+
+def apply_edit_with_note(text: str, old: str, new: str, replace_all: bool) -> tuple[str, str]:
+    """The edited text and a note ("" when the match was exact). When nothing matches exactly, a block of
+    lines that differs only in indentation or trailing spaces is applied (HW3); never with replace_all."""
     if old == new:
         raise EditError("old_string and new_string are identical.")
     if not old:
@@ -277,10 +283,22 @@ def apply_edit(text: str, old: str, new: str, replace_all: bool) -> str:
         replacement = new.replace("\r\n", "\n")
         if "\r\n" in candidate:
             replacement = replacement.replace("\n", "\r\n")
-        return (
+        edited = (
             text.replace(candidate, replacement) if replace_all else text.replace(candidate, replacement, 1)
         )
+        return edited, ""
+    if not replace_all:
+        matched = apply_line_match(text, old, new)
+        if matched is not None:
+            return matched
     raise EditError("old_string was not found." + _nearest_candidates(text, old))
+
+
+def _with_note(result: ToolResult, notes: list[str]) -> ToolResult:
+    notes = [note for note in notes if note]
+    if not notes or not result.ok:
+        return result
+    return result.model_copy(update={"content": result.content + "\n" + "\n".join(notes)})
 
 
 def _find_all(text: str, needle: str) -> list[int]:
@@ -573,7 +591,7 @@ async def _save(context: ToolContext, relative: str, text: str, reason: str, op:
                 message += "\n" + note
     if changed_tests:
         message += "\n" + test_change_note(relative, changed_tests)  # D-560
-    problem = await diagnose_file(workspace, relative)
+    problem = await diagnose_file(context, relative)
     return ToolResult(
         ok=True, content=message + (f"\n{problem}" if problem else ""), meta={"diagnostics_ok": not problem}
     )

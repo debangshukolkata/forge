@@ -145,6 +145,9 @@ class ToolContext:
     last_edit_step: int = 0
     last_code_edit_step: int = 0  # the last change to something that has behaviour to test: not a page, a stylesheet, a note or a picture (D-379)
     last_verified_step: int = 0
+    api_calls: dict[str, int] = field(
+        default_factory=dict
+    )  # "<METHOD> <url without query>" -> step of the last http_request that got an answer (HW5)
     require_baseline: bool = False  # a real session asks for a test run before the first edit of existing code (set by the session host, D-408)
     tests_pinned: bool = False  # a test file was written in this session (D-410)
     rewrite_asked: bool = False  # the one reminder about replacing most of a file in one step was given

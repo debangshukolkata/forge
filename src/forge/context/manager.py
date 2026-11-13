@@ -25,6 +25,7 @@ from forge.context.compaction import (
     micro_compact,
     split_for_summary,
     step_starts,
+    stub_superseded_reads,
     summary_is_valid,
     summary_prompt,
 )
@@ -103,6 +104,7 @@ class ContextManager:
         # needs makes the model re-read it and thrash. Inside the current turn, the summary below
         # recovers space while keeping the findings.
         current_turn = latest_user_index(history)
+        stubbed += stub_superseded_reads(history)  # HW2: safe at any fill level, the newer read is whole
         while keep >= 1 and self._history_share(history, tools) >= settings.micro_compact_at:
             stubbed += micro_compact(history, keep, before=current_turn)
             keep //= 2

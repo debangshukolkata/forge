@@ -92,6 +92,26 @@ async def test_edit_uniqueness_errors_help_the_model(context: ToolContext) -> No
     assert everywhere.ok
 
 
+async def test_edit_with_wrong_indentation_reports_the_note_and_saves_the_right_file(
+    context: ToolContext,
+) -> None:
+    await call(ReadFile(), context, path=ERRORS)
+    path = context.workspace.path_of(ERRORS)
+    path.write_text("class Box:\n    def size(self):\n        return 1\n", encoding="utf-8")
+    await call(ReadFile(), context, path=ERRORS)
+
+    result = await call(
+        EditFile(),
+        context,
+        path=ERRORS,
+        old_string="def size(self):\n    return 1",
+        new_string="def size(self):\n    return 2",
+    )
+
+    assert result.ok and "Matched lines 2 to 3" in result.content
+    assert path.read_text(encoding="utf-8") == "class Box:\n    def size(self):\n        return 2\n"
+
+
 async def test_crlf_file_edit_with_lf_strings(context: ToolContext) -> None:
     await call(ReadFile(), context, path=CRLF_FILE)
 

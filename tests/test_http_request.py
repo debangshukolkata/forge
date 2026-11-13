@@ -278,3 +278,83 @@ async def test_an_api_that_wants_the_bare_token_is_served_without_the_user_chang
     assert told.ok and "takes the token without" not in told.content
     unnamed = await _call(context, url=f"{bare_token_api}/x")
     assert unnamed.ok and "without `Bearer`" in unnamed.content and TOKEN not in unnamed.content
+
+
+@pytest.fixture
+def echo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, original_repo: Path
+) -> Iterator[tuple[str, ToolContext]]:
+    """A local server that answers with what it received, so the place a token was put can be seen."""
+
+    class Handler(BaseHTTPRequestHandler):
+        def _answer(self) -> None:
+            length = int(self.headers.get("Content-Length") or 0)
+            body = self.rfile.read(length).decode() if length else ""
+            reply = json.dumps(
+                {
+                    "path": self.path,
+                    "cookie": self.headers.get("Cookie"),
+                    "authorization": self.headers.get("Authorization"),
+                    "body": body,
+                }
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(reply)))
+            self.end_headers()
+            self.wfile.write(reply)
+
+        do_GET = do_POST = _answer
+
+        def log_message(self, *args: object) -> None:
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    env_file = tmp_path / "debcraft.env"
+    env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n", encoding="utf-8")
+    monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
+    monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
+    workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
+    yield f"http://127.0.0.1:{server.server_port}", ToolContext(workspace=workspace)
+    server.shutdown()
+
+
+async def test_a_token_can_go_into_a_query_parameter_a_cookie_or_a_body_field(
+    echo: tuple[str, ToolContext],
+) -> None:
+    """RS13 (D-590): the tool puts the value where the API wants it; the model and the result never show it."""
+    base, context = echo
+    name = "DEVELOPMENT_INSTANCE_TOKEN"
+
+    query = await _call(
+        context, url=f"{base}/x?a=1", token_env=name, token_in="query", token_field="access_token"
+    )
+    assert (
+        query.ok and f"/x?a=1&access_token={TOKEN}" not in query.content and "access_token=" in query.content
+    )
+    assert TOKEN not in query.content and "[token hidden]" in query.content
+    assert "Bearer" not in query.content  # nothing in a header
+
+    cookie = await _call(context, url=f"{base}/x", token_env=name, token_in="cookie", token_field="session")
+    assert cookie.ok and "session=" in cookie.content and TOKEN not in cookie.content
+
+    body = await _call(
+        context,
+        method="POST",
+        url=f"{base}/x",
+        json={"q": 1},
+        token_env=name,
+        token_in="body",
+        token_field="token",
+    )
+    assert body.ok and "q" in body.content and "[token hidden]" in body.content and TOKEN not in body.content
+
+    missing = await _call(context, url=f"{base}/x", token_env=name, token_in="query")
+    assert not missing.ok and "token_field" in missing.content
+    listy = await _call(
+        context, method="POST", url=f"{base}/x", json=[1, 2], token_env=name, token_in="body", token_field="t"
+    )
+    assert not listy.ok and "object" in listy.content
+    header = await _call(context, url=f"{base}/x", token_env=name)
+    assert header.ok and "Bearer [token hidden]" in header.content and TOKEN not in header.content

@@ -410,3 +410,65 @@ async def test_a_failing_hook_never_blocks_compaction() -> None:
     assert await manager.compact(history) is True
     assert events.count("hook_failed") == 2 and "compacted" in events
     assert pairs_are_valid(history)
+
+
+# --- HW2: a read replaced by a newer read of the same lines is dropped ---
+
+
+def _read_exchange(call_id: str, result: str, **arguments: object) -> list[Message]:
+    arguments = {"path": "src\\a.py", **arguments}
+    call = ToolCall(id=call_id, name="read_file", raw_arguments=str(arguments), arguments=arguments)
+    return [Message(role="assistant", content="", tool_calls=[call]), Message.tool_result(call_id, result)]
+
+
+def test_an_older_read_of_the_same_lines_is_stubbed_and_the_newer_one_kept() -> None:
+    from forge.context.compaction import STUB_PREFIX, stub_superseded_reads
+
+    history = [
+        Message.system("s"),
+        Message.user("u"),
+        *_read_exchange("c1", "old content"),
+        *_read_exchange("c2", "new content", path="src/a.py"),  # a backslash and a slash are the same path
+    ]
+
+    assert stub_superseded_reads(history) == 1
+    assert history[3].content.startswith(STUB_PREFIX) and "read_file(src/a.py)" in history[3].content
+    assert history[5].content == "new content"
+    assert pairs_are_valid(history)
+    assert stub_superseded_reads(history) == 0  # an already stubbed result is not counted again
+
+
+def test_reads_with_another_offset_or_limit_are_not_touched() -> None:
+    from forge.context.compaction import stub_superseded_reads
+
+    history = [
+        Message.system("s"),
+        Message.user("u"),
+        *_read_exchange("c1", "lines 1 to 10"),
+        *_read_exchange("c2", "lines 50 to 60", offset=50),
+        *_read_exchange("c3", "lines 1 to 5", limit=5),
+    ]
+
+    assert stub_superseded_reads(history) == 0
+    assert [m.content for m in history if m.role == "tool"] == [
+        "lines 1 to 10",
+        "lines 50 to 60",
+        "lines 1 to 5",
+    ]
+
+
+def test_nothing_is_stubbed_when_the_newer_result_is_an_error_or_a_pointer() -> None:
+    from forge.context.compaction import stub_superseded_reads
+
+    for newest in (
+        "Error: a.py does not exist.",
+        "[Same result as your identical call at step 3: unchanged]",
+    ):
+        history = [
+            Message.system("s"),
+            Message.user("u"),
+            *_read_exchange("c1", "old content"),
+            *_read_exchange("c2", newest),
+        ]
+        assert stub_superseded_reads(history) == 0
+        assert history[3].content == "old content"

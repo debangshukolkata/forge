@@ -9,6 +9,7 @@ import os
 import re
 import time
 import traceback
+from collections.abc import Awaitable, Callable
 from datetime import date
 from importlib import resources
 from typing import Any
@@ -19,8 +20,10 @@ from forge.agent.hints import security_hint, variants_hint
 from forge.agent.hooks import EVENTS as HOOK_EVENTS
 from forge.agent.hooks import HookRunner
 from forge.agent.parallel import MAX_PARALLEL_COMMANDS, is_parallel_safe_command, is_test_command
+from forge.agent.repeats import Entry, RepeatLedger, call_key, digest_of
 from forge.agent.tool_output import save_full_output
 from forge.config import HookRule, forge_home
+from forge.context.compaction import SAME_RESULT_START, STUB_PREFIX
 from forge.context.manager import ContextManager
 from forge.context.warnings import next_warning
 from forge.errors import ForgeError, LLMContentFilterError, LLMContextLengthError
@@ -134,6 +137,20 @@ def is_test_path(path: str) -> bool:
 
 
 # These tools return only when the person answers, so their whole duration is waiting, not work (S1).
+PROOF_NOTE = (
+    "You called {calls} before your last code change and not after it. Run the same call again now and "
+    "report what it answers (restart the application first if it does not reload by itself). If it cannot "
+    "be run, say plainly in your reply that the change was not proven through the API and why."
+)
+POINTER_TOOLS = frozenset(
+    {"read_file", "grep", "glob", "list_dir", "code_map", "code_outline", "knowledge_search"}
+)
+POINTER_MIN_CHARS = 400
+POINTER = (
+    SAME_RESULT_START
+    + " your identical call at step {step}: nothing in it has changed. It is still above in "
+    "this conversation; use it. To see another part, change the arguments.]"
+)
 USER_WAIT_TOOLS = frozenset({"ask_user", "propose_requirements", "propose_plan", "request_user_action"})
 PARALLEL_SUBAGENT_TYPES = frozenset(
     {"explore", "planner", "reviewer", "design-critic", "art-director"}
@@ -184,6 +201,9 @@ class AgentLoop:
         )
         self._last_step_read_only = False  # the previous step only read things and nothing failed
         self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
+        self.repeats = RepeatLedger()  # HW1: identical calls with identical answers
+        self.after_step: Callable[[], Awaitable[None]] | None = None  # the session saves the history here
+        self._history: list[Message] = []
         self.role = "coder"  # subagents run on other roles' models (reviewer, debugger)
         # The web UI can show a tool's whole result (D-195); a subagent's calls show only as steps.
         self.keep_full_output = True
@@ -223,6 +243,9 @@ class AgentLoop:
 
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
+        self._history = history
+        turn_start_step = self.context.step
+        proof_nudges = 0
         continuations = 0
         question_nudges = 0
         todo_nudges = 0
@@ -309,6 +332,19 @@ class AgentLoop:
                             },
                         )
                         continue
+                if proof_nudges < 1 and self.keep_full_output and self.gate.mode != "plan":
+                    unproven = self._calls_to_repeat_after_change(turn_start_step)
+                    if unproven:
+                        proof_nudges += 1
+                        history.append(Message.system(PROOF_NOTE.format(calls="; ".join(unproven))))
+                        await self.bus.publish(
+                            EventType.NOTICE,
+                            {
+                                "kind": "proof_call",
+                                "text": "Asking for the API call to be run again after the code change.",
+                            },
+                        )
+                        continue
                 # the main agent only: a subagent runs with keep_full_output off, and a test run at the end of each subagent would cost far more than it checks
                 if (
                     stop_hook_rounds < MAX_STOP_HOOK_ROUNDS
@@ -337,6 +373,8 @@ class AgentLoop:
                     results.get(call.id) or Message.tool_result(call.id, INTERRUPTED)
                     for call in response.tool_calls
                 )
+            if self.after_step is not None:  # the history has complete call and result pairs here (D-582)
+                await self.after_step()
             self._last_step_read_only = all(
                 (tool := self.tools.get(call.name)) is not None
                 and tool.read_only
@@ -360,6 +398,11 @@ class AgentLoop:
     def active_role(self) -> str:
         """The role whose model answers now: in plan mode (read-only analysis) the planner, otherwise the loop's own role (D-411)."""
         return "planner" if self.role == "coder" and self.gate.mode == "plan" else self.role
+
+    def _calls_to_repeat_after_change(self, turn_start_step: int) -> list[str]:
+        """HW5: API calls made in this turn whose last run was before the last code change (at most 3)."""
+        changed = self.context.last_code_edit_step
+        return [key for key, step in self.context.api_calls.items() if turn_start_step < step < changed][:3]
 
     def _unreported_risks(self, reply: str) -> list[str]:
         """Risks in the source files read in this session (the model changed something) that the final reply does not name (D-410)."""
@@ -662,6 +705,13 @@ class AgentLoop:
             output_id = save_full_output(self.context.workspace, result.content, self.bus.redact_text)
             if output_id is not None:
                 full = {"output_id": output_id, "output_chars": len(result.content)}
+        rework = self._note_ui_evidence(tool.name, call.arguments or {}, result)
+        # Every result is capped here (spec §10.3), whatever the tool did itself.
+        content, _ = self.context.cap_output(result.content, tool.output_kind)
+        content, marker = flag(content)
+        if rework:
+            content += "\n" + rework
+        content, repeat_of = self._answer_to_repeat(call, result.ok, content)
         await self.bus.publish(
             EventType.TOOL_CALL_FINISHED,
             {
@@ -672,15 +722,12 @@ class AgentLoop:
                 "preview": preview,
                 "duration_s": round(max(elapsed - waited, 0.0), 2),
                 **({"waited_s": round(waited, 2)} if waited >= 0.01 else {}),
+                # Counts and seconds a tool reports about itself, for `log-summary` (KP0): never text.
+                **({"metrics": result.meta["metrics"]} if result.meta.get("metrics") else {}),
+                **({"repeat_of": repeat_of} if repeat_of is not None else {}),
                 **full,
             },
         )
-        rework = self._note_ui_evidence(tool.name, call.arguments or {}, result)
-        # Every result is capped here (spec §10.3), whatever the tool did itself.
-        content, _ = self.context.cap_output(result.content, tool.output_kind)
-        content, marker = flag(content)
-        if rework:
-            content += "\n" + rework
         if marker:
             await self.bus.publish(
                 EventType.NOTICE,
@@ -690,6 +737,51 @@ class AgentLoop:
                 },
             )
         return Message.tool_result(call.id, content if result.ok else f"Error: {content}")
+
+    def _answer_to_repeat(self, call: ToolCall, ok: bool, content: str) -> tuple[str, int | None]:
+        """HW1: what the model is given for a call it already made with the same answer. A pointer for a
+        read whose first answer is still whole above; a note from the third identical answer on. The step of
+        the first answer is returned for the event, or None when the call is new or its answer changed."""
+        key = call_key(call.name, call.arguments)
+        digest = digest_of(content)
+        earlier = self.repeats.seen(key, digest)
+        first = self.repeats.first(key, digest)
+        times = self.repeats.count(key, digest)
+        if (
+            earlier is not None
+            and ok
+            and call.name in POINTER_TOOLS
+            and len(content) > POINTER_MIN_CHARS
+            and self._result_is_whole(earlier.tool_call_id)
+        ):
+            # The entry keeps the place of the whole result, so a third call points to the same place.
+            self.repeats.add(key, Entry(earlier.step, earlier.tool_call_id, digest, ok))
+            return POINTER.format(step=earlier.step), earlier.step
+        self.repeats.add(key, Entry(self.context.step, call.id, digest, ok))
+        if (
+            first is not None
+            and times >= 2
+            and call.name not in USER_WAIT_TOOLS
+            and call.name != "todo_write"
+        ):
+            ending = (
+                "look somewhere else for the cause: for a running application its output (read_background)."
+                if call.name == "http_request"
+                else "try another way."
+            )
+            return (
+                f"{content}\n[note: this is the same call with the same answer for the {times + 1}th time "
+                f"(first at step {first.step}). Repeating it will give this answer again. Change something "
+                f"first, or {ending}]"
+            ), first.step
+        return content, None
+
+    def _result_is_whole(self, tool_call_id: str) -> bool:
+        """The result of that call is in the history in full: not trimmed to a stub, not itself a pointer."""
+        for message in self._history:
+            if message.role == "tool" and message.tool_call_id == tool_call_id:
+                return not message.content.startswith((STUB_PREFIX, SAME_RESULT_START))
+        return False
 
     def _note_ui_evidence(self, tool_name: str, arguments: dict[str, Any], result: ToolResult) -> str | None:
         """Remembers when UI files were edited and when the app was last used in a browser, so task_update can

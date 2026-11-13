@@ -349,3 +349,146 @@ async def test_a_request_that_matches_the_catalogue_gets_the_matches_in_front_of
     notes = [m for m in host.history if m.role == "system" and "Catalogue matches" in str(m.content)]
     assert len(notes) == 1 and "tpl-landing-charity" in str(notes[0].content)
     assert "tpl-landing-charity" in json.dumps(bodies[0])
+
+
+# --- HW5: an API call made before a code change is made again after it ---
+
+
+class _Answering:
+    """A local HTTP server that answers every GET with a short text, like the app under test."""
+
+    def __init__(self) -> None:
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        from threading import Thread
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self) -> None:
+                self.send_response(200)
+                self.send_header("content-type", "text/plain")
+                self.end_headers()
+                self.wfile.write(b"pong")
+
+            def log_message(self, *args: object) -> None:
+                pass
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}/ping"
+        Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def close(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+
+
+def _proof_steps(
+    url: str, *, again: bool = False, edit: bool = True, call: bool = True
+) -> list[tuple[str, str]]:
+    from tests.test_repeats import BIG
+
+    steps: list[tuple[str, str]] = []
+    if call:
+        steps.append(("http_request", json.dumps({"method": "GET", "url": url})))
+    steps.append(("read_file", json.dumps({"path": BIG})))
+    if edit:
+        steps.append(
+            (
+                "edit_file",
+                json.dumps({"path": BIG, "old_string": "return 59", "new_string": "return 590"}),
+            )
+        )
+    if again:
+        steps.append(("http_request", json.dumps({"method": "GET", "url": url})))
+    return steps
+
+
+def _edits_allowed(host: SessionHost) -> None:
+    assert host.agent is not None
+    host.agent.context.require_baseline = False  # the first-edit test run (D-408) is not what is tested here
+
+
+def _proof_notes(host: SessionHost) -> list[str]:
+    return [m.content for m in host.history if m.role == "system" and m.content.startswith("You called ")]
+
+
+def _proof_notices(host: SessionHost) -> list[object]:
+    return [
+        e.payload
+        for e in host.bus.events_since(0)
+        if e.type == EventType.NOTICE and e.payload.get("kind") == "proof_call"
+    ]
+
+
+async def test_an_api_call_before_the_code_change_and_not_after_it_is_asked_for_once(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    from tests.test_repeats import _run
+
+    server = _Answering()
+    try:
+        host = await _run(original_repo, tmp_path, _proof_steps(server.url), setup=_edits_allowed)
+    finally:
+        server.close()
+
+    notes = _proof_notes(host)
+    assert len(notes) == 1 and f"GET {server.url} before your last code change" in notes[0]
+    assert len(_proof_notices(host)) == 1  # asked once, although the model answered twice without calling
+
+
+async def test_no_reminder_when_the_call_is_made_again_after_the_change(
+    original_repo: Path, tmp_path: Path
+) -> None:
+    from tests.test_repeats import _run
+
+    server = _Answering()
+    try:
+        host = await _run(original_repo, tmp_path, _proof_steps(server.url, again=True), setup=_edits_allowed)
+    finally:
+        server.close()
+
+    assert _proof_notes(host) == []
+
+
+async def test_no_reminder_when_there_was_only_an_edit(original_repo: Path, tmp_path: Path) -> None:
+    from tests.test_repeats import _run
+
+    host = await _run(
+        original_repo, tmp_path, _proof_steps("http://127.0.0.1:1/x", call=False), setup=_edits_allowed
+    )
+
+    assert _proof_notes(host) == []
+
+
+async def test_no_reminder_for_a_call_made_in_an_earlier_turn(original_repo: Path, tmp_path: Path) -> None:
+    from forge.llm.base import Message  # noqa: F401
+    from tests.test_repeats import _run
+
+    def earlier_turn(host: SessionHost) -> None:
+        _edits_allowed(host)
+        assert host.agent is not None
+        host.agent.context.step = 5  # five tool calls were made before this turn
+        host.agent.context.api_calls["GET http://127.0.0.1:1/old"] = 3
+
+    host = await _run(
+        original_repo, tmp_path, _proof_steps("http://127.0.0.1:1/x", call=False), setup=earlier_turn
+    )
+
+    assert _proof_notes(host) == []
+
+
+async def test_http_request_notes_the_call_without_its_query_string() -> None:
+    from forge.toolkit.base import ToolContext
+    from forge.tools.http_request import HttpRequest
+
+    server = _Answering()
+    try:
+        context = ToolContext(workspace=None)  # type: ignore[arg-type]
+        context.step = 7
+        args = HttpRequest.Args(method="GET", url=server.url + "?a=1&b=2")
+        result = await HttpRequest().run(args, context)
+    finally:
+        server.close()
+
+    assert result.ok and context.api_calls == {f"GET {server.url}": 7}
+    refused = ToolContext(workspace=None)  # type: ignore[arg-type]
+    await HttpRequest().run(HttpRequest.Args(method="GET", url="https://example.com/x"), refused)
+    assert refused.api_calls == {}  # a refused request is not an API call that ran

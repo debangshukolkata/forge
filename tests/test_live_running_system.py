@@ -21,6 +21,7 @@ from pathlib import Path
 import httpx
 import pytest
 
+from forge.agent.loop import AgentLoop
 from forge.config import load_config, load_secrets
 from forge.engine.headless import auto_reply
 from forge.engine.session_host import SessionHost
@@ -64,11 +65,18 @@ async def test_a_requirement_is_solved_by_running_the_system(
         workspace=workspace,
         permission_mode="auto",
     )
+    if (
+        os.environ.get("PROOF_REMINDER") == "off"
+    ):  # HW5 measurement: the same run without the reminder (D-584)
+        monkeypatch.setattr(AgentLoop, "_calls_to_repeat_after_change", lambda self, turn_start_step: [])
     calls: list[str] = []
     asked_user: list[str] = []
     said: list[str] = []
+    proof_notices: list[int] = []  # the number of calls so far when the reminder was given
 
     def reply(event: Event) -> UserInput | None:
+        if event.type == EventType.NOTICE and event.payload.get("kind") == "proof_call":
+            proof_notices.append(len(calls))
         if event.type == EventType.TOOL_CALL_STARTED:
             calls.append(f"{event.payload['name']} {event.payload['arguments']}"[:500])
         if event.type == EventType.MESSAGE_DONE:
@@ -141,6 +149,8 @@ async def test_a_requirement_is_solved_by_running_the_system(
         "read_run_log": any("runs.jsonl" in call or "logs" in call for call in calls),
         "loaded_skill": any("solve-against-running-system" in call for call in calls),
         "called_the_api": sum(1 for call in calls if call.startswith("http_request")),
+        "proof_reminder": os.environ.get("PROOF_REMINDER", "on"),
+        "proof_notices": proof_notices,
         "wrote_knowledge": "knowledge_write" in tools_used,
         "changed": sorted({change.path for change in workspace.changes()}),
         "final_status": body.get("status"),

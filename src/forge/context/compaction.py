@@ -104,6 +104,53 @@ def micro_compact(history: list[Message], keep_recent: int, before: int | None =
     return stubbed
 
 
+SAME_RESULT_START = "[Same result as"  # the pointer a repeated call is given (HW1, agent/loop.py)
+
+
+def _is_whole_result(content: str) -> bool:
+    return not content.startswith((STUB_PREFIX, SAME_RESULT_START, "Error"))
+
+
+def stub_superseded_reads(history: list[Message]) -> int:
+    """HW2: a read_file result is replaced by a stub when the same path, offset and limit were read again
+    later and that newer result is whole in the history. Unlike micro_compact this is safe inside the
+    current turn: the newer result holds the current content. Returns how many results were replaced."""
+    keys: dict[str, tuple[str, int, int | None]] = {}
+    for message in history:
+        for call in message.tool_calls:
+            if call.name != "read_file" or call.arguments is None:
+                continue
+            arguments = call.arguments
+            try:
+                offset = int(arguments.get("offset", 1))
+                limit = None if arguments.get("limit") is None else int(arguments["limit"])
+            except (TypeError, ValueError):
+                continue
+            keys[call.id] = (str(arguments.get("path", "")).replace("\\", "/"), offset, limit)
+    results: dict[tuple[str, int, int | None], list[int]] = {}
+    for index, message in enumerate(history):
+        if message.role == "tool" and message.tool_call_id in keys:
+            results.setdefault(keys[message.tool_call_id], []).append(index)
+    replaced = 0
+    for key, indexes in results.items():
+        if len(indexes) < 2 or not _is_whole_result(history[indexes[-1]].content):
+            continue
+        for index in indexes[:-1]:
+            message = history[index]
+            if not _is_whole_result(message.content):
+                continue
+            history[index] = message.model_copy(
+                update={
+                    "content": (
+                        f"{STUB_PREFIX}read_file({key[0]}) removed: the same lines were read again later in "
+                        "this conversation and that newer result is the current content.]"
+                    )
+                }
+            )
+            replaced += 1
+    return replaced
+
+
 def split_for_summary(history: list[Message], keep_recent_steps: int) -> tuple[list[Message], list[Message]]:
     """(older, recent) with the system prompt excluded, cut at a step boundary. older is empty when there
     aren't enough steps to compact. The latest user request stays in recent even if it is older."""

@@ -49,7 +49,14 @@ class TodoWrite(Tool):
         return f"todo list ({done}/{len(args.todos)} done)"
 
     async def run(self, args: TodoWrite.Args, context: ToolContext) -> ToolResult:
-        context.todos = [item.model_dump() for item in args.todos]
+        new_items = [item.model_dump() for item in args.todos]
+        if new_items == context.todos:
+            return ToolResult(
+                ok=True,
+                content="The todo list is unchanged: this is the same list as before. Do the next open "
+                "item; send the list again only when an item changes.",
+            )
+        context.todos = new_items
         if context.pin is not None:
             context.pin(PIN_SLOT, render(args.todos) if args.todos else None)
         await context.emit("todo_updated", {"items": context.todos})

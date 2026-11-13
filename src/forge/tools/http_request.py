@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import re
 from typing import Any, Literal
+from urllib.parse import quote
 
 import httpx
 from pydantic import Field
@@ -74,6 +75,21 @@ def json_shape(value: Any, name: str = "body", depth: int = 0) -> list[str]:
     ]
 
 
+NoneType = type(None)
+
+
+def _place_token(args: HttpRequest.Args, token: str, headers: dict[str, str], body: Any) -> tuple[str, Any]:
+    """(url, json body) with the token under `token_field` where `token_in` says; a cookie goes into the headers."""
+    field = args.token_field.strip()
+    if args.token_in == "query":
+        separator = "&" if "?" in args.url else "?"
+        return f"{args.url}{separator}{quote(field)}={quote(token, safe='')}", body
+    if args.token_in == "cookie":
+        headers["Cookie"] = "; ".join(filter(None, [headers.get("Cookie", ""), f"{field}={token}"]))
+        return args.url, body
+    return args.url, {**(body or {}), field: token}
+
+
 class HttpRequest(Tool):
     name = "http_request"
     description = (
@@ -101,6 +117,10 @@ class HttpRequest(Tool):
         token_env: str = ""
         token_header: str = "Authorization"
         token_prefix: str = "Bearer "
+        # Where the token goes when the API does not read a header (RS13): the name of the query parameter, cookie
+        # or JSON body field is `token_field`. The value is put there by the tool; the model never sees it.
+        token_in: Literal["header", "query", "cookie", "body"] = "header"
+        token_field: str = ""
         timeout_s: int = Field(default=HTTP_TIMEOUT_S, ge=1, le=MAX_TIMEOUT_S)
 
     def summary(self, args: HttpRequest.Args) -> str:
@@ -114,6 +134,7 @@ class HttpRequest(Tool):
                 content=f"Not sent: {problem.replace('browser tools only open', 'http_request only calls')}.",
             )
         headers = dict(args.headers)
+        sent_url, sent_json = args.url, args.json_body
         token = ""
         name = args.token_env.strip()
         if name:
@@ -144,14 +165,30 @@ class HttpRequest(Tool):
                     )
             if refusal:
                 return ToolResult(ok=False, content=refusal)
-            headers[args.token_header] = f"{args.token_prefix}{token}"
+            if args.token_in == "header":
+                headers[args.token_header] = f"{args.token_prefix}{token}"
+            elif not args.token_field.strip():
+                return ToolResult(
+                    ok=False,
+                    content=f'token_in="{args.token_in}" needs `token_field`: the name it goes under.',
+                )
+            elif args.token_in == "body" and not isinstance(sent_json, dict | NoneType):
+                return ToolResult(
+                    ok=False, content='token_in="body" needs `json` to be an object (or empty).'
+                )
+            else:
+                sent_url, sent_json = _place_token(args, token, headers, sent_json)
         # What to try when the API refuses the call (401, 403: nothing was done, so sending again is safe). The
         # user was asked to rewrite the token line and to restart for things the tool can find out itself (D-570).
         # Each try: the headers, what to tell the model when it is the one that works, and (name, header, prefix).
         origin = "/".join(args.url.split("/")[:3])
         workspace = context.workspace
         tries: list[tuple[dict[str, str], str, tuple[str, str, str]]] = []
-        if token:
+        if token and args.token_in != "header":
+            tries.append(
+                (headers, "", ("", "", ""))
+            )  # no scheme to adapt: the API takes it where the model said
+        elif token:
             tries.append((headers, "", (name, args.token_header, args.token_prefix)))
             if args.token_prefix:
                 tries.append(
@@ -203,7 +240,7 @@ class HttpRequest(Tool):
             async with httpx.AsyncClient(timeout=args.timeout_s) as client:
                 for try_headers, note, form in tries:
                     response = await client.request(
-                        args.method, args.url, json=args.json_body, headers=try_headers
+                        args.method, sent_url, json=sent_json, headers=try_headers
                     )
                     if response.status_code not in (401, 403):
                         adapted = note
@@ -218,14 +255,18 @@ class HttpRequest(Tool):
             )
         except httpx.HTTPError as error:
             return ToolResult(
-                ok=False, content=f"Request failed: {type(error).__name__}: {error}. Is the app running?"
+                ok=False,
+                content=f"Request failed: {type(error).__name__}: {str(error).replace(token, '[token hidden]') if token else error}. Is the app running?",
             )
+        context.api_calls[f"{args.method} {args.url.split('?', 1)[0]}"] = context.step
         body = response.text
         if token:
             body = body.replace(token, "[token hidden]")  # an API that echoes the header must not show it
         shape: list[str] = []
         try:
             parsed = response.json()
+            if token:  # an API that echoes what it received must not show the token in the summary either
+                parsed = json.loads(json.dumps(parsed).replace(token, "[token hidden]"))
             shape = json_shape(parsed)[:SHAPE_LINES]
             body = json.dumps(parsed, indent=1)
             if token:
