@@ -1,6 +1,6 @@
 import { MessagesSquare, Network, PanelRightClose, PanelRightOpen } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Chat } from "./components/Chat";
+import { Chat, SHOW_ALL_EVENT } from "./components/Chat";
 import { RunMap } from "./components/RunMap";
 import { Account } from "./components/Account";
 import { EnvironmentDrawer } from "./components/Environment";
@@ -81,7 +81,7 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
   // From the Run map to the chat: show the row of that event (or the last row before it) and flash it.
   const jump = useCallback((seq: number) => {
     setSurface("chat");
-    window.setTimeout(() => {
+    const show = () => {
       const rows = [...document.querySelectorAll<HTMLElement>("[data-seq]")];
       const row = rows.filter((r) => Number(r.dataset.seq) <= seq).pop() ?? rows[0];
       if (!row) return;
@@ -89,6 +89,16 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
       row.classList.remove("jump-flash");
       void row.offsetWidth; // restart the animation
       row.classList.add("jump-flash");
+    };
+    window.setTimeout(() => {
+      const first = document.querySelector<HTMLElement>("[data-seq]");
+      if (first && Number(first.dataset.seq) > seq) {
+        // The chat draws only the latest items (CV3): draw them all, then go there.
+        window.dispatchEvent(new Event(SHOW_ALL_EVENT));
+        window.setTimeout(show, 150);
+      } else {
+        show();
+      }
     }, 60);
   }, []);
 

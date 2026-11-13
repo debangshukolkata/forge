@@ -1,7 +1,7 @@
 import {
   AlertOctagon, ArrowDown, Check, ChevronDown, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload,
 } from "lucide-react";
-import { useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
 import type { ChatItem, EnvironmentOverview, SlideSet, UserInput } from "../types";
 import type { Forge } from "../useForge";
@@ -13,8 +13,18 @@ import { LookingGroup, ThinkingLine, ToolCard, groupLookingRuns } from "./ToolRo
 import { Badge, Button, CopyButton, Textarea } from "./ui";
 
 
+export const SHOW_ALL_EVENT = "forge:show-all"; // the Run map's jump asks the chat to draw every item
+const WINDOW_ITEMS = 300; // the chat draws about this many of the latest items; "Show earlier" adds as many (CV3, D-594)
+
+function rowSize(row: ChatRow): number {
+  return row.kind === "looking" ? row.items.length : 1;
+}
+
 export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment?: () => void }) {
   const scroller = useRef<HTMLDivElement>(null);
+  // A project with a long history opened slowly because every item was drawn (20,000 events: 10 s of rendering).
+  const [limit, setLimit] = useState(WINDOW_ITEMS);
+  const grown = useRef<number | null>(null); // the scroll height before the window grew, to keep the reader where they were
   const stick = useRef(true);
   // Scrolled away from the newest message (the "jump to latest" button shows) and whether something new arrived meanwhile (a dot on the button).
   const [away, setAway] = useState(false);
@@ -28,6 +38,37 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
     box.scrollTo({ top: box.scrollHeight, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   };
   const { items } = forge.timeline;
+  const allTurns = useMemo(() => groupIntoTurns(groupLookingRuns(items)), [items]);
+  const { turns, hidden } = useMemo(() => {
+    let shown = 0;
+    let first = allTurns.length;
+    while (first > 0 && shown < limit) {
+      first -= 1;
+      shown += allTurns[first].rows.reduce((sum, row) => sum + rowSize(row), 0);
+    }
+    const hiddenCount = allTurns.slice(0, first).reduce((sum, turn) => sum + turn.rows.reduce((inner, row) => inner + rowSize(row), 0), 0);
+    return { turns: allTurns.slice(first), hidden: hiddenCount };
+  }, [allTurns, limit]);
+  useEffect(() => {
+    if (items.length === 0) setLimit(WINDOW_ITEMS); // another conversation or project: start small again
+  }, [items.length]);
+  useEffect(() => {
+    const showAll = () => setLimit(Number.MAX_SAFE_INTEGER);
+    window.addEventListener(SHOW_ALL_EVENT, showAll);
+    return () => window.removeEventListener(SHOW_ALL_EVENT, showAll);
+  }, []);
+  useLayoutEffect(() => {
+    const box = scroller.current;
+    if (box && grown.current !== null) {
+      box.scrollTop += box.scrollHeight - grown.current; // the older items were added above the reader
+      grown.current = null;
+    }
+  }, [limit]);
+  const showEarlier = () => {
+    grown.current = scroller.current?.scrollHeight ?? null;
+    stick.current = false;
+    setLimit((current) => current + WINDOW_ITEMS);
+  };
   const attachments = useAttachments();
   const [dragging, setDragging] = useState(false);
   // The oldest question still waiting for an answer opens as a pop-up; "Answer later" leaves it in the chat.
@@ -105,7 +146,14 @@ export function Chat({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnviron
               </Button>
             </div>
           )}
-          {groupIntoTurns(groupLookingRuns(items)).map((turn) => (
+          {hidden > 0 && (
+            <div className="flex justify-center">
+              <Button size="sm" variant="secondary" onClick={showEarlier} data-testid="show-earlier">
+                Show earlier messages ({hidden.toLocaleString()} more)
+              </Button>
+            </div>
+          )}
+          {turns.map((turn) => (
             // One turn = your message plus everything DebCraft did for it. The message sticks to the top while that
             // turn is on screen, so a scrolled-up reply always shows which prompt it answers.
             <div key={turn.key} className="flex flex-col gap-4">

@@ -1,5 +1,5 @@
-"""CV3 in headless Edge: a project whose log holds 20,000 events opens in a reasonable time (the replay goes out in
-batches and the browser applies a batch at once). The time is printed so it can be compared before and after."""
+"""CV3 in headless Edge: a project whose log holds 20,000 events opens fast because the chat draws only the latest
+items and a "Show earlier" button adds more (D-593, D-594). The time is printed; before the window it was 10.5 s."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import pytest
 
 from forge.safety.server_security import ServerSecurity
 from forge.workspace.workspace import Workspace
+from tests.conftest import REPO_ROOT
 from tests.test_web_conversations_e2e import (  # noqa: F401  (a server on the conversation paths)
     server,
     workspace,
@@ -19,7 +20,6 @@ from tests.test_web_e2e import configured_secrets, playwright_api  # noqa: F401
 pytestmark = pytest.mark.e2e
 
 TURNS = 5000  # four events each: 20,000 events
-OPEN_SECONDS_LIMIT = 20.0
 
 
 def write_long_log(project: Workspace) -> None:
@@ -68,21 +68,20 @@ def write_long_log(project: Workspace) -> None:
             handle.write(line("message_done", {"text": f"answer {turn}", "model": "gpt51"}) + "\n")
 
 
-@pytest.mark.parametrize("batch", [1, 500])
-def test_a_project_with_twenty_thousand_events_opens_in_reasonable_time(
-    batch: int,
+OPEN_SECONDS_LIMIT = 4.0
+
+
+def test_a_project_with_twenty_thousand_events_opens_fast_and_shows_earlier_on_request(
     server: ServerSecurity,  # noqa: F811
     workspace: Workspace,  # noqa: F811
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """batch 1 is one message and one render per event, which is what the replay was before CV3; 500 is the
-    batch size in use. Only the batched replay has to meet the limit."""
-    monkeypatch.setattr("forge.web.server.REPLAY_BATCH", batch)
     write_long_log(workspace)
     post = (
         "async ([path, body]) => (await fetch(path, {method: 'POST',"
         " headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)})).status"
     )
+    shots = REPO_ROOT / "test-artifacts" / "react-ui"
+    shots.mkdir(parents=True, exist_ok=True)
     with playwright_api.sync_playwright() as p:
         try:
             browser = p.chromium.launch(channel="msedge", headless=True)
@@ -96,12 +95,18 @@ def test_a_project_with_twenty_thousand_events_opens_in_reasonable_time(
         assert page.evaluate(post, ["/api/open", {"workspace": str(workspace.root)}]) == 200
         started = time.perf_counter()
         page.reload()
-        page.wait_for_selector(
-            f"text=answer {TURNS - 1}", timeout=int(OPEN_SECONDS_LIMIT * 1000 * (6 if batch == 1 else 1))
-        )
+        page.wait_for_selector(f"text=answer {TURNS - 1}", timeout=int(OPEN_SECONDS_LIMIT * 4000))
         seconds = time.perf_counter() - started
+        button = page.get_by_test_id("show-earlier")
+        label = button.inner_text()
+        page.screenshot(path=str(shots / "chat-long-window.png"))
+        older = f"answer {TURNS - 150}"  # about 450 items from the end: outside the first window of 300
+        assert page.get_by_text(older, exact=True).count() == 0
+        button.click()
+        page.wait_for_selector(f"text={older}", timeout=10000)
+        assert button.inner_text() != label  # fewer messages are hidden now
         browser.close()
-    print(f"\nOPEN of a log with {TURNS * 4} events, batch {batch}: {seconds:.1f} s")
+    print(f"\nOPEN of a log with {TURNS * 4} events: {seconds:.1f} s; button: {label}")
     assert not problems, problems
-    if batch > 1:
-        assert seconds < OPEN_SECONDS_LIMIT
+    assert seconds < OPEN_SECONDS_LIMIT
+    assert "more" in label
