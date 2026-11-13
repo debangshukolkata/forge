@@ -221,7 +221,11 @@ def classify(command: str, scope: ShellScope) -> Classification:
         r"(powershell|pwsh)", command, re.IGNORECASE
     ):
         result.raise_to("blocked", "encoded PowerShell commands are not allowed")
-    if _HIDDEN_SECRET_PATH.search(command) or _PROFILE_VARIABLE.search(command):
+    if (
+        _HIDDEN_SECRET_PATH.search(command)
+        or _PROFILE_VARIABLE.search(command)
+        or _OWN_PRIVATE_FILES.search(command)
+    ):
         # A path built from a variable, or a ".env" named inside a quoted string (python -c "open('.env')"),
         # is invisible to the per-argument checks below, and these files hold DebCraft's own keys.
         result.raise_to(
@@ -372,6 +376,12 @@ _SECRET_FILE = re.compile(
 # ".env" (not .env.example) after a path separator or quote anywhere in the command text.
 _HIDDEN_SECRET_PATH = re.compile(
     r"[\\/'\"]\.env(?!\.(?:example|sample|template)\b)(?:\.[\w.-]+)?(?=$|[\\/'\"\s)\]};,])", re.IGNORECASE
+)
+# DebCraft's own private files (D-606): the token store, the signed-in browser profiles, the login and tunnel
+# descriptions and the application's environment file. Named in a command (any way it is spelled), the user is asked.
+_OWN_PRIVATE_FILES = re.compile(
+    r"(?<![\w-])(?:\.forge[\\/]+tokens\.json|app_logins\.yaml|tunnels\.yaml|app\.env|browser_profile)(?![\w-])",
+    re.IGNORECASE,
 )
 # Where DebCraft keeps its folder and keys, reached through a variable instead of a literal path.
 _PROFILE_VARIABLE = re.compile(
