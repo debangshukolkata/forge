@@ -339,9 +339,29 @@ async def test_a_token_the_server_refuses_is_replaced_without_asking_the_user(ch
     assert (await ensure_token(login, home, ask=never)).token == "good-token"
 
 
-async def test_when_no_token_can_be_got_the_user_is_asked_to_run_gcloud_auth_login_and_then_it_is_tried_again(  # type: ignore[no-untyped-def]
+async def test_when_the_quiet_sign_in_fails_a_window_opens_before_the_user_is_asked_anything(
     checked, monkeypatch
-) -> None:
+) -> None:  # type: ignore[no-untyped-def]
+    from forge.tools.app_login import SignIn, ensure_token
+
+    login, home = checked
+    calls: list[bool] = []
+
+    async def fake_sign_in(login, home=None, visible=False):  # type: ignore[no-untyped-def]
+        calls.append(visible)
+        return SignIn(True, token="good-token") if visible else SignIn(False, message="Google is waiting")
+
+    async def never(*args: object) -> str:
+        raise AssertionError("no card is needed when the window works")
+
+    monkeypatch.setattr("forge.tools.app_login.sign_in", fake_sign_in)
+    ensured = await ensure_token(login, home, ask=never)
+    assert ensured.token == "good-token" and calls == [False, True]
+
+
+async def test_when_even_the_window_fails_the_user_gets_a_card_and_one_more_window_after_done(
+    checked, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
     from forge.tools.app_login import SignIn, ensure_token
 
     login, home = checked
@@ -351,7 +371,7 @@ async def test_when_no_token_can_be_got_the_user_is_asked_to_run_gcloud_auth_log
         calls.append(visible)
         return (
             SignIn(True, token="good-token")
-            if len(calls) >= 2
+            if len(calls) >= 3
             else SignIn(False, message="Google is waiting")
         )
 
@@ -363,12 +383,11 @@ async def test_when_no_token_can_be_got_the_user_is_asked_to_run_gcloud_auth_log
 
     monkeypatch.setattr("forge.tools.app_login.sign_in", fake_sign_in)
     ensured = await ensure_token(login, home, ask=done)
+    assert ensured.token == "good-token" and calls == [False, True, True]
+    assert len(cards) == 1 and "gcloud auth login" in cards[0][1] and "another issue" in cards[0][1]
 
-    assert ensured.token == "good-token" and calls == [False, False]
-    assert len(cards) == 1 and "gcloud auth login" in cards[0][0] and "Google is waiting" in cards[0][1]
 
-
-async def test_a_skipped_card_or_a_failed_second_try_ends_with_no_token_and_a_reason(
+async def test_a_skipped_card_or_a_failed_last_window_ends_with_no_token_and_a_reason(
     checked, monkeypatch
 ) -> None:  # type: ignore[no-untyped-def]
     from forge.tools.app_login import SignIn, ensure_token
@@ -388,12 +407,13 @@ async def test_a_skipped_card_or_a_failed_second_try_ends_with_no_token_and_a_re
 
     monkeypatch.setattr("forge.tools.app_login.sign_in", always_fails)
     skipped = await ensure_token(login, home, ask=skip)
-    assert skipped.token == "" and "did not run gcloud auth login" in skipped.message and tries == [False]
+    assert skipped.token == "" and "skipped" in skipped.message and tries == [False, True]
 
     tries.clear()
     failed = await ensure_token(login, home, ask=done)
-    assert failed.token == "" and tries == [False, False, True] and "Google is waiting" in failed.message
-    assert (await ensure_token(login, home, ask=None)).token == ""
+    assert failed.token == "" and tries == [False, True, True] and "Google is waiting" in failed.message
+    tries.clear()
+    assert (await ensure_token(login, home, ask=None)).token == "" and tries == [False, True]
 
 
 async def test_the_status_tool_checks_without_signing_in(

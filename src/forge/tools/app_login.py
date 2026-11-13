@@ -217,30 +217,33 @@ async def ensure_token(
     result = await renew(login, home)
     if result.ok:
         return Ensured(result.token)
+    # No token without a window: open one, so the user can sign in there (the browser profile of DebCraft is not the
+    # user's own Edge, so Google may ask once; the first run is visible already).
+    result = await sign_in(login, home, visible=True)
+    if result.ok:
+        TokenStore(home).put(login.token_name, result.token)
+        return Ensured(result.token)
     if ask is None:
         return Ensured("", result.message)
     from forge.tools.interaction import OptionSpec
 
     answer = await ask(
-        f"DebCraft could not sign in to {login.name}. Please run gcloud auth login.",
-        f"{result.message}\n\nIn PowerShell run:\n\n    gcloud auth login\n\nSign in with your Google account in the "
-        "browser that opens. Then choose Done here: DebCraft tries the sign-in again, and opens a window if the site "
-        "needs you.",
+        f"DebCraft could not get the {login.name} token, even after opening the sign-in window.",
+        f"{result.message}\n\n"
+        "If Google asked for a login, run `gcloud auth login` in PowerShell and sign in the window "
+        "DebCraft opens. If you are sure you are signed in, there may be another issue (the site, the steps in "
+        "app_logins.yaml). Choose Done once you have signed in: DebCraft opens the window again and tries once more.",
         [
-            OptionSpec(label="Done", description="I ran gcloud auth login; try the sign-in again."),
+            OptionSpec(label="Done", description="I signed in; try again."),
             OptionSpec(label="Skip", description="Do not sign in now."),
         ],
         "Done",
     )
     if not answer.startswith("The user chose: Done"):
-        return Ensured(
-            "", f"Not signed in to {login.name}: the user did not run gcloud auth login ({answer[:80]})."
-        )
-    result = await renew(login, home)
-    if not result.ok:  # the site itself needs the person: a window, the way it was the first time
-        result = await sign_in(login, home, visible=True)
-        if result.ok:
-            TokenStore(home).put(login.token_name, result.token)
+        return Ensured("", f"Not signed in to {login.name}: the user skipped it ({answer[:80]}).")
+    result = await sign_in(login, home, visible=True)
+    if result.ok:
+        TokenStore(home).put(login.token_name, result.token)
     return Ensured(result.token, "" if result.ok else result.message)
 
 
