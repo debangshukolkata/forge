@@ -20,6 +20,12 @@ CREATE TABLE agent_tools (
     PRIMARY KEY (agent, tool)
 );
 
+-- The deployment system's state. It is empty here: a real database holds the applications.
+CREATE TABLE applications (
+    name TEXT PRIMARY KEY,
+    doc JSONB NOT NULL
+);
+
 INSERT INTO agents VALUES ('ops', 'Answers questions about what is deployed', 20000,
     'You answer questions about what is deployed. Use your tools and answer only from what they return.');
 INSERT INTO agents VALUES ('billing', 'Answers questions about invoices', 20000,

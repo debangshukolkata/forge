@@ -103,9 +103,20 @@ async def test_after_an_undo_or_rewind_the_model_is_told_which_files_went_back(
     host = SessionHost(mocked_router(unreachable), EventBus(redactor=Redactor()), workspace=workspace)  # type: ignore[arg-type]
     runner = asyncio.create_task(host.run())
     await host.submit(SlashCommand(text="/undo"))
-    await asyncio.sleep(0.2)
+
+    def undo_notes() -> list[object]:
+        return [
+            m for m in host.history if m.role == "system" and "undid your recent changes" in str(m.content)
+        ]
+
+    for _ in range(
+        200
+    ):  # the session starts up first; on a loaded machine that takes longer than any fixed wait
+        if undo_notes():
+            break
+        await asyncio.sleep(0.05)
     runner.cancel()
-    notes = [m for m in host.history if m.role == "system" and "undid your recent changes" in str(m.content)]
+    notes = undo_notes()
     assert (
         len(notes) == 1
         and "backend/claims_app/a.py" in str(notes[0].content)

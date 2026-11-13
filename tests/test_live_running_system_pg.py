@@ -43,6 +43,7 @@ from tests.test_agent_platform_pg import (
     TOKEN,
     VENV_PYTHON,
     copy_app,
+    fill_applications,
     free_port,
     local_pg_url,
     start_app,
@@ -133,6 +134,8 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
     with psycopg.connect(admin_url, options=f"-c search_path={dev_schema}", autocommit=True) as admin:
         admin.execute((FIXTURE / "agenthub_pg" / "seed.sql").read_text(encoding="utf-8"))
         admin.execute(f'GRANT SELECT ON ALL TABLES IN SCHEMA "{dev_schema}" TO {role}')
+    # Only this database holds the applications (the seed creates the table empty), as the user's shared one would.
+    fill_applications(admin_url, dev_schema)
     before = _rows(admin_url, dev_schema)
 
     env_file = tmp_path / "debcraft.env"
@@ -211,7 +214,11 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
         *(f"{name}={own_env[name]}" for name in AZURE_NAMES if name in own_env),
     ]
     (check_dir / ".env").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    process = start_app(check_dir, check_port)
+    process = start_app(check_dir, check_port)  # seeds the fresh schema from the copy's own seed.sql
+    with psycopg.connect(
+        admin_url, autocommit=True
+    ) as admin:  # the same applications as the development database
+        admin.execute(f'INSERT INTO "{fresh_schema}".applications SELECT * FROM "{dev_schema}".applications')
     try:
         headers = {"Authorization": f"Bearer {TOKEN}"}
 

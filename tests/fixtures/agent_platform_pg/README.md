@@ -17,7 +17,7 @@ from the `.env` file in this folder (a pydantic settings class: every name start
 - `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_API_VERSION`, `AZURE_OPENAI_DEPLOYMENT` the model
   the agents use.
 
-The tables are created and filled from `agenthub_pg/seed.sql` the first time the server starts on an empty schema.
+The tables are created (and the agents, prompts and tools filled) from `agenthub_pg/seed.sql` the first time the server starts on an empty schema. The deployment system's state is the `applications` table; the seed creates it empty, a real database holds the applications (`agenthub_pg/sample_data.py` generates rows for a test database).
 The fixture's own packages are in `requirements.txt` (the test suite makes `venv` from it).
 
 ## Use

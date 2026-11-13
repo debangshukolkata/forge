@@ -196,9 +196,17 @@ def events_until(socket: Any, predicate: Any, limit: int = 200) -> list[dict[str
     seen = []
     for _ in range(limit):
         message = socket.receive_json()
-        if message.get("type") == "event":
-            seen.append(message["event"])
-            if predicate(message["event"]):
+        # a replay arrives in batches ("events"), what happens afterwards one by one ("event")
+        batch = (
+            message["events"]
+            if message.get("type") == "events"
+            else [message["event"]]
+            if message.get("type") == "event"
+            else []
+        )
+        for event in batch:
+            seen.append(event)
+            if predicate(event):
                 return seen
     raise AssertionError("expected event not received")
 
@@ -228,12 +236,12 @@ def test_websocket_replays_accepts_inputs_and_has_one_controller(
             second.send_json({"type": "input", "input": {"kind": "slash_command", "text": "/help"}})
             assert second.receive_json() == {"type": "control", "controls": True}
             told = first.receive_json()
-            while told["type"] == "event":
+            while told["type"] in ("event", "events"):
                 told = first.receive_json()
             assert told == {"type": "control", "controls": False}
             first.send_json({"type": "take_control"})
             taken = first.receive_json()
-            while taken["type"] == "event":
+            while taken["type"] in ("event", "events"):
                 taken = first.receive_json()
             assert taken == {"type": "control", "controls": True}
 

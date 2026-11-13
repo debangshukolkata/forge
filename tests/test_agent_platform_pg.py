@@ -49,6 +49,20 @@ def local_pg_url() -> str:
     return url
 
 
+def fill_applications(url: str, schema: str) -> None:
+    """The deployment system's state: 120 applications, as a real development database would hold them."""
+    import sys
+
+    sys.path.insert(0, str(FIXTURE))
+    try:
+        from agenthub_pg.sample_data import rows
+    finally:
+        sys.path.remove(str(FIXTURE))
+    with psycopg.connect(url, options=f"-c search_path={schema}", autocommit=True) as connection:
+        for name, document in rows():
+            connection.execute("INSERT INTO applications VALUES (%s, %s::jsonb)", (name, document))
+
+
 def copy_app(
     target: Path,
     database_url: str,
@@ -114,7 +128,10 @@ def hub(schema: tuple[str, str], tmp_path: Path) -> Iterator[tuple[str, Path, tu
     url, name = schema
     port = free_port()
     folder = copy_app(tmp_path / "app", url, name, port, fake_model=True)
-    process = start_app(folder, port)
+    process = start_app(
+        folder, port
+    )  # seeds the empty schema: the tables exist, the applications table is empty
+    fill_applications(schema[0], schema[1])
     yield f"http://127.0.0.1:{port}", folder, schema
     process.kill()
     process.wait(timeout=10)

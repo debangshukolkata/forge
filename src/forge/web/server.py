@@ -68,6 +68,9 @@ class NewStandalone(BaseModel):
     profile: str
 
 
+REPLAY_BATCH = 500
+
+
 class OpenWorkspace(BaseModel):
     workspace: str
 
@@ -571,9 +574,19 @@ async def _serve(socket: WebSocket, manager: WebSessionManager, client: str, sin
     manager.sockets[client] = socket
     await socket.send_json({"type": "hello", "controls": controls, "last_seq": host.bus.last_seq})
     subscription = host.bus.subscribe(since_seq=since)
+    replay_until = host.bus.last_seq
 
     async def forward() -> None:
+        """The events a window missed go out in batches (a log of 20,000 events was 20,000 messages and as many
+        renders in the browser, CV3); what happens after that goes out one by one."""
+        batch: list[dict[str, Any]] = []
         async for event in subscription:
+            if event.seq <= replay_until:
+                batch.append(event.model_dump(mode="json"))
+                if len(batch) >= REPLAY_BATCH or event.seq == replay_until:
+                    await socket.send_json({"type": "events", "events": batch})
+                    batch = []
+                continue
             await socket.send_json({"type": "event", "event": event.model_dump(mode="json")})
 
     sender = asyncio.create_task(forward())

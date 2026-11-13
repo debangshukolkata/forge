@@ -122,7 +122,7 @@ async def test_run_ready_tasks_builds_in_parallel_records_statuses_and_sets_the_
 
     async def fake_builder(context: object, *, folder: str, name: str, task: str) -> tuple[str, str, str]:
         briefs[name] = task
-        await asyncio.sleep(0.4)
+        await asyncio.sleep(1.0)
         orch.workspace.write_text(f"{folder}/index.html", "<h1>x</h1>")
         status = "BLOCKED" if name == "t2" else "DONE"
         return (
@@ -137,7 +137,8 @@ async def test_run_ready_tasks_builds_in_parallel_records_statuses_and_sets_the_
     result = await orch.run_ready_tasks([], {"T1": "Use the blue palette."})
     elapsed = time.perf_counter() - started
 
-    assert result.ok and elapsed < 0.7  # two builders of 0.4 s ran together
+    # two builders of 1.0 s ran together: well under the 2.0 s that one after the other would take, also on a loaded machine
+    assert result.ok and elapsed < 1.9
     assert (
         "[builder t1 in designs/a: DONE]" in result.content
         and "[builder t2 in designs/b: BLOCKED]" in result.content

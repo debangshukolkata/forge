@@ -68,17 +68,38 @@ class Handler(BaseHTTPRequestHandler):
         try:
             result = run(agent, question)
         except ContextOverflow as error:
-            log_run({"agent": agent.name, "question": question, "status": "failed", "tool": error.tool,
-                     "tool_result_chars": error.size, "limit": error.limit})
+            log_run(
+                {
+                    "agent": agent.name,
+                    "question": question,
+                    "status": "failed",
+                    "tool": error.tool,
+                    "tool_result_chars": error.size,
+                    "limit": error.limit,
+                }
+            )
             self._send(200, {"status": "failed", "error": "the agent could not finish"})
             return
         except Exception as error:  # the reason goes to the run log only
-            log_run({"agent": agent.name, "question": question, "status": "failed",
-                     "error": f"{type(error).__name__}: {error}"[:500]})
+            log_run(
+                {
+                    "agent": agent.name,
+                    "question": question,
+                    "status": "failed",
+                    "error": f"{type(error).__name__}: {error}"[:500],
+                }
+            )
             self._send(200, {"status": "failed", "error": "the agent could not finish"})
             return
-        log_run({"agent": agent.name, "question": question, "status": "ok", "tools": result.tools,
-                 "tool_result_chars": result.tool_result_chars})
+        log_run(
+            {
+                "agent": agent.name,
+                "question": question,
+                "status": "ok",
+                "tools": result.tools,
+                "tool_result_chars": result.tool_result_chars,
+            }
+        )
         self._send(200, {"status": "ok", "tool": (result.tools or [""])[-1], "answer": result.answer})
 
     def log_message(self, format: str, *args: object) -> None:  # quiet: runs go to the run log

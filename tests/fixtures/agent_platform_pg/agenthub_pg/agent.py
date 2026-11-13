@@ -16,7 +16,23 @@ from agenthub_pg import deployment_api
 from agenthub_pg.settings import settings
 from agenthub_pg.store import Agent, Tool
 
-STOP_WORDS = {"the", "a", "an", "of", "that", "which", "what", "is", "are", "with", "all", "their", "this", "show", "list"}
+STOP_WORDS = {
+    "the",
+    "a",
+    "an",
+    "of",
+    "that",
+    "which",
+    "what",
+    "is",
+    "are",
+    "with",
+    "all",
+    "their",
+    "this",
+    "show",
+    "list",
+}
 
 
 class ContextOverflow(Exception):
@@ -70,7 +86,9 @@ def run(agent: Agent, question: str) -> RunResult:
 
     if settings.fake_model:  # the API tests: no model, the tool whose description fits the question best
         asked = _words(question)
-        best = max(agent.tools, key=lambda t: len(asked & _words(t.description + " " + t.name.replace("_", " "))))
+        best = max(
+            agent.tools, key=lambda t: len(asked & _words(t.description + " " + t.name.replace("_", " ")))
+        )
         result.answer = guarded(best)
         return result
 
@@ -89,7 +107,9 @@ def run(agent: Agent, question: str) -> RunResult:
         output = graph.invoke({"messages": [("user", question)]}, {"recursion_limit": 12})
     except ContextOverflow:
         raise
-    if result.tool_result_chars > agent.max_context_chars:  # the graph may have turned the error into a message
+    if (
+        result.tool_result_chars > agent.max_context_chars
+    ):  # the graph may have turned the error into a message
         raise ContextOverflow(result.tools[-1], result.tool_result_chars, agent.max_context_chars)
     content = output["messages"][-1].content
     result.answer = content if isinstance(content, str) else str(content)

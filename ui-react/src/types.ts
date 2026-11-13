@@ -60,7 +60,8 @@ export type ServerMessage =
   | { type: "hello"; controls: boolean; last_seq: number }
   | { type: "control"; controls: boolean }
   | { type: "rejected"; reason: string }
-  | { type: "event"; event: ForgeEvent };
+  | { type: "event"; event: ForgeEvent }
+  | { type: "events"; events: ForgeEvent[] }; // the replay of a reopened or reconnected window, in batches (CV3)
 
 export type UserInput =
   | { kind: "send_message"; text: string }

@@ -240,9 +240,9 @@ export function useForge(): Forge {
   }, [reload]);
 
   const onEvent = useCallback(
-    (event: ForgeEvent) => {
+    (event: ForgeEvent, record = true) => {
       dispatch({ type: "event", event });
-      setEvents((list) => [...list, event]);
+      if (record) setEvents((list) => [...list, event]);
       const p = event.payload;
       const live = !replayingRef.current;
       if (live) trackActivity(event.type, p);
@@ -370,6 +370,19 @@ export function useForge(): Forge {
       }
       if (data.type === "control") return setControls(data.controls);
       if (data.type === "rejected") return dispatch({ type: "local", item: { key: `r${Date.now()}`, kind: "error", text: data.reason } });
+      if (data.type === "events") {
+        // A batch of the replay: one list update and, inside this handler, one render for all of its events.
+        const fresh = data.events.filter((event) => event.seq > lastSeq.current);
+        if (fresh.length) {
+          setEvents((list) => [...list, ...fresh]);
+          for (const event of fresh) {
+            lastSeq.current = event.seq;
+            onEvent(event, false);
+          }
+        }
+        if (replayingRef.current && lastSeq.current >= replayUntil.current) void finishReplay();
+        return;
+      }
       if (data.type !== "event" || data.event.seq <= lastSeq.current) return;
       lastSeq.current = data.event.seq;
       onEvent(data.event);

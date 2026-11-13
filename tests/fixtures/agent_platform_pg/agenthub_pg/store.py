@@ -28,7 +28,9 @@ class Agent:
 
 
 def connect() -> psycopg.Connection:
-    return psycopg.connect(settings.database_url, options=f"-c search_path={settings.schema_name}", autocommit=True)
+    return psycopg.connect(
+        settings.database_url, options=f"-c search_path={settings.schema_name}", autocommit=True
+    )
 
 
 def ensure_seeded() -> None:
@@ -36,6 +38,12 @@ def ensure_seeded() -> None:
     with connect() as connection:
         if connection.execute("SELECT to_regclass('agents')").fetchone()[0] is None:  # type: ignore[index]
             connection.execute((Path(__file__).parent / "seed.sql").read_text(encoding="utf-8"))
+
+
+def applications() -> list[object]:
+    """The documents of the `applications` table, in name order."""
+    with connect() as connection:
+        return [row[0] for row in connection.execute("SELECT doc FROM applications ORDER BY name")]
 
 
 def agent_names() -> list[str]:
