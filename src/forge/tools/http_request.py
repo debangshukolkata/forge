@@ -39,7 +39,7 @@ from forge.toolkit.app_keys import (
 )
 from forge.toolkit.app_logins import EnvLogin, TokenStore, login_for_host, login_for_token
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
-from forge.tools.app_login import renew
+from forge.tools.app_login import ensure_token
 from forge.tools.browser import LOCAL_HOSTS
 from forge.tools.interaction import OptionSpec
 from forge.tools.stream_summary import summarize_stream
@@ -248,10 +248,14 @@ class HttpRequest(Tool):
                     ok=False,
                     content=f"Not sent: {name} is the token of {login_env.host}, not of {host or args.url}.",
                 )
-            if TokenStore().get(name) is None:  # none yet, or it ended: sign in again without a window
-                signed = await renew(login_env)
-                if not signed.ok:
-                    return ToolResult(ok=False, content=f"{name} is not available: {signed.message}")
+            # a valid token, or one DebCraft gets by itself, or (after the gcloud card) with the user's help (D-603)
+            ensured = await ensure_token(login_env, ask=context.ask_user)
+            if not ensured.token:
+                return ToolResult(
+                    ok=False,
+                    content=f"{name} is not available: {ensured.message} Tell the user plainly that there is no "
+                    f"valid {name}.",
+                )
         if name:
             token, refusal = self._token(name)
             if refusal and NOT_SET in refusal and context.ask_user is not None:
@@ -370,10 +374,8 @@ class HttpRequest(Tool):
                             remember_auth(workspace, origin, *form)
                         break
                 if login_env is not None and response.status_code in (401, 403) and args.token_in == "header":
-                    fresh = await renew(
-                        login_env
-                    )  # the session ended: sign in again once and repeat the call
-                    if fresh.ok:
+                    fresh = await ensure_token(login_env, ask=context.ask_user, force=True)
+                    if fresh.token:  # the server refused the token: get another once and repeat the call
                         token = fresh.token
                         retry = {**headers, args.token_header: f"{args.token_prefix}{token}"}
                         response = await client.request(args.method, sent_url, json=sent_json, headers=retry)

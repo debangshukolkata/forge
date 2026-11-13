@@ -14,6 +14,8 @@ token appears (a cookie or a request header) and the NAME it is kept under. The 
           - wait_url: "uuid_key"
           - click: "Proceed"
           - wait_url: "landing-home"
+        check_url: https://dev.example.com/app/api/me   # optional: a cheap call that tells whether the token is valid
+        warn_without_token: true                         # optional: warn at session start without a valid token
 
 The tokens a login produces are kept in a private store: memory and the file `tokens.json` in DebCraft Home. They are
 never written into an environment file (values there reach every command the model runs), never shown, registered with
@@ -59,6 +61,10 @@ class EnvLogin:
     token_cookie: str
     token_header: str
     steps: tuple[Step, ...]
+    check_url: str = (
+        ""  # a cheap authenticated address: 2xx means the token is valid, 401 or 403 that it is not
+    )
+    warn_without_token: bool = False  # at the start of a session, warn the user when there is no valid token
 
     @property
     def host(self) -> str:
@@ -98,7 +104,18 @@ def _parse(name: str, raw: Any) -> EnvLogin:
     steps = tuple(
         _step(item, f"{where}, step {number}") for number, item in enumerate(raw.get("steps") or [], 1)
     )
-    return EnvLogin(name, login_url, token_name, cookie, header, steps)
+    check_url = str(raw.get("check_url", "")).strip()
+    if check_url:
+        checked = urlparse(check_url)
+        if (
+            checked.scheme not in ("http", "https")
+            or (checked.hostname or "").lower() != parsed.hostname.lower()
+        ):
+            raise ConfigError(
+                f"{where}: `check_url` must be an http(s) address on the same host as `login_url`."
+            )
+    warn = bool(raw.get("warn_without_token", False))
+    return EnvLogin(name, login_url, token_name, cookie, header, steps, check_url, warn)
 
 
 def load_logins(home: Path | None = None) -> dict[str, EnvLogin]:

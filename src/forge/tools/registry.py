@@ -9,7 +9,7 @@ from forge.toolkit.background import Monitor, ReadBackground, StartBackground, S
 from forge.toolkit.base import Tool
 from forge.toolkit.shell import PythonRun, RunCommand
 from forge.tools.app_keys_tool import app_keys_tools
-from forge.tools.app_login import AppLogin
+from forge.tools.app_login import AppLogin, AppTokenStatus
 from forge.tools.archive import archive_tools
 from forge.tools.assets import AddAsset, FindAsset
 from forge.tools.brand_file import SaveBrand
@@ -111,6 +111,7 @@ def default_tools() -> list[Tool]:
         InstallSkill(),
         ConversationRecall(),
         AppLogin(),
+        AppTokenStatus(),
         NotebookRead(),
         NotebookEditCell(),
         *browser_tools(),

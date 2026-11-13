@@ -27,6 +27,7 @@ from forge.db.credential_tables import credential_tables
 from forge.db.scratch import ScratchError
 from forge.db.session import DbSession
 from forge.engine.session_conversations import SessionConversations
+from forge.engine.session_tokens import check_tokens
 from forge.engine.slash_commands import SlashCommandHandler
 from forge.environment.store import tavily_declined, tesseract_ready
 from forge.errors import BudgetExceededError, ConfigError, LLMError
@@ -503,6 +504,8 @@ class SessionHost:
         await self.wait_for_map()  # the first message is answered with the map in place (KP6)
         if self.conversations is not None:
             await self.conversations.notice_if_not_restored(self)
+        # D-603: is there a valid token for each environment the user marked? Not a turn: it runs beside the input loop.
+        self._token_check = asyncio.create_task(self._check_tokens_quietly())
         if self.workspace is not None:
             timing = {"open_s": round(self.open_seconds, 2)}
             if self.map_seconds is not None:
@@ -524,6 +527,12 @@ class SessionHost:
                 await self.bus.publish(
                     EventType.NOTICE, {"kind": "unsupported", "text": f"'{user_input.kind}' is not used yet"}
                 )
+
+    async def _check_tokens_quietly(self) -> None:
+        try:
+            await check_tokens(self)
+        except Exception:  # a sign-in check must never end a session
+            return
 
     async def _run_hooks(self, event: str) -> None:
         """config hooks for a session event (D-501): output is shown as notices only; a hook cannot change the message or approve anything."""
@@ -834,6 +843,9 @@ class SessionHost:
         with contextlib.suppress(Exception):  # a hook never stops a session from closing
             await self._run_hooks("session_end")
         await self.interrupt()
+        token_check = getattr(self, "_token_check", None)
+        if token_check is not None:
+            token_check.cancel()
         if self._current_turn is not None:
             with contextlib.suppress(asyncio.CancelledError):
                 await self._current_turn

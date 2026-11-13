@@ -143,6 +143,145 @@ async def renew(login: EnvLogin, home: Path | None = None) -> SignIn:
     return result
 
 
+@dataclass
+class TokenStatus:
+    state: str  # valid | ended | missing | rejected | unchecked
+    minutes: int | None = None  # how long the token still lasts by its own expiry
+    detail: str = ""
+
+    @property
+    def usable(self) -> bool:
+        return self.state in (
+            "valid",
+            "unchecked",
+        )  # unchecked: the check could not be made (network), the token is not known to be bad
+
+
+async def probe(login: EnvLogin, token: str) -> tuple[bool | None, str]:
+    """True when the environment's check address accepts the token, False when it refuses it (401 or 403), None when
+    it could not be asked (the host does not resolve, a time-out): then nothing is known against the token."""
+    import httpx
+
+    cookies = {login.token_cookie: token} if login.token_cookie else None
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(
+                login.check_url, headers={"Authorization": f"Bearer {token}"}, cookies=cookies
+            )
+    except httpx.HTTPError as error:
+        return None, f"{type(error).__name__}: {str(error)[:120]}"
+    if response.status_code in (401, 403):
+        return False, f"HTTP {response.status_code}"
+    return response.status_code < 400, f"HTTP {response.status_code}"
+
+
+async def token_status(login: EnvLogin, home: Path | None = None, check: bool = True) -> TokenStatus:
+    """Whether the stored token of this environment can be used: not past its expiry and, when the user gave a check
+    address, accepted by the server."""
+    store = TokenStore(home)
+    token = store.get(login.token_name)
+    if token is None:
+        return TokenStatus("ended" if store.remaining(login.token_name) is not None else "missing")
+    minutes = (store.remaining(login.token_name) or 0) // 60
+    if check and login.check_url:
+        ok, detail = await probe(login, token)
+        if ok is False:
+            return TokenStatus("rejected", minutes, f"the server refused it ({detail})")
+        if ok is None:
+            return TokenStatus("unchecked", minutes, f"could not be checked: {detail}")
+    return TokenStatus("valid", minutes)
+
+
+@dataclass
+class Ensured:
+    token: str  # "" when no token could be got
+    message: str = ""
+
+
+async def ensure_token(
+    login: EnvLogin, home: Path | None = None, ask: Any = None, force: bool = False
+) -> Ensured:
+    """A usable token for the environment, by the order the user described (D-603): the stored one when it is valid
+    (its expiry and the check address); else sign in again without a window; and when that fails, ask the user on a
+    card to run `gcloud auth login` and try again (a window opens if the site needs the person). `force`: the server
+    just refused the token, so the stored one is not trusted."""
+    store = TokenStore(home)
+    if force:
+        store.forget(login.token_name)
+    else:
+        status = await token_status(login, home)
+        if status.usable:
+            return Ensured(store.get(login.token_name) or "")
+        if status.state == "rejected":
+            store.forget(login.token_name)
+    result = await renew(login, home)
+    if result.ok:
+        return Ensured(result.token)
+    if ask is None:
+        return Ensured("", result.message)
+    from forge.tools.interaction import OptionSpec
+
+    answer = await ask(
+        f"DebCraft could not sign in to {login.name}. Please run gcloud auth login.",
+        f"{result.message}\n\nIn PowerShell run:\n\n    gcloud auth login\n\nSign in with your Google account in the "
+        "browser that opens. Then choose Done here: DebCraft tries the sign-in again, and opens a window if the site "
+        "needs you.",
+        [
+            OptionSpec(label="Done", description="I ran gcloud auth login; try the sign-in again."),
+            OptionSpec(label="Skip", description="Do not sign in now."),
+        ],
+        "Done",
+    )
+    if not answer.startswith("The user chose: Done"):
+        return Ensured(
+            "", f"Not signed in to {login.name}: the user did not run gcloud auth login ({answer[:80]})."
+        )
+    result = await renew(login, home)
+    if not result.ok:  # the site itself needs the person: a window, the way it was the first time
+        result = await sign_in(login, home, visible=True)
+        if result.ok:
+            TokenStore(home).put(login.token_name, result.token)
+    return Ensured(result.token, "" if result.ok else result.message)
+
+
+class AppTokenStatus(Tool):
+    name = "app_token_status"
+    sends_outside = True
+    description = (
+        "Check, without signing in, whether the kept token of an environment (dev, SIT) is still valid: its own expiry "
+        "and, when app_logins.yaml gives a check address, a call to that address with the token. Use it before a run "
+        "against the environment; if the token is not valid, call app_login. The token is never shown."
+    )
+
+    class Args(ToolArgs):
+        environment: str
+
+    def summary(self, args: AppTokenStatus.Args) -> str:
+        return f"check the {args.environment} token"
+
+    async def run(self, args: AppTokenStatus.Args, context: ToolContext) -> ToolResult:
+        try:
+            login = load_logins().get(args.environment)
+        except ConfigError as error:
+            return ToolResult(ok=False, content=str(error))
+        if login is None:
+            return ToolResult(
+                ok=False, content=f"There is no environment {args.environment!r} in app_logins.yaml."
+            )
+        status = await token_status(login)
+        if status.usable:
+            left = f" (about {status.minutes} minutes left)" if status.minutes is not None else ""
+            return ToolResult(
+                ok=True,
+                content=f"{login.token_name} for {login.name} is valid{left}. {status.detail}".strip(),
+            )
+        return ToolResult(
+            ok=False,
+            content=f"No valid {login.token_name} for {login.name}: {status.state}. {status.detail} "
+            "Call app_login for this environment (the user may need to run `gcloud auth login`).",
+        )
+
+
 class AppLogin(Tool):
     name = "app_login"
     sends_outside = True
@@ -174,19 +313,24 @@ class AppLogin(Tool):
             return ToolResult(
                 ok=False, content=f"There is no environment {args.environment!r}. Known: {known}."
             )
-        result = await sign_in(login, visible=args.visible)
-        if not result.ok:
-            hand_off = (
-                " Call app_login again with visible=true so a window opens, and ask the user to sign in there "
-                "(if gcloud or the company login has expired, they run `gcloud auth login` first)."
-                if result.needs_user
-                else ""
+        if args.visible:  # the user asked for the window: no check, no gcloud card
+            result = await sign_in(login, visible=True)
+            if result.ok:
+                TokenStore().put(login.token_name, result.token)
+            ensured = Ensured(result.token, "" if result.ok else result.message)
+        else:
+            ensured = await ensure_token(login, ask=context.ask_user)
+        if not ensured.token:
+            return ToolResult(
+                ok=False,
+                content=f"Not signed in to {login.name}: {ensured.message} Tell the user plainly that there is no "
+                f"valid {login.token_name}, so calls to {login.host} cannot be made until they sign in "
+                "(app_login with visible=true opens the window; `gcloud auth login` first if Google asks).",
             )
-            return ToolResult(ok=False, content=f"Not signed in to {login.name}: {result.message}{hand_off}")
-        seconds = TokenStore().put(login.token_name, result.token)
+        minutes = (TokenStore().remaining(login.token_name) or 0) // 60
         return ToolResult(
             ok=True,
             content=f"Signed in to {login.name}. The token is kept as {login.token_name} (valid for about "
-            f"{seconds // 60} minutes) and is not shown. Call {login.host} with http_request and "
-            f'token_env="{login.token_name}"; it signs in again by itself when the token ends.',
+            f"{minutes} minutes) and is not shown. Call {login.host} with http_request and "
+            f'token_env="{login.token_name}"; it checks the token and signs in again by itself when it ends.',
         )
