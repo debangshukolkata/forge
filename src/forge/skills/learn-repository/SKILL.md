@@ -27,7 +27,9 @@ about one thing each, with the files and lines that prove them. You change no fi
 3. **Write the topic** with `knowledge_write`:
    - `title`: the thing, as a person would ask for it ("How tools are attached to an agent").
    - `summary`: one line saying what the topic answers.
-   - `body`: the facts in the order things happen. Every fact has its file and line (`agents/react.py:42`).
+   - `body`: start with a `## Key facts` section of three to five short lines, the ones people ask most
+     (the pin shows them for the most used topics, so a common question needs no tool call), then the facts
+     in the order things happen. Every fact has its file and line (`agents/react.py:42`).
      Name classes, functions, tables, settings. Say what you checked and what you only inferred.
      Short excerpts only (a signature, a registration line); never whole functions.
    - `sources`: every file the topic rests on.

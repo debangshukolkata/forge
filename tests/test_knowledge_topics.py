@@ -20,6 +20,7 @@ from forge.tools.knowledge_tools import (
     learn_request,
     learning_status,
     reading_note,
+    stored_counts,
 )
 from forge.tools.registry import default_tools, session_tools
 from forge.workspace.create import create_workspace
@@ -423,3 +424,111 @@ async def test_reading_through_the_tool_records_the_use(
     usage = load_usage(knowledge_store(context.workspace))
     assert usage["how-a-request-is-authenticated"]["reads"] == 2
     assert usage["how-a-request-is-authenticated"]["found"] == 1
+
+
+async def test_each_call_reports_what_it_did_as_counts_for_the_log_summary(
+    isolated_forge_home: Path,
+    shop: Path,
+    tmp_path: Path,
+) -> None:
+    """D-575: `debcraft log-summary` adds these up, so a new topic, a correction and a confirmation must be
+    told apart by the tool itself and not by the wording of its answer."""
+    context = ToolContext(workspace=create_workspace(shop, tmp_path / "ws1", ""))
+    nothing = (await _search(context, "search", "kubernetes helm")).meta["metrics"]
+    assert (nothing["layer"], nothing["kind"], nothing["outcome"]) == ("knowledge", "search", "nothing")
+    assert nothing["topics"] == 0 and nothing["view_s"] >= 0
+
+    written = (await _auth_topic(context)).meta["metrics"]
+    assert (written["kind"], written["outcome"]) == ("write", "written")
+    assert written["sources"] >= 1 and written["total_s"] >= written["view_s"]
+
+    slug = "how-a-request-is-authenticated"
+    read = (await _search(context, "read", slug)).meta["metrics"]
+    assert (read["outcome"], read["read"], read["outdated"], read["topics"]) == ("read", 1, 0, 1)
+    assert (await _search(context, "read", "no-such-topic")).meta["metrics"]["outcome"] == "missing"
+
+    corrected = await _write(
+        context,
+        slug=slug,
+        summary="Which function checks the token and which setting holds the secret",
+        body=BODY,
+        sources=["shop/security.py"],
+        reason="shorter",
+    )
+    assert corrected.meta["metrics"]["outcome"] == "corrected"
+    assert (await _write(context, slug=slug, confirm=True)).meta["metrics"]["outcome"] == "confirmed"
+    assert (await _write(context, title="No body")).meta["metrics"]["outcome"] == "refused"
+    assert (await _write(context, slug=slug, delete=True)).meta["metrics"]["outcome"] == "removed"
+
+    env = await CodeMapTool().run(CodeMapTool.Args(action="env"), context)  # type: ignore[arg-type]
+    assert env.meta["metrics"]["kind"] == "code_map" and env.meta["metrics"]["action"] == "env"
+    assert env.meta["metrics"]["files"] >= 1
+    assert stored_counts(context.workspace) == {  # type: ignore[arg-type]
+        "topics": 0,
+        "reads": 0,
+        "search_hits": 0,
+        "never_read": 0,
+        "most_read": [],
+    }
+
+
+def test_key_facts_come_from_the_heading_or_the_first_lines() -> None:
+    """KU4 (D-586): the lines a topic puts into the pin."""
+    from forge.knowledge.topics import Topic, key_facts
+
+    with_heading = Topic(
+        slug="auth",
+        title="Auth",
+        summary="s",
+        body="# Auth\nlong intro that is not a fact\n\n## Key facts\n- tokens are SHA-256 hashed\n- header is Authorization\n\n## Details\nmore",
+    )
+    assert key_facts(with_heading, 4) == ["- tokens are SHA-256 hashed", "- header is Authorization"]
+    plain = Topic(slug="x", title="X", summary="s", body="# X\nfirst line\nsecond line\n\nthird " + "w" * 300)
+    facts = key_facts(plain, 3)
+    assert facts[:2] == ["first line", "second line"] and len(facts[2]) == 160 and facts[2].endswith("…")
+    assert key_facts(plain, 1) == ["first line"]
+    assert key_facts(Topic(slug="e", title="E", summary="s"), 4) == []
+
+
+def test_the_pin_carries_key_facts_only_for_the_most_used_current_topics() -> None:
+    from forge.knowledge.topics import Topic, index_lines
+
+    topics = [
+        Topic(slug=f"t{n}", title=f"T{n}", summary="s", body=f"fact {n}a\nfact {n}b", sources={"a.py": "1"})
+        for n in range(4)
+    ]
+    usage = {"t2": {"reads": 5}, "t1": {"reads": 3}, "t3": {"reads": 1}}
+    plain = index_lines(topics, {"a.py": "1"}, usage=usage)
+    assert not any(line.startswith("    ") for line in plain)  # off by default: nothing changes
+
+    lines = index_lines(topics, {"a.py": "1"}, usage=usage, facts_top=2, fact_lines=1)
+    assert lines[:4] == ["- t2: T2. s", "    fact 2a", "- t1: T1. s", "    fact 1a"]
+    assert not any("fact 3a" in line or "fact 0a" in line for line in lines)
+
+    stale = index_lines(topics, {"a.py": "changed"}, usage=usage, facts_top=2, fact_lines=1)
+    assert not any(line.startswith("    ") for line in stale)  # files changed: the note may be wrong
+    assert not any(
+        line.startswith("    ") for line in index_lines(topics, {"a.py": "1"}, usage={}, facts_top=3)
+    )  # no use known: no facts
+
+
+def test_topics_never_read_and_topics_on_the_same_files_are_offered_for_review(tmp_path: Path) -> None:
+    """KU5 (D-589): nothing is removed; the agenda lists them."""
+    from forge.knowledge.topics import Topic, overlapping
+    from forge.knowledge.usage import load_usage, record, unused
+
+    slugs = ["read-often", "never-read", "new-one"]
+    for project in ("p1", "p2", "p3"):
+        record(tmp_path, project, seen=slugs[:2])
+    record(tmp_path, "p3", read=["read-often"], seen=["new-one"])
+    record(tmp_path, "p3", seen=["never-read"])  # the same project twice counts once
+    usage = load_usage(tmp_path)
+    assert usage["never-read"]["seen"] == ["p1", "p2", "p3"]
+    assert unused(slugs, usage) == [("never-read", 3)]  # read-often was read; new-one is seen only once
+
+    topics = [
+        Topic(slug="a", title="A", summary="s", sources={"x.py": "1", "y.py": "1", "z.py": "1"}),
+        Topic(slug="b", title="B", summary="s", sources={"x.py": "1", "y.py": "1", "z.py": "1", "w.py": "1"}),
+        Topic(slug="c", title="C", summary="s", sources={"x.py": "1", "q.py": "1"}),  # one shared file
+    ]
+    assert overlapping(topics) == [("a", "b")]

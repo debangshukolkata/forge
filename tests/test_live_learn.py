@@ -12,6 +12,7 @@ import os
 
 import pytest
 
+from forge.engine.log_summary import knowledge_section
 from forge.knowledge.topics import all_topics
 from forge.protocol.events import EventType
 from forge.tools.code_map_tool import knowledge_store
@@ -56,6 +57,7 @@ async def test_learn_writes_topics_and_the_next_project_uses_them(
         store = knowledge_store(first.workspace)
         topics = all_topics(store)
         changed = [change.path for change in first.workspace.changes()]
+        report = "\n".join(knowledge_section(first.bus.events_since(0)))
     finally:
         await first.close()
     names = [topic.slug for topic in topics]
@@ -63,7 +65,11 @@ async def test_learn_writes_topics_and_the_next_project_uses_them(
         {"step": "learn", "calls": calls, "topics": names, "changed": changed, "said": "\n".join(said)[-500:]}
     )
     print(f"\nLEARN: {len(calls)} tool calls, topics={names}, repository files changed={changed}")
+    print(report)
     assert topics, f"no topic was written; tools used: {calls}"
+    # D-575: the run log tells a new topic from a correction, with the tool's own numbers (no older-log guess).
+    assert "Inserts: 0 new topics" not in report and "Inserts:" in report, report
+    assert "Bringing the index up to date" in report and "before the tools reported" not in report, report
     assert not changed, f"learning must not change the repository: {changed}"
     for topic in topics:
         assert topic.sources and all(path.startswith("backend/") for path in topic.sources), topic.sources

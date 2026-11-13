@@ -358,3 +358,72 @@ def test_installed_libraries_are_not_delivered(tmp_path: Path) -> None:
     assert rules.is_ignored(".vendor", is_dir=True)
     assert rules.is_ignored("tools/pyvenv_home", is_dir=True)
     assert not rules.is_ignored("tools", is_dir=True)
+
+
+def _settings_reads(source: str) -> dict[str, tuple[int, bool]]:
+    import ast
+
+    from forge.knowledge.python_file import env_reads
+
+    return env_reads(ast.parse(source))
+
+
+def test_pydantic_settings_fields_are_environment_names() -> None:
+    """DB3 (D-585): a BaseSettings class reads PREFIX + FIELD from the environment."""
+    reads = _settings_reads(
+        "from pydantic_settings import BaseSettings, SettingsConfigDict\n"
+        "from typing import ClassVar\n\n"
+        "class A(BaseSettings):\n"
+        '    model_config = SettingsConfigDict(env_prefix="APP_")\n'
+        "    database_url: str\n"  # line 6, required
+        "    debug: bool = False\n"  # default
+        "    workers: int | None\n"  # optional without default: still required
+        "    tags: list[str] = Field(default_factory=list)\n"
+        "    _hidden: str\n"
+        "    kind: ClassVar[str] = 'x'\n"
+    )
+    assert reads == {
+        "APP_DATABASE_URL": (6, True),
+        "APP_DEBUG": (7, False),
+        "APP_WORKERS": (8, True),
+        "APP_TAGS": (9, False),
+    }
+
+
+def test_settings_prefix_alias_and_other_forms() -> None:
+    reads = _settings_reads(
+        "import os\n"
+        "from pydantic_settings import BaseSettings\n\n"
+        "class B(BaseSettings):\n"
+        '    model_config = {"env_prefix": "SVC_"}\n'
+        '    token: str = Field(alias="SERVICE_TOKEN")\n'  # line 6: exact alias, no prefix
+        "    region: str = Field(...)\n\n"
+        "class C(BaseSettings):\n"
+        "    class Config:\n"
+        '        env_prefix = "OLD_"\n'
+        "    name: str = 'x'\n\n"
+        "class NotSettings:\n"
+        "    ignored: str\n\n"
+        'PORT = os.getenv("PORT")\n'
+    )
+    assert reads["SERVICE_TOKEN"] == (6, True) and reads["SVC_REGION"] == (7, True)
+    assert reads["OLD_NAME"] == (12, False) and reads["PORT"][1] is True
+    assert "IGNORED" not in reads
+
+
+async def test_the_settings_report_includes_pydantic_settings_names(
+    isolated_forge_home: Path, tmp_path: Path
+) -> None:
+    repo = tmp_path / "svc"
+    (repo / "svc").mkdir(parents=True)
+    (repo / "svc" / "__init__.py").write_text("", encoding="utf-8")
+    (repo / "svc" / "config.py").write_text(
+        "from pydantic_settings import BaseSettings, SettingsConfigDict\n\n\n"
+        "class Settings(BaseSettings):\n"
+        '    model_config = SettingsConfigDict(env_prefix="HUB_")\n'
+        "    api_token: str\n",
+        encoding="utf-8",
+    )
+    workspace = create_workspace(repo, tmp_path / "ws", "")
+    result = await CodeMapTool().run(CodeMapTool.Args(action="env"), ToolContext(workspace=workspace))
+    assert "HUB_API_TOKEN: read in svc/config.py:6 (no default); NOT SET in any env file" in result.content

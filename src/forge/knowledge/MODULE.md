@@ -11,6 +11,7 @@ What DebCraft knows about an existing repository between projects (TODO section 
 - `topic_check.py` (KU6, D-574): the rule checks (short title, no "I did", no DebCraft names) and the reviewer prompt and parser that decide whether a note is about the repository or about the task.
 
 - `usage.py` (KU1 to KU3, D-574): `usage.json` beside the topics: reads, last read, projects and search hits per topic; orders the pin and nudges the search ranking. Counts only.
+- `topics.key_facts` (KU4, D-586): the lines of a topic's `Key facts` section (or its first body lines), put into the pin under the most used topics when `facts_top` is set (`usage.PIN_FACTS_TOP`, 0 until the live measurement in tests/test_live_pin_facts.py decides). A topic whose files changed gets none.
 
 - **Depends on:** (nothing)
 - **Invariants:** Never writes into the user's repository or a workspace: only under DebCraft Home. Stores names, signatures, paths and line numbers; no code bodies and no values of environment variables. A link that is not proven by an import is labelled `by name`. The index describes the user's repository: files the project has changed keep their stored record.

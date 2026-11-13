@@ -16,6 +16,9 @@ from typing import Any
 USAGE_FILE = "usage.json"
 MAX_PROJECTS_KEPT = 50
 PINNED_BY_USE = 20  # topics listed one by one in the pin once there is any use data
+PIN_FACTS_TOP = 5  # topics that also carry their key facts in the pin (KU4, D-586: measured, top 5 costs about 300 tokens per call)
+PIN_FACT_LINES = 4
+UNUSED_AFTER_PROJECTS = 3  # a topic listed in this many projects and never read is offered for review (KU5)
 MAX_USE_BONUS = 4  # what use can add to a search score: words come first
 OUTDATED_PENALTY = 2
 
@@ -38,14 +41,25 @@ def _save(store: Path, usage: Usage) -> None:
     os.replace(scratch, target)
 
 
-def record(store: Path, project: str, *, read: Iterable[str] = (), found: Iterable[str] = ()) -> None:
+def record(
+    store: Path,
+    project: str,
+    *,
+    read: Iterable[str] = (),
+    found: Iterable[str] = (),
+    seen: Iterable[str] = (),
+) -> None:
     """Counts reads and search hits for this project. Best effort: a failed write never fails a tool."""
-    read, found = list(read), list(found)
-    if not read and not found:
+    read, found, seen = list(read), list(found), list(seen)
+    if not read and not found and not seen:
         return
     try:
         usage = load_usage(store)
         today = time.strftime("%Y-%m-%d")
+        for slug in seen:  # listed in the pin of this project (KU5)
+            entry = usage.setdefault(slug, {})
+            earlier = [p for p in entry.get("seen", []) if p != project]
+            entry["seen"] = [*earlier[-(MAX_PROJECTS_KEPT - 1) :], project]
         for slug in found:
             usage.setdefault(slug, {})["found"] = usage.get(slug, {}).get("found", 0) + 1
         for slug in read:
@@ -75,6 +89,12 @@ def use_order(slugs: list[str], usage: Usage) -> list[str]:
             position[slug],
         ),
     )
+
+
+def unused(slugs: list[str], usage: Usage, projects: int = UNUSED_AFTER_PROJECTS) -> list[tuple[str, int]]:
+    """Topics never read although they were listed in at least `projects` projects: (slug, projects)."""
+    found = [(slug, len(usage.get(slug, {}).get("seen", []))) for slug in slugs if reads_of(usage, slug) == 0]
+    return [(slug, count) for slug, count in found if count >= projects]
 
 
 def never_read(slugs: list[str], usage: Usage) -> list[str]:

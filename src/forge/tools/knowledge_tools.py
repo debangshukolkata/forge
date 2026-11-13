@@ -27,13 +27,14 @@ from forge.knowledge.topics import (
     all_topics,
     clear_winner,
     delete_topic,
+    overlapping,
     ranked,
     read_topic,
     save_topic,
     slug_of,
     uncovered,
 )
-from forge.knowledge.usage import load_usage
+from forge.knowledge.usage import load_usage, never_read, reads_of, unused, use_order
 from forge.knowledge.usage import record as count_use
 from forge.llm.base import ChatRequest, Message
 from forge.memory.scope import scope_of
@@ -42,10 +43,11 @@ from forge.safety.redact import default_redactor
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.code_map_tool import (
     current_marks,
+    knowledge_metrics,
     knowledge_store,
     project_view,
-    project_view_async,
     repository_map_pin,
+    timed_view,
 )
 from forge.workspace.workspace import Workspace
 
@@ -106,20 +108,29 @@ class KnowledgeSearch(Tool):
         context.knowledge_looked = True
         store = knowledge_store(workspace)
         notes = all_topics(store)
-        structure, _ = await project_view_async(workspace)
+        structure, _, view_seconds = await timed_view(workspace)
         marks = current_marks(workspace, structure, {path for topic in notes for path in topic.sources})
         query = args.query.strip()
+
+        def facts(outcome: str, **counts: int) -> dict[str, Any]:
+            return knowledge_metrics(args.action, outcome, view_seconds, topics=len(notes), **counts)
+
         if args.action == "list":
             lines = [f"{topic.slug}: {topic.title}. {topic.summary}" for topic in notes]
-            return ToolResult(ok=True, content=cap(lines) if lines else "Nothing is written down yet.")
+            return ToolResult(
+                ok=True,
+                content=cap(lines) if lines else "Nothing is written down yet.",
+                meta=facts("listed" if lines else "nothing"),
+            )
         if args.action == "agenda":
-            return ToolResult(ok=True, content=_agenda(notes, marks, structure, store))
+            return ToolResult(ok=True, content=_agenda(notes, marks, structure, store), meta=facts("listed"))
         if not query:
-            return ToolResult(ok=False, content=f"`{args.action}` needs a `query`.")
+            return ToolResult(ok=False, content=f"`{args.action}` needs a `query`.", meta=facts("refused"))
         if args.action == "read":
             slugs = [part for part in re.split(r"[\s,;]+", query) if part][:MAX_READ_AT_ONCE]
             rendered = []
             read_slugs = []
+            outdated = 0
             for slug in slugs:
                 topic = read_topic(store, slug)
                 if topic is None:
@@ -128,16 +139,22 @@ class KnowledgeSearch(Tool):
                 else:
                     rendered.append(_render_topic(topic, marks))
                     read_slugs.append(topic.slug)
+                    outdated += bool(topic.outdated(marks))
             record_use(store, workspace, read=read_slugs)
-            if not any(not text.startswith("No topic ") for text in rendered):
-                return ToolResult(ok=False, content="\n\n".join(rendered))
-            return ToolResult(ok=True, content="\n\n---\n\n".join(rendered))
+            if not read_slugs:
+                return ToolResult(ok=False, content="\n\n".join(rendered), meta=facts("missing"))
+            return ToolResult(
+                ok=True,
+                content="\n\n---\n\n".join(rendered),
+                meta=facts("read", read=len(read_slugs), outdated=outdated),
+            )
         found = ranked(notes, query, usage=load_usage(store), current=marks)
         if not found:
             return ToolResult(
                 ok=True,
                 content=f"Nothing written down matches {query!r}. Work it out from the code (code_map first), "
                 "then record it with knowledge_write.",
+                meta=facts("nothing"),
             )
         winner = clear_winner(found)
         lines = []
@@ -160,8 +177,13 @@ class KnowledgeSearch(Tool):
                 ok=True,
                 content="\n".join(lines)
                 + f"\n\nThe best match, {winner.slug}, in full:\n\n{_render_topic(winner, marks)}",
+                meta=facts("whole", found=len(found), read=1),
             )
-        return ToolResult(ok=True, content="\n".join(lines) + "\n\nRead one in full with action `read`.")
+        return ToolResult(
+            ok=True,
+            content="\n".join(lines) + "\n\nRead one in full with action `read`.",
+            meta=facts("matches", found=len(found)),
+        )
 
 
 def record_use(store: Path, workspace: Workspace, *, read: list[str], found: list[str] | None = None) -> None:
@@ -194,6 +216,19 @@ def _agenda(notes: list[Topic], marks: dict[str, str], structure: dict[str, Any]
             "Topics that look like findings of a task, not knowledge of the repository (move to memory with "
             "memory_write and delete, or rewrite for any task; never removed automatically):\n"
             + "\n".join(f"- {topic.slug}: {topic.title[:90]}" for topic in task_like)
+        )
+    idle = unused([topic.slug for topic in notes], load_usage(store))
+    if idle:
+        parts.append(
+            "Topics listed in several projects and never read (merge, shorten, delete or keep; never removed "
+            "automatically):\n"
+            + "\n".join(f"- {slug}: listed in {count} projects, read in none" for slug, count in idle)
+        )
+    same = overlapping(notes)
+    if same:
+        parts.append(
+            "Topics that rest on mostly the same files (consider merging them into one):\n"
+            + "\n".join(f"- {first} and {second}" for first, second in same)
         )
     folders: dict[str, int] = {}
     for path, record in code_map.files.items():
@@ -254,25 +289,41 @@ class KnowledgeWrite(Tool):
         store = knowledge_store(workspace)
         slug = slug_of(args.slug or args.title)
         existing = read_topic(store, slug) if (args.slug or args.title) else None
-        structure, _ = await project_view_async(workspace)
+        started = time.perf_counter()
+        structure, _, view_seconds = await timed_view(workspace)
+
+        def facts(outcome: str, **counts: float) -> dict[str, Any]:
+            # `total_s` leaves nothing out: the view, the second model's check, the save and the re-pin.
+            total = round(time.perf_counter() - started, 2)
+            return knowledge_metrics("write", outcome, view_seconds, total_s=total, **counts)
+
         if args.delete:
             done = delete_topic(store, slug)
             await self._repin(context, structure)
-            return ToolResult(ok=done, content=f"Topic {slug} removed." if done else f"No topic {slug!r}.")
+            return ToolResult(
+                ok=done,
+                content=f"Topic {slug} removed." if done else f"No topic {slug!r}.",
+                meta=facts("removed" if done else "refused"),
+            )
         if args.confirm:
             if existing is None:
-                return ToolResult(ok=False, content=f"No topic {slug!r} to confirm.")
+                return ToolResult(ok=False, content=f"No topic {slug!r} to confirm.", meta=facts("refused"))
             existing.sources = current_marks(workspace, structure, existing.sources)
             existing.updated = time.strftime("%Y-%m-%d")
             save_topic(store, existing)
             await self._repin(context, structure)
-            return ToolResult(ok=True, content=f"Topic {slug} confirmed against the current files.")
+            return ToolResult(
+                ok=True, content=f"Topic {slug} confirmed against the current files.", meta=facts("confirmed")
+            )
         problem = self._problem(args)
         if problem:
-            return ToolResult(ok=False, content=problem)
+            return ToolResult(ok=False, content=problem, meta=facts("refused"))
+        review_started = time.perf_counter()
         moved = await self._task_finding(args, slug, context)
+        review_seconds = round(time.perf_counter() - review_started, 2)
         if moved is not None:
-            return moved
+            outcome = "moved_to_memory" if moved.ok else "refused"
+            return moved.model_copy(update={"meta": facts(outcome, review_s=review_seconds)})
         paths = [path.replace("\\", "/").strip().lstrip("./") for path in args.sources][:MAX_SOURCES]
         marks = current_marks(workspace, structure, paths)
         unknown = [path for path in paths if path not in marks]
@@ -281,6 +332,7 @@ class KnowledgeWrite(Tool):
                 ok=False,
                 content=f"None of the source files exist in the repository: {', '.join(unknown)}. Give paths "
                 "relative to the repository root, as code_map and read_file show them.",
+                meta=facts("refused", review_s=review_seconds),
             )
         history = list(existing.history) if existing else []
         if existing is not None:
@@ -305,6 +357,12 @@ class KnowledgeWrite(Tool):
             ok=True,
             content=f"Topic {slug} {verb} ({len(marks)} source files tracked).{note} Every later project on this "
             "repository starts with it.",
+            meta=facts(
+                "corrected" if existing is not None else "written",
+                review_s=review_seconds,
+                sources=len(marks),
+                characters=len(args.body.strip()),
+            ),
         )
 
     @staticmethod
@@ -410,6 +468,24 @@ def learn_request(focus: str = "") -> str:
         f"Learn this repository for later projects: load the `{LEARN_SKILL}` skill and follow it.{about} "
         "Do not change any file of the repository."
     )
+
+
+def stored_counts(workspace: Workspace) -> dict[str, Any] | None:
+    """What is on disk for this repository, as numbers for `debcraft log-summary` (D-575): topics, how often
+    they were read and found over all projects, and the most read ones. None for a project without a repository."""
+    if workspace.mode_b:
+        return None
+    store = knowledge_store(workspace)
+    slugs = [topic.slug for topic in all_topics(store)]
+    usage = load_usage(store)
+    most_read = [slug for slug in use_order(slugs, usage) if reads_of(usage, slug)][:5]
+    return {
+        "topics": len(slugs),
+        "reads": sum(reads_of(usage, slug) for slug in slugs),
+        "search_hits": sum(int(usage.get(slug, {}).get("found", 0)) for slug in slugs),
+        "never_read": len(never_read(slugs, usage)),
+        "most_read": [f"{slug} x{reads_of(usage, slug)}" for slug in most_read],
+    }
 
 
 def learning_status(workspace: Workspace) -> str:

@@ -437,6 +437,67 @@ def describe(source: str, module: str, is_package: bool = False) -> dict[str, An
     }
 
 
+def _env_prefix(cls: ast.ClassDef) -> str:
+    """`env_prefix` of a pydantic settings class: `model_config = SettingsConfigDict(env_prefix="X_")`, a dict
+    with that key, or an inner `class Config`. Only a string literal counts; anything else is no prefix."""
+    for item in cls.body:
+        if isinstance(item, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "model_config" for target in item.targets
+        ):
+            value = item.value
+            if isinstance(value, ast.Call):
+                return _string(_keyword(value, "env_prefix")) or ""
+            if isinstance(value, ast.Dict):
+                for key, entry in zip(value.keys, value.values, strict=True):
+                    if _string(key) == "env_prefix":
+                        return _string(entry) or ""
+        if isinstance(item, ast.ClassDef) and item.name == "Config":
+            for inner in item.body:
+                if (
+                    isinstance(inner, ast.Assign)
+                    and any(isinstance(t, ast.Name) and t.id == "env_prefix" for t in inner.targets)
+                    and (prefix := _string(inner.value)) is not None
+                ):
+                    return prefix
+    return ""
+
+
+def settings_class_reads(cls: ast.ClassDef) -> list[tuple[str, int, bool]]:
+    """The environment names a pydantic `BaseSettings` class reads, as (name, line, required) (DB3). A field is
+    read as PREFIX + NAME upper-cased, or as the exact name of its alias; it is required when it has no
+    default (an optional type without a default is still required in pydantic v2). Names only."""
+    prefix = _env_prefix(cls)
+    found: list[tuple[str, int, bool]] = []
+    for item in cls.body:
+        if not isinstance(item, ast.AnnAssign) or not isinstance(item.target, ast.Name):
+            continue
+        field_name = item.target.id
+        if (
+            field_name.startswith("_")
+            or field_name == "model_config"
+            or "ClassVar" in ast.unparse(item.annotation)
+        ):
+            continue
+        name = prefix + field_name.upper()
+        required = item.value is None
+        if isinstance(item.value, ast.Call) and dotted(item.value.func).endswith("Field"):
+            call = item.value
+            alias = (
+                _string(_keyword(call, "alias"))
+                or _string(_keyword(call, "validation_alias"))
+                or _string(_keyword(call, "env"))
+            )
+            name = alias or name
+            first = call.args[0] if call.args else None
+            required = (
+                _keyword(call, "default") is None
+                and _keyword(call, "default_factory") is None
+                and (first is None or (isinstance(first, ast.Constant) and first.value is Ellipsis))
+            )
+        found.append((name, item.lineno, required))
+    return found
+
+
 def env_reads(tree: ast.Module) -> dict[str, tuple[int, bool]]:
     """Every environment variable the file reads, anywhere in it (module level and class bodies too, where
     settings usually live): name -> (line of the first read, read without a default). A name read without a
@@ -449,6 +510,11 @@ def env_reads(tree: ast.Module) -> dict[str, tuple[int, bool]]:
         found[name] = (min(first, line), needed or required)
 
     for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and any(
+            dotted(base).endswith("BaseSettings") for base in node.bases
+        ):
+            for setting, line, required in settings_class_reads(node):
+                note(setting, line, required)
         if isinstance(node, ast.Call) and node.args and (name := _string(node.args[0])):
             called = dotted(node.func)
             if called in ("os.getenv", "getenv") or called.endswith("environ.get"):

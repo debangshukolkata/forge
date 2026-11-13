@@ -10,6 +10,7 @@ import asyncio
 import os
 import re
 import threading
+import time
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -19,7 +20,8 @@ from forge.config import forge_home
 from forge.knowledge.code_map import BY_NAME, CodeMap, cap
 from forge.knowledge.structure import SKIPPED_FOLDERS, STRUCTURE_FILE, Refresh, fingerprint, load, refresh
 from forge.knowledge.topics import all_topics, index_lines
-from forge.knowledge.usage import load_usage
+from forge.knowledge.usage import PIN_FACT_LINES, PIN_FACTS_TOP, load_usage
+from forge.knowledge.usage import record as record_use
 from forge.memory.scope import project_dir, scope_of
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.workspace.workspace import Workspace
@@ -94,6 +96,28 @@ async def project_view_async(workspace: Workspace) -> tuple[dict[str, Any], Refr
     return await asyncio.to_thread(project_view, workspace)
 
 
+async def timed_view(workspace: Workspace) -> tuple[dict[str, Any], Refresh, float]:
+    """The view plus the seconds the caller waited for it (the update itself and any wait for another call's
+    update): what `log-summary` reports as the index time of a call."""
+    started = time.perf_counter()
+    structure, report = await project_view_async(workspace)
+    return structure, report, time.perf_counter() - started
+
+
+def knowledge_metrics(kind: str, outcome: str, view_seconds: float, **counts: Any) -> dict[str, Any]:
+    """The `meta` of a knowledge tool's result: what happened, as counts and seconds only (D-575). The loop
+    puts it into the `tool_call_finished` event, and `debcraft log-summary` adds it up."""
+    return {
+        "metrics": {
+            "layer": "knowledge",
+            "kind": kind,
+            "outcome": outcome,
+            "view_s": round(view_seconds, 2),
+            **counts,
+        }
+    }
+
+
 def refreshed_map(workspace: Workspace) -> tuple[CodeMap, Refresh]:
     structure, report = project_view(workspace)
     return CodeMap(structure), report
@@ -140,6 +164,15 @@ def overview(code_map: CodeMap, report: Refresh | None = None) -> str:
     return "\n".join(lines)
 
 
+def _env_number(name: str, default: int) -> int:
+    """A number from the environment for the KU4 measurement (3 against 5 topics with facts); the default
+    stays in knowledge/usage.py. A value that is not a number is ignored."""
+    try:
+        return max(0, int(os.environ.get(name, default)))
+    except ValueError:
+        return default
+
+
 def repository_map_pin(
     workspace: Workspace, live: bool = True, structure: dict[str, Any] | None = None
 ) -> str | None:
@@ -170,12 +203,22 @@ def repository_map_pin(
             f"Changed in the repository when the map was last updated ({changes['at']}): {names}{more}."
         )
     notes = all_topics(knowledge_store(workspace))
+    if notes and live:  # a project that lists a topic and never reads it is what KU5 reports
+        record_use(knowledge_store(workspace), str(workspace.root), seen=[topic.slug for topic in notes])
     if notes:
         marks = current_marks(workspace, structure, {path for topic in notes for path in topic.sources})
         parts.append(
             "What is already written down about this repository (read one with knowledge_search before exploring "
             "that area again; correct it with knowledge_write when the code says otherwise):\n"
-            + "\n".join(index_lines(notes, marks, usage=load_usage(knowledge_store(workspace))))
+            + "\n".join(
+                index_lines(
+                    notes,
+                    marks,
+                    usage=load_usage(knowledge_store(workspace)),
+                    facts_top=_env_number("FORGE_PIN_FACTS_TOP", PIN_FACTS_TOP),
+                    fact_lines=PIN_FACT_LINES,
+                )
+            )
         )
     else:
         parts.append(
@@ -214,18 +257,33 @@ class CodeMapTool(Tool):
             return ToolResult(
                 ok=False, content="code_map describes an existing repository; this project has none."
             )
-        structure, report = await project_view_async(context.workspace)
+        structure, report, view_seconds = await timed_view(context.workspace)
         code_map = CodeMap(structure)
         query = args.query.strip()
         if args.action != "overview" and args.action not in ("endpoints", "tables", "env") and not query:
-            return ToolResult(ok=False, content=f"`{args.action}` needs a `query`.")
+            return ToolResult(
+                ok=False,
+                content=f"`{args.action}` needs a `query`.",
+                meta=knowledge_metrics("code_map", "refused", view_seconds, action=args.action),
+            )
         if args.action == "env":
             lines = settings_report(context.workspace, code_map, query)
         else:
             lines = getattr(self, f"_{args.action}")(code_map, query)
         slow = report.seconds >= SLOW_UPDATE_SECONDS  # a slow update must be visible, not guessed at
         note = f"\n\n[index updated: {report.line()}]" if report.touched or slow else ""
-        return ToolResult(ok=True, content=(cap(lines) if lines else f"Nothing found for {query!r}.") + note)
+        return ToolResult(
+            ok=True,
+            content=(cap(lines) if lines else f"Nothing found for {query!r}.") + note,
+            meta=knowledge_metrics(
+                "code_map",
+                "found" if lines else "nothing",
+                view_seconds,
+                action=args.action,
+                files=len(code_map.files),
+                index_changed=len(report.touched),
+            ),
+        )
 
     def _overview(self, code_map: CodeMap, query: str) -> list[str]:
         return overview(code_map).split("\n")

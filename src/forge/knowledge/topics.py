@@ -127,22 +127,67 @@ def delete_topic(store: Path, slug: str) -> bool:
     return True
 
 
+FACT_LINE_CHARS = 160
+KEY_FACTS_HEADING = re.compile(r"^#{1,6}\s*key facts\s*$", re.IGNORECASE)
+
+
+def overlapping(topics: list[Topic], share: float = 0.6) -> list[tuple[str, str]]:
+    """Pairs of topics resting on mostly the same source files (KU5): candidates for merging. Needs at least two
+    shared files so one popular file does not link everything."""
+    pairs = []
+    for index, first in enumerate(topics):
+        for second in topics[index + 1 :]:
+            a, b = set(first.sources), set(second.sources)
+            both = a & b
+            if len(both) >= 2 and len(both) / len(a | b) >= share:
+                pairs.append((first.slug, second.slug))
+    return pairs
+
+
+def key_facts(topic: Topic, lines: int) -> list[str]:
+    """The few lines of a topic worth having in every model call (KU4): what is under a `Key facts` heading
+    when the note has one, otherwise the first lines of its body that are not headings. Each is clipped."""
+    body = [line.strip() for line in topic.body.splitlines()]
+    start = next((i + 1 for i, line in enumerate(body) if KEY_FACTS_HEADING.match(line)), 0)
+    facts: list[str] = []
+    for line in body[start:]:
+        if line.startswith("#"):
+            if start:
+                break  # the next heading ends the key facts section
+            continue
+        if line:
+            facts.append(line if len(line) <= FACT_LINE_CHARS else line[: FACT_LINE_CHARS - 1] + "…")
+        if len(facts) == lines:
+            break
+    return facts
+
+
 def index_lines(
-    topics: list[Topic], current: dict[str, str], limit: int = 80, usage: Usage | None = None
+    topics: list[Topic],
+    current: dict[str, str],
+    limit: int = 80,
+    usage: Usage | None = None,
+    facts_top: int = 0,
+    fact_lines: int = 4,
 ) -> list[str]:
     """One line per topic for the pinned index, with a mark on those whose sources changed.
 
     Once any topic has been read (KU2) only the most used ones get a line, the rest are counted: the pin stays
-    short however many topics the repository collects. With no use yet it lists them in order, as before."""
+    short however many topics the repository collects. With no use yet it lists them in order, as before.
+    `facts_top` (KU4): the first that many topics, the most used, also carry their key facts, so a common
+    question needs no tool call. Only when use is known and the topic's files are unchanged."""
     if usage and any(reads_of(usage, topic.slug) for topic in topics):
         by_slug = {topic.slug: topic for topic in topics}
         topics = [by_slug[slug] for slug in use_order(list(by_slug), usage)]
         limit = min(limit, PINNED_BY_USE)
     lines = []
-    for topic in topics[:limit]:
+    with_facts = facts_top if usage and any(reads_of(usage, topic.slug) for topic in topics) else 0
+    for number, topic in enumerate(topics[:limit]):
         changed = topic.outdated(current)
         mark = f" [may be outdated: {len(changed)} of its files changed]" if changed else ""
         lines.append(f"- {topic.slug}: {topic.title}. {topic.summary}{mark}")
+        if number < with_facts and not changed:  # a note whose files changed may be wrong: no facts from it
+            lines.extend(f"    {fact}" for fact in key_facts(topic, fact_lines))
     if len(topics) > limit:
         lines.append(f"- ... and {len(topics) - limit} more: knowledge_search finds them")
     return lines
