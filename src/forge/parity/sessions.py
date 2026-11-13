@@ -10,6 +10,7 @@ from pathlib import Path
 
 from forge.config import forge_home
 from forge.protocol.events import Event, EventType
+from forge.workspace.conversations import conversation_file
 from forge.workspace.workspace import Workspace
 
 
@@ -23,7 +24,7 @@ def list_sessions(home: Path | None = None) -> str:
     lines = []
     for number, entry in enumerate(entries, 1):
         root = Path(entry["path"])
-        state_file = root / ".forge" / "state.json"
+        state_file = conversation_file(root, "state.json")
         phase = "?"
         if state_file.exists():
             with contextlib.suppress(ValueError):

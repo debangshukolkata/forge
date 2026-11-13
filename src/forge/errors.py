@@ -64,3 +64,11 @@ class LLMNotFoundError(LLMError):
 
 class LLMBadRequestError(LLMError):
     """The provider rejected the request for another reason."""
+
+
+class ConversationError(ForgeError):
+    """An unknown or invalid conversation id (D-582)."""
+
+
+class ConversationBusyError(ConversationError):
+    """The agent is working in this conversation and the switch was not told to stop it."""

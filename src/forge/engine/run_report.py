@@ -14,6 +14,7 @@ from pathlib import Path
 from forge.engine.log_summary import summarize
 from forge.protocol.events import Event, EventType, load_event_log
 from forge.safety.redact import Redactor, default_redactor
+from forge.workspace.conversations import conversation_file
 
 PREVIEW_CHARS = 140
 VERDICT = re.compile(r"VERDICT:\s*(SHIP|REVISE)", re.IGNORECASE)
@@ -196,9 +197,11 @@ def build_run_report(
     return _scrubber(workspace, redactor)("\n".join(parts) + "\n")
 
 
-def write_run_report(workspace: Path, destination: Path | None = None) -> Path:
-    """Reads the workspace's event log and writes the report next to it (or at `destination`)."""
-    log = workspace / ".forge" / "transcripts" / "events.jsonl"
+def write_run_report(
+    workspace: Path, destination: Path | None = None, conversation: str | None = None
+) -> Path:
+    """Reads the event log of the active (or the named) conversation and writes the report next to it (or at `destination`)."""
+    log = conversation_file(workspace, "events.jsonl", conversation)
     events = (
         load_event_log(log) if log.is_file() else []
     )  # a project that has not run yet still gets a (short) report

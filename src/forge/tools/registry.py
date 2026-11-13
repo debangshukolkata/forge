@@ -16,6 +16,7 @@ from forge.tools.browser import browser_tools
 from forge.tools.code_intel import code_intel_tools
 from forge.tools.code_map_tool import CodeMapTool
 from forge.tools.code_outline import code_outline_tools
+from forge.tools.conversation_recall import ConversationRecall
 from forge.tools.db import (
     DbCopyTable,
     DbQuery,
@@ -107,6 +108,7 @@ def default_tools() -> list[Tool]:
         FindAsset(),
         AddAsset(),
         InstallSkill(),
+        ConversationRecall(),
         NotebookRead(),
         NotebookEditCell(),
         *browser_tools(),

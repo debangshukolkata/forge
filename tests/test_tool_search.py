@@ -14,7 +14,7 @@ from forge.llm.tokens import count_tools_tokens
 from forge.parity.skills import discover
 from forge.protocol.events import EventBus
 from forge.safety.redact import Redactor
-from forge.toolkit.base import ToolContext, ToolResult
+from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.deferred import DEFERRED_GROUPS, GROUP_OF, expand
 from forge.tools.parity import LoadSkill
 from forge.tools.registry import MAX_TOOLS_PER_REQUEST, ToolRegistry, default_tools
@@ -250,3 +250,38 @@ async def test_a_reopened_session_gets_back_the_tools_it_used(original_repo: Pat
     with contextlib.suppress(Exception):  # the mocked model answers 500; the tools are restored before that
         await host.agent._chat(history, ignore)
     assert "redact_pdf" in _names(host.agent.tools)
+
+
+class _McpStandIn(Tool):
+    """A tool the way an MCP server's tool is named (mcp__<server>__<tool>)."""
+
+    name = "mcp__jira__search_issues"
+    read_only = True
+    description = "Search Jira issues by text."
+
+    class Args(ToolArgs):
+        text: str
+
+    async def run(self, args: _McpStandIn.Args, context: ToolContext) -> ToolResult:
+        return ToolResult(ok=True, content="none")
+
+
+async def test_mcp_tools_wait_in_the_tool_search_list_until_loaded(tmp_path: Path) -> None:
+    """TR3 (D-591): an MCP server's tools are not sent with every request."""
+    registry = ToolRegistry(defer=True)
+    before = _names(registry)
+    registry.add(_McpStandIn())
+
+    assert "mcp__jira__search_issues" not in _names(registry)  # waiting
+    assert _names(registry) == before
+    assert "mcp__jira__search_issues - Search Jira issues" in _search(registry).spec().description
+
+    found = await _run(registry, "jira issues", tmp_path)
+    assert found.ok and "mcp__jira__search_issues" in found.content
+    assert "mcp__jira__search_issues" in _names(registry)  # loaded by the search
+    # called directly without a search: loaded then too
+    other = ToolRegistry(defer=True)
+    other.add(_McpStandIn())
+    assert other.is_waiting("mcp__jira__search_issues")
+    assert other.attach(["mcp__jira__search_issues"]) == ["mcp__jira__search_issues"]
+    assert not other.is_waiting("mcp__jira__search_issues")

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from forge.engine.session_host import SessionHost
+from forge.errors import ConversationBusyError, ConversationError
 from forge.workspace.create import create_workspace
 from forge.workspace.pyenv import find_app_folder_candidates
 from forge.workspace.repo_memory import remembered_app_folder
@@ -51,6 +52,52 @@ class WebSessionManager:
         self._runner = asyncio.create_task(self.host.run())
         self._remember(workspace)
         return workspace
+
+    # --- conversations of the open project (D-582) ---
+
+    def conversations(self) -> dict[str, Any]:
+        host = self.host
+        if host is None or host.conversations is None:
+            return {"active": None, "conversations": []}
+        active = host.conversations.conversation_id
+        return {
+            "active": active,
+            "conversations": [
+                {**c.model_dump(), "active": c.id == active, "running": c.id == active and host.busy}
+                for c in host.conversations.store.list()
+            ],
+        }
+
+    async def switch_conversation(
+        self, conversation_id: str | None, title: str = "", stop_running: bool = False
+    ) -> str:
+        """Opens another conversation of the project, or a new one when `conversation_id` is None. A running
+        turn is stopped only when the caller said so (the UI asks first); its history up to the last finished
+        step is saved before the project is opened again."""
+        host, workspace = self.host, self.workspace
+        if host is None or workspace is None or host.conversations is None:
+            raise ConversationError("No project is open.")
+        if host.busy:
+            if not stop_running:
+                raise ConversationBusyError("DebCraft is working in this conversation.")
+            await host.interrupt()
+            for _ in range(100):  # up to 10 seconds for the turn to end
+                if not host.busy:
+                    break
+                await asyncio.sleep(0.1)
+            else:
+                raise ConversationError("DebCraft could not be stopped in time; nothing was switched.")
+        await host.save_conversation(force=True)
+        store = host.conversations.store
+        chosen = store.create(title) if conversation_id is None else store.activate(conversation_id)
+        await self.open_workspace(workspace.root)
+        return chosen.id
+
+    def rename_conversation(self, conversation_id: str, title: str) -> None:
+        host = self.host
+        if host is None or host.conversations is None:
+            raise ConversationError("No project is open.")
+        host.conversations.store.rename(conversation_id, title)
 
     async def new_workspace(
         self, repo: Path, path: Path, app_folder: str | None, project: str = ""

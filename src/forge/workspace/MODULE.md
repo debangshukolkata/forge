@@ -11,3 +11,4 @@ Changed expectations in the user's existing tests are recorded for the delivery 
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
 - **Attachments (D-469):** `Workspace.input_path` resolves `.forge/inputs/...` and `.forge/tool_outputs/...` for reading only; `read_file` and `list_dir` use it.
+- **Conversations (D-582):** `conversations.py`: `ConversationStore` (index, folder per conversation under `.forge/conversations/`, copy-migration of the old log and task state into `c1`, id check before any path is built) and `conversation_file` (where a log or state file is, read without changing anything).

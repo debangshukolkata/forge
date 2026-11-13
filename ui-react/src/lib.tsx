@@ -8,6 +8,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export const SIGNED_OUT_EVENT = "forge:signed-out";
 export const DRAFT_EVENT = "forge:draft"; // the welcome screen's starter chips fill the composer
 
+/** An API error that keeps the status and the server's answer, so a caller can tell "busy" from a failure. */
+export class ApiError extends Error {
+  constructor(message: string, public status: number, public data: Record<string, unknown>) {
+    super(message);
+  }
+}
+
 export async function api<T = unknown>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
   const response = await fetch(path, {
     method: options.method ?? "GET",
@@ -18,7 +25,7 @@ export async function api<T = unknown>(path: string, options: { method?: string;
   const data = await response.json().catch(() => ({}));
   // An expired or missing session (the server restarted): send the user back to the login screen.
   if (response.status === 401 && !path.startsWith("/api/auth")) window.dispatchEvent(new Event(SIGNED_OUT_EVENT));
-  if (!response.ok) throw new Error(data.detail || data.error || `HTTP ${response.status}`);
+  if (!response.ok) throw new ApiError(data.detail || data.error || `HTTP ${response.status}`, response.status, data);
   return data as T;
 }
 

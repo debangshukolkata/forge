@@ -87,10 +87,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     log_summary.add_argument("--workspace", type=Path, help="a workspace folder (uses its transcripts)")
     log_summary.add_argument("--log", type=Path, help="an events.jsonl file instead of a workspace")
+    log_summary.add_argument(
+        "--conversation", help="a conversation id of the workspace, like c2 (default: the active one)"
+    )
     run_report = subcommands.add_parser(
         "run-report", help="scrubbed report of a run you can send for analysis: no source code, no secrets"
     )
     run_report.add_argument("--workspace", type=Path, required=True, dest="report_workspace")
+    run_report.add_argument("--conversation", help="a conversation id, like c2 (default: the active one)")
     run_report.add_argument(
         "--out", type=Path, help="where to write it (default: <workspace>/.forge/run-report.md)"
     )
@@ -216,9 +220,9 @@ def main(argv: list[str] | None = None) -> int:
         error = args.error_file.read_text(encoding="utf-8", errors="replace") if args.error_file else None
         return asyncio.run(_diagnose(args.diagnose_workspace, error, not args.no_run))
     if args.command == "log-summary":
-        return _log_summary(args.workspace, args.log)
+        return _log_summary(args.workspace, args.log, args.conversation)
     if args.command == "run-report":
-        return _run_report(args.report_workspace, args.out)
+        return _run_report(args.report_workspace, args.out, args.conversation)
     if args.command == "template-probe":
         return _template_probe(args.template, args.out, args.hide_text, args.max_samples)
     if args.command == "skill":
@@ -528,26 +532,39 @@ def _template_probe(template: Path, out: Path | None, hide_text: bool, max_sampl
     return 0
 
 
-def _run_report(workspace_path: Path, out: Path | None) -> int:
+def _run_report(workspace_path: Path, out: Path | None, conversation: str | None = None) -> int:
     from forge.engine.run_report import write_run_report
+    from forge.workspace.conversations import conversation_file
 
-    if not (workspace_path / ".forge" / "transcripts" / "events.jsonl").exists():
-        print("forge run-report needs a workspace that has a transcript (.forge/transcripts/events.jsonl)")
+    if not conversation_file(workspace_path, "events.jsonl", conversation).exists():
+        print(
+            "forge run-report needs a workspace that has a transcript (.forge/conversations/<id>/events.jsonl)"
+        )
         return 2
-    print(f"Run report written to {write_run_report(workspace_path, out)}")
+    print(f"Run report written to {write_run_report(workspace_path, out, conversation)}")
     return 0
 
 
-def _log_summary(workspace_path: Path | None, log_path: Path | None) -> int:
+def _log_summary(workspace_path: Path | None, log_path: Path | None, conversation: str | None = None) -> int:
     from forge.engine.log_summary import summarize_file
+    from forge.workspace.conversations import conversation_file
 
     path = log_path or (
-        workspace_path / ".forge" / "transcripts" / "events.jsonl" if workspace_path else None
+        conversation_file(workspace_path, "events.jsonl", conversation) if workspace_path else None
     )
     if path is None or not path.exists():
         print("forge log-summary needs --workspace (with a transcript) or --log events.jsonl")
         return 2
-    print(summarize_file(path))
+    stored = None
+    if workspace_path is not None:
+        try:  # the numbers on disk are an extra: a log is summarized also when the project cannot be opened
+            from forge.tools.knowledge_tools import stored_counts
+            from forge.workspace.workspace import Workspace
+
+            stored = stored_counts(Workspace.open(workspace_path))
+        except Exception:
+            stored = None
+    print(summarize_file(path, stored))
     return 0
 
 

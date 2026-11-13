@@ -11,6 +11,7 @@ from forge.engine.session_host import SessionHost
 from forge.environment.plan import apply_saved_plan
 from forge.llm.router import LLMRouter
 from forge.protocol.events import EventBus, EventType
+from forge.workspace.conversations import ConversationStore
 from forge.workspace.workspace import Workspace
 
 
@@ -31,9 +32,11 @@ def build_session(
     secrets = secrets or load_secrets(home)
     if log_path is None:
         # With a workspace, the transcript lives in it (spec §6.2); otherwise in DebCraft home (D-029).
-        log_path = (
-            workspace.forge_dir / "transcripts" / "events.jsonl" if workspace else new_session_log_path(home)
-        )
+        if workspace is not None:
+            conversations = ConversationStore(workspace)
+            log_path = conversations.events_path(conversations.active().id)
+        else:
+            log_path = new_session_log_path(home)
     bus = EventBus(log_path)
 
     async def on_notice(kind: str, data: dict[str, Any]) -> None:

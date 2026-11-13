@@ -8,3 +8,4 @@ The session host: input queue, turn handling, slash commands, headless runs, run
 - **Decisions:** docs/DECISIONS.md (search the module's feature names); layering is enforced by tests/test_module_boundaries.py.
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
+- **Conversations (D-582):** `history_store.py` (the model's history as `history.json`, redacted on write and on load, cut back to valid call/result pairs) and `session_conversations.py` (restore at open, save after every finished step, title from the first message, the pinned line about other conversations, the `history_not_restored` notice).

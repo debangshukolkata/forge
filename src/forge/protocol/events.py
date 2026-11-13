@@ -29,6 +29,7 @@ class EventType(StrEnum):
     MODEL_PROGRESS = "model_progress"  # a model call in flight: thinking, writing text or preparing a tool call, with a running size (D-361)
     MESSAGE_DONE = "message_done"
     LLM_CALL = "llm_call"  # one model call: latency, tokens, tool calls asked for (run log; no UI row)
+    SESSION_TIMING = "session_timing"  # seconds to open a project and to read the repository map (run log; no UI row, D-575)
     TOOL_CALL_STARTED = "tool_call_started"
     TOOL_CALL_FINISHED = "tool_call_finished"
     APPROVAL_REQUESTED = "approval_requested"
@@ -84,6 +85,10 @@ class EventBus:
     def redact_text(self, text: str) -> str:
         """Text that leaves the engine outside an event (a saved tool output) gets the same redaction."""
         return self._redactor.redact(text)
+
+    def redact_data(self, data: Any) -> Any:
+        """The same redaction for nested data that leaves the engine outside an event (the saved model history)."""
+        return self._redactor.redact_data(data)
 
     @property
     def last_seq(self) -> int:

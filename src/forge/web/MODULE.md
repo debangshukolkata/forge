@@ -12,3 +12,4 @@ The local web UI server (FastAPI) and the React build in web/react/. Route modul
 - **Decisions:** docs/DECISIONS.md (search the module's feature names); layering is enforced by tests/test_module_boundaries.py.
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
+- **Conversations (D-582):** `conversation_routes.py` (`/api/conversations`, `/open`, `/rename`; 409 `busy` unless `stop_running`) and `WebSessionManager.switch_conversation` (stops the run on request, saves the history, opens the project again on the other conversation). The UI is `ui-react/src/components/ConversationSwitcher.tsx` in the top bar.

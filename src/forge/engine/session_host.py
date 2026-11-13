@@ -10,6 +10,7 @@ import asyncio
 import contextlib
 import re
 import threading
+import time
 import traceback
 from collections.abc import Awaitable, Callable
 from datetime import datetime
@@ -25,6 +26,7 @@ from forge.db.access import AccessLevel
 from forge.db.credential_tables import credential_tables
 from forge.db.scratch import ScratchError
 from forge.db.session import DbSession
+from forge.engine.session_conversations import SessionConversations
 from forge.engine.slash_commands import SlashCommandHandler
 from forge.environment.store import tavily_declined, tesseract_ready
 from forge.errors import BudgetExceededError, ConfigError, LLMError
@@ -92,6 +94,9 @@ class SessionHost:
         orchestrated: bool = False,
         secrets: Secrets | None = None,
     ) -> None:
+        opened = time.perf_counter()
+        self.open_seconds = 0.0  # what building this session took, for `log-summary` (RS19, D-575)
+        self.map_seconds: float | None = None  # the repository map, read in its own thread (KP6)
         self.router = router
         self.bus = bus
         self.workspace = workspace
@@ -108,6 +113,13 @@ class SessionHost:
             system_prompt(workspace) if workspace is not None else DEFAULT_SYSTEM_PROMPT
         )
         self.history: list[Message] = [Message.system(self.system_prompt)]
+        self.conversations: SessionConversations | None = None  # D-582: this project's active conversation
+        if workspace is not None:
+            self.conversations = SessionConversations(workspace)
+            self.conversations.restore(self)
+            self.conversations.pin_others(self)
+            if self.agent is not None:
+                self.agent.after_step = self.save_conversation
         self.user_urls: set[str] = (
             set()
         )  # web addresses the user typed: what design_md_import may fetch (D-349)
@@ -132,6 +144,7 @@ class SessionHost:
             self.bus.stamp = lambda: dict(zip(("phase", "task"), self._usage_where(), strict=True))
         if workspace is not None:
             self.refresh_instructions()
+        self.open_seconds = time.perf_counter() - opened
 
     def refresh_profile_pin(self) -> None:
         """Mode B: the host profile's essentials, plus active interface contracts (§6A.2A, D-129), are pinned.
@@ -153,7 +166,9 @@ class SessionHost:
         for the walk of two folders (KP6). The first turn waits for it in `wait_for_map`."""
 
         def work() -> None:
+            started = time.perf_counter()
             self.context_manager.pinned.set("kb_essentials", repository_map_pin(workspace))
+            self.map_seconds = time.perf_counter() - started
 
         thread = threading.Thread(target=work, name="repository-map", daemon=True)
         self._map_thread = thread
@@ -379,6 +394,8 @@ class SessionHost:
                 user_input.text
             )  # what install_skill may use (D-237)
             await self.bus.publish(EventType.USER_MESSAGE, {"text": user_input.text})
+            if self.conversations is not None and not user_input.text.lstrip().startswith("/"):
+                self.conversations.name_from(user_input.text)
             self.recent_user_texts = [
                 *self.recent_user_texts,
                 default_redactor.redact(user_input.text)[:1500],
@@ -480,6 +497,13 @@ class SessionHost:
         ):
             await self._run_turn(self.orchestrator.resume)
         await self.wait_for_map()  # the first message is answered with the map in place (KP6)
+        if self.conversations is not None:
+            await self.conversations.notice_if_not_restored(self)
+        if self.workspace is not None:
+            timing = {"open_s": round(self.open_seconds, 2)}
+            if self.map_seconds is not None:
+                timing["map_s"] = round(self.map_seconds, 2)
+            await self.bus.publish(EventType.SESSION_TIMING, timing)
         while not self.closed:
             user_input = await self._inputs.get()
             if isinstance(user_input, SendMessage):
@@ -723,6 +747,7 @@ class SessionHost:
                 raise
         finally:
             self._current_turn = None
+            await self.save_conversation(force=True)
             await self._publish_status("idle")
 
     async def _guarded(self, work: Callable[[], Awaitable[None]]) -> None:
@@ -790,6 +815,11 @@ class SessionHost:
         if self.agent is not None:
             payload["permission_mode"] = self.agent.gate.mode
         await self.bus.publish(EventType.STATUS_CHANGED, payload)
+
+    async def save_conversation(self, *, force: bool = False) -> None:
+        """The model's history of this conversation is saved after every finished step (D-582)."""
+        if self.conversations is not None:
+            await self.conversations.save(self, force=force)
 
     def reset_history(self) -> None:
         self.history = [Message.system(self.system_prompt)]

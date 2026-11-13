@@ -9,13 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from forge.web.project_memory import project_memory
+from forge.workspace.conversations import conversation_file
 
 TAIL_BYTES = 256 * 1024
 SUMMARY_CHARS = 160
 
 
 def _event_log(root: Path) -> Path:
-    return root / ".forge" / "transcripts" / "events.jsonl"
+    return conversation_file(root, "events.jsonl")
 
 
 def _last_request(log: Path) -> str:

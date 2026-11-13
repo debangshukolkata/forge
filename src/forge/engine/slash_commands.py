@@ -755,9 +755,11 @@ class SlashCommandHandler:
         compacted = await self.host.context_manager.compact(self.host.history, " ".join(args) or None)
         if not compacted:
             await self._say("Nothing to compact yet (the conversation is still short).")
+        await self.host.save_conversation(force=True)
 
     async def _clear(self, args: list[str]) -> None:
         self.host.reset_history()
+        await self.host.save_conversation(force=True)
         await self._say("Conversation cleared.")
 
     async def _exit(self, args: list[str]) -> None:

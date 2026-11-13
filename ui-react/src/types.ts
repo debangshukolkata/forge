@@ -5,6 +5,7 @@ export interface WorkspaceSummary {
   name: string;
   mode: "A" | "B";
   repo: string;
+  conversation?: { id: string; title: string } | null; // the open conversation of the project (D-582)
 }
 
 export interface Task {

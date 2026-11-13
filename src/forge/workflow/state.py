@@ -17,6 +17,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from forge.workspace.conversations import ConversationStore
 from forge.workspace.workspace import Workspace
 
 TaskStatus = Literal["pending", "in_progress", "done", "blocked"]
@@ -100,7 +101,8 @@ class OrchestratorState(BaseModel):
 class StateStore:
     def __init__(self, workspace: Workspace) -> None:
         self.workspace = workspace
-        self.path = workspace.forge_dir / "state.json"
+        store = ConversationStore(workspace)
+        self.path = store.state_path(store.active().id)
 
     def load(self) -> OrchestratorState:
         if not self.path.exists():

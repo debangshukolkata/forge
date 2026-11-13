@@ -21,6 +21,7 @@ SLOT_ORDER = [
     "kb_essentials",
     "files_modified",
     "memory_index",
+    "conversations",
     "skills",
 ]
 SLOT_TITLES = {
@@ -37,6 +38,7 @@ SLOT_TITLES = {
     "skills": "Skills",
     "files_modified": "Files modified so far",
     "memory_index": "Memory",
+    "conversations": "Other conversations of this project",
 }
 HEADER = "Pinned context (kept up to date by DebCraft; it replaces anything older on the same topics):"
 

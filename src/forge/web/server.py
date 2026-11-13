@@ -29,6 +29,7 @@ from forge.safety.server_security import ServerSecurity
 from forge.web.accounts import AccountStore
 from forge.web.auth_routes import add_auth_routes, add_no_login_route, needs_login, session_cookie_name
 from forge.web.contracts_routes import add_contracts_routes
+from forge.web.conversation_routes import add_conversation_routes
 from forge.web.deps_routes import add_deps_routes
 from forge.web.environment_routes import add_environment_routes
 from forge.web.image_routes import add_image_routes
@@ -96,6 +97,7 @@ def create_app(
     session_cookie = session_cookie_name(security)
     add_environment_routes(app, manager)
     add_contracts_routes(app, manager)
+    add_conversation_routes(app, manager)
     add_tool_output_routes(app, manager)
     add_image_routes(app, manager)
     add_slide_routes(app, manager)
@@ -156,6 +158,12 @@ def create_app(
         orchestrator = host.orchestrator
         return {
             "workspace": {
+                "conversation": {
+                    "id": host.conversations.conversation_id,
+                    "title": host.conversations.store.active().title,
+                }
+                if host.conversations is not None
+                else None,
                 "path": str(workspace.root),
                 "name": workspace.info.project or workspace.info.name,
                 "repo": workspace.info.repo_path or "standalone (Mode B)",

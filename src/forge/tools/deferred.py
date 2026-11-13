@@ -101,6 +101,10 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
         ("run_eval", "synth_samples", "mutation_check"),
     ),
     "notebooks": ("Jupyter notebooks: read and edit cells", ("notebook_read", "notebook_edit_cell")),
+    "conversations": (
+        "Earlier conversations of this project: what was asked and answered in them",
+        ("conversation_recall",),
+    ),
     "code_intel": (
         "Exact Python lookups: where a name is defined, who uses it, the symbols of a file",
         ("find_definition", "find_references", "list_symbols"),
@@ -110,8 +114,13 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
 GROUP_OF: dict[str, str] = {name: group for group, (_, names) in DEFERRED_GROUPS.items() for name in names}
 
 
+MCP_PREFIX = "mcp__"  # forge.parity.mcp_client.PREFIX; not imported: this module has no dependencies
+
+
 def is_deferrable(name: str) -> bool:
-    return name in GROUP_OF
+    """A tool in a group, and every tool of an MCP server (TR3, D-591): a server can bring dozens of schemas that a
+    session mostly does not use; they wait in the `tool_search` list like the other deferred tools."""
+    return name in GROUP_OF or name.startswith(MCP_PREFIX)
 
 
 def expand(names: Iterable[str]) -> list[str]:

@@ -1,6 +1,7 @@
 import { Anvil, Gauge, Home, LogOut, Moon, Power, ShieldCheck, Sun, UserRound } from "lucide-react";
 import type { Forge } from "../useForge";
 import { AnimatedCost } from "./AnimatedCost";
+import { ConversationSwitcher } from "./ConversationSwitcher";
 import { ProjectSwitcher } from "./ProjectSwitcher";
 import { Badge, Button, IconButton, Spinner } from "./ui";
 
@@ -52,6 +53,7 @@ export function TopBar({
       {workspace ? (
         <div className="flex min-w-0 items-center gap-2">
           <ProjectSwitcher forge={forge} onOpen={onOpenProject} onNew={onNewProject} onDeleted={onProjectDeleted} />
+          <ConversationSwitcher forge={forge} />
           <Badge tone={workspace.mode === "B" ? "info" : "neutral"}>{workspace.mode === "B" ? "Standalone" : "Repository"}</Badge>
           {waiting ? (
             <Badge tone="warn">Waiting for you</Badge>
