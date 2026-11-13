@@ -185,9 +185,8 @@ def test_the_order_design_first_page_last_is_stated_where_the_model_reads_first(
     """D-365: pages written before DESIGN.md and the candidates were refused after being fully generated (two pages, ~17k tokens, in a measured run)."""
     root = Path(__file__).resolve().parents[1] / "src" / "forge"
     for relative in ("agent/prompts/system.md", "agent/prompts/system_modeb.md"):
-        assert "DESIGN.md, then three candidates and design_candidates, and only then the page" in (
-            root / relative
-        ).read_text(encoding="utf-8")
+        # D-598: one line in the prompt (the full rules are in the skill, which the line tells the model to load)
+        assert "DESIGN.md, three candidates, then the page" in (root / relative).read_text(encoding="utf-8")
     skill = (root / "skills/ui-design-quality/SKILL.md").read_text(encoding="utf-8")
     assert skill.index("Order of work for a new page") < skill.index("## 0. Make sure the styles load")
 

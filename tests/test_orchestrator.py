@@ -528,6 +528,34 @@ async def test_a_task_that_changed_the_ui_needs_a_browser_check_before_done(host
     assert accepted.ok
 
 
+async def test_a_design_skill_the_user_chose_is_not_held_to_the_built_in_design_gates(
+    host: SessionHost,
+) -> None:
+    """D-598: look, audit and critic gates belong to the built-in design way; the browser check stays for every UI task."""
+    from forge.toolkit.base import ToolContext
+
+    orch = orchestrator(host)
+    orch.state.tasks = [Task(id="T1", title="landing page")]
+    orch.state.current_task = "T1"
+    context = host.agent.context  # type: ignore[union-attr]
+    assert isinstance(context, ToolContext)
+    context.step = context.last_ui_edit_step = 7
+    context.design_exempt = True  # a skill with `own_design` was loaded (taste, impeccable)
+
+    refused = await orch.task_update("T1", "done", "", "pytest: 9 passed", "", context)
+    assert not refused.ok and "browser" in refused.content  # a page nobody opened is still not done
+    assert (
+        "design-critic" not in refused.content and "Also still missing" not in refused.content
+    )  # no design checks listed
+
+    context.step, context.last_browser_step = 9, 9
+    context.ui_audit_blocked = (
+        True  # even a style audit BLOCKER does not hold a page the chosen skill styles itself
+    )
+    accepted = await orch.task_update("T1", "done", "Landing page works.", "browser: opened it", "", context)
+    assert accepted.ok, accepted.content
+
+
 async def test_a_blocked_ui_task_does_not_need_a_browser_check(host: SessionHost) -> None:
     orch = orchestrator(host)
     orch.state.tasks = [Task(id="T1", title="cart page")]

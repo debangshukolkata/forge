@@ -23,6 +23,9 @@ async def test_a_screen_is_copied_into_the_project(original_repo: Path, tmp_path
 def test_the_prompts_and_the_skill_send_applications_to_the_screen_recipes() -> None:
     root = Path(__file__).resolve().parents[1] / "src" / "forge"
     for relative in ("agent/prompts/system.md", "agent/prompts/system_modeb.md"):
-        assert "Applications are built from screen recipes" in (root / relative).read_text(encoding="utf-8")
+        # D-598: the design rules live in the skill; the prompt only says when to load a design skill
+        prompt = (root / relative).read_text(encoding="utf-8")
+        assert "first load a design skill" in prompt and "the screen recipes" in prompt
+        assert "Applications are built from screen recipes" not in prompt
     skill = (root / "skills/ui-design-quality/SKILL.md").read_text(encoding="utf-8")
     assert "## 0i. Applications: start from a screen recipe" in skill and "app-dashboard-kpi" in skill

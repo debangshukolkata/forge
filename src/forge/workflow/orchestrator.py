@@ -90,7 +90,11 @@ UI_EVIDENCE_NOTE = (
     "what you changed and how to start the app; start the app once with start_background and give the same URL to "
     "the verifier and to the design-critic in the same turn: they run side by side). Fix what you find, then give "
     "your final summary and say "
-    "what you saw. Then have the design reviewed: spawn_subagent with agent 'design-critic' and fix everything it "
+    "what you saw."
+)
+# Added to the note above only when the built-in design way drives; a design skill the user chose has its own checks (D-598).
+UI_EVIDENCE_DESIGN = (
+    " Then have the design reviewed: spawn_subagent with agent 'design-critic' and fix everything it "
     "lists. Also screenshot the page (browser_screenshot, it runs a style audit), look at the image with "
     "view_image and judge the design: hierarchy, spacing, colour, readability. Improve it if it is not good "
     "enough; the ui-design-quality skill has the checklist."
@@ -301,7 +305,9 @@ class Orchestrator:
             # The model finished a turn after changing what the page shows without using the app in a browser
             # (it "verified" a layout fix with unit tests, D-169): send it back once, before delivery.
             self._ui_nudge_step = self.context.step
-            self.host.history.append(Message.system(UI_EVIDENCE_NOTE))
+            self.host.history.append(
+                Message.system(UI_EVIDENCE_NOTE + ("" if self.context.design_exempt else UI_EVIDENCE_DESIGN))
+            )
             await self._run_agent(self._tools())
         # Settled: no task is open, and either tasks exist or the model changed files on its own. A task list
         # is the model's choice (D-128), so building everything without one must still deliver (D-166).
@@ -687,11 +693,14 @@ class Orchestrator:
                 ok=False,
                 content=f"Not accepted: the styling setup is broken, so the page cannot look right. {setup_problem}",
             )
-        if status == "done" and ui_edited and context.last_screenshot_step <= context.last_ui_edit_step:
+        # The look, audit and critic gates belong to the built-in design way; a design skill the user chose (taste,
+        # impeccable: `own_design`) sets its own bar, and these gates stood in its way (D-598).
+        built_in_design = ui_edited and not context.design_exempt
+        if status == "done" and built_in_design and context.last_screenshot_step <= context.last_ui_edit_step:
             return ToolResult(ok=False, content=UI_LOOK_NOTE + self._also_missing(context, "look"))
-        if status == "done" and ui_edited and context.ui_audit_blocked:
+        if status == "done" and built_in_design and context.ui_audit_blocked:
             return ToolResult(ok=False, content=UI_AUDIT_BLOCKED_NOTE + self._also_missing(context, "audit"))
-        if status == "done" and ui_edited and not critic_cleared(context):
+        if status == "done" and built_in_design and not critic_cleared(context):
             return ToolResult(ok=False, content=UI_CRITIC_NOTE + self._also_missing(context, "critic"))
         if status == "done" and self._is_last_open_task(task) and self._wrote_code():
             criteria = project_criteria(self.workspace.forge_dir)
@@ -741,11 +750,12 @@ class Orchestrator:
             missing["browser"] = (
                 "use of the running app in a browser (browser_open and a click-through), or the verifier"
             )
-        if ui_edited and context.last_screenshot_step <= context.last_ui_edit_step:
+        design = ui_edited and not context.design_exempt  # the built-in design way (D-598)
+        if design and context.last_screenshot_step <= context.last_ui_edit_step:
             missing["look"] = "a screenshot you have looked at (browser_screenshot, then view_image)"
-        if ui_edited and context.ui_audit_blocked:
+        if design and context.ui_audit_blocked:
             missing["audit"] = "a fix for the style audit's BLOCKER"
-        if ui_edited and not critic_cleared(context):
+        if design and not critic_cleared(context):
             missing["critic"] = (
                 "the design-critic review of the running app (spawn_subagent, in the same step as the verifier)"
             )
