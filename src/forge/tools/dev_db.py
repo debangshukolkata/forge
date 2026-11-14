@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
+from urllib.parse import urlsplit
 
 import psycopg
 from pydantic import Field
 
 from forge.db.access import AccessLevel
+from forge.db.dev_proxy import DevProxy, DevProxyError
 from forge.db.dev_write import (
     DevWriteError,
     WritePlan,
@@ -25,6 +27,7 @@ from forge.db.dev_write import (
     record_write,
     undo_write,
 )
+from forge.db.tunnel import TunnelError, ensure_tunnel
 from forge.safety.sql_guard import SqlGuardError, check_dev_write
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.db import NO_DB, _ensure_checked
@@ -267,5 +270,139 @@ class DevDbUndo(Tool):
         )
 
 
+RUN_CARD = (
+    "**The copy of the application will read and write the shared Development database directly.** "
+    "Other people work in it.\n\n"
+    "Why DebCraft wants this: {reason}\n\n"
+    "- Its settings {names} will point at the Development database, through DebCraft, until this session ends "
+    "or DebCraft switches back.\n"
+    "- **Rows it adds or changes there are real.** DebCraft lists them for you after each turn; it cannot show "
+    "them before the application runs.\n"
+    "- **Its DELETE, TRUNCATE and DROP statements are refused by DebCraft** and never reach the database. A "
+    "delete hidden inside a database function or trigger is not seen.\n"
+    "- The original repository is not touched: only the copy runs."
+)
+
+
+class UseDevDatabase(Tool):
+    name = "use_dev_database"
+    description = (
+        "Run the copy of the application directly on the shared DEVELOPMENT database, when it needs more of the "
+        "real data than is sensible to copy (prefer db_copy_table and use_scratch_database: they need no "
+        "approval and nothing shared can change). `variables` maps each setting the APPLICATION reads for its "
+        "database (find them with code_map action env) to the part of the connection it should get: `url`, "
+        "`host`, `port`, `user`, `password` or `database`; `url:<scheme>` gives the URL with another scheme (for "
+        'example `url:postgresql+psycopg2`). Example: {"DATABASE_URL": "url"}. `reason`: one sentence for the '
+        "user. The user approves on a red card, once per session. From then on every command and background "
+        "process you start has these set (you never see the values); the application connects through DebCraft, "
+        "which refuses its DELETE, TRUNCATE and DROP statements and reports every row it adds or changes to the "
+        "user. The address is local and without TLS: if the application forces TLS on its database connection, "
+        "switch that off in the copy. Start the application after this call. An empty `variables` switches back "
+        "to the scratch database. dev_db_activity shows what the application wrote."
+    )
+
+    class Args(ToolArgs):
+        variables: dict[str, str]
+        reason: str = Field(
+            default="", description="Why the copied rows in the scratch schema are not enough."
+        )
+
+    def summary(self, args: UseDevDatabase.Args) -> str:
+        return f"run the app on the development database: {', '.join(args.variables) or '(switch back)'}"
+
+    async def run(self, args: UseDevDatabase.Args, context: ToolContext) -> ToolResult:
+        db = context.db
+        if not args.variables:
+            if db is None or db.dev_proxy is None:
+                return ToolResult(ok=True, content="The application was not on the development database.")
+            report = db.dev_proxy.activity.summary(only_new=False)
+            await db.dev_proxy.close()
+            db.dev_proxy, db.dev_variables = None, {}
+            if context.shell is not None:
+                context.shell.extra_env = db.command_environment()
+            return ToolResult(
+                ok=True,
+                content="Switched back: commands no longer get the development database. A process that is "
+                "still running keeps its connection: stop it."
+                + (f"\n\nIn this session:\n{report}" if report else ""),
+            )
+        target, problem = await _dev_target(context)
+        if problem is not None or context.confirm_danger is None:
+            return problem or NO_DB
+        try:
+            db.check_dev_variables(args.variables)
+        except ValueError as error:
+            return ToolResult(ok=False, content=str(error))
+        if db.dev_proxy is None:  # one card per session; changing the names later needs no second one
+            approved, note = await context.confirm_danger(
+                "Run the copied application on the shared Development database?",
+                RUN_CARD.format(
+                    reason=args.reason.strip() or "(no reason given)",
+                    names=", ".join(f"`{name}`" for name in args.variables),
+                ),
+                "Run it on the Development database",
+            )
+            if not approved:
+                said = f" The user said: {note}" if note else ""
+                return ToolResult(
+                    ok=False,
+                    content=f"The user did not approve this.{said} The application stays on the scratch "
+                    "database: copy the rows it needs with db_copy_table. Do not ask again for the same thing.",
+                )
+            url = urlsplit(target.url(db.secrets) or "")
+            proxy = DevProxy(url.hostname or "127.0.0.1", url.port or 5432, db.dev_sslmode())
+            try:
+                await asyncio.to_thread(ensure_tunnel, DEV)  # the tunnel the user described, if there is one
+                await proxy.start()
+            except (DevProxyError, TunnelError) as error:
+                return ToolResult(ok=False, content=f"{error} The application was not switched over.")
+            db.dev_proxy = proxy
+        db.dev_variables = dict(args.variables)
+        if context.shell is not None:
+            context.shell.extra_env = db.command_environment()
+        if context.pin is not None:
+            context.pin("database", db.status_line())
+        return ToolResult(
+            ok=True,
+            content=f"Approved by the user. Set for every command from now on: {', '.join(args.variables)} "
+            "(values hidden), pointing at the development database through DebCraft. A process that is already "
+            "running keeps its old settings: stop it and start it again. What the application writes there is "
+            "real: keep it to what the requirement needs. Its DELETE, TRUNCATE and DROP statements fail with a "
+            "database error that names DebCraft; that is the rule, not a bug to work around. The user is told "
+            "after each turn what it wrote; dev_db_activity shows you the same."
+            + (
+                f" Still held back (they refuse a connection): {', '.join(db.still_held_back())}. Give them "
+                "here too if the application connects with them."
+                if db.still_held_back()
+                else ""
+            ),
+        )
+
+
+class DevDbActivity(Tool):
+    name = "dev_db_activity"
+    read_only = True
+    description = (
+        "What the copy of the application wrote to the development database in this session (after "
+        "use_dev_database): its writing statements with how often each ran, the row counts the database "
+        "reported, and the statements DebCraft refused (DELETE, TRUNCATE, DROP)."
+    )
+
+    class Args(ToolArgs):
+        pass
+
+    async def run(self, args: DevDbActivity.Args, context: ToolContext) -> ToolResult:
+        db = context.db
+        if db is None or db.dev_proxy is None:
+            return ToolResult(
+                ok=True, content="The application is not on the development database in this session."
+            )
+        report = db.dev_proxy.activity.summary(only_new=False)
+        return ToolResult(
+            ok=True,
+            content=report or "The application has not written to the development database in this session.",
+        )
+
+
 def dev_db_tools() -> list[Tool]:
-    return [DevDbWrite(), DevDbUndo()]
+    return [DevDbWrite(), DevDbUndo(), UseDevDatabase(), DevDbActivity()]

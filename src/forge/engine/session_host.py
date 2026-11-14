@@ -24,6 +24,7 @@ from forge.config import Secrets, forge_home, permission_rules
 from forge.context.manager import ContextManager
 from forge.db.access import AccessLevel
 from forge.db.credential_tables import credential_tables
+from forge.db.dev_guard import Refuser
 from forge.db.scratch import ScratchError
 from forge.db.session import DbSession
 from forge.engine.session_conversations import SessionConversations
@@ -236,6 +237,7 @@ class SessionHost:
                 await self.bus.publish(
                     EventType.NOTICE, {"kind": "db", "text": f"Scratch schema not available: {error}"}
                 )
+        await self._hold_back_dev_settings(db)
         assert self.agent is not None and self.agent.context.shell is not None
         self.agent.context.shell.extra_env = db.command_environment()
         self.context_manager.pinned.set("database", db.status_line())
@@ -243,6 +245,27 @@ class SessionHost:
         await self.bus.publish(
             EventType.NOTICE,
             {"kind": "db_status", "text": db.status_line(), "reachable": reachable},
+        )
+
+    async def _hold_back_dev_settings(self, db: DbSession) -> None:
+        """The copy inherits the user's env file; when that points at the shared development database, the copy
+        must not connect there just by being started (D-613). The env files are read in a thread (D-573)."""
+        if db.dev_refuser is not None:
+            return
+        held = await asyncio.to_thread(db.find_dev_settings)
+        if not held.kinds:
+            return
+        refuser = Refuser(sorted(held.kinds))
+        await refuser.start()
+        db.dev_held, db.dev_refuser = held, refuser
+        await self.bus.publish(
+            EventType.NOTICE,
+            {
+                "kind": "dev_settings_held",
+                "text": f"The copy's settings {', '.join(sorted(held.kinds))} ({', '.join(held.files)}) point at "
+                "the shared Development database. DebCraft holds them back: the copy cannot connect there until "
+                "DebCraft points it at copied rows, or you approve the Development database on a red card.",
+            },
         )
 
     async def _summarise(self, text: str, instruction: str) -> str:
@@ -781,8 +804,17 @@ class SessionHost:
                 raise
         finally:
             self._current_turn = None
+            await self._report_dev_writes()
             await self.save_conversation(force=True)
             await self._publish_status("idle")
+
+    async def _report_dev_writes(self) -> None:
+        """After every turn: what the copy of the application wrote to the development database since the last
+        report, and what DebCraft refused (D-610). The user approved the run, not each row, so they are told."""
+        proxy = getattr(self.db, "dev_proxy", None) if self.db is not None else None
+        report = proxy.activity.summary(only_new=True) if proxy is not None else ""
+        if report:
+            await self.bus.publish(EventType.NOTICE, {"kind": "dev_db_activity", "text": report})
 
     async def _guarded(self, work: Callable[[], Awaitable[None]]) -> None:
         """One turn's work with the shared error handling: errors are reported, the session lives on."""
@@ -877,6 +909,13 @@ class SessionHost:
         hub = getattr(self, "mcp_hub", None)
         if hub is not None:
             await hub.close()
+        proxy = getattr(self.db, "dev_proxy", None) if self.db is not None else None
+        if proxy is not None:
+            await self._report_dev_writes()  # what a background process wrote after the last turn
+            await proxy.close()
+        refuser = getattr(self.db, "dev_refuser", None) if self.db is not None else None
+        if refuser is not None:
+            await refuser.close()
         if self.agent is not None and self.agent.context.browser is not None:
             with contextlib.suppress(Exception):
                 await self.agent.context.browser.close()

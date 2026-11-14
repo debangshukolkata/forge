@@ -7,13 +7,15 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
 
 import psycopg
 
 from forge.config import PostgresConfig, Secrets
 from forge.db.access import AccessLevel, AccessReport, detect
 from forge.db.connection import DbTarget, connect
+from forge.db.dev_guard import HeldBack, Refuser, dev_settings
+from forge.db.dev_proxy import DevProxy
 from forge.db.requests import DbRequest, DbRequests
 from forge.db.scratch import ScratchRegistry, ScratchSchema, pgoptions, scratch_name_for
 from forge.safety.sql_guard import SqlGuardError, check_read_only
@@ -22,6 +24,7 @@ from forge.workspace.workspace import Workspace
 APP_ENV_FILE = "db_app_env.json"  # in the workspace's .forge folder: setting names only, never a value
 APP_VARIABLE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,80}$")
 CONNECTION_PARTS = ("url", "host", "port", "user", "password", "database", "schema")
+DEV_CONNECTION_PARTS = ("url", "host", "port", "user", "password", "database")
 
 
 class DbSession:
@@ -45,6 +48,14 @@ class DbSession:
         self.reports: dict[str, AccessReport] = {}
         self.scratch: ScratchSchema | None = None
         self.requests = DbRequests(workspace)
+        # The copied application on the development database (D-610): the relay it connects to and the names of
+        # its settings. Only for this session, never written to disk: the next session asks the user again.
+        self.dev_proxy: DevProxy | None = None
+        self.dev_variables: dict[str, str] = {}
+        # The copy's own settings that point at the development database (D-613): held back until the model
+        # points the application somewhere on purpose. `dev_refuser` answers connections made with them.
+        self.dev_held: HeldBack = HeldBack()
+        self.dev_refuser: Refuser | None = None
 
     def add_deny_tables(self, tables: list[str]) -> None:
         self.deny_tables = sorted({*self.deny_tables, *(t.lower() for t in tables)})
@@ -83,12 +94,90 @@ class DbSession:
         self.scratch = scratch
         return scratch
 
+    @property
+    def on_dev_database(self) -> bool:
+        """The application's settings point at the development database in this session. Read with getattr:
+        some callers build a session without its constructor."""
+        return getattr(self, "dev_proxy", None) is not None and bool(getattr(self, "dev_variables", None))
+
     def command_environment(self) -> dict[str, str]:
         """Added to every command DebCraft runs once the scratch schema is ready: the search path, and the
         application's own database settings pointed at the scratch database when the model asked for that."""
+        held = self.held_back_values()
+        if self.on_dev_database:
+            # No search path here: the application must see the development database's own schemas.
+            return {**held, **self.dev_app_values()}
         if self.scratch is None:
+            return held
+        return {**held, "PGOPTIONS": pgoptions(self.scratch.schema), **self._app_values()}
+
+    # --- the copy's own settings that point at the development database (D-613) ---
+
+    def find_dev_settings(self) -> HeldBack:
+        """Blocking (reads the copy's env files): which of its settings hold the development database's address."""
+        url = self.targets["dev"].url(self.secrets) if "dev" in self.targets else None
+        if not url:
+            return HeldBack()
+        return dev_settings([self.workspace.repo_dir, self.workspace.app_dir], url)
+
+    def held_back_values(self) -> dict[str, str]:
+        refuser = getattr(self, "dev_refuser", None)
+        held = getattr(self, "dev_held", None)
+        return held.values(refuser.local_port) if refuser is not None and held is not None else {}
+
+    def still_held_back(self) -> list[str]:
+        """The held-back settings that neither use_scratch_database nor use_dev_database has replaced."""
+        if getattr(self, "dev_refuser", None) is None:
+            return []
+        replaced = set(self.dev_variables) if self.on_dev_database else set(self.app_variables())
+        return [name for name in self.dev_held.kinds if name not in replaced]
+
+    # --- the application copy on the development database, through DebCraft's relay (D-610) ---
+
+    def dev_sslmode(self) -> str:
+        url = self.targets["dev"].url(self.secrets) or ""
+        return dict(parse_qsl(urlsplit(url).query)).get("sslmode") or self.targets["dev"].sslmode
+
+    def check_dev_variables(self, variables: dict[str, str]) -> None:
+        for name, part in variables.items():
+            if not APP_VARIABLE.match(name):
+                raise ValueError(f"{name!r} is not a plain environment variable name.")
+            if part.partition(":")[0] not in DEV_CONNECTION_PARTS:
+                raise ValueError(
+                    f"{part!r} is not one of {', '.join(DEV_CONNECTION_PARTS)} (or url:<scheme>)."
+                )
+
+    def dev_app_values(self) -> dict[str, str]:
+        """The application's database settings for the development database: its own user, password and
+        database name, but the address of the relay on this machine instead of the server's."""
+        url = self.targets["dev"].url(self.secrets) if "dev" in self.targets else None
+        if not url or self.dev_proxy is None:
             return {}
-        return {"PGOPTIONS": pgoptions(self.scratch.schema), **self._app_values()}
+        parsed = urlsplit(url)
+        login = parsed.netloc.rpartition("@")[0]
+        # The relay speaks plain PostgreSQL on localhost and does the TLS to the server itself.
+        query = urlencode(
+            [(k, v) for k, v in parse_qsl(parsed.query) if k != "sslmode"] + [("sslmode", "disable")]
+        )
+        port = str(self.dev_proxy.local_port)
+        local = urlunsplit(
+            parsed._replace(netloc=f"{login + '@' if login else ''}127.0.0.1:{port}", query=query)
+        )
+        parts = {
+            "url": local,
+            "host": "127.0.0.1",
+            "port": port,
+            "user": unquote(parsed.username or ""),
+            "password": unquote(parsed.password or ""),
+            "database": parsed.path.lstrip("/"),
+        }
+        values: dict[str, str] = {}
+        for name, part in self.dev_variables.items():
+            kind, _, scheme = part.partition(":")
+            values[name] = (
+                local.replace(parsed.scheme, scheme, 1) if kind == "url" and scheme else parts[kind]
+            )
+        return values
 
     # --- the application copy pointed at the scratch database (D-568) ---
 
@@ -142,6 +231,21 @@ class DbSession:
             "script, call db_request (exact SQL + verification query; the user or their DBA runs it), and "
             "mark_server_run any test that needs the database. Never present such SQL as checked."
         )
+        held = self.still_held_back()
+        if held:
+            lines.append(
+                f"HELD BACK: the copy's own settings {', '.join(held)} (in {', '.join(self.dev_held.files)}) point "
+                "at the shared development database. Commands get an address that refuses the connection for "
+                "them. Before you start the application: db_copy_table the rows it needs and "
+                "use_scratch_database with these settings, or use_dev_database with them (the user approves)."
+            )
+        if self.on_dev_database:
+            lines.append(
+                f"The application's settings {', '.join(self.dev_variables)} point at the DEVELOPMENT database for "
+                "this session (approved by the user): what it writes there is real and shared, its DELETE, "
+                "TRUNCATE and DROP statements are refused, and its writes are reported to the user. "
+                "use_dev_database with empty variables switches back."
+            )
         pending = [r.id for r in self.requests.all() if r.status == "pending"]
         if pending:
             lines.append(f"Pending DB requests: {', '.join(pending)}")

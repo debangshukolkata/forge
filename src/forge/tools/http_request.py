@@ -42,6 +42,7 @@ from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.app_login import ensure_token
 from forge.tools.browser import LOCAL_HOSTS
 from forge.tools.interaction import OptionSpec
+from forge.tools.kept_secrets import blank, check_names, keep_from_answer
 from forge.tools.stream_summary import summarize_stream
 from forge.workspace.run_notes import RunNotes
 
@@ -209,7 +210,12 @@ class HttpRequest(Tool):
         "raise it for a call that runs an agent (up to 900). `stream`: true for an API that streams its answer "
         "(server-sent events or one JSON object per line): the call is read to its end and the result is an "
         "account by event (the kinds, the tool events in order with their sizes, errors, the longest silence, "
-        "the final answer), with the whole stream kept in a file you can read in ranges."
+        "the final answer), with the whole stream kept in a file you can read in ranges. `keep_secret`: when the "
+        "answer holds a secret that a command needs (a value the secret store or a key service does not give "
+        "out on this machine but the development instance does), map the variable NAME to the path of the "
+        'field in the JSON answer, for example {"ARGOCD_TOKEN": "secret.secretValue"}: the value is taken out '
+        "of the answer before you see it and set for the commands of this session after the user agreed. Never "
+        "read such a value from the answer and write it into a command, a file or the code yourself."
     )
 
     class Args(ToolArgs):
@@ -227,6 +233,9 @@ class HttpRequest(Tool):
         # An API that streams its answer (server-sent events or one JSON object per line): the call is read to its
         # end (or `timeout_s`) and returned as an account by event instead of one block of text (RS9, D-599).
         stream: bool = False
+        # A secret the answer holds goes to the project's commands under a name and is never shown (D-611):
+        # {"ARGOCD_TOKEN": "secret.secretValue"} = variable name -> dotted path of the field in the JSON answer.
+        keep_secret: dict[str, str] = Field(default_factory=dict)
         timeout_s: int = Field(default=HTTP_TIMEOUT_S, ge=1, le=MAX_TIMEOUT_S)
 
     def summary(self, args: HttpRequest.Args) -> str:
@@ -236,6 +245,12 @@ class HttpRequest(Tool):
         refusal = await self._host_refusal(args.url, context)
         if refusal:
             return ToolResult(ok=False, content=f"Not sent: {refusal}.")
+        if args.keep_secret:
+            problem = check_names(args.keep_secret) or (
+                "`keep_secret` reads one JSON answer: leave out `stream`" if args.stream else ""
+            )
+            if problem:
+                return ToolResult(ok=False, content=f"Not sent: {problem}.")
         headers = dict(args.headers)
         sent_url, sent_json = args.url, args.json_body
         token = ""
@@ -404,8 +419,15 @@ class HttpRequest(Tool):
         if token:
             body = body.replace(token, "[token hidden]")  # an API that echoes the header must not show it
         shape: list[str] = []
+        kept_lines: list[str] = []
+        hidden: list[tuple[str, str]] = []
         try:
             parsed = response.json()
+            if args.keep_secret and response.status_code < 400:
+                kept_lines, hidden = await keep_from_answer(
+                    args.keep_secret, parsed, urlparse(args.url).hostname or args.url, context
+                )
+                parsed = json.loads(blank(json.dumps(parsed), hidden))
             if token:  # an API that echoes what it received must not show the token in the summary either
                 parsed = json.loads(json.dumps(parsed).replace(token, "[token hidden]"))
             shape = json_shape(parsed)[:SHAPE_LINES]
@@ -413,7 +435,11 @@ class HttpRequest(Tool):
             if token:
                 body = body.replace(token, "[token hidden]")
         except ValueError:
-            pass
+            if args.keep_secret:
+                kept_lines = ["Nothing was kept: the answer is not JSON."]
+        body = blank(body, hidden)
+        if args.keep_secret and not kept_lines:
+            kept_lines = [f"Nothing was kept: the call answered HTTP {response.status_code}."]
         if streamed is not None:
             if token:
                 streamed = [(at, line.replace(token, "[token hidden]")) for at, line in streamed]
@@ -435,6 +461,7 @@ class HttpRequest(Tool):
             lines += ["Parts by size:", *shape]
         if adapted:
             lines.insert(1, adapted)
+        lines[1:1] = kept_lines
         if response.status_code in (401, 403):
             tried = name or (DEFAULT_TOKEN_NAMES[0] if token else "")
             lines.append(

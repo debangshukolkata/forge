@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Literal
+import re
+from typing import Any, Literal
 
 import psycopg
 from pydantic import Field
@@ -13,7 +14,7 @@ from forge.db.connection import connect
 from forge.db.copy_rows import MAX_COPY_ROWS, copy_table
 from forge.db.introspect import describe, introspect
 from forge.db.scratch import ScratchError
-from forge.safety.sql_guard import SqlGuardError, check_read_only
+from forge.safety.sql_guard import SqlGuardError, check_dev_write, check_read_only
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.workspace.server_checks import ServerRunCheck, add_check
 
@@ -32,6 +33,42 @@ async def _ensure_checked(context: ToolContext) -> None:
         await asyncio.to_thread(db.detect)
     except (psycopg.Error, OSError, ValueError):
         return  # the status line then still says what is wrong
+
+
+MISSING_RELATION = re.compile(r'relation "([^"]+)" does not exist')
+NO_TABLES = "No tables found"
+WHERE_SQL = """
+SELECT schemaname FROM pg_tables WHERE tablename = %s AND schemaname NOT IN ('pg_catalog', 'information_schema')
+UNION SELECT schemaname FROM pg_views WHERE viewname = %s AND schemaname NOT IN ('pg_catalog', 'information_schema')
+ORDER BY 1 LIMIT 20
+"""
+SCHEMAS_SQL = """
+SELECT schemaname, count(*) FROM pg_tables
+WHERE schemaname NOT IN ('pg_catalog', 'information_schema') GROUP BY 1 ORDER BY 1 LIMIT 40
+"""
+
+
+def _where_it_is(db: Any, target: str, table: str | None) -> str:
+    """Said with a "does not exist" or "no tables": which schema holds the table, or which schemas hold tables at
+    all. In a live run the model asked for a table in the application's own schema ten times, was told only
+    that it was not there, and handed the work to the user; the database knows the answer in one query."""
+    try:
+        with connect(db.targets[target], db.secrets, read_only=True) as connection:
+            if table:
+                name = table.split(".")[-1].strip('"')
+                schemas = [row[0] for row in connection.execute(WHERE_SQL, (name, name)).fetchall()]
+                if schemas:
+                    places = ", ".join(f"{schema}.{name}" for schema in schemas)
+                    return (
+                        f"\n[`{name}` is not in the default schema. It exists as: {places}. Use that name.]"
+                    )
+            found = connection.execute(SCHEMAS_SQL).fetchall()
+    except psycopg.Error:
+        return ""
+    if not found:
+        return ""
+    listed = ", ".join(f"{schema} ({count} tables)" for schema, count in found)
+    return f"\n[Schemas with tables in the {target} database: {listed}. Pass one as schema_name, or write schema.table.]"
 
 
 def _readable_target(context: ToolContext, requested: str | None) -> str | None:
@@ -70,7 +107,10 @@ class DbSchema(Tool):
             )
         except (psycopg.Error, ValueError) as error:
             return ToolResult(ok=False, content=f"Introspection failed: {str(error).splitlines()[0]}")
-        return ToolResult(ok=True, content=f"({name} database)\n" + describe(tables, context.db.deny_tables))
+        described = describe(tables, context.db.deny_tables)
+        if NO_TABLES in described:
+            described += await asyncio.to_thread(_where_it_is, context.db, name, args.table)
+        return ToolResult(ok=True, content=f"({name} database)\n" + described)
 
 
 class DbQuery(Tool):
@@ -109,7 +149,11 @@ class DbQuery(Tool):
         try:
             columns, rows = await asyncio.to_thread(run_query)
         except psycopg.Error as error:
-            return ToolResult(ok=False, content=f"Query failed: {str(error).splitlines()[0]}")
+            reason = str(error).splitlines()[0]
+            missing = MISSING_RELATION.search(reason)
+            if missing:
+                reason += await asyncio.to_thread(_where_it_is, context.db, name, missing.group(1))
+            return ToolResult(ok=False, content=f"Query failed: {reason}")
         return ToolResult(ok=True, content=_table(columns, rows, args.limit))
 
 
@@ -174,6 +218,16 @@ class DbRequestTool(Tool):
     async def run(self, args: DbRequestTool.Args, context: ToolContext) -> ToolResult:
         if context.db is None:
             return NO_DB
+        if self._is_a_dev_change(args.sql, context):
+            # Seen live: the model wrote a request for the user to run an UPDATE DebCraft can make itself.
+            return ToolResult(
+                ok=False,
+                content="No request was written: this is one INSERT or UPDATE, which DebCraft can make in the "
+                "development database itself. Call dev_db_write with the statement and a one-sentence reason; "
+                "the user approves it on a red card. (For a table of your scratch schema use scratch_exec.) A "
+                "DB request is for what DebCraft has no right to do: creating schemas or tables, grants, "
+                "extensions.",
+            )
         request = context.db.create_request(
             args.title, args.purpose, args.sql, args.verification_query, args.who
         )
@@ -189,6 +243,19 @@ class DbRequestTool(Tool):
             },
         )
         return ToolResult(ok=True, content=f"Created {request.id}. The user will run it and tell DebCraft.")
+
+    @staticmethod
+    def _is_a_dev_change(statement: str, context: ToolContext) -> bool:
+        """One plain INSERT or UPDATE, with a development database DebCraft reaches and a user who can approve."""
+        db = context.db
+        report = db.reports.get("dev") if db is not None else None
+        if report is None or report.level == AccessLevel.NONE or context.confirm_danger is None:
+            return False
+        try:
+            check_dev_write(statement, db.deny_tables)
+        except SqlGuardError:
+            return False
+        return True
 
 
 class MarkServerRun(Tool):
@@ -320,10 +387,19 @@ class UseScratchDatabase(Tool):
             return ToolResult(
                 ok=True, content="The application's database settings are no longer overridden."
             )
+        if context.pin is not None:
+            context.pin("database", db.status_line())
+        held = db.still_held_back()
         return ToolResult(
             ok=True,
             content=f"Set for every command from now on: {', '.join(args.variables)} (values hidden), with the "
             f"search path on the scratch schema {db.scratch.schema}. A process that is already running keeps its "
             "old settings: stop it and start it again. If the application names a schema itself (public.table) "
-            "or sets its own search path, it will not find the copied tables: check its database code.",
+            "or sets its own search path, it will not find the copied tables: check its database code."
+            + (
+                f" Still held back (they point at the development database and refuse a connection): "
+                f"{', '.join(held)}. Give them here too if the application connects with them."
+                if held
+                else ""
+            ),
         )

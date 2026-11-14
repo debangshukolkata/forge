@@ -53,6 +53,9 @@ class WritePlan:
     key: list[str]
     after: list[Row]  # the rows as the statement leaves them
     before: list[Row] = field(default_factory=list)  # UPDATE: the same rows as they are now, same order
+    # The statement named the table without its schema and it is not in the default one: the schema it was
+    # found in. The statement then runs with the search path on that schema.
+    search_path: str = ""
 
     def changed(self, index: int) -> list[str]:
         """The columns of row `index` whose value the UPDATE changes."""
@@ -72,6 +75,42 @@ def _shape(connection: psycopg.Connection[Any], table: str) -> tuple[dict[str, s
     types = {name: kind for name, kind in connection.execute(COLUMNS_SQL, (qualified,)).fetchall()}
     key = [row[0] for row in connection.execute(PRIMARY_KEY_SQL, (qualified,)).fetchall()]
     return types, key
+
+
+SCHEMAS_SQL = """
+SELECT schemaname FROM pg_tables
+WHERE tablename = %s AND schemaname NOT IN ('pg_catalog', 'information_schema') ORDER BY schemaname
+"""
+
+
+def _locate(connection: psycopg.Connection[Any], table: str) -> tuple[str, str]:
+    """The table as `schema.table` and, when the statement did not name the schema and the table is not in the
+    default one, the schema to put on the search path. In a live run the model wrote `UPDATE agents ...` for a
+    table that lives in the application's own schema, was told "not found" and handed the change to the user;
+    which schema holds the table is something the tool can look up."""
+    if "." in table:
+        return table, ""
+    found = connection.execute("SELECT to_regclass(%s)", (_identifier(table).as_string(None),)).fetchone()
+    if found is not None and found[0] is not None:
+        return table, ""
+    schemas = [row[0] for row in connection.execute(SCHEMAS_SQL, (table,)).fetchall()]
+    if len(schemas) == 1:
+        return f"{schemas[0]}.{table}", schemas[0]
+    if not schemas:
+        raise DevWriteError(
+            f"There is no table {table} in the development database. db_schema shows its schemas and tables."
+        )
+    shown = ", ".join(f"{schema}.{table}" for schema in schemas[:10])
+    raise DevWriteError(
+        f"The table {table} exists in {len(schemas)} schemas: {shown}. Write it with its schema in the statement "
+        "(the one the application uses: its schema setting, see code_map action env) and call again."
+    )
+
+
+def _use_schema(connection: psycopg.Connection[Any], schema: str) -> None:
+    """Inside a transaction: unqualified names of the statement are looked up in this schema until it ends."""
+    if schema:
+        connection.execute(sql.SQL("SET LOCAL search_path TO {}").format(sql.Identifier(schema)))
 
 
 def _as_text(columns: list[str]) -> sql.Composable:
@@ -126,20 +165,22 @@ def _rows_by_key(
 def plan_write(target: DbTarget, secrets: Secrets, write: DevWrite) -> WritePlan:
     """What the statement would do, without doing it: it runs inside a transaction that is rolled back."""
     with connect(target, secrets) as connection:
-        types, key = _shape(connection, write.table)
+        table, schema = _locate(connection, write.table)
+        types, key = _shape(connection, table)
         columns = list(types)
         if write.kind == "update" and not key:
             raise DevWriteError(
-                f"{write.table} has no primary key, so the old values could not be set back. DebCraft does not "
+                f"{table} has no primary key, so the old values could not be set back. DebCraft does not "
                 "update such a table in the development database; tell the user what should change."
             )
         with connection.transaction(force_rollback=True):
+            _use_schema(connection, schema)
             after = _run(connection, write.text, columns)
         if not after:
             raise DevWriteError("The statement matches no rows, so there is nothing to change.")
-        plan = WritePlan(write.kind, write.table, write.text, columns, key, after)
+        plan = WritePlan(write.kind, table, write.text, columns, key, after, search_path=schema)
         if write.kind == "update":
-            now = _rows_by_key(connection, write.table, columns, key, [_key_of(row, key) for row in after])
+            now = _rows_by_key(connection, table, columns, key, [_key_of(row, key) for row in after])
             if len(now) != len(after):
                 raise DevWriteError(
                     "The statement changes the primary key of a row; such a change could not be set back and is "
@@ -160,6 +201,7 @@ def apply_write(target: DbTarget, secrets: Secrets, plan: WritePlan) -> list[Row
                     "The rows changed in the development database after the card was shown, so nothing was "
                     "changed. Call the tool again: the user is asked again with the rows as they are now."
                 )
+        _use_schema(connection, plan.search_path)
         done = _run(connection, plan.text, plan.columns)
         same = (
             sorted(map(str, (_key_of(row, plan.key) for row in done)))

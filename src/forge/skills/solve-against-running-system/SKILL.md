@@ -39,7 +39,18 @@ You work on a copy of the repository. Start that copy; never test against, or wr
    `db_copy_table` (use `where` to take only the rows of the agent or tenant you are working on), then
    `use_scratch_database` to point the application's own database settings at your copy. Start the application
    after that. From then on its writes land in your copy.
+   **When copying is not enough** (the code path needs many related tables, or you cannot tell which): call
+   `use_dev_database` with the same `variables` and a one-sentence `reason`. The user approves on a red card;
+   the copy then runs on the development database itself. What it writes there is real and shared, so keep the
+   run to what the check needs. Its DELETE, TRUNCATE and DROP statements are refused with a database error that
+   names DebCraft: do not work around that. `dev_db_activity` shows what it wrote; the user is told too.
+   **When a row in the development database itself must change** for the requirement (a setting of the agent,
+   a tool's registration): `dev_db_write` with one INSERT or UPDATE and the reason. Never change it another way.
 3. Start it with `start_background` and wait for it to listen.
+4. **A secret the application cannot get on this machine** (the secret store or a key service does not answer
+   here, but the development instance hands the value out through its API): call that API with `http_request`
+   and `keep_secret` = {"THE_VARIABLE_NAME": "path.of.the.field"}. The value goes to your commands under that
+   name; you never see it. Then start the application again. Do not hand this to the user.
 
 ## 4. Call it the way its users do
 

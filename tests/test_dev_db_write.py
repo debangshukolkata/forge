@@ -12,10 +12,12 @@ from pathlib import Path
 from typing import Any
 
 import httpx2
+import psycopg
 import pytest
 
 from forge.config import PostgresConfig, Secrets
 from forge.db.access import AccessLevel
+from forge.db.dev_proxy import DevProxy
 from forge.db.dev_write import LOG_FILE, MAX_ROWS
 from forge.db.session import DbSession
 from forge.engine.headless import HEADLESS_DANGER, auto_reply
@@ -25,8 +27,9 @@ from forge.protocol.inputs import Answer, SendMessage
 from forge.safety.redact import Redactor
 from forge.safety.sql_guard import SqlGuardError, check_dev_write
 from forge.toolkit.base import ToolContext
+from forge.tools.db import DbQuery, DbRequestTool, DbSchema
 from forge.tools.deferred import GROUP_OF
-from forge.tools.dev_db import DevDbUndo, DevDbWrite
+from forge.tools.dev_db import DevDbActivity, DevDbUndo, DevDbWrite, UseDevDatabase
 from forge.tools.registry import db_tools
 from forge.workspace.workspace import Workspace
 from tests.helpers import mocked_router
@@ -131,7 +134,10 @@ async def test_the_hosts_red_card_is_approved_by_its_option_only() -> None:
 
 def test_the_tools_wait_in_their_own_group_and_come_with_the_database_tools() -> None:
     assert GROUP_OF["dev_db_write"] == GROUP_OF["dev_db_undo"] == "dev_database"
-    assert {"dev_db_write", "dev_db_undo"} <= {tool.name for tool in db_tools()}
+    names = {"dev_db_write", "dev_db_undo", "use_dev_database", "dev_db_activity"}
+    assert names <= {tool.name for tool in db_tools()} and all(
+        GROUP_OF[name] == "dev_database" for name in names
+    )
 
 
 # --- against the local Postgres, standing in for the development database --------------------------------
@@ -341,3 +347,166 @@ def test_a_statement_that_touches_too_many_rows_is_refused(
     )
     assert not result.ok and "more than" in result.content and card.shown == []
     assert _rows(admin_url, dev_schema, "SELECT count(*) FROM {s}.agents WHERE max_steps = 1") == [(0,)]
+
+
+# --- the copied application on the development database (D-610) --------------------------------------------
+
+
+class Shell:
+    def __init__(self) -> None:
+        self.extra_env: dict[str, str] = {}
+
+
+@pytest.mark.pg
+async def test_the_copy_runs_on_the_development_database_only_after_the_card_and_through_the_relay(
+    workspace: Workspace, admin_url: str, dev_schema: str, tmp_path: Path
+) -> None:
+    declined = Card(approve=False)
+    context = _context(workspace, admin_url, tmp_path / "home", declined)
+    context.shell = Shell()  # type: ignore[assignment]
+    tool, arguments = UseDevDatabase(), {"variables": {"DATABASE_URL": "url", "DB_PORT": "port"}}
+    refused = await tool.run(tool.Args(**arguments, reason="needs twenty tables"), context)
+    assert not refused.ok and "did not approve" in refused.content
+    assert context.db.dev_proxy is None and context.shell.extra_env == {}
+    assert "needs twenty tables" in declined.shown[0][1] and "refused by DebCraft" in declined.shown[0][1]
+
+    bad = await tool.run(tool.Args(variables={"DATABASE_URL": "schema"}), context)
+    assert not bad.ok and "not one of" in bad.content and len(declined.shown) == 1  # no card for a wrong call
+
+    card = Card(approve=True)
+    context.confirm_danger = card
+    try:
+        result = await tool.run(tool.Args(**arguments, reason="needs twenty tables"), context)
+        assert result.ok, result.content
+        environment = context.shell.extra_env
+        port = str(context.db.dev_proxy.local_port)
+        assert environment["DB_PORT"] == port and "PGOPTIONS" not in environment
+        assert (
+            f"@127.0.0.1:{port}/" in environment["DATABASE_URL"]
+            and "sslmode=disable" in environment["DATABASE_URL"]
+        )
+        assert environment["DATABASE_URL"] not in result.content and port not in result.content
+        assert "DEVELOPMENT database" in context.db.status_line()
+
+        again = await tool.run(tool.Args(variables={"DATABASE_URL": "url"}), context)
+        assert again.ok and len(card.shown) == 1  # one card per session
+        assert set(context.shell.extra_env) == {"DATABASE_URL"}
+
+        def application() -> None:  # the copy of the application, with the settings DebCraft gave it
+            with psycopg.connect(context.shell.extra_env["DATABASE_URL"], autocommit=True) as app:
+                app.execute(f"UPDATE {dev_schema}.agents SET max_steps = %s WHERE name = %s", (11, "argo"))
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    app.execute(f"DELETE FROM {dev_schema}.agents WHERE name = 'billing'")
+
+        await asyncio.to_thread(application)
+        assert _rows(admin_url, dev_schema, "SELECT name, max_steps FROM {s}.agents ORDER BY id")[:2] == [
+            ("argo", 11),
+            ("billing", 9),
+        ]
+        seen = await DevDbActivity().run(DevDbActivity.Args(), context)
+        assert (
+            "UPDATE" in seen.content
+            and "Blocked by DebCraft" in seen.content
+            and "DELETE FROM" in seen.content
+        )
+
+        back = await tool.run(tool.Args(variables={}), context)
+        assert back.ok and "UPDATE" in back.content and context.db.dev_proxy is None
+        assert context.shell.extra_env == {}
+    finally:
+        if context.db.dev_proxy is not None:
+            await context.db.dev_proxy.close()
+
+
+async def test_the_user_is_told_after_the_turn_what_the_application_wrote() -> None:
+    host = SessionHost(mocked_router(lambda request: httpx2.Response(500)), EventBus(redactor=Redactor()))
+    proxy = DevProxy("127.0.0.1", 1)
+    proxy.activity.note("INSERT INTO runs (agent) VALUES ($1)", "INSERT", blocked=False)
+    proxy.activity.note("DELETE FROM sessions WHERE id = $1", "DELETE", blocked=True)
+    proxy.activity.rows["INSERT"] = 1
+
+    class Database:
+        dev_proxy = proxy
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(SessionHost, "db", property(lambda self: Database()))
+        await host._report_dev_writes()
+        await host._report_dev_writes()  # nothing new: no second notice
+    notices = [e.payload for e in host.bus.events_since(0) if e.payload.get("kind") == "dev_db_activity"]
+    assert len(notices) == 1
+    assert "INSERT INTO runs" in notices[0]["text"] and "NOT sent" in notices[0]["text"]
+
+
+@pytest.mark.pg
+def test_a_table_named_without_its_schema_is_found_by_the_tool(
+    workspace: Workspace, admin_url: str, dev_schema: str, cleanup_schemas: list[str], tmp_path: Path
+) -> None:
+    """Live run 2026-11-13: the model wrote `UPDATE agents ...` for a table in the application's own schema, was
+    told "not found" and handed the change to the user. Which schema holds a table is the tool's to look up."""
+    only, twin = f"only_{uuid.uuid4().hex[:8]}", f"twin_{uuid.uuid4().hex[:8]}"
+    other = f"forge_test_dev2_{uuid.uuid4().hex[:8]}"
+    cleanup_schemas.append(other)
+    with _admin(admin_url) as connection:
+        connection.execute(f'CREATE SCHEMA "{other}"')
+        connection.execute(f'CREATE TABLE "{dev_schema}".{only} (id int PRIMARY KEY, prompt text)')
+        connection.execute(f"INSERT INTO \"{dev_schema}\".{only} VALUES (1, 'Always answer in English.')")
+        for schema in (dev_schema, other):
+            connection.execute(f'CREATE TABLE "{schema}".{twin} (id int PRIMARY KEY, prompt text)')
+            connection.execute(f"INSERT INTO \"{schema}\".{twin} VALUES (1, 'x')")
+    card = Card(approve=True)
+    context = _context(workspace, admin_url, tmp_path / "home", card)
+    result = _run(
+        DevDbWrite(),
+        context,
+        sql=f"UPDATE {only} SET prompt = 'In the customer''s language.' WHERE id = 1",
+        reason="x",
+    )
+    assert result.ok, result.content
+    assert f"({dev_schema}.{only})" in card.shown[0][0] and f"{dev_schema}.{only}" in result.content
+    assert _rows(admin_url, dev_schema, f"SELECT prompt FROM {{s}}.{only}") == [
+        ("In the customer's language.",)
+    ]
+    assert _run(DevDbUndo(), context, write_id=1).ok
+    assert _rows(admin_url, dev_schema, f"SELECT prompt FROM {{s}}.{only}") == [
+        ("Always answer in English.",)
+    ]
+
+    several = _run(DevDbWrite(), context, sql=f"UPDATE {twin} SET prompt = 'y' WHERE id = 1", reason="x")
+    assert (
+        not several.ok and f"{dev_schema}.{twin}" in several.content and f"{other}.{twin}" in several.content
+    )
+    assert "with its schema" in several.content and len(card.shown) == 2  # no card for the ambiguous one
+    named = _run(
+        DevDbWrite(), context, sql=f"UPDATE {other}.{twin} SET prompt = 'y' WHERE id = 1", reason="x"
+    )
+    assert named.ok and _rows(admin_url, dev_schema, f"SELECT prompt FROM {{s}}.{twin}") == [("x",)]
+
+
+@pytest.mark.pg
+def test_the_read_tools_say_where_a_table_is_and_a_plain_change_is_not_handed_to_the_user(
+    workspace: Workspace, admin_url: str, dev_schema: str, tmp_path: Path
+) -> None:
+    """Live run 2026-11-14: `agents` was in the application's schema; db_query said "does not exist", db_schema
+    said "No tables found" ten times, and the model wrote a request for the user to run the UPDATE."""
+    only = f"only_{uuid.uuid4().hex[:8]}"
+    with _admin(admin_url) as connection:
+        connection.execute(f'CREATE TABLE "{dev_schema}".{only} (id int PRIMARY KEY, prompt text)')
+    context = _context(workspace, admin_url, tmp_path / "home", Card(approve=True))
+
+    missing = _run(DbQuery(), context, sql=f"SELECT * FROM {only}")
+    assert not missing.ok and f"It exists as: {dev_schema}.{only}" in missing.content
+    found = _run(DbQuery(), context, sql=f"SELECT count(*) FROM {dev_schema}.{only}")
+    assert found.ok
+
+    wrong_schema = _run(DbSchema(), context, schema_name="public", table=only)
+    assert f"It exists as: {dev_schema}.{only}" in wrong_schema.content
+    empty = _run(DbSchema(), context, schema_name=f"forge_none_{uuid.uuid4().hex[:6]}")
+    assert "Schemas with tables in the dev database" in empty.content and dev_schema in empty.content
+
+    change = {"title": "t", "purpose": "p", "verification_query": "SELECT 1"}
+    handed = _run(DbRequestTool(), context, sql=f"UPDATE {only} SET prompt = 'x' WHERE id = 1;", **change)
+    assert not handed.ok and "dev_db_write" in handed.content and context.db.requests.all() == []
+    allowed = _run(DbRequestTool(), context, sql="CREATE TABLE audit_log (id int)", **change)
+    assert allowed.ok and len(context.db.requests.all()) == 1  # what DebCraft may not do is still a request
+    context.confirm_danger = None  # nobody to approve: the request is the only way left
+    assert _run(DbRequestTool(), context, sql=f"UPDATE {only} SET prompt = 'x' WHERE id = 1", **change).ok

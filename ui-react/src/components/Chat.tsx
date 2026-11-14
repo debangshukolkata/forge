@@ -350,11 +350,13 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
 function Notice({ kind, text, image, slides }: { kind: string; text: string; image?: string; slides?: SlideSet }) {
   if (kind === "command_output") return <Code text={text} />;
   if (kind === "slides_ready" && slides) return <SlideStrip set={slides} />;
-  const tone = kind === "stuck" || kind === "injection" ? "warn" : "info";
+  // What was changed in the shared development database (D-608, D-610) is never a quiet grey line.
+  const shared = kind === "dev_db_activity" || kind === "dev_db_write";
+  const tone = shared ? "danger" : kind === "stuck" || kind === "injection" ? "warn" : "info";
   return (
     <div className="space-y-2">
-      <div className={cx("flex gap-2 rounded-md px-3 py-1.5 text-[12.5px]", tone === "warn" ? "bg-warn-soft text-warn" : "text-fg-muted")}>
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+      <div data-notice={kind} className={cx("flex gap-2 rounded-md px-3 py-1.5 text-[12.5px]", tone === "danger" ? "border border-danger/40 bg-danger-soft text-fg" : tone === "warn" ? "bg-warn-soft text-warn" : "text-fg-muted")}>
+        {shared ? <AlertOctagon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-danger" aria-hidden /> : <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />}
         <span className="whitespace-pre-wrap break-words">{text}</span>
       </div>
       {image && <ImageThumb path={image} />}

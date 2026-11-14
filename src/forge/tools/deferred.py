@@ -106,9 +106,10 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
         ("app_login", "app_token_status"),
     ),
     "dev_database": (
-        "Adding or changing rows in the shared development database, each change approved by the user on a red "
-        "card; setting such a change back",
-        ("dev_db_write", "dev_db_undo"),
+        "The shared development database beyond reading: adding or changing rows (each change approved by the "
+        "user on a red card), setting such a change back, running the copy of the application directly on it "
+        "and seeing what it wrote there",
+        ("dev_db_write", "dev_db_undo", "use_dev_database", "dev_db_activity"),
     ),
     "conversations": (
         "Earlier conversations of this project: what was asked and answered in them",
