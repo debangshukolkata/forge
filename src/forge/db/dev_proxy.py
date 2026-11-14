@@ -22,7 +22,11 @@ import contextlib
 import re
 import ssl
 import struct
+import time
+from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 from forge.safety.sql_guard import split_statements
 
@@ -162,6 +166,10 @@ class _Link:
         self.prepared: dict[str, str] = {}  # statement name -> its text, for counting at Bind
         self.skipping = False  # a Parse was refused: drop the rest of that batch up to its Sync
         self.refusal: bytes | None = None  # the error for the batch being skipped
+        # asyncpg asks for the answer to a Parse with a Flush and sends no Sync until it has it: the error must be
+        # sent at the Flush (when no earlier batch is still owed an answer), not held until a Sync that never comes.
+        self.sent_early = False  # the error of the batch being skipped is already with the application
+        self.flush_seen = False  # the application asked for an answer (Flush) and it is still waiting
         # Every Query and Sync passed on is answered by one ReadyForQuery, in order (the first one ends the
         # startup). Counting both tells which ReadyForQuery belongs to a refused batch, also when the
         # application sends several batches before it reads the answers.
@@ -170,13 +178,44 @@ class _Link:
         self.refusals: dict[int, bytes] = {}  # number of the ReadyForQuery -> the error to put before it
 
 
+BENIGN_END = (ConnectionResetError, ConnectionAbortedError, BrokenPipeError, asyncio.IncompleteReadError)
+
+
 class DevProxy:
-    def __init__(self, host: str, port: int, sslmode: str = "prefer") -> None:
+    """`log(kind, **fields)` receives the facts of the relay (start, errors, stop) for the field log (D-615): a
+    driver whose traffic the relay does not understand must leave a trace, not fail without a word."""
+
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        sslmode: str = "prefer",
+        log: Callable[..., None] | None = None,
+    ) -> None:
         self.host, self.port, self.sslmode = host, port, sslmode
         self.activity = Activity()
         self.local_port = 0
+        self.connections = 0
+        self.kinds: Counter[str] = Counter()  # message types the application sent: Q, P, B, E, S, ...
+        self.errors: Counter[str] = Counter()  # what ended a connection other than the normal way
+        self._log = log
+        self._started = 0.0
         self._server: asyncio.Server | None = None
         self._links: set[asyncio.Task[None]] = set()
+
+    def _note(self, kind: str, **fields: Any) -> None:
+        if self._log is not None:
+            self._log(kind, **fields)
+
+    def _note_error(self, error: BaseException, where: str) -> None:
+        """A connection ended in a way that is not the application closing it. Counted and written once per
+        kind, with the first words of the message (these never hold a password: they are the library's text)."""
+        if isinstance(error, (*BENIGN_END, asyncio.CancelledError)):
+            return
+        name = f"{where}:{type(error).__name__}"
+        self.errors[name] += 1
+        if self.errors[name] == 1:
+            self._note("relay_error", where=where, type=type(error).__name__, text=str(error)[:120])
 
     async def start(self) -> int:
         try:  # fail now, with the reason, not at the application's first query
@@ -186,9 +225,12 @@ class DevProxy:
         probe.close()
         self._server = await asyncio.start_server(self._accept, "127.0.0.1", 0)
         self.local_port = int(self._server.sockets[0].getsockname()[1])
+        self._started = time.monotonic()
+        self._note("relay_start", local_port=self.local_port, sslmode=self.sslmode)
         return self.local_port
 
     async def close(self) -> None:
+        was_running = self._server is not None
         if self._server is not None:
             self._server.close()
             self._server = None
@@ -197,6 +239,21 @@ class DevProxy:
         for task in list(self._links):
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await task
+        if was_running:
+            self._note("relay_stop", **self.stats())
+
+    def stats(self) -> dict[str, Any]:
+        """Numbers for the facts report: no statement text, no value."""
+        statements = self.activity.statements.values()
+        return {
+            "seconds": round(time.monotonic() - self._started) if self._started else 0,
+            "connections": self.connections,
+            "messages": dict(self.kinds.most_common(12)),
+            "writing_statements": sum(s.times for s in statements if not s.blocked),
+            "refused_statements": sum(s.times for s in statements if s.blocked),
+            "rows": dict(self.activity.rows),
+            "errors": dict(self.errors.most_common(6)),
+        }
 
     async def _open_upstream(self) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
         reader, writer = await asyncio.open_connection(self.host, self.port)
@@ -222,10 +279,11 @@ class DevProxy:
         if task is not None:
             self._links.add(task)
         upstream: asyncio.StreamWriter | None = None
+        self.connections += 1
         try:
             upstream = await self._serve(reader, writer)
-        except (OSError, asyncio.IncompleteReadError, ssl.SSLError, DevProxyError):
-            pass  # the application or the server closed the connection: nothing to report
+        except (OSError, asyncio.IncompleteReadError, ssl.SSLError, DevProxyError) as error:
+            self._note_error(error, "connect")  # a normal close of either side is not counted
         finally:
             for end in (writer, upstream):
                 if end is not None:
@@ -263,9 +321,13 @@ class DevProxy:
         finally:
             for pump in pumps:
                 pump.cancel()
-            for pump in pumps:
-                with contextlib.suppress(asyncio.CancelledError, Exception):
+            for name, pump in zip(("application", "server"), pumps, strict=True):
+                try:
                     await pump
+                except asyncio.CancelledError:
+                    pass
+                except Exception as error:  # a bug or a message the relay does not understand: leave a trace
+                    self._note_error(error, name)
         return server_writer
 
     async def _from_application(
@@ -299,6 +361,7 @@ class DevProxy:
     def _inspect(self, link: _Link, message: bytes, onward: list[bytes], back: list[bytes]) -> None:
         """Decides what happens to one message of the application: passed on, dropped, or answered here."""
         kind, payload = message[:1], message[5:]
+        self.kinds[kind.decode("ascii", "replace")] += 1
         if kind == b"Q":
             text, _ = _text(payload)
             words = blocked_words(text)
@@ -317,7 +380,7 @@ class DevProxy:
             words = blocked_words(text)
             if words and not link.skipping:
                 self.activity.note(text, write_kind(text) or words[0].upper(), blocked=True)
-                link.skipping = True
+                link.skipping, link.sent_early, link.flush_seen = True, False, False
                 link.refusal = _error(
                     BLOCKED_MESSAGE.format(words=" / ".join(word.upper() for word in words))
                 )
@@ -330,12 +393,18 @@ class DevProxy:
             verb = write_kind(text) if text else ""
             if verb:
                 self.activity.note(text, verb, blocked=False)
+        elif kind == b"H" and link.skipping and link.refusal is not None and not link.sent_early:
+            if link.asked - link.answered == 0:
+                back.append(link.refusal)  # nothing earlier is owed: the error goes now
+                link.sent_early = True
+            else:
+                link.flush_seen = True  # it goes when the last earlier answer has been passed on
         elif kind == b"S":
             link.asked += 1
-            if link.skipping and link.refusal is not None:
+            if link.skipping and link.refusal is not None and not link.sent_early:
                 # The Sync goes on: the server's ReadyForQuery ends the batch for the client, after the error.
                 link.refusals[link.asked] = link.refusal
-            link.skipping, link.refusal = False, None
+            link.skipping, link.refusal, link.sent_early, link.flush_seen = False, None, False, False
         elif kind == b"F":
             link.asked += 1  # a function call is answered by a ReadyForQuery too
         elif kind == b"X":
@@ -377,6 +446,15 @@ class DevProxy:
                         if link.status == b"T":
                             message = _ready(b"E")
                 out.append(message)
+                if (
+                    kind == b"Z"
+                    and link.flush_seen
+                    and link.refusal is not None
+                    and not link.sent_early
+                    and link.asked - link.answered == 0
+                ):
+                    out.append(link.refusal)  # the application is waiting for it (see _Link.flush_seen)
+                    link.sent_early, link.flush_seen = True, False
             if out:
                 writer.write(b"".join(out))
                 await writer.drain()

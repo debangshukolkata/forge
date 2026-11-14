@@ -96,6 +96,16 @@ def build_parser() -> argparse.ArgumentParser:
     facts.add_argument("--workspace", type=Path, dest="facts_workspace", help="default: the newest project")
     facts.add_argument("--conversation", help="a conversation id, like c2 (default: the active one)")
     facts.add_argument("--no-pause", action="store_true", help="print all three screens at once")
+    laptop = subcommands.add_parser(
+        "laptop",
+        help="close the items that need the office laptop: plan, check, live, report; pages to photograph (D-615)",
+    )
+    laptop.add_argument("action", choices=["plan", "check", "live", "report"])
+    laptop.add_argument(
+        "--app-python", type=Path, help="check: the Python of the application's own environment (its venv)"
+    )
+    laptop.add_argument("--workspace", type=Path, dest="laptop_workspace", help="default: the newest project")
+    laptop.add_argument("--no-pause", action="store_true", help="print all pages at once")
     run_report = subcommands.add_parser(
         "run-report", help="scrubbed report of a run you can send for analysis: no source code, no secrets"
     )
@@ -229,6 +239,10 @@ def main(argv: list[str] | None = None) -> int:
         return _log_summary(args.workspace, args.log, args.conversation)
     if args.command == "run-report":
         return _run_report(args.report_workspace, args.out, args.conversation)
+    if args.command == "laptop":
+        from forge.engine.laptop import run as run_laptop
+
+        return run_laptop(args.action, args.app_python, args.laptop_workspace, pause=not args.no_pause)
     if args.command == "facts":
         from forge.engine.facts_report import show
 

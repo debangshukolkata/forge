@@ -19,6 +19,7 @@ from pydantic import Field
 
 from forge.config import forge_home
 from forge.errors import ConfigError
+from forge.toolkit import field_log
 from forge.toolkit.app_logins import EnvLogin, TokenStore, load_logins
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
@@ -205,26 +206,48 @@ async def ensure_token(
     (its expiry and the check address); else sign in again without a window; and when that fails, ask the user on a
     card to run `gcloud auth login` and try again (a window opens if the site needs the person). `force`: the server
     just refused the token, so the stored one is not trusted."""
+    started = time.monotonic()
     store = TokenStore(home)
+
+    def noted(path: str, ensured: Ensured, detail: str = "") -> Ensured:
+        """The way the token was got goes to the field log (D-615): the facts that close TK5 are which path was
+        taken, how long it took and how long the token lasts. Numbers and names, never the token."""
+        span = store.lifetime(login.token_name)
+        field_log.write(
+            "sign_in",
+            home,
+            env=login.name,
+            token_name=login.token_name,
+            path=path,
+            ok=bool(ensured.token),
+            seconds=round(time.monotonic() - started, 1),
+            minutes_left=(store.remaining(login.token_name) or 0) // 60,
+            lifetime_min=span[0] // 60 if span else None,
+            exp_claim=span[1] if span else None,
+            detail=detail or ensured.message,
+        )
+        return ensured
+
     if force:
         store.forget(login.token_name)
     else:
         status = await token_status(login, home)
         if status.usable:
-            return Ensured(store.get(login.token_name) or "")
+            return noted("stored", Ensured(store.get(login.token_name) or ""), status.detail)
         if status.state == "rejected":
             store.forget(login.token_name)
     result = await renew(login, home)
     if result.ok:
-        return Ensured(result.token)
+        return noted("silent" if not force else "silent_after_refusal", Ensured(result.token))
     # No token without a window: open one, so the user can sign in there (the browser profile of DebCraft is not the
     # user's own Edge, so Google may ask once; the first run is visible already).
+    silent_problem = result.message
     result = await sign_in(login, home, visible=True)
     if result.ok:
         TokenStore(home).put(login.token_name, result.token)
-        return Ensured(result.token)
+        return noted("window", Ensured(result.token), f"silent sign-in failed first: {silent_problem}")
     if ask is None:
-        return Ensured("", result.message)
+        return noted("failed", Ensured("", result.message))
     from forge.tools.interaction import OptionSpec
 
     answer = await ask(
@@ -240,11 +263,13 @@ async def ensure_token(
         "Done",
     )
     if not answer.startswith("The user chose: Done"):
-        return Ensured("", f"Not signed in to {login.name}: the user skipped it ({answer[:80]}).")
+        return noted(
+            "skipped", Ensured("", f"Not signed in to {login.name}: the user skipped it ({answer[:80]}).")
+        )
     result = await sign_in(login, home, visible=True)
     if result.ok:
         TokenStore(home).put(login.token_name, result.token)
-    return Ensured(result.token, "" if result.ok else result.message)
+    return noted("card_done", Ensured(result.token, "" if result.ok else result.message))
 
 
 class AppTokenStatus(Tool):

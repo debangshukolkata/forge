@@ -59,6 +59,7 @@ from forge.safety.permissions import PermissionGate, PermissionMode
 from forge.safety.redact import default_redactor
 from forge.subagents.spawn_tool import SpawnSubagent
 from forge.subagents.variants_tool import BuildVariants
+from forge.toolkit import field_log
 from forge.toolkit.app_keys import apply_grant
 from forge.toolkit.background import BackgroundManager
 from forge.toolkit.base import Tool, ToolContext
@@ -255,7 +256,7 @@ class SessionHost:
         held = await asyncio.to_thread(db.find_dev_settings)
         if not held.kinds:
             return
-        refuser = Refuser(sorted(held.kinds))
+        refuser = Refuser(sorted(held.kinds), log=field_log.write)
         await refuser.start()
         db.dev_held, db.dev_refuser = held, refuser
         await self.bus.publish(

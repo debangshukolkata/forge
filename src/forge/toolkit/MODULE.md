@@ -10,3 +10,4 @@ Tool runtime primitives: Tool/ToolContext/ToolResult contract, shell and PowerSh
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
 - **App logins (D-603):** `app_logins.py`: `<DebCraft Home>/app_logins.yaml` (the environments the user describes: login address, steps, where the token is, its name), `TokenStore` (`tokens.json`, expiry from the JWT, registered with the redactor, never an env file) and the host lookup that makes the listed hosts the only remote hosts `http_request` may call.
+- **The field log (D-615):** `field_log.py` (`write(kind, **fields)`, `read(kinds)`): `<DebCraft Home>/logs/field.jsonl`, facts that happen outside a conversation (sign-ins with the path taken and the token's lifetime, the relay, the refuser). Names, counts and seconds only; redacted; never raises. `TokenStore.lifetime` gives the token's span in seconds without the token.

@@ -22,8 +22,10 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import struct
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from dotenv import dotenv_values
@@ -144,21 +146,27 @@ def _fatal(message: str) -> bytes:
 class Refuser:
     """Answers every PostgreSQL connection on its port with an error that says what to do instead."""
 
-    def __init__(self, names: list[str]) -> None:
+    def __init__(self, names: list[str], log: Callable[..., Any] | None = None) -> None:
+        self.names = names
         self.message = REFUSAL.format(names=", ".join(names))
         self.local_port = 0
         self.refused = 0
+        self._log = log  # the field log (D-615): names and counts only
         self._server: asyncio.Server | None = None
 
     async def start(self) -> int:
         self._server = await asyncio.start_server(self._answer, "127.0.0.1", 0)
         self.local_port = int(self._server.sockets[0].getsockname()[1])
+        if self._log is not None:
+            self._log("refuser_start", settings=self.names, local_port=self.local_port)
         return self.local_port
 
     async def close(self) -> None:
         if self._server is not None:
             self._server.close()
             self._server = None
+            if self._log is not None:
+                self._log("refuser_stop", settings=self.names, refused=self.refused)
 
     async def _answer(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         try:
@@ -173,6 +181,8 @@ class Refuser:
                     continue
                 break
             self.refused += 1
+            if self._log is not None and self.refused == 1:
+                self._log("refuser_hit", settings=self.names)  # the copy tried the development database
             writer.write(_fatal(self.message))
             await writer.drain()
         except (OSError, asyncio.IncompleteReadError, TimeoutError, struct.error):

@@ -188,12 +188,28 @@ class TokenStore:
             return None
         return max(0, int(float(entry.get("expires_at", 0)) - time.time()))
 
+    def lifetime(self, name: str) -> tuple[int, bool] | None:
+        """How long the stored token lasted from the moment DebCraft got it to its end, in seconds, and whether
+        that end is the token's own `exp` claim. Numbers only: the token itself is not returned."""
+        entry = self._load().get(name)
+        if not isinstance(entry, dict) or "obtained" not in entry:
+            return None
+        span = int(float(entry.get("expires_at", 0)) - float(entry["obtained"]))
+        return max(0, span), bool(entry.get("from_claim", False))
+
     def put(self, name: str, token: str) -> int:
         """Keeps a token; returns the seconds it is valid for. The file is replaced atomically and made private."""
         default_redactor.register(token, name)
-        expires_at = jwt_expiry(token) or time.time() + DEFAULT_LIFETIME_S
+        claimed = jwt_expiry(token)
+        expires_at = claimed or time.time() + DEFAULT_LIFETIME_S
         data = self._load()
-        data[name] = {"token": token, "expires_at": expires_at, "obtained": int(time.time())}
+        # `from_claim`: the end is the token's own `exp`, not DebCraft's guess (the facts report says which).
+        data[name] = {
+            "token": token,
+            "expires_at": expires_at,
+            "obtained": int(time.time()),
+            "from_claim": claimed is not None,
+        }
         self.path.parent.mkdir(parents=True, exist_ok=True)
         scratch = self.path.with_suffix(".tmp")
         scratch.write_text(json.dumps(data), encoding="utf-8")

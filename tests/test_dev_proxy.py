@@ -7,6 +7,7 @@ and psycopg for the application."""
 from __future__ import annotations
 
 import asyncio
+import struct
 import threading
 import uuid
 from collections.abc import Iterator
@@ -16,7 +17,7 @@ from urllib.parse import urlsplit, urlunsplit
 import psycopg
 import pytest
 
-from forge.db.dev_proxy import DevProxy, DevProxyError, blocked_words, write_kind
+from forge.db.dev_proxy import DevProxy, DevProxyError, _Link, _ready, blocked_words, write_kind
 from tests.test_db import _admin, admin_url, cleanup_schemas  # noqa: F401  (fixtures)
 
 
@@ -60,7 +61,12 @@ class Relay:
 
     def __init__(self, url: str) -> None:
         parts = urlsplit(url)
-        self.proxy = DevProxy(parts.hostname or "127.0.0.1", parts.port or 5432)
+        self.logged: list[tuple[str, dict[str, Any]]] = []
+        self.proxy = DevProxy(
+            parts.hostname or "127.0.0.1",
+            parts.port or 5432,
+            log=lambda kind, **fields: self.logged.append((kind, fields)),
+        )
         self.loop = asyncio.new_event_loop()
         self.thread = threading.Thread(target=self.loop.run_forever, daemon=True)
         self.thread.start()
@@ -196,3 +202,73 @@ def test_an_unreachable_database_is_reported_at_the_start() -> None:
 
     with pytest.raises(DevProxyError, match="did not answer"):
         asyncio.run(start())
+
+
+def test_the_relay_counts_what_it_saw_and_writes_start_and_stop_to_the_log(relay: Relay, items: str) -> None:
+    with _app(relay, autocommit=True) as app:
+        app.execute(f"SELECT count(*) FROM {items}")
+        app.execute(f"INSERT INTO {items} (name) VALUES (%s)", ("x",))
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            app.execute(f"DELETE FROM {items}")
+    stats = relay.proxy.stats()
+    assert stats["connections"] == 1 and stats["refused_statements"] == 1 and stats["writing_statements"] == 1
+    assert stats["messages"]["Q"] >= 2 and stats["rows"] == {"INSERT": 1} and stats["errors"] == {}
+    relay.stop()
+    kinds = [kind for kind, _ in relay.logged]
+    assert kinds == ["relay_start", "relay_stop"]
+    assert relay.logged[1][1]["refused_statements"] == 1
+    assert "DELETE" not in str(relay.logged)  # numbers and kinds, never a statement
+    relay.stop = lambda: None  # type: ignore[method-assign]  # already stopped: the fixture stops it again
+
+
+def _message(kind: bytes, body: bytes = b"") -> bytes:
+    return kind + struct.pack("!I", len(body) + 4) + body
+
+
+PARSE_DELETE = _message(b"P", b"stmt\x00DELETE FROM t WHERE id = $1\x00\x00\x00")
+FLUSH, SYNC, DESCRIBE = _message(b"H"), _message(b"S"), _message(b"D", b"Sstmt\x00")
+
+
+def test_a_refused_parse_is_answered_at_the_flush_because_asyncpg_waits_for_it() -> None:
+    """asyncpg sends Parse, Describe and Flush and no Sync until it has an answer: an error held back for a Sync
+    that never comes froze the connection until its timeout (found with the real driver, D-615)."""
+    proxy, link = DevProxy("127.0.0.1", 1), _Link()
+    link.answered = 1  # the startup is over and nothing is owed to the application
+    onward: list[bytes] = []
+    back: list[bytes] = []
+    for message in (PARSE_DELETE, DESCRIBE, FLUSH):
+        proxy._inspect(link, message, onward, back)
+    assert onward == [] and len(back) == 1 and back[0][:1] == b"E" and b"DebCraft" in back[0]
+    proxy._inspect(link, SYNC, onward, back)  # the Sync goes on for its ReadyForQuery; no second error
+    assert onward == [SYNC] and len(back) == 1 and not link.skipping and link.refusals == {}
+
+
+async def test_the_error_waits_for_the_answers_still_owed_to_earlier_batches() -> None:
+    proxy, link = DevProxy("127.0.0.1", 1), _Link()
+    link.answered, link.asked = 1, 2  # one earlier batch is still owed its ReadyForQuery
+    onward: list[bytes] = []
+    back: list[bytes] = []
+    for message in (PARSE_DELETE, DESCRIBE, FLUSH):
+        proxy._inspect(link, message, onward, back)
+    assert back == [] and link.flush_seen  # the earlier answer must come first
+
+    class Application:
+        def __init__(self) -> None:
+            self.written: list[bytes] = []
+
+        def write(self, data: bytes) -> None:
+            self.written.append(data)
+
+        async def drain(self) -> None:
+            return None
+
+    server = asyncio.StreamReader()
+    server.feed_data(_ready(b"I"))
+    server.feed_eof()
+    application = Application()
+    await proxy._from_server(link, server, application)  # type: ignore[arg-type]
+    sent = b"".join(application.written)
+    assert (
+        sent.startswith(_ready(b"I")) and sent[len(_ready(b"I")) :][:1] == b"E"
+    )  # its answer, then the error
+    assert link.sent_early and not link.flush_seen

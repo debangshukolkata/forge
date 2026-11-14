@@ -29,6 +29,7 @@ from forge.db.dev_write import (
 )
 from forge.db.tunnel import TunnelError, ensure_tunnel
 from forge.safety.sql_guard import SqlGuardError, check_dev_write
+from forge.toolkit import field_log
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.db import NO_DB, _ensure_checked
 
@@ -350,7 +351,9 @@ class UseDevDatabase(Tool):
                     "database: copy the rows it needs with db_copy_table. Do not ask again for the same thing.",
                 )
             url = urlsplit(target.url(db.secrets) or "")
-            proxy = DevProxy(url.hostname or "127.0.0.1", url.port or 5432, db.dev_sslmode())
+            proxy = DevProxy(
+                url.hostname or "127.0.0.1", url.port or 5432, db.dev_sslmode(), log=field_log.write
+            )
             try:
                 await asyncio.to_thread(ensure_tunnel, DEV)  # the tunnel the user described, if there is one
                 await proxy.start()
