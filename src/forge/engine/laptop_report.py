@@ -483,7 +483,7 @@ def live_tests_page(home: Path | None = None) -> Page:
         page.lines.append(
             f"{entry['file']}: passed {entry['passed']}, failed {entry['failed']}, skipped {entry['skipped']}, {entry['seconds']}s"
         )
-        page.lines += [f"   {line[:94]}" for line in entry.get("notes", [])[:4]]
+        page.lines += [f"   {line}" for line in entry.get("notes", [])[:4]]
     tool_search = next((e for e in results if e["file"] == "test_live_tool_search.py"), None)
     page.verdicts.append(
         Verdict("TR6", "NOT RUN", "test_live_tool_search.py was not run")
