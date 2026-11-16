@@ -43,7 +43,9 @@ from forge.toolkit.powershell import ps_quote
 from forge.toolkit.shell import execute
 from forge.tools.assets import catalogue_hint
 from forge.tools.knowledge_tools import knowledge_finish_note
+from forge.tools.leftover_review import review_leftovers
 from forge.tools.registry import ToolRegistry
+from forge.tools.temporary import temporary_finish_note
 from forge.workspace.workspace import Workspace
 
 PREVIEW_CHARS = 1500
@@ -261,6 +263,8 @@ class AgentLoop:
         todo_nudges = 0
         risk_nudges = 0
         knowledge_nudges = 0
+        temporary_nudges = 0
+        leftover_reviews = 0
         stop_hook_rounds = 0
         self.hit_iteration_limit = False
         if (
@@ -380,6 +384,32 @@ class AgentLoop:
                                 "text": "Asking for the API call to be run again after the code change.",
                             },
                         )
+                        continue
+                if temporary_nudges < 1 and self.keep_full_output and self.gate.mode != "plan":
+                    # WF2: what was changed only to investigate is named before the turn ends
+                    temporary_note = temporary_finish_note(self.context)
+                    if temporary_note:
+                        temporary_nudges += 1
+                        history.append(Message.system(temporary_note))
+                        await self.bus.publish(
+                            EventType.NOTICE,
+                            {
+                                "kind": "temporary_changes",
+                                "text": "Naming the temporary changes before finishing.",
+                            },
+                        )
+                        continue
+                if (
+                    leftover_reviews < 1
+                    and self.keep_full_output
+                    and self.gate.mode != "plan"
+                    and self.context.last_edit_step > turn_start_step
+                ):
+                    # WF2: a second model reads this turn's changes for what nobody marked (once per turn)
+                    leftover_reviews += 1
+                    leftover_note = await review_leftovers(self.context)
+                    if leftover_note:
+                        history.append(Message.system(leftover_note))
                         continue
                 # the main agent only: a subagent runs with keep_full_output off, and a test run at the end of each subagent would cost far more than it checks
                 if (

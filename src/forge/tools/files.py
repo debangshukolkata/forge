@@ -5,6 +5,7 @@ from __future__ import annotations
 import difflib
 import re
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field
 
@@ -15,6 +16,7 @@ from forge.tools.baseline_gate import baseline_gate, rewrite_gate
 from forge.tools.diagnostics import diagnose_file
 from forge.tools.edit_match import EditError, apply_line_match
 from forge.tools.knowledge_tools import reading_note
+from forge.workspace.temporary_edits import TemporaryEdits, hunks_between
 from forge.workspace.test_expectations import changed_assertions, is_existing_test
 from forge.workspace.test_expectations import note as test_change_note
 from forge.workspace.test_expectations import record as record_test_changes
@@ -24,6 +26,13 @@ DEFAULT_READ_LIMIT = 2000
 MAX_LINE_CHARS = 2000
 REASON_HELP = "One line saying why; shown to the user in CHANGES.md."
 PATH_HELP = "Path relative to the repository root, e.g. backend/app/routes.py"
+TEMPORARY_HELP = (
+    "Set it when this change is only there to investigate and must not be delivered. `bypass`: a dependency is "
+    "skipped, stubbed or pointed somewhere else so the code you are working on can run. `logging`: added log or "
+    "print lines. Give `reason` (for a bypass: what is bypassed and why it is not the cause). The change stays in "
+    "the copy, is taken out of the delivered files and is named in the report."
+)
+Temporary = Literal["", "bypass", "logging"]
 _ENV_KEY = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_.-]*)\s*[=:]")
 
 
@@ -121,17 +130,23 @@ class WriteFile(Tool):
         path: str = Field(description=PATH_HELP)
         content: str
         reason: str = Field(default="", description=REASON_HELP)
+        temporary: Temporary = Field(default="", description=TEMPORARY_HELP)
 
     def summary(self, args: WriteFile.Args) -> str:
         return f"write {args.path} ({len(args.content.splitlines())} lines)"
 
     async def run(self, args: WriteFile.Args, context: ToolContext) -> ToolResult:
         path = context.workspace.path_of(args.path)
+        refused = temporary_problem(context, args.temporary, args.reason)
+        if not refused and args.temporary and path.exists():
+            refused = "Use edit_file for a temporary change to an existing file."
+        if refused:
+            return ToolResult(ok=False, content=refused)
         if path.exists():
             problem = context.reads.check(args.path, path.read_bytes())
             if problem:
                 return ToolResult(ok=False, content=problem)
-        return await _save(context, args.path, args.content, args.reason, "write")
+        return await save_marked(context, args.path, args.content, args.reason, "write", args.temporary)
 
 
 class EditFile(Tool):
@@ -148,11 +163,15 @@ class EditFile(Tool):
         new_string: str
         replace_all: bool = False
         reason: str = Field(default="", description=REASON_HELP)
+        temporary: Temporary = Field(default="", description=TEMPORARY_HELP)
 
     def summary(self, args: EditFile.Args) -> str:
         return f"edit {args.path}"
 
     async def run(self, args: EditFile.Args, context: ToolContext) -> ToolResult:
+        refused = temporary_problem(context, args.temporary, args.reason)
+        if refused:
+            return ToolResult(ok=False, content=refused)
         loaded = _load_for_edit(context, args.path)
         if isinstance(loaded, ToolResult):
             return loaded
@@ -160,7 +179,8 @@ class EditFile(Tool):
             text, note = apply_edit_with_note(loaded, args.old_string, args.new_string, args.replace_all)
         except EditError as error:
             return ToolResult(ok=False, content=str(error))
-        return _with_note(await _save(context, args.path, text, args.reason, "edit"), [note])
+        saved = await save_marked(context, args.path, text, args.reason, "edit", args.temporary)
+        return _with_note(saved, [note])
 
 
 class MultiEdit(Tool):
@@ -179,11 +199,15 @@ class MultiEdit(Tool):
         path: str = Field(description=PATH_HELP)
         edits: list[Edit] = Field(min_length=1)
         reason: str = Field(default="", description=REASON_HELP)
+        temporary: Temporary = Field(default="", description=TEMPORARY_HELP)
 
     def summary(self, args: MultiEdit.Args) -> str:
         return f"edit {args.path} ({len(args.edits)} edits)"
 
     async def run(self, args: MultiEdit.Args, context: ToolContext) -> ToolResult:
+        refused = temporary_problem(context, args.temporary, args.reason)
+        if refused:
+            return ToolResult(ok=False, content=refused)
         loaded = _load_for_edit(context, args.path)
         if isinstance(loaded, ToolResult):
             return loaded
@@ -196,7 +220,8 @@ class MultiEdit(Tool):
                 return ToolResult(ok=False, content=f"Edit {number} failed, nothing was changed: {error}")
             if note:
                 notes.append(f"Edit {number}: {note}")
-        return _with_note(await _save(context, args.path, text, args.reason, "edit"), notes)
+        saved = await save_marked(context, args.path, text, args.reason, "edit", args.temporary)
+        return _with_note(saved, notes)
 
 
 class DeleteFile(Tool):
@@ -522,6 +547,46 @@ def candidate_composition_note(text: str) -> str:
     return (
         "This candidate does not name its composition yet. Add `composition: lay-<name>` (marketing page), `composition: app-<name>` (application screen) or `composition: custom <one line>` "
         "to its front matter with ONE small edit (multi_edit), not a rewrite: design_candidates refuses a candidate without it."
+    )
+
+
+def temporary_problem(context: ToolContext, temporary: str, reason: str) -> str:
+    """Why a change cannot be marked as temporary; "" when it can, or when it is not marked at all."""
+    if not temporary:
+        return ""
+    if not reason.strip():
+        return "A temporary change needs `reason`: what it bypasses or logs, and why."
+    if context.workspace.mode_b:
+        return "Temporary changes are for a project on an existing repository."
+    return ""
+
+
+async def save_marked(
+    context: ToolContext, relative: str, text: str, reason: str, op: str, temporary: str = ""
+) -> ToolResult:
+    """Saves like every write, and writes a change marked as temporary down with the text it replaced, so that the
+    delivery is built without it (WF2). The text after the save is read back from the file: the record must hold
+    exactly what a later read sees, whatever the save did to line endings."""
+    workspace = context.workspace
+    existed = workspace.path_of(relative).is_file()
+    before = workspace.read_text(relative)[0] if existed and temporary else ""
+    result = await _save(context, relative, text, reason, op)
+    if not result.ok or not temporary:
+        return result
+    edits = TemporaryEdits(workspace)
+    if existed:
+        hunks = hunks_between(before, workspace.read_text(relative)[0])
+        if not hunks:
+            return result
+        number = edits.add(relative, temporary, reason, "edit", hunks)  # type: ignore[arg-type]
+    else:
+        number = edits.add(relative, temporary, reason, "create", [])  # type: ignore[arg-type]
+    return result.model_copy(
+        update={
+            "content": result.content
+            + f"\nRecorded as temporary change #{number} ({temporary}): it will not be delivered. Take it out "
+            "with temporary_edits when you no longer need it."
+        }
     )
 
 

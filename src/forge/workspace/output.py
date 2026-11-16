@@ -16,7 +16,8 @@ from forge.safety.paths import os_path
 from forge.workspace.copy_repo import iter_source_files
 from forge.workspace.manifest import sha256_of
 from forge.workspace.server_checks import load_checks, server_run_md
-from forge.workspace.text_format import decode_text, detect_format
+from forge.workspace.temporary_edits import Entry, TemporaryEdits
+from forge.workspace.text_format import decode_text, detect_format, encode_text
 from forge.workspace.workspace import Workspace
 
 FileStatus = Literal["added", "modified", "deleted"]
@@ -33,6 +34,8 @@ class FileChange(BaseModel):
     binary: bool = False
     moved_from: str | None = None
     reasons: list[str] = Field(default_factory=list)
+    # Reasons of temporary changes that could not be taken out of this file (WF2): the user removes them by hand.
+    temporary_left: list[str] = Field(default_factory=list)
 
 
 class OutputManifest(BaseModel):
@@ -41,11 +44,38 @@ class OutputManifest(BaseModel):
     generated: str
     repository: str
     files: list[FileChange]
+    temporary: list[dict[str, str]] = Field(default_factory=list)  # every temporary change, active or removed
+
+
+def delivered_bytes(
+    workspace: Workspace, relative: str, data: bytes, edits: TemporaryEdits
+) -> tuple[bytes, list[Entry]]:
+    """What is delivered for a file that holds temporary changes (WF2): its content with those changes taken out,
+    in the file's own encoding and line endings, and the entries that could not be taken out."""
+    marked = [entry for entry in edits.active(relative) if entry.get("op") == "edit"]
+    if not marked:
+        return data, []
+    file_format = detect_format(data)
+    if file_format.binary:
+        return data, marked
+    text, _, left = edits.without(relative, decode_text(data, file_format))
+    return encode_text(text, file_format), left
+
+
+def _marked_paths(edits: TemporaryEdits) -> tuple[set[str], set[str]]:
+    """(files with a temporary edit, files that are temporary as a whole)."""
+    active = edits.active()
+    return (
+        {entry["path"] for entry in active if entry.get("op") == "edit"},
+        {entry["path"] for entry in active if entry.get("op") == "create"},
+    )
 
 
 def compute_changes(workspace: Workspace) -> list[FileChange]:
     manifest = workspace.manifest.files
     rules = workspace.ignore_rules()
+    edits = TemporaryEdits(workspace)
+    edited, created = _marked_paths(edits)
     current: dict[str, bytes] = {}
     for top in sorted(p.name for p in workspace.repo_dir.iterdir()):
         if (workspace.repo_dir / top).is_dir():
@@ -60,6 +90,11 @@ def compute_changes(workspace: Workspace) -> list[FileChange]:
         entry = manifest.get(relative)
         if relative.lower().endswith(RUNTIME_DATA_SUFFIXES):
             continue
+        if entry is None and relative in created:
+            continue  # a file written only to investigate is not delivered
+        left: list[Entry] = []
+        if relative in edited:
+            data, left = delivered_bytes(workspace, relative, data, edits)
         if entry is None or entry.sha256 != sha256_of(data):
             changes[relative] = FileChange(
                 path=relative,
@@ -67,6 +102,7 @@ def compute_changes(workspace: Workspace) -> list[FileChange]:
                 sha256=sha256_of(data),
                 secret=workspace.is_secret(relative),
                 binary=detect_format(data).binary,
+                temporary_left=[str(item["reason"]) for item in left],
             )
     for relative, entry in manifest.items():
         if relative not in current:
@@ -82,17 +118,28 @@ def compute_changes(workspace: Workspace) -> list[FileChange]:
 
 def build_output(workspace: Workspace) -> OutputManifest:
     changes = compute_changes(workspace)
+    edits = TemporaryEdits(workspace)
+    edited, _ = _marked_paths(edits)
     _clear_output(workspace)
     for change in changes:
         if change.status != "deleted" and not change.secret:
             target = workspace.jail.check(workspace.output_dir / change.path)
             os.makedirs(os_path(target.parent, force=True), exist_ok=True)
-            shutil.copy2(workspace.repo_dir / change.path, os_path(target))
+            source = workspace.repo_dir / change.path
+            if change.path in edited:  # delivered without its temporary changes; the copy keeps them
+                data, _ = delivered_bytes(workspace, change.path, source.read_bytes(), edits)
+                Path(os_path(target)).write_bytes(data)
+            else:
+                shutil.copy2(source, os_path(target))
 
     report = OutputManifest(
         generated=datetime.now().isoformat(timespec="seconds"),
         repository=workspace.info.repo_path,
         files=changes,
+        temporary=[
+            {key: str(entry.get(key, "")) for key in ("id", "kind", "path", "reason", "state")}
+            for entry in edits.entries()
+        ],
     )
     _write(workspace, "MANIFEST.json", report.model_dump_json(indent=1))
     _write(workspace, "changes.patch", build_patch(workspace, changes))
@@ -160,8 +207,11 @@ def build_patch(workspace: Workspace, changes: list[FileChange]) -> str:
 
 def build_changes_md(workspace: Workspace, changes: list[FileChange]) -> str:
     lines = [f"# Changes — {workspace.info.name}", "", "All paths are relative to the repository root.", ""]
+    lines += temporary_section(TemporaryEdits(workspace).entries())
     for change in changes:
         lines += [f"## {change.path}", "", f"**Status:** {change.status}"]
+        for reason in change.temporary_left:
+            lines.append(TEMPORARY_LEFT.format(reason=reason))
         if change.moved_from:
             lines.append(f"**Moved from:** `{change.moved_from}`")
         for reason in change.reasons:
@@ -185,6 +235,28 @@ def build_changes_md(workspace: Workspace, changes: list[FileChange]) -> str:
             )
             lines += ["```diff", diff.rstrip("\n"), "```", ""]
     return "\n".join(lines) + "\n"
+
+
+TEMPORARY_LEFT = (
+    "**This file still holds a temporary change DebCraft could not take out: {reason}. Remove it by hand before "
+    "you copy the file.**"
+)
+
+
+def temporary_section(entries: list[Entry]) -> list[str]:
+    """What was changed only to investigate (WF2). A bypass that was still in place at the end means the part
+    it bypasses never ran: the user must know that the proof does not cover it."""
+    if not entries:
+        return []
+    lines = ["## Temporary changes (not in these files)", ""]
+    for entry in entries:
+        line = f"- {entry['kind']}, `{entry['path']}`: {str(entry['reason']).rstrip('.')}."
+        if entry.get("state") != "active":
+            line += " Taken out again during the work."
+        elif entry["kind"] == "bypass":
+            line += " The solution was proved with this in place; what it bypasses was not exercised."
+        lines.append(line)
+    return [*lines, ""]
 
 
 def build_copy_instructions(workspace: Workspace, changes: list[FileChange]) -> str:
@@ -261,6 +333,8 @@ def _file_table(changes: list[FileChange], kind: str) -> list[str]:
     rows = ["| # | File | Notes |", "|---|---|---|"]
     for number, change in enumerate(changes, start=1):
         note = f"moved from `{change.moved_from}` (delete the old file)" if change.moved_from else kind
+        for reason in change.temporary_left:
+            note += ". " + TEMPORARY_LEFT.format(reason=reason)
         rows.append(f"| {number} | `{change.path}` | {note} |")
     return [*rows, ""]
 
@@ -277,7 +351,12 @@ def file_texts(workspace: Workspace, change: FileChange) -> tuple[str, str] | No
     original = saved if saved.exists() else Path(workspace.info.repo_path) / change.path
     try:
         before = _decoded(original) if change.status != "added" else ""
-        after = _decoded(workspace.repo_dir / change.path) if change.status != "deleted" else ""
+        after = ""
+        if change.status != "deleted":  # the delivered text: without the temporary changes (WF2)
+            current = workspace.repo_dir / change.path
+            data = current.read_bytes() if current.exists() else b""
+            data, _ = delivered_bytes(workspace, change.path, data, TemporaryEdits(workspace))
+            after = decode_text(data, detect_format(data))
     except ValueError:  # decode_text refuses binary content
         return None
     return before, after

@@ -151,6 +151,10 @@ Rules
 - A requirement about what an existing system should be able to DO (an agent that must answer something, a tool, an API, a workflow that fails or falls short): load
   `solve-against-running-system` and follow it. Reading the code is not enough for these: start the copy, call it the way its users do, look at what the run
   left behind, find the cause, make the smallest fitting change, and run the same check again before you say it works.
+- When the user asks for a part that is like one the system already has (an agent, a connector, an endpoint, a tool: "like the existing ...",
+  "similar to ...", "the same for ..."), load the skill `build-similar-part` and follow it.
+- A change you make only to investigate (a dependency you skip or stub because it cannot run here and is not the cause, added log or print
+  lines): make it with `temporary` set on the edit and say why. It stays in your copy, is taken out of what is delivered and is reported.
 - Code tasks: when a failure's cause is not obvious load `debugging` (reproduce, find the root cause, one fix). For a large or risky
   change you may ask `spawn_subagent` with agent 'code-review' for a second opinion; treat its report as a colleague's: check each
   finding against the code, fix the real ones, answer a wrong one with evidence. Do not ask for it on small tasks.

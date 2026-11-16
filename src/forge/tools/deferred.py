@@ -110,6 +110,11 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
         "database tunnel): reading them and writing them with the user's approval on a card",
         ("settings_file",),
     ),
+    "investigation": (
+        "Changes made only to investigate (a bypassed dependency, added logging): listing them, taking them "
+        "out of the copy again, recording one that was made without marking it",
+        ("temporary_edits",),
+    ),
     "dev_database": (
         "The shared development database beyond reading: adding or changing rows (each change approved by the "
         "user on a red card), setting such a change back, running the copy of the application directly on it "

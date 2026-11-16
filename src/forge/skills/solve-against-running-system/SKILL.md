@@ -83,6 +83,17 @@ Collect what the run left behind, all of it, before you name a cause:
   (`read_background`), rows it wrote;
 - which capability it used, with what input, and what came back, how large.
 
+**Getting the run far enough to see the failure.** A dependency that cannot run on this machine and is not
+what you are investigating (it needs configuration you do not have, or a service that does not answer here):
+first try to run it on the development settings (`use_dev_database`, `keep_secret`, `request_app_secret`). If
+that is not possible, skip or stub it with an edit marked `temporary` = `bypass` and the reason; log lines you
+add to follow the run are `temporary` = `logging`. Such changes stay in your copy, are taken out of the
+delivered files, and are named in the report. Never get past a failing dependency with an unmarked edit: it
+would be delivered as if it were part of the solution. When you no longer need one, take it out with
+`temporary_edits` and run the check again. **The application's own login is never such a dependency**: do not
+change its settings or its code to let yourself in, and do not make up a token; the token comes from
+`token_env` (section 4).
+
 State the failure as a fact with its evidence ("the tool list_deployments returned 343,634 characters; the
 agent's context holds 20,000; logs/runs.jsonl line 3"). If the evidence does not show the cause, run a
 narrower experiment (call the tool's API yourself through the application, shorten the input); do not guess.

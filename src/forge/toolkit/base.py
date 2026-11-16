@@ -143,6 +143,13 @@ class ToolContext:
         None  # 'name: what it does', every tool of the session (D-571)
     )
     handoff_refusals: int = 0  # hand-offs the review sent back in a row; the third is shown whatever it says
+    temporary_reported: frozenset[int] = (
+        frozenset()
+    )  # the active temporary changes last named before a turn ended (WF2)
+    leftover_diff_hash: str = ""  # the diff the leftover review last read: an unchanged one is not read again
+    leftovers_told: set[str] = field(
+        default_factory=set
+    )  # what that review already named, so it is said once
     end_turn: bool = False  # a phase tool finished its phase: the agent loop stops after this step
     step: int = 0  # increases with every tool call; used for 'no claim without evidence'
     last_edit_step: int = 0
