@@ -31,7 +31,7 @@ The rules below still describe what goes into briefs and summaries.
 - New UI features: the user wants the options discussed first (2–3 options, with previews, recommendation);
   fixes to what they report from screenshots go straight in. Design theme changes are deferred to the user.
 - Keep updated: this file, TODO.md, docs/DECISIONS.md, docs/RISKS.md, docs/SPEC_DEVIATIONS.md.
-- **TODO.md is the single list of open work** (section 0 is the build order with phases and dependencies, sections 1-6 the items with stable IDs, 7 the finished work). Add new tasks there, never in another file, and keep to the build order.
+- **TODO.md is the single list of open work** (since 2026-11-16, D-624: section 0 is the direction and the order of work, 1 what to build now, 2 what waits for the office laptop, 3 what is decided after that run, 4 parked, 5 the history: finished work, work dropped with the mark `[-]`, and the background of each group under its old heading such as `0j` or `0q`). Add new tasks to sections 1 to 4, never in another file, and keep to the order of work. Do not reopen a `[-]` item unless the user asks.
 - Be honest about anything unrealistic; propose the best achievable alternative.
 
 ## Platform targets
@@ -116,7 +116,7 @@ The rules below still describe what goes into briefs and summaries.
    the whole spec, run only the tests that matter, keep summaries short.
 
 ## Apps DebCraft builds: the UI-quality pipeline (D-245..D-254)
-Before changing how DebCraft designs or checks the pages it builds, read `src/forge/skills/ui-design-quality/SKILL.md` and its `recipes/` folder, `src/forge/tools/ui_audit.py` and the `design-critic` (`src/forge/subagents/critic.py`). The pipeline is: DESIGN.md first, recipes to copy from, `browser_screenshot` with the style audit, the independent critic, and the `task_update` gates in `workflow/orchestrator.py`. The build order for what comes next is in TODO.md section 0; the model is weaker than Claude, so quality comes from assets and process, measured on the benchmarks (TODO C1, S2).
+Before changing how DebCraft designs or checks the pages it builds, read `src/forge/skills/ui-design-quality/SKILL.md` and its `recipes/` folder, `src/forge/tools/ui_audit.py` and the `design-critic` (`src/forge/subagents/critic.py`). The pipeline is: DESIGN.md first, recipes to copy from, `browser_screenshot` with the style audit, the independent critic, and the `task_update` gates in `workflow/orchestrator.py`. This pipeline is not a priority since 2026-11-16 (D-624): its open follow-ups were dropped and nothing new is added unless the user asks; what is built stays. The model is weaker than Claude, so quality comes from assets and process.
 
 ## Revamp direction (D-151..D-156, 2026-10-02) — Forge behaves like Claude Code
 The runtime copies Claude Code: a flat loop; the model improvises failure recovery (no stuck detector or
