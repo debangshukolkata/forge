@@ -98,6 +98,24 @@ def test_a_wrong_description_says_what_is_wrong(
         load_logins(isolated_forge_home)
 
 
+@pytest.mark.parametrize("text", ["", "# environments will go here\n", "other: 1\n", "environments:\n"])
+def test_a_file_without_environments_describes_none_and_blocks_nothing(
+    isolated_forge_home: Path, text: str
+) -> None:
+    (isolated_forge_home / "app_logins.yaml").write_text(text, encoding="utf-8")
+    assert load_logins(isolated_forge_home) == {}
+    assert login_for_token("DEVELOPMENT_INSTANCE_TOKEN", isolated_forge_home) is None  # localhost calls go on
+
+
+def test_a_broken_file_does_not_stop_a_token_lookup_but_is_reported_for_a_remote_host(
+    isolated_forge_home: Path,
+) -> None:
+    (isolated_forge_home / "app_logins.yaml").write_text("environments: [1, 2]\n", encoding="utf-8")
+    assert login_for_token("ANY_TOKEN", isolated_forge_home) is None
+    with pytest.raises(ConfigError, match="by name"):
+        login_for_host("dev.example.com", isolated_forge_home)
+
+
 def test_a_file_that_is_not_yaml_says_so(isolated_forge_home: Path) -> None:
     (isolated_forge_home / "app_logins.yaml").write_text("environments: [", encoding="utf-8")
     with pytest.raises(ConfigError, match="not valid YAML"):

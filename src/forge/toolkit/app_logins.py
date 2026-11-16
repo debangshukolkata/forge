@@ -130,8 +130,13 @@ def load_logins(home: Path | None = None) -> dict[str, EnvLogin]:
     except yaml.YAMLError as error:
         raise ConfigError(f"{LOGINS_FILE} is not valid YAML: {error}") from error
     environments = data.get("environments") if isinstance(data, dict) else None
+    if environments is None:
+        # An empty file, one with only comments, or one without the section describes no environment. Refusing it
+        # stopped every http_request that named a token from DebCraft's .env, even one to localhost (office laptop,
+        # 2026-11-16); only a section that is there and wrongly shaped is an error.
+        return {}
     if not isinstance(environments, dict):
-        raise ConfigError(f"{LOGINS_FILE} needs an `environments:` section.")
+        raise ConfigError(f"{LOGINS_FILE}: `environments:` must list the environments by name.")
     return {str(name): _parse(str(name), raw) for name, raw in environments.items()}
 
 
@@ -142,7 +147,14 @@ def login_for_host(host: str, home: Path | None = None) -> EnvLogin | None:
 
 
 def login_for_token(name: str, home: Path | None = None) -> EnvLogin | None:
-    return next((login for login in load_logins(home).values() if login.token_name == name), None)
+    """The environment that signs in for this token name. A file that cannot be read means no such environment here:
+    a token from DebCraft's .env must still work, and a call to a remote host reports the file through
+    `login_for_host`."""
+    try:
+        logins = load_logins(home)
+    except ConfigError:
+        return None
+    return next((login for login in logins.values() if login.token_name == name), None)
 
 
 def jwt_expiry(token: str) -> float | None:
