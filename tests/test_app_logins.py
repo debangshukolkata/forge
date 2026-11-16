@@ -205,61 +205,70 @@ async def call(context: ToolContext, url: str, **fields: object):  # type: ignor
     return await HttpRequest().run(HttpRequest.Args(method="GET", url=url, **fields), context)  # type: ignore[arg-type]
 
 
-def approve(context: ToolContext) -> None:
-    (context.workspace.forge_dir / "remote_hosts.json").write_text(
-        json.dumps(["127.0.0.2"]), encoding="utf-8"
-    )
-
-
-async def test_a_host_the_user_did_not_list_is_refused(remote) -> None:  # type: ignore[no-untyped-def]
+async def test_any_http_address_is_called_without_a_question_and_gets_no_token(  # D-621
+    remote, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:  # type: ignore[no-untyped-def]
     _, context, _ = remote
-    result = await call(context, "http://127.0.0.3:80/api")
-    assert not result.ok and "neither" in result.content
+    env_file = tmp_path / "debcraft.env"
+    env_file.write_text(
+        "DEVELOPMENT_INSTANCE_TOKEN=the-users-dev-token\n", encoding="utf-8"
+    )  # check_secrets: fake
+    monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
+    monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
+    other = ThreadingHTTPServer(("127.0.0.3", 0), Remote)  # a host the user never named
+    threading.Thread(target=other.serve_forever, daemon=True).start()
+    asked: list[str] = []
+
+    async def never(question: str, detail: str, options: list[object], default: str | None) -> str:
+        asked.append(question)
+        return "The user chose: Do not allow"
+
+    context.ask_user = never  # type: ignore[assignment]
+    try:
+        url = f"http://127.0.0.3:{other.server_port}/api"
+        result = await call(context, url)
+        # the call went out, nobody was asked, and the 401 did not make DebCraft send the user's token there
+        assert "HTTP 401" in result.content and asked == [] and Remote.seen == [""]
+        with_token = await call(context, url, token_env="DEVELOPMENT_INSTANCE_TOKEN")
+        assert (
+            not with_token.ok
+            and with_token.content.startswith("Not sent")
+            and "neither" in with_token.content
+        )
+        assert Remote.seen == [""] and "the-users-dev-token" not in with_token.content
+    finally:
+        other.shutdown()
     assert not (await call(context, "ftp://127.0.0.2/x")).ok
 
 
-async def test_a_file_the_call_needs_but_cannot_use_is_reported_once_and_the_model_is_told_to_stop(
+async def test_a_file_that_cannot_be_used_stops_a_token_and_is_reported_with_its_path(
     remote,
 ) -> None:  # type: ignore[no-untyped-def]
     _, context, home = remote
     for text, wanted in (("environments: [1, 2]\n", "by name"), ("environments: {}\n", "neither")):
         (home / "app_logins.yaml").write_text(text, encoding="utf-8")
-        result = await call(context, "https://dev.example.com/api")
+        result = await call(context, "https://dev.example.com/api", token_env="DEVELOPMENT_INSTANCE_TOKEN")
         assert not result.ok and result.content.startswith("Not sent")
         assert wanted in result.content and str(home / "app_logins.yaml") in result.content
-        assert "Stop here and tell the user" in result.content and "do not retry" in result.content
 
 
-async def test_a_listed_host_needs_the_users_card_once_and_the_answer_is_kept(remote) -> None:  # type: ignore[no-untyped-def]
+async def test_a_listed_host_is_called_with_its_token_and_no_card(remote) -> None:  # type: ignore[no-untyped-def]
     url, context, home = remote
     TokenStore(home).put("SIT_TOKEN", "token-one")
     asked: list[str] = []
 
-    async def deny(question: str, detail: str, options: list[object], default: str | None) -> str:
+    async def record(question: str, detail: str, options: list[object], default: str | None) -> str:
         asked.append(question)
         return "The user chose: Do not allow"
 
-    context.ask_user = deny  # type: ignore[assignment]
-    refused = await call(context, url, token_env="SIT_TOKEN")
-    assert not refused.ok and "did not allow" in refused.content and Remote.seen == []
-
-    async def allow(question: str, detail: str, options: list[object], default: str | None) -> str:
-        asked.append(question)
-        return "The user chose: Allow"
-
-    context.ask_user = allow  # type: ignore[assignment]
+    context.ask_user = record  # type: ignore[assignment]
     sent = await call(context, url, token_env="SIT_TOKEN")
     assert sent.ok and "HTTP 200" in sent.content and Remote.seen == ["Bearer token-one"]
-    assert "token-one" not in sent.content
-
-    context.ask_user = None
-    again = await call(context, url, token_env="SIT_TOKEN")  # approved for this project: no card needed
-    assert again.ok and len(asked) == 2
+    assert "token-one" not in sent.content and asked == []
 
 
 async def test_a_401_signs_in_again_once_and_repeats_the_call(remote, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     url, context, home = remote
-    approve(context)
     TokenStore(home).put("SIT_TOKEN", "token-stale")
     attempts: list[str] = []
 
@@ -287,7 +296,6 @@ async def test_a_token_for_one_host_is_not_sent_to_another(remote) -> None:  # t
 
 async def test_a_token_that_ended_and_cannot_be_renewed_says_so(remote, monkeypatch) -> None:  # type: ignore[no-untyped-def]
     url, context, _ = remote
-    approve(context)
 
     async def needs_person(login, home=None, visible=False):  # type: ignore[no-untyped-def]
         from forge.tools.app_login import SignIn

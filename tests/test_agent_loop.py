@@ -490,7 +490,8 @@ async def test_http_request_notes_the_call_without_its_query_string() -> None:
 
     assert result.ok and context.api_calls == {f"GET {server.url}": 7}
     refused = ToolContext(workspace=None)  # type: ignore[arg-type]
-    await HttpRequest().run(HttpRequest.Args(method="GET", url="https://example.com/x"), refused)
+    # D-621: any http(s) address is called, so only another scheme is still refused
+    await HttpRequest().run(HttpRequest.Args(method="GET", url="ftp://example.com/x"), refused)
     assert refused.api_calls == {}  # a refused request is not an API call that ran
 
 

@@ -1,4 +1,5 @@
-"""`http_request`: calls the API of the application running on this machine (D-568).
+"""`http_request`: calls the API of the application running on this machine (D-568), and any other http(s)
+address the task needs, without a question (D-621); a token goes only to this machine and to named hosts.
 
 Used for a smoke test, and to run the application the way its users do: call an agent's endpoint, read what
 came back and how large each part of it is. Two things make that possible without breaking the rule that
@@ -37,7 +38,7 @@ from forge.toolkit.app_keys import (
     remembered_auth,
     user_value,
 )
-from forge.toolkit.app_logins import LOGINS_FILE, EnvLogin, TokenStore, login_for_host, login_for_token
+from forge.toolkit.app_logins import LOGINS_FILE, TokenStore, login_for_host, login_for_token
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.app_login import ensure_token
 from forge.tools.browser import LOCAL_HOSTS
@@ -50,12 +51,6 @@ HTTP_TIMEOUT_S = 30
 MAX_TIMEOUT_S = 900
 SHAPE_DEPTH = 3
 SHAPE_LINES = 40
-HOST_STOP_NOTE = (
-    ". Stop here and tell the user this in plain words; do not retry and do not reach the API another way "
-    "(a script, curl, run_command): that would go around what the user allowed. You may offer to fix the file: "
-    "settings_file shows the user the exact new text on a card (ask them for what you do not know, such as the "
-    "address of the login page)"
-)
 NOT_SET = "is not set in"
 ADDED = "I have added it"
 NO_TOKEN = "I cannot get a token"
@@ -161,47 +156,25 @@ def _keep_stream(context: ToolContext, body: str) -> tuple[str, str | None]:
     )
 
 
-REMOTE_HOSTS_FILE = "remote_hosts.json"
-
-
-async def _approve_host(login: EnvLogin, context: ToolContext) -> str:
-    """One card per host and project: the user says yes once; the answer is kept in the project's `.forge` folder."""
-    workspace = context.workspace
-    path = workspace.forge_dir / REMOTE_HOSTS_FILE if workspace is not None else None
-    approved: list[str] = []
-    if path is not None:
-        try:
-            approved = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            approved = []
-    if login.host in approved:
-        return ""
-    if context.ask_user is None:
-        return f"{login.host} has not been approved for this project (no way to ask the user here)"
-    answer = await context.ask_user(
-        f"May DebCraft call {login.host} ({login.name}) in this project?",
-        f"DebCraft will send HTTP requests to {login.host}, with the token it signed in for ({login.token_name}). "
-        "The token goes only to that host and is never shown to the model.",
-        [
-            OptionSpec(label="Allow", description=f"Calls to {login.host} are allowed in this project."),
-            OptionSpec(label="Do not allow", description="DebCraft does not call that host."),
-        ],
-        "Allow",
-    )
-    if not answer.startswith("The user chose: Allow"):
-        return f"the user did not allow calls to {login.host}"
-    if path is not None and workspace is not None:
-        target = workspace.jail.check(path)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps([*approved, login.host]), encoding="utf-8")
-    return ""
+def _token_may_go_to(host: str) -> tuple[bool, str]:
+    """(yes or no, what is wrong with the file). A token is sent only to this machine and to a host the user named
+    in app_logins.yaml. http_request may call any address (the user, 2026-11-16, D-621), so this is what keeps a
+    token of the user from being sent to an address the model chose (invariant 3)."""
+    if host in LOCAL_HOSTS:
+        return True, ""
+    try:
+        return login_for_host(host) is not None, ""
+    except ConfigError as error:
+        return False, str(error)
 
 
 class HttpRequest(Tool):
     name = "http_request"
     description = (
-        "Call the API of the application running on this machine: method, URL on localhost, optional JSON body "
-        "and headers. Use it to check an endpoint and to run the application as its users do (for example to "
+        "Call an HTTP API: the application running on this machine, its development or test instance, or any "
+        "other address the task needs: method, URL, optional JSON body and headers. No approval is asked for a "
+        "call. A token is sent only to this machine and to the hosts the user named in app_logins.yaml. "
+        "Use it to check an endpoint and to run the application as its users do (for example to "
         "call an agent and see what it answers). The result shows the status, the size of the answer in "
         "characters and tokens, for JSON the size of each part, and then the body (a long one is cut and kept "
         "whole in a file you can read in ranges). When the endpoint needs a token that only the user can get: "
@@ -248,7 +221,7 @@ class HttpRequest(Tool):
         return f"{args.method} {args.url}" + (f" (token from {args.token_env})" if args.token_env else "")
 
     async def run(self, args: HttpRequest.Args, context: ToolContext) -> ToolResult:
-        refusal = await self._host_refusal(args.url, context)
+        refusal = self._host_refusal(args.url)
         if refusal:
             return ToolResult(ok=False, content=f"Not sent: {refusal}.")
         if args.keep_secret:
@@ -262,8 +235,22 @@ class HttpRequest(Tool):
         token = ""
         name = args.token_env.strip()
         login_env = login_for_token(name) if name else None
+        host = (urlparse(args.url).hostname or "").lower()
+        token_host, file_problem = _token_may_go_to(host)
+        if name and not token_host:
+            where = forge_home() / LOGINS_FILE
+            return ToolResult(
+                ok=False,
+                content=(
+                    f"Not sent: {file_problem} The file is {where}. No token can go to {host or args.url} until "
+                    "it is repaired: tell the user, and offer to fix the file (settings_file)."
+                    if file_problem
+                    else f"Not sent: a token goes only to this machine and to the hosts the user named in {where}; "
+                    f"{host or args.url} is neither. Call it without `token_env`, or, when it is an instance of "
+                    "the user's application, offer to add it to that file (settings_file)."
+                ),
+            )
         if login_env is not None:
-            host = (urlparse(args.url).hostname or "").lower()
             if host not in LOCAL_HOSTS and host != login_env.host:
                 return ToolResult(
                     ok=False,
@@ -340,7 +327,7 @@ class HttpRequest(Tool):
                         (name, args.token_header, ""),
                     )
                 )
-        elif not name and not any(key.lower() == "authorization" for key in headers):
+        elif not name and token_host and not any(key.lower() == "authorization" for key in headers):
             known = remembered_auth(workspace).get(origin) if workspace is not None else None
             if known:  # how this API took the token before: used at once, the model need not remember it
                 token, _ = self._token(known["token_env"])
@@ -488,27 +475,10 @@ class HttpRequest(Tool):
         )
 
     @staticmethod
-    async def _host_refusal(url: str, context: ToolContext) -> str:
-        """ "" when the call may go out. The local machine always may; any other host only when it is one of the
-        environments the user described in app_logins.yaml AND the user has approved it for this project (D-603)."""
-        parsed = urlparse(url)
-        if parsed.scheme not in ("http", "https"):
-            return "only http(s) URLs"
-        host = (parsed.hostname or "").lower()
-        if host in LOCAL_HOSTS:
-            return ""
-        where = forge_home() / LOGINS_FILE
-        try:
-            login = login_for_host(host)
-        except ConfigError as error:
-            return f"{error} The file is {where}{HOST_STOP_NOTE}"
-        if login is None:
-            return (
-                f"http_request calls the application on localhost, and the hosts the user listed in {where}; "
-                f"{host or url} is neither. To allow it, an environment for it goes into that file "
-                f"(login_url, token_name, token, steps){HOST_STOP_NOTE}"
-            )
-        return await _approve_host(login, context)
+    def _host_refusal(url: str) -> str:
+        """ "" when the call may go out: any http(s) address, without a question (the user, 2026-11-16, D-621).
+        What is limited is where a token goes (`_token_may_go_to`), not where a call goes."""
+        return "" if urlparse(url).scheme in ("http", "https") else "only http(s) URLs"
 
     @staticmethod
     def _token(name: str) -> tuple[str, str]:

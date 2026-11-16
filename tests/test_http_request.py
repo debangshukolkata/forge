@@ -123,7 +123,8 @@ async def test_only_names_the_user_released_can_be_sent(hub: tuple[str, ToolCont
     assert allowed_token_names("A, B") == {"DEVELOPMENT_INSTANCE_TOKEN", "A", "B"}
 
     elsewhere = await _call(context, url="https://example.com/api", token_env="STAGING_TOKEN")
-    assert not elsewhere.ok and "localhost" in elsewhere.content  # a token never leaves this machine
+    # a token goes only to this machine and to hosts the user named (D-621: the call itself may go anywhere)
+    assert not elsewhere.ok and elsewhere.content.startswith("Not sent") and "neither" in elsewhere.content
 
 
 async def test_an_agent_run_is_reported_with_its_size(hub: tuple[str, ToolContext, Path]) -> None:

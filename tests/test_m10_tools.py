@@ -226,8 +226,9 @@ async def test_http_request_smoke_tests_the_local_api(app_with_new_endpoint: tup
     context = ToolContext(workspace=workspace)
     result = await HttpRequest().run(HttpRequest.Args(url=f"http://127.0.0.1:{port}/api/exports/"), context)
     assert result.ok and "HTTP 200" in result.content and '"count": 0' in result.content
-    refused = await HttpRequest().run(HttpRequest.Args(url="https://example.com/"), context)
-    assert not refused.ok and "localhost" in refused.content
+    # D-621: any http(s) address may be called; only another scheme is refused
+    refused = await HttpRequest().run(HttpRequest.Args(url="ftp://example.com/"), context)
+    assert not refused.ok and "only http(s)" in refused.content
 
 
 @pytest.mark.e2e
