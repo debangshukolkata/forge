@@ -105,10 +105,10 @@ export function ConversationSwitcher({ forge }: { forge: Forge }) {
         aria-label="Conversations"
         title="Conversations of this project"
         onClick={() => setOpen(!open)}
-        className="flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-[13px] text-fg-muted transition-colors duration-150 hover:bg-raised hover:text-fg"
+        className="flex max-w-full min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-[13px] text-fg-muted transition-colors duration-150 hover:bg-raised hover:text-fg"
       >
         <MessageSquare className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        <span className="max-w-48 truncate">{current?.title || "New conversation"}</span>
+        <span className="max-w-72 truncate">{current?.title || "New conversation"}</span>
         <ChevronDown className={cx("h-3.5 w-3.5 shrink-0 transition-transform duration-150", open && "rotate-180")} aria-hidden />
       </button>
       {open && (

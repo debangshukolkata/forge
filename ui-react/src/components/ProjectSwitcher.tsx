@@ -67,7 +67,7 @@ export function ProjectSwitcher({
         aria-expanded={open}
         title={workspace?.path}
         onClick={() => setOpen(!open)}
-        className="flex min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 font-medium transition-colors duration-150 hover:bg-raised"
+        className="flex max-w-full min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 font-medium transition-colors duration-150 hover:bg-raised"
       >
         <span className="truncate">{workspace?.name}</span>
         <ChevronDown className={cx("h-3.5 w-3.5 shrink-0 text-fg-muted transition-transform duration-150", open && "rotate-180")} aria-hidden />
