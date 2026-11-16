@@ -32,6 +32,7 @@ from tests.helpers import (
     responses_body,
     text_output,
 )
+from tests.test_app_logins import GOOD, write_logins
 
 
 def make_context(original_repo: Path, tmp_path: Path, answer: str | None):  # type: ignore[no-untyped-def]
@@ -274,10 +275,7 @@ async def test_debcrafts_own_keys_and_a_pasted_value_are_never_accepted(
         assert not result.ok and "DebCraft's own settings" in result.content, name
     assert not cards  # the user is not even asked
     # Even listed by the user and written into the project's file by hand, an own name is not handed over.
-    assert allowed_token_names("AZURE_OPENAI_API_KEY, DEV_PG_URL, X_TOKEN") == {
-        "DEVELOPMENT_INSTANCE_TOKEN",
-        "X_TOKEN",
-    }
+    assert allowed_token_names("AZURE_OPENAI_API_KEY, DEV_PG_URL, X_TOKEN") == {"X_TOKEN"}
     save_secret_names(context.workspace, ["AZURE_OPENAI_API_KEY"])
     assert secret_environment(context.workspace, load_secrets(forge_home())) == {}
 
@@ -349,10 +347,9 @@ async def test_the_api_token_and_what_the_applications_own_env_sets_are_not_aske
     original_repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     context, cards, _ = secret_context(original_repo, tmp_path, monkeypatch, f"The user chose: {ALLOW}")
-    token = await _secret(
-        context, "DEVELOPMENT_INSTANCE_TOKEN"
-    )  # it belongs to http_request, not to a command
-    assert not token.ok and 'token_env="DEVELOPMENT_INSTANCE_TOKEN"' in token.content and not cards
+    write_logins(forge_home(), GOOD)
+    token = await _secret(context, "DEV_TOKEN")  # the token DebCraft signs in for is not for a command
+    assert not token.ok and "DebCraft signs in by itself" in token.content and not cards
     (context.workspace.app_dir / ".env").write_text("CONSOLE_TOKEN_SHA256=abc123\n", encoding="utf-8")
     own = await _secret(context, "CONSOLE_TOKEN_SHA256")
     assert not own.ok and "application's own .env file" in own.content and not cards

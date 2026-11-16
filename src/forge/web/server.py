@@ -28,6 +28,7 @@ from forge.protocol.inputs import parse_user_input
 from forge.safety.server_security import ServerSecurity
 from forge.web.accounts import AccountStore
 from forge.web.auth_routes import add_auth_routes, add_no_login_route, needs_login, session_cookie_name
+from forge.web.connection_routes import add_connection_routes
 from forge.web.contracts_routes import add_contracts_routes
 from forge.web.conversation_routes import add_conversation_routes
 from forge.web.deps_routes import add_deps_routes
@@ -99,6 +100,7 @@ def create_app(
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     session_cookie = session_cookie_name(security)
     add_environment_routes(app, manager)
+    add_connection_routes(app, manager)
     add_contracts_routes(app, manager)
     add_conversation_routes(app, manager)
     add_tool_output_routes(app, manager)

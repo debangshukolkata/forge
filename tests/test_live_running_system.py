@@ -49,7 +49,9 @@ async def test_a_requirement_is_solved_by_running_the_system(
     own_env = (REPO_ROOT / ".env").read_text(encoding="utf-8")
     env_file = tmp_path / "debcraft.env"
     env_file.write_text(
-        own_env + (f"\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n" if scenario == "token_ready" else "\n"),
+        own_env
+        + "\nFORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN"  # the test bed has no login page: a fixed token the user released (D-626)
+        + (f"\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n" if scenario == "token_ready" else "\n"),
         encoding="utf-8",
     )
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))

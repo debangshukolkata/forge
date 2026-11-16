@@ -40,6 +40,15 @@ ITEMS = {
     "DV8": "the relay with the drivers of the application",
     "DV9": "no triggers, rules or functions that delete",
     "DV10": "settings of the copy that point at the Development DB",
+    "HT1": "HTTP calls go out without a card; a token only to a listed host",
+    "TK6": "DebCraft signs in by itself for dev and for the local copy",
+    "RS9": "a streamed agent answer is read event by event",
+    "TV1": "Tavily research, extract and crawl answer",
+    "SF2": "a settings file written on a red card signs in",
+    "WF2": "temporary changes marked; what the leftover review named",
+    "KP8": "no installed libraries in the delivery folder",
+    "KP7": "an index update stays fast late in a session",
+    "KP0": "sizes of the knowledge store and the logs",
 }
 
 

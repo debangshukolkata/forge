@@ -103,7 +103,7 @@ export function SetupGuide({ first, onDone, onBack }: { first: boolean; onDone: 
             </code>
           </div>
           <p className="mt-2 text-[12.5px] text-fg-muted">
-            Put here what the application itself needs: its API token (DEVELOPMENT_INSTANCE_TOKEN), tokens for other services, the settings of its
+            Put here what the application itself needs: tokens for other services (not its own API token: DebCraft signs in by itself), the settings of its
             secret store. Every command DebCraft runs gets these values without asking you; DebCraft never sees or shows them. The file is read
             each time, so nothing needs a restart after you change it. DebCraft's own keys stay in the first file and are never handed to a
             command.

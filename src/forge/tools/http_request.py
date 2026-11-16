@@ -31,14 +31,20 @@ from forge.errors import ConfigError
 from forge.llm.tokens import count_text_tokens
 from forge.safety.redact import default_redactor
 from forge.toolkit.app_keys import (
-    DEFAULT_TOKEN_NAMES,
     TOKEN_NAMES_ENV,
     allowed_token_names,
     remember_auth,
     remembered_auth,
     user_value,
 )
-from forge.toolkit.app_logins import LOGINS_FILE, TokenStore, login_for_host, login_for_token
+from forge.toolkit.app_logins import (
+    LOGINS_FILE,
+    EnvLogin,
+    TokenStore,
+    default_login,
+    login_for_host,
+    login_for_token,
+)
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.app_login import ensure_token
 from forge.tools.browser import LOCAL_HOSTS
@@ -57,7 +63,7 @@ NO_TOKEN = "I cannot get a token"
 SHOWN_HEADERS = ("content-type", "location", "allow", "www-authenticate", "retry-after")
 
 
-__all__ = ["DEFAULT_TOKEN_NAMES", "TOKEN_NAMES_ENV", "HttpRequest", "allowed_token_names", "json_shape"]
+__all__ = ["TOKEN_NAMES_ENV", "HttpRequest", "allowed_token_names", "json_shape"]
 
 
 def _size(value: Any) -> int:
@@ -177,14 +183,16 @@ class HttpRequest(Tool):
         "Use it to check an endpoint and to run the application as its users do (for example to "
         "call an agent and see what it answers). The result shows the status, the size of the answer in "
         "characters and tokens, for JSON the size of each part, and then the body (a long one is cut and kept "
-        "whole in a file you can read in ranges). When the endpoint needs a token that only the user can get: "
-        "`token_env` = the NAME of the variable in DebCraft's .env file that holds it (the user puts it there; "
-        "DEVELOPMENT_INSTANCE_TOKEN unless they said otherwise). DebCraft sends it as `Authorization: Bearer "
+        "whole in a file you can read in ranges). The token of the user's application is the one DebCraft signs "
+        "in for: call the endpoint without a token; when it answers 401 or 403, DebCraft signs in to the "
+        "environment of that host in app_logins.yaml (for this machine: the environment `dev`) and repeats the "
+        "call with its token. You pass nothing and never ask the user for a token. `token_env` is only for "
+        "another token: the token name of a named environment, or a NAME the user released in "
+        "FORGE_REQUEST_TOKEN_NAMES whose value is in DebCraft's .env file. It is sent as `Authorization: Bearer "
         "<token>` (change `token_header` and `token_prefix` if the API expects something else); you never see "
         "the value and never write one into a header yourself. The tool adapts by itself, so never ask the user "
-        "to change the line in the file: a value saved as `Bearer <token>` is sent correctly; when the API "
-        "refuses the token with `Bearer`, the same call is tried with the bare token; when you gave no token and "
-        "the API answers 401 or 403, DEVELOPMENT_INSTANCE_TOKEN is tried if the user has set it. The file is "
+        "to change a line in the file: a value saved as `Bearer <token>` is sent correctly; when the API "
+        "refuses the token with `Bearer`, the same call is tried with the bare token. The file is "
         "read on every call: a token the user has just saved is used at once, without a restart. `timeout_s`: "
         "raise it for a call that runs an agent (up to 900). `stream`: true for an API that streams its answer "
         "(server-sent events or one JSON object per line): the call is read to its end and the result is an "
@@ -311,6 +319,7 @@ class HttpRequest(Tool):
         origin = "/".join(args.url.split("/")[:3])
         workspace = context.workspace
         tries: list[tuple[dict[str, str], str, tuple[str, str, str]]] = []
+        own_login: EnvLogin | None = None
         if token and args.token_in != "header":
             tries.append(
                 (headers, "", ("", "", ""))
@@ -341,41 +350,35 @@ class HttpRequest(Tool):
                     )
             else:
                 tries.append((headers, "", ("", "", "")))
-            default = DEFAULT_TOKEN_NAMES[0]
-            spare, _ = self._token(default)
-            sent = f"The endpoint needs a token; DebCraft sent {default} from the user's file itself"
-            if spare:
-                token = spare
-                tries.append(
-                    (
-                        {**headers, "Authorization": f"Bearer {spare}"},
-                        f'{sent}. Pass token_env="{default}" from now on.',
-                        (default, "Authorization", "Bearer "),
-                    )
-                )
-                tries.append(
-                    (
-                        {**headers, "Authorization": spare},
-                        f'{sent}, without `Bearer`. Pass token_env="{default}" and token_prefix="" from now on.',
-                        (default, "Authorization", ""),
-                    )
-                )
         if not tries:
             tries.append((headers, "", ("", "", "")))
+        # The token of the application is the one DebCraft signs in for (the user, 2026-11-16, D-626): when the
+        # call is refused, the environment of this host signs in and the call is repeated, below. Also when the
+        # model wrote an Authorization header itself: it never holds a real token, and live it sent
+        # `Bearer dummy-token` and went on without the API.
+        own_header = any(key.lower() == "authorization" for key in args.headers)
+        clean = {key: value for key, value in headers.items() if key.lower() != "authorization"}
+        wrote = "The Authorization header you wrote was refused and left out: never write a token yourself. "
+        if not name and token_host:
+            own_login = default_login(host, local=host in LOCAL_HOSTS)
         adapted = ""
+        signed_in_as = sign_in_problem = ""
         streamed: list[tuple[float, str]] | None = None
         cut = False
         try:
             async with httpx.AsyncClient(timeout=args.timeout_s) as client:
-                for try_headers, note, form in tries:
+
+                async def send(with_headers: dict[str, str]) -> httpx.Response:
+                    nonlocal streamed, cut
                     if args.stream:
-                        response, streamed, cut = await _read_stream(
-                            client, args, sent_url, sent_json, try_headers
+                        answer, streamed, cut = await _read_stream(
+                            client, args, sent_url, sent_json, with_headers
                         )
-                    else:
-                        response = await client.request(
-                            args.method, sent_url, json=sent_json, headers=try_headers
-                        )
+                        return answer
+                    return await client.request(args.method, sent_url, json=sent_json, headers=with_headers)
+
+                for try_headers, note, form in tries:
+                    response = await send(try_headers)
                     if response.status_code not in (401, 403):
                         adapted = note
                         if form[0] and workspace is not None:
@@ -388,6 +391,27 @@ class HttpRequest(Tool):
                         retry = {**headers, args.token_header: f"{args.token_prefix}{token}"}
                         response = await client.request(args.method, sent_url, json=sent_json, headers=retry)
                         adapted = f"The token of {login_env.name} had ended: DebCraft signed in again and repeated the call."
+                if own_login is not None and response.status_code in (401, 403):
+                    # Signing in may open a window, so it happens only after the endpoint asked for a token.
+                    signed_in_as = own_login.name
+                    for force in (False, True):
+                        ensured = await ensure_token(own_login, ask=context.ask_user, force=force)
+                        if not ensured.token:
+                            sign_in_problem = ensured.message
+                            break
+                        token = ensured.token
+                        response = await send({**clean, "Authorization": f"Bearer {token}"})
+                        if response.status_code not in (401, 403):
+                            adapted = (
+                                (wrote if own_header else "")
+                                + f"The endpoint needs a token: DebCraft signed in to {own_login.name} and sent "
+                                f"{own_login.token_name} itself. Nothing to pass and nothing to ask the user."
+                            )
+                            if workspace is not None:
+                                remember_auth(
+                                    workspace, origin, own_login.token_name, "Authorization", "Bearer "
+                                )
+                            break
         except httpx.TimeoutException:
             return ToolResult(
                 ok=False,
@@ -456,16 +480,42 @@ class HttpRequest(Tool):
             lines.insert(1, adapted)
         lines[1:1] = kept_lines
         if response.status_code in (401, 403):
-            tried = name or (DEFAULT_TOKEN_NAMES[0] if token else "")
+            signed = signed_in_as or (login_env.name if login_env is not None else "")
+            released = sorted(allowed_token_names(load_secrets(forge_home()).get(TOKEN_NAMES_ENV)))
+            unsigned = not name and not signed and token_host and len(released) == 1
+            if unsigned:
+                # The one fixed token the user released is for this: the tool takes the step itself (and asks
+                # the user for a missing line), because the model was told to and went on without the API.
+                kept = {key: value for key, value in args.headers.items() if key.lower() != "authorization"}
+                again = await self.run(
+                    args.model_copy(update={"token_env": released[0], "headers": kept}), context
+                )
+                note = (
+                    (wrote if own_header else "")
+                    + f"The endpoint needs a token; DebCraft used {released[0]}, the one the user released, "
+                    "itself."
+                )
+                return again.model_copy(update={"content": f"{note}\n{again.content}"})
             lines.append(
-                f"Not authorised. The token in {tried} was sent with and without `Bearer` and refused both "
+                f"Not authorised. DebCraft could not sign in to {signed}: {sign_in_problem} Tell the user "
+                "plainly; do not ask them for a token."
+                if sign_in_problem
+                else f"Not authorised. DebCraft signed in to {signed} and its token was refused: the account may "
+                "have no right to this endpoint, or the endpoint belongs to another environment. Tell the user "
+                "plainly; do not ask them for a token."
+                if signed
+                else f"Not authorised. The token in {name} was sent with and without `Bearer` and refused both "
                 "times: it may have expired or be for another instance. Ask the user to replace the line in "
                 f"{env_file_path(forge_home())} with a fresh token (ask_user; do not ask for the value, a "
                 "restart or a change of its form), then call again."
-                if tried
-                else "Not authorised. If the endpoint needs a token only the user can get, call again with "
-                f'token_env="{DEFAULT_TOKEN_NAMES[0]}": the tool asks the user to put it into DebCraft\'s .env '
-                "file when it is not there yet."
+                if name
+                else f"Not authorised. The user released a token for requests: call again with `token_env` = "
+                f"{' or '.join(released)}."
+                if released
+                else f"Not authorised, and no environment in {forge_home() / LOGINS_FILE} covers "
+                f"{host or args.url}, so DebCraft has no token for it. If this is the user's application, add "
+                "its environment with settings_file (ask the user only for the address of its login page): "
+                "DebCraft then signs in by itself. Do not ask the user for a token."
             )
         return ToolResult(
             ok=response.status_code < 500,
@@ -495,9 +545,11 @@ class HttpRequest(Tool):
         where = secrets.source or "DebCraft's .env file"
         if name not in allowed_token_names(secrets.get(TOKEN_NAMES_ENV)):
             return "", (
-                f"{name} is not a token the user has released for requests. Usable: "
-                f"{', '.join(sorted(allowed_token_names(secrets.get(TOKEN_NAMES_ENV))))}. The user can release "
-                f"another name by listing it in {TOKEN_NAMES_ENV} in {where}."
+                f"{name} is not a token the user has released for requests. For the user's application "
+                "leave `token_env` out: DebCraft signs in by itself when the endpoint asks for a token. "
+                "Released names: "
+                f"{', '.join(sorted(allowed_token_names(secrets.get(TOKEN_NAMES_ENV)))) or 'none'}. The user "
+                f"can release another name by listing it in {TOKEN_NAMES_ENV} in {where}."
             )
         value = user_value(name)  # app.env first, then DebCraft's .env
         if not value:

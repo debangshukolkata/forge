@@ -65,7 +65,9 @@ def hub(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[str, 
     port = free_port()
     folder = copy_fixture(tmp_path / "hub", port)
     env_file = tmp_path / "debcraft.env"
-    env_file.write_text("", encoding="utf-8")
+    env_file.write_text(
+        "FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\n", encoding="utf-8"
+    )  # a fixed token the user released (D-626)
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
     monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
     process = start_hub(folder, port)
@@ -85,21 +87,27 @@ async def test_a_token_from_the_env_file_is_sent_by_name_and_never_shown(
     base, context, env_file = hub
     plain = await _call(context, url=f"{base}/api/agents")
     assert (
-        "HTTP 401" in plain.content and "DEVELOPMENT_INSTANCE_TOKEN" in plain.content
-    )  # says what is needed
+        not plain.ok
+        and "DebCraft used DEVELOPMENT_INSTANCE_TOKEN" in plain.content
+        and "is not set in" in plain.content
+    )  # the one released token is tried by the tool itself; here its line is missing
 
     absent = await _call(context, url=f"{base}/api/agents", token_env="DEVELOPMENT_INSTANCE_TOKEN")
     assert not absent.ok and "is not set in" in absent.content and str(env_file) in absent.content
     assert "ask_user" in absent.content and "paste the token into the chat" in absent.content
 
     env_file.write_text(
-        f"DEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n", encoding="utf-8"
+        f"FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
+        encoding="utf-8",
     )  # the user adds it mid-session
     listed = await _call(context, url=f"{base}/api/agents", token_env="DEVELOPMENT_INSTANCE_TOKEN")
     assert listed.ok and "HTTP 200" in listed.content and '"ops"' in listed.content
     assert TOKEN not in listed.content and TOKEN not in json.dumps(listed.meta)
 
-    env_file.write_text("DEVELOPMENT_INSTANCE_TOKEN=an-expired-token\n", encoding="utf-8")
+    env_file.write_text(
+        "FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN=an-expired-token\n",
+        encoding="utf-8",
+    )
     expired = await _call(context, url=f"{base}/api/agents", token_env="DEVELOPMENT_INSTANCE_TOKEN")
     assert "HTTP 401" in expired.content and "may have expired" in expired.content
 
@@ -120,7 +128,7 @@ async def test_only_names_the_user_released_can_be_sent(hub: tuple[str, ToolCont
     env_file.write_text(f"FORGE_REQUEST_TOKEN_NAMES=STAGING_TOKEN\nSTAGING_TOKEN={TOKEN}\n", encoding="utf-8")
     released = await _call(context, url=f"{base}/api/agents", token_env="STAGING_TOKEN")
     assert released.ok and "HTTP 200" in released.content
-    assert allowed_token_names("A, B") == {"DEVELOPMENT_INSTANCE_TOKEN", "A", "B"}
+    assert allowed_token_names("A, B") == {"A", "B"} and allowed_token_names(None) == set()
 
     elsewhere = await _call(context, url="https://example.com/api", token_env="STAGING_TOKEN")
     # a token goes only to this machine and to hosts the user named (D-621: the call itself may go anywhere)
@@ -129,7 +137,10 @@ async def test_only_names_the_user_released_can_be_sent(hub: tuple[str, ToolCont
 
 async def test_an_agent_run_is_reported_with_its_size(hub: tuple[str, ToolContext, Path]) -> None:
     base, context, env_file = hub
-    env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n", encoding="utf-8")
+    env_file.write_text(
+        f"FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
+        encoding="utf-8",
+    )
     failed = await _call(
         context,
         method="POST",
@@ -178,7 +189,10 @@ async def test_a_missing_token_is_asked_for_by_the_tool_itself(hub: tuple[str, T
 
     async def user_adds_it(question: str, detail: str, options: list[object], recommended: str | None) -> str:
         asked.append(question + "\n" + detail)
-        env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n", encoding="utf-8")
+        env_file.write_text(
+            f"FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
+            encoding="utf-8",
+        )
         return "The user chose: I have added it"
 
     context.ask_user = user_adds_it
@@ -192,7 +206,7 @@ async def test_a_missing_token_is_asked_for_by_the_tool_itself(hub: tuple[str, T
     again = await _call(context, url=f"{base}/api/agents", token_env="DEVELOPMENT_INSTANCE_TOKEN")
     assert again.ok and len(asked) == 1  # it is there now: no second question
 
-    env_file.write_text("", encoding="utf-8")
+    env_file.write_text("FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\n", encoding="utf-8")
 
     async def user_cannot(question: str, detail: str, options: list[object], recommended: str | None) -> str:
         return "The user chose: I cannot get a token"
@@ -219,21 +233,25 @@ async def test_a_token_saved_with_bearer_and_a_call_without_token_env_both_work(
 ) -> None:
     base, context, env_file = hub
     env_file.write_text(
-        f"DEVELOPMENT_INSTANCE_TOKEN=Bearer {TOKEN}\n", encoding="utf-8"
+        f"FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN=Bearer {TOKEN}\n",
+        encoding="utf-8",
     )  # as copied from a header
     plain = await _call(context, url=f"{base}/api/agents")  # the model forgot token_env
     assert plain.ok and "HTTP 200" in plain.content and TOKEN not in plain.content
-    assert "sent DEVELOPMENT_INSTANCE_TOKEN from the user's file itself" in plain.content
-    assert 'token_env="DEVELOPMENT_INSTANCE_TOKEN"' in plain.content
+    assert "DebCraft used DEVELOPMENT_INSTANCE_TOKEN, the one the user released" in plain.content
 
     named = await _call(context, url=f"{base}/api/agents", token_env="DEVELOPMENT_INSTANCE_TOKEN")
     assert named.ok and "HTTP 200" in named.content and TOKEN not in named.content
 
     own = await _call(context, url=f"{base}/api/agents", headers={"Authorization": "Bearer something-else"})
-    assert "HTTP 401" in own.content  # a header the model set itself is not replaced
+    # a header the model wrote itself cannot hold a real token: refused, it is left out and the released one used
+    assert own.ok and "HTTP 200" in own.content and "header you wrote was refused" in own.content
 
-    env_file.write_text("DEVELOPMENT_INSTANCE_TOKEN=an-expired-token\n", encoding="utf-8")
-    expired = await _call(context, url=f"{base}/api/agents")
+    env_file.write_text(
+        "FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN=an-expired-token\n",
+        encoding="utf-8",
+    )
+    expired = await _call(context, url=f"{base}/api/agents", token_env="DEVELOPMENT_INSTANCE_TOKEN")
     assert "HTTP 401" in expired.content and "with and without `Bearer`" in expired.content
     assert "a restart" in expired.content and str(env_file) in expired.content
 
@@ -265,7 +283,10 @@ async def test_an_api_that_wants_the_bare_token_is_served_without_the_user_chang
     bare_token_api: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     env_file = tmp_path / "debcraft.env"
-    env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN=Bearer {TOKEN}\n", encoding="utf-8")
+    env_file.write_text(
+        f"FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN=Bearer {TOKEN}\n",
+        encoding="utf-8",
+    )
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
     monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
     context = ToolContext(workspace=None)  # type: ignore[arg-type]
@@ -313,7 +334,10 @@ def echo(
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     env_file = tmp_path / "debcraft.env"
-    env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n", encoding="utf-8")
+    env_file.write_text(
+        f"FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
+        encoding="utf-8",
+    )
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
     monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
     workspace = create_workspace(original_repo, tmp_path / "ws", "backend")

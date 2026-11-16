@@ -39,8 +39,9 @@ SECRETS_FILE = "app_secrets.json"  # {"names": [...]}: variable names only, neve
 AUTH_FILE = "http_auth.json"  # {origin: {token_env, header, prefix}}: how an API took the token; no value
 # The user's file for the application under test (D-571), next to DebCraft's own .env: everything in it goes
 # into the commands of every project without a question, because putting a value there is the user saying so.
-TOKEN_NAMES_ENV = "FORGE_REQUEST_TOKEN_NAMES"  # in DebCraft's .env: more names, separated by commas
-DEFAULT_TOKEN_NAMES = ("DEVELOPMENT_INSTANCE_TOKEN",)
+# in DebCraft's .env: the names of fixed tokens http_request may send, separated by commas. Nothing is released
+# by default (D-626): the token of the user's application is the one DebCraft signs in for (app_logins.yaml).
+TOKEN_NAMES_ENV = "FORGE_REQUEST_TOKEN_NAMES"
 # DebCraft's own settings: the keys of its models, its databases and its search services. The model chooses the
 # name it asks for, so a name from here is refused even when the user lists it: one hurried click on a card
 # must not hand DebCraft's own key to a command the model wrote.
@@ -136,7 +137,7 @@ def is_debcrafts_own(name: str) -> bool:
 def allowed_token_names(listed: str | None) -> set[str]:
     """The names the user released: only these can be sent by http_request or handed to a command.
     DebCraft's own settings are never among them, whatever the list says."""
-    names = {*DEFAULT_TOKEN_NAMES, *(name.strip() for name in (listed or "").split(",") if name.strip())}
+    names = {name.strip() for name in (listed or "").split(",") if name.strip()}
     return {name for name in names if not is_debcrafts_own(name)}
 
 
@@ -201,6 +202,49 @@ def remember_auth(workspace: Workspace, origin: str, token_env: str, header: str
     path.write_text(json.dumps(known, indent=1), encoding="utf-8")
 
 
+def _token_facts(secrets: Secrets) -> list[str]:
+    """Where the application runs and which token goes there (D-626): names and addresses, never a value."""
+    from forge.toolkit.app_logins import load_logins
+
+    try:
+        logins = list(load_logins(forge_home()).values())
+    except ConfigError:
+        logins = []
+    lines = [
+        "- The token for the application's API is the one DebCraft signs in for. Call the endpoint with "
+        "http_request without a token: when it answers 401 or 403, DebCraft signs in and repeats the call. "
+        "Never ask the user for a token and never look for one in files."
+    ]
+    for login in logins:
+        lines.append(
+            f"- Environment `{login.name}` of the application: https://{login.host} (token name "
+            f"{login.token_name})"
+            + (f"; an address of its API that answers: {login.check_url}" if login.check_url else "")
+            + ". A route you find in the controllers is called on that host; the part of the address before "
+            "the route is the one the check address or the login address shows."
+        )
+    if not logins:
+        lines.append(
+            "- No environment of the application is set up yet (app_logins.yaml is missing or cannot be "
+            "used): to call its development instance, write the file with settings_file; ask the user only "
+            "for the address of the login page."
+        )
+    elif len(logins) > 0:
+        local = next((login for login in logins if login.name == "dev"), logins[0])
+        lines.append(
+            f"- The copy of the application on this machine is sent the token of `{local.name}` when it "
+            "asks for one."
+        )
+    released = sorted(allowed_token_names(secrets.get(TOKEN_NAMES_ENV)))
+    if released:
+        lines.append(
+            "- Other tokens the user released for http_request (`token_env`): "
+            + ", ".join(f"{name} ({'set' if user_value(name) else 'not set'})" for name in released)
+            + "."
+        )
+    return lines
+
+
 def installation_facts(workspace: Workspace) -> str:
     """What the model is told about its own installation at the start of a session (names and paths only).
     Without it the model guessed: that the .env was not loaded, that a restart was needed, that the user had to
@@ -214,7 +258,6 @@ def installation_facts(workspace: Workspace) -> str:
         for name in secrets.names()
         if not is_debcrafts_own(name) and name not in granted and name not in in_app_file
     ]
-    token = DEFAULT_TOKEN_NAMES[0]
     lines = [
         "",
         "Facts about this DebCraft installation (found when the session started; the tools read the files again "
@@ -236,11 +279,7 @@ def installation_facts(workspace: Workspace) -> str:
             f"- In DebCraft's settings file but not in your commands yet: {', '.join(waiting)}. If the "
             "application needs them, call request_app_secret with those names (one click for the user)."
         )
-    lines.append(
-        f"- {token} (the token for the application's API): "
-        + ("set" if user_value(token) else "not set yet; http_request asks the user for it when you name it")
-        + f'. Use it only through http_request with token_env="{token}".'
-    )
+    lines += _token_facts(secrets)
     for origin, form in remembered_auth(workspace).items():
         how = (
             f"`{form['header']}: {form['prefix']}<token>`"

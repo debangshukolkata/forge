@@ -95,7 +95,7 @@ async def test_a_row_in_the_development_database_is_changed_only_through_the_red
     env_file = tmp_path / "debcraft.env"
     env_file.write_text(  # DebCraft's own development connection may write: the admin login of the local server
         "\n".join(f"{k}={v}" for k, v in own_env.items() if k != "DEV_PG_URL")
-        + f"\nDEV_PG_URL={admin_url}\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
+        + f"\nDEV_PG_URL={admin_url}\nFORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
         encoding="utf-8",
     )
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))

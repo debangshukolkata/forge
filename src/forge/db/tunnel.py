@@ -130,7 +130,22 @@ def _log_tail(log: Path) -> str:
     return " | ".join(line for line in lines if line)[-400:]
 
 
+# Why the last try to open a tunnel failed, by name ("" after a success): the top bar shows it (D-627).
+last_problem: dict[str, str] = {}
+
+
 def ensure_tunnel(target_name: str, home: Path | None = None) -> str:
+    """`_ensure_tunnel`, and the outcome is kept for the connection indicators."""
+    try:
+        note = _ensure_tunnel(target_name, home)
+    except TunnelError as error:
+        last_problem[target_name] = str(error)
+        raise
+    last_problem.pop(target_name, None)
+    return note
+
+
+def _ensure_tunnel(target_name: str, home: Path | None = None) -> str:
     """Makes sure the tunnel for this database target is open. Returns "" when none is described or it was already
     open, else a short note ("tunnel started"). Raises TunnelError with the reason when it cannot be opened."""
     specs = load_tunnels(home)

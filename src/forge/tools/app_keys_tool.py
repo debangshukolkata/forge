@@ -12,7 +12,6 @@ from pydantic import Field
 from forge.config import app_env_file_path, env_file_path, forge_home, load_secrets
 from forge.toolkit.app_keys import (
     APP_ENV_NAMES,
-    DEFAULT_TOKEN_NAMES,
     app_file_values,
     apply_grant,
     available_models,
@@ -24,6 +23,7 @@ from forge.toolkit.app_keys import (
     secret_environment,
     user_value,
 )
+from forge.toolkit.app_logins import login_for_token
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.interaction import OptionSpec
 
@@ -156,14 +156,14 @@ class RequestAppSecret(Tool):
                 "that calls an Azure OpenAI model use request_app_keys; for a database use the scratch database "
                 "tools. Call again with the application's own names only.",
             )
-        api_token = [name for name in names if name in DEFAULT_TOKEN_NAMES]
+        api_token = [name for name in names if login_for_token(name) is not None]
         if api_token:
             # Seen live: offered this tool, the model took the API token into a command and never called the API.
             return ToolResult(
                 ok=False,
                 content=f"{api_token[0]} is the token for the application's own API, and a command does not need "
-                f'it: call the API with http_request and token_env="{api_token[0]}" (the tool reads the file, '
-                "sends the token the way the API accepts it and asks the user itself when it is missing). That "
+                f"it: call the API with http_request (DebCraft signs in by itself and sends {api_token[0]} when the "
+                "endpoint asks for a token; nothing to pass and nothing to ask the user). That "
                 "call is also the proof a requirement asks for. Call request_app_secret again without this name "
                 "if a command needs other values.",
             )

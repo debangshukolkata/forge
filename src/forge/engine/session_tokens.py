@@ -39,9 +39,10 @@ def _line(login: EnvLogin, status: TokenStatus) -> str:
 
 
 async def check_tokens(host: SessionHost) -> None:
-    """Looks at the marked environments, signs in silently where it may, warns where there is still no valid token."""
+    """Looks at every environment (D-627: the top bar shows each one), signs in silently where it may, and warns
+    for the marked ones where there is still no valid token."""
     try:
-        logins = [login for login in load_logins().values() if login.warn_without_token]
+        logins = list(load_logins().values())
     except ConfigError as error:
         await host.bus.publish(
             EventType.NOTICE, {"kind": "token_warning", "text": f"app_logins.yaml: {error}"}
@@ -56,12 +57,14 @@ async def check_tokens(host: SessionHost) -> None:
         signed_in_before = (profile_dir(login, forge_home()) / MARKER).exists()
         if not status.usable and signed_in_before and (await renew(login)).ok:
             status = await token_status(login)
-        lines.append(_line(login, status))
-        if not status.usable:
+        if status.usable or login.warn_without_token:  # an unmarked one signs in at its first call (D-626)
+            lines.append(_line(login, status))
+        if not status.usable and login.warn_without_token:
             warnings.append(
                 f"No valid {login.token_name} for {login.name}. DebCraft cannot call {login.host} until you sign in: "
                 "ask it to sign in to that environment, and run `gcloud auth login` first if Google asks."
             )
-    host.context_manager.pinned.set(PIN_SLOT, "\n".join(lines))
+    if lines:
+        host.context_manager.pinned.set(PIN_SLOT, "\n".join(lines))
     for text in warnings:
         await host.bus.publish(EventType.NOTICE, {"kind": "token_warning", "text": text})

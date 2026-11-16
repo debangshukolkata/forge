@@ -75,13 +75,19 @@ def test_the_model_is_told_the_facts_about_its_installation(
 ) -> None:
     env_file, app_file = files
     app_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN={TOKEN}\nENV_SLUG=dev\n", encoding="utf-8")
+    env_file.write_text(
+        env_file.read_text(encoding="utf-8") + "\nFORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\n",
+        encoding="utf-8",
+    )
     context = make_context(original_repo, tmp_path)
     facts = installation_facts(context.workspace)
     assert str(env_file) in facts and str(app_file) in facts
     assert "nothing ever needs a restart" in facts
     assert "Every command you run has what is in it: DEVELOPMENT_INSTANCE_TOKEN, ENV_SLUG" in facts
     assert "not in your commands yet: INFISICAL_PROJECT_ID" in facts and "request_app_secret" in facts
-    assert "DEVELOPMENT_INSTANCE_TOKEN (the token for the application's API): set" in facts
+    assert "the one DebCraft signs in for" in facts and "Never ask the user for a token" in facts
+    assert "No environment of the application is set up yet" in facts and "settings_file" in facts
+    assert "released for http_request (`token_env`): DEVELOPMENT_INSTANCE_TOKEN (set)" in facts
     assert "AZURE_OPENAI_API_KEY" not in facts  # DebCraft's own names are not listed
     assert TOKEN not in facts and OWN not in facts and "p-1" not in facts  # names and paths only
     assert facts.strip() in system_prompt(context.workspace)
@@ -111,7 +117,11 @@ def bare_token_api() -> Iterator[str]:
 async def test_how_an_api_took_the_token_is_remembered_for_the_project_and_used_by_the_tool(
     original_repo: Path, tmp_path: Path, files: tuple[Path, Path], bare_token_api: str
 ) -> None:
-    _, app_file = files
+    env_file, app_file = files
+    env_file.write_text(
+        env_file.read_text(encoding="utf-8") + "\nFORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\n",
+        encoding="utf-8",
+    )
     app_file.write_text(
         f"DEVELOPMENT_INSTANCE_TOKEN=Bearer {TOKEN}\n", encoding="utf-8"
     )  # the token may live here

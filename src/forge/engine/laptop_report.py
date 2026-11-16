@@ -52,6 +52,7 @@ class Call:
     ok: bool | None
     summary: str
     preview: str
+    seconds: float = 0.0
 
     def text(self) -> str:
         return (
@@ -104,6 +105,7 @@ def _calls(events: list[Event]) -> list[Call]:
                     bool(payload.get("ok")),
                     str(payload.get("summary", "")),
                     str(payload.get("preview", "")),
+                    float(payload.get("duration_s") or 0.0),
                 )
             )
     return sorted(calls, key=lambda call: call.index)

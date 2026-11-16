@@ -169,6 +169,20 @@ def login_for_host(host: str, home: Path | None = None) -> EnvLogin | None:
     return next((login for login in load_logins(home).values() if login.host == host), None)
 
 
+def default_login(host: str, local: bool = False, home: Path | None = None) -> EnvLogin | None:
+    """The environment DebCraft signs in to for a call to this host (D-626): the one whose login address is
+    on the host; for this machine (`local`: the copy of the application) the one named `dev`, else the first
+    in the file. None when there is none or the file cannot be used."""
+    try:
+        logins = load_logins(home)
+    except ConfigError:
+        return None
+    found = next((login for login in logins.values() if login.host == host.lower()), None)
+    if found is None and local:
+        found = logins.get("dev") or next(iter(logins.values()), None)
+    return found
+
+
 def login_for_token(name: str, home: Path | None = None) -> EnvLogin | None:
     """The environment that signs in for this token name. A file that cannot be read means no such environment here:
     a token from DebCraft's .env must still work, and a call to a remote host reports the file through

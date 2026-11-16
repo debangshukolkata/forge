@@ -153,7 +153,6 @@ async def test_wrong_paths_and_names_say_what_is_wrong_without_values(
     for bad in (
         {"argocd token": "a"},
         {"AZURE_OPENAI_API_KEY": "secret.secretValue"},  # one of DebCraft's own names
-        {"DEVELOPMENT_INSTANCE_TOKEN": "secret.secretValue"},
         {"ARGOCD_TOKEN": " "},
     ):
         refused = await _call(context, url=f"{secret_api}/secret", keep_secret=bad)

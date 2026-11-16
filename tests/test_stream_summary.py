@@ -111,7 +111,10 @@ async def test_a_streamed_call_returns_the_account_keeps_the_stream_and_hides_th
 ) -> None:
     workspace = create_workspace(original_repo, tmp_path / "ws", "backend")
     env_file = tmp_path / "debcraft.env"
-    env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN={FAKE_KEY}\n", encoding="utf-8")
+    env_file.write_text(
+        f"FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN={FAKE_KEY}\n",
+        encoding="utf-8",
+    )
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
     monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
     context = ToolContext(workspace=workspace)

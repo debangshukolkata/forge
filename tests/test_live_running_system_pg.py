@@ -141,7 +141,7 @@ async def test_a_requirement_is_solved_on_the_postgres_agent_platform(
     env_file = tmp_path / "debcraft.env"
     env_file.write_text(
         "\n".join(f"{k}={v}" for k, v in own_env.items())
-        + f"\nDEV_PG_URL={dev_url}\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
+        + f"\nDEV_PG_URL={dev_url}\nFORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
         encoding="utf-8",
     )
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))

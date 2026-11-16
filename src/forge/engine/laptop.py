@@ -42,6 +42,7 @@ from forge.engine.laptop_report import (
     speed_page,
     tokens_page,
 )
+from forge.engine.laptop_report_more import calls_page, delivery_page
 from forge.toolkit import field_log
 from forge.workspace.workspace import Workspace
 
@@ -372,9 +373,16 @@ def plan_page() -> Page:
         '   "Run the same agent again with the same question."',
         "5. A NEW conversation: type your real requirement for the LangChain agent and let it finish.",
         "   Approve the cards as you would for real; do not add hints.      items RS7 RS11 DB2 RS15 DV8 DV10",
+        "   The same conversation gives WF2 and KP8 (temporary changes, the delivery folder).",
         "6. A NEW conversation, type:  /learn   then, when it ends:",
         '   "Where are the orchestration, the common LLM gateway and the file operations in this code?"  KL6',
-        "7. Then:",
+        "   (also KP7 and KP0: the seconds of the index and the sizes)",
+        "7. A NEW conversation; type these three, one after the other (put in your own names):",
+        '   "Crawl <a site with links> with tavily_crawl and list the pages you found."        item TV1',
+        '   "Call the streaming endpoint of the <agent> agent with stream and list its events."  RS9',
+        '   "Read app_logins.yaml with settings_file, add a comment line on top, write it, then',
+        '    sign in to dev with app_login and call its check address."               items SF2 HT1',
+        "8. Then:",
         f"   {cli} report --workspace <project folder>",
         "   Photograph every page. The last page lists all items with PASS, CHECK, FAIL or NOT RUN.",
         "",
@@ -436,6 +444,8 @@ def run(
             requirement_page(conversations),
             dev_database_page(conversations, home),
             speed_page(conversations),
+            calls_page(conversations, home),
+            delivery_page(conversations, root or Path("."), home),
             live_tests_page(home),
         ]
         _record(pages, home)

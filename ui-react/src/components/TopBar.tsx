@@ -1,6 +1,7 @@
 import { Anvil, Gauge, Home, LogOut, Moon, Power, ShieldCheck, Sun, UserRound } from "lucide-react";
 import type { Forge } from "../useForge";
 import { AnimatedCost } from "./AnimatedCost";
+import { Connections } from "./Connections";
 import { ConversationSwitcher } from "./ConversationSwitcher";
 import { ProjectSwitcher } from "./ProjectSwitcher";
 import { Badge, Button, IconButton, Spinner } from "./ui";
@@ -76,6 +77,7 @@ export function TopBar({
       ) : (
         <span className="flex-1 text-fg-muted">No project open</span>
       )}
+      {workspace && <Connections busy={!!state.busy} />}
       {context && (
         <span className="hidden items-center gap-1.5 text-[12.5px] text-fg-muted md:flex" title="Context window used">
           <Gauge className="h-3.5 w-3.5" aria-hidden />

@@ -16,6 +16,7 @@ import yaml
 from forge.errors import ConfigError
 from forge.toolkit.app_logins import (
     TokenStore,
+    default_login,
     jwt_expiry,
     load_logins,
     login_for_host,
@@ -514,3 +515,99 @@ async def test_at_session_start_a_missing_token_is_warned_about_and_pinned(check
     TokenStore(home).put("DEV_TOKEN", "good-token")
     await check_tokens(host)  # type: ignore[arg-type]
     assert "valid" in pins["tokens"] and "NO VALID" not in pins["tokens"] and events == []
+
+
+# --- D-626: the token of the application is the one DebCraft signs in for; no fixed token by default ---------
+
+
+async def test_a_call_without_a_token_signs_in_by_itself_after_a_401(remote, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    url, context, _ = remote
+    attempts: list[str] = []
+
+    async def fake_sign_in(login, home=None, visible=False):  # type: ignore[no-untyped-def]
+        from forge.tools.app_login import SignIn
+
+        attempts.append(login.name)
+        return SignIn(True, token="token-one")
+
+    monkeypatch.setattr("forge.tools.app_login.sign_in", fake_sign_in)
+    result = await call(context, url)  # the model passes nothing
+    assert result.ok and "HTTP 200" in result.content and "signed in to sit" in result.content
+    assert attempts == ["sit"] and Remote.seen == ["", "Bearer token-one"]
+    assert "token-one" not in result.content and "SIT_TOKEN" in result.content
+    again = await call(context, url)  # how this API took the token is remembered: sent at once
+    assert again.ok and Remote.seen[2:] == ["Bearer token-one"] and attempts == ["sit"]
+    own = await call(context, url, headers={"Authorization": "Bearer mine"})
+    # an invented header is refused, left out, and the signed-in token goes instead (seen live: dummy-token)
+    assert own.ok and "header you wrote was refused" in own.content and attempts == ["sit"]
+    assert Remote.seen[-2:] == ["Bearer mine", "Bearer token-one"]
+
+
+async def test_the_copy_on_this_machine_gets_the_token_of_the_dev_environment(remote, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    _, context, home = remote
+    write_logins(home, GOOD)
+    assert default_login("dev.example.com", home=home).name == "dev"  # type: ignore[union-attr]
+    assert default_login("127.0.0.1", local=True, home=home).name == "dev"  # type: ignore[union-attr]
+    assert default_login("other.example.org", home=home) is None
+    Remote.valid = "token-dev"
+    local = ThreadingHTTPServer(("127.0.0.1", 0), Remote)
+    threading.Thread(target=local.serve_forever, daemon=True).start()
+    attempts: list[str] = []
+
+    async def fake_sign_in(login, home=None, visible=False):  # type: ignore[no-untyped-def]
+        from forge.tools.app_login import SignIn
+
+        attempts.append(login.name)
+        return SignIn(True, token="token-dev")
+
+    monkeypatch.setattr("forge.tools.app_login.sign_in", fake_sign_in)
+    try:
+        result = await call(context, f"http://127.0.0.1:{local.server_port}/api/agents")
+    finally:
+        local.shutdown()
+    assert result.ok and "signed in to dev" in result.content and attempts == ["dev"]
+    assert Remote.seen == ["", "Bearer token-dev"] and "token-dev" not in result.content
+
+
+async def test_a_fixed_token_is_sent_only_when_the_user_released_its_name(
+    remote, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:  # type: ignore[no-untyped-def]
+    _, context, home = remote
+    env_file = tmp_path / "debcraft.env"
+    env_file.write_text("DEVELOPMENT_INSTANCE_TOKEN=token-one\n", encoding="utf-8")  # check_secrets: fake
+    monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
+    monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
+    local = ThreadingHTTPServer(("127.0.0.1", 0), Remote)
+    threading.Thread(target=local.serve_forever, daemon=True).start()
+    (home / "app_logins.yaml").unlink()  # no environment: nothing to sign in to
+    try:
+        url = f"http://127.0.0.1:{local.server_port}/api"
+        plain = await call(context, url)  # the line in the file is not read any more
+        assert "HTTP 401" in plain.content and Remote.seen == [""] and "no environment in" in plain.content
+        named = await call(context, url, token_env="DEVELOPMENT_INSTANCE_TOKEN")
+        assert not named.ok and "not a token the user has released" in named.content
+        assert "leave `token_env` out" in named.content and Remote.seen == [""]
+        env_file.write_text(
+            "FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN=token-one\n",
+            encoding="utf-8",
+        )
+        hinted = await call(context, url)
+        assert hinted.ok and "HTTP 200" in hinted.content and "the one the user released" in hinted.content
+        released = await call(context, url, token_env="DEVELOPMENT_INSTANCE_TOKEN")
+        assert released.ok and "HTTP 200" in released.content and "token-one" not in released.content
+    finally:
+        local.shutdown()
+
+
+def test_the_facts_name_the_environments_and_their_addresses(remote) -> None:  # type: ignore[no-untyped-def]
+    from forge.toolkit.app_keys import installation_facts
+
+    _, context, home = remote
+    good = json.loads(json.dumps(GOOD))
+    good["environments"]["dev"]["check_url"] = "https://dev.example.com/app/api/me"
+    write_logins(home, good)
+    facts = installation_facts(context.workspace)
+    assert "Environment `dev` of the application: https://dev.example.com (token name DEV_TOKEN)" in facts
+    assert "an address of its API that answers: https://dev.example.com/app/api/me" in facts
+    assert "Environment `sit`" in facts and "is sent the token of `dev`" in facts
+    assert "DEVELOPMENT_INSTANCE_TOKEN" not in facts and "released for http_request" not in facts

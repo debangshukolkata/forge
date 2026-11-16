@@ -19,6 +19,7 @@ from forge.safety.redact import Redactor, default_redactor
 ROLES = ("coder", "reviewer", "summariser", "vision", "judge", "critic", "planner", "fallback")
 ReasoningEffort = Literal["minimal", "low", "medium", "high"]
 _SECRET_NAME = re.compile(r"(KEY|SECRET|PASSWORD|TOKEN)", re.IGNORECASE)
+NAMES_NOT_SECRET = "FORGE_REQUEST_TOKEN_NAMES"
 _URL_PASSWORD = re.compile(r"://[^:/\s@]+:([^@\s]+)@")
 
 
@@ -434,7 +435,9 @@ def load_secrets(home: Path | None = None, redactor: Redactor = default_redactor
 
 def register_secret_values(values: dict[str, str], redactor: Redactor) -> None:
     for name, value in values.items():
-        if _SECRET_NAME.search(name):
+        # FORGE_REQUEST_TOKEN_NAMES holds names, not a secret: masked, the model was told to use a token
+        # called [REDACTED] and could not (seen live, D-626).
+        if _SECRET_NAME.search(name) and name != NAMES_NOT_SECRET:
             redactor.register(value, name)
         url_password = _URL_PASSWORD.search(value)
         if url_password:

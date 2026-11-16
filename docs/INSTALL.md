@@ -119,10 +119,11 @@ debcraft run --workspace <project folder> -p "Learn this repository: load the le
 starts a copy of the application, calls it through its API, looks at what the run left behind, makes a change and
 runs the same check again. Two things it may need from you:
 
-- **A token only you can get** (from the application's login page or console). Add it to `app.env` (or DebCraft's
-  `.env`): `DEVELOPMENT_INSTANCE_TOKEN=<the token>`, as you copied it, with or without `Bearer `. DebCraft asks for
-  it when it is missing and tells you the file. Do not paste it into the chat. It is sent only to the application
-  on this computer, in the form the application accepts; replace the value when it expires. No restart is needed.
+- **The token of your application.** You do not put it anywhere: DebCraft signs in to the environments in
+  `app_logins.yaml` (DebCraft Home) by itself and uses the token it gets, also for the copy on this computer
+  (D-626). A line `DEVELOPMENT_INSTANCE_TOKEN=` is no longer read; remove it. Only for another API with a
+  fixed token: list its name in `FORGE_REQUEST_TOKEN_NAMES` in DebCraft's `.env` and add its line there or in
+  `app.env`. A token is sent only to this computer and to the hosts of `app_logins.yaml`.
 - **Other values the application needs** (a token for another service, the settings of a secret store such as
   Infisical): put them in **`%USERPROFILE%\.forge\app.env`**, a second file next to `.env` (the setup guide shows
   its path). Everything in it reaches the commands DebCraft runs, without a question, and is read each time, so

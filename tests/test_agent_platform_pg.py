@@ -210,7 +210,10 @@ async def test_the_stream_endpoint_is_read_by_event_through_http_request(
 
     base, _, _ = hub
     env_file = tmp_path / "debcraft.env"
-    env_file.write_text(f"DEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n", encoding="utf-8")
+    env_file.write_text(
+        f"FORGE_REQUEST_TOKEN_NAMES=DEVELOPMENT_INSTANCE_TOKEN\nDEVELOPMENT_INSTANCE_TOKEN={TOKEN}\n",
+        encoding="utf-8",
+    )
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
     monkeypatch.delenv("DEVELOPMENT_INSTANCE_TOKEN", raising=False)
     context = ToolContext(workspace=create_workspace(original_repo, tmp_path / "ws", "backend"))

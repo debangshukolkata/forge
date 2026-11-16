@@ -15,7 +15,8 @@ import re
 from typing import Any
 
 from forge.safety.redact import default_redactor
-from forge.toolkit.app_keys import DEFAULT_TOKEN_NAMES, is_debcrafts_own
+from forge.toolkit.app_keys import is_debcrafts_own
+from forge.toolkit.app_logins import login_for_token
 from forge.toolkit.base import ToolContext
 from forge.tools.interaction import OptionSpec
 
@@ -34,7 +35,7 @@ def check_names(wanted: dict[str, str]) -> str:
             return (
                 "`keep_secret` maps a variable NAME (upper case letters, digits and _) to the path of a field"
             )
-        if is_debcrafts_own(name) or name in DEFAULT_TOKEN_NAMES:
+        if is_debcrafts_own(name) or login_for_token(name) is not None:
             return f"{name} is one of DebCraft's own names and cannot be set this way; choose the application's name"
         if not path.strip():
             return f"`keep_secret` needs the path of the field for {name}, for example `secret.secretValue`"

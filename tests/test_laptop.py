@@ -17,6 +17,7 @@ import pytest
 from forge.engine import laptop
 from forge.engine.laptop_pages import ITEMS, Page, Verdict, emit, load_verdicts, paginate, save_verdicts
 from forge.engine.laptop_report import load_conversations
+from forge.engine.laptop_report_more import calls_page, delivery_page
 from forge.safety.redact import default_redactor
 from forge.toolkit import field_log
 from forge.toolkit.app_logins import TokenStore, load_logins
@@ -199,6 +200,47 @@ def _project(root: Path) -> Path:
         preview="Approved by the user and committed",
     )
     third.call("http_request", {"url": run}, summary=run, preview="HTTP 200\nAnswer: 20 characters")
+    dev = "https://dev.example.com/app/api/me"
+    third.call("http_request", {"url": dev, "token_env": "DEV_TOKEN"}, summary=dev, preview="HTTP 200")
+    third.call(
+        "http_request",
+        {"url": dev},
+        preview="HTTP 200\nThe endpoint needs a token: DebCraft signed in to dev and sent DEV_TOKEN itself.",
+    )
+    third.call(
+        "http_request",
+        {"url": "https://other.example.org/x", "token_env": "DEV_TOKEN"},
+        ok=False,
+        preview="Not sent: a token goes only to this machine and to the hosts the user named in ...",
+    )
+    third.call("http_request", {"url": "https://other.example.org/x"}, preview="HTTP 200")
+    third.call(
+        "http_request",
+        {"url": run + "/stream", "stream": True},
+        preview="HTTP 200\nStream: 14 events in 6.2 s (first after 0.4 s)\nFinal answer (20 characters): ok",
+    )
+    third.call("tavily_crawl", {"url": "https://docs.example.org"}, preview="4 pages")
+    third.call("settings_file", {"action": "write", "file": "app_logins.yaml", "content": "x"})
+    third.add("notice", {"kind": "settings_file", "text": "Wrote C:/home/app_logins.yaml (approved by you)."})
+    third.add(
+        "notice",
+        {"kind": "leftover_review", "text": "src/tools.py: the call to the mail service is commented out."},
+    )
+    (root / ".forge").mkdir(parents=True, exist_ok=True)
+    (root / ".forge" / "temporary_edits.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "next_id": 2,
+                "entries": [
+                    {"id": 1, "path": "src/mail.py", "kind": "bypass", "state": "active", "reason": SECRET}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (root / "output" / "src").mkdir(parents=True, exist_ok=True)
+    (root / "output" / "src" / "tools.py").write_text("x = 1\n", encoding="utf-8")
     third.add(
         "notice",
         {
@@ -308,8 +350,64 @@ def test_the_report_reads_the_conversations_and_gives_each_item_a_verdict(
         and "held back: A step for you" in text
     )
     assert verdicts["KL6"] == "PASS" and verdicts["HW6"] == "NOT RUN" and verdicts["TR6"] == "NOT RUN"
-    assert "SUMMARY OF THE OPEN ITEMS" in text and "PASS 9" in text
+    # LP5 (D-625): the items that had no verdict
+    assert verdicts["HT1"] == "PASS" and "token refused for a host that is not listed: 1x" in text
+    assert (
+        "other hosts: other.example.org x2" in text and "http_request to listed: 2 calls, 2 answered" in text
+    )
+    assert verdicts["TK6"] == "PASS" and "signed in for by itself: 1 (this machine 0)" in text
+    assert verdicts["RS9"] == "PASS" and "events 14 in 6.2s" in text
+    assert verdicts["TV1"] == "PASS" and "tavily_crawl: 1 calls, ok 1" in text
+    assert verdicts["SF2"] == "PASS" and "sign-ins after app_logins.yaml was written: 4" in text
+    assert verdicts["WF2"] == "CHECK" and "#1 bypass mail.py" in text and "mail service is commented" in text
+    assert verdicts["KP8"] == "PASS" and "delivery folder: 1 files" in text
+    assert verdicts["KP7"] == "PASS" and verdicts["KP0"] == "NOT RUN"
+    assert "SUMMARY OF THE OPEN ITEMS" in text and "PASS 16" in text
     assert SECRET not in text and jwt(exp=1) not in text
+
+
+def test_the_new_pages_name_what_went_wrong(isolated_forge_home: Path, tmp_path: Path) -> None:
+    root = tmp_path / "proj"
+    log = Log()
+    log.call("edit_file", {"path": "a.py"})
+    log.call(
+        "http_request",
+        {"url": "https://other.example.org/x", "token_env": "DEV_TOKEN"},
+        preview="HTTP 200",  # must never happen: a token name answered by a host that is not listed
+    )
+    log.call(
+        "http_request",
+        {"url": "http://127.0.0.1:1/s", "stream": True},
+        preview="HTTP 200\nNo final answer text",
+    )
+    log.call("tavily_crawl", {"url": "https://x.example.org"}, ok=False, preview="HTTP 422 from the platform")
+    log.call("settings_file", {"action": "write", "file": "app_logins.yaml"})
+    log.add("notice", {"kind": "settings_file", "text": "Wrote app_logins.yaml (approved by you)."})
+    log.lines[-1] = log.lines[-1].replace("2026-11-14", "2999-01-01")  # no sign-in can be later
+    log.add("tool_call_started", {"id": "slow", "name": "code_map", "arguments": {"action": "env"}})
+    log.add("tool_call_finished", {"id": "slow", "name": "code_map", "ok": True, "duration_s": 71.8})
+    _write_conversation(root, "c1", log, 10)
+    vendor = root / "output" / ".vendor" / "lib"
+    vendor.mkdir(parents=True)
+    (vendor / "a.py").write_text("x", encoding="utf-8")
+    store = isolated_forge_home / "memory" / "scopes" / "wisdomnext" / "knowledge"
+    (store / "topics").mkdir(parents=True)
+    (store / "topics" / "gateway.md").write_text("x", encoding="utf-8")
+    (store / "structure.json").write_text("{}", encoding="utf-8")
+    field_log.write("sign_in", env="dev", path="stored", ok=True)
+
+    conversations = load_conversations(root)
+    calls = {v.item: v for v in calls_page(conversations, isolated_forge_home).verdicts}
+    page = delivery_page(conversations, root, isolated_forge_home)
+    delivery = {v.item: v for v in page.verdicts}
+    assert calls["HT1"].status == "FAIL" and calls["RS9"].status == "CHECK" and calls["TV1"].status == "CHECK"
+    assert calls["SF2"].status == "CHECK" and "no successful sign-in after" in calls["SF2"].line
+    assert delivery["KP8"].status == "FAIL" and ".vendor" in delivery["KP8"].line
+    assert delivery["KP7"].status == "CHECK" and "slowest 71.8s (code_map in c1, call 1 of 1)" in "\n".join(
+        page.lines
+    )
+    assert delivery["KP0"].status == "PASS" and "knowledge of wisdomnext: 1 topics" in "\n".join(page.lines)
+    assert delivery["WF2"].status == "PASS" and "0 marked temporary" in delivery["WF2"].line
 
 
 def test_the_report_says_what_is_missing_instead_of_guessing(
