@@ -17,9 +17,12 @@ from forge.tools.knowledge_tools import (
     READS_BEFORE_WRITE_REMINDER,
     KnowledgeSearch,
     KnowledgeWrite,
+    knowledge_finish_note,
     learn_request,
     learning_status,
+    outdated_topics,
     reading_note,
+    refresh_request,
     stored_counts,
 )
 from forge.tools.registry import default_tools, session_tools
@@ -273,6 +276,39 @@ def test_topic_files_are_parsed_once_per_version(tmp_path, monkeypatch) -> None:
     assert reads == ["two"]
 
 
+def test_a_new_process_reads_the_notes_from_the_cache_file_and_a_changed_note_is_parsed_again(
+    tmp_path, monkeypatch
+) -> None:
+    """D-616: parsing every note's YAML at the first search of each process was the slow part (5 s for 1000)."""
+    from forge.knowledge import topics as topics_module
+    from forge.knowledge.topics import CACHE_FILE, Topic, all_topics, save_topic
+
+    for name in ("one", "two", "three"):
+        save_topic(
+            tmp_path, Topic(slug=name, title=name, summary="s", body="body " * 20, sources={"a.py": "x"})
+        )
+    all_topics(tmp_path)
+    assert (tmp_path / "topics" / CACHE_FILE).is_file()
+
+    topics_module._parsed.clear()  # a new process
+    topics_module._warmed.clear()
+    reads: list[str] = []
+    real = topics_module._read
+    monkeypatch.setattr(topics_module, "_read", lambda path: (reads.append(path.stem), real(path))[1])
+    again = all_topics(tmp_path)
+    assert reads == [] and [t.slug for t in again] == ["one", "three", "two"]
+    assert again[0].sources == {"a.py": "x"} and again[0].body == ("body " * 20).strip()
+
+    save_topic(tmp_path, Topic(slug="two", title="two", summary="changed", body="body " * 30))
+    assert {t.slug: t.summary for t in all_topics(tmp_path)}["two"] == "changed"
+    assert reads == ["two"]  # only the note that differs from the cache file
+
+    (tmp_path / "topics" / CACHE_FILE).write_text("{ not json", encoding="utf-8")
+    topics_module._parsed.clear()
+    topics_module._warmed.clear()
+    assert len(all_topics(tmp_path)) == 3  # a damaged cache file costs a parse, nothing more
+
+
 async def test_a_search_with_one_clear_winner_returns_it_whole_and_read_takes_several_slugs(
     isolated_forge_home: Path, shop: Path, tmp_path: Path
 ) -> None:
@@ -310,6 +346,55 @@ def test_titles_and_summaries_about_the_task_or_about_debcraft_are_refused_by_ru
     assert "DebCraft" in rule_problem("Setting DEVELOPMENT_INSTANCE_TOKEN for http_request", "how to call it")
     assert verdict_of('Sure: {"verdict": "task", "reason": "a workaround"}') == ("task", "a workaround")
     assert verdict_of('{"verdict": "maybe"}') is None and verdict_of("no json") is None
+
+
+async def test_a_doubtful_topic_holds_the_turn_open_until_confirmed_or_corrected(
+    isolated_forge_home: Path, shop: Path, tmp_path: Path
+) -> None:
+    first = ToolContext(workspace=create_workspace(shop, tmp_path / "ws1", ""))
+    await _auth_topic(first)
+    (shop / "shop" / "security.py").write_text(
+        SECURITY.replace("SHOP_JWT_SECRET", "SHOP_SIGNING_KEY"), encoding="utf-8"
+    )
+    later = ToolContext(workspace=create_workspace(shop, tmp_path / "ws2", ""))
+    assert knowledge_finish_note(later) == ""  # nothing was given to this session yet
+
+    await _search(later, "read", "how-a-request-is-authenticated")
+    note = knowledge_finish_note(later)
+    assert "how-a-request-is-authenticated" in note and "shop/security.py" in note and "confirm" in note
+    assert knowledge_finish_note(later) == note  # it asks again until the topic is dealt with
+
+    stale = outdated_topics(later.workspace)
+    assert [slug for slug, _ in stale] == ["how-a-request-is-authenticated"]
+    assert "shop/security.py" in refresh_request(stale) and "Write no new topics" in refresh_request(stale)
+
+    done = await _write(later, slug="how-a-request-is-authenticated", confirm=True)
+    assert done.ok and knowledge_finish_note(later) == ""
+    assert outdated_topics(later.workspace) == []
+
+
+async def test_reading_the_files_of_a_topic_it_used_asks_once_whether_the_note_still_holds(
+    isolated_forge_home: Path, shop: Path, tmp_path: Path
+) -> None:
+    first = ToolContext(workspace=create_workspace(shop, tmp_path / "ws1", ""))
+    await _auth_topic(first)
+    second = ToolContext(workspace=create_workspace(shop, tmp_path / "ws2", ""))
+    await _search(second, "read", "how-a-request-is-authenticated")
+    assert knowledge_finish_note(second) == ""  # it has not looked at the code yet
+
+    second.reads.record("shop/security.py", b"anything")
+    note = knowledge_finish_note(second)
+    assert "how-a-request-is-authenticated" in note and "shop/security.py" in note and "reason" in note
+    assert knowledge_finish_note(second) == ""  # asked once; a note that held needs nothing more
+
+
+async def test_a_project_without_notes_is_never_held_up(
+    isolated_forge_home: Path, shop: Path, tmp_path: Path
+) -> None:
+    quiet = ToolContext(workspace=create_workspace(shop, tmp_path / "ws1", ""))
+    quiet.reads.record("shop/security.py", b"x")
+    assert knowledge_finish_note(quiet) == ""
+    assert outdated_topics(quiet.workspace) == []
 
 
 async def test_a_note_the_reviewer_judges_to_be_about_the_task_goes_to_memory_not_to_the_topics(

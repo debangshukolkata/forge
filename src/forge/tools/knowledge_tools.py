@@ -138,6 +138,7 @@ class KnowledgeSearch(Tool):
                     rendered.append(f"No topic {slug!r}. Topics: {names}.")
                 else:
                     rendered.append(_render_topic(topic, marks))
+                    note_served(context, topic, marks)
                     read_slugs.append(topic.slug)
                     outdated += bool(topic.outdated(marks))
             record_use(store, workspace, read=read_slugs)
@@ -172,6 +173,7 @@ class KnowledgeSearch(Tool):
             found=[topic.slug for _, topic, _ in found],
         )
         if winner is not None and whole:
+            note_served(context, winner, marks)
             # One topic clearly answers the question: give it whole, so no second call follows (KP5, D-574).
             return ToolResult(
                 ok=True,
@@ -299,6 +301,8 @@ class KnowledgeWrite(Tool):
 
         if args.delete:
             done = delete_topic(store, slug)
+            if done:
+                note_resolved(context, slug)
             await self._repin(context, structure)
             return ToolResult(
                 ok=done,
@@ -311,6 +315,7 @@ class KnowledgeWrite(Tool):
             existing.sources = current_marks(workspace, structure, existing.sources)
             existing.updated = time.strftime("%Y-%m-%d")
             save_topic(store, existing)
+            note_resolved(context, slug)
             await self._repin(context, structure)
             return ToolResult(
                 ok=True, content=f"Topic {slug} confirmed against the current files.", meta=facts("confirmed")
@@ -350,6 +355,7 @@ class KnowledgeWrite(Tool):
                 history=history,
             ),
         )
+        note_resolved(context, slug)
         await self._repin(context, structure)
         note = f" Not found, so not tracked: {', '.join(unknown)}." if unknown else ""
         verb = "corrected" if existing is not None else "written"
@@ -456,6 +462,82 @@ def reading_note(context: ToolContext) -> str:
             "files), or correct the existing topic: the next project should not have to read these files again.]"
         )
     return ""
+
+
+def note_served(context: ToolContext, topic: Topic, marks: dict[str, str]) -> None:
+    """Remembers that this session was given a topic, and whether its files had changed: the turn is not finished
+    while such a topic is neither confirmed nor corrected (`knowledge_finish_note`)."""
+    context.knowledge_served[topic.slug] = tuple(topic.sources)
+    changed = topic.outdated(marks)
+    if changed:
+        context.knowledge_stale[topic.slug] = changed
+    else:
+        context.knowledge_stale.pop(topic.slug, None)
+
+
+def note_resolved(context: ToolContext, slug: str) -> None:
+    """A topic was confirmed, corrected or removed: it no longer holds the turn open."""
+    context.knowledge_stale.pop(slug, None)
+    context.knowledge_checked.add(slug)
+
+
+def knowledge_finish_note(context: ToolContext) -> str:
+    """What to tell the model before it ends a turn, or "" (spec: knowledge corrects itself while work is done).
+
+    First, a topic it was given whose files had changed and that it neither confirmed nor corrected: a note known to
+    be doubtful must not stay as it is. Then, once per topic, one it was given whose source files it then read:
+    that is the moment the code could have shown the note wrong, and a weaker model does not go back on its own.
+    A note that held needs nothing: the model says so and finishes."""
+    if context.workspace is None or context.workspace.mode_b or context.write_only_under is not None:
+        return ""
+    if context.knowledge_stale:
+        names = "; ".join(
+            f"{slug} (changed: {', '.join(changed[:4])})" for slug, changed in context.knowledge_stale.items()
+        )
+        return (
+            "Before you finish: these topics about the repository were given to you with source files that had "
+            f"changed since they were written, and you have not dealt with them: {names}. For each one, read the "
+            "changed files, then call knowledge_write with its `slug`: with `confirm: true` if it still holds, or "
+            "with the corrected text and a `reason` if it does not. Do not leave a note you know may be wrong."
+        )
+    read = set(context.reads.paths())
+    asked = [
+        (slug, sorted(read.intersection(paths)))
+        for slug, paths in context.knowledge_served.items()
+        if slug not in context.knowledge_checked and read.intersection(paths)
+    ]
+    if not asked:
+        return ""
+    context.knowledge_checked.update(slug for slug, _ in asked)
+    listing = "; ".join(f"{slug} (files read: {', '.join(files[:4])})" for slug, files in asked)
+    return (
+        "Before you finish: you used these topics about the repository and then read files they describe: "
+        f"{listing}. If anything in those files differed from what a topic says, or the work showed it incomplete, "
+        "correct it now with knowledge_write (its `slug`, the new text, a `reason`). If every topic held, finish."
+    )
+
+
+def outdated_topics(workspace: Workspace) -> list[tuple[str, list[str]]]:
+    """Every topic whose source files changed since it was written, with the files: what a refresh has to re-check."""
+    store = knowledge_store(workspace)
+    notes = all_topics(store)
+    if not notes:
+        return []
+    structure, _ = project_view(workspace)
+    marks = current_marks(workspace, structure, {path for topic in notes for path in topic.sources})
+    return [(topic.slug, changed) for topic in notes if (changed := topic.outdated(marks))]
+
+
+def refresh_request(stale: list[tuple[str, list[str]]]) -> str:
+    """The message the automatic refresh sends: only the doubtful topics, nothing new, nothing in the repository."""
+    listing = "\n".join(f"- {slug}: {', '.join(changed[:6])}" for slug, changed in stale)
+    return (
+        f"Keep the repository's topic notes true: load the `{LEARN_SKILL}` skill, section 3 only. These topics have "
+        f"source files that changed since they were written:\n{listing}\nFor each: read the changed files, then "
+        "knowledge_write with its `slug` and `confirm: true` if it still holds, or the corrected text and a `reason` "
+        "if not. Write no new topics. Do not change any file of the repository. Finish with one line per topic: "
+        "confirmed or corrected (and what was wrong)."
+    )
 
 
 LEARN_SKILL = "learn-repository"

@@ -8,10 +8,11 @@ written. A topic is small on purpose: the index line is pinned, the body is load
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import time
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 
 import yaml
@@ -89,11 +90,71 @@ def _read(path: Path) -> Topic | None:
     )
 
 
+CACHE_FILE = (
+    "topics.cache.json"  # beside the notes: every topic already parsed, so a new process skips the YAML
+)
+_warmed: dict[str, int] = {}  # topics folder -> modified time of the cache file last loaded from it
+
+
+def _stamp_of(path: Path) -> tuple[int, int] | None:
+    try:
+        status = path.stat()
+    except OSError:
+        return None
+    return (status.st_size, status.st_mtime_ns)
+
+
+def _load_cache(folder: Path) -> None:
+    """Puts the parsed topics of the cache file into the parse cache for every note that has not changed since.
+    Parsing 1000 notes with YAML took about five seconds at the first search of every process (D-616); the cache
+    file is derived data, safe to delete, and any note that differs from it is parsed again."""
+    cache = folder / CACHE_FILE
+    stamp = _stamp_of(cache)
+    if stamp is None or _warmed.get(str(folder)) == stamp[1]:
+        return
+    _warmed[str(folder)] = stamp[1]
+    try:
+        entries = json.loads(cache.read_text(encoding="utf-8"))
+        for name, entry in entries.items():
+            path = folder / name
+            current = _stamp_of(path)
+            if current is not None and list(current) == entry["stamp"] and str(path) not in _parsed:
+                _parsed[str(path)] = (current, Topic(**entry["topic"]))
+    except (OSError, ValueError, KeyError, TypeError):
+        return  # a damaged cache file only costs the parse it was meant to save
+
+
+def _save_cache(folder: Path, files: list[Path]) -> None:
+    entries = {}
+    for path in files:
+        cached = _parsed.get(str(path))
+        if cached is not None and cached[1] is not None and cached[0] == _stamp_of(path):
+            entries[path.name] = {"stamp": list(cached[0]), "topic": asdict(cached[1])}
+    target = folder / CACHE_FILE
+    scratch = target.with_suffix(".tmp")
+    try:
+        scratch.write_text(json.dumps(entries, ensure_ascii=False), encoding="utf-8")
+        os.replace(scratch, target)
+        status = _stamp_of(target)
+        if status is not None:
+            _warmed[str(folder)] = status[1]
+    except OSError:
+        return  # the notes are right without it; the next call parses again
+
+
 def all_topics(store: Path) -> list[Topic]:
     folder = _folder(store)
     if not folder.is_dir():
         return []
-    return [topic for path in sorted(folder.glob("*.md")) if (topic := _parse(path)) is not None]
+    files = sorted(folder.glob("*.md"))
+    _load_cache(folder)
+    stale = [
+        path for path in files if (cached := _parsed.get(str(path))) is None or cached[0] != _stamp_of(path)
+    ]
+    topics = [topic for path in files if (topic := _parse(path)) is not None]
+    if stale:
+        _save_cache(folder, files)
+    return topics
 
 
 def read_topic(store: Path, slug: str) -> Topic | None:

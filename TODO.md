@@ -7,7 +7,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done. **Every open task 
 - 0d. Design Intelligence Engine: **8 open**
 - 0e. Back-office design and theme inspiration (D-487 to D-495): **2 open**
 - 0g. Trim-down: a light core, everything else on demand (D-561, D-562): **8 open**
-- 0h. Knowledge layer for an existing repository (D-563 to D-566): **5 open**
+- 0h. Knowledge layer for an existing repository (D-563 to D-566, D-616): **6 open**
 - 0i. Check, do not guess; debug until resolved (D-567): **2 open**
 - 0j. Solving a requirement against the running system (D-568 to D-573): **9 open**
 - 0k. Knowledge speed, knowledge by use, several conversations per project (analysis 2026-11-12): **19 open**
@@ -225,6 +225,9 @@ The user finds DebCraft too heavy: less weight on presentations, PDF and the pag
 - [ ] `KL4` **Measure:** the same questions and one change task on a repository of a few hundred files, with and without the layer: steps, tokens, time, correct or not.
 - [x] `KL5` **(dropped 2026-11-11, user: "graphify is not required since you are taking up the load")** Graphify as an optional engine. What it would have added goes into the own map instead: see `KL1c`.
 - [~] `KL1c` *(not now, decided 2026-11-13, D-594: decide after `KL6`)* **What Graphify offered that the own map lacks:** a path query between any two symbols; Angular (TypeScript) and SQL parsed properly instead of matched by pattern; tables read from the live PostgreSQL schema (DebCraft already has read-only database tools); a picture of the graph in the web UI (a new UI feature: discuss the options with the user first).
+- [x] `KL7` **(done 2026-11-16, D-616)** Notes correct themselves: a finish check in the agent loop (`knowledge_finish_note`) and an automatic refresh once per session (`knowledge.auto_refresh`).
+- [x] `KL8` **(done 2026-11-16, D-616)** Search speed measured (`scripts/dev/bench_knowledge_search.py`) and fixed with `topics.cache.json`.
+- [ ] `KL7b` **Live measurement:** a repository with changed files and a note gone wrong: does the model confirm or correct at the finish check, and does the refresh leave true notes alone? (extend `tests/test_live_learn.py`)
 - [ ] `KL6` **The user tries it on WisdomNext on the office laptop** (it cannot be tested on the build machine).
 
 ## 0i. Check, do not guess; debug until resolved (user report 2026-11-12; D-567)

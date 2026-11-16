@@ -42,6 +42,7 @@ from forge.toolkit.folders import clean_folder, folders_disjoint
 from forge.toolkit.powershell import ps_quote
 from forge.toolkit.shell import execute
 from forge.tools.assets import catalogue_hint
+from forge.tools.knowledge_tools import knowledge_finish_note
 from forge.tools.registry import ToolRegistry
 from forge.workspace.workspace import Workspace
 
@@ -96,6 +97,7 @@ def system_prompt(workspace: Workspace) -> str:
 MAX_QUESTION_NUDGES = 1
 MAX_TODO_NUDGES = 2
 MAX_STOP_HOOK_ROUNDS = 2
+MAX_KNOWLEDGE_NUDGES = 3  # doubtful topics, then the one question about topics whose files were read
 STOP_HOOK_NOTE = "You are about to finish, but a stop hook set up for this project failed. Fix what it reports and then finish; do not just report it.\n"
 RISK_NOTE = (
     "Before you finish: the code you worked with has risks you have not told the user about. Add a short 'Noticed, not changed' list to your final reply (file and line, what could go "
@@ -258,6 +260,7 @@ class AgentLoop:
         question_nudges = 0
         todo_nudges = 0
         risk_nudges = 0
+        knowledge_nudges = 0
         stop_hook_rounds = 0
         self.hit_iteration_limit = False
         if (
@@ -337,6 +340,24 @@ class AgentLoop:
                             {
                                 "kind": "risk_notes",
                                 "text": "Asking for the risks in the code to be named before finishing.",
+                            },
+                        )
+                        continue
+                if (
+                    knowledge_nudges < MAX_KNOWLEDGE_NUDGES
+                    and self.keep_full_output
+                    and self.gate.mode != "plan"
+                ):
+                    # The main agent only: a note it was given that may be wrong is dealt with before the turn ends.
+                    knowledge_note = knowledge_finish_note(self.context)
+                    if knowledge_note:
+                        knowledge_nudges += 1
+                        history.append(Message.system(knowledge_note))
+                        await self.bus.publish(
+                            EventType.NOTICE,
+                            {
+                                "kind": "knowledge_check",
+                                "text": "Checking the repository notes it used before finishing.",
                             },
                         )
                         continue

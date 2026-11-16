@@ -66,6 +66,7 @@ from forge.toolkit.base import Tool, ToolContext
 from forge.toolkit.shell import ShellSession, execute
 from forge.tools.code_map_tool import repository_map_pin
 from forge.tools.interaction import AskUser
+from forge.tools.knowledge_tools import outdated_topics, refresh_request
 from forge.tools.modeb import modeb_tools
 from forge.tools.registry import ToolRegistry, db_tools, session_tools
 from forge.tools.tavily_tools import tavily_tools
@@ -136,6 +137,9 @@ class SessionHost:
         self._inputs: asyncio.Queue[UserInput] = asyncio.Queue()
         self._current_turn: asyncio.Task[None] | None = None
         self._streamed: list[str] = []
+        self._knowledge_refreshed = (
+            False  # the automatic re-check of doubtful topic notes runs once per session
+        )
         self._commands = SlashCommandHandler(self)
         self.closed = False
         # Set by `forge run` without a prompt (D-552): continue open planned tasks too, not only an interrupted turn.
@@ -582,8 +586,41 @@ class SessionHost:
                 if len(self.history) == history_length + 1:
                     self.history.pop()  # nothing happened yet: the user can simply resend
                 raise
+            await self._refresh_doubtful_knowledge()
 
         return turn
+
+    async def _refresh_doubtful_knowledge(self) -> None:
+        """Once per session, after the user's first answer: the topic notes about the repository whose source files
+        changed are re-checked by the agent itself (confirmed or corrected), so a doubtful note does not wait for a
+        task that happens to read it. Never at session start (opening stays fast, D-573); the user can interrupt."""
+        workspace = self.workspace
+        if (
+            self._knowledge_refreshed
+            or self.agent is None
+            or workspace is None
+            or workspace.mode_b
+            or not self.router.config.knowledge.auto_refresh
+        ):
+            return
+        self._knowledge_refreshed = True
+        try:
+            stale = await asyncio.to_thread(outdated_topics, workspace)
+        except Exception:  # a failed look at the notes must never spoil the answer that was just given
+            return
+        if not stale:
+            return
+        await self.bus.publish(
+            EventType.NOTICE,
+            {
+                "kind": "knowledge_refresh",
+                "text": f"Re-checking {len(stale)} repository note(s) whose source files changed.",
+            },
+        )
+        request = refresh_request(stale)
+        await self.bus.publish(EventType.USER_MESSAGE, {"text": request})
+        self.history.append(Message.user(request))
+        await self.agent.run(self.history, self.stream_delta)
 
     async def _restructure(self, command: str) -> None:
         instruction = command.removeprefix("/restructure").strip()

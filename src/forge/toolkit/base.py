@@ -168,6 +168,12 @@ class ToolContext:
     knowledge_written: bool = False
     knowledge_look_asked: bool = False
     knowledge_write_asked: bool = False
+    # Topics this session read or was given whole (slug -> their source files), the ones among them whose files had
+    # changed and that no one has confirmed or corrected yet (slug -> changed files), and the ones the finish check
+    # already asked about. The agent loop does not end a turn on an unresolved note (knowledge_finish_note).
+    knowledge_served: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    knowledge_stale: dict[str, list[str]] = field(default_factory=dict)
+    knowledge_checked: set[str] = field(default_factory=set)
     design_first: bool = (
         True  # D4: the first page or style file of a project waits for a DESIGN.md (the design concept)
     )

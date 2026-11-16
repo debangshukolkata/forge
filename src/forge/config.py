@@ -287,6 +287,14 @@ class LearningConfig(_Strict):
     lessons_token_cap: int = 800
 
 
+class KnowledgeConfig(_Strict):
+    """The topic notes about a repository. `auto_refresh`: after the first answer of a session DebCraft re-checks the
+    notes whose source files changed, confirming or correcting each, so no note stays doubtful for lack of a task
+    that happens to read it."""
+
+    auto_refresh: bool = True
+
+
 class McpServerConfig(_Strict):
     command: str
     args: list[str] = []
@@ -320,6 +328,7 @@ class ForgeConfig(BaseModel):
     web: WebConfig = WebConfig()
     hooks: HooksConfig = HooksConfig()
     learning: LearningConfig = LearningConfig()
+    knowledge: KnowledgeConfig = KnowledgeConfig()
     mcp: McpConfig = McpConfig()
 
 
