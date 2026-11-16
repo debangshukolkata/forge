@@ -37,7 +37,7 @@ from forge.toolkit.app_keys import (
     remembered_auth,
     user_value,
 )
-from forge.toolkit.app_logins import EnvLogin, TokenStore, login_for_host, login_for_token
+from forge.toolkit.app_logins import LOGINS_FILE, EnvLogin, TokenStore, login_for_host, login_for_token
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.app_login import ensure_token
 from forge.tools.browser import LOCAL_HOSTS
@@ -50,6 +50,10 @@ HTTP_TIMEOUT_S = 30
 MAX_TIMEOUT_S = 900
 SHAPE_DEPTH = 3
 SHAPE_LINES = 40
+HOST_STOP_NOTE = (
+    ". Stop here and tell the user this in plain words; do not retry and do not reach the API another way "
+    "(a script, curl, run_command): that would go around what the user allowed"
+)
 NOT_SET = "is not set in"
 ADDED = "I have added it"
 NO_TOKEN = "I cannot get a token"
@@ -491,14 +495,16 @@ class HttpRequest(Tool):
         host = (parsed.hostname or "").lower()
         if host in LOCAL_HOSTS:
             return ""
+        where = forge_home() / LOGINS_FILE
         try:
             login = login_for_host(host)
         except ConfigError as error:
-            return str(error)
+            return f"{error} The file is {where}; only the user can correct it{HOST_STOP_NOTE}"
         if login is None:
             return (
-                f"http_request calls the application on localhost, and the hosts the user listed in app_logins.yaml; "
-                f"{host or url} is neither"
+                f"http_request calls the application on localhost, and the hosts the user listed in {where}; "
+                f"{host or url} is neither. To allow it the user adds an environment for it to that file "
+                f"(login_url, token_name, token, steps){HOST_STOP_NOTE}"
             )
         return await _approve_host(login, context)
 

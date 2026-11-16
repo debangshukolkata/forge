@@ -202,6 +202,18 @@ async def test_a_host_the_user_did_not_list_is_refused(remote) -> None:  # type:
     assert not (await call(context, "ftp://127.0.0.2/x")).ok
 
 
+async def test_a_file_the_call_needs_but_cannot_use_is_reported_once_and_the_model_is_told_to_stop(
+    remote,
+) -> None:  # type: ignore[no-untyped-def]
+    _, context, home = remote
+    for text, wanted in (("environments: [1, 2]\n", "by name"), ("environments: {}\n", "neither")):
+        (home / "app_logins.yaml").write_text(text, encoding="utf-8")
+        result = await call(context, "https://dev.example.com/api")
+        assert not result.ok and result.content.startswith("Not sent")
+        assert wanted in result.content and str(home / "app_logins.yaml") in result.content
+        assert "Stop here and tell the user" in result.content and "do not retry" in result.content
+
+
 async def test_a_listed_host_needs_the_users_card_once_and_the_answer_is_kept(remote) -> None:  # type: ignore[no-untyped-def]
     url, context, home = remote
     TokenStore(home).put("SIT_TOKEN", "token-one")
