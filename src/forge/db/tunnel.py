@@ -58,6 +58,11 @@ def load_tunnels(home: Path | None = None) -> dict[str, TunnelSpec]:
         text = path.read_text(encoding="utf-8")
     except OSError:
         return {}
+    return parse_tunnels(text)
+
+
+def parse_tunnels(text: str) -> dict[str, TunnelSpec]:
+    """The tunnels a file's text describes, or a ConfigError saying what is wrong (also used to check a proposed file)."""
     try:
         data = yaml.safe_load(text) or {}
     except yaml.YAMLError as error:

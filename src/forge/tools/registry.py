@@ -51,6 +51,7 @@ from forge.tools.presentation import presentation_tools
 from forge.tools.presentation_raw import raw_tools
 from forge.tools.presentation_sources import source_tools
 from forge.tools.search import Glob, Grep, ListDir
+from forge.tools.settings_file import SettingsFile
 from forge.tools.shadcn import AddUiComponent, ShadcnSetup
 from forge.tools.show_app import ShowApp
 from forge.tools.skill_install_tool import InstallSkill
@@ -113,6 +114,7 @@ def default_tools() -> list[Tool]:
         ConversationRecall(),
         AppLogin(),
         AppTokenStatus(),
+        SettingsFile(),
         NotebookRead(),
         NotebookEditCell(),
         *browser_tools(),

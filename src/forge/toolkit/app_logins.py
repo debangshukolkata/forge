@@ -125,6 +125,12 @@ def load_logins(home: Path | None = None) -> dict[str, EnvLogin]:
         text = path.read_text(encoding="utf-8")
     except OSError:
         return {}
+    return parse_logins(text)
+
+
+def parse_logins(text: str) -> dict[str, EnvLogin]:
+    """The environments a file's text describes, or a ConfigError saying what is wrong. Also used to check a file
+    before it is written (`settings_file`), so a proposed file is refused for the same reasons a stored one is."""
     try:
         data = yaml.safe_load(text) or {}
     except yaml.YAMLError as error:
@@ -145,7 +151,16 @@ def load_logins(home: Path | None = None) -> dict[str, EnvLogin]:
         )
     if not isinstance(environments, dict):
         raise ConfigError(f"{LOGINS_FILE}: `environments:` must list the environments by name.")
-    return {str(name): _parse(str(name), raw) for name, raw in environments.items()}
+    parsed = {str(name): _parse(str(name), raw) for name, raw in environments.items()}
+    names: dict[str, str] = {}
+    for name, login in parsed.items():
+        if login.token_name in names:  # two environments sharing a name would overwrite each other's token
+            raise ConfigError(
+                f"{LOGINS_FILE}: environments {names[login.token_name]!r} and {name!r} both keep their token "
+                f"under {login.token_name!r}; each needs its own `token_name`."
+            )
+        names[login.token_name] = name
+    return parsed
 
 
 def login_for_host(host: str, home: Path | None = None) -> EnvLogin | None:

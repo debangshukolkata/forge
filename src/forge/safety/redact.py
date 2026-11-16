@@ -130,7 +130,26 @@ _KEYWORD_LEFT = re.compile(r"^[a-z][a-z0-9_]*=$")
 _KEYWORD_VALUE = re.compile(r"^(?:[a-z_]+(?:\.[a-z_]+)+$|[a-z_][a-z_.]*\()")
 
 
+# Settings that hold the NAME of a token, never a token: `token_name: DEV_TOKEN` and `token_env: DEV_TOKEN` of the
+# user's app_logins.yaml and of http_request, and the `token:` key of that file, whose value is a mapping
+# (`token: {cookie: access_token_cookie}`). Masking them showed the user a card with the text hidden and hid the
+# file from the model that was asked to write it (seen live, D-618). A real token is still masked by its own shape
+# (a JWT, a bearer value, a long random string after any other key).
+_NAME_LEFT = re.compile(r"(?i)^(?:token_name|token_env)[\"']?\s*[:=]\s*[\"']?$")
+_NAME_VALUE = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
+_TOKEN_MAPPING_LEFT = re.compile(r"(?i)^token[\"']?\s*:\s*$")
+_MAPPING_VALUE = re.compile(r"^(?:\{|[A-Za-z_][\w-]*:$)")
+
+
+def _is_setting_name(left: str, value: str) -> bool:
+    if _NAME_LEFT.match(left) and _NAME_VALUE.match(value):
+        return True
+    return bool(_TOKEN_MAPPING_LEFT.match(left) and _MAPPING_VALUE.match(value))
+
+
 def _is_code_expression(left: str, value: str) -> bool:
+    if _is_setting_name(left, value):
+        return True
     if _CODE_LEFT.match(left) and _CODE_VALUE.match(value):
         return True
     if left.rstrip("= ").lower() == value.lower():  # `api_key=api_key`: a parameter passed through

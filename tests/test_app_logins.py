@@ -124,6 +124,14 @@ def test_a_broken_file_does_not_stop_a_token_lookup_but_is_reported_for_a_remote
         login_for_host("dev.example.com", isolated_forge_home)
 
 
+def test_two_environments_cannot_keep_their_token_under_one_name(isolated_forge_home: Path) -> None:
+    twice = json.loads(json.dumps(GOOD))
+    twice["environments"]["sit"] = json.loads(json.dumps(GOOD["environments"]["dev"]))
+    write_logins(isolated_forge_home, twice)
+    with pytest.raises(ConfigError, match="each needs its own `token_name`"):
+        load_logins(isolated_forge_home)
+
+
 def test_a_file_that_is_not_yaml_says_so(isolated_forge_home: Path) -> None:
     (isolated_forge_home / "app_logins.yaml").write_text("environments: [", encoding="utf-8")
     with pytest.raises(ConfigError, match="not valid YAML"):

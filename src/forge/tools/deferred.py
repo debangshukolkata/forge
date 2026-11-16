@@ -105,6 +105,11 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
         "Signing in to an environment of the user's web application (dev, SIT) and keeping the token",
         ("app_login", "app_token_status"),
     ),
+    "settings_files": (
+        "The user's own settings files (app_logins.yaml for signing in to dev and SIT, tunnels.yaml for the "
+        "database tunnel): reading them and writing them with the user's approval on a card",
+        ("settings_file",),
+    ),
     "dev_database": (
         "The shared development database beyond reading: adding or changing rows (each change approved by the "
         "user on a red card), setting such a change back, running the copy of the application directly on it "

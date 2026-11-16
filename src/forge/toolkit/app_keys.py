@@ -251,6 +251,12 @@ def installation_facts(workspace: Workspace) -> str:
             f"- {origin} accepted {form['token_env']} as {how} in an earlier session. http_request sends it that "
             "way by itself; the user has nothing to change."
         )
+    lines.append(
+        f"- Two settings files of the user's are in {forge_home()}: app_logins.yaml (how to sign in to their dev and "
+        "SIT sites) and tunnels.yaml (the database tunnel). Fix or create them yourself with the tool settings_file: "
+        "the user approves the exact text on a card. Do not ask the user to edit them, and ask only for what you "
+        "cannot know (such as the address of a login page)."
+    )
     return "\n".join(lines) + "\n"
 
 

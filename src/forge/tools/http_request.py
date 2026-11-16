@@ -52,7 +52,9 @@ SHAPE_DEPTH = 3
 SHAPE_LINES = 40
 HOST_STOP_NOTE = (
     ". Stop here and tell the user this in plain words; do not retry and do not reach the API another way "
-    "(a script, curl, run_command): that would go around what the user allowed"
+    "(a script, curl, run_command): that would go around what the user allowed. You may offer to fix the file: "
+    "settings_file shows the user the exact new text on a card (ask them for what you do not know, such as the "
+    "address of the login page)"
 )
 NOT_SET = "is not set in"
 ADDED = "I have added it"
@@ -499,11 +501,11 @@ class HttpRequest(Tool):
         try:
             login = login_for_host(host)
         except ConfigError as error:
-            return f"{error} The file is {where}; only the user can correct it{HOST_STOP_NOTE}"
+            return f"{error} The file is {where}{HOST_STOP_NOTE}"
         if login is None:
             return (
                 f"http_request calls the application on localhost, and the hosts the user listed in {where}; "
-                f"{host or url} is neither. To allow it the user adds an environment for it to that file "
+                f"{host or url} is neither. To allow it, an environment for it goes into that file "
                 f"(login_url, token_name, token, steps){HOST_STOP_NOTE}"
             )
         return await _approve_host(login, context)

@@ -33,6 +33,24 @@ def test_patterns_catch_unregistered_secrets() -> None:
     assert "hunter22" not in redactor.redact("DB_PASSWORD=hunter22")
 
 
+def test_the_names_of_tokens_in_the_users_settings_stay_readable_but_values_do_not() -> None:
+    """D-618: `token_name: DEV_TOKEN` and `token: {cookie: ...}` are settings, not secrets; the card that asks the
+    user to approve app_logins.yaml must show them."""
+    redactor = Redactor()
+    settings = (
+        "environments:\n  dev:\n    token_name: DEVELOPMENT_INSTANCE_TOKEN\n    token: {cookie: access_token_cookie}\n"
+        "    warn_without_token: true\n  sit:\n    token_name: SIT_TOKEN\n    token:\n      cookie: access_token_cookie\n"
+    )
+    assert redactor.redact(settings) == settings
+    assert redactor.redact("token_env: DEVELOPMENT_INSTANCE_TOKEN") == "token_env: DEVELOPMENT_INSTANCE_TOKEN"
+    jwt = ".".join(["eyJhbGciOiJIUzI1NiJ9", "eyJzdWIiOiJ1c2VyMTIzNCJ9", "c2lnbmF0dXJlLXZhbHVlLXg"])
+    assert jwt not in redactor.redact(f"token_name: {jwt}")  # a token in a name's place is still masked
+    assert "hunter22xyz" not in redactor.redact("token_name: hunter22xyz-9!")  # not a plain name
+    assert "abcdefghij0123456789" not in redactor.redact("token: abcdefghij0123456789")
+    assert "abcdefghij0123456789" not in redactor.redact("DEV_TOKEN=abcdefghij0123456789")
+    assert "abcdefghij0123456789" not in redactor.redact("password: {abcdefghij0123456789")
+
+
 def test_nested_data_is_redacted() -> None:
     redactor = Redactor()
     redactor.register("canary-value-42", "K")
