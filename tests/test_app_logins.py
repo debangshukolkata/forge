@@ -98,12 +98,20 @@ def test_a_wrong_description_says_what_is_wrong(
         load_logins(isolated_forge_home)
 
 
-@pytest.mark.parametrize("text", ["", "# environments will go here\n", "other: 1\n", "environments:\n"])
-def test_a_file_without_environments_describes_none_and_blocks_nothing(
+@pytest.mark.parametrize("text", ["", "# environments will go here\n", "environments:\n"])
+def test_an_empty_file_describes_no_environment(isolated_forge_home: Path, text: str) -> None:
+    (isolated_forge_home / "app_logins.yaml").write_text(text, encoding="utf-8")
+    assert load_logins(isolated_forge_home) == {}
+    assert login_for_token("DEVELOPMENT_INSTANCE_TOKEN", isolated_forge_home) is None
+
+
+@pytest.mark.parametrize("text", ["dev:\n  login_url: https://dev.example.com/\n", "- dev\n"])
+def test_a_file_with_content_but_no_environments_section_says_what_it_holds_and_blocks_no_localhost_call(
     isolated_forge_home: Path, text: str
 ) -> None:
     (isolated_forge_home / "app_logins.yaml").write_text(text, encoding="utf-8")
-    assert load_logins(isolated_forge_home) == {}
+    with pytest.raises(ConfigError, match="no `environments:` section"):
+        load_logins(isolated_forge_home)
     assert login_for_token("DEVELOPMENT_INSTANCE_TOKEN", isolated_forge_home) is None  # localhost calls go on
 
 

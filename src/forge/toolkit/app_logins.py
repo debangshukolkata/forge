@@ -131,10 +131,18 @@ def load_logins(home: Path | None = None) -> dict[str, EnvLogin]:
         raise ConfigError(f"{LOGINS_FILE} is not valid YAML: {error}") from error
     environments = data.get("environments") if isinstance(data, dict) else None
     if environments is None:
-        # An empty file, one with only comments, or one without the section describes no environment. Refusing it
-        # stopped every http_request that named a token from DebCraft's .env, even one to localhost (office laptop,
-        # 2026-11-16); only a section that is there and wrongly shaped is an error.
-        return {}
+        if not data or (isinstance(data, dict) and "environments" in data):
+            return {}  # an empty file, comments only, or an empty `environments:` describes no environment yet
+        # A file with content but no `environments:` is a mistake the user must be told about, with what it holds: the
+        # office laptop's file existed and was refused with a message that did not say why (2026-11-16). It does not
+        # block a call to localhost: `login_for_token` leaves such a file aside.
+        found = (
+            ", ".join(f"`{key}`" for key in data) if isinstance(data, dict) else "a " + type(data).__name__
+        )
+        raise ConfigError(
+            f"{LOGINS_FILE} has {found} at the top but no `environments:` section: put each environment under "
+            "`environments:` (name, then login_url, token_name, token, steps), indented."
+        )
     if not isinstance(environments, dict):
         raise ConfigError(f"{LOGINS_FILE}: `environments:` must list the environments by name.")
     return {str(name): _parse(str(name), raw) for name, raw in environments.items()}
