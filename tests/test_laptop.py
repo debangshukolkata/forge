@@ -205,7 +205,7 @@ def _project(root: Path) -> Path:
     third.call(
         "http_request",
         {"url": dev},
-        preview="HTTP 200\nThe endpoint needs a token: DebCraft signed in to dev and sent DEV_TOKEN itself.",
+        preview="HTTP 200\nThe endpoint asked for a token, so DebCraft signed in to dev and sent DEV_TOKEN itself.",
     )
     third.call(
         "http_request",

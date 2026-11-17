@@ -207,7 +207,7 @@ function Shell({ user, theme, onToggleTheme, onSignOut }: { user: string | null;
           />
         )}
         {!envOpen && view === "chat" && surface === "chat" && forge.state.workspace && (
-          <Panels forge={forge} collapsed={panelsCollapsed} onExpand={() => collapsePanels(false)} />
+          <Panels forge={forge} collapsed={panelsCollapsed} onExpand={() => collapsePanels(false)} onJump={jump} />
         )}
       </div>
     </div>

@@ -14,6 +14,7 @@ import pytest
 import yaml
 
 from forge.errors import ConfigError
+from forge.safety.redact import Redactor
 from forge.toolkit.app_logins import (
     TokenStore,
     default_login,
@@ -533,6 +534,8 @@ async def test_a_call_without_a_token_signs_in_by_itself_after_a_401(remote, mon
     monkeypatch.setattr("forge.tools.app_login.sign_in", fake_sign_in)
     result = await call(context, url)  # the model passes nothing
     assert result.ok and "HTTP 200" in result.content and "signed in to sit" in result.content
+    # the redactor must not mask the tool's own words (it did: "a token: DebCraft" read as an assignment)
+    assert "DebCraft signed in to sit" in Redactor().redact(result.content)
     assert attempts == ["sit"] and Remote.seen == ["", "Bearer token-one"]
     assert "token-one" not in result.content and "SIT_TOKEN" in result.content
     again = await call(context, url)  # how this API took the token is remembered: sent at once

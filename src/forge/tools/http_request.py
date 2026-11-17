@@ -404,7 +404,7 @@ class HttpRequest(Tool):
                         if response.status_code not in (401, 403):
                             adapted = (
                                 (wrote if own_header else "")
-                                + f"The endpoint needs a token: DebCraft signed in to {own_login.name} and sent "
+                                + f"The endpoint asked for a token, so DebCraft signed in to {own_login.name} and sent "
                                 f"{own_login.token_name} itself. Nothing to pass and nothing to ask the user."
                             )
                             if workspace is not None:
