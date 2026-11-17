@@ -155,6 +155,7 @@ def tokens_page(conversations: list[Conversation], home: Path | None = None, wit
     home = home or forge_home()
     page = Page("SIGN-IN AND TOKEN CARDS")
     records = field_log.read(("sign_in",), home)
+    refusals = field_log.read(("sign_in_state_refused",), home)
     try:
         logins = load_logins(home)
     except Exception as error:  # a broken app_logins.yaml is itself the fact
@@ -178,6 +179,13 @@ def tokens_page(conversations: list[Conversation], home: Path | None = None, wit
         page.lines.append(
             f"   token lasts {life}; left now {(store.remaining(login.token_name) or 0) // 60} min"
         )
+        refused = [r for r in refusals if r.get("env") == login.name]
+        if refused:
+            # D-630: the site's state error page; the highest attempt tells whether starting again got through.
+            page.lines.append(
+                f"   state error page (mismatching_state) x{len(refused)}, "
+                f"highest attempt {max(int(r.get('attempt') or 0) for r in refused)}"
+            )
         window_at = next((i for i, r in enumerate(mine) if r.get("path") == "window" and r.get("ok")), None)
         silent_after = window_at is not None and any(
             r.get("path") in ("stored", "silent") and r.get("ok") for r in mine[window_at + 1 :]

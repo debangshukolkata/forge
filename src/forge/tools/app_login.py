@@ -9,6 +9,7 @@ passes MFA); afterwards it signs in without a window until the session ends. The
 
 from __future__ import annotations
 
+import contextlib
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,6 +29,11 @@ MARKER = ".debcraft_signed_in"
 STEP_SECONDS_HEADLESS = 20
 STEP_SECONDS_VISIBLE = 240  # time for a person to pass a Google or company login in the open window
 HEADER_WAIT_SECONDS = 10
+POLL_MS = 500
+STATE_ATTEMPTS = (
+    3  # the second pass usually goes straight through, because the single sign-on is done by then
+)
+STATE_REFUSED_MARKS = ("mismatching_state", "CSRF Warning")
 
 
 @dataclass
@@ -36,6 +42,7 @@ class SignIn:
     token: str = ""
     message: str = ""
     needs_user: bool = False  # a window should be opened for the user to sign in first
+    shown: bool = False  # this attempt already ran in a visible window
 
 
 def profile_dir(login: EnvLogin, home: Path) -> Path:
@@ -45,6 +52,81 @@ def profile_dir(login: EnvLogin, home: Path) -> Path:
 async def _click(page: Any, text: str, timeout_ms: int) -> None:
     target = page.get_by_role("button", name=text, exact=True).or_(page.get_by_text(text, exact=True))
     await target.first.click(timeout=timeout_ms)
+
+
+class _StateRefused(Exception):
+    """The site answered the return from the single sign-on with its state error page."""
+
+
+async def _state_refused(page: Any, login: EnvLogin) -> bool:
+    """True when the site shows its state error instead of the next page (the OAuth `state` of the return did not match
+    the one in the site's session: a second click on Sign in, or a return left over from an earlier attempt). A person
+    gets past it by opening the login page again, so DebCraft does the same."""
+    if (urlparse(page.url).hostname or "").lower() != login.host:
+        return False
+    try:
+        text = await page.inner_text("body", timeout=2000)
+    except Exception:
+        return False  # the page is on its way to the next address
+    return any(mark in text for mark in STATE_REFUSED_MARKS)
+
+
+async def _wait_url(page: Any, login: EnvLogin, wanted: str, timeout_ms: int) -> None:
+    """Waits for an address that contains `wanted`, and stops at once on the state error page: a person would
+    otherwise look at that page until the whole waiting time has passed."""
+    deadline = time.monotonic() + timeout_ms / 1000
+    while wanted not in page.url:
+        if await _state_refused(page, login):
+            raise _StateRefused
+        if time.monotonic() >= deadline:
+            raise TimeoutError(f"the address never contained {wanted!r}")
+        await page.wait_for_timeout(POLL_MS)
+    with contextlib.suppress(Exception):
+        await page.wait_for_load_state("load", timeout=max(1000, int((deadline - time.monotonic()) * 1000)))
+
+
+async def _run_steps(page: Any, login: EnvLogin, seconds: int, show: bool) -> SignIn | None:
+    """Opens the login page and runs the steps; None when all completed, else the failure to report."""
+    await page.goto(login.login_url, wait_until="domcontentloaded", timeout=seconds * 1000)
+    for number, step in enumerate(login.steps, 1):
+        try:
+            if step.action == "click":
+                await _click(page, step.value, seconds * 1000)
+            elif step.action == "wait_url":
+                await _wait_url(page, login, step.value, seconds * 1000)
+            else:
+                await page.wait_for_timeout(step.seconds * 1000)
+        except _StateRefused:
+            raise
+        except Exception as error:
+            if await _state_refused(page, login):
+                raise _StateRefused from error
+            # Host and path only: the query of a sign-in address carries codes and state values.
+            at = urlparse(page.url)
+            where = at.hostname or "?"
+            stood = f"{where}{at.path}"[:90]
+            step_name = f"Step {number} ({step.action} {step.value!r})"
+            if page.is_closed():
+                # Said as it is: "did not complete in 240 s" would send the reader after a time-out that never was.
+                return SignIn(
+                    False,
+                    message=f"The sign-in window was closed before {step_name.lower()} completed; "
+                    f"it last stood at {stood}.",
+                    needs_user=not show,
+                    shown=show,
+                )
+            note = (
+                f" The browser is at {stood}, not at {login.host}: a Google or company sign-in may be waiting."
+                if where != login.host
+                else f" The browser stood at {stood}."
+            )
+            return SignIn(
+                False,
+                message=f"{step_name} did not complete in {seconds} s: {str(error).splitlines()[0]}.{note}",
+                needs_user=not show,
+                shown=show,
+            )
+    return None
 
 
 async def sign_in(login: EnvLogin, home: Path | None = None, visible: bool = False) -> SignIn:
@@ -86,30 +168,26 @@ async def sign_in(login: EnvLogin, home: Path | None = None, visible: bool = Fal
 
         if login.token_header:
             page.on("request", watch)
-        await page.goto(login.login_url, wait_until="domcontentloaded", timeout=seconds * 1000)
-        for number, step in enumerate(login.steps, 1):
+        for attempt in range(1, STATE_ATTEMPTS + 1):
             try:
-                if step.action == "click":
-                    await _click(page, step.value, seconds * 1000)
-                elif step.action == "wait_url":
-                    await page.wait_for_url(
-                        lambda url, wanted=step.value: wanted in url, timeout=seconds * 1000
-                    )
-                else:
-                    await page.wait_for_timeout(step.seconds * 1000)
-            except Exception as error:
-                where = urlparse(page.url).hostname or "?"
-                note = (
-                    f" The browser is at {where}, not at {login.host}: a Google or company sign-in may be waiting."
-                    if where != login.host
-                    else ""
-                )
+                failure = await _run_steps(page, login, seconds, show)
+            except _StateRefused:
+                # Names and counts for the laptop report (D-615): how often the site refuses and whether the
+                # second pass gets through.
+                field_log.write("sign_in_state_refused", home, env=login.name, attempt=attempt, visible=show)
+                if attempt < STATE_ATTEMPTS:
+                    continue
                 return SignIn(
                     False,
-                    message=f"Step {number} ({step.action} {step.value!r}) did not complete in {seconds} s: "
-                    f"{str(error).splitlines()[0]}.{note}",
+                    message=f"The site refused the sign-in {STATE_ATTEMPTS} times with its state error "
+                    "(mismatching_state), also after DebCraft started again from the login page. In the sign-in "
+                    "window, click Sign in once only and leave the other clicks to DebCraft; if it still happens, "
+                    "the site does not keep its session cookie in DebCraft's browser.",
                     needs_user=not show,
                 )
+            if failure is not None:
+                return failure
+            break
         token = ""
         if login.token_cookie:
             cookies = await context.cookies([login.login_url])
@@ -242,7 +320,10 @@ async def ensure_token(
     # No token without a window: open one, so the user can sign in there (the browser profile of DebCraft is not the
     # user's own Edge, so Google may ask once; the first run is visible already).
     silent_problem = result.message
-    result = await sign_in(login, home, visible=True)
+    if (
+        not result.shown
+    ):  # a first sign-in is visible already: a second window right after it would only confuse
+        result = await sign_in(login, home, visible=True)
     if result.ok:
         TokenStore(home).put(login.token_name, result.token)
         return noted("window", Ensured(result.token), f"silent sign-in failed first: {silent_problem}")

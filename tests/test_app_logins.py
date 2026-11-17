@@ -415,6 +415,23 @@ async def test_when_the_quiet_sign_in_fails_a_window_opens_before_the_user_is_as
     assert ensured.token == "good-token" and calls == [False, True]
 
 
+async def test_a_first_sign_in_that_already_showed_a_window_does_not_open_a_second_one(
+    checked, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
+    from forge.tools.app_login import SignIn, ensure_token
+
+    login, home = checked
+    calls: list[bool] = []
+
+    async def fake_sign_in(login, home=None, visible=False):  # type: ignore[no-untyped-def]
+        calls.append(visible)
+        return SignIn(False, message="The sign-in window was closed", shown=True)
+
+    monkeypatch.setattr("forge.tools.app_login.sign_in", fake_sign_in)
+    ensured = await ensure_token(login, home)
+    assert not ensured.token and "closed" in ensured.message and calls == [False]
+
+
 async def test_when_even_the_window_fails_the_user_gets_a_card_and_one_more_window_after_done(
     checked, monkeypatch
 ) -> None:  # type: ignore[no-untyped-def]

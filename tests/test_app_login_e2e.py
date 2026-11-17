@@ -42,10 +42,15 @@ LANDING = (
     + TOKEN
     + "'}})</script></body></html>"
 )
+STATE_ERROR = (
+    '<html><body><pre>{"message": "mismatching_state: CSRF Warning! State not equal in request and response.", '
+    '"status": false}</pre></body></html>'
+)
 
 
 class Site(BaseHTTPRequestHandler):
     api_headers: ClassVar[list[str]] = []
+    refuse_state: ClassVar[int] = 0  # how many returns from the single sign-on end on the state error page
 
     def _send(self, status: int, body: str = "", headers: dict[str, str] | None = None) -> None:
         data = body.encode()
@@ -61,6 +66,11 @@ class Site(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path == "/app/login/":
             self._send(200, LOGIN_PAGE)
+        elif path == "/app/sso" and Site.refuse_state > 0:
+            Site.refuse_state -= 1
+            self._send(302, headers={"Location": "/app/api/login/callback?state=abc"})
+        elif path == "/app/api/login/callback":
+            self._send(500, STATE_ERROR)
         elif path == "/app/sso":
             self._send(302, headers={"Location": "/app/?uuid_key=abc&wisdom_user_exists=True"})
         elif path == "/app/":
@@ -88,6 +98,7 @@ def site(isolated_forge_home: Path):  # type: ignore[no-untyped-def]
     server = ThreadingHTTPServer(("127.0.0.1", 0), Site)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     Site.api_headers = []
+    Site.refuse_state = 0
     base = f"http://127.0.0.1:{server.server_port}/app/login/"
     steps = [
         {"click": "Sign in"},
@@ -145,6 +156,27 @@ async def test_the_token_is_read_from_the_request_header(site: Path) -> None:
     assert Site.api_headers and Site.api_headers[-1] == f"Bearer {TOKEN}"
 
 
+async def test_a_state_error_page_makes_debcraft_start_again_from_the_login_page(site: Path) -> None:
+    Site.refuse_state = 1
+    started = time.monotonic()
+    result = await sign_in(load_logins(site)["by_cookie"], site)
+    if not result.ok and "No browser" in result.message:
+        _skip_without_edge(RuntimeError(result.message))
+    assert result.ok and result.token == TOKEN, result.message
+    assert time.monotonic() - started < 15  # it did not sit on the error page for the whole waiting time
+    lines = (site / "logs" / "field.jsonl").read_text(encoding="utf-8")
+    assert "sign_in_state_refused" in lines and TOKEN not in lines
+
+
+async def test_a_site_that_always_refuses_the_state_is_reported_plainly(site: Path) -> None:
+    Site.refuse_state = 99
+    result = await sign_in(load_logins(site)["by_cookie"], site)
+    if not result.ok and "No browser" in result.message:
+        _skip_without_edge(RuntimeError(result.message))
+    assert not result.ok and "mismatching_state" in result.message and "once only" in result.message
+    assert result.needs_user
+
+
 async def test_the_tool_keeps_the_token_in_the_store_and_never_shows_it(
     site: Path, original_repo: Path, tmp_path: Path
 ) -> None:
@@ -169,6 +201,7 @@ async def test_a_step_that_cannot_complete_says_which_one_and_asks_for_a_visible
     if not result.ok and "No browser" in result.content:
         _skip_without_edge(RuntimeError(result.content))
     assert not result.ok and "Step 1" in result.content and "visible=true" in result.content
+    assert "stood at 127.0.0.1/app/login/" in result.content  # where the browser was, without the query
     assert "gcloud auth login" in result.content
     assert TokenStore(site).get("BROKEN_TOKEN") is None
 
