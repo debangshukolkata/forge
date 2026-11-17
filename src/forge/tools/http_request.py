@@ -366,7 +366,10 @@ class HttpRequest(Tool):
         streamed: list[tuple[float, str]] | None = None
         cut = False
         try:
-            async with httpx.AsyncClient(timeout=args.timeout_s) as client:
+            # A call to this machine never goes through the company proxy: httpx reads the Windows proxy settings,
+            # and Zscaler answered a call to http://127.0.0.1:5062 with its "blocked, invalid server IP" page on the
+            # office laptop (D-632), so the model wrote "localhost is blocked by policy" into its memory.
+            async with httpx.AsyncClient(timeout=args.timeout_s, trust_env=host not in LOCAL_HOSTS) as client:
 
                 async def send(with_headers: dict[str, str]) -> httpx.Response:
                     nonlocal streamed, cut

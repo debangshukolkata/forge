@@ -617,3 +617,40 @@ def test_topics_never_read_and_topics_on_the_same_files_are_offered_for_review(t
         Topic(slug="c", title="C", summary="s", sources={"x.py": "1", "q.py": "1"}),  # one shared file
     ]
     assert overlapping(topics) == [("a", "b")]
+
+
+async def test_the_briefing_is_pinned_in_full_marked_when_its_files_change_and_asked_for_when_missing(
+    isolated_forge_home: Path, shop: Path, tmp_path: Path
+) -> None:
+    context = ToolContext(workspace=create_workspace(shop, tmp_path / "ws1", ""))
+    assert "No briefing on this system yet" in (repository_map_pin(context.workspace) or "")
+
+    body = "\n".join(
+        ["## What it is", "A shop API that sells things."]
+        + [f"- Block {number}: shop/security.py: check_token ({number})" for number in range(60)]
+    )
+    written = await _write(
+        context,
+        title="Briefing",
+        summary="What the system does and where its building blocks are",
+        body=body,
+        sources=["shop/security.py"],
+    )
+    assert written.ok
+    pin = repository_map_pin(context.workspace) or ""
+    assert "No briefing on this system yet" not in pin
+    assert (
+        "A shop API that sells things." in pin and "Block 10:" in pin
+    )  # the lines themselves, not a pointer
+    assert (
+        "Block 59:" not in pin and "more lines: knowledge_search briefing" in pin
+    )  # clipped to a short walkthrough
+    assert pin.count("briefing:") == 0  # not repeated in the one-line index of topics
+    assert "[may be outdated" not in pin
+
+    (shop / "shop" / "security.py").write_text(
+        SECURITY + "\n\ndef changed() -> None: ...\n", encoding="utf-8"
+    )
+    later = create_workspace(shop, tmp_path / "ws2", "")  # a project is answered for its own copy
+    stale = repository_map_pin(later) or ""
+    assert "[may be outdated: these files changed since it was written: shop/security.py" in stale

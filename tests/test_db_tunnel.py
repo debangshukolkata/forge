@@ -73,6 +73,24 @@ def test_an_expired_google_login_is_named_and_asks_for_gcloud_auth_login(
         ensure_tunnel("dev")
 
 
+def test_the_gcloud_refresh_sentence_survives_the_redactor_and_the_advice_comes_first(
+    isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from forge.safety.redact import default_redactor
+
+    monkeypatch.setattr(tunnel, "START_WAIT_SECONDS", 10)
+    script = (
+        "import sys\nprint('ERROR: (gcloud.compute.start-iap-tunnel) There was a problem refreshing your current "
+        "auth tokens: Reauthentication failed. cannot prompt during non-interactive execution.')\nsys.exit(1)\n"
+    )
+    describe(isolated_forge_home, script, free_port(), args=[])
+    with pytest.raises(TunnelError) as caught:
+        ensure_tunnel("dev")
+    text = default_redactor.redact(str(caught.value))
+    assert text.startswith("The tunnel to dev did not open: the Google login has run out")
+    assert "Reauthentication failed" in text and "REDACTED" not in text
+
+
 def test_a_connection_to_the_dev_target_opens_the_tunnel_first_and_reports_a_failure_as_a_connection_error(
     isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

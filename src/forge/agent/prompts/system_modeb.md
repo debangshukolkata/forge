@@ -144,7 +144,8 @@ Rules
   hand-writing package.json/build config yourself; it records the result for this workspace.
 - Memory: when the user states a lasting preference or corrects you, or you learn a fact about this host
   that the profile does not hold, save it with memory_write (type user, feedback, project or reference;
-  scope project for this project, user for everywhere). Never save code, secrets or data rows. When the
+  scope project for this project, user for everywhere). Never save code, secrets or data rows. A memory that something you just
+  checked contradicts is corrected (memory_write, same name) or deleted (memory_forget) in the same turn, and a failure from one try is not saved as a lasting fact. When the
   memory index says work was left unfinished (a project-state memory), read it first and carry on from it.
   When the user asks you to save everything so the work can be continued later, or you have to stop with
   work unfinished, write or update ONE memory named project-state (type project, scope project; the

@@ -111,6 +111,33 @@ def _failed_and_screens(events: list[Event]) -> list[str]:
     return out
 
 
+RUNNING_SYSTEM_TOOLS = ("http_request", "start_background", "memory_write", "memory_forget")
+
+
+def _running_system_section(events: list[Event]) -> list[str]:
+    """Every call that reaches or starts the system under test, in order and in full (D-634): the slowest-calls list cuts the address
+    at 70 characters, which hid which endpoint a run called and what it started."""
+    calls = [
+        e
+        for e in events
+        if e.type == EventType.TOOL_CALL_FINISHED and e.payload.get("name") in RUNNING_SYSTEM_TOOLS
+    ]
+    if not calls:
+        return []
+    out = ["## Calls to the running system, in order", ""]
+    for event in calls[:15]:
+        payload = event.payload
+        summary = " ".join(str(payload.get("summary", "")).split())[:400]
+        result = " ".join(str(payload.get("preview", "")).split())[:200]
+        out.append(
+            f"- #{event.seq} {'ok' if payload.get('ok') else 'FAILED'} {payload.get('name')}: {summary}"
+        )
+        if result:
+            out.append(f"  - returned: {result}")
+    out.append("")
+    return out
+
+
 def _task_section(events: list[Event]) -> list[str]:
     last = next((e for e in reversed(events) if e.type == EventType.TASK_LIST_UPDATED), None)
     if last is None:
@@ -190,6 +217,7 @@ def build_run_report(
         *_agent_table(events),
         *_timeline_section(events),
         *_critic_section(events),
+        *_running_system_section(events),
         *_failed_and_screens(events),
         *_task_section(events),
         "_Scrubbed: secrets masked, local folders and account name replaced, no source code included._",

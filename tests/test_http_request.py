@@ -112,6 +112,20 @@ async def test_a_token_from_the_env_file_is_sent_by_name_and_never_shown(
     assert "HTTP 401" in expired.content and "may have expired" in expired.content
 
 
+async def test_a_call_to_this_machine_ignores_the_company_proxy(
+    hub: tuple[str, ToolContext, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    base, context, env_file = hub
+    env_file.write_text(f"FORGE_REQUEST_TOKEN_NAMES=STAGING_TOKEN\nSTAGING_TOKEN={TOKEN}\n", encoding="utf-8")
+    dead_proxy = f"http://127.0.0.1:{free_port()}"  # nothing listens there: a call that used it would fail
+    for name in ("HTTP_PROXY", "http_proxy", "ALL_PROXY", "all_proxy"):
+        monkeypatch.setenv(name, dead_proxy)
+    monkeypatch.delenv("NO_PROXY", raising=False)
+    monkeypatch.delenv("no_proxy", raising=False)
+    answer = await _call(context, url=f"{base}/api/agents", token_env="STAGING_TOKEN")
+    assert answer.ok and "HTTP 200" in answer.content
+
+
 async def test_only_names_the_user_released_can_be_sent(hub: tuple[str, ToolContext, Path]) -> None:
     base, context, env_file = hub
     own_key = "sk-own-" + "Zz91Kk02" * 4  # check_secrets: fake

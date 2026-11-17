@@ -189,6 +189,11 @@ def delete_topic(store: Path, slug: str) -> bool:
 
 
 FACT_LINE_CHARS = 160
+BRIEFING_SLUG = (
+    "briefing"  # D-635: the walkthrough a new joiner gets; pinned in full, whatever the use counts say
+)
+BRIEFING_LINES = 45
+BRIEFING_LINE_CHARS = 220
 KEY_FACTS_HEADING = re.compile(r"^#{1,6}\s*key facts\s*$", re.IGNORECASE)
 
 
@@ -223,6 +228,27 @@ def key_facts(topic: Topic, lines: int) -> list[str]:
     return facts
 
 
+def briefing_text(topic: Topic, current: dict[str, str]) -> str:
+    """The briefing as the model sees it in every session: its own lines, clipped, with the files that changed named
+    so an entry that rests on one is checked before it is trusted (a wrong landmark sends the model the wrong way)."""
+    lines = [
+        line if len(line) <= BRIEFING_LINE_CHARS else line[: BRIEFING_LINE_CHARS - 1] + "…"
+        for line in (raw.rstrip() for raw in topic.body.splitlines())
+        if line.strip()
+    ]
+    shown = lines[:BRIEFING_LINES]
+    if len(lines) > BRIEFING_LINES:
+        shown.append(f"... {len(lines) - BRIEFING_LINES} more lines: knowledge_search {BRIEFING_SLUG}")
+    changed = topic.outdated(current)
+    if changed:
+        names = ", ".join(changed[:6]) + (f" and {len(changed) - 6} more" if len(changed) > 6 else "")
+        shown.append(
+            f"[may be outdated: these files changed since it was written: {names}. Check the entries that point to "
+            "them before relying on them, then correct the briefing or confirm it.]"
+        )
+    return "\n".join(shown)
+
+
 def index_lines(
     topics: list[Topic],
     current: dict[str, str],
@@ -241,6 +267,7 @@ def index_lines(
         by_slug = {topic.slug: topic for topic in topics}
         topics = [by_slug[slug] for slug in use_order(list(by_slug), usage)]
         limit = min(limit, PINNED_BY_USE)
+    topics = [topic for topic in topics if topic.slug != BRIEFING_SLUG]  # shown in full by `briefing_text`
     lines = []
     with_facts = facts_top if usage and any(reads_of(usage, topic.slug) for topic in topics) else 0
     for number, topic in enumerate(topics[:limit]):

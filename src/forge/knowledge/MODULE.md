@@ -15,6 +15,8 @@ What DebCraft knows about an existing repository between projects (TODO section 
 
 - `topics.cache.json` (D-616): the parsed topics beside the notes, keyed by file size and modified time, so a new process does not parse every note's YAML (1000 topics: seconds, then 79 ms). Derived data, safe to delete. The finish check and the automatic refresh that keep notes true are in `tools/knowledge_tools.py` (`knowledge_finish_note`, `outdated_topics`, `refresh_request`).
 
+- `topics.briefing_text` (D-635): the topic `briefing` (what a tech lead tells a new joiner: purpose, features, building blocks with file and symbol) is pinned in full before the topic index, marked when its source files changed, and left out of the index.
+
 - **Depends on:** (nothing)
 - **Invariants:** Never writes into the user's repository or a workspace: only under DebCraft Home. Stores names, signatures, paths and line numbers; no code bodies and no values of environment variables. A link that is not proven by an import is labelled `by name`. The index describes the user's repository: files the project has changed keep their stored record.
 - **Tests:** test_knowledge_structure.py, test_knowledge_topics.py

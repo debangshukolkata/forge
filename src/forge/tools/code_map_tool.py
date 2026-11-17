@@ -19,7 +19,7 @@ from typing import Any, Literal
 from forge.config import forge_home
 from forge.knowledge.code_map import BY_NAME, CodeMap, cap
 from forge.knowledge.structure import SKIPPED_FOLDERS, STRUCTURE_FILE, Refresh, fingerprint, load, refresh
-from forge.knowledge.topics import all_topics, index_lines
+from forge.knowledge.topics import BRIEFING_SLUG, all_topics, briefing_text, index_lines
 from forge.knowledge.usage import PIN_FACT_LINES, PIN_FACTS_TOP, load_usage
 from forge.knowledge.usage import record as record_use
 from forge.memory.scope import project_dir, scope_of
@@ -205,6 +205,20 @@ def repository_map_pin(
     notes = all_topics(knowledge_store(workspace))
     if notes and live:  # a project that lists a topic and never reads it is what KU5 reports
         record_use(knowledge_store(workspace), str(workspace.root), seen=[topic.slug for topic in notes])
+    briefing = next((topic for topic in notes if topic.slug == BRIEFING_SLUG), None)
+    if briefing is not None:
+        parts.append(
+            "Briefing on this system, what a tech lead would tell a new joiner (what it does, its main features, and "
+            "the building blocks with the file and function or table of each). Start from it; when a run or the code "
+            "shows an entry is wrong, correct it at once with knowledge_write (slug `briefing`) and a reason:\n"
+            + briefing_text(briefing, current_marks(workspace, structure, set(briefing.sources)))
+        )
+    else:
+        parts.append(
+            "No briefing on this system yet. As soon as you know enough to tell a new joiner what it does, its main "
+            "features and where its building blocks are, write it with knowledge_write (title `Briefing`, see the "
+            "learn-repository skill, section 0)."
+        )
     if notes:
         marks = current_marks(workspace, structure, {path for topic in notes for path in topic.sources})
         parts.append(

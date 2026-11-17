@@ -75,7 +75,11 @@ class MemoryWrite(Tool):
         await context.emit(
             "notice", {"kind": "memory", "text": f"Remembered ({memory.name}): {memory.description}"}
         )
-        return ToolResult(ok=True, content=f"Saved as {memory.name} ({args.scope}).")
+        return ToolResult(
+            ok=True,
+            content=f"Saved as {memory.name} ({args.scope}). If a later check shows it is wrong, correct it with "
+            "memory_write under the same name or delete it with memory_forget, in that turn.",
+        )
 
 
 class MemoryForget(Tool):

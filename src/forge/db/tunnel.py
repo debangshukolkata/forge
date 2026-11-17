@@ -186,11 +186,16 @@ def _ensure_tunnel(target_name: str, home: Path | None = None) -> str:
         _stop(process)
         _running.pop(spec.name, None)
         needs_login = any(hint in tail.lower() for hint in LOGIN_HINTS)
-        advice = (
-            " The Google login looks expired: the user has to run `gcloud auth login`, then try again."
-            if needs_login
-            else ""
-        )
+        # gcloud's "problem refreshing your current auth tokens: <reason>" looks like a secret assignment to the
+        # redactor, which then hid the reason itself (seen on the office laptop, D-631): reworded before it goes out.
+        shown = tail.replace("auth tokens:", "auth tokens -") or "none"
+        if needs_login:
+            # The advice comes first: the top bar and the cards cut long texts, and the log tail is the long part.
+            raise TunnelError(
+                f"The tunnel to {spec.name} did not open: the Google login has run out (gcloud cannot ask for it "
+                "in a hidden window). Run `gcloud auth login` in PowerShell, sign in, then click Open again. "
+                f"gcloud said: {shown}"
+            )
         raise TunnelError(
-            f"The tunnel to {spec.name} did not open within {START_WAIT_SECONDS} s. Output: {tail or 'none'}.{advice}"
+            f"The tunnel to {spec.name} did not open within {START_WAIT_SECONDS} s. Output: {shown}."
         )

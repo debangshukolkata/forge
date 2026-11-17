@@ -4949,3 +4949,42 @@ Every page is at most 30 lines of 100 characters (readable in a photograph), is 
 **Built:** `tools/app_login.py`: `wait_url` is now a poll that stops at once on the state error page (before, the window sat on it for 240 s), a failed click checks for it too, and the steps run again from `login_url`. After 3 refusals the message says so plainly. Field log record `sign_in_state_refused` (environment, attempt, visible; no value), shown on the laptop page "Sign-in and token cards".
 **Limits:** tested on the stand-in site in headless Edge (refused once: signs in; refused always: plain message). Not yet seen on the real site: if the site never keeps its session cookie in DebCraft's browser, the third pass fails too and the report shows `highest attempt 3`.
 **D-630 addendum (second photo, same day):** dev became green after the window opened again, so starting again does get past the state error on the real site (seen once, by hand). SIT stayed red with "Step 2 (wait_url 'uuid_key') did not complete in 240 s: Target page, context or browser has been closed": the wording hid that the window was closed, not timed out, and did not say where it stood. Now a closed window is reported as closed, every step failure names the host and path where the browser stood (never the query, which carries codes and state), and a first sign-in that already ran in a visible window is not followed by a second window at once (`SignIn.shown`). Why SIT did not reach its second page is still open: the next photo of the red line answers it.
+
+### D-631 — The tunnel's "Google login has run out" says so, with the advice first (2026-11-17)
+**Reported by the user (photos):** the dev tunnel failed after 45 s with `There was a problem refreshing your current auth tokens: [REDACTED:`. `tunnels.yaml` matches the command the user runs by hand, so the file is right.
+**Cause:** gcloud could not refresh the Google login and, with no window and no keyboard, cannot ask for it (the usual text after the colon is "Reauthentication failed. cannot prompt during non-interactive execution"). The redactor then read `auth tokens: Reauthentication...` as a secret assignment and hid the reason, and the advice sat after the long log text, where the cards cut it off.
+**Built:** `db/tunnel.py`: a login failure now starts with "the Google login has run out ... run `gcloud auth login` in PowerShell, sign in, then click Open again"; the sentence of gcloud is reworded (`auth tokens -`) so it passes the redactor. DebCraft still never runs `gcloud auth login` itself (user rule, 2026-11-13).
+**Open:** the Google login of the laptop ran out a few hours after the user's own `gcloud auth login`: how long it lasts is a fact for the field report. The next photo of the tunnel line after a fresh login closes TK8.
+
+### D-632 — A call to this machine never goes through the company proxy (2026-11-17)
+**Seen on the office laptop (photo of the Argo CD run, conversation c2):** the dev API call (`.../evaluate-3p-api-suite`, HTTP 200, 52 deployments) worked, but `http_request` to `http://127.0.0.1:5062/evaluate` (the local bridge) came back with a Zscaler page ("Website blocked by TCS policy, Blocked due to invalid server IP"). A call to 127.0.0.1 only meets Zscaler when it is sent to the proxy. `httpx.AsyncClient` reads the system proxy settings (`trust_env`), and on Windows its no-proxy list does not carry the registry's bypass list.
+**Built:** `tools/http_request.py`: `trust_env` is off for `localhost`, `127.0.0.1` and `::1`; every other address is unchanged. Test with a dead proxy in the environment: it failed before the change and passes after.
+**Side effect to undo:** the model saved a project memory, `localhost-http-request-zscaler-block` ("localhost http_request calls to the bridge can be blocked by corporate policy"). It is wrong, and it will keep the model from using the bridge. The user deletes it in the "What DebCraft learned" list of that project.
+**Not decided:** whether `http_request` to other hosts should honour the proxy (it does today, and the dev call worked that way).
+
+### D-633 — Show the answer, name the API, correct wrong learnings, start the real app (2026-11-17)
+**Asked by the user, from the Argo CD run (four points):** (1) when the dev API answered, DebCraft should have shown the answer and said it would now try the same call on the local copy; (2) say which API it called: the one it called was not the right one; (3) a learning found wrong should be deleted or updated by DebCraft itself; (4) the application was not started locally.
+**Built (instructions only, not measured live yet):** `system.md`: a rule to show what a call returned, name the call (method, address, payload keys, why this endpoint), say the next step before doing it, and ask the user when two endpoints could do the job; a memory rule (a memory or topic that a fresh check contradicts is corrected with `memory_write` under the same name, or deleted with `memory_forget`, in that turn; a failure from one try is not saved as a lasting fact); the same memory rule in `system_modeb.md`. `memory_write` tells the model how to correct. Skill `solve-against-running-system`: start the application's own server from the copy (not a bridge written to reach dev), say the command and show its "listening" line; the endpoint that runs an agent for a user is not one whose name says evaluate, test-suite or batch.
+**Not built:** nothing in a tool forces these; the model can still ignore them. If a live run shows that, the next step is to put the check into the tool (for example `http_request` returning the answer text to the user's message itself).
+**Open (needs the laptop run):** which endpoint was the right one for the Argo CD agent and what DebCraft actually started as `dev-argocd-bridge`: only the conversation's events say; asked the user for the run report of c2.
+
+## D-634 — The run report lists every call to the running system in full (2026-11-17)
+The c2 run report cut the address of each call at 70 characters, so it could not show which endpoint a run called or
+what `start_background` started. New section "Calls to the running system, in order" (`engine/run_report.py`): every
+`http_request`, `start_background`, `memory_write` and `memory_forget` only (at most 15; not reads, queries or stops), in order, summary up to
+400 characters and the start of the result. Nothing else changes; secrets are masked by the existing scrubber.
+
+## D-635 — The briefing: what a tech lead tells a new joiner, pinned in full (2026-11-17)
+The user (a tech lead): the main building blocks of a codebase (where the model gateway is called, where agents are
+written and started, where tools are attached, which tables hold what) are remembered at a higher level than the
+rest, and the set of questions varies per system: it is what one explains to a new joiner.
+Options: (A) one pinned topic written like a walkthrough, (B) a search at the start of each task, (C) a hand-written
+sheet. Chose A; C stays possible because the user can edit the note. Built on the topic machinery, nothing new on disk:
+topic slug `briefing` (`knowledge/topics.py` `BRIEFING_SLUG`, `briefing_text`): shown in full (45 lines, 220 characters
+each) before the topic index in the pin (`tools/code_map_tool.py`) and left out of that index; its `sources` are
+fingerprinted, so when one of those files changed the pin says which, and the model checks those lines before trusting
+them. With no briefing the pin asks the model to write one. No fixed question list: skill `learn-repository` section 0
+describes the walkthrough (purpose, main features, building blocks this system has, what is easy to get wrong), every
+line pointing to a file and function or table. System prompt: start from it, add a block it lacks, correct a wrong line
+at once (D-633). Not measured live yet: the check is whether a run on WisdomNext starts from the briefing and finds
+the endpoint that runs an agent for a user (laptop item).

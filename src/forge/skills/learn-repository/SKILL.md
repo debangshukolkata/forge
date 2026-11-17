@@ -8,6 +8,27 @@ description: Explores an existing repository and writes down how it works as top
 The goal is that no later project has to work out again what you work out now. You write **topics**: short notes
 about one thing each, with the files and lines that prove them. You change no file of the repository.
 
+## 0. The briefing comes first
+
+Before the topics, make sure there is one topic with the title `Briefing` (slug `briefing`). It is pinned in full in
+every session on this repository, so it is what you would tell a new joiner on their first day, not a list of
+files. Write it the way a tech lead explains the system, in the order a person needs it:
+
+1. What the system is for and who uses it (two or three lines).
+2. Its main features or capabilities, one line each.
+3. Its building blocks, one line each: the place where it starts, where the model gateway is called, where agents
+   or services are written and started, where tools are attached to them, where files are written, which tables
+   hold what, which API runs what for a user, how it is started locally and on which port. Take the blocks THIS
+   system has; skip the ones it does not, and add the ones it has that are not named here.
+4. What is easy to get wrong (a name that suggests the wrong thing, such as an endpoint that runs test cases and
+   not a user's request).
+
+Every line points to its file and function or table (`agents/react.py: build_agent`). A line you only inferred
+says so. Keep it to about 45 short lines: the pointer, not the explanation (the explanation is a topic). List all
+the files it rests on in `sources` so it is marked outdated when they change. When you learn a building block
+later, add its line; when a line is wrong, correct it with the `reason`. If a briefing exists and its files did
+not change, leave it.
+
 ## 1. See what is known and what is open
 
 1. `knowledge_search` with action `agenda`. It lists, in this order of value:
