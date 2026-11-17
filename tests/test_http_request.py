@@ -397,3 +397,43 @@ async def test_a_token_can_go_into_a_query_parameter_a_cookie_or_a_body_field(
     assert not listy.ok and "object" in listy.content
     header = await _call(context, url=f"{base}/x", token_env=name)
     assert header.ok and "Bearer [token hidden]" in header.content and TOKEN not in header.content
+
+
+@pytest.fixture
+def gateway_404() -> Iterator[str]:
+    """A server in front of an application that routes only `/gateway/api/...` and answers anything else with its own web page."""
+
+    class Handler(BaseHTTPRequestHandler):
+        def _answer(self) -> None:
+            routed = self.path.startswith("/gateway/api/")
+            body = b'{"ok": true}' if routed else b"<html><body><h1>404 Not Found</h1>nginx</body></html>"
+            self.send_response(200 if routed else 404)
+            self.send_header("Content-Type", "application/json" if routed else "text/html")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        do_GET = do_POST = _answer
+
+        def log_message(self, *args: object) -> None:
+            return
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{server.server_address[1]}"
+    server.shutdown()
+
+
+async def test_a_404_web_page_tells_the_model_to_find_the_real_path_not_to_guess_prefixes(
+    gateway_404: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("FORGE_ENV_FILE", str(tmp_path / "debcraft.env"))
+    context = ToolContext(workspace=None)  # type: ignore[arg-type]
+    lost = await _call(context, url=f"{gateway_404}/third-party-integration/evaluate", method="POST")
+    assert (
+        "HTTP 404" in lost.content
+        and "not routed" in lost.content
+        and "Do not try more guessed prefixes" in lost.content
+    )
+    found = await _call(context, url=f"{gateway_404}/gateway/api/agent/evaluate", method="POST")
+    assert "HTTP 200" in found.content and "not routed" not in found.content

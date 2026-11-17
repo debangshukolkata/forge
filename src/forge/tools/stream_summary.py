@@ -31,7 +31,7 @@ DELTA_KINDS = ("delta", "token", "chunk", "partial", "text")
 MAX_KINDS = 12
 MAX_TOOLS = 25
 MAX_ERRORS = 3
-ANSWER_CHARS = 600
+ANSWER_CHARS = 4000  # D-637: 600 cut a list of 52 deployments; the full stream is kept in a file anyway
 
 
 @dataclass
@@ -93,14 +93,29 @@ def _text_of(payload: Any) -> str:
     if isinstance(payload, str):
         return payload
     if isinstance(payload, dict):
-        for key in ("text", "answer", "content", "message", "output", "result", "delta", "token"):
+        for key in (
+            "text",
+            "answer",
+            "content",
+            "message",
+            "output",
+            "result",
+            "response",
+            "data",
+            "delta",
+            "token",
+        ):
             value = payload.get(key)
             if isinstance(value, str) and value:
                 return value
-            if isinstance(value, dict):
+            if isinstance(value, dict | list):
                 inner = _text_of(value)
                 if inner:
                     return inner
+    if isinstance(
+        payload, list
+    ):  # content as a list of blocks, like {"content": [{"type": "text", "text": "..."}]}
+        return "\n".join(part for part in (_text_of(item) for item in payload) if part)
     return ""
 
 

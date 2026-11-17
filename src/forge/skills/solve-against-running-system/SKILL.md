@@ -62,10 +62,13 @@ You work on a copy of the repository. Start that copy; never test against, or wr
 Do this before you change anything: the first run through the API is the evidence the rest is built on.
 
 - `http_request` to the endpoint you found, with the payload it expects. Give `timeout_s` for a run that takes long.
-  **Running an agent is the endpoint that runs the agent for a user**, found with `code_map` `endpoints`/`endpoint`
-  and the code that calls the agent's loop; an endpoint whose name says evaluate, test-suite or batch usually
-  runs a set of stored cases and is not it. Name the endpoint you chose and why in your message, and show the
-  agent's answer to the user as soon as you have it.
+  **Running an agent is the endpoint that runs the agent**, found with `code_map` `endpoints`/`endpoint` and the
+  code that calls the agent's loop. Judge it by what its handler does, never by its name (in one system the
+  endpoint called `evaluate-3p-api-suite` is the one that runs an agent for a prompt). Name the endpoint you chose
+  and why in your message, and show the agent's answer to the user as soon as you have it.
+  **The path in the code is only the end of the address**: a gateway prefix and the prefix a router adds come
+  before it. Take the full address from a call that already works on that host or from the code that calls it
+  (the front end), not from guessing; after a 404 that is a web page, stop guessing.
 - **The token is DebCraft's job, not yours and not the user's.** Call the endpoint without a token. When it
   answers 401 or 403, `http_request` signs in to the environment of that host (for the copy on this machine:
   the environment `dev`) and repeats the call; the facts at the end of your instructions name the

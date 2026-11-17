@@ -179,3 +179,27 @@ async def test_a_stream_that_never_ends_is_cut_at_the_time_limit(original_repo: 
     finally:
         server.shutdown()
     assert result.ok and "cut at the time limit" in result.content and "tick x" in result.content
+
+
+def test_a_final_answer_wrapped_in_data_or_blocks_is_found_and_a_long_one_is_not_cut_at_600() -> None:
+    long_answer = "deployment-name\n" * 150  # about 2,400 characters
+    wrapped = json.dumps({"event": "final", "data": {"answer": long_answer}})
+    lines = summarize_stream(
+        [
+            (0.1, "data: " + json.dumps({"type": "tool_call", "name": "list"})),
+            (0.2, ""),
+            (3.0, "data: " + wrapped),
+            (3.1, ""),
+        ],
+        3.1,
+    )
+    final = next(line for line in lines if line.startswith("Final answer"))
+    assert "(2,400 characters)" in final and final.count("deployment-name") >= 149
+
+    blocks = json.dumps(
+        {
+            "type": "message",
+            "content": [{"type": "text", "text": "first"}, {"type": "text", "text": "second"}],
+        }
+    )
+    assert "first\nsecond" in "\n".join(summarize_stream([(0.1, "data: " + blocks), (0.2, "")], 0.2))

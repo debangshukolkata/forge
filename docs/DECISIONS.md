@@ -4988,3 +4988,23 @@ describes the walkthrough (purpose, main features, building blocks this system h
 line pointing to a file and function or table. System prompt: start from it, add a block it lacks, correct a wrong line
 at once (D-633). Not measured live yet: the check is whether a run on WisdomNext starts from the briefing and finds
 the endpoint that runs an agent for a user (laptop item).
+
+## D-636 — A 404 web page is "not routed": find the real path, do not guess prefixes; names do not decide (2026-11-17)
+Laptop run, 2026-11-17 16:11 to 16:13: the model took the end of an endpoint from the code
+(`/third-party-integration/evaluate-3p-api-suite`), tried `/wnxt/api/...`, `/wnxtv4/api/...`, without prefix and with
+trailing slashes (all nginx 404 pages), until the user pasted the real address
+(`/wnxtv4/api/agent/third-party-integration/evaluate-3p-api-suite`, HTTP 200). The missing part was `/agent`, a prefix the
+code's path did not show. Two changes. (1) `http_request`: a 404 whose answer is HTML now says the path is not routed,
+that the code's path is only the end of the real one, and to take the full address from a call that works, the front
+end's code or the docs, or to ask for one working URL, and not to guess more prefixes. (2) I was wrong in D-633: the
+skill said an endpoint named evaluate/test-suite is "usually not" the one that runs an agent; here that very endpoint is
+the one the user calls. The skill now says to judge an endpoint by what its handler does, never by its name. Open: why
+`code_map endpoint` showed no `/agent` (a prefix added at registration that the static reader did not see) is not
+known; it needs the repository on this machine or the laptop's `code_map endpoint` output.
+
+## D-637 — The stream summary finds a wrapped final answer and shows more of it (2026-11-17)
+Laptop, 2026-11-17 16:20: after the call that returned 200 the model said "the streaming parser summarized the final
+answer oddly", and the user never saw the deployment list. Two likely causes, fixed without having seen the stream:
+the answer was read only from a few top-level keys (now also `response` and `data`, nested dicts and lists of blocks),
+and it was cut at 600 characters (now 4,000; the full stream is kept in a file as before). To confirm on the laptop:
+the same call again; the "Final answer" line should hold the list.

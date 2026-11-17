@@ -520,6 +520,16 @@ class HttpRequest(Tool):
                 "its environment with settings_file (ask the user only for the address of its login page): "
                 "DebCraft then signs in by itself. Do not ask the user for a token."
             )
+        if response.status_code == 404 and "html" in response.headers.get("content-type", "").lower():
+            # D-636: a web page as the answer to an API call is the server in front of the application saying it
+            # routes no such path; the model then tried five guessed prefixes in a row instead of finding the real one.
+            lines.append(
+                "This 404 is a web page from the server in front of the application, not an answer of the "
+                "application: this path is not routed. The path in the code is only the end of the real one (a "
+                "gateway prefix and the prefix a router adds come before it). Do not try more guessed prefixes: "
+                "find the full address where something already calls it (the front end's code, a call that "
+                "worked on this host, the README or the API docs), or ask the user for one working URL."
+            )
         return ToolResult(
             ok=response.status_code < 500,
             content="\n".join(lines) + "\n\n" + shown,
