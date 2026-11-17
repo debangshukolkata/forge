@@ -11,9 +11,11 @@ from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
+from forge.config import forge_home
 from forge.engine.log_summary import summarize
 from forge.protocol.events import Event, EventType, load_event_log
 from forge.safety.redact import Redactor, default_redactor
+from forge.toolkit import field_log
 from forge.workspace.conversations import conversation_file
 
 PREVIEW_CHARS = 140
@@ -208,11 +210,64 @@ def _timeline_section(events: list[Event]) -> list[str]:
     return out
 
 
+LAST_REQUEST_CHARS = 700
+LAST_ANSWER_CHARS = 1800
+FIELD_RECORDS_SHOWN = 25
+
+
+def _what_happened(events: list[Event]) -> list[str]:
+    """The top of the report (D-638): what was asked in the last turn, how it ended and what DebCraft said last, so the
+    reader does not have to infer the outcome from counts. The final message is where DebCraft says what failed."""
+    if not events:
+        return []
+    last_request = next((e for e in reversed(events) if e.type == EventType.USER_MESSAGE), None)
+    start = events.index(last_request) if last_request else 0
+    turn = events[start:]
+    errors = [str(e.payload.get("message", "")) for e in turn if e.type == EventType.ERROR]
+    failed = [e for e in turn if e.type == EventType.TOOL_CALL_FINISHED and not e.payload.get("ok")]
+    answer = next((e for e in reversed(turn) if e.type == EventType.MESSAGE_DONE), None)
+    asked = " ".join(str((last_request.payload if last_request else {}).get("text", "")).split())
+    out = ["## What happened in the last request", ""]
+    out.append(f"- Asked: {asked[:LAST_REQUEST_CHARS] or '(no user message)'}")
+    out.append(f"- Started {turn[0].ts}, last event {turn[-1].ts}.")
+    out.append(
+        f"- Errors: {len(errors)}; failed tool calls: {len(failed)}; "
+        + (
+            "it ended with an answer."
+            if answer
+            else "it ended WITHOUT a final answer (stopped, or still running)."
+        )
+    )
+    for message in errors[:5]:
+        out.append(f"  - error: {' '.join(message.split())[:300]}")
+    if answer:
+        text = " ".join(str(answer.payload.get("text", "")).split())
+        out += ["", "What DebCraft said last:", "", f"> {text[:LAST_ANSWER_CHARS]}"]
+    return [*out, ""]
+
+
+def _connection_section(events: list[Event], home: Path) -> list[str]:
+    """The facts about connections and sign-ins since this conversation began (names, counts, seconds; never a value)."""
+    since = events[0].ts if events else ""
+    records = [r for r in field_log.read(home=home) if str(r.get("ts", "")) >= since[:19]]
+    if not records:
+        return []
+    out = ["## Connection and sign-in facts since the conversation began (newest last)", ""]
+    for record in records[-FIELD_RECORDS_SHOWN:]:
+        rest = ", ".join(f"{k}={v}" for k, v in record.items() if k not in ("ts", "kind"))
+        out.append(f"- {record.get('ts')} {record.get('kind')}: {rest}"[:300])
+    return [*out, ""]
+
+
 def build_run_report(
-    events: list[Event], workspace: Path | None = None, redactor: Redactor = default_redactor
+    events: list[Event],
+    workspace: Path | None = None,
+    redactor: Redactor = default_redactor,
+    home: Path | None = None,
 ) -> str:
     """The whole report as markdown text, scrubbed."""
     parts = [
+        *_what_happened(events),
         summarize(events),
         *_agent_table(events),
         *_timeline_section(events),
@@ -220,6 +275,7 @@ def build_run_report(
         *_running_system_section(events),
         *_failed_and_screens(events),
         *_task_section(events),
+        *_connection_section(events, home or forge_home()),
         "_Scrubbed: secrets masked, local folders and account name replaced, no source code included._",
     ]
     return _scrubber(workspace, redactor)("\n".join(parts) + "\n")
@@ -236,4 +292,23 @@ def write_run_report(
     target = destination or workspace / ".forge" / "run-report.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(build_run_report(events, workspace), encoding="utf-8")
+    return target
+
+
+def write_send_report(
+    home: Path | None = None, workspace: Path | None = None, conversation: str | None = None
+) -> Path | None:
+    """The one report to send after a task that failed or went wrong (D-638): the newest project (or the named one),
+    written to `<DebCraft Home>/reports/` with the time in its name, plus `latest.md` beside it. None: no project has a
+    transcript yet."""
+    from forge.engine.facts_report import newest_workspace
+
+    base = home or forge_home()
+    root = workspace or newest_workspace(base)
+    if root is None:
+        return None
+    folder = base / "reports"
+    target = folder / f"debcraft-report-{datetime.now():%Y%m%d-%H%M%S}.md"
+    write_run_report(root, target, conversation)
+    (folder / "latest.md").write_text(target.read_text(encoding="utf-8"), encoding="utf-8")
     return target

@@ -5008,3 +5008,15 @@ answer oddly", and the user never saw the deployment list. Two likely causes, fi
 the answer was read only from a few top-level keys (now also `response` and `data`, nested dicts and lists of blocks),
 and it was cut at 600 characters (now 4,000; the full stream is kept in a file as before). To confirm on the laptop:
 the same call again; the "Final answer" line should hold the list.
+
+## D-638 — One command to send for analysis: `/report` and `forge report` (2026-11-17)
+The user: after a task that failed (connectivity, missing knowledge, anything) there should be one command that writes a
+file they can send. Parts existed (`run-report` needed the project folder and conversation id, `facts` and `laptop
+report` were pages to photograph). Now: `python -m forge.cli report` and the chat command `/report`, no arguments: the
+newest project and its active conversation, written to `<DebCraft Home>/reports/debcraft-report-<time>.md` with a copy
+at `reports/latest.md`; the terminal command also opens Explorer on the file. The file starts with "What happened in the
+last request" (what was asked, the errors, whether it ended with an answer, and DebCraft's last message, which is where
+it says what failed), then the existing run report (time, tokens, calls to the running system, failed calls, tasks), and
+ends with the connection and sign-in facts since the conversation began (`logs/field.jsonl`: names, counts, seconds,
+never a value). Scrubbed as before: secrets masked, folders and the account name replaced, no source code.
+`engine/run_report.py` (`write_send_report`), `cli.py`, `engine/slash_commands.py`.

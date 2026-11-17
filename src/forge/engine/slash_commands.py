@@ -66,6 +66,7 @@ HELP_TEXT = """Available commands:
   /revoke-read <path>       take that permission back
   /app-keys [model|off]     let the app being built use one of your Azure OpenAI models while it is tested (off = take it back)
   /bg [kill <name>]         background processes (dev servers...) with the tail of their output
+  /report                   after a task that failed or went wrong: write one scrubbed file to send for analysis
   /log | /diff <task|hash>  the workspace's local history: one commit per completed task
   /rename <name>            name this session/workspace
   /export-chat              save the conversation as Markdown (.forge/exports/)
@@ -131,6 +132,7 @@ class SlashCommandHandler:
             "/agents": self._agents,
             "/bg": self._bg,
             "/log": self._log,
+            "/report": self._report,
             "/diff": self._diff,
             "/rename": self._rename,
             "/export-chat": self._export_chat,
@@ -647,6 +649,18 @@ class SlashCommandHandler:
             tail = "\n".join(f"      {line}" for line in list(entry.lines)[-5:])
             lines.append(f"  {name}  [{state}]  port {entry.port or '-'}  {entry.command}\n{tail}")
         await self._say("\n".join(lines) or "No background processes.")
+
+    async def _report(self, args: list[str]) -> None:
+        from forge.engine.run_report import write_send_report
+
+        target = await asyncio.to_thread(write_send_report, None, self._workspace().root, None)
+        if target is None:
+            await self._say("There is nothing to report yet: this project has no transcript.")
+            return
+        await self._say(
+            f"Report written: {target}\nIt holds no source code and no secrets. Send this one file "
+            f"(a copy is always at {target.parent / 'latest.md'})."
+        )
 
     async def _log(self, args: list[str]) -> None:
         from forge.parity.history import History

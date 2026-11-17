@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -114,6 +117,13 @@ def build_parser() -> argparse.ArgumentParser:
     run_report.add_argument(
         "--out", type=Path, help="where to write it (default: <workspace>/.forge/run-report.md)"
     )
+    report = subcommands.add_parser(
+        "report",
+        help="after a task that failed or went wrong: write ONE scrubbed file to send for analysis, no arguments needed (D-638)",
+    )
+    report.add_argument("--workspace", type=Path, dest="send_workspace", help="default: the newest project")
+    report.add_argument("--conversation", help="a conversation id, like c2 (default: the active one)")
+    report.add_argument("--no-open", action="store_true", help="do not open the folder")
     probe = subcommands.add_parser(
         "template-probe",
         help="try a company PowerPoint template: how DebCraft reads it, a test deck on it, pictures and a report to send",
@@ -237,6 +247,8 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(_diagnose(args.diagnose_workspace, error, not args.no_run))
     if args.command == "log-summary":
         return _log_summary(args.workspace, args.log, args.conversation)
+    if args.command == "report":
+        return _send_report(args.send_workspace, args.conversation, not args.no_open)
     if args.command == "run-report":
         return _run_report(args.report_workspace, args.out, args.conversation)
     if args.command == "laptop":
@@ -566,6 +578,22 @@ def _run_report(workspace_path: Path, out: Path | None, conversation: str | None
         )
         return 2
     print(f"Run report written to {write_run_report(workspace_path, out, conversation)}")
+    return 0
+
+
+def _send_report(workspace_path: Path | None, conversation: str | None, open_folder: bool) -> int:
+    from forge.engine.run_report import write_send_report
+
+    target = write_send_report(workspace=workspace_path, conversation=conversation)
+    if target is None:
+        print("No project with a transcript was found. Open a project in DebCraft and give it a task first.")
+        return 2
+    print(f"Report written: {target}")
+    print("It holds no source code and no secrets (they are masked; folders and your name are replaced).")
+    print("Send this one file. A copy with the same content is always at:", target.parent / "latest.md")
+    if open_folder and sys.platform == "win32":
+        with contextlib.suppress(OSError):
+            subprocess.Popen(["explorer", "/select,", str(target)])
     return 0
 
 
