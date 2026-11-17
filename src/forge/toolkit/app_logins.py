@@ -194,6 +194,15 @@ def login_for_token(name: str, home: Path | None = None) -> EnvLogin | None:
     return next((login for login in logins.values() if login.token_name == name), None)
 
 
+def is_environment_name(name: str, home: Path | None = None) -> bool:
+    """True when `name` is the name of an environment in app_logins.yaml (`dev`, `sit`), not of a token. The model passed
+    the environment where a token name belongs four times in one run (D-639)."""
+    try:
+        return name in load_logins(home) and login_for_token(name, home) is None
+    except ConfigError:
+        return False
+
+
 def jwt_expiry(token: str) -> float | None:
     """The `exp` claim of a JWT (not a secret), or None when the token is no JWT or has no expiry."""
     parts = token.split(".")

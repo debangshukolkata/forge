@@ -5,6 +5,7 @@ masked by the redactor and the user's folders and account name are replaced befo
 from __future__ import annotations
 
 import getpass
+import json
 import re
 from collections import defaultdict
 from collections.abc import Callable
@@ -126,8 +127,13 @@ def _running_system_section(events: list[Event]) -> list[str]:
     ]
     if not calls:
         return []
-    out = ["## Calls to the running system, in order", ""]
-    for event in calls[:15]:
+    starts = [e for e in calls if e.payload.get("name") == "start_background"]
+    others = [e for e in calls if e.payload.get("name") != "start_background"][-15:]
+    shown = sorted({e.seq: e for e in [*starts[:6], *starts[-3:], *others]}.values(), key=lambda e: e.seq)
+    out = ["## Calls to the running system, in order (what was started; the last calls)", ""]
+    if len(starts) > 9:
+        out.append(f"({len(starts)} start_background calls in all; the first 6 and the last 3 are listed)")
+    for event in shown:
         payload = event.payload
         summary = " ".join(str(payload.get("summary", "")).split())[:400]
         result = " ".join(str(payload.get("preview", "")).split())[:200]
@@ -138,6 +144,27 @@ def _running_system_section(events: list[Event]) -> list[str]:
             out.append(f"  - returned: {result}")
     out.append("")
     return out
+
+
+def _delivery_section(workspace: Path | None) -> list[str]:
+    """The files the run would deliver (output/MANIFEST.json): names and status only. The closing line of a run counts
+    deletions without naming them (D-639)."""
+    if workspace is None:
+        return []
+    try:
+        manifest = json.loads((workspace / "output" / "MANIFEST.json").read_text(encoding="utf-8"))
+        files = [(str(f.get("status")), str(f.get("path"))) for f in manifest.get("files", [])]
+    except (OSError, ValueError, AttributeError):
+        return []
+    if not files:
+        return []
+    order = {"deleted": 0, "modified": 1, "added": 2}
+    files.sort(key=lambda item: (order.get(item[0], 3), item[1]))
+    out = [f"## Files this run would deliver ({len(files)})", ""]
+    out += [f"- {status}: {path}" for status, path in files[:40]]
+    if len(files) > 40:
+        out.append(f"- ... {len(files) - 40} more")
+    return [*out, ""]
 
 
 def _task_section(events: list[Event]) -> list[str]:
@@ -225,7 +252,11 @@ def _what_happened(events: list[Event]) -> list[str]:
     turn = events[start:]
     errors = [str(e.payload.get("message", "")) for e in turn if e.type == EventType.ERROR]
     failed = [e for e in turn if e.type == EventType.TOOL_CALL_FINISHED and not e.payload.get("ok")]
-    answer = next((e for e in reversed(turn) if e.type == EventType.MESSAGE_DONE), None)
+    done = [e for e in turn if e.type == EventType.MESSAGE_DONE]
+    # D-639: the closing line the workflow adds ("Done: 4 task(s) completed ...") is a template, not the model's answer to
+    # the user; report the last real message and the closing apart.
+    answer = next((e for e in reversed(done) if e.payload.get("model") != "forge"), None)
+    closing = next((e for e in reversed(done) if e.payload.get("model") == "forge"), None)
     asked = " ".join(str((last_request.payload if last_request else {}).get("text", "")).split())
     out = ["## What happened in the last request", ""]
     out.append(f"- Asked: {asked[:LAST_REQUEST_CHARS] or '(no user message)'}")
@@ -243,6 +274,9 @@ def _what_happened(events: list[Event]) -> list[str]:
     if answer:
         text = " ".join(str(answer.payload.get("text", "")).split())
         out += ["", "What DebCraft said last:", "", f"> {text[:LAST_ANSWER_CHARS]}"]
+    if closing is not None:
+        line = " ".join(str(closing.payload.get("text", "")).split())
+        out += ["", f"Closing line added by the workflow (a template, not an answer): {line[:300]}"]
     return [*out, ""]
 
 
@@ -274,6 +308,7 @@ def build_run_report(
         *_critic_section(events),
         *_running_system_section(events),
         *_failed_and_screens(events),
+        *_delivery_section(workspace),
         *_task_section(events),
         *_connection_section(events, home or forge_home()),
         "_Scrubbed: secrets masked, local folders and account name replaced, no source code included._",

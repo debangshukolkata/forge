@@ -631,3 +631,13 @@ def test_the_facts_name_the_environments_and_their_addresses(remote) -> None:  #
     assert "an address of its API that answers: https://dev.example.com/app/api/me" in facts
     assert "Environment `sit`" in facts and "is sent the token of `dev`" in facts
     assert "DEVELOPMENT_INSTANCE_TOKEN" not in facts and "released for http_request" not in facts
+
+
+def test_an_environment_name_is_told_from_a_token_name(isolated_forge_home: Path) -> None:
+    from forge.toolkit.app_logins import is_environment_name
+
+    assert not is_environment_name("dev", isolated_forge_home)  # no file: nothing to be an environment of
+    write_logins(isolated_forge_home, GOOD)
+    assert is_environment_name("dev", isolated_forge_home) and is_environment_name("sit", isolated_forge_home)
+    assert not is_environment_name("DEV_TOKEN", isolated_forge_home)  # a token name is not an environment
+    assert not is_environment_name("STAGING_TOKEN", isolated_forge_home)

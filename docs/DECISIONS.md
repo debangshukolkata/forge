@@ -5020,3 +5020,30 @@ it says what failed), then the existing run report (time, tokens, calls to the r
 ends with the connection and sign-in facts since the conversation began (`logs/field.jsonl`: names, counts, seconds,
 never a value). Scrubbed as before: secrets masked, folders and the account name replaced, no source code.
 `engine/run_report.py` (`write_send_report`), `cli.py`, `engine/slash_commands.py`.
+
+## D-639 — What the first /report taught (2026-11-17, conversation of 10:46 to 11:23, 6 requests, 5,373 s)
+Findings from the report the user sent. (1) The "last thing DebCraft said" was the workflow's template ("Done: 4 task(s)
+completed. output/ has 13 new and 12 deletion(s) ...") and not an answer to the user's question "let me know if you are
+able to access": the report now shows the last real message and the template apart, and a new section "Files this run
+would deliver" names every file from output/MANIFEST.json (deletions first), because the closing line counts 12
+deletions without naming one. (2) "Calls to the running system" listed only the first 15 calls and so hid the local runs;
+it now lists the first 6 and last 3 `start_background` calls and the last 15 other calls. (3) `http_request` was called
+four times with `token_env` = `dev` (the environment, not a token) and failed each time: an environment name there is now
+treated as no token, and DebCraft signs in to it as usual. Facts in the report that are NOT fixed here: the real server
+`local-full-app` exited with code 1 after `pip install` of opentelemetry-instrumentation-flask failed (4 of 4 run_command
+failed), after which DebCraft wrote its own `tmp_local_3p_runner.py` and started it 10 times (the stand-in the skill says
+not to use); `request_app_secret` failed 4 times because JWT_SECRET_KEY, SECRET_KEY and AGENTIC_PLATFORM_ENDPOINT are not
+in DebCraft's .env, and the Infisical values were not fetched through the development instance; the model tried the old
+wrong URLs again after the user had given the right one (the learning was inserted as 3 new topics, 0 corrected); three
+GETs to the dev site's connection_details failed with ConnectError after 33 s each (cause unknown).
+
+## D-640 — When the copy cannot run on the laptop at all, say so and stop (2026-11-17)
+The user (after the 37-minute run of D-639): the Argo CD agent needs its connection details from Infisical; the fetch is
+a function call in `connection_utils.py` (line 40), not an API, and Infisical is blocked from the office laptop, so this
+code cannot run locally. DebCraft had written its own stand-in runner and started it 10 times. The skill
+`solve-against-running-system` now has a section for this case: say plainly that it cannot run and what stops it (file,
+line, proof), never fake the dependency, do not start the same thing a third time, write it into the briefing and project
+memory, do what remains possible (call the user's dev instance, read code and rows, change the copy), and deliver the
+change as unproven with the one call the user makes after deploying. `learn-repository` asks the briefing to say what
+stops a local run. Instruction level; to measure: a run on a requirement whose dependency is blocked should end within a
+few minutes with this account.

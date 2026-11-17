@@ -57,6 +57,20 @@ You work on a copy of the repository. Start that copy; never test against, or wr
    and `keep_secret` = {"THE_VARIABLE_NAME": "path.of.the.field"}. The value goes to your commands under that
    name; you never see it. Then start the application again. Do not hand this to the user.
 
+**When the copy cannot run on this machine at all** (a dependency it needs is blocked here or cannot be redirected: a
+secret store the network policy blocks and the code reads by a function call, a service that only answers inside another
+network), stop trying and say so, in this order:
+1. Say plainly that it cannot run here, what stops it (the file and line, and the proof: the error, the blocked address)
+   and that you will not try to get round it. Never write a small server that stands in for the missing dependency and
+   call that a local run. Do not start the same thing a third time for the same reason.
+2. Write it down once: in the briefing ("Runs locally: no, because ...") and as a project memory, so the next session
+   does not try again.
+3. Do what is still possible and say which part of the check it covers: call the development instance's API (the user's
+   own instance, signed in by DebCraft) to show the failure with its evidence; read the code and the rows to find the
+   cause; make the change in the copy.
+4. Deliver the change with what is **not proven**: a fix that could not be run is a proposal. Give the exact call the user
+   makes after deploying it (the endpoint, the payload, what the answer must show), so one run decides.
+
 ## 4. Call it the way its users do
 
 Do this before you change anything: the first run through the API is the evidence the rest is built on.

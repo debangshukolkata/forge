@@ -101,8 +101,20 @@ def test_the_send_report_says_how_the_last_request_ended_and_what_the_connection
     events = [
         _event(1, EventType.USER_MESSAGE, {"text": "run the agent with a prompt"}),
         _event(2, EventType.ERROR, {"message": "The tunnel to dev did not open"}),
-        _event(3, EventType.MESSAGE_DONE, {"text": "I could not call the API: it answered 404."}),
+        _event(
+            3, EventType.MESSAGE_DONE, {"text": "I could not call the API: it answered 404.", "model": "gpt"}
+        ),
+        _event(
+            4,
+            EventType.MESSAGE_DONE,
+            {"text": "Done: 2 task(s) completed. output/ has 1 new", "model": "forge"},
+        ),
     ]
+    (workspace / "output").mkdir(parents=True)
+    (workspace / "output" / "MANIFEST.json").write_text(
+        '{"files": [{"path": "app/a.py", "status": "deleted"}, {"path": "tmp_runner.py", "status": "added"}]}',
+        encoding="utf-8",
+    )
     log.write_text("\n".join(e.model_dump_json() for e in events) + "\n", encoding="utf-8")
     field_log.write("sign_in", home, env="sit", seconds=61, ok=True)
 
@@ -112,7 +124,9 @@ def test_the_send_report_says_how_the_last_request_ended_and_what_the_connection
     text = target.read_text(encoding="utf-8")
     assert text.startswith("## What happened in the last request")
     assert "Asked: run the agent with a prompt" in text and "error: The tunnel to dev did not open" in text
-    assert "it ended with an answer" in text and "I could not call the API: it answered 404." in text
+    assert "it ended with an answer" in text and "> I could not call the API: it answered 404." in text
+    assert "Closing line added by the workflow (a template, not an answer): Done: 2 task(s)" in text
+    assert text.index("deleted: app/a.py") < text.index("added: tmp_runner.py")  # deletions first, by name
     assert "sign_in: env=sit, seconds=61, ok=True" in text
     assert (home / "reports" / "latest.md").read_text(encoding="utf-8") == text
     assert (

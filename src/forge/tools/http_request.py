@@ -42,6 +42,7 @@ from forge.toolkit.app_logins import (
     EnvLogin,
     TokenStore,
     default_login,
+    is_environment_name,
     login_for_host,
     login_for_token,
 )
@@ -242,6 +243,8 @@ class HttpRequest(Tool):
         sent_url, sent_json = args.url, args.json_body
         token = ""
         name = args.token_env.strip()
+        if name and is_environment_name(name):
+            name = ""  # an environment named where a token name belongs: DebCraft signs in to it by itself anyway (D-639)
         login_env = login_for_token(name) if name else None
         host = (urlparse(args.url).hostname or "").lower()
         token_host, file_problem = _token_may_go_to(host)

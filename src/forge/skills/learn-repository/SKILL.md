@@ -18,7 +18,7 @@ files. Write it the way a tech lead explains the system, in the order a person n
 2. Its main features or capabilities, one line each.
 3. Its building blocks, one line each: the place where it starts, where the model gateway is called, where agents
    or services are written and started, where tools are attached to them, where files are written, which tables
-   hold what, which API runs what for a user, how it is started locally and on which port. Take the blocks THIS
+   hold what, which API runs what for a user, how it is started locally and on which port, or, when it cannot run here, what stops it (a blocked secret store or service) with the file and line that depend on it. Take the blocks THIS
    system has; skip the ones it does not, and add the ones it has that are not named here.
 4. What is easy to get wrong (a name that suggests the wrong thing, such as an endpoint that runs test cases and
    not a user's request).
