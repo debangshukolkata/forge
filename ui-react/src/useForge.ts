@@ -53,7 +53,7 @@ function reducer(state: Timeline, action: Action): Timeline {
 function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
   const p = event.payload;
   const key = `e${event.seq}`;
-  const items = state.items;
+  let items = state.items;
   const last = items[items.length - 1];
   switch (event.type) {
     case "user_message":
@@ -135,10 +135,12 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
     }
     case "notice":
       if (p.kind === "usage") return state; // shown as cost/usage, not as a chat line
+      // The model starts its sentence again after a failed call: the broken start must not stay on the screen (D-641).
+      if ((p.kind === "retry" || p.kind === "fallback") && last && last.kind === "assistant" && last.streaming) items = items.slice(0, -1);
       // image_sent / screenshot carry the workspace-relative path of the picture the model looks at (D-253).
       return {
         ...state,
-        items: [...items, { key, kind: "notice", noticeKind: p.kind || "", text: p.text || p.kind || "", image: p.kind === "image_sent" || p.kind === "screenshot" ? p.path || undefined : undefined, slides: p.kind === "slides_ready" ? { deck: p.deck || "", pictures: p.pictures || [], notes: p.notes || [] } : undefined }],
+        items: [...items, { key, kind: "notice", noticeKind: p.kind || "", text: p.text || p.kind || "", image: p.kind === "image_sent" || p.kind === "screenshot" ? p.path || undefined : undefined, slides: p.kind === "slides_ready" ? { deck: p.deck || "", pictures: p.pictures || [], notes: p.notes || [] } : undefined, risks: p.kind === "risks_noticed" ? p.risks || [] : undefined }],
       };
     case "error":
       return { ...state, items: [...items, { key, kind: "error", text: p.message || "Error" }] };

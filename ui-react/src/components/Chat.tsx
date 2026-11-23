@@ -7,6 +7,7 @@ import type { ChatItem, EnvironmentOverview, SlideSet, UserInput } from "../type
 import type { Forge } from "../useForge";
 import { UsageBadge } from "../usage";
 import { Composer, useAttachments } from "./Composer";
+import { NoticedRisks, NoticedSection, splitNoticed } from "./Noticed";
 import { SlideStrip } from "./Slides";
 import { QuestionDialog, QuestionForm, QuestionPopup } from "./QuestionDialog";
 import { LookingGroup, ThinkingLine, ToolCard, groupLookingRuns } from "./ToolRows";
@@ -220,12 +221,10 @@ function StickyPrompt({ text }: { text: string }) {
         type="button"
         onClick={() => setOpen(!open)}
         title={open ? "Show less" : "Show the whole message"}
-        className={cx(
-          "max-w-[85%] cursor-pointer whitespace-pre-wrap break-words rounded-[20px] bg-accent-soft px-4 py-2.5 text-left text-[13.5px] leading-[1.5]",
-          !open && "line-clamp-3",
-        )}
+        className="max-w-[85%] cursor-pointer rounded-[20px] bg-accent-soft px-4 py-2.5 text-left text-[13.5px] leading-[1.5]"
       >
-        {text}
+        {/* The cut is on an element without padding: in the padding the next line would show through, cut in half. */}
+        <span data-testid="sticky-prompt-text" className={cx("whitespace-pre-wrap break-words", open ? "block" : "line-clamp-3")}>{text}</span>
       </button>
     </div>
   );
@@ -296,6 +295,19 @@ function Welcome({ forge, onOpenEnvironment }: { forge: Forge; onOpenEnvironment
   );
 }
 
+/** A finished reply; a "Noticed, not changed" list the model wrote itself is folded away. */
+function Reply({ text }: { text: string }) {
+  const { before, noticed, after } = useMemo(() => splitNoticed(text), [text]);
+  if (!noticed) return <Markdown text={text} />;
+  return (
+    <>
+      {before && <Markdown text={before} />}
+      <NoticedSection text={noticed} />
+      {after && <Markdown text={after} />}
+    </>
+  );
+}
+
 function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
   switch (item.kind) {
     case "user":
@@ -314,7 +326,7 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
           {item.streaming ? (
             <div className="caret whitespace-pre-wrap break-words">{item.text}</div>
           ) : (
-            <Markdown text={item.text} />
+            <Reply text={item.text} />
           )}
           {!item.streaming && item.usage && (item.usage.input > 0 || item.usage.cost > 0) && (
             <UsageBadge
@@ -330,6 +342,7 @@ function Item({ item, forge }: { item: ChatItem; forge: Forge }) {
     case "thinking":
       return <ThinkingLine text={item.text} />;
     case "notice":
+      if (item.risks?.length) return <NoticedRisks risks={item.risks} />;
       return <Notice kind={item.noticeKind} text={item.text} image={item.image} slides={item.slides} />;
     case "error":
       return (

@@ -5047,3 +5047,16 @@ memory, do what remains possible (call the user's dev instance, read code and ro
 change as unproven with the one call the user makes after deploying. `learn-repository` asks the briefing to say what
 stops a local run. Instruction level; to measure: a run on a requirement whose dependency is blocked should end within a
 few minutes with this account.
+
+## D-641 — One answer per turn; "Noticed, not changed" is DebCraft's own folded list (2026-11-24)
+The user's photographs: the whole answer appeared twice, with "Asking for the risks in the code to be named before
+finishing" between. The check of D-410 ran after the answer was shown and asked for the list "in your final reply"; it
+ran after any edit of the session (here only REQUIREMENTS.md and TODO.md), in every turn, and when one kind was missing.
+Options: DebCraft writes the list (chosen by the user), ask for the list only, hide the first answer. Now:
+`agent/risk_notes.py` shows the scan's findings as a notice (`risks_noticed`) only after a turn of the main agent that
+changed code, each once per project (the user's choice; `.forge/risks_shown.json` holds hashes without secret values),
+and leaves a note in the history so the user can ask for a fix. The web chat shows a folded row with the counts (amber
+with a secret); a list the model writes under that heading is folded too. The other end-of-turn checks that need the
+model (notes, API proof, temporary changes, leftovers, stop hook) now say not to repeat the answer. A retry or a model
+switch removes the broken start of the reply from the screen. The pinned message no longer shows half of a fourth line.
+Limit: code changed only by a shell command or a subagent does not trigger the list. Not measured live.

@@ -133,6 +133,15 @@ export interface CostColors {
   phase: CostLimits;
 }
 
+/** A risk DebCraft found in code it read and left alone (D-641). */
+export interface NoticedRisk {
+  path: string;
+  line: number;
+  kind: string;
+  what: string;
+  advice: string;
+}
+
 /** One entry in the chat timeline, derived from events. */
 export type ChatItem =
   | { key: string; kind: "user"; text: string }
@@ -157,7 +166,7 @@ export type ChatItem =
       retried?: boolean;
     }
   | { key: string; kind: "thinking"; text: string } // the model's reasoning summary between calls (dim)
-  | { key: string; kind: "notice"; noticeKind: string; text: string; image?: string; slides?: SlideSet }
+  | { key: string; kind: "notice"; noticeKind: string; text: string; image?: string; slides?: SlideSet; risks?: NoticedRisk[] }
   | { key: string; kind: "error"; text: string }
   | { key: string; kind: "approval"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any
   | { key: string; kind: "question"; id: string; payload: Record<string, any> } // eslint-disable-line @typescript-eslint/no-explicit-any

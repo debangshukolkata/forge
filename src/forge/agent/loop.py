@@ -21,6 +21,7 @@ from forge.agent.hooks import EVENTS as HOOK_EVENTS
 from forge.agent.hooks import HookRunner
 from forge.agent.parallel import MAX_PARALLEL_COMMANDS, is_parallel_safe_command, is_test_command
 from forge.agent.repeats import Entry, RepeatLedger, call_key, digest_of
+from forge.agent.risk_notes import history_note, risk_notice, take_new_risks
 from forge.agent.tool_output import save_full_output
 from forge.config import HookRule, forge_home
 from forge.context.compaction import SAME_RESULT_START, STUB_PREFIX
@@ -101,9 +102,10 @@ MAX_TODO_NUDGES = 2
 MAX_STOP_HOOK_ROUNDS = 2
 MAX_KNOWLEDGE_NUDGES = 3  # doubtful topics, then the one question about topics whose files were read
 STOP_HOOK_NOTE = "You are about to finish, but a stop hook set up for this project failed. Fix what it reports and then finish; do not just report it.\n"
-RISK_NOTE = (
-    "Before you finish: the code you worked with has risks you have not told the user about. Add a short 'Noticed, not changed' list to your final reply (file and line, what could go "
-    "wrong, a one-line suggestion) and do not fix them unless the user asked. What the scan found:\n"
+# The answer is on the screen when these checks run; without this the model writes all of it again (D-641).
+NO_REPEAT = (
+    "\n\nThe user can already see your answer above. Do not write it again: when you are done, reply only with what "
+    "is new or changed since then, or with one short sentence when nothing is."
 )
 OPEN_TODOS_NOTE = "You ended your turn, but your todo list still has open items: "
 OPEN_TODOS_NOTE_END = (
@@ -261,7 +263,6 @@ class AgentLoop:
         continuations = 0
         question_nudges = 0
         todo_nudges = 0
-        risk_nudges = 0
         knowledge_nudges = 0
         temporary_nudges = 0
         leftover_reviews = 0
@@ -333,20 +334,6 @@ class AgentLoop:
                         },
                     )
                     continue
-                if risk_nudges < 1:
-                    risks = self._unreported_risks(response.text)
-                    if risks:
-                        risk_nudges += 1
-                        listing = "\n".join(f"- {risk}" for risk in risks)
-                        history.append(Message.system(RISK_NOTE + listing))
-                        await self.bus.publish(
-                            EventType.NOTICE,
-                            {
-                                "kind": "risk_notes",
-                                "text": "Asking for the risks in the code to be named before finishing.",
-                            },
-                        )
-                        continue
                 if (
                     knowledge_nudges < MAX_KNOWLEDGE_NUDGES
                     and self.keep_full_output
@@ -356,7 +343,7 @@ class AgentLoop:
                     knowledge_note = knowledge_finish_note(self.context)
                     if knowledge_note:
                         knowledge_nudges += 1
-                        history.append(Message.system(knowledge_note))
+                        history.append(Message.system(knowledge_note + NO_REPEAT))
                         await self.bus.publish(
                             EventType.NOTICE,
                             {
@@ -372,9 +359,12 @@ class AgentLoop:
                         proof_nudges += 1
                         history.append(
                             Message.system(
-                                PROOF_NOTE.format(calls="; ".join(unproven))
-                                if unproven
-                                else NO_API_PROOF_NOTE
+                                (
+                                    PROOF_NOTE.format(calls="; ".join(unproven))
+                                    if unproven
+                                    else NO_API_PROOF_NOTE
+                                )
+                                + NO_REPEAT
                             )
                         )
                         await self.bus.publish(
@@ -390,7 +380,7 @@ class AgentLoop:
                     temporary_note = temporary_finish_note(self.context)
                     if temporary_note:
                         temporary_nudges += 1
-                        history.append(Message.system(temporary_note))
+                        history.append(Message.system(temporary_note + NO_REPEAT))
                         await self.bus.publish(
                             EventType.NOTICE,
                             {
@@ -409,7 +399,7 @@ class AgentLoop:
                     leftover_reviews += 1
                     leftover_note = await review_leftovers(self.context)
                     if leftover_note:
-                        history.append(Message.system(leftover_note))
+                        history.append(Message.system(leftover_note + NO_REPEAT))
                         continue
                 # the main agent only: a subagent runs with keep_full_output off, and a test run at the end of each subagent would cost far more than it checks
                 if (
@@ -420,7 +410,7 @@ class AgentLoop:
                     stop_hook_rounds += 1
                     failed = HookRunner.blocked_by(await self.hooks.run("stop"))
                     if failed is not None:
-                        history.append(Message.system(STOP_HOOK_NOTE + failed.note("stop")))
+                        history.append(Message.system(STOP_HOOK_NOTE + failed.note("stop") + NO_REPEAT))
                         await self.bus.publish(
                             EventType.NOTICE,
                             {
@@ -429,6 +419,7 @@ class AgentLoop:
                             },
                         )
                         continue
+                await self._show_new_risks(history, response.text, turn_start_step)
                 return
             continuations = 0
             results: dict[str, Message] = {}
@@ -497,22 +488,16 @@ class AgentLoop:
             return False
         return not any(step > changed for step in context.api_calls.values())
 
-    def _unreported_risks(self, reply: str) -> list[str]:
-        """Risks in the source files read in this session (the model changed something) that the final reply does not name (D-410)."""
-        from forge.safety.risk_scan import MAX_FINDINGS, Risk, mentioned, scan_text, scannable
-
-        if self.context.last_edit_step == 0:
-            return []
-        found: list[Risk] = []
-        for path in self.context.reads.paths():
-            if not scannable(path):
-                continue
-            try:
-                text = self.context.workspace.read_text(path)[0]
-            except Exception:  # a file that cannot be read now is not worth a note
-                continue
-            found.extend(risk for risk in scan_text(path, text) if not mentioned(risk, reply))
-        return [risk.sentence() for risk in found[:MAX_FINDINGS]]
+    async def _show_new_risks(self, history: list[Message], reply: str, turn_start_step: int) -> None:
+        """D-641: after a turn that changed code, the risks in the files read that this project was not shown yet."""
+        if not self.keep_full_output or self.context.last_code_edit_step <= turn_start_step:
+            return
+        risks = take_new_risks(self.context, reply)
+        if not risks:
+            return
+        await self.bus.publish(EventType.NOTICE, risk_notice(risks))
+        # Nothing is awaited after this: an interrupt must find the answer as the newest message, or the turn over.
+        history.append(Message.system(history_note(risks)))
 
     def _open_todos(self) -> list[str]:
         return [

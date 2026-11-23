@@ -1,5 +1,7 @@
 """Risks the model should name in its final reply when the code it worked with has them (D-410).
 
+Since D-641 DebCraft shows the list itself (agent/risk_notes.py); the model is not asked to write it.
+
 The approach challenge c09 (2026-10-15) gave the model a small task in a file that unpickles its settings and holds a committed token: the prompt already said to report such flaws
 and the final reply did not mention them. A prompt line is not enough, so a short deterministic scan of the source files the model read finds the usual suspects and, once, asks for them
 to be named before the turn ends. It is a notice, never a refusal, and it finds patterns, not proof: the reply says what could go wrong and leaves the code alone."""
@@ -14,7 +16,6 @@ SOURCE_SUFFIXES = (".py", ".js", ".jsx", ".ts", ".tsx", ".php", ".rb", ".java", 
 PLACEHOLDER = re.compile(
     r"(?i)x{3,}|changeme|example|your[-_ ]|<[^>]+>|dummy|placeholder|test[-_]?key|\*{3,}"
 )
-MAX_FINDINGS = 6
 
 # (kind, pattern, what can go wrong, what to do)
 RULES: tuple[tuple[str, re.Pattern[str], str, str], ...] = (
@@ -68,6 +69,7 @@ class Risk:
     kind: str
     what: str
     advice: str
+    code: str = ""  # the line without any secret: tells one finding from another
 
     def sentence(self) -> str:
         return f"{self.path}:{self.line}: {self.kind}: {self.what} ({self.advice})"
@@ -84,7 +86,10 @@ def scan_text(path: str, text: str) -> list[Risk]:
                 continue
             if kind == "hard-coded secret" and PLACEHOLDER.search(match.group(2)):
                 continue
-            found.append(Risk(path, number, kind, what, advice))
+            code = line.strip()
+            if kind == "hard-coded secret":
+                code = code.replace(match.group(2), "")  # only the name: a secret's value is never kept
+            found.append(Risk(path, number, kind, what, advice, code))
             break
     return found
 
