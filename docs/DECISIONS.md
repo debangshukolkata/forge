@@ -5163,3 +5163,25 @@ are not built into DebCraft: they would be wrong in every other repository. Firs
 same refusal 9 times in 2 projects) and the office report (a saved output looked for below the application folder): a path that
 repeats the folder it is in is corrected at the entrance of the file tools (`Workspace.plain_relative`), before any check or log,
 only when it is clear. The refusal in `path_of` stays for other callers.
+
+## D-652: A live test with questions DebCraft never saw (2026-11-24)
+The user: "make debcraft as intelligent as claude"; the video agent answered by counting words. `tests/test_live_recording_qa.py`
+(`tests/fixtures/recording_qa`) gives DebCraft the request in the user's words and asks the result eight questions: covered by any
+summary, shown for one moment, reworded, not in the recording. Measured with the shipped default coder (gpt-5.1, by mistake: a
+clean home has the shipped roles; the user's coder is gpt-5.4): as it is 3, 0, 8 of 8 (5.5 min); a review of the change against the
+request 3, 8, 3, 8 (15.7 min); the approach worked out before the first code change 6, 3, 7, 8 (17 min). Neither is in the product:
+both wait for the measurement on gpt-5.4 and for a second, different task (local branch `experiment-d652`). The test now takes
+gpt-5.4 (`RECQA_CODER`, `RECQA_EFFORT`). First two runs on gpt-5.4 were worthless because of D-654.
+
+## D-653: Which model thinks best, and three Gemini 4 models (2026-11-24)
+`scripts/dev/thinking_test.py` compares models on exact, code and design tasks (no data of the user is sent). Gemini 4 Carbon, Neon
+and Hydrogen answered from `global` on the office laptop and are in the default config. The user chose them for all eight roles
+(2026-11-25): set on the laptop in `config.yaml` and by hand in `environment.json` (`manual`); the shipped proposals
+(`environment/plan.py`) stay until the laptop shows how they do as coder.
+
+## D-654: A subagent never waits for an approval nobody sees (2026-11-25)
+Found on gpt-5.4: in two of two builds a helper agent stood still for 30 minutes on a one-line command. Only the verifier, the
+builder and the researcher asked through the session; custom helpers, the debugger, forked skills, the reviewers and `diagnose`
+asked an internal broker. Now every subagent uses the session's approvals and permission mode; without a session the
+request is declined at once (`NobodyAnswers`). Options: a timeout (hides the question), declining always (the helper cannot work), the session's
+channel (chosen).

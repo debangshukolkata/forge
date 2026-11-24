@@ -14,7 +14,7 @@ from forge.context.manager import ContextManager
 from forge.llm.base import Message, Usage
 from forge.llm.router import LLMRouter
 from forge.llm.tokens import head_and_tail
-from forge.protocol.approvals import ApprovalBroker
+from forge.protocol.approvals import ApprovalBroker, NobodyAnswers
 from forge.protocol.events import EventBus, EventType
 from forge.safety.permissions import PermissionGate
 from forge.safety.redact import default_redactor
@@ -363,7 +363,6 @@ async def _run_subagent(
     role: str,
     *,
     write_only_under: str | None = None,
-    needs_user_approvals: bool = False,
     shell: ShellSession | None = None,
     builder: bool = False,
 ) -> str:
@@ -380,11 +379,11 @@ async def _run_subagent(
     inherit_web_settings(context, sub_context)
     sub_context.made_up = context.made_up  # what a verifier ran with counts for the final reply too (D-644)
     gate_mode = "default"
-    approvals = ApprovalBroker(bus)
+    approvals: ApprovalBroker = NobodyAnswers(bus)
     host = getattr(context.interaction, "host", None)
-    if needs_user_approvals and host is not None:
-        # The verifier installs packages and starts the app, which can need the user's approval: ask through
-        # the same channel as the main agent instead of an internal broker nobody answers (it would hang).
+    if host is not None:
+        # Every subagent asks through the same channel as the main agent. An internal broker nobody answers made a
+        # helper wait 30 minutes for a one-line command (D-654: only some subagents were connected before).
         approvals = host.approvals
         gate_mode = host.agent.gate.mode if host.agent is not None else gate_mode
         sub_context.background = context.background
@@ -393,7 +392,7 @@ async def _run_subagent(
         context.workspace.forge_dir / "permissions.json",
         permission_rules(),
     )
-    if needs_user_approvals and host is not None and host.agent is not None:
+    if host is not None and host.agent is not None:
         gate.ask_new_domains = host.agent.gate.ask_new_domains  # the user is asked, through the main channel
     manager = ContextManager(router, router.config)
     loop = AgentLoop(router, bus, tools, sub_context, gate, approvals, iterations, manager)

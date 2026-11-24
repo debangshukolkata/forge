@@ -70,7 +70,6 @@ async def run_builder(context: ToolContext, *, folder: str, name: str, task: str
         BUILDER_ITERATIONS,
         "coder",
         write_only_under=folder + "/",
-        needs_user_approvals=True,
         shell=shell,
         builder=True,
     )
@@ -186,7 +185,6 @@ class SpawnSubagent(Tool):
                     args.task,
                     RESEARCHER_ITERATIONS,
                     "coder",
-                    needs_user_approvals=True,
                 )
             except LLMError as error:  # whatever the model could not finish, the caller still gets an answer
                 report = (
@@ -239,7 +237,6 @@ class SpawnSubagent(Tool):
                 VERIFIER_ITERATIONS if context.verifier_runs == 1 else RECHECK_ITERATIONS,
                 "coder",
                 write_only_under="tests/e2e/",
-                needs_user_approvals=True,
             )
             if "VERDICT: PASS" in report:
                 context.last_browser_step = context.step  # an independent browser check passed (D-167/D-168)

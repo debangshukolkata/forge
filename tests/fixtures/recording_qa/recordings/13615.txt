@@ -1,0 +1,246 @@
+00:00:00 | speech: on the welcome, this is what sets us apart | screen: a table with three columns in teal
+00:00:20 | speech: on the welcome, we have grown this steadily over the last years | screen: a line chart in beige
+00:00:40 | speech: on the welcome, customers asked for it and we listened | screen: a pie chart in beige
+00:01:00 | speech: on the welcome, we have grown this steadily over the last years | screen: a photo of a branch in blue
+00:01:20 | speech: on the welcome, customers asked for it and we listened | screen: a screenshot of the app in teal
+00:01:40 | speech: on the welcome, customers asked for it and we listened | screen: a photo of a branch in blue
+00:02:00 | speech: on the welcome, we will come back to this later | screen: a bar chart in beige
+00:02:20 | speech: on the welcome, customers asked for it and we listened | screen: a photo of a branch in navy
+00:02:40 | speech: on the welcome, we have grown this steadily over the last years | screen: a screenshot of the app in blue
+00:03:00 | speech: on the welcome, there is more to come in the next quarter | screen: a bar chart in beige
+00:03:20 | speech: on the welcome, our teams worked hard on this part | screen: a list of five points in teal
+00:03:40 | speech: on the welcome, our teams worked hard on this part | screen: a line chart in beige
+00:04:00 | speech: on the welcome, let me give you one more number | screen: a table with three columns in blue
+00:04:20 | speech: we now run more than 50,000 cash machines, the largest network in the country | screen: a chart with dots
+00:04:40 | speech: on the welcome, there is more to come in the next quarter | screen: a pie chart in blue
+00:05:00 | speech: on the welcome, customers asked for it and we listened | screen: a bar chart in beige
+00:05:20 | speech: on the welcome, there is more to come in the next quarter | screen: a timeline in navy
+00:05:40 | speech: on the welcome, we will come back to this later | screen: a pie chart in teal
+00:06:00 | speech: on the welcome, please note the trend here | screen: a pie chart in white
+00:06:20 | speech: on the welcome, there is more to come in the next quarter | screen: a table with three columns in navy
+00:06:40 | speech: on the welcome, there is more to come in the next quarter | screen: a line chart in beige
+00:07:00 | speech: on our network, let me give you one more number | screen: a timeline in white
+00:07:20 | speech: on our network, please note the trend here | screen: a list of five points in beige
+00:07:40 | speech: on our network, customers asked for it and we listened | screen: a line chart in beige
+00:08:00 | speech: on our network, we will come back to this later | screen: a table with three columns in white
+00:08:20 | speech: on our network, our teams worked hard on this part | screen: a timeline in teal
+00:08:40 | speech: on our network, we have grown this steadily over the last years | screen: a line chart in beige
+00:09:00 | speech: on our network, this is what sets us apart | screen: a pie chart in navy
+00:09:20 | speech: here you see where we are present | screen: a map of India filled in saffron orange on a black background
+00:09:40 | speech: on our network, this is what sets us apart | screen: a timeline in beige
+00:10:00 | speech: on our network, please note the trend here | screen: a line chart in blue
+00:10:20 | speech: on our network, let me give you one more number | screen: a timeline in navy
+00:10:40 | speech: on our network, customers asked for it and we listened | screen: a bar chart in navy
+00:11:00 | speech: on our network, let me give you one more number | screen: a timeline in white
+00:11:20 | speech: on our network, we will come back to this later | screen: a pie chart in blue
+00:11:40 | speech: on our network, please note the trend here | screen: a pie chart in grey
+00:12:00 | speech: on our network, customers asked for it and we listened | screen: a timeline in blue
+00:12:20 | speech: on our network, there is more to come in the next quarter | screen: a list of five points in grey
+00:12:40 | speech: on our network, there is more to come in the next quarter | screen: a screenshot of the app in teal
+00:13:00 | speech: on our network, please note the trend here | screen: a line chart in grey
+00:13:20 | speech: on our network, please note the trend here | screen: a screenshot of the app in beige
+00:13:40 | speech: on our network, let me give you one more number | screen: a table with three columns in teal
+00:14:00 | speech: on mobile payments, let me give you one more number | screen: a screenshot of the app in white
+00:14:20 | speech: on mobile payments, we will come back to this later | screen: a photo of a branch in grey
+00:14:40 | speech: on mobile payments, customers asked for it and we listened | screen: a table with three columns in grey
+00:15:00 | speech: on mobile payments, there is more to come in the next quarter | screen: a photo of a branch in blue
+00:15:20 | speech: on mobile payments, please note the trend here | screen: a table with three columns in white
+00:15:40 | speech: on mobile payments, let me give you one more number | screen: a bar chart in grey
+00:16:00 | speech: on mobile payments, we will come back to this later | screen: a pie chart in beige
+00:16:20 | speech: on mobile payments, this is what sets us apart | screen: a table with three columns in navy
+00:16:40 | speech: on mobile payments, we have grown this steadily over the last years | screen: a timeline in navy
+00:17:00 | speech: on mobile payments, we will come back to this later | screen: a screenshot of the app in teal
+00:17:20 | speech: the daily transfer limit was raised to two lakh rupees in March 2025 | screen: a table of limits
+00:17:40 | speech: on mobile payments, we will come back to this later | screen: a line chart in teal
+00:18:00 | speech: on mobile payments, we will come back to this later | screen: a bar chart in grey
+00:18:20 | speech: on mobile payments, customers asked for it and we listened | screen: a photo of a branch in teal
+00:18:40 | speech: on mobile payments, our teams worked hard on this part | screen: a line chart in white
+00:19:00 | speech: on mobile payments, we have grown this steadily over the last years | screen: a line chart in blue
+00:19:20 | speech: on mobile payments, our teams worked hard on this part | screen: a line chart in white
+00:19:40 | speech: on mobile payments, we have grown this steadily over the last years | screen: a line chart in grey
+00:20:00 | speech: on mobile payments, we will come back to this later | screen: a table with three columns in navy
+00:20:20 | speech: on mobile payments, let me give you one more number | screen: a pie chart in beige
+00:20:40 | speech: on mobile payments, this is what sets us apart | screen: a timeline in blue
+00:21:00 | speech: on cards, customers asked for it and we listened | screen: a timeline in teal
+00:21:20 | speech: on cards, please note the trend here | screen: a timeline in white
+00:21:40 | speech: on cards, customers asked for it and we listened | screen: a table with three columns in blue
+00:22:00 | speech: on cards, this is what sets us apart | screen: a list of five points in teal
+00:22:20 | speech: on cards, our teams worked hard on this part | screen: a bar chart in grey
+00:22:40 | speech: on cards, this is what sets us apart | screen: a table with three columns in navy
+00:23:00 | speech: on cards, we have grown this steadily over the last years | screen: a list of five points in navy
+00:23:20 | speech: thank you for waiting | screen: the presenter drinks from a cup with an elephant drawn on it
+00:23:40 | speech: on cards, customers asked for it and we listened | screen: a list of five points in beige
+00:24:00 | speech: on cards, this is what sets us apart | screen: a table with three columns in white
+00:24:20 | speech: on cards, there is more to come in the next quarter | screen: a pie chart in navy
+00:24:40 | speech: on cards, there is more to come in the next quarter | screen: a photo of a branch in grey
+00:25:00 | speech: on cards, we will come back to this later | screen: a photo of a branch in grey
+00:25:20 | speech: on cards, please note the trend here | screen: a pie chart in navy
+00:25:40 | speech: on cards, we have grown this steadily over the last years | screen: a bar chart in white
+00:26:00 | speech: on cards, please note the trend here | screen: a list of five points in grey
+00:26:20 | speech: on cards, this is what sets us apart | screen: a timeline in navy
+00:26:40 | speech: on cards, this is what sets us apart | screen: a pie chart in blue
+00:27:00 | speech: on cards, there is more to come in the next quarter | screen: a line chart in grey
+00:27:20 | speech: on cards, please note the trend here | screen: a photo of a branch in white
+00:27:40 | speech: on cards, there is more to come in the next quarter | screen: a timeline in beige
+00:28:00 | speech: on loans, we have grown this steadily over the last years | screen: a timeline in navy
+00:28:20 | speech: on loans, this is what sets us apart | screen: a line chart in navy
+00:28:40 | speech: on loans, customers asked for it and we listened | screen: a screenshot of the app in navy
+00:29:00 | speech: on loans, there is more to come in the next quarter | screen: a timeline in grey
+00:29:20 | speech: on loans, we will come back to this later | screen: a pie chart in blue
+00:29:40 | speech: on loans, we will come back to this later | screen: a timeline in teal
+00:30:00 | speech: on loans, customers asked for it and we listened | screen: a table with three columns in grey
+00:30:20 | speech: on loans, our teams worked hard on this part | screen: a bar chart in grey
+00:30:40 | speech: on loans, please note the trend here | screen: a table with three columns in beige
+00:31:00 | speech: on loans, please note the trend here | screen: a pie chart in grey
+00:31:20 | speech: housing loans grew by 14 percent | screen: a bar chart, the last bar hatched
+00:31:40 | speech: on loans, our teams worked hard on this part | screen: a bar chart in blue
+00:32:00 | speech: on loans, customers asked for it and we listened | screen: a table with three columns in teal
+00:32:20 | speech: on loans, there is more to come in the next quarter | screen: a photo of a branch in blue
+00:32:40 | speech: on loans, let me give you one more number | screen: a photo of a branch in white
+00:33:00 | speech: on loans, there is more to come in the next quarter | screen: a pie chart in white
+00:33:20 | speech: on loans, we will come back to this later | screen: a table with three columns in blue
+00:33:40 | speech: on loans, this is what sets us apart | screen: a timeline in navy
+00:34:00 | speech: on loans, we will come back to this later | screen: a table with three columns in beige
+00:34:20 | speech: on loans, our teams worked hard on this part | screen: a bar chart in teal
+00:34:40 | speech: on loans, our teams worked hard on this part | screen: a bar chart in grey
+00:35:00 | speech: on fraud protection, our teams worked hard on this part | screen: a table with three columns in teal
+00:35:20 | speech: on fraud protection, customers asked for it and we listened | screen: a bar chart in white
+00:35:40 | speech: on fraud protection, please note the trend here | screen: a line chart in beige
+00:36:00 | speech: on fraud protection, we have grown this steadily over the last years | screen: a photo of a branch in grey
+00:36:20 | speech: on fraud protection, let me give you one more number | screen: a bar chart in blue
+00:36:40 | speech: on fraud protection, please note the trend here | screen: a bar chart in blue
+00:37:00 | speech: on fraud protection, please note the trend here | screen: a pie chart in beige
+00:37:20 | speech: on fraud protection, there is more to come in the next quarter | screen: a list of five points in teal
+00:37:40 | speech: on fraud protection, please note the trend here | screen: a photo of a branch in navy
+00:38:00 | speech: on fraud protection, let me give you one more number | screen: a photo of a branch in teal
+00:38:20 | speech: a blocked card is replaced within four days | screen: a red telephone beside the number 1800
+00:38:40 | speech: on fraud protection, our teams worked hard on this part | screen: a screenshot of the app in blue
+00:39:00 | speech: on fraud protection, we will come back to this later | screen: a timeline in white
+00:39:20 | speech: on fraud protection, customers asked for it and we listened | screen: a photo of a branch in teal
+00:39:40 | speech: on fraud protection, customers asked for it and we listened | screen: a photo of a branch in navy
+00:40:00 | speech: on fraud protection, let me give you one more number | screen: a line chart in grey
+00:40:20 | speech: on fraud protection, this is what sets us apart | screen: a table with three columns in white
+00:40:40 | speech: on fraud protection, our teams worked hard on this part | screen: a timeline in grey
+00:41:00 | speech: on rural banking, customers asked for it and we listened | screen: a screenshot of the app in teal
+00:41:20 | speech: on rural banking, our teams worked hard on this part | screen: a photo of a branch in grey
+00:41:40 | speech: on rural banking, we will come back to this later | screen: a screenshot of the app in white
+00:42:00 | speech: on rural banking, we will come back to this later | screen: a photo of a branch in white
+00:42:20 | speech: on rural banking, this is what sets us apart | screen: a line chart in navy
+00:42:40 | speech: on rural banking, this is what sets us apart | screen: a bar chart in white
+00:43:00 | speech: on rural banking, please note the trend here | screen: a timeline in navy
+00:43:20 | speech: on rural banking, we have grown this steadily over the last years | screen: a screenshot of the app in white
+00:43:40 | speech: on rural banking, let me give you one more number | screen: a line chart in blue
+00:44:00 | speech: on rural banking, there is more to come in the next quarter | screen: a line chart in blue
+00:44:20 | speech: on rural banking, let me give you one more number | screen: a list of five points in blue
+00:44:40 | speech: on rural banking, our teams worked hard on this part | screen: a list of five points in grey
+00:45:00 | speech: on rural banking, we will come back to this later | screen: a list of five points in teal
+00:45:20 | speech: on rural banking, our teams worked hard on this part | screen: a timeline in navy
+00:45:40 | speech: on rural banking, this is what sets us apart | screen: a line chart in white
+00:46:00 | speech: on rural banking, we have grown this steadily over the last years | screen: a table with three columns in teal
+00:46:20 | speech: eleven thousand agents serve the villages | screen: a woman with a yellow umbrella hands over a form
+00:46:40 | speech: on rural banking, customers asked for it and we listened | screen: a list of five points in blue
+00:47:00 | speech: on rural banking, customers asked for it and we listened | screen: a list of five points in blue
+00:47:20 | speech: on rural banking, there is more to come in the next quarter | screen: a line chart in white
+00:47:40 | speech: on rural banking, customers asked for it and we listened | screen: a timeline in blue
+00:48:00 | speech: on customer service, this is what sets us apart | screen: a screenshot of the app in white
+00:48:20 | speech: on customer service, our teams worked hard on this part | screen: a bar chart in beige
+00:48:40 | speech: on customer service, there is more to come in the next quarter | screen: a line chart in grey
+00:49:00 | speech: on customer service, let me give you one more number | screen: a bar chart in grey
+00:49:20 | speech: on customer service, there is more to come in the next quarter | screen: a list of five points in navy
+00:49:40 | speech: on customer service, let me give you one more number | screen: a photo of a branch in white
+00:50:00 | speech: on customer service, please note the trend here | screen: a table with three columns in white
+00:50:20 | speech: on customer service, this is what sets us apart | screen: a bar chart in white
+00:50:40 | speech: on customer service, we have grown this steadily over the last years | screen: a bar chart in blue
+00:51:00 | speech: on customer service, there is more to come in the next quarter | screen: a timeline in grey
+00:51:20 | speech: on customer service, please note the trend here | screen: a line chart in navy
+00:51:40 | speech: on customer service, we will come back to this later | screen: a timeline in beige
+00:52:00 | speech: on customer service, we will come back to this later | screen: a list of five points in navy
+00:52:20 | speech: complaints are answered within 48 hours | screen: a wall clock showing ten past four
+00:52:40 | speech: on customer service, there is more to come in the next quarter | screen: a photo of a branch in white
+00:53:00 | speech: on customer service, there is more to come in the next quarter | screen: a table with three columns in teal
+00:53:20 | speech: on customer service, this is what sets us apart | screen: a bar chart in grey
+00:53:40 | speech: on customer service, we have grown this steadily over the last years | screen: a line chart in navy
+00:54:00 | speech: on customer service, let me give you one more number | screen: a screenshot of the app in grey
+00:54:20 | speech: on customer service, we have grown this steadily over the last years | screen: a line chart in navy
+00:54:40 | speech: on customer service, we will come back to this later | screen: a list of five points in beige
+00:55:00 | speech: on technology, there is more to come in the next quarter | screen: a list of five points in blue
+00:55:20 | speech: on technology, please note the trend here | screen: a table with three columns in grey
+00:55:40 | speech: on technology, let me give you one more number | screen: a timeline in blue
+00:56:00 | speech: on technology, let me give you one more number | screen: a pie chart in white
+00:56:20 | speech: on technology, this is what sets us apart | screen: a photo of a branch in blue
+00:56:40 | speech: on technology, let me give you one more number | screen: a photo of a branch in white
+00:57:00 | speech: on technology, our teams worked hard on this part | screen: a bar chart in white
+00:57:20 | speech: on technology, we will come back to this later | screen: a line chart in teal
+00:57:40 | speech: on technology, let me give you one more number | screen: a photo of a branch in grey
+00:58:00 | speech: on technology, we have grown this steadily over the last years | screen: a line chart in white
+00:58:20 | speech: the second data centre is in Hyderabad | screen: a rack with a green sticker reading SITE B
+00:58:40 | speech: on technology, customers asked for it and we listened | screen: a table with three columns in teal
+00:59:00 | speech: on technology, we have grown this steadily over the last years | screen: a screenshot of the app in blue
+00:59:20 | speech: on technology, let me give you one more number | screen: a list of five points in navy
+00:59:40 | speech: on technology, there is more to come in the next quarter | screen: a line chart in beige
+01:00:00 | speech: on technology, our teams worked hard on this part | screen: a screenshot of the app in white
+01:00:20 | speech: on technology, please note the trend here | screen: a table with three columns in white
+01:00:40 | speech: on technology, our teams worked hard on this part | screen: a bar chart in navy
+01:01:00 | speech: on technology, we will come back to this later | screen: a table with three columns in beige
+01:01:20 | speech: on technology, we have grown this steadily over the last years | screen: a photo of a branch in blue
+01:01:40 | speech: on technology, we have grown this steadily over the last years | screen: a bar chart in grey
+01:02:00 | speech: on our people, this is what sets us apart | screen: a line chart in teal
+01:02:20 | speech: on our people, please note the trend here | screen: a bar chart in navy
+01:02:40 | speech: on our people, we have grown this steadily over the last years | screen: a photo of a branch in teal
+01:03:00 | speech: on our people, let me give you one more number | screen: a bar chart in teal
+01:03:20 | speech: on our people, customers asked for it and we listened | screen: a line chart in navy
+01:03:40 | speech: on our people, customers asked for it and we listened | screen: a timeline in white
+01:04:00 | speech: on our people, customers asked for it and we listened | screen: a list of five points in grey
+01:04:20 | speech: on our people, there is more to come in the next quarter | screen: a photo of a branch in navy
+01:04:40 | speech: on our people, please note the trend here | screen: a timeline in teal
+01:05:00 | speech: on our people, customers asked for it and we listened | screen: a timeline in navy
+01:05:20 | speech: on our people, let me give you one more number | screen: a bar chart in beige
+01:05:40 | speech: on our people, there is more to come in the next quarter | screen: a line chart in beige
+01:06:00 | speech: on our people, our teams worked hard on this part | screen: a pie chart in white
+01:06:20 | speech: we hired 3,200 engineers | screen: a group photo in which one person wears a cowboy hat
+01:06:40 | speech: on our people, let me give you one more number | screen: a table with three columns in blue
+01:07:00 | speech: on our people, please note the trend here | screen: a bar chart in teal
+01:07:20 | speech: on our people, let me give you one more number | screen: a line chart in navy
+01:07:40 | speech: on our people, there is more to come in the next quarter | screen: a timeline in white
+01:08:00 | speech: on our people, let me give you one more number | screen: a timeline in teal
+01:08:20 | speech: on our people, please note the trend here | screen: a line chart in beige
+01:08:40 | speech: on our people, there is more to come in the next quarter | screen: a list of five points in blue
+01:09:00 | speech: on the results, please note the trend here | screen: a bar chart in white
+01:09:20 | speech: on the results, please note the trend here | screen: a line chart in beige
+01:09:40 | speech: on the results, please note the trend here | screen: a list of five points in teal
+01:10:00 | speech: on the results, there is more to come in the next quarter | screen: a photo of a branch in blue
+01:10:20 | speech: on the results, customers asked for it and we listened | screen: a table with three columns in navy
+01:10:40 | speech: on the results, let me give you one more number | screen: a pie chart in grey
+01:11:00 | speech: on the results, let me give you one more number | screen: a line chart in navy
+01:11:20 | speech: on the results, this is what sets us apart | screen: a photo of a branch in teal
+01:11:40 | speech: on the results, please note the trend here | screen: a screenshot of the app in blue
+01:12:00 | speech: on the results, our teams worked hard on this part | screen: a bar chart in teal
+01:12:20 | speech: on the results, please note the trend here | screen: a screenshot of the app in white
+01:12:40 | speech: on the results, our teams worked hard on this part | screen: a screenshot of the app in white
+01:13:00 | speech: on the results, we will come back to this later | screen: a pie chart in blue
+01:13:20 | speech: on the results, this is what sets us apart | screen: a bar chart in white
+01:13:40 | speech: on the results, this is what sets us apart | screen: a screenshot of the app in blue
+01:14:00 | speech: on the results, there is more to come in the next quarter | screen: a bar chart in navy
+01:14:20 | speech: profit rose to 61 thousand crore | screen: a chart in gold
+01:14:40 | speech: on the results, let me give you one more number | screen: a list of five points in white
+01:15:00 | speech: on the results, customers asked for it and we listened | screen: a screenshot of the app in teal
+01:15:20 | speech: on the results, customers asked for it and we listened | screen: a pie chart in teal
+01:15:40 | speech: on the results, let me give you one more number | screen: a bar chart in white
+01:16:00 | speech: on the outlook, customers asked for it and we listened | screen: a bar chart in navy
+01:16:20 | speech: on the outlook, let me give you one more number | screen: a table with three columns in grey
+01:16:40 | speech: on the outlook, let me give you one more number | screen: a screenshot of the app in beige
+01:17:00 | speech: on the outlook, this is what sets us apart | screen: a photo of a branch in white
+01:17:20 | speech: on the outlook, we will come back to this later | screen: a bar chart in navy
+01:17:40 | speech: on the outlook, we will come back to this later | screen: a photo of a branch in navy
+01:18:00 | speech: on the outlook, customers asked for it and we listened | screen: a bar chart in navy
+01:18:20 | speech: on the outlook, we will come back to this later | screen: a timeline in beige
+01:18:40 | speech: on the outlook, our teams worked hard on this part | screen: a list of five points in teal
+01:19:00 | speech: on the outlook, we have grown this steadily over the last years | screen: a table with three columns in grey
+01:19:20 | speech: thank you all | screen: the last slide shows three paper cranes
+01:19:40 | speech: on the outlook, please note the trend here | screen: a screenshot of the app in white
+01:20:00 | speech: on the outlook, let me give you one more number | screen: a list of five points in white
+01:20:20 | speech: on the outlook, let me give you one more number | screen: a screenshot of the app in navy
+01:20:40 | speech: on the outlook, there is more to come in the next quarter | screen: a list of five points in teal
+01:21:00 | speech: on the outlook, we will come back to this later | screen: a line chart in grey
+01:21:20 | speech: on the outlook, our teams worked hard on this part | screen: a line chart in grey
+01:21:40 | speech: on the outlook, please note the trend here | screen: a photo of a branch in teal

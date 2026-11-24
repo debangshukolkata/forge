@@ -63,6 +63,16 @@ class ApprovalBroker:
         return True
 
 
+class NobodyAnswers(ApprovalBroker):
+    """For work no UI is connected to: what needs approval is declined at once, never waited for (D-654)."""
+
+    async def request(self, payload: dict[str, Any]) -> ApprovalAnswer:
+        return ApprovalAnswer(
+            approved=False,
+            instruction="This needs the user's approval and nobody can be asked here. Find another way, or report it.",
+        )
+
+
 @dataclass
 class QuestionAnswer:
     choice: str | None = None  # the option label picked (or "done"/"skip"/"cant" for user actions)
