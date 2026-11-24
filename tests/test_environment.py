@@ -44,7 +44,7 @@ def test_store_round_trip_and_damaged_file(tmp_path: Path) -> None:
     store.save_answer(tmp_path, "tesseract", True)
     store.save_answer(tmp_path, "gemini", False)
     assert store.load(tmp_path)["answers"] == {"tesseract": True, "gemini": False}
-    (tmp_path / store.FILE).write_text("{not json", encoding="utf-8")
+    (tmp_path / "data" / store.FILE).write_text("{not json", encoding="utf-8")
     assert store.load(tmp_path)["plan"] == {}
 
 

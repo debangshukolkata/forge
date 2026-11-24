@@ -22,7 +22,8 @@ class Answer(BaseModel):
 class Approve(BaseModel):
     kind: Literal["approve"] = "approve"
     request_id: str
-    scope: Literal["once", "prefix"] = "once"  # "prefix": always allow commands starting the same way
+    # "prefix": always allow commands starting the same way; "python": all Python commands of this project (D-649)
+    scope: Literal["once", "prefix", "python"] = "once"
 
 
 class Reject(BaseModel):

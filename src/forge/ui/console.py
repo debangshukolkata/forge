@@ -126,6 +126,7 @@ def render_event(event: Event, console: Console, state: ConsoleState) -> None:
         choices = (
             "[y] allow once"
             + (f"  [a] always allow '{prefix}'" if prefix else "")
+            + ("  [p] allow all Python in this project" if payload.get("can_allow_python") else "")
             + "  [n <instead...>] deny"
         )
         console.print(Text(f"  {choices}", style="yellow"))
@@ -218,6 +219,8 @@ def answer_for(line: str, request_id: str) -> UserInput | None:
         return Approve(request_id=request_id)
     if word in ("a", "always"):
         return Approve(request_id=request_id, scope="prefix")
+    if word in ("p", "python"):
+        return Approve(request_id=request_id, scope="python")
     if word in ("n", "no"):
         return Reject(request_id=request_id, instruction=rest.strip() or None)
     return None

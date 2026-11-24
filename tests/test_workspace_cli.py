@@ -25,7 +25,7 @@ def test_new_then_export(original_repo: Path, tmp_path: Path, isolated_forge_hom
 
     assert workspace.info.app_subfolder == "backend"  # auto-detected: the only candidate
     assert (workspace_path / "output" / "backend" / "claims_app" / "added.py").is_file()
-    remembered = json.loads((isolated_forge_home / "repos.json").read_text(encoding="utf-8"))
+    remembered = json.loads((isolated_forge_home / "data" / "repos.json").read_text(encoding="utf-8"))
     assert list(remembered.values()) == [{"app_subfolder": "backend"}]
 
 

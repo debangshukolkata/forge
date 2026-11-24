@@ -230,6 +230,24 @@ def _first_word_section(llm: list[dict[str, Any]]) -> list[str]:
     return out
 
 
+def approval_lines(events: list[Event]) -> list[str]:
+    """Why the user was asked (D-649): the cards by tool and reason, so that a needless question can be found."""
+    cards: Counter[tuple[str, str, bool]] = Counter()
+    for event in events:
+        if event.type != EventType.APPROVAL_REQUESTED or event.payload.get("markdown"):
+            continue
+        reason = " ".join(str(event.payload.get("reason") or "no reason given").split())
+        cards[(str(event.payload.get("tool")), reason[:110], bool(event.payload.get("always_ask")))] += 1
+    if not cards:
+        return []
+    out = ["## Approval cards by reason", ""]
+    out += [
+        f"- {count}x {tool}: {reason}{' (asked in auto mode too)' if always else ''}"
+        for (tool, reason, always), count in cards.most_common(12)
+    ]
+    return [*out, ""]
+
+
 def retry_lines(events: list[Event]) -> list[str]:
     """How long DebCraft waited for busy or failing models (D-643): waits by model and reason, and the switches."""
     waits: dict[tuple[str, str], list[float]] = {}
@@ -279,6 +297,7 @@ def summarize(events: list[Event], stored_knowledge: dict[str, Any] | None = Non
         "",
     ]
     out += retry_lines(events)
+    out += approval_lines(events)
     if not llm:
         out += ["_No `llm_call` events: this log predates the run log (D-151)._", ""]
 

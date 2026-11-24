@@ -1,6 +1,7 @@
 ---
 name: solve-against-running-system
 proof: api
+tools: remote_apps
 description: Makes an existing system fulfil a requirement it cannot fulfil yet, by running it and watching what happens. Use when the user wants an agent, a tool, an API or a workflow of their existing application to be able to do something ("the agent should be able to ...", "make it answer ...", "it fails when ..."), and whenever reading the code alone cannot tell you whether the requirement is met.
 ---
 
@@ -91,6 +92,9 @@ Do this before you change anything: the first run through the API is the evidenc
   user for one. When the tool says no environment covers the host, write `app_logins.yaml` with
   `settings_file` (ask only for the address of the login page). When the tool names a token the user
   released, call again with that name in `token_env`.
+- **The application itself calls the dev environment** (a file service, a gateway) with a token of its own: start it
+  with `start_with_token` (it gets a fresh token; the user approves the command once). When it passes on the token of
+  its caller instead, one token has to be valid in both places: find that out before you give the user a curl.
 - **The token line needs no care from the user.** `http_request` reads DebCraft's .env on every call, sends a
   value saved as `Bearer <token>` correctly, and tries the bare token when the API refuses `Bearer`. Never ask
   the user to rewrite the line or to restart DebCraft.

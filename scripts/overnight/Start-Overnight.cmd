@@ -3,7 +3,7 @@ rem Double-click to start the overnight test run (docs\OVERNIGHT_OFFICE.md expla
 rem Options go after the name, for example:  Start-Overnight.cmd --dry-run   (shows the plan, runs nothing)   Start-Overnight.cmd --profile extended --max-hours 20
 rem To continue a run that was stopped: Start-Overnight.cmd --out overnight-results\<the same folder>
 title DebCraft overnight run
-cd /d "%~dp0"
+cd /d "%~dp0..\.."
 if not exist ".venv\Scripts\python.exe" (
     echo The private Python environment is missing. Double-click Start-DebCraft.cmd once first, close DebCraft, then start this again.
     pause

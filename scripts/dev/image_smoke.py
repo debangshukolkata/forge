@@ -4,7 +4,7 @@ r"""Live check of generate_image on Vertex AI. Run on a machine with Google ADC 
     (optional) set GEMINI_IMAGE_MODEL=gemini-2.5-flash-image   (or an imagen-... model)
     .venv\Scripts\python scripts\dev\image_smoke.py
 
-Writes smoke-picture.png next to where you run it and prints OK or the reason it failed.
+Writes debcraft-smoke-picture.png to the temp folder and prints OK or the reason it failed.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ async def main() -> int:
     )
     print(("OK   " if result.ok else "FAIL ") + result.content)
     if result.ok:
-        target = Path.cwd() / "smoke-picture.png"
+        target = Path(tempfile.gettempdir()) / "debcraft-smoke-picture.png"
         target.write_bytes(workspace.path_of("smoke.png").read_bytes())
         print(f"picture: {target}")
     return 0 if result.ok else 1

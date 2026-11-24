@@ -11,7 +11,7 @@ cannot change that file, so it can only start the command the user wrote:
         port: 9006               # DebCraft waits until this local port accepts connections
 
 `ensure_tunnel` is called before every connection to that target: when the port already answers nothing is done;
-otherwise the command is started in the background (no window), its output goes to a log file in DebCraft Home, and it
+otherwise the command is started in the background (no window), its output goes to a log file in the logs folder of DebCraft Home, and it
 is stopped when DebCraft ends. A tunnel that does not come up says why; an expired Google login is reported as such, so
 the user is asked to run `gcloud auth login`. The command runs without DebCraft's own secrets in its environment."""
 
@@ -161,7 +161,7 @@ def _ensure_tunnel(target_name: str, home: Path | None = None) -> str:
         program = shutil.which(spec.command[0])
         if program is None:
             raise TunnelError(f"The tunnel program {spec.command[0]!r} is not on the PATH ({TUNNELS_FILE}).")
-        folder = home or forge_home()
+        folder = (home or forge_home()) / "logs"
         log = folder / LOG_NAME.format(name=spec.name)
         folder.mkdir(parents=True, exist_ok=True)
         flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0  # type: ignore[attr-defined,unused-ignore]

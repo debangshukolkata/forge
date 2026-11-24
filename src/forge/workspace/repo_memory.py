@@ -5,11 +5,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from forge.home_layout import data_path
 from forge.safety.paths import real_path
 
 
 def _store(home: Path) -> Path:
-    return home / "repos.json"
+    return data_path(home, "repos.json")
 
 
 def remembered_app_folder(home: Path, repo: Path) -> str | None:
@@ -25,5 +26,5 @@ def remember_app_folder(home: Path, repo: Path, app_subfolder: str) -> None:
     path = _store(home)
     data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
     data.setdefault(str(real_path(repo)), {})["app_subfolder"] = app_subfolder
-    home.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=1), encoding="utf-8")

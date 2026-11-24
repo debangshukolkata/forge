@@ -494,6 +494,18 @@ function ApprovalCard({ itemKey, p, forge }: { itemKey: string; p: P; forge: For
           Deny
         </Button>
       </div>
+      {p.can_allow_python && !p.always_ask && (
+        <button
+          type="button"
+          data-testid="allow-python"
+          title="Installing packages, addresses outside this computer and secret files are still asked about. Undo: /allow-python off"
+          onClick={() => reply({ kind: "approve", request_id: p.id, scope: "python" }, "All Python allowed in this project")}
+          className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-border bg-raised px-3 py-2 text-left text-[13px] font-medium transition-colors duration-150 hover:border-border-strong hover:bg-muted"
+        >
+          <span className="shrink-0">Allow all Python in this project</span>
+          <span className="min-w-0 flex-1 truncate text-[12px] font-normal text-fg-muted">still asks for installs, outside addresses and secrets</span>
+        </button>
+      )}
       {prefix && (
         <button
           type="button"

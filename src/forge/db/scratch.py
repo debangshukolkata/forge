@@ -17,6 +17,7 @@ import psycopg
 
 from forge.config import Secrets
 from forge.db.connection import DbTarget, connect, safe_schema_name
+from forge.home_layout import data_path
 from forge.safety.sql_guard import check_scratch, created_objects
 from forge.workspace.workspace import Workspace
 
@@ -45,7 +46,7 @@ class ScratchRegistry:
     """<forge_home>/scratch_registry.json: which workspace owns which schema, and what DebCraft created in it."""
 
     def __init__(self, home: Path) -> None:
-        self.path = home / "scratch_registry.json"
+        self.path = data_path(home, "scratch_registry.json")
 
     def load(self) -> dict[str, Any]:
         return json.loads(self.path.read_text(encoding="utf-8")) if self.path.exists() else {}

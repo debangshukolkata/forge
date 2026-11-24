@@ -15,6 +15,7 @@ from forge.memory.store import CommandStore, MemoryStore
 from forge.parity.plugins import plugin_command_folders
 from forge.protocol.events import EventType
 from forge.tools.knowledge_tools import learn_request, learning_status
+from forge.tools.start_with_token import forget_approvals
 from forge.workspace.output import build_output
 from forge.workspace.read_grants import ReadGrantError
 from forge.workspace.workspace import Workspace, WorkspaceError
@@ -66,6 +67,7 @@ HELP_TEXT = """Available commands:
   /revoke-read <path>       take that permission back
   /app-keys [model|off]     let the app being built use one of your Azure OpenAI models while it is tested (off = take it back)
   /bg [kill <name>]         background processes (dev servers...) with the tail of their output
+  /allow-python [on|off]    run Python commands in this project without a card (installs, outside addresses, secrets still ask)
   /report                   after a task that failed or went wrong: write one scrubbed file to send for analysis
   /log | /diff <task|hash>  the workspace's local history: one commit per completed task
   /rename <name>            name this session/workspace
@@ -127,6 +129,7 @@ class SlashCommandHandler:
             "/skills": self._skills,
             "/skill": self._skill,
             "/allow-read": self._allow_read,
+            "/allow-python": self._allow_python,
             "/revoke-read": self._revoke_read,
             "/app-keys": self._app_keys,
             "/agents": self._agents,
@@ -598,6 +601,8 @@ class SlashCommandHandler:
             return
         if choice.lower() == "off":
             save_grant(workspace, None)
+            if self.host.agent is not None:
+                forget_approvals(self.host.agent.context)
             save_secret_names(workspace, [])
             apply_grant(agent.context.shell, workspace, config, secrets)
             await self._say(
@@ -649,6 +654,24 @@ class SlashCommandHandler:
             tail = "\n".join(f"      {line}" for line in list(entry.lines)[-5:])
             lines.append(f"  {name}  [{state}]  port {entry.port or '-'}  {entry.command}\n{tail}")
         await self._say("\n".join(lines) or "No background processes.")
+
+    async def _allow_python(self, args: list[str]) -> None:
+        agent = self.host.agent
+        if agent is None:
+            await self._say("Open a project first.")
+            return
+        choice = args[0].lower() if args else ""
+        if choice in ("on", "off"):
+            agent.gate.allow_python(choice == "on")
+        elif choice:
+            await self._say("Usage: /allow-python [on|off]")
+            return
+        state = "on" if agent.gate.python_allowed() else "off"
+        await self._say(
+            f"Allow all Python commands in this project: {state}. With it on, Python runs without a card. Still asked "
+            "about: installing packages, addresses outside this computer, secret files and paths outside the project, "
+            "and anything else chained to the command. Change it with /allow-python on or off."
+        )
 
     async def _report(self, args: list[str]) -> None:
         from forge.engine.run_report import write_send_report

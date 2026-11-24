@@ -354,3 +354,28 @@ async def test_the_api_token_and_what_the_applications_own_env_sets_are_not_aske
     own = await _secret(context, "CONSOLE_TOKEN_SHA256")
     assert not own.ok and "application's own .env file" in own.content and not cards
     assert "abc123" not in own.content
+
+
+def test_gemini_settings_in_app_env_reach_the_application_but_a_key_does_not(
+    isolated_forge_home: Path, original_repo: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-647: the projects DebCraft works on need to know their Gemini model."""
+    from forge.toolkit.app_keys import app_file_values, is_debcrafts_own
+
+    monkeypatch.delenv("FORGE_APP_ENV_FILE", raising=False)
+    (isolated_forge_home / "app.env").write_text(
+        "GEMINI_MODEL=gemini-2.5-pro\n"
+        "GOOGLE_CLOUD_PROJECT=my-project\n"
+        "VERTEX_PROJECT=my-project-2\n"
+        "GEMINI_API_KEY=not-a-real-key-123\n"  # check_secrets: fake
+        "AZURE_OPENAI_API_KEY=not-a-real-key-456\n"  # check_secrets: fake
+        "GOOGLE_APPLICATION_CREDENTIALS=C:/x.json\n",
+        encoding="utf-8",
+    )
+    assert app_file_values() == {
+        "GEMINI_MODEL": "gemini-2.5-pro",
+        "GOOGLE_CLOUD_PROJECT": "my-project",
+        "VERTEX_PROJECT": "my-project-2",
+    }
+    assert default_redactor.redact("uses gemini-2.5-pro") == "uses gemini-2.5-pro"
+    assert is_debcrafts_own("GEMINI_MODEL")  # from DebCraft's own .env it is still not handed out

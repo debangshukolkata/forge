@@ -34,6 +34,7 @@ from forge.environment.tavily_tool import extract as tavily_extract
 from forge.environment.tavily_tool import research as tavily_research
 from forge.environment.tavily_tool import search as tavily_search
 from forge.errors import ForgeError
+from forge.home_layout import data_path
 from forge.safety.redact import default_redactor
 from forge.vision.ocr import find_tesseract
 
@@ -360,7 +361,7 @@ def check_node() -> Outcome:
     if node_supports_system_ca(version):
         environment["NODE_USE_SYSTEM_CA"] = "1"
     else:
-        bundle = windows_certificate_bundle(forge_home() / "certs" / "windows-roots.pem")
+        bundle = windows_certificate_bundle(data_path(forge_home(), "certs") / "windows-roots.pem")
         if bundle is not None:
             environment["NODE_EXTRA_CA_CERTS"] = str(bundle)
     try:

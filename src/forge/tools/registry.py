@@ -56,6 +56,7 @@ from forge.tools.settings_file import SettingsFile
 from forge.tools.shadcn import AddUiComponent, ShadcnSetup
 from forge.tools.show_app import ShowApp
 from forge.tools.skill_install_tool import InstallSkill
+from forge.tools.start_with_token import StartWithToken
 from forge.tools.temporary import TemporaryEditsTool
 from forge.tools.test_quality import MutationCheck
 from forge.tools.theme_search import theme_search_tools
@@ -117,6 +118,7 @@ def default_tools() -> list[Tool]:
         ConversationRecall(),
         AppLogin(),
         AppTokenStatus(),
+        StartWithToken(),
         SettingsFile(),
         TemporaryEditsTool(),
         NotebookRead(),

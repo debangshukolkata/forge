@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from forge.config import forge_home
+from forge.home_layout import data_path
 from forge.protocol.events import Event, EventType
 from forge.workspace.conversations import conversation_file
 from forge.workspace.workspace import Workspace
@@ -16,7 +17,7 @@ from forge.workspace.workspace import Workspace
 
 def list_sessions(home: Path | None = None) -> str:
     home = home or forge_home()
-    recent_file = home / "recent_workspaces.json"
+    recent_file = data_path(home, "recent_workspaces.json")
     try:
         entries = json.loads(recent_file.read_text(encoding="utf-8")) if recent_file.exists() else []
     except ValueError:

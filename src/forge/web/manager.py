@@ -14,6 +14,7 @@ from typing import Any
 
 from forge.engine.session_host import SessionHost
 from forge.errors import ConversationBusyError, ConversationError
+from forge.home_layout import data_path
 from forge.workspace.create import create_workspace
 from forge.workspace.pyenv import find_app_folder_candidates
 from forge.workspace.repo_memory import remembered_app_folder
@@ -169,7 +170,7 @@ class WebSessionManager:
 
     @property
     def _recent_file(self) -> Path:
-        return self.home / "recent_workspaces.json"
+        return data_path(self.home, "recent_workspaces.json")
 
     def recent(self) -> list[dict[str, Any]]:
         try:

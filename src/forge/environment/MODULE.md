@@ -9,7 +9,7 @@ Shown by the web UI's Environment drawer (D-186); the confirmed plan is applied 
 
 A failed Tavily call writes `<home>/logs/tavily-<tool>-<time>.log` (`tavily_log.py`: request body, status, reply structure and text, never the token) and its error names the file (D-548).
 
-- **Depends on:** config, doctor, errors, llm, net, safety, vision
+- **Depends on:** config, doctor, errors, home_layout, llm, net, safety, vision
 - **Invariants:** no secret value is ever stored or returned (details are redacted, only env var *names* appear); the saved file only
   holds check results and role -> model keys; a stale or unknown model key in it is ignored, never fatal.
 - **Tests:** test_environment.py, test_setup_guide.py, test_ocr.py, test_tavily_tool.py, test_tavily_kinds.py

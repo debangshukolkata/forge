@@ -18,6 +18,7 @@ from typing import Any
 import httpx
 
 from forge.config import forge_home
+from forge.home_layout import data_path
 
 API = "https://api.fontsource.org/v1/fonts"
 USER_AGENT = "DebCraft/1.0 (https://github.com/debangshukolkata/forge; font search) httpx"
@@ -82,7 +83,7 @@ class FontError(Exception):
 
 
 def cache_file() -> Path:
-    return forge_home() / "library" / "fonts" / "catalogue.json"
+    return data_path(forge_home(), "library") / "fonts" / "catalogue.json"
 
 
 def make_client() -> httpx.AsyncClient:

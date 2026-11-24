@@ -26,7 +26,7 @@ def test_account_is_stored_as_a_salted_hash(tmp_path: Path) -> None:
     store = AccountStore(tmp_path)
     assert not store.configured
     token = store.create("asha", PASSWORD)
-    text = (tmp_path / "account.json").read_text(encoding="utf-8")
+    text = (tmp_path / "data" / "account.json").read_text(encoding="utf-8")
     assert PASSWORD not in text and json.loads(text)["user"] == "asha"
     assert store.signed_in(token) and not store.signed_in("other") and not store.signed_in(None)
     with pytest.raises(AccountError, match="already exists"):
@@ -73,7 +73,7 @@ def test_repeated_wrong_passwords_pause_logins(tmp_path: Path) -> None:
 def test_deleting_the_account_file_resets_it(tmp_path: Path) -> None:
     store = AccountStore(tmp_path)
     store.create("asha", PASSWORD)
-    (tmp_path / "account.json").unlink()
+    (tmp_path / "data" / "account.json").unlink()
     assert not store.configured
     store.create("new-user", PASSWORD)
     assert store.user == "new-user"

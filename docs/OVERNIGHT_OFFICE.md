@@ -1,5 +1,7 @@
 # The overnight test run on the office laptop
 
+The `*-Overnight.cmd` files are in `scripts\overnight` (since D-646); the results stay in `overnight-results`.
+
 What this is: one double-click that tests DebCraft for a whole night while you sleep. It runs every test once, one after another, gives DebCraft real tasks of different kinds (fixing code, building a tool, cutting a signature out of a photo, researching on the web, building a whole web application, designing pages with Gemini and with Azure, documents and presentations), and in the morning leaves **one report page** that says what passed, what failed and which screenshots to send back so that I can see why.
 
 It is built so that it does not get stuck:

@@ -7,11 +7,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from forge.home_layout import data_path
+
 FILE = "environment.json"
 
 
 def _path(home: Path) -> Path:
-    return home / FILE
+    return data_path(home, FILE)
 
 
 def load(home: Path) -> dict[str, Any]:
@@ -39,7 +41,7 @@ def load(home: Path) -> dict[str, Any]:
 
 
 def _write(home: Path, data: dict[str, Any]) -> None:
-    home.mkdir(parents=True, exist_ok=True)
+    _path(home).parent.mkdir(parents=True, exist_ok=True)
     _path(home).write_text(json.dumps(data, indent=1), encoding="utf-8")
 
 

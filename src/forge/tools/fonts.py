@@ -23,6 +23,7 @@ import httpx
 from pydantic import Field
 
 from forge.config import forge_home
+from forge.home_layout import data_path
 from forge.net import connection_hint, root_cause
 from forge.slides.rawpackage import check_archive
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
@@ -56,7 +57,7 @@ Get-ChildItem -Path $PSScriptRoot -Include *.ttf, *.otf -Recurse | ForEach-Objec
 
 
 def library_folder() -> Path:
-    return forge_home() / "library" / "fonts"
+    return data_path(forge_home(), "library") / "fonts"
 
 
 def font_id(text: str) -> str:

@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 from forge.config import forge_home
 from forge.engine.log_summary import _failure_reason, _first_word_section, _median
 from forge.errors import ConfigError
+from forge.home_layout import data_path
 from forge.protocol.events import Event, EventType, load_event_log
 from forge.safety.redact import default_redactor
 from forge.workspace.conversations import conversation_file
@@ -32,7 +33,9 @@ FIRST_PAGE = "Photograph each screen; press Enter for the next one."
 def newest_workspace(home: Path | None = None) -> Path | None:
     """The recent project whose transcript was written last."""
     try:
-        recent = json.loads(((home or forge_home()) / "recent_workspaces.json").read_text(encoding="utf-8"))
+        recent = json.loads(
+            data_path(home or forge_home(), "recent_workspaces.json").read_text(encoding="utf-8")
+        )
     except (OSError, ValueError):
         return None
     best: tuple[float, Path] | None = None

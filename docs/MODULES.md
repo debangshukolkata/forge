@@ -8,7 +8,7 @@ spec.** Single-file modules (`errors.py`, `net.py`, `session.py`, `cli.py`) are 
 
 | Tier | Modules | Role |
 |---|---|---|
-| 0 | errors, net | exceptions, TLS |
+| 0 | errors, net, home_layout | exceptions, TLS, where things are in DebCraft Home |
 | 1 | brand, ooxml, safety | write jail, permissions, sandbox, redaction (safety invariants); Office package checks; document brand kit |
 | 2 | config, protocol, workspace | settings; events/inputs/approvals; the workspace write gate |
 | 3 | llm, memory | providers, router, tokens, cost; auto-memory (user + project scope) |

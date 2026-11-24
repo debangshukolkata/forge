@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 from forge.errors import ForgeError
+from forge.home_layout import data_path
 from forge.safety.paths import is_within, real_path
 
 
@@ -40,7 +41,9 @@ class ReadGrants:
     @classmethod
     def for_workspace(cls, workspace_root: Path, home: Path) -> ReadGrants:
         key = hashlib.sha1(os.path.normcase(str(real_path(workspace_root))).encode("utf-8")).hexdigest()[:16]
-        return cls(home / "read_grants" / f"{key}.json", always=[home / "skills"], protected_home=home)
+        return cls(
+            data_path(home, "read_grants") / f"{key}.json", always=[home / "skills"], protected_home=home
+        )
 
     # --- reading the list ---
 

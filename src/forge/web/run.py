@@ -13,6 +13,7 @@ from pathlib import Path
 import uvicorn
 
 from forge.config import forge_home
+from forge.home_layout import tidy
 from forge.safety.server_security import ServerSecurity, check_bind_host, check_dev_origin
 from forge.session import build_session
 from forge.web.accounts import AccountStore
@@ -57,6 +58,7 @@ async def serve(
     bind = check_bind_host(host)
     chosen = free_port(port or DEFAULT_PORT)
     security = ServerSecurity(port=chosen, dev_origin=check_dev_origin(DEV_ORIGIN) if dev else None)
+    tidy(forge_home())  # before anything keeps a path (D-646)
     manager = WebSessionManager(forge_home(), lambda ws: build_session(workspace=ws, orchestrated=True))
     config = uvicorn.Config(None, host=bind, port=chosen, log_level="warning", ws="websockets-sansio")  # type: ignore[arg-type]
     server = uvicorn.Server(config)

@@ -194,6 +194,13 @@ class Classification:
     level: Level
     reasons: list[str] = field(default_factory=list)
     always_ask: bool = False  # the reason is on the always-ask list: auto mode must still ask
+    uses_python: bool = False
+    beyond_python: bool = False  # something other than Python in the command needs approval too (D-649)
+
+    @property
+    def only_python(self) -> bool:
+        """All that needs approval is that Python runs: what "allow all Python" in a project covers."""
+        return self.level == "ask" and self.uses_python and not self.beyond_python and not self.always_ask
 
     def raise_to(self, level: Level, reason: str, always_ask: bool = False) -> None:
         order = {"safe": 0, "ask": 1, "blocked": 2}
@@ -231,6 +238,8 @@ def classify(command: str, scope: ShellScope) -> Classification:
         result.raise_to(
             "ask", "refers to a secret file or to the user's profile/Forge folder indirectly", always_ask=True
         )
+    if "$(" in command or "@(" in command or "`" in command:
+        result.beyond_python = True  # PowerShell runs what is inside before Python sees it
     segments = split_segments(command)
     if not segments:
         result.raise_to("ask", "empty command")
@@ -241,6 +250,8 @@ def classify(command: str, scope: ShellScope) -> Classification:
 
 def _classify_segment(tokens: list[str], scope: ShellScope, result: Classification) -> None:
     verb, args = _verb(tokens)
+    if verb in PYTHON_NAMES:
+        result.uses_python = True
     if verb in BLOCKED_VERBS:
         result.raise_to("blocked", f"{verb}: {BLOCKED_VERBS[verb]}")
         return
@@ -260,6 +271,7 @@ def _classify_segment(tokens: list[str], scope: ShellScope, result: Classificati
             result.raise_to("blocked", "git push is never run by DebCraft")
         elif sub not in SAFE_GIT:
             result.raise_to("ask", f"git {sub} changes repository state")
+            result.beyond_python = True
     if any(_is_secret_file(arg) for arg in args):
         # read_file shows key names only; the shell would print the values (redaction only knows DebCraft's
         # own secrets and secret-shaped text, not every value in the app's .env).
@@ -275,6 +287,7 @@ def _classify_segment(tokens: list[str], scope: ShellScope, result: Classificati
     elif verb in WRITE_VERBS or writes:
         # Even inside the workspace: shell writes bypass DebCraft's checkpoints, so they need approval.
         result.raise_to("ask", f"{verb} changes files")
+        result.beyond_python = result.beyond_python or verb not in PYTHON_NAMES
     elif verb in READ_ONLY or verb in SAFE_EXECUTABLES or _is_safe_python(verb, args) or verb == "git":
         pass
     elif (
@@ -286,6 +299,20 @@ def _classify_segment(tokens: list[str], scope: ShellScope, result: Classificati
         pass  # smoke-testing the app this workspace runs
     else:
         result.raise_to("ask", f"'{verb}' is not on the allowlist")
+        if verb not in PYTHON_NAMES and not _is_plain_setting(tokens):
+            result.beyond_python = True
+
+
+# `$env:NAME='value'` before a program, with a value PowerShell does not evaluate. PATH and the variables that decide
+# what Python itself loads are not plain settings.
+_PLAIN_SETTING = re.compile(
+    r"""^\$env:(?!(?:path|pathext|comspec|pythonpath|pythonhome|pythonstartup|psmodulepath)\b)\w+\s*=\s*(?:'[^']*'|"[^"$`]*"|[\w.:/\\-]*)$""",
+    re.IGNORECASE,
+)
+
+
+def _is_plain_setting(tokens: list[str]) -> bool:
+    return bool(_PLAIN_SETTING.match(" ".join(tokens)))
 
 
 def _check_path(raw: str, scope: ShellScope, result: Classification, writing: bool) -> None:
@@ -380,7 +407,7 @@ _HIDDEN_SECRET_PATH = re.compile(
 # DebCraft's own private files (D-606): the token store, the signed-in browser profiles, the login and tunnel
 # descriptions and the application's environment file. Named in a command (any way it is spelled), the user is asked.
 _OWN_PRIVATE_FILES = re.compile(
-    r"(?<![\w-])(?:\.forge[\\/]+tokens\.json|app_logins\.yaml|tunnels\.yaml|app\.env|browser_profile)(?![\w-])",
+    r"(?<![\w-])(?:\.forge[\\/]+tokens\.json|\.forge[\\/]+data(?![\\/]+(?:profiles|library|cache)\b(?!.*\.\.))|data[\\/]+(?:tokens|account)\.json|app_logins\.yaml|tunnels\.yaml|app\.env|browser_profile)(?![\w-])",
     re.IGNORECASE,
 )
 # Where DebCraft keeps its folder and keys, reached through a variable instead of a literal path.

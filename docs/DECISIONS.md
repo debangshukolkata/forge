@@ -5112,3 +5112,37 @@ answer, event or log. Tested with a stand-in for Windows; the real clipboard is 
 
 D-644, live (2026-11-24): two builds of `tests/test_live_skill_agent.py` passed with these checks on; the second proved its
 agent only with `APP_FAKE_MODEL=true`, which the check now counts as made up too (unit test, not run live again).
+
+## D-646: Tidy folders (2026-11-24, the user's photographs; option A)
+Program folder: the five `*-Overnight.cmd` are in `scripts/overnight`, CHANGELOG and SECURITY in `docs`, the doctor's report
+in `<DebCraft Home>/reports`, the image smoke picture in the temp folder. DebCraft Home: what the user edits stays at the top
+(no path the user knows changes), DebCraft's own files and folders are in `data` (`home_layout.py`: OWN), tunnel logs in
+`logs`, the left-over `learning` in `data/old`, and a README.txt says what each is. The web app moves them at its start, each
+by one rename, never onto something that exists, nothing is deleted; a file in use stays where it is and is found there
+(`data_path`); `data/layout.json` remembers what moved, so an old copy written by an older version never comes back (a reset
+password stays reset). The shell rule that asks before private files are read covers `.forge/data`, not its profiles, library
+and cache. Options refused: group everything (moves `.env` and `app.env`), a README only. Going back to an older version needs
+the files moved back by hand.
+
+## D-647: Gemini settings of the project in app.env (2026-11-24)
+The user: the projects DebCraft works on may need to know their Gemini model. Five names without a secret (GEMINI_MODEL,
+GEMINI_LOCATION, GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, GOOGLE_GENAI_USE_VERTEXAI) in app.env now reach the commands; they
+were dropped as DebCraft's own names. They are not masked. Keys and credentials files are still refused.
+
+## D-648: A fresh sign-in token for one approved program (2026-11-24, the user said yes)
+`start_with_token` (deferred group `remote_apps`): an application under test that itself calls dev or SIT gets the token DebCraft
+signs in for, in one variable of that one program; no other command has it. Red card with the exact command, once per project
+(approval in `<DebCraft Home>/data/app_tokens.json`, a hash, where no command can write it); a changed command, variable, folder
+or host asks again; a headless run and a subagent cannot approve; `/app-keys off` takes it back. Never in the model's context,
+masked in output, names only in the field log. Accepted risk, written on the card: the program runs code DebCraft may have
+changed and could store or send the token. A token ends; a restart with the tool brings a new one. `forge env-check` was offered
+and refused by the user. Not tried on WisdomNext.
+
+## D-649: Allow all Python in a project; approval cards by reason in the report (2026-11-24)
+The user: it keeps asking for Python commands. "Always allow" remembers three words, so every `python -c` was new. Chosen (A): a
+third choice on the card and `/allow-python on|off`, per project: a command whose only open point is that Python runs (also a
+.venv Python, `cd` and plain `$env:NAME=` before it) is allowed. Still asked: installs, addresses outside this computer, secret
+files, paths outside the project, anything else in the command, substitutions, PATH and PYTHONPATH settings; plan mode and deny
+rules win. Refused: a global setting, and never asking for Python at all. The check reads the command, not the script. The user
+says it also asks with Auto on: that can only be the always-ask list, so `/report` now counts the cards by reason, also of runs
+before this version.

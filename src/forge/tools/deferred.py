@@ -102,8 +102,9 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
     ),
     "notebooks": ("Jupyter notebooks: read and edit cells", ("notebook_read", "notebook_edit_cell")),
     "remote_apps": (
-        "Signing in to an environment of the user's web application (dev, SIT) and keeping the token",
-        ("app_login", "app_token_status"),
+        "Signing in to an environment of the user's web application (dev, SIT) and keeping the token; starting the "
+        "application under test with a fresh token of that environment",
+        ("app_login", "app_token_status", "start_with_token"),
     ),
     "settings_files": (
         "The user's own settings files (app_logins.yaml for signing in to dev and SIT, tunnels.yaml for the "

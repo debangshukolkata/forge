@@ -1,6 +1,6 @@
 @echo off
 rem Double-click to stop the overnight run NOW, before you shut the laptop. The job that is running is stopped and starts again from its beginning when you continue with Resume-Overnight.cmd.
-cd /d "%~dp0"
+cd /d "%~dp0..\.."
 for /f "delims=" %%F in ('dir /b /ad /o-d "overnight-results" 2^>nul') do (
     if exist "overnight-results\%%F\state.json" (
         echo stop> "overnight-results\%%F\STOP_NOW"

@@ -2,7 +2,7 @@
 
 The per-requirement workspace: copy, baseline manifest, the single write gate (jail + checkpoint), output/ builder, checkpoints, Python/Node environment detection, read grants (`read_grants.py`: read-only places the user opened, D-208).
 
-- **Depends on:** errors, safety
+- **Depends on:** errors, home_layout, safety
 - **Invariants:** Every write goes through Workspace (safety invariant 1). Preserve BOM and line endings.
 Changed expectations in the user's existing tests are recorded for the delivery report (`test_expectations.py`, D-560).
 

@@ -9,6 +9,7 @@ from typing import Any
 from forge.config import ForgeConfig, Secrets, forge_home, load_config, load_secrets
 from forge.engine.session_host import SessionHost
 from forge.environment.plan import apply_saved_plan
+from forge.home_layout import data_path
 from forge.llm.router import LLMRouter
 from forge.protocol.events import EventBus, EventType
 from forge.workspace.conversations import ConversationStore
@@ -17,7 +18,7 @@ from forge.workspace.workspace import Workspace
 
 def new_session_log_path(home: Path) -> Path:
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
-    return home / "sessions" / stamp / "events.jsonl"
+    return data_path(home, "sessions") / stamp / "events.jsonl"
 
 
 def build_session(

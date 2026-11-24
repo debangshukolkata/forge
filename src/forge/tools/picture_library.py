@@ -12,12 +12,13 @@ import re
 from pathlib import Path
 
 from forge.config import forge_home
+from forge.home_layout import data_path
 
 MAX_ENTRIES = 2000
 
 
 def folder() -> Path:
-    return forge_home() / "library" / "pictures"
+    return data_path(forge_home(), "library") / "pictures"
 
 
 def _index_file() -> Path:

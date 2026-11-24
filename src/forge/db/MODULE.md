@@ -2,7 +2,7 @@
 
 Database access: access levels, scratch schema, introspection, DB requests, table checks.
 
-- **Depends on:** config, errors, safety, workspace
+- **Depends on:** config, errors, home_layout, safety, workspace
 - **Invariants:** DB writes only happen in the scratch schema for the current requirement (safety invariant 4), with one exception the user set (D-608): a single INSERT or UPDATE on the development database after the user approved it on a red card; never a delete or a table change there.
 - **Tests:** test_db.py, test_live_db.py, test_dev_db_write.py
 - **Decisions:** docs/DECISIONS.md (search the module's feature names); layering is enforced by tests/test_module_boundaries.py.

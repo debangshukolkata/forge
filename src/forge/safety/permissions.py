@@ -20,7 +20,7 @@ import re
 from dataclasses import dataclass, field
 from fnmatch import fnmatchcase
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from forge.errors import ConfigError
@@ -28,7 +28,7 @@ from forge.safety.shell_classifier import Classification, ShellScope, classify
 
 PermissionMode = Literal["plan", "default", "auto"]
 Verdict = Literal["allow", "ask", "deny"]
-SHELL_TOOLS = {"run_command", "python_run", "start_background"}
+SHELL_TOOLS = {"run_command", "python_run", "start_background", "start_with_token"}
 ALWAYS_ASK_TOOLS = {"delete_file"}
 PREFIX_WORDS = 3  # "always allow" remembers this many leading words of a command
 
@@ -105,6 +105,7 @@ class Decision:
     reason: str
     always_ask: bool = False
     command_prefix: str | None = None  # offered to the user for "always allow this prefix"
+    offer_python: bool = False  # "allow all Python in this project" can be offered (D-649)
 
 
 class PermissionGate:
@@ -166,23 +167,37 @@ class PermissionGate:
             return Decision("ask", reason, always_ask=True, command_prefix=None)
         if self.mode == "auto":
             return Decision("allow", f"auto mode: {reason}")
+        if result.only_python and self.python_allowed():
+            return Decision("allow", "you allow all Python commands in this project")
         if prefix in self.allowed_prefixes():
             return Decision("allow", f"you always allow '{prefix}'")
         allowed = self.rules.allowed_by(tool_name, command)
         if allowed is not None:
             return Decision("allow", f"your settings allow '{allowed.text}'")
-        return Decision("ask", reason, command_prefix=prefix)
+        return Decision("ask", reason, command_prefix=prefix, offer_python=result.only_python)
+
+    def _stored(self) -> dict[str, Any]:
+        if not self._rules_file.exists():
+            return {}
+        data = json.loads(self._rules_file.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+
+    def _store(self, **changes: Any) -> None:
+        self._rules_file.parent.mkdir(parents=True, exist_ok=True)
+        self._rules_file.write_text(json.dumps({**self._stored(), **changes}, indent=1), encoding="utf-8")
+
+    def python_allowed(self) -> bool:
+        return self._stored().get("allow_all_python") is True
+
+    def allow_python(self, on: bool) -> None:
+        """Only the user switches this, on a card or with /allow-python (D-649)."""
+        self._store(allow_all_python=on)
 
     def allowed_prefixes(self) -> list[str]:
-        if not self._rules_file.exists():
-            return []
-        data = json.loads(self._rules_file.read_text(encoding="utf-8"))
-        return [str(prefix) for prefix in data.get("allowed_prefixes", [])]
+        return [str(prefix) for prefix in self._stored().get("allowed_prefixes", [])]
 
     def allow_prefix(self, prefix: str) -> None:
-        prefixes = sorted(set(self.allowed_prefixes()) | {prefix})
-        self._rules_file.parent.mkdir(parents=True, exist_ok=True)
-        self._rules_file.write_text(json.dumps({"allowed_prefixes": prefixes}, indent=1), encoding="utf-8")
+        self._store(allowed_prefixes=sorted(set(self.allowed_prefixes()) | {prefix}))
 
 
 def command_prefix(command: str) -> str:

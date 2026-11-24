@@ -21,6 +21,7 @@ from pydantic import Field
 from forge.config import forge_home
 from forge.environment.tavily_tool import TavilySettings
 from forge.environment.tavily_tool import search as tavily_tool_search
+from forge.home_layout import data_path
 from forge.safety.redact import default_redactor
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 from forge.tools.web_chain import FetchOptions, PageResult, fetch_page, normalise_url
@@ -48,7 +49,7 @@ NO_TAVILY = (
 
 class WebCache:
     def __init__(self, root: Path | None = None) -> None:
-        self.root = root or forge_home() / "cache" / "web"
+        self.root = root or data_path(forge_home(), "cache") / "web"
 
     def _path(self, key: str) -> Path:
         return self.root / (hashlib.sha256(key.encode()).hexdigest()[:32] + ".json")

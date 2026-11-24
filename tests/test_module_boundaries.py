@@ -14,7 +14,7 @@ SOURCE = Path(__file__).resolve().parent.parent / "src" / "forge"
 
 # Earlier tier = lower level. A package may import only from strictly earlier tiers.
 TIERS: list[set[str]] = [
-    {"__init__", "buildinfo", "errors", "net"},
+    {"__init__", "buildinfo", "errors", "home_layout", "net"},
     {"safety", "ooxml", "brand"},
     {"config", "protocol", "workspace"},
     {"llm", "memory"},

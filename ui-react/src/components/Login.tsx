@@ -79,7 +79,7 @@ export function Login({ configured, onSignedIn }: { configured: boolean; onSigne
           <p className="text-center text-[12px] text-fg-muted">
             {creating
               ? "Stored only on this computer."
-              : "Forgot the password? Delete account.json in the .forge folder and start DebCraft again. Your projects are kept."}
+              : "Forgot the password? Delete account.json in the .forge\\data folder and start DebCraft again. Your projects are kept."}
           </p>
         </form>
         <footer className="mx-auto mt-14 max-w-sm border-t border-border pt-5 text-center text-[11px] uppercase tracking-[0.18em] text-fg-muted">

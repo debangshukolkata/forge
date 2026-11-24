@@ -131,6 +131,12 @@ class StartBackground(Tool):
         return args.command.replace(PORT_PLACEHOLDER, "5055")
 
     async def run(self, args: StartBackground.Args, context: ToolContext) -> ToolResult:
+        return await self.start(args, context, {})
+
+    async def start(
+        self, args: StartBackground.Args, context: ToolContext, extra: dict[str, str]
+    ) -> ToolResult:
+        """`extra`: variables for this program only (start_with_token)."""
         shell, manager = context.shell, context.background
         assert shell is not None and manager is not None
         if args.name in manager.processes:
@@ -147,10 +153,10 @@ class StartBackground(Tool):
         script = build_script(command, start_dir, None)
         sandboxed = shell.prepare_sandbox()
         try:
-            process = await start_process(script, start_dir, shell.environment(), sandboxed)
+            process = await start_process(script, start_dir, {**shell.environment(), **extra}, sandboxed)
         except SandboxUnavailableError as error:
             shell.disable_sandbox(str(error))
-            process = await start_process(script, start_dir, shell.environment())
+            process = await start_process(script, start_dir, {**shell.environment(), **extra})
         entry = BackgroundProcess(args.name, command, process, port)
         entry.reader = asyncio.create_task(_collect(entry))
         manager.processes[args.name] = entry

@@ -67,7 +67,7 @@ export type UserInput =
   | { kind: "send_message"; text: string }
   | { kind: "slash_command"; text: string }
   | { kind: "interrupt" }
-  | { kind: "approve"; request_id: string; scope?: "once" | "prefix" }
+  | { kind: "approve"; request_id: string; scope?: "once" | "prefix" | "python" }
   | { kind: "reject"; request_id: string; instruction?: string | null }
   | { kind: "answer"; question_id: string; choice?: string; text?: string | null };
 

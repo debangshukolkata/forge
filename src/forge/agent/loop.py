@@ -973,6 +973,7 @@ class AgentLoop:
                     "command": command,
                     "reason": decision.reason,
                     "can_remember_prefix": decision.command_prefix,
+                    "can_allow_python": decision.offer_python,
                     "always_ask": decision.always_ask,
                 }
             )
@@ -982,6 +983,8 @@ class AgentLoop:
             return ToolResult(ok=False, content=f"The user declined this action.{note}")
         if answer.scope == "prefix" and decision.command_prefix:
             self.gate.allow_prefix(decision.command_prefix)
+        if answer.scope == "python" and decision.offer_python:
+            self.gate.allow_python(True)
         return await self._execute(tool, args)
 
     def _load_tools_named_by(self, result: ToolResult) -> ToolResult:

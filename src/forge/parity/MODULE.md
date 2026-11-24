@@ -2,7 +2,7 @@
 
 Claude Code parity features: skills (incl. `skill_install.py`: `forge skill add` from a GitHub link or folder, D-207), custom agents, FORGE.md instructions, MCP client, @-mentions, local history, sessions.
 
-- **Depends on:** config, errors, llm, protocol, safety, toolkit, workspace
+- **Depends on:** config, errors, home_layout, llm, protocol, safety, toolkit, workspace
 - **Invariants:** MCP server tools join the agent through the registry; their output is untrusted (injection markers apply).
 - **Tests:** test_parity.py, test_web.py
 - **Decisions:** docs/DECISIONS.md (search the module's feature names); layering is enforced by tests/test_module_boundaries.py.

@@ -88,11 +88,14 @@ if ($Wheelhouse) {
 }
 
 # DebCraft doctor runs on every start (D-415): Python, certificates, the .env, the models (Azure and Gemini), the databases and Node, one line each. The text is saved in
-# doctor-report.txt next to this script so it can be sent. A failing check never stops DebCraft from starting: the Environment panel explains each one. Skip it with -SkipDoctor
+# doctor-report.txt in the reports folder of DebCraft Home so it can be sent. A failing check never stops DebCraft from starting: the Environment panel explains each one. Skip it with -SkipDoctor
 # or by setting DEBCRAFT_SKIP_DOCTOR=1 (the model calls take about half a minute).
 if (-not $SkipDoctor -and $env:DEBCRAFT_SKIP_DOCTOR -ne "1") {
     Write-Host "==> Checking this computer (DebCraft doctor)"
-    $report = Join-Path $root "doctor-report.txt"
+    $forgeHome = if ($env:FORGE_HOME) { $env:FORGE_HOME } else { Join-Path $env:USERPROFILE ".forge" }
+    $reports = Join-Path $forgeHome "reports"
+    New-Item -ItemType Directory -Force -Path $reports | Out-Null
+    $report = Join-Path $reports "doctor-report.txt"
     $ErrorActionPreference = "Continue"
     try {
         $lines = @(& $venvPython -m forge doctor 2>&1 | ForEach-Object { "$_" })

@@ -22,6 +22,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from forge.home_layout import data_path
 from forge.modeb.bm25 import BM25, tokenize
 from forge.safety.redact import default_redactor
 
@@ -265,7 +266,7 @@ def _documents(export: dict[str, Any]) -> list[list[str]]:
 
 class ProfileStore:
     def __init__(self, home: Path) -> None:
-        self.root = home / "profiles"
+        self.root = data_path(home, "profiles")
 
     def names(self) -> list[str]:
         return (

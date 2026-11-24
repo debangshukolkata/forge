@@ -15,7 +15,7 @@ from forge.protocol.inputs import Answer, Approve, Reject
 @dataclass
 class ApprovalAnswer:
     approved: bool
-    scope: Literal["once", "prefix"] = "once"
+    scope: Literal["once", "prefix", "python"] = "once"
     instruction: str | None = None
 
 

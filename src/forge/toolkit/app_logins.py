@@ -37,6 +37,7 @@ import yaml
 
 from forge.config import forge_home
 from forge.errors import ConfigError
+from forge.home_layout import data_path
 from forge.safety.redact import default_redactor
 
 LOGINS_FILE = "app_logins.yaml"
@@ -220,7 +221,11 @@ class TokenStore:
     """name -> token with its expiry, in `tokens.json` of DebCraft Home (private to the user's account)."""
 
     def __init__(self, home: Path | None = None) -> None:
-        self.path = (home or forge_home()) / TOKENS_FILE
+        self.home = home or forge_home()
+
+    @property
+    def path(self) -> Path:
+        return data_path(self.home, TOKENS_FILE)
 
     def _load(self) -> dict[str, dict[str, Any]]:
         try:

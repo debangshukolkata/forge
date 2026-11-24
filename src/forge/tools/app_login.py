@@ -20,6 +20,7 @@ from pydantic import Field
 
 from forge.config import forge_home
 from forge.errors import ConfigError
+from forge.home_layout import data_path
 from forge.toolkit import field_log
 from forge.toolkit.app_logins import EnvLogin, TokenStore, load_logins
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
@@ -46,7 +47,7 @@ class SignIn:
 
 
 def profile_dir(login: EnvLogin, home: Path) -> Path:
-    return home / "browser_profile" / login.name
+    return data_path(home, "browser_profile") / login.name
 
 
 async def _click(page: Any, text: str, timeout_ms: int) -> None:

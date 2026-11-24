@@ -48,7 +48,9 @@ def test_grants_are_per_project_and_survive_a_reopen(
     assert again.allows(library.resolve())
     elsewhere = ReadGrants.for_workspace(tmp_path / "another-project", isolated_forge_home)
     assert not elsewhere.allows(library.resolve())
-    assert granting.root not in (isolated_forge_home / "read_grants").parents  # outside what a tool can write
+    assert (
+        granting.root not in (isolated_forge_home / "data" / "read_grants").parents
+    )  # outside what a tool can write
 
 
 def test_installed_skills_are_always_readable(granting: Workspace, isolated_forge_home: Path) -> None:

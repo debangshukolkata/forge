@@ -16,6 +16,8 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+from forge.home_layout import data_path
+
 SESSION_COOKIE = "forge_session"
 MIN_PASSWORD_LENGTH = 8
 MAX_ATTEMPTS = 5  # wrong passwords in a row before a pause
@@ -33,7 +35,7 @@ class AccountError(ValueError):
 
 class AccountStore:
     def __init__(self, home: Path, clock: Callable[[], float] = time.monotonic) -> None:
-        self._file = home / "account.json"
+        self._file = data_path(home, "account.json")
         self._clock = clock
         self._sessions: set[str] = set()
         self._failures = 0
@@ -62,7 +64,7 @@ class AccountStore:
         """First run only. Returns a session token (the new account is signed in)."""
         if self.configured:
             raise AccountError(
-                "An account already exists. To reset it, delete account.json in the DebCraft folder."
+                "An account already exists. To reset it, delete account.json in the data folder of DebCraft Home."
             )
         user = user.strip()
         if not user or len(user) > 64:

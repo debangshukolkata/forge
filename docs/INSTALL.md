@@ -157,13 +157,13 @@ Remove the PATH entry.
 | `forge doctor`: model check fails with 401/404 | Wrong key or deployment name in `.env` |
 | Browser tool says Playwright is missing | Rebuild the wheelhouse with `-IncludeBrowser`, or ignore it (only the browser tool needs it) |
 | Company proxy blocks Azure | Set `HTTPS_PROXY` for your user; ask IT for the proxy address |
-| You forgot the DebCraft password | Delete `%USERPROFILE%\.forge\account.json` and start `forge ui` again: it offers to create a new account. Your projects and settings are kept |
+| You forgot the DebCraft password | Delete `%USERPROFILE%\.forge\data\account.json` and start `forge ui` again: it offers to create a new account. Your projects and settings are kept |
 | The setup guide says a name is missing but you filled it in | Press "Check the file" after saving; check the path shown on the page (it may come from the `FORGE_ENV_FILE` variable) |
 | Edits to `.env` do not seem to apply | The model keys: a project that is already open keeps the keys it started with: open the project again (or restart `forge ui`). The Environment panel's tests always read the file fresh. Values for the application (`app.env`, the API token) are read on every call and never need a restart |
 | The message box is dead and the header says "Watching" | Another DebCraft window has the project open. Type in this one or click "Watching · take over"; it takes over |
 
 ## Check this computer: double-click Debcraft-Doctor.cmd
 
-Next to Start-DebCraft.cmd. It runs DebCraft's doctor (the same as .venv\Scripts\python -m forge doctor, or debcraft doctor in a terminal): Python and packages, certificates, your .env, the Azure and Gemini models your roles use (by default gpt-5.1, gpt-4.1 and the fallback gpt-4o; gpt-5.2, gpt-5.4 and the Gemini models when you choose them in the Environment panel), the databases, web research and Node. One line per check, OK, WARN or FAIL, and the same text is saved to doctor-report.txt in the folder so you can send it. No key is printed.
+Next to Start-DebCraft.cmd. It runs DebCraft's doctor (the same as .venv\Scripts\python -m forge doctor, or debcraft doctor in a terminal): Python and packages, certificates, your .env, the Azure and Gemini models your roles use (by default gpt-5.1, gpt-4.1 and the fallback gpt-4o; gpt-5.2, gpt-5.4 and the Gemini models when you choose them in the Environment panel), the databases, web research and Node. One line per check, OK, WARN or FAIL, and the same text is saved to `.forge\reports\doctor-report.txt` in your user folder so you can send it. No key is printed.
 
-Start-DebCraft.cmd also runs the doctor before DebCraft opens (about half a minute for the model calls): the lines appear in the window and are saved in doctor-report.txt. A FAIL line does not stop DebCraft from starting. To skip it, set DEBCRAFT_SKIP_DOCTOR=1 before starting.
+Start-DebCraft.cmd also runs the doctor before DebCraft opens (about half a minute for the model calls): the lines appear in the window and are saved in `.forge\reports\doctor-report.txt`. A FAIL line does not stop DebCraft from starting. To skip it, set DEBCRAFT_SKIP_DOCTOR=1 before starting.

@@ -46,6 +46,17 @@ TOKEN_NAMES_ENV = "FORGE_REQUEST_TOKEN_NAMES"
 # name it asks for, so a name from here is refused even when the user lists it: one hurried click on a card
 # must not hand DebCraft's own key to a command the model wrote.
 OWN_PREFIXES = ("AZURE_", "FORGE_", "DEBCRAFT_", "GOOGLE_", "GEMINI_", "TAVILY_")
+# Which Gemini model the application under test uses, and where: no secrets, and a project needs them under the usual
+# names (D-647). From app.env only; a key (GEMINI_API_KEY) or a credentials file stays DebCraft's own.
+APP_MODEL_NAMES = frozenset(
+    {
+        "GEMINI_MODEL",
+        "GEMINI_LOCATION",
+        "GOOGLE_CLOUD_PROJECT",
+        "GOOGLE_CLOUD_LOCATION",
+        "GOOGLE_GENAI_USE_VERTEXAI",
+    }
+)
 OWN_NAMES = frozenset(
     {
         "LOCAL_PG_URL",
@@ -166,7 +177,11 @@ def app_file_values() -> dict[str, str]:
         return {}
     found: dict[str, str] = {}
     for name, value in dotenv_values(path).items():
-        if value and not is_debcrafts_own(name):
+        if value and name.upper() in APP_MODEL_NAMES:
+            found[name] = (
+                value  # not masked: hiding a model's name would garble every output that mentions it
+            )
+        elif value and not is_debcrafts_own(name):
             default_redactor.register(value, name)
             found[name] = value
     return found

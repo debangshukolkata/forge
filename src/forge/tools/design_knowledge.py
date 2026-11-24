@@ -23,6 +23,7 @@ from forge.config import forge_home
 from forge.designsystem.extract import from_computed
 from forge.designsystem.novelty import MIN_DIFFERENT_DIMENSIONS, Fingerprint, differences, fingerprint
 from forge.designsystem.spec import DesignMdError, parse_design_md
+from forge.home_layout import data_path
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 MAX_REFERENCES = 400
@@ -32,7 +33,7 @@ INSPIRATION = ".forge/inspiration"
 
 
 def folder() -> Path:
-    return forge_home() / "library" / "design"
+    return data_path(forge_home(), "library") / "design"
 
 
 def _index() -> Path:
