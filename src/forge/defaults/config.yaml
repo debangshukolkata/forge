@@ -121,6 +121,11 @@ llm:
 
   rotation: [gpt54, gpt52, gpt51, gpt41, gpt4o]   # D-465: on a rate limit, switch to the next configured model and let the busy one rest
   rotation_cooldown_s: 120
+  rotation_patience_s: 5          # D-643: wait this long for a busy model when another one is free, then switch; a switch lasts until the request is finished
+  rotation_last_resort: [gpt41, gpt4o]   # weaker: used only when nothing else is free, and for writing code only after last_resort_patience_s
+  last_resort_patience_s: 60
+  gemini_on_quota: never          # never | second | last: Gemini while Azure's quota is used up (needs a Gemini model that answered the Environment test; compare first, D-643)
+  gemini_on_quota_model: gemini4argon
 
   retry:
     max_attempts: 6

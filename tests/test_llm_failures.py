@@ -35,14 +35,14 @@ async def test_429_is_retried_honouring_retry_after() -> None:
     def handler(request: httpx2.Request) -> httpx2.Response:
         calls.append(1)
         if len(calls) == 1:
-            return json_response(429, error_body("429", "Rate limit"), headers={"retry-after": "7"})
+            return json_response(429, error_body("429", "Rate limit"), headers={"retry-after": "4"})
         return json_response(200, responses_body([text_output("ok")]))
 
     response = await mocked_router(handler, sleeps).chat("coder", HELLO)
 
     assert response.text == "ok"
     assert len(calls) == 2
-    assert sleeps == [7.0]
+    assert sleeps == [4.0]
 
 
 async def test_retry_after_ms_takes_precedence() -> None:
@@ -76,6 +76,7 @@ async def test_server_errors_back_off_then_fall_back_to_the_fallback_model() -> 
 
     sleeps: list[float] = []
     router = mocked_router(handler, sleeps, on_notice=on_notice)
+    router.config.llm.rotation_last_resort = []
     router.config.llm.rotation = ["gpt51", "gpt41"]  # the test's secrets only cover these two deployments
     response = await router.chat("coder", HELLO)
 
@@ -124,6 +125,7 @@ async def test_a_rate_limited_model_rests_two_minutes_then_comes_back() -> None:
             back.append(data)
 
     router = mocked_router(handler, [], on_notice=on_notice, clock=lambda: now[0])
+    router.config.llm.rotation_last_resort = []
     router.config.llm.rotation = ["gpt51", "gpt41"]
     first = await router.chat("coder", HELLO)
     assert first.text == "from the next model"
@@ -341,3 +343,107 @@ async def test_fallback_model_uses_its_own_endpoint_key_and_version() -> None:
     )
     assert provider.deployment == "fallback-deployment"
     assert "other.openai.azure.com" in str(provider._client.base_url)
+
+
+# --- D-643: switch instead of waiting, stay switched, weak models last, Gemini only when asked for ---
+
+
+def _router_429(
+    retry_after: str, models_ok: set[str], sleeps: list[float], served: list[str], **extra: object
+):  # type: ignore[no-untyped-def]
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        deployment = json.loads(request.content)["model"]
+        served.append(deployment)
+        if deployment in models_ok:
+            return json_response(200, responses_body([text_output("ok")]))
+        return json_response(429, error_body("429", "quota"), headers={"retry-after": retry_after})
+
+    router = mocked_router(handler, sleeps, **extra)  # type: ignore[arg-type]
+    router.config.llm.rotation = ["gpt51", "gpt41"]
+    router.config.llm.rotation_last_resort = []
+    return router
+
+
+async def test_a_long_wait_is_not_taken_when_another_model_is_free() -> None:
+    sleeps: list[float] = []
+    served: list[str] = []
+    router = _router_429("45", {"secondary-deployment"}, sleeps, served)
+    await router.chat("coder", HELLO)
+    assert sleeps == [] and served == ["primary-deployment", "secondary-deployment"]
+
+
+async def test_a_switch_lasts_until_the_request_is_finished() -> None:
+    now = [0.0]
+    served: list[str] = []
+    router = _router_429("45", {"secondary-deployment"}, [], served, clock=lambda: now[0])
+    router.begin_request()
+    await router.chat("coder", HELLO)
+    now[0] = 1000.0  # the rest is long over
+    served.clear()
+    await router.chat("coder", HELLO)
+    assert served == ["secondary-deployment"]
+    router.begin_request()
+    served.clear()
+    await router.chat("coder", HELLO)
+    assert served[0] == "primary-deployment"
+
+
+async def test_code_waits_longer_before_a_weak_model_and_does_not_stay_on_it() -> None:
+    now = [0.0]
+    sleeps: list[float] = []
+    served: list[str] = []
+    router = _router_429("25", {"secondary-deployment"}, sleeps, served, clock=lambda: now[0])
+    router.config.llm.rotation_last_resort = ["gpt41"]
+    router.config.llm.fallback_also = []
+    router.role_models["fallback"] = None
+    router.begin_request()
+    await router.chat("coder", HELLO)
+    assert sleeps == [25.0, 25.0]  # a third wait would pass the 60 s
+    assert served == ["primary-deployment"] * 3 + ["secondary-deployment"]
+    now[0] = 1000.0
+    served.clear()
+    await router.chat("coder", HELLO)
+    assert served[0] == "primary-deployment"
+
+
+async def test_every_usable_model_is_tried_once() -> None:
+    served: list[str] = []
+    router = _router_429("45", {"third-deployment"}, [], served)
+    order = ["gpt51", "gpt41", "gpt4o"]
+    router.config.llm.rotation = order
+    router._configured = lambda key: key in order  # type: ignore[method-assign]
+    assert router._fallback_for("gpt51", HELLO) == "gpt41"
+    assert router._fallback_for("gpt41", HELLO, ("gpt51", "gpt41")) == "gpt4o"
+    assert router._fallback_for("gpt4o", HELLO, tuple(order)) not in order
+
+
+def test_gemini_is_in_the_rotation_only_when_wanted_and_answered() -> None:
+    router = _router_429("1", set(), [], [])
+    llm = router.config.llm
+    llm.rotation, llm.rotation_last_resort = ["gpt54", "gpt52", "gpt41"], ["gpt41"]
+    assert "gemini4argon" not in router._rotation()
+    llm.gemini_on_quota = "second"
+    assert "gemini4argon" not in router._rotation()  # never tested here
+    router.answered_models = {"gemini4argon"}
+    assert router._rotation() == ["gpt54", "gemini4argon", "gpt52", "gpt41"]
+    llm.gemini_on_quota = "last"
+    assert router._rotation() == ["gpt54", "gpt52", "gemini4argon", "gpt41"]
+
+
+def test_the_report_says_how_long_it_waited() -> None:
+    from forge.engine.log_summary import retry_lines
+    from forge.protocol.events import Event, EventType
+
+    def notice(seq: int, **payload: object) -> Event:
+        return Event(seq=seq, ts="2026-11-24T10:00:00+00:00", type=EventType.NOTICE, payload=payload)
+
+    text = "\n".join(
+        retry_lines(
+            [
+                notice(1, kind="retry", model="gpt54", delay_s=40, reason="Error code: 429 - quota"),
+                notice(2, kind="retry", model="gpt54", delay_s=20, reason="Error code: 429 - quota"),
+                notice(3, kind="fallback", from_model="gpt54", to_model="gpt52"),
+            ]
+        )
+    )
+    assert "gpt54, quota (429): 2 waits, 60s in all, longest 40s" in text and "gpt54 -> gpt52: 1" in text

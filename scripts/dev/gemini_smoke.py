@@ -15,7 +15,7 @@ import io
 import sys
 
 from forge.config import GeminiProviderConfig, ModelConfig, Secrets
-from forge.llm.base import ChatRequest, Message, ToolSpec
+from forge.llm.base import ChatRequest, Message, ToolCall, ToolSpec
 from forge.llm.gemini import GeminiProvider
 
 READ_FILE = ToolSpec(
@@ -85,6 +85,29 @@ async def main(model_name: str) -> None:
             "tool result round trip", provider.chat(ChatRequest(messages=history, tools=[READ_FILE]))
         )
         print("      ", getattr(final, "text", "")[:200])
+
+    # What happens when Gemini takes over in the middle of a task: the tool call in the history is another model's.
+    foreign = [
+        Message.user("Read the file config.yaml and tell me what's in it."),
+        Message(
+            role="assistant",
+            content="",
+            tool_calls=[
+                ToolCall(
+                    id="c1",
+                    name="read_file",
+                    arguments={"path": "config.yaml"},
+                    raw_arguments='{"path": "config.yaml"}',
+                )
+            ],
+        ),
+        Message.tool_result("c1", "port: 8080"),
+    ]
+    taken_over = await step(
+        "taking over a task another model began (D-643)",
+        provider.chat(ChatRequest(messages=foreign, tools=[READ_FILE])),
+    )
+    print("      ", getattr(taken_over, "text", "")[:200])
 
     thoughts: list[str] = []
 

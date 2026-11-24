@@ -13,6 +13,7 @@ from forge.environment import store
 
 class RoleRouter(Protocol):
     config: ForgeConfig
+    answered_models: set[str] | None
 
     def set_role_model(self, role: str, model_key: str) -> None: ...
 
@@ -158,6 +159,8 @@ def apply_saved_plan(router: RoleRouter, home: Path) -> None:
     saved = store.load(home)
     plan = dict(saved["plan"])
     if saved["results"]:
+        answered = _answers(router.config, saved["results"])
+        router.answered_models = {key for key, ok in (answered or {}).items() if ok}
         manual = {role: plan[role] for role in saved["manual"] if role in plan}
         for entry in propose_plan(router.config, saved["results"], manual)["roles"]:
             if entry["role"] not in manual and entry["model"]:

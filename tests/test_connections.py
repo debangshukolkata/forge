@@ -122,3 +122,47 @@ def test_the_buttons_sign_in_and_open_the_tunnel_only_for_what_the_user_set_up(
 def test_the_connections_need_the_login_like_every_other_address(client: TestClient) -> None:
     assert client.get("/api/connections").status_code in (401, 403)
     assert client.post("/api/connections/sign-in", json={"name": "dev"}).status_code in (401, 403)
+
+
+def test_copy_token_copies_on_the_machine_and_never_answers_with_it(
+    client: TestClient, security: ServerSecurity, isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from forge.toolkit.clipboard import ClipboardError
+
+    assert client.post("/api/connections/copy-token", json={"name": "dev"}).status_code in (401, 403)
+    login(client, security)
+    write_logins(isolated_forge_home, GOOD)
+    copied: list[str] = []
+    monkeypatch.setattr("forge.web.connection_routes.copy_for_a_minute", copied.append)
+    none = client.post("/api/connections/copy-token", json={"name": "dev"}).json()
+    assert not none["ok"] and "Sign in first" in none["message"]
+    TokenStore(isolated_forge_home).put("DEV_TOKEN", jwt(exp=time.time() - 5))
+    assert not client.post("/api/connections/copy-token", json={"name": "dev"}).json()["ok"]  # ended
+    token = jwt(exp=time.time() + 900)
+    TokenStore(isolated_forge_home).put("DEV_TOKEN", token)
+    answer = client.post("/api/connections/copy-token", json={"name": "dev"})
+    assert answer.json()["ok"] and answer.json()["clears_in_s"] == 60
+    assert copied == [token]  # the token alone, without Bearer
+    assert token not in answer.text
+    log = (isolated_forge_home / "logs" / "field.jsonl").read_text(encoding="utf-8")
+    assert "token_copied" in log and token not in log
+    assert client.post("/api/connections/copy-token", json={"name": "prod"}).status_code == 404
+
+    def refused(text: str) -> None:
+        raise ClipboardError("Copying works on Windows only.")
+
+    monkeypatch.setattr("forge.web.connection_routes.copy_for_a_minute", refused)
+    failed = client.post("/api/connections/copy-token", json={"name": "dev"}).json()
+    assert not failed["ok"] and "Windows only" in failed["message"]
+
+
+def test_no_tool_and_no_slash_command_copies_a_token() -> None:
+    from pathlib import Path as P
+
+    root = P(__file__).resolve().parent.parent / "src" / "forge"
+    users = {
+        p.relative_to(root).as_posix()
+        for p in root.rglob("*.py")
+        if "toolkit.clipboard" in p.read_text(encoding="utf-8") and p.name != "clipboard.py"
+    }
+    assert users == {"web/connection_routes.py"}

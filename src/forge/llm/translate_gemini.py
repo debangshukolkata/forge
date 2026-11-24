@@ -36,6 +36,11 @@ def split_data_url(data_url: str) -> tuple[str, bytes]:
     return mime_type, base64.b64decode(payload)
 
 
+# Gemini 3 and later answer 400 to a tool call without a thought signature. A call another model made has none, and
+# this is the value Google documents for a transferred history (Vertex AI, "Thought signatures"; a last resort, D-643).
+FOREIGN_CALL_SIGNATURE = b"skip_thought_signature_validator"
+
+
 def to_gemini_request(messages: list[Message], model_key: str) -> tuple[str | None, list[types.Content]]:
     """Returns (system instruction, conversation). Gemini wants tool results as function_response parts of a
     user turn, matched to calls by name, so consecutive tool messages are merged into one turn."""
@@ -87,8 +92,11 @@ def _assistant_content(message: Message, model_key: str) -> types.Content:
             if item.get("type") == PROVIDER_ITEM_TYPE:
                 return types.Content.model_validate_json(json.dumps(item["content"]))
     parts: list[types.Part] = [types.Part(text=message.content)] if message.content else []
-    for call in message.tool_calls:
-        parts.append(types.Part.from_function_call(name=call.name, args=call.arguments or {}))
+    for index, call in enumerate(message.tool_calls):
+        part = types.Part.from_function_call(name=call.name, args=call.arguments or {})
+        if index == 0:  # in parallel calls only the first one carries a signature
+            part.thought_signature = FOREIGN_CALL_SIGNATURE
+        parts.append(part)
     return types.Content(role="model", parts=parts or [types.Part(text="")])
 
 

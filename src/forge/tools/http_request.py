@@ -47,6 +47,7 @@ from forge.toolkit.app_logins import (
     login_for_token,
 )
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.made_up import note_made_up
 from forge.tools.app_login import ensure_token
 from forge.tools.browser import LOCAL_HOSTS
 from forge.tools.interaction import OptionSpec
@@ -447,6 +448,8 @@ class HttpRequest(Tool):
         call_key = f"{args.method} {args.url.split('?', 1)[0]}"
         context.api_calls[call_key] = context.step
         context.api_failed.pop(call_key, None)
+        if not args.stream:
+            note_made_up(context, response.text[:20_000])
         if failure := answer_failure(response.status_code, "" if args.stream else response.text):
             context.api_failed[call_key] = failure
         if response.status_code < 400 and context.workspace is not None:

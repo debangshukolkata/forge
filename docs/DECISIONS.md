@@ -5082,3 +5082,33 @@ does), which earlier runs did not have. Not measured: the user's repository, mor
 `create_agent` projects, streaming answers, the Development network of the office laptop.
 Run 4 passed while its agent invented a list of applications (the forbidden tool did not run): both recipes now carry a
 rule against it (`NO_GUESSING`) and the test checks that the agent says it cannot; runs 7, 8 and 9 passed with it.
+
+## D-643: Azure quota: switch instead of waiting, stay switched, weak models last, Gemini prepared but off (2026-11-24)
+From the office laptop: 31 of 39 retries were 429 of gpt-5.4 and only 5 switches, because a switch came only after
+waiting as long as Azure asked (up to 5 minutes). Now: with another model free the wait is at most
+`rotation_patience_s` (5 s); a switch lasts until the user's request is finished (`begin_request`), except to a
+last-resort model (`rotation_last_resort`: gpt41, gpt4o), which code waits up to 60 s to avoid; every usable model is
+tried once. `gemini_on_quota: never | second | last` (default never) puts a Gemini model that answered the Environment
+test into the rotation; a tool call made by another model gets the placeholder signature Google documents as a last
+resort (Vertex AI, Thought signatures). The fallback ROLE may already be a Gemini model on a machine where one answered:
+that is unchanged. `/report` has a section "Waiting for busy models". The user allowed sending this repository's code to
+Vertex. The 5 and 60 seconds are first guesses. Not checked live: Gemini taking over (`gemini_smoke.py` has the step).
+
+## D-644: What is handed over must be proven (2026-11-24, the video agent run: 130 minutes, a curl that failed)
+(1) `start_background`: an error trace with no answering port is a failure, and the port the output names is tried;
+(2) a call to the local application that still answers 4xx or a failed run after a code change, and (3) a curl in the
+reply that was never run as given or failed, are sent back once (`agent/handover_check.py`); the note asks which token
+the call needs and where the caller's token is passed on; (4) invented settings (names only) and fake data, also those a
+verifier used, must be named and what depends on them is not called verified; (5) the verifier runs three times at most
+for one request (the first in full, two short rechecks), and the criteria gate then lets the task close: the user's
+choice, an exception to D-161 (six runs took 36 of the 130 minutes). Not measured live on the user's project.
+Open: why the summary failed twice and why one file was read 31 times (TODO `RD1`).
+
+## D-645: Copy token (CP1, 2026-11-24)
+Button in the panel behind the dots; DebCraft's own process puts the token alone on the Windows clipboard, marked out of
+history and cloud, cleared after 60 s unless something else was copied, and when DebCraft closes. The value is in no
+answer, event or log. Tested with a stand-in for Windows; the real clipboard is denied to the build environment
+(error 5), so the first real click is on the laptop.
+
+D-644, live (2026-11-24): two builds of `tests/test_live_skill_agent.py` passed with these checks on; the second proved its
+agent only with `APP_FAKE_MODEL=true`, which the check now counts as made up too (unit test, not run live again).

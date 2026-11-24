@@ -14,6 +14,7 @@ from pydantic import Field
 
 from forge.safety.sandbox import SandboxedProcess, SandboxUnavailableError
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.made_up import note_made_up
 from forge.toolkit.powershell import build_script, kill_tree, start_process
 from forge.toolkit.progress import ProgressTracker
 from forge.workspace.run_notes import RunNotes
@@ -23,6 +24,9 @@ FAILURE_SIGNS = re.compile(
     r"Traceback|\bFAILED\b|\bERROR\b|Killed|Segmentation fault|\bfatal:", re.IGNORECASE
 )
 KEPT_LINES = 2000
+TRACE = "Traceback (most recent call last)"
+SETTLE_S = 2.0
+ANNOUNCED = re.compile(r"https?://(?:127\.0\.0\.1|localhost|0\.0\.0\.0|\[::1?\]):(\d{2,5})")
 PORT_PLACEHOLDER = "{port}"
 PORT_IN_COMMAND = re.compile(
     r"(?:--port[= ]|-p[= ]|--listen[= ]|http\.server\s+|\bserve\b.*?\s-l\s+|:)(\d{2,5})\b", re.IGNORECASE
@@ -150,8 +154,30 @@ class StartBackground(Tool):
         entry = BackgroundProcess(args.name, command, process, port)
         entry.reader = asyncio.create_task(_collect(entry))
         manager.processes[args.name] = entry
+        note_made_up(context, command, settings=True)
         ready = await _wait_until_ready(entry, args.ready_pattern, args.timeout_s)
+        answering = entry.port is not None and await asyncio.to_thread(port_open, entry.port)
+        for _ in range(2):
+            if not ready or answering:
+                break
+            # Nothing proved it yet but a line of output: look for the port it names, else wait a moment, because a
+            # crash is often printed just after that line (D-644).
+            found = _announced_port(entry)
+            if found is not None and await asyncio.to_thread(port_open, found):
+                entry.port = port = found
+                answering = True
+            else:
+                await _settle(entry)
         recent = "\n".join(list(entry.lines)[-20:])
+        crashed = any(TRACE in line for line in entry.lines)
+        if entry.running and crashed and not answering:
+            await manager.stop(args.name)
+            shown = "\n".join(list(entry.lines)[-40:])
+            return ToolResult(
+                ok=False,
+                content=f"'{args.name}' is NOT ready: it printed an error trace and no port answers (it was stopped). "
+                f"Find the cause in the trace before you start it again:\n{shown}",
+            )
         if not entry.running:
             await manager.stop(args.name)
             return ToolResult(
@@ -164,11 +190,18 @@ class StartBackground(Tool):
             if context.pin is not None:
                 context.pin("run_notes", notes.render())
         where = f" on http://127.0.0.1:{port}" if port else ""
-        status = "ready" if ready else f"started but not confirmed ready after {args.timeout_s}s"
+        if ready and not answering and not args.ready_pattern:
+            status = "started (nothing confirms that it is ready: give ready_pattern, or call it)"
+        else:
+            status = "ready" if ready else f"started but not confirmed ready after {args.timeout_s}s"
         # Name the folder: a process that silently started in the wrong one served the wrong app (D-248).
         folder = f" [cwd: {shell.display(start_dir)}]"
         return ToolResult(
-            ok=ready, content=f"'{args.name}' {status}{where}{folder}.\n{recent}", meta={"port": port}
+            ok=ready,
+            content=f"'{args.name}' {status}{where}{folder}."
+            + (" Its output holds an error trace: read it before you rely on it." if crashed else "")
+            + f"\n{recent}",
+            meta={"port": port},
         )
 
 
@@ -286,6 +319,20 @@ async def _collect(entry: BackgroundProcess) -> None:
     while line := await entry.process.stdout.readline():
         entry.lines.append(line.decode("utf-8", errors="replace").rstrip("\r\n"))
         entry.total_lines += 1
+
+
+async def _settle(entry: BackgroundProcess) -> None:
+    deadline = asyncio.get_running_loop().time() + SETTLE_S
+    while entry.running and asyncio.get_running_loop().time() < deadline:
+        await asyncio.sleep(0.1)
+
+
+def _announced_port(entry: BackgroundProcess) -> int | None:
+    """The port the output names ("Running on http://127.0.0.1:5045"), the last one named."""
+    for line in reversed(entry.lines):
+        if (found := ANNOUNCED.search(line)) is not None:
+            return int(found.group(1))
+    return None
 
 
 async def _wait_until_ready(entry: BackgroundProcess, pattern: str | None, timeout_s: int) -> bool:

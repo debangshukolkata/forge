@@ -230,6 +230,31 @@ def _first_word_section(llm: list[dict[str, Any]]) -> list[str]:
     return out
 
 
+def retry_lines(events: list[Event]) -> list[str]:
+    """How long DebCraft waited for busy or failing models (D-643): waits by model and reason, and the switches."""
+    waits: dict[tuple[str, str], list[float]] = {}
+    switches: Counter[str] = Counter()
+    for event in events:
+        if event.type != EventType.NOTICE:
+            continue
+        p = event.payload
+        if p.get("kind") == "retry":
+            reason = str(p.get("reason") or "")
+            short = "quota (429)" if "429" in reason else " ".join(reason.split())[:60]
+            waits.setdefault((str(p.get("model")), short), []).append(float(p.get("delay_s") or 0.0))
+        elif p.get("kind") == "fallback":
+            switches[f"{p.get('from_model')} -> {p.get('to_model')}"] += 1
+    if not waits and not switches:
+        return []
+    out = ["## Waiting for busy models", ""]
+    for (model, reason), seconds in sorted(waits.items(), key=lambda item: -sum(item[1])):
+        out.append(
+            f"- {model}, {reason}: {len(seconds)} waits, {sum(seconds):.0f}s in all, longest {max(seconds):.0f}s"
+        )
+    out += [f"- switched {name}: {count}" for name, count in switches.most_common()]
+    return [*out, ""]
+
+
 def summarize(events: list[Event], stored_knowledge: dict[str, Any] | None = None) -> str:
     if not events:
         return "No events in this log."
@@ -253,6 +278,7 @@ def summarize(events: list[Event], stored_knowledge: dict[str, Any] | None = Non
         f"- Tokens: {in_tokens:,} in ({cached:,} cached), {out_tokens:,} out ({reasoning:,} reasoning)",
         "",
     ]
+    out += retry_lines(events)
     if not llm:
         out += ["_No `llm_call` events: this log predates the run log (D-151)._", ""]
 

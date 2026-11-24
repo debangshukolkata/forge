@@ -8,7 +8,13 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from forge.config import ROLES, ForgeConfig, Secrets, model_secret_names
-from forge.errors import ConfigError, LLMError, LLMRateLimitError
+from forge.errors import (
+    ConfigError,
+    LLMContentFilterError,
+    LLMContextLengthError,
+    LLMError,
+    LLMRateLimitError,
+)
 from forge.llm.azure_openai import AzureOpenAIProvider
 from forge.llm.base import ChatRequest, LLMProvider, LLMResponse, TextDeltaCallback
 from forge.llm.cost import CostTracker
@@ -42,6 +48,13 @@ class LLMRouter:
         self._clock = clock
         self._resting_until: dict[str, float] = {}  # model key -> clock time its rest ends (D-465)
         self._back_unannounced: set[str] = set()  # models whose rest is over but the chat was not told yet
+        self._switched: dict[
+            str, str
+        ] = {}  # preferred model -> the one used for the rest of this request (D-643)
+        self._in_request = False
+        self.answered_models: set[str] | None = (
+            None  # models that answered the Environment test; None: not tested
+        )
         self.role_models: dict[str, str | None] = {role: getattr(config.llm.roles, role) for role in ROLES}
         self.cost = CostTracker(config.llm.models, config.limits.session_budget_usd)
 
@@ -121,15 +134,34 @@ class LLMRouter:
             and self._fits(key, request)
         )
 
-    def _fallback_for(self, failing_key: str, request: ChatRequest | None = None) -> str | None:
-        """The model to switch to when `failing_key` is rate limited or down (D-411, D-465).
-        A model in config `llm.rotation` goes to the next usable one in that order (preference order, so the strongest
-        comes first). Otherwise: the fallback role, then the coder's model, then `fallback_also`, preferring another
-        provider because a rate limit or an outage usually hits one provider and not the other."""
-        rotation = self.config.llm.rotation
-        if failing_key in rotation:
+    def _rotation(self) -> list[str]:
+        """The configured rotation with Gemini put where the user wants it (D-643)."""
+        llm = self.config.llm
+        order = list(llm.rotation)
+        gemini = llm.gemini_on_quota_model
+        if llm.gemini_on_quota == "never" or not order or gemini in order or gemini not in llm.models:
+            return order
+        if self.answered_models is None or gemini not in self.answered_models:
+            return order  # it never answered a test here
+        at = 1
+        if llm.gemini_on_quota == "last":
+            at = next((i for i, key in enumerate(order) if key in llm.rotation_last_resort), len(order))
+        return [*order[:at], gemini, *order[at:]]
+
+    def _fallback_for(
+        self, failing_key: str, request: ChatRequest | None = None, tried: tuple[str, ...] = ()
+    ) -> str | None:
+        """The model to switch to when `failing_key` is rate limited or down (D-411, D-465, D-643).
+        A model in the rotation goes to the next usable one in that order (preference order, so the strongest comes
+        first; the last-resort models after everything else). Otherwise: the fallback role, then the coder's model,
+        then `fallback_also`, preferring another provider because a rate limit or an outage usually hits one provider
+        and not the other."""
+        rotation = self._rotation()
+        weak = set(self.config.llm.rotation_last_resort)
+        in_rotation = failing_key in rotation
+        if in_rotation:
             for key in rotation:
-                if self._usable(key, failing_key, request):
+                if key not in weak and key not in tried and self._usable(key, failing_key, request):
                     return key
         failing = self.config.llm.models[failing_key]
         candidates: list[str] = []
@@ -138,11 +170,39 @@ class LLMRouter:
             self.role_models.get("coder"),
             *self.config.llm.fallback_also,
         ):
-            if named and named not in candidates and self._usable(named, failing_key, request):
+            if in_rotation and named in weak:
+                continue  # the last-resort models come below, in the order of the rotation
+            if (
+                named
+                and named not in candidates
+                and named not in tried
+                and self._usable(named, failing_key, request)
+            ):
                 candidates.append(named)
         other_family = [key for key in candidates if self.config.llm.models[key].provider != failing.provider]
         chosen = other_family or candidates
-        return chosen[0] if chosen else None
+        if chosen:
+            return chosen[0]
+        if in_rotation:
+            for key in rotation:
+                if key in weak and key not in tried and self._usable(key, failing_key, request):
+                    return key
+        return None
+
+    def begin_request(self) -> None:
+        """A new request of the user: the preferred models are tried first again (D-643)."""
+        self._in_request = True
+        self._switched.clear()
+
+    def _start_model(self, preferred: str, request: ChatRequest) -> str:
+        """The preferred model, or the one this request was moved to: a switch back in the middle of the work costs the
+        cache, and the model that comes back has not seen its own reasoning since (D-643)."""
+        moved = self._switched.get(preferred)
+        if moved and not self._resting(moved) and self._fits(moved, request):
+            return moved
+        if self._resting(preferred):
+            return self._fallback_for(preferred, request) or preferred
+        return preferred
 
     # --- calls ---
 
@@ -150,41 +210,61 @@ class LLMRouter:
         self, role: str, request: ChatRequest, on_text_delta: TextDeltaCallback | None = None
     ) -> LLMResponse:
         self.cost.check_budget()
-        model_key = self.model_for_role(role)
-        if model_key in self._back_unannounced and not self._resting(model_key):
-            self._back_unannounced.discard(model_key)  # said once, on the first call after the rest
+        preferred = self.model_for_role(role)
+        model_key = self._start_model(preferred, request)
+        if model_key == preferred and preferred in self._back_unannounced and not self._resting(preferred):
+            self._back_unannounced.discard(preferred)  # said once, on the first call after the rest
             await self._notice(
                 "switch_back",
-                {"role": role, "model": model_key, "text": f"{model_key} has rested; using it again"},
+                {"role": role, "model": preferred, "text": f"{preferred} has rested; using it again"},
             )
-        if self._resting(model_key):  # rate limited a moment ago: use the next model until its rest is over
-            model_key = self._fallback_for(model_key, request) or model_key
-        has_alternative = self._fallback_for(model_key, request) is not None
-        try:
-            # With somewhere else to go, wait once and switch instead of going through every retry.
-            response = await self._call_with_retries(
-                role, model_key, request, on_text_delta, quick=has_alternative
-            )
-        except LLMError as error:
-            fallback = self._fallback_for(model_key, request) if error.retryable else None
-            if fallback is None:
-                raise
-            seconds = self._rest(model_key, error)
-            why = "is rate limited" if isinstance(error, LLMRateLimitError) else "failed"
-            await self._notice(
-                "fallback",
-                {
-                    "role": role,
-                    "from_model": model_key,
-                    "to_model": fallback,
-                    "rest_s": round(seconds),
-                    "reason": str(error)[:300],
-                    "text": f"{model_key} {why} ({str(error)[:160]}); using {fallback} for the next "
-                    f"{max(1, round(seconds / 60))} min, then back",
-                },
-            )
-            model_key = fallback
-            response = await self._call_with_retries(role, model_key, request, on_text_delta)
+        tried: list[str] = []
+        weak = self.config.llm.rotation_last_resort
+        while True:
+            alternative = self._fallback_for(model_key, request, (*tried, model_key))
+            patience: float | None = None
+            if alternative is not None:
+                # With somewhere else to go: a short wait, then the next model. A coder waits longer before a weak one.
+                weaker = alternative in weak and model_key not in weak and role == "coder"
+                patience = (
+                    self.config.llm.last_resort_patience_s if weaker else self.config.llm.rotation_patience_s
+                )
+            try:
+                response = await self._call_with_retries(role, model_key, request, on_text_delta, patience)
+                break
+            except LLMError as error:
+                # A replacement that refuses (no access, a request it does not take) is passed over too; what the
+                # request itself is at fault for is not.
+                moved_on = model_key != preferred and not isinstance(
+                    error, LLMContextLengthError | LLMContentFilterError
+                )
+                if not error.retryable and not moved_on:
+                    raise
+                tried.append(model_key)
+                fallback = self._fallback_for(model_key, request, tuple(tried))
+                if fallback is None:
+                    raise
+                seconds = self._rest(model_key, error)
+                why = "is rate limited" if isinstance(error, LLMRateLimitError) else "failed"
+                if self._in_request and fallback not in weak:
+                    self._switched[preferred] = fallback
+                until = (
+                    "until this request is finished"
+                    if self._in_request and fallback not in weak
+                    else f"for the next {max(1, round(seconds / 60))} min, then back"
+                )
+                await self._notice(
+                    "fallback",
+                    {
+                        "role": role,
+                        "from_model": model_key,
+                        "to_model": fallback,
+                        "rest_s": round(seconds),
+                        "reason": str(error)[:300],
+                        "text": f"{model_key} {why} ({str(error)[:160]}); using {fallback} {until}",
+                    },
+                )
+                model_key = fallback
         cost = self.cost.record(model_key, role, response.usage)
         await self._notice(
             "usage",
@@ -206,7 +286,7 @@ class LLMRouter:
         model_key: str,
         request: ChatRequest,
         on_text_delta: TextDeltaCallback | None,
-        quick: bool = False,
+        patience_s: float | None = None,
     ) -> LLMResponse:
         prepared = self.prepare_request(role, model_key, request)
         provider = self.provider(model_key)
@@ -226,10 +306,10 @@ class LLMRouter:
             )
 
         retry = self.config.llm.retry
-        if quick:
+        if patience_s is not None and patience_s <= self.config.llm.rotation_patience_s:
             retry = retry.model_copy(update={"max_attempts": min(retry.max_attempts, 2)})
         return await with_retries(
-            lambda: provider.chat(prepared, on_text_delta), retry, self._sleep, on_retry
+            lambda: provider.chat(prepared, on_text_delta), retry, self._sleep, on_retry, patience_s
         )
 
     def prepare_request(self, role: str, model_key: str, request: ChatRequest) -> ChatRequest:

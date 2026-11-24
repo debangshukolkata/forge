@@ -27,6 +27,7 @@ export function Connections({ busy }: { busy: boolean }) {
   const [open, setOpen] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [copied, setCopied] = useState<{ name: string; left: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
 
   async function load(check = false) {
@@ -65,6 +66,24 @@ export function Connections({ busy }: { busy: boolean }) {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!copied) return;
+    const timer = window.setTimeout(() => setCopied(copied.left > 1 ? { ...copied, left: copied.left - 1 } : null), 1000);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
+
+  // DebCraft itself puts the token on the clipboard; it never comes to this page (CP1).
+  async function copy(item: Item) {
+    setMessage("");
+    try {
+      const result = await api<{ ok: boolean; message: string; clears_in_s?: number }>("/api/connections/copy-token", { method: "POST", body: { name: item.name } });
+      if (result.ok) setCopied({ name: item.name, left: result.clears_in_s ?? 60 });
+      else setMessage(result.message || "It did not work.");
+    } catch (failure) {
+      setMessage((failure as Error).message);
+    }
+  }
+
   async function act(item: Item) {
     setWorking(`${item.kind}:${item.name}`);
     setMessage("");
@@ -101,7 +120,7 @@ export function Connections({ busy }: { busy: boolean }) {
         ))}
       </button>
       {open && (
-        <div role="dialog" aria-label="Connections" className="absolute right-0 top-full z-40 mt-1.5 w-[26rem] max-w-[90vw] rounded-lg border border-border bg-surface p-1.5 shadow-lg">
+        <div role="dialog" aria-label="Connections" className="absolute right-0 top-full z-40 mt-1.5 w-[34rem] max-w-[90vw] rounded-lg border border-border bg-surface p-1.5 shadow-lg">
           <ul>
             {items.map((item) => {
               const key = `${item.kind}:${item.name}`;
@@ -111,8 +130,13 @@ export function Connections({ busy }: { busy: boolean }) {
                   <span className={cx("h-2 w-2 shrink-0 rounded-full", TONE[item.state])} aria-hidden />
                   <span className="w-24 shrink-0 truncate text-[13px] font-medium">{label(item)}</span>
                   <span className={cx("min-w-0 flex-1 text-[12.5px]", item.state === "failed" ? "text-danger" : "text-fg-muted")}>{item.detail}</span>
+                  {item.kind === "login" && item.state === "ok" && (
+                    <Button variant="ghost" size="sm" className="shrink-0 whitespace-nowrap" data-testid={`copy-token-${item.name}`} title="Copies the token alone, without the word Bearer" onClick={() => void copy(item)}>
+                      {copied?.name === item.name ? `Copied, clears in ${copied.left} s` : "Copy token"}
+                    </Button>
+                  )}
                   {!file && (item.kind === "login" || item.state !== "ok") && (
-                    <Button variant="ghost" size="sm" disabled={working !== null} onClick={() => void act(item)}>
+                    <Button variant="ghost" size="sm" className="shrink-0 whitespace-nowrap" disabled={working !== null} onClick={() => void act(item)}>
                       {working === key ? <Spinner className="h-3 w-3" /> : item.kind === "tunnel" ? "Open" : item.state === "ok" ? "Sign in again" : "Sign in"}
                     </Button>
                   )}

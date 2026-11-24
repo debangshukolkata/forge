@@ -22,6 +22,7 @@ from forge.safety.sandbox import is_supported as sandbox_supported
 from forge.safety.shell_classifier import ShellScope
 from forge.toolkit.app_keys import is_debcrafts_own, secret_environment
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
+from forge.toolkit.made_up import note_made_up
 from forge.toolkit.powershell import ps_quote, run_powershell
 from forge.toolkit.private_env import without_private, without_store_aliases
 from forge.workspace.stub_packages import ensure_shared_stub_packages
@@ -377,6 +378,7 @@ async def execute(context: ToolContext, command: str, timeout_s: int, cwd: str |
     refused = install_into_copy(context.workspace, command, start_dir)
     if refused:
         return ToolResult(ok=False, content=refused)
+    note_made_up(context, command, settings=not is_test_command(command))
     sandboxed = shell.prepare_sandbox()
 
     async def report(progress: dict[str, object]) -> None:

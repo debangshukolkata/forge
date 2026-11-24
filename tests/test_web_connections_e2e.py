@@ -23,13 +23,16 @@ playwright_api = pytest.importorskip("playwright.sync_api")
 
 
 def test_the_top_bar_shows_a_dot_per_sign_in_and_tunnel(
-    server: ServerSecurity, isolated_forge_home: Path, tmp_path: Path
+    server: ServerSecurity, isolated_forge_home: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from forge.modeb.profile import ProfileStore
 
     ProfileStore(isolated_forge_home).create("dots-host")
     write_logins(isolated_forge_home, GOOD)
-    TokenStore(isolated_forge_home).put("DEV_TOKEN", jwt(exp=time.time() + 42 * 60 + 30))
+    token = jwt(exp=time.time() + 42 * 60 + 30)
+    TokenStore(isolated_forge_home).put("DEV_TOKEN", token)
+    copied: list[str] = []  # never the real clipboard of the machine that runs the tests
+    monkeypatch.setattr("forge.web.connection_routes.copy_for_a_minute", copied.append)
     field_log.write(
         "sign_in", isolated_forge_home, env="sit", ok=False, detail="the page asked for a Google login"
     )
@@ -73,6 +76,11 @@ def test_the_top_bar_shows_a_dot_per_sign_in_and_tunnel(
         assert "Google login" in panel and "open on port" in panel
         assert "Sign in again" in panel and "Sign in" in panel
         page.screenshot(path=str(shots / "connections-panel-light.png"))
+        page.click("[data-testid=copy-token-dev]")
+        page.wait_for_selector("text=Copied, clears in")
+        assert copied == [token] and token not in page.content()
+        assert page.locator("[data-testid=copy-token-sit]").count() == 0  # no token, no button
+        page.screenshot(path=str(shots / "connections-copied.png"))
         page.keyboard.press("Escape")
         page.wait_for_selector("[role=dialog][aria-label=Connections]", state="detached")
         browser.close()

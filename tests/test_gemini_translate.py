@@ -11,7 +11,12 @@ from google.genai import errors, types
 from forge.errors import LLMAuthError, LLMNotFoundError, LLMRateLimitError, LLMServerError
 from forge.llm.base import Message, ToolCall, ToolSpec
 from forge.llm.gemini_errors import map_gemini_error
-from forge.llm.translate_gemini import GeminiStreamAccumulator, to_gemini_request, to_gemini_tools
+from forge.llm.translate_gemini import (
+    FOREIGN_CALL_SIGNATURE,
+    GeminiStreamAccumulator,
+    to_gemini_request,
+    to_gemini_tools,
+)
 
 PNG = base64.b64encode(b"\x89PNG-bytes").decode()
 
@@ -86,9 +91,9 @@ def test_function_call_response_round_trips_with_thought_signature() -> None:
     replay = response.to_message("gemini")
     _, contents = to_gemini_request([Message.user("go"), replay], "gemini")
     assert (contents[1].parts or [])[0].thought_signature == signature
-    # A different model never gets another model's signatures back.
+    # A different model never gets another model's signatures back, only the documented placeholder (D-643).
     _, other = to_gemini_request([Message.user("go"), replay], "other-model")
-    assert (other[1].parts or [])[0].thought_signature is None
+    assert (other[1].parts or [])[0].thought_signature == FOREIGN_CALL_SIGNATURE
     assert (other[1].parts or [])[0].function_call.args == {"path": "config.yaml"}
 
 

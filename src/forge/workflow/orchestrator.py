@@ -25,7 +25,7 @@ from forge.protocol.events import EventType
 from forge.subagents.builder import result_text
 from forge.subagents.criteria import criteria_refusal, project_criteria
 from forge.subagents.critic import CRITIC_ROUND_LIMIT
-from forge.subagents.spawn_tool import SpawnSubagent, run_builder
+from forge.subagents.spawn_tool import VERIFIER_RUN_LIMIT, SpawnSubagent, run_builder
 from forge.subagents.variants_tool import BuildVariants
 from forge.toolkit.base import Tool, ToolContext, ToolResult
 from forge.toolkit.folders import clean_folder
@@ -704,7 +704,10 @@ class Orchestrator:
             return ToolResult(ok=False, content=UI_CRITIC_NOTE + self._also_missing(context, "critic"))
         if status == "done" and self._is_last_open_task(task) and self._wrote_code():
             criteria = project_criteria(self.workspace.forge_dir)
-            if criteria:  # D-456: a passing build is not a finished application: the plan's criteria are walked in the running app
+            # with the verifier's runs used up the open points belong in the reply, not in another round (D-644)
+            if (
+                criteria and context.verifier_runs < VERIFIER_RUN_LIMIT
+            ):  # D-456: a passing build is not a finished application: the plan's criteria are walked in the running app
                 checked = context.criteria_checked_step > context.last_code_edit_step
                 refusal = criteria_refusal(
                     criteria, context.criteria_result if checked else None, context.criteria_rounds

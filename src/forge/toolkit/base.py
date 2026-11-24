@@ -158,6 +158,13 @@ class ToolContext:
     api_failed: dict[str, str] = field(
         default_factory=dict
     )  # the calls whose last answer was a failure, and what it said (D-642)
+    made_up: set[str] = field(
+        default_factory=set
+    )  # invented settings (names only) and fake data the application was run with; shared with subagents (D-644)
+    handover_told: set[str] = field(
+        default_factory=set
+    )  # what the finish checks already said, so it is said once
+    verifier_runs: int = 0  # how often the verifier ran for this request (D-644)
     proof_by_post: bool = (
         False  # the loaded skill is proven by a call that runs something, not by a GET (D-642)
     )

@@ -19,7 +19,8 @@ from forge.db.tunnel import TunnelError, ensure_tunnel, last_problem, load_tunne
 from forge.errors import ConfigError
 from forge.safety.redact import default_redactor
 from forge.toolkit import field_log
-from forge.toolkit.app_logins import LOGINS_FILE, load_logins
+from forge.toolkit.app_logins import LOGINS_FILE, TokenStore, load_logins
+from forge.toolkit.clipboard import CLEAR_AFTER_S, ClipboardError, clear_now, copy_for_a_minute
 from forge.tools.app_login import ensure_token, token_status
 from forge.web.manager import WebSessionManager
 
@@ -106,6 +107,28 @@ def add_connection_routes(app: FastAPI, manager: WebSessionManager) -> None:
             "message": _short(ensured.message),
             "items": await connection_items(manager.home),
         }
+
+    @app.post("/api/connections/copy-token")
+    async def copy_token(body: Named) -> dict[str, Any]:
+        """The user clicked "Copy token" (CP1, D-645): this process puts it on the clipboard. The answer never holds it."""
+        try:
+            login = load_logins(manager.home).get(body.name)
+        except ConfigError as error:
+            raise HTTPException(400, str(error)) from error
+        if login is None:
+            raise HTTPException(404, "No such environment")
+        token = TokenStore(manager.home).get(login.token_name)
+        if token is None:
+            return {"ok": False, "message": "There is no valid token. Sign in first."}
+        try:
+            await asyncio.to_thread(copy_for_a_minute, token)
+        except ClipboardError as error:
+            field_log.write("token_copied", manager.home, env=login.name, ok=False, detail=str(error))
+            return {"ok": False, "message": str(error)}
+        field_log.write("token_copied", manager.home, env=login.name, ok=True)
+        return {"ok": True, "message": "", "clears_in_s": CLEAR_AFTER_S}
+
+    app.router.add_event_handler("shutdown", clear_now)
 
     @app.post("/api/connections/tunnel")
     async def tunnel(body: Named) -> dict[str, Any]:

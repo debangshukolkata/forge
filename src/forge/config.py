@@ -133,6 +133,15 @@ class LLMConfig(_Strict):
     # rests for rotation_cooldown_s (or the server's Retry-After, if longer) and calls go to the next one meanwhile.
     rotation: list[str] = []
     rotation_cooldown_s: float = Field(default=120.0, ge=0)
+    # D-643: with another model free, wait at most this long for the busy one; more than that, switch at once.
+    rotation_patience_s: float = Field(default=5.0, ge=0)
+    # Weaker models of the rotation: only used when nothing else is free, and for writing code only after this wait.
+    rotation_last_resort: list[str] = []
+    last_resort_patience_s: float = Field(default=60.0, ge=0)
+    # Gemini when Azure's quota is used up: "never", "second" (right after the busy model) or "last" (when the strong
+    # Azure models are busy too). Only a Gemini model that answered the Environment test is used.
+    gemini_on_quota: Literal["never", "second", "last"] = "never"
+    gemini_on_quota_model: str = "gemini4argon"
     retry: RetryConfig = RetryConfig()
 
     @model_validator(mode="after")
@@ -143,7 +152,7 @@ class LLMConfig(_Strict):
                 raise ValueError(
                     f"role '{role}' uses unknown model '{model_key}'; known: {sorted(self.models)}"
                 )
-        for key in [*self.rotation, *self.fallback_also]:
+        for key in [*self.rotation, *self.rotation_last_resort, *self.fallback_also]:
             if key not in self.models:
                 raise ValueError(
                     f"rotation/fallback_also names unknown model '{key}'; known: {sorted(self.models)}"

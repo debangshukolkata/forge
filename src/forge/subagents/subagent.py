@@ -378,6 +378,7 @@ async def _run_subagent(
         write_only_is_builder=builder,
     )
     inherit_web_settings(context, sub_context)
+    sub_context.made_up = context.made_up  # what a verifier ran with counts for the final reply too (D-644)
     gate_mode = "default"
     approvals = ApprovalBroker(bus)
     host = getattr(context.interaction, "host", None)

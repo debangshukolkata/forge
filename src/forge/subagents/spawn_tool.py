@@ -84,6 +84,14 @@ async def run_builder(context: ToolContext, *, folder: str, name: str, task: str
     return status, report, saved
 
 
+VERIFIER_RUN_LIMIT = 3  # one full check and two rechecks for one request (the user, 2026-11-24, D-644)
+RECHECK_ITERATIONS = 35
+RECHECK_NOTE = (
+    "This is a recheck. Check only the findings listed as failed or not met, plus one smoke call that the rest still "
+    "answers. Do not repeat the whole check.\n\n"
+)
+
+
 class SpawnSubagent(Tool):
     name = "spawn_subagent"
     read_only = True  # the subagent's own tools are restricted; only its report comes back
@@ -192,6 +200,14 @@ class SpawnSubagent(Tool):
         elif args.agent == "builder":
             return await self._run_builder(args, context, read_only)
         elif args.agent == "verifier":
+            if context.verifier_runs >= VERIFIER_RUN_LIMIT:
+                return ToolResult(
+                    ok=False,
+                    content=f"The verifier has run {context.verifier_runs} times for this request; that is the limit. "
+                    "Check what is still open yourself (the tests, http_request, the browser), then finish, and list "
+                    "in your reply what is not confirmed.",
+                )
+            context.verifier_runs += 1
             everything = {t.name: t for t in default_tools()}
             wanted = [
                 n
@@ -219,8 +235,8 @@ class SpawnSubagent(Tool):
                 context,
                 tools,
                 VERIFIER_PROMPT,
-                args.task,
-                VERIFIER_ITERATIONS,
+                args.task if context.verifier_runs == 1 else RECHECK_NOTE + args.task,
+                VERIFIER_ITERATIONS if context.verifier_runs == 1 else RECHECK_ITERATIONS,
                 "coder",
                 write_only_under="tests/e2e/",
                 needs_user_approvals=True,

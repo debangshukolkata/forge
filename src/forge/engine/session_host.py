@@ -824,6 +824,7 @@ class SessionHost:
 
     async def _run_turn(self, work: Callable[[], Awaitable[None]]) -> None:
         self._streamed = []
+        self.router.begin_request()
         self._current_turn = asyncio.create_task(self._guarded(work))
         try:
             await self._current_turn

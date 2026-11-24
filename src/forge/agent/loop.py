@@ -16,6 +16,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from forge.agent.handover_check import curl_note, failed_calls_note, made_up_note
 from forge.agent.hints import name_resolution_note, read_only_database_note, security_hint, variants_hint
 from forge.agent.hooks import EVENTS as HOOK_EVENTS
 from forge.agent.hooks import HookRunner
@@ -101,6 +102,7 @@ MAX_QUESTION_NUDGES = 1
 MAX_TODO_NUDGES = 2
 MAX_STOP_HOOK_ROUNDS = 2
 MAX_PROOF_NUDGES = 3
+MAX_HANDOVER_NUDGES = 2
 MAX_KNOWLEDGE_NUDGES = 3  # doubtful topics, then the one question about topics whose files were read
 STOP_HOOK_NOTE = "You are about to finish, but a stop hook set up for this project failed. Fix what it reports and then finish; do not just report it.\n"
 # The answer is on the screen when these checks run; without this the model writes all of it again (D-641).
@@ -271,6 +273,9 @@ class AgentLoop:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
         self._history = history
         turn_start_step = self.context.step
+        if self.keep_full_output:
+            self.context.verifier_runs = 0
+        handover_nudges = 0
         proof_nudges = 0
         last_proof_problem = ""
         continuations = 0
@@ -384,6 +389,32 @@ class AgentLoop:
                             {
                                 "kind": "proof_call",
                                 "text": "Asking for the API call to be run again after the code change.",
+                            },
+                        )
+                        continue
+                if (
+                    handover_nudges < MAX_HANDOVER_NUDGES
+                    and self.keep_full_output
+                    and self.gate.mode != "plan"
+                ):
+                    # D-644: a curl that was never run, a call that still fails, values that were made up
+                    handover = "\n\n".join(
+                        note
+                        for note in (
+                            curl_note(self.context, response.text) if self.tools.get("http_request") else "",
+                            failed_calls_note(self.context, turn_start_step),
+                            made_up_note(self.context, response.text),
+                        )
+                        if note
+                    )
+                    if handover:
+                        handover_nudges += 1
+                        history.append(Message.system(handover + NO_REPEAT))
+                        await self.bus.publish(
+                            EventType.NOTICE,
+                            {
+                                "kind": "handover_check",
+                                "text": "Checking what is handed over: calls that were not proven, values that were made up.",
                             },
                         )
                         continue

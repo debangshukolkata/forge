@@ -32,8 +32,11 @@ async def with_retries(
     config: RetryConfig,
     sleep: Sleeper = asyncio.sleep,
     on_retry: RetryCallback | None = None,
+    max_wait_s: float | None = None,
 ) -> T:
+    """`max_wait_s`: give up instead of waiting longer than this in all (the caller has another model to go to)."""
     attempt = 1
+    waited = 0.0
     while True:
         try:
             return await operation()
@@ -41,6 +44,9 @@ async def with_retries(
             if not error.retryable or attempt >= config.max_attempts:
                 raise
             delay = compute_delay(attempt, error, config)
+            if max_wait_s is not None and waited + delay > max_wait_s:
+                raise
+            waited += delay
             if on_retry is not None:
                 await on_retry(attempt, error, delay)
             await sleep(delay)
