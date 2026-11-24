@@ -5185,3 +5185,12 @@ builder and the researcher asked through the session; custom helpers, the debugg
 asked an internal broker. Now every subagent uses the session's approvals and permission mode; without a session the
 request is declined at once (`NobodyAnswers`). Options: a timeout (hides the question), declining always (the helper cannot work), the session's
 channel (chosen).
+
+## D-655: The role challenge: which model for which role (2026-11-25)
+The user will use Gemini and wants one challenge for Gemini and Azure models in every role, with a report to scan; the pending
+gpt-5.4 measurements of D-652 were dropped at their request. `Role-Challenge.cmd` / `scripts/dev/role_challenge.py` (parts in
+`scripts/dev/roles/`): planner (15 criteria, graded blind by two models, never by the author), reviewer, judge, critic, vision,
+summariser and fallback are direct calls scored without a model, 3 runs; the coder works through DebCraft (2 runs), alone in every
+role, in a made-up project whose application asks one fixed model, with its own DebCraft Home and no database of the user. Agreed:
+coder through DebCraft, overnight, two graders, report of about 5 pages. Less than 8 points apart counts as equal, then the
+faster one is the choice. Offline tests: `tests/test_role_challenge.py` (the known verdicts are proven by running the code).
