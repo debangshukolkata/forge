@@ -66,6 +66,8 @@ def test_the_built_in_list_names_five_pinned_github_folders(isolated_forge_home:
         "unslop",
         "extract-design",
         "playwright-cli",
+        "langchain-build-agent",
+        "langchain-agent-tracing",
     }
     for entry in sources.values():
         url, subfolder = skill_install.github_zip_url(entry.source)

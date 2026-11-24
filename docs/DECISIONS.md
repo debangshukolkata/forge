@@ -5060,3 +5060,25 @@ with a secret); a list the model writes under that heading is folded too. The ot
 model (notes, API proof, temporary changes, leftovers, stop hook) now say not to repeat the answer. A retry or a model
 switch removes the broken start of the reply from the screen. The pinned message no longer shows half of a fourth line.
 Limit: code changed only by a shell command or a subagent does not trigger the list. Not measured live.
+
+## D-642: LangChain agents that attach tools through skills; library versions; proof by running (2026-11-24)
+The user: DebCraft should write a LangChain ReAct agent that attaches tools to itself through skills (a skill is a system
+prompt plus knowledge of its tools), have LangChain skills, and understand the latest and the earlier versions. Options:
+try it as it is; a better skill plus a live test (chosen); a tool that generates agents (too rigid). Built:
+(1) `library_versions` (deferred group `python_libraries`, `deps/published.py`): declared, installed, latest and earlier
+releases, and what a symbol looks like in any release, read from the wheel as text (never installed or run); falls back
+to pip for a company index (not tried on one). Only package names and versions are sent.
+(2) Skill `langchain-agent` with two recipes: `skill_agent_graph.py` (run on langgraph 0.2.76, 0.6.11, 1.0.10, 1.2.21,
+1.2.24) and `skill_agent_middleware.py` (langchain 1.0.0, 1.5.2); `tests/langchain_recipe_check.py` is the check.
+(3) Two links to LangChain's own skills (pinned, MIT); their older skills are retired stubs and were not linked.
+(4) Skill header lines `attach:` (a file sent with the skill's text) and `proof:` (`api` or `run`). With `run` the
+end-of-turn check wants a call that runs something (not a GET) after the last code change, and a failed answer (also a
+200 with a failed run inside) sends the model back; at most 3 reminders, never the same one twice in a row.
+Live (`tests/test_live_skill_agent.py`, AgentHub PG, real model), in order: run 1 failed (the skill was chosen by word
+matching in code, the recipe was not opened, the API was not called); after `attach:` and `proof: api`, run 2 passed and
+run 3 failed (a constant lost while copying, and a GET taken as proof); after `proof: run`, the failed-answer check and
+the pyflakes line, runs 4, 5 and 6 passed. From run 4 on the test also grants the application a model (as `/app-keys`
+does), which earlier runs did not have. Not measured: the user's repository, more than four skills, langchain 1.x
+`create_agent` projects, streaming answers, the Development network of the office laptop.
+Run 4 passed while its agent invented a list of applications (the forbidden tool did not run): both recipes now carry a
+rule against it (`NO_GUESSING`) and the test checks that the agent says it cannot; runs 7, 8 and 9 passed with it.

@@ -155,6 +155,12 @@ class ToolContext:
     last_edit_step: int = 0
     last_code_edit_step: int = 0  # the last change to something that has behaviour to test: not a page, a stylesheet, a note or a picture (D-379)
     last_verified_step: int = 0
+    api_failed: dict[str, str] = field(
+        default_factory=dict
+    )  # the calls whose last answer was a failure, and what it said (D-642)
+    proof_by_post: bool = (
+        False  # the loaded skill is proven by a call that runs something, not by a GET (D-642)
+    )
     api_calls: dict[str, int] = field(
         default_factory=dict
     )  # "<METHOD> <url without query>" -> step of the last http_request that got an answer (HW5)

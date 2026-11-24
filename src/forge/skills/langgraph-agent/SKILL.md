@@ -4,6 +4,8 @@ description: Use when you build or extend a LangGraph graph: typed state, nodes,
 ---
 # LangGraph graphs
 
+For an agent that calls tools (ReAct, skills) or a question about versions, load `langchain-agent` instead.
+
 1. Mirror the app's existing graph module: state definition (`TypedDict` or pydantic), builder function
    signature (usually takes the LLM as a parameter), where prompts live, how the graph is compiled.
 2. State: add only the keys the new nodes need; keep them typed.

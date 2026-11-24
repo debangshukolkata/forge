@@ -101,6 +101,17 @@ def read_skill_file(skill: Skill, relative: str) -> ToolResult:
         return ToolResult(ok=False, content=f"{relative!r} is not a text file.")
 
 
+def attached_files(skill: Skill) -> str:
+    """The files of the skill's `attach:` header line, sent with its text: a recipe that is only named in the text is
+    not opened (D-642, live run)."""
+    parts = []
+    for name in skill.attach:
+        result = read_skill_file(skill, name)
+        if result.ok:
+            parts.append(f"\n\n## The file {name} (attached)\n{result.content}")
+    return "".join(parts)
+
+
 class LoadSkill(Tool):
     name = "load_skill"
     read_only = True
@@ -159,7 +170,8 @@ class LoadSkill(Tool):
                 ),
             )
         listed = sources.get(skill.name)  # what the list of known sources adds to the skill's own header
-        if skill.name == "solve-against-running-system":
+        if skill.proof:
+            context.proof_by_post = context.proof_by_post or skill.proof == "run"
             context.running_system_step = (
                 context.step
             )  # the end-of-turn reminder asks for the proof through the API (D-600)
@@ -168,6 +180,9 @@ class LoadSkill(Tool):
         tools = [*skill.tools, *(listed.tools if listed is not None else [])]
         return ToolResult(
             ok=True,
-            content=skill.body() + skill_files_note(skill) + (loading_note(listed) if listed else ""),
+            content=skill.body()
+            + attached_files(skill)
+            + skill_files_note(skill)
+            + (loading_note(listed) if listed else ""),
             meta={"attach_tools": tools} if tools else {},
         )

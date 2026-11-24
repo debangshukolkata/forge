@@ -118,6 +118,8 @@ extend-ignore = ["E501"]
 python_version = "3.11"
 strict = true
 files = ["src/forge"]
+# Code the skills hand to the model; it needs libraries DebCraft itself does not have (D-642).
+exclude = ["src/forge/skills/"]
 
 [[tool.mypy.overrides]]
 # A standalone stdlib script users run on the host machine (Mode B); it is not imported by Forge.

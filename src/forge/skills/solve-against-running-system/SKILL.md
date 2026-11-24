@@ -1,5 +1,6 @@
 ---
 name: solve-against-running-system
+proof: api
 description: Makes an existing system fulfil a requirement it cannot fulfil yet, by running it and watching what happens. Use when the user wants an agent, a tool, an API or a workflow of their existing application to be able to do something ("the agent should be able to ...", "make it answer ...", "it fails when ..."), and whenever reading the code alone cannot tell you whether the requirement is met.
 ---
 

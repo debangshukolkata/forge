@@ -37,3 +37,10 @@ sources:
     source: https://github.com/microsoft/playwright-cli/tree/8297c9b12432ea12c1707cd64995fc96768bdb70/skills/playwright-cli
     use_when: Microsoft's browser command line (Apache-2.0). Use only when the user asks for playwright-cli or for Playwright test files; for looking at a page DebCraft's own browser tools are already loaded.
     needs: npm (`npm install -g @playwright/cli`); it starts a browser itself.
+  - name: langchain-build-agent
+    source: https://github.com/langchain-ai/langchain-skills/tree/ab84b0b5a3164ee17eb78b0828e58c48186f54ce/skills/langchain-build-agent
+    use_when: LangChain's own guidance (MIT) on choosing between Deep Agents, LangChain and LangGraph. Use for a NEW LLM application whose architecture is open; for an existing repository or an agent with skills use langchain-agent.
+    tools: [python_libraries]
+  - name: langchain-agent-tracing
+    source: https://github.com/langchain-ai/langchain-skills/tree/ab84b0b5a3164ee17eb78b0828e58c48186f54ce/skills/langchain-agent-tracing
+    use_when: LangChain's own guidance (MIT) on LangSmith tracing. Use only when the user wants LangSmith or OpenTelemetry traces of an agent; LangSmith sends data out of the machine.

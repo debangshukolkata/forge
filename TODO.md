@@ -4,7 +4,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done · `[-]` dropped (c
 
 ## Contents
 - 1. Build now: **7 open**
-- 2. Waiting for the office laptop (closed from photographs): **22 open**
+- 2. Waiting for the office laptop (closed from photographs): **23 open**
 - 3. Decide or build after the laptop run: **8 open**
 - 4. Parked: **1**
 - 5. History. Closed on 2026-11-16 as no longer a priority (D-624): **56 items**, marked `[-]` where they stood.
@@ -31,6 +31,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done · `[-]` dropped (c
 
 ## 2. Waiting for the office laptop (closed from photographs)
 Nobody builds these: each waits for the user's run and the photograph of the summary page.
+- [ ] `LA1` **A LangChain agent with skills on WisdomNext (D-642).** On the office laptop: DebCraft adds a skill-driven agent beside the existing ReAct agent; the report (`/report`) shows the versions it found, that it called the new agent through the API, and whether `library_versions` reaches PyPI or the company's index.
 - [ ] `LP4` **The user runs the plan on the office laptop** (`python -m forge.cli laptop plan` lists the 8 steps) and sends the photographs. From them each of these items is closed or reopened: `TK5`, `RN2`, `RS7`, `RS11`, `RS15`, `RS19`, `KL6`, `DB2`, `HW6`, `TR6`, `DV8`, `DV9`, `DV10`, and since D-625 `HT1`, `RS9`, `TV1`, `SF2`, `WF2`, `KP8`, `KP7`, `KP0`, `TK6`. The summary page (the last page of every command) shows the verdicts of all of them.
 - [ ] `RS7` **The user tries it on WisdomNext** (office laptop): a real requirement on a LangChain agent, with the token DebCraft signs in for (D-626; no token line in the .env), the application started from the copy and its tool tables copied from the development database. Report what happens; the run report helps (`debcraft run-report --workspace <project>`).
 - [ ] `RS11` **The user retries on the office laptop** (project `automated-3rd-party-integration`): with the token and the Infisical names in `C:\Users\<you>\.forge\.env`, DebCraft should call the agent endpoint without asking to restart, to remove `Bearer` or to copy anything; one card asks whether the commands may use the Infisical names. Report any question that still sends you somewhere.

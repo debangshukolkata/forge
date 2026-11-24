@@ -26,6 +26,8 @@ class Skill:
         str, ...
     ] = ()  # `tools:` in its front matter: deferred tools (or groups of them) loaded together with the skill (D-561)
     fork: bool = False  # `context: fork` in its front matter: it runs in a subagent of its own and only its conclusion comes back (C12 c, D-515)
+    attach: tuple[str, ...] = ()  # `attach:`: files of its folder sent together with its text (D-642)
+    proof: str = ""  # `proof: api`: a code change is proven through the running application (D-600); `run`: by a call that runs it, not a GET (D-642)
 
     @property
     def folder(self) -> Path:
@@ -73,7 +75,11 @@ def _parse(path: Path) -> Skill | None:
     own_design = meta.get("own_design", "").strip().lower() in ("true", "yes")
     fork = meta.get("context", "").strip().lower() == "fork"
     tools = tuple(part.strip() for part in meta.get("tools", "").split(",") if part.strip())
-    return Skill(name, description, path, _pack_of(path, meta), own_design, tools, fork) if name else None
+    attach = tuple(part.strip() for part in meta.get("attach", "").split(",") if part.strip())
+    proof = meta.get("proof", "").strip().lower()
+    if not name:
+        return None
+    return Skill(name, description, path, _pack_of(path, meta), own_design, tools, fork, attach, proof)
 
 
 PACK_FILE = ".pack"

@@ -520,7 +520,7 @@ async def test_the_skill_loaded_and_code_changed_without_any_api_call_asks_for_t
     notes = _no_api_notes(host)
     assert (
         len(notes) == 1
-        and "solve-against-running-system" in notes[0]
+        and "proof through the running application" in notes[0]
         and "not through a function call" in notes[0]
     )
     assert len(_proof_notices(host)) == 1

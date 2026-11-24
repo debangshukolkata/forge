@@ -42,6 +42,7 @@ from forge.tools.fonts import font_tools
 from forge.tools.imagegen import imagegen_tools
 from forge.tools.knowledge_tools import KnowledgeSearch, KnowledgeWrite
 from forge.tools.library_api import LibraryApi
+from forge.tools.library_versions import LibraryVersions
 from forge.tools.memory import InstructionsWrite, MemoryForget, MemoryRead, MemoryWrite
 from forge.tools.model_switch import model_switch_tools
 from forge.tools.notebook import NotebookEditCell, NotebookRead
@@ -88,6 +89,7 @@ def default_tools() -> list[Tool]:
         VisualCheck(),
         PythonRun(),
         LibraryApi(),
+        LibraryVersions(),
         CodeMapTool(),
         KnowledgeSearch(),
         KnowledgeWrite(),

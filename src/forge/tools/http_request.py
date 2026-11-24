@@ -175,6 +175,21 @@ def _token_may_go_to(host: str) -> tuple[bool, str]:
         return False, str(error)
 
 
+def answer_failure(status: int, body: str) -> str:
+    """Why an answer counts as a failure, or "": an agent API often answers 200 with a failed run inside (D-642)."""
+    if status >= 400:
+        return f"HTTP {status}"
+    try:
+        data = json.loads(body)
+    except ValueError:
+        return ""
+    if not isinstance(data, dict):
+        return ""
+    if str(data.get("status", "")).lower() in ("failed", "failure", "error"):
+        return f"status {data['status']}"
+    return "the answer holds an error" if data.get("error") and not data.get("answer") else ""
+
+
 class HttpRequest(Tool):
     name = "http_request"
     description = (
@@ -429,7 +444,11 @@ class HttpRequest(Tool):
                 ok=False,
                 content=f"Request failed: {type(error).__name__}: {str(error).replace(token, '[token hidden]') if token else error}. Is the app running?",
             )
-        context.api_calls[f"{args.method} {args.url.split('?', 1)[0]}"] = context.step
+        call_key = f"{args.method} {args.url.split('?', 1)[0]}"
+        context.api_calls[call_key] = context.step
+        context.api_failed.pop(call_key, None)
+        if failure := answer_failure(response.status_code, "" if args.stream else response.text):
+            context.api_failed[call_key] = failure
         if response.status_code < 400 and context.workspace is not None:
             # The call that worked is written down by the tool: a later session repeats it instead of searching again (D-597).
             notes = RunNotes(context.workspace)

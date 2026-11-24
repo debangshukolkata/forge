@@ -121,6 +121,11 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
         "and seeing what it wrote there",
         ("dev_db_write", "dev_db_undo", "use_dev_database", "dev_db_activity"),
     ),
+    "python_libraries": (
+        "Versions of a Python library: declared, installed, latest and earlier ones, and what a function or class "
+        "looks like in another version (LangChain and LangGraph above all); library_api is always loaded",
+        ("library_versions",),
+    ),
     "conversations": (
         "Earlier conversations of this project: what was asked and answered in them",
         ("conversation_recall",),

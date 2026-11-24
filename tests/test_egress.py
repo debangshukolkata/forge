@@ -110,6 +110,7 @@ def test_an_address_the_user_typed_is_theirs_to_send(guard: EgressGuard) -> None
         "fetch_font",
         "theme_search",
         "library_api",
+        "library_versions",
         "design_inspire",
     ],
 )

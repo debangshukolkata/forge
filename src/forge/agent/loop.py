@@ -100,6 +100,7 @@ def system_prompt(workspace: Workspace) -> str:
 MAX_QUESTION_NUDGES = 1
 MAX_TODO_NUDGES = 2
 MAX_STOP_HOOK_ROUNDS = 2
+MAX_PROOF_NUDGES = 3
 MAX_KNOWLEDGE_NUDGES = 3  # doubtful topics, then the one question about topics whose files were read
 STOP_HOOK_NOTE = "You are about to finish, but a stop hook set up for this project failed. Fix what it reports and then finish; do not just report it.\n"
 # The answer is on the screen when these checks run; without this the model writes all of it again (D-641).
@@ -149,10 +150,21 @@ PROOF_NOTE = (
     "be run, say plainly in your reply that the change was not proven through the API and why."
 )
 NO_API_PROOF_NOTE = (
-    "You loaded the solve-against-running-system skill and changed code, but you called no API after your last "
+    "You loaded a skill that asks for proof through the running application and changed code, but you called no API after your last "
     "change. The check goes through the application's API, not through a function call: start or restart the "
     "application and make the same call as before with http_request, then report what it answers. If the API "
     "cannot be called, say plainly in your reply that the change was not proven through the API and why."
+)
+NO_RUN_PROOF_NOTE = (
+    "After your last code change you only made GET calls. They do not run what you built. Make the call that runs it "
+    "(the POST the user would make) with http_request, for each case you claim, and report the answers. If it cannot "
+    "be made, say plainly in your reply that the change was not proven and why."
+)
+FAILED_PROOF_NOTE = (
+    "Your last call of {call} (step {step}) failed: {reason}. Find the cause (the application's output with "
+    "read_background, its run log), fix it and make the call again. If a key of the model is missing, call "
+    "request_app_keys. If it cannot be made to work here, say plainly in your reply that the change is not proven, "
+    "and what stops it (the error itself)."
 )
 POINTER_TOOLS = frozenset(
     {"read_file", "grep", "glob", "list_dir", "code_map", "code_outline", "knowledge_search"}
@@ -260,6 +272,7 @@ class AgentLoop:
         self._history = history
         turn_start_step = self.context.step
         proof_nudges = 0
+        last_proof_problem = ""
         continuations = 0
         question_nudges = 0
         todo_nudges = 0
@@ -352,18 +365,17 @@ class AgentLoop:
                             },
                         )
                         continue
-                if proof_nudges < 1 and self.keep_full_output and self.gate.mode != "plan":
-                    unproven = self._calls_to_repeat_after_change(turn_start_step)
-                    skipped = not unproven and self._skill_without_api_proof(turn_start_step)
+                if proof_nudges < MAX_PROOF_NUDGES and self.keep_full_output and self.gate.mode != "plan":
+                    unproven = self._calls_to_repeat_after_change(turn_start_step) if not proof_nudges else []
+                    skipped = "" if unproven else self._skill_proof_problem(turn_start_step)
+                    if skipped == last_proof_problem:
+                        skipped = ""  # said once already and nothing new was tried: never a trap
                     if unproven or skipped:
                         proof_nudges += 1
+                        last_proof_problem = skipped
                         history.append(
                             Message.system(
-                                (
-                                    PROOF_NOTE.format(calls="; ".join(unproven))
-                                    if unproven
-                                    else NO_API_PROOF_NOTE
-                                )
+                                (PROOF_NOTE.format(calls="; ".join(unproven)) if unproven else skipped)
                                 + NO_REPEAT
                             )
                         )
@@ -479,14 +491,22 @@ class AgentLoop:
             content = content + "\n" + network
         return content
 
-    def _skill_without_api_proof(self, turn_start_step: int) -> bool:
-        """D-600: the running-system skill was loaded in this turn, code was changed, and no API call was made after
-        the last change (the live run that proved a fix with a function call and never started the application)."""
+    def _skill_proof_problem(self, turn_start_step: int) -> str:
+        """What is missing from the proof a loaded skill asks for, as a note to the model, or "" (D-600, D-642): no call
+        after the last code change, only calls that run nothing, or a last call that failed."""
         context = self.context
         changed = context.last_code_edit_step
         if context.running_system_step < turn_start_step or changed <= turn_start_step:
-            return False
-        return not any(step > changed for step in context.api_calls.values())
+            return ""
+        after = {key: step for key, step in context.api_calls.items() if step > changed}
+        if not after:
+            return NO_API_PROOF_NOTE
+        runs = {key: step for key, step in after.items() if not key.startswith(("GET ", "HEAD "))}
+        if context.proof_by_post and not runs:
+            return NO_RUN_PROOF_NOTE
+        last = max(runs or after, key=lambda key: after[key])
+        reason = context.api_failed.get(last)
+        return FAILED_PROOF_NOTE.format(call=last, step=after[last], reason=reason) if reason else ""
 
     async def _show_new_risks(self, history: list[Message], reply: str, turn_start_step: int) -> None:
         """D-641: after a turn that changed code, the risks in the files read that this project was not shown yet."""
