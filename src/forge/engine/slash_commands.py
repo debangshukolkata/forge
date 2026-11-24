@@ -68,6 +68,7 @@ HELP_TEXT = """Available commands:
   /app-keys [model|off]     let the app being built use one of your Azure OpenAI models while it is tested (off = take it back)
   /bg [kill <name>]         background processes (dev servers...) with the tail of their output
   /allow-python [on|off]    run Python commands in this project without a card (installs, outside addresses, secrets still ask)
+  /learnings export [full]  candidates for general lessons, with names hidden, in a local file for you to review
   /report                   after a task that failed or went wrong: write one scrubbed file to send for analysis
   /log | /diff <task|hash>  the workspace's local history: one commit per completed task
   /rename <name>            name this session/workspace
@@ -136,6 +137,7 @@ class SlashCommandHandler:
             "/bg": self._bg,
             "/log": self._log,
             "/report": self._report,
+            "/learnings": self._learnings,
             "/diff": self._diff,
             "/rename": self._rename,
             "/export-chat": self._export_chat,
@@ -671,6 +673,28 @@ class SlashCommandHandler:
             f"Allow all Python commands in this project: {state}. With it on, Python runs without a card. Still asked "
             "about: installing packages, addresses outside this computer, secret files and paths outside the project, "
             "and anything else chained to the command. Change it with /allow-python on or off."
+        )
+
+    async def _learnings(self, args: list[str]) -> None:
+        from forge.engine.learnings_export import PRIVATE_TERMS, write_export
+
+        if args not in (["export"], ["export", "full"]):
+            await self._say(
+                "Usage: /learnings export [full]   (what you may forget is under 'What DebCraft learned')"
+            )
+            return
+        full = args[-1] == "full"
+        target = await asyncio.to_thread(write_export, None, full)
+        if full:
+            await self._say(
+                f"Written: {target}\nEverything DebCraft learned, with names; keys, tokens and passwords are masked as far "
+                "as DebCraft recognises them. It stays on this machine until you send it: look through it first."
+            )
+            return
+        await self._say(
+            f"Written: {target}\nCandidates for general lessons; it stays on this machine. Read it and delete what is "
+            f"about your company before you send it to anyone: hiding names automatically cannot be complete. More "
+            f"words to hide go into {PRIVATE_TERMS} in DebCraft Home, one per line; then run it again."
         )
 
     async def _report(self, args: list[str]) -> None:

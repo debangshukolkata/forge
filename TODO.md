@@ -4,7 +4,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done · `[-]` dropped (c
 
 ## Contents
 - 1. Build now: **8 open**
-- 2. Waiting for the office laptop (closed from photographs): **25 open**
+- 2. Waiting for the office laptop (closed from photographs): **26 open**
 - 3. Decide or build after the laptop run: **8 open**
 - 4. Parked: **1**
 - 5. History. Closed on 2026-11-16 as no longer a priority (D-624): **56 items**, marked `[-]` where they stood.
@@ -33,6 +33,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done · `[-]` dropped (c
 
 ## 2. Waiting for the office laptop (closed from photographs)
 Nobody builds these: each waits for the user's run and the photograph of the summary page.
+- [ ] `LN1` **Review the exported learnings with the user (D-650):** `/learnings export` on the office laptop, the user reads and cleans the file, then each candidate becomes a check, a skill, a short rule or nothing, with a test.
 - [ ] `GQ1` **Gemini while Azure's quota is used up (D-643).** On the office laptop: `gemini_smoke.py gemini-4-argon` (the step 'taking over a task another model began'), then the same small task with gpt-5.4 and with Argon as coder (time, failed edits, tests); only then `gemini_on_quota: second` or `last`.
 - [ ] `CP2` **The Copy token button on the real clipboard (D-645):** paste works, Win+V does not list it, it is gone after a minute.
 - [ ] `LA1` **A LangChain agent with skills on WisdomNext (D-642).** On the office laptop: DebCraft adds a skill-driven agent beside the existing ReAct agent; the report (`/report`) shows the versions it found, that it called the new agent through the API, and whether `library_versions` reaches PyPI or the company's index.

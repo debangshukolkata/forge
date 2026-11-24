@@ -5146,3 +5146,20 @@ files, paths outside the project, anything else in the command, substitutions, P
 rules win. Refused: a global setting, and never asking for Python at all. The check reads the command, not the script. The user
 says it also asks with Auto on: that can only be the always-ask list, so `/report` now counts the cards by reason, also of runs
 before this version.
+
+## D-650: /learnings export: candidates for general lessons, reviewed by the user (2026-11-24)
+The user asked whether what DebCraft learned can go into DebCraft. Chosen (A): general lessons only, after review, turned into
+checks, skills or short rules with a test; refused: adding them by itself (wrong notes and company details would spread). The
+export collects saved feedback, sentences in which the user corrected it, calls that failed three times or more the same way,
+checks that had to step in and corrected notes, from all projects' logs; facts about repositories are left out. Written from the
+logs without a model and without the network, to `reports` in DebCraft Home. Names are hidden by rules (addresses, paths, files,
+code names, words of the sign-in hosts and projects, `private_terms.txt`), which cannot be complete: the file says to read it
+first. Whether it may leave the laptop was asked and not answered: the user decides.
+
+## D-651: First lesson taken from the logs; the full export (2026-11-24)
+The user: nothing is private, ingest all learnings. `/learnings export full` writes everything saved, with names; keys, tokens and
+passwords are still masked. Facts about one repository stay in that repository's knowledge (they already reach its projects) and
+are not built into DebCraft: they would be wrong in every other repository. First lesson, from the logs of the build machine (the
+same refusal 9 times in 2 projects) and the office report (a saved output looked for below the application folder): a path that
+repeats the folder it is in is corrected at the entrance of the file tools (`Workspace.plain_relative`), before any check or log,
+only when it is clear. The refusal in `path_of` stays for other callers.

@@ -160,7 +160,9 @@ async def test_approval_cards_are_asked_one_at_a_time(tmp_path):  # type: ignore
     agent = host.agent
     assert agent is not None
     agent.approvals = FakeApprovals()  # type: ignore[assignment]
-    decision = SimpleNamespace(command_prefix=None, always_ask=False, reason="", verdict="ask")
+    decision = SimpleNamespace(
+        command_prefix=None, offer_python=False, always_ask=False, reason="", verdict="ask"
+    )
     tool = Quick()
     args = Quick.Args(command="ruff check .")
     waits: list[float] = []

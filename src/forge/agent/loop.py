@@ -103,6 +103,18 @@ MAX_TODO_NUDGES = 2
 MAX_STOP_HOOK_ROUNDS = 2
 MAX_PROOF_NUDGES = 3
 MAX_HANDOVER_NUDGES = 2
+PATH_TOOLS = frozenset(
+    {
+        "read_file",
+        "write_file",
+        "edit_file",
+        "multi_edit",
+        "delete_file",
+        "move_file",
+        "list_dir",
+        "code_outline",
+    }
+)
 MAX_KNOWLEDGE_NUDGES = 3  # doubtful topics, then the one question about topics whose files were read
 STOP_HOOK_NOTE = "You are about to finish, but a stop hook set up for this project failed. Fix what it reports and then finish; do not just report it.\n"
 # The answer is on the screen when these checks run; without this the model writes all of it again (D-641).
@@ -539,6 +551,16 @@ class AgentLoop:
         reason = context.api_failed.get(last)
         return FAILED_PROOF_NOTE.format(call=last, step=after[last], reason=reason) if reason else ""
 
+    def _plain_paths(self, tool_name: str, args: ToolArgs) -> None:
+        """Corrects a path that repeats the folder it is in, before any check, log or approval sees it (D-651)."""
+        workspace = self.context.workspace
+        if workspace is None or tool_name not in PATH_TOOLS:
+            return
+        for name in ("path", "source", "destination"):
+            value = getattr(args, name, None)
+            if isinstance(value, str) and value:
+                setattr(args, name, workspace.plain_relative(value))
+
     async def _show_new_risks(self, history: list[Message], reply: str, turn_start_step: int) -> None:
         """D-641: after a turn that changed code, the risks in the files read that this project was not shown yet."""
         if not self.keep_full_output or self.context.last_code_edit_step <= turn_start_step:
@@ -774,6 +796,7 @@ class AgentLoop:
                 else ""
             )
             return Message.tool_result(call.id, f"Error: invalid arguments for {call.name}: {error}{schema}")
+        self._plain_paths(call.name, args)
         summary = tool.summary(args)
         self.context.step += 1
         command = tool.command(args, self.context)

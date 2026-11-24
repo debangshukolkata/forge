@@ -130,6 +130,27 @@ class Workspace:
             return None  # the workspace's own files go through the normal rules
         return resolved if self.read_grants.allows(resolved) else None
 
+    def plain_relative(self, raw: str) -> str:
+        """The path the model meant when it names the folder it is already in (D-651: the same refusal came back again
+        and again): `project/x` in Mode B; `repo/x` in Mode A, when there is no such folder and the rest exists or its
+        folder does; the text of a saved output named with a folder before `.forge`. Anything unclear stays as it is."""
+        text = raw.replace("\\", "/").strip()
+        if text.startswith("/") or ".." in text.split("/") or ":" in text:
+            return raw
+        for folder in self.READABLE_FORGE_FOLDERS:
+            _, mark, rest = text.partition(f"/.forge/{folder}/")
+            if mark and rest and not (self.repo_dir / text).exists():
+                return f".forge/{folder}/{rest}"
+        first, _, rest = text.removeprefix("./").partition("/")
+        if not rest or (self.repo_dir / first).exists():
+            return raw
+        if self.mode_b:
+            return rest if first == "project" else raw
+        meant = self.repo_dir / rest
+        if first == "repo" and (meant.exists() or ("/" in rest and meant.parent.is_dir())):
+            return rest
+        return raw
+
     def path_of(self, relative: str) -> Path:
         external = self.resolve_readable(relative)
         if external is not None:
