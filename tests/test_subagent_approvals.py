@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from forge.llm.base import Message
 from forge.protocol.approvals import ApprovalBroker, NobodyAnswers
 from forge.protocol.events import EventBus
 from forge.subagents import subagent
@@ -52,3 +53,20 @@ async def test_every_subagent_asks_through_the_main_channel(
         assert used == [host.approvals, "auto"]
     else:
         assert isinstance(used[0], NobodyAnswers)
+
+
+def test_a_plan_is_not_lost_behind_a_closing_line() -> None:
+    """D-656: 'Plan complete' was all the coder got of a plan of 8,500 characters."""
+    plan = "## 1. Objective\n" + "Ask the model with the original moments. " * 60
+    history = [
+        Message.user("plan it"),
+        Message(role="assistant", content="I look around."),
+        Message(role="assistant", content=plan),
+        Message.system("The to-do list still has open items."),
+        Message(role="assistant", content="Plan complete."),
+    ]
+    report = subagent._last_text(history)
+    assert report.startswith("## 1. Objective") and report.endswith("Plan complete.")
+    history[-1] = Message(role="assistant", content="## Second plan\n" + plan)
+    assert subagent._last_text(history).startswith("## Second plan")
+    assert subagent._last_text([Message.user("x")]) == ""

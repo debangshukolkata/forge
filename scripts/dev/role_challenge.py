@@ -19,6 +19,7 @@ import asyncio
 import base64
 import json
 import os
+import re
 import sys
 import time
 from collections.abc import Callable
@@ -157,6 +158,34 @@ async def one_task(role: str, candidate: Candidate, graders: list[Candidate]) ->
     return (*scored(answer), answer)
 
 
+def rescore(row: dict[str, Any]) -> None:
+    """Saved answers are scored by the rules of today, so a mistake in a rule does not cost another night."""
+    role, answer = row["role"], row.get("answer")
+    if row.get("error"):
+        return
+    if (
+        role == "fallback"
+        and "rules" not in row
+        and (found := re.search(r"(\d+) repeated", row.get("note", "")))
+    ):
+        # reading again what the other model left counted as repeated work at first; looking it over is sensible
+        row["score"] = min(100.0, row["score"] + 5 * min(int(found.group(1)), 4))
+        row["rules"] = 2
+    if role == "coder" and row.get("answers"):
+        row["right"] = coder.count_right(row["answers"]["results"])
+        row["score"] = coder.points(row["right"], row["camera"])
+        row["note"] = re.sub(r"^\d+ of", f"{row['right']} of", row.get("note", ""))
+    if role in ("vision", "critic") and isinstance(answer, dict):
+        score = tasks.vision_score if role == "vision" else tasks.critic_score
+        results = [score(name, text) for name, text in answer.items()]
+        row["score"] = round(sum(r[0] for r in results) / len(results), 1)
+        row["note"] = " | ".join(r[1] for r in results)
+    scored = {"reviewer": tasks.reviewer_score, "judge": tasks.judge_score, "summariser": tasks.summary_score}
+    if role in scored and isinstance(answer, str):
+        points, row["note"] = scored[role](answer)
+        row["score"] = round(points, 1)
+
+
 class Run:
     """The results of one run, saved after every step."""
 
@@ -169,6 +198,8 @@ class Run:
         if self.file.is_file():
             data = json.loads(self.file.read_text(encoding="utf-8"))
             self.rows, self.facts = data["rows"], data["facts"]
+            for row in self.rows:
+                rescore(row)
 
     def done(self, role: str, model: str, repeat: int) -> bool:
         """A step that ended with an error is tried again when the run goes on."""
@@ -255,7 +286,7 @@ async def direct(run: Run, role: str, candidate: Candidate, graders: list[Candid
         score, note, answer = await one_task(
             role, mine, [Candidate(g.name, g.key, g.router) for g in graders]
         )
-        row |= {"score": round(score, 1), "note": note, "answer": answer}
+        row |= {"score": round(score, 1), "note": note, "answer": answer, "rules": 2}
     except Exception as error:  # one broken answer must not end a run of hours
         row |= {"score": 0.0, "error": short(error)}
     row |= {"seconds": round(mine.seconds, 1), "waited": round(mine.waited), "tokens": mine.tokens}

@@ -5194,3 +5194,13 @@ summariser and fallback are direct calls scored without a model, 3 runs; the cod
 role, in a made-up project whose application asks one fixed model, with its own DebCraft Home and no database of the user. Agreed:
 coder through DebCraft, overnight, two graders, report of about 5 pages. Less than 8 points apart counts as equal, then the
 faster one is the choice. Offline tests: `tests/test_role_challenge.py` (the known verdicts are proven by running the code).
+
+## D-656: A subagent's report is its report, not its last line; corrections to the role challenge (2026-11-25)
+The trial of D-655 showed that a planner's plan of 8,502 characters was lost: reminded of an open to-do item it ended with "Plan
+complete", and only that reached the coder. Now the longest final reply is handed over together with a short last one, and a report
+may have 4,000 tokens (was 1,500). Options: no to-do reminder for subagents (other endings lose the report too), the whole
+conversation (too much), the longest final reply (chosen). **It did not raise the result:** GPT-5.4 as coder 3 of 12 questions
+before, 2 and 2 after (2 is what "not found" to everything gave); both plans arrived. Both applications still answer by comparing
+words; one uses the model to index, none to answer; the coder and the verifier tried the one example of the request. The scores of the challenge were
+corrected: "April" counts, reading a file again is no fault, the model calls of the project never go through a proxy, and an
+application that never finds anything gets no points for what is not there. Saved answers are scored again (`--report`).

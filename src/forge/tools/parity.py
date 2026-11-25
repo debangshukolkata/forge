@@ -1,6 +1,6 @@
 """Parity tools (spec §13B): load_skill (full text of a skill whose description is pinned) and spawn_subagent
 (built-in types explore / reviewer / debugger, or a custom agent from <forge_home>/agents/). A subagent works
-with its own context and tools and returns a report (<= ~1.5k tokens)."""
+with its own context and tools and returns a report (<= ~4k tokens)."""
 
 from __future__ import annotations
 

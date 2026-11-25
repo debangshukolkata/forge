@@ -84,7 +84,8 @@ def complete(prompt: str, json_answer: bool = False) -> str:
     """The model's answer to one prompt. `json_answer`: it answers with one JSON object (say so in the prompt)."""
     body = json.dumps({{"prompt": prompt, "json": json_answer}}).encode()
     request = urllib.request.Request(ADDRESS, body, {{"Content-Type": "application/json"}})
-    with urllib.request.urlopen(request, timeout=150) as answer:
+    direct = urllib.request.build_opener(urllib.request.ProxyHandler({{}}))  # this machine, never through a proxy
+    with direct.open(request, timeout=150) as answer:
         return json.loads(answer.read())["text"]
 '''
 README = """# RecQA
@@ -192,6 +193,17 @@ def judge(question: str, answer: dict[str, Any]) -> str:
     if not begin - 60 <= second <= end + 60:
         return "wrong moment"
     return "" if end - begin <= 300 else f"plays {end - begin:.0f} s"
+
+
+def count_right(results: dict[str, dict[str, Any]]) -> int:
+    """Questions answered right. An application that never finds anything gets nothing for what is not there."""
+    right = [question for question, result in results.items() if not result["problem"]]
+    return len(right) if any(QUESTIONS[question][1] is not None for question in right) else 0
+
+
+def points(right: int, camera: dict[str, bool]) -> float:
+    """The product: 70 percent the unseen questions, 30 percent the reported fault and its relatives."""
+    return round(70 * right / len(QUESTIONS) + 30 * sum(camera.values()) / len(camera), 1)
 
 
 class Application:
@@ -360,16 +372,14 @@ async def run(
         finally:
             runner.cancel()
             await host.close()
-        right = sum(1 for r in answers["results"].values() if not r["problem"])
+        right = count_right(answers["results"])
         served = {
             json.loads(line)["payload"].get("served_model")
             for line in (workspace.forge_dir / "events.jsonl").read_text(encoding="utf-8").splitlines()
             if '"llm_call"' in line
         }
-        # the product: 70 percent the unseen questions, 30 percent the reported fault and its relatives
-        score = 70 * right / len(QUESTIONS) + 30 * sum(camera.values()) / len(camera)
         return {
-            "score": round(score, 1),
+            "score": points(right, camera),
             "note": f"{right} of {len(QUESTIONS)} questions, fault: {sum(camera.values())} of {len(camera)}, "
             f"{sum(counted.values())} tool calls ({len(failed)} failed)"
             + ("" if built else ", build not finished in time")

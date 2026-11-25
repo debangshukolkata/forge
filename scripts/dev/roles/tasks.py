@@ -536,7 +536,8 @@ def _same(given: Any, wanted: Any, slack: float) -> bool:
             return abs(float(str(given).replace(",", "")) - wanted) <= slack
         except ValueError:
             return False
-    return str(given).strip().lower() == str(wanted).lower()
+    given, wanted = str(given).strip().lower(), str(wanted).lower()
+    return given == wanted or (wanted == "apr" and given == "april")
 
 
 def vision_score(name: str, text: str) -> Result:

@@ -1,5 +1,5 @@
 """Subagents (spec §9.10, §10.5): a fresh context and a restricted toolset for noisy work such as exploring
-the codebase. Only the condensed report (<= ~1.5k tokens) comes back to the main conversation."""
+the codebase. Only the condensed report (<= ~4k tokens) comes back to the main conversation."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from forge.toolkit.shell import RunCommand, ShellSession
 from forge.tools.files import ReadFile
 from forge.tools.registry import ToolRegistry, default_tools
 
-REPORT_TOKENS = 1500
+REPORT_TOKENS = 4000  # a plan of 2,100 tokens lost its middle at 1,500 (D-656)
 EXPLORE_ITERATIONS = 25
 
 EXPLORE_PROMPT = """You are DebCraft's explore subagent. You only read: search and read the code to
@@ -216,7 +216,19 @@ async def run_debugger(router: LLMRouter, context: ToolContext, problem: str) ->
 
 
 def _last_text(history: list[Message]) -> str:
-    return next((m.content for m in reversed(history) if m.role == "assistant" and m.content.strip()), "")
+    """The subagent's report: its last words, and before them the report itself when the last words only follow it up.
+
+    A planner wrote its plan, was reminded of an open to-do item and ended with "Plan complete": only that line reached
+    the coder, the plan of 8,500 characters was lost (D-656)."""
+    texts = [m.content.strip() for m in history if m.role == "assistant" and m.content.strip()]
+    if not texts:
+        return ""
+    finals = [
+        m.content.strip() for m in history if m.role == "assistant" and not m.tool_calls and m.content.strip()
+    ]
+    last = texts[-1]
+    longest = max(finals, key=len, default=last)
+    return f"{longest}\n\n{last}" if len(last) < len(longest) / 2 else last
 
 
 def _ended_with_text(history: list[Message]) -> bool:

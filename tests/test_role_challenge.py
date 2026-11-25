@@ -173,3 +173,14 @@ def test_the_project_is_complete_and_the_checks_see_a_missing_answer(kit: Any, t
     assert camera == {"20417": False, "20418": False, "20419": False, "13615 still works": True}
     answers = kit.coder.check_answers(repo, tmp_path / "check", 9)
     assert answers["starts"] and all(r["problem"] for r in answers["results"].values())
+
+
+def test_an_application_that_never_finds_anything_gets_no_points_for_questions(kit: Any) -> None:
+    """D-656: "not found" to everything gave 2 of 12, as much as a built application."""
+    nothing = {
+        q: {"problem": "" if second is None else "not found"}
+        for q, (_, second) in kit.coder.QUESTIONS.items()
+    }
+    assert kit.coder.count_right(nothing) == 0
+    one = nothing | {next(iter(nothing)): {"problem": ""}}
+    assert kit.coder.count_right(one) == 3

@@ -162,7 +162,6 @@ async def play(ask: Callable[[ChatRequest], Awaitable[LLMResponse]], key: str) -
             arguments: dict[str, Any] = call.arguments or {}
             path = str(arguments.get("path", "")).removeprefix("./")
             if call.name == "read_file" and path in files:
-                repeated += files[path] in (SHOP, PRICES)  # it is in the history already
                 result = files[path]
             elif (
                 call.name == "write_file"
