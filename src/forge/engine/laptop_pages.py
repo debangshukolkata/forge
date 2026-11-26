@@ -129,16 +129,17 @@ def save_verdicts(verdicts: list[Verdict], home: Path | None = None) -> None:
         (folder / VERDICTS_FILE).write_text(json.dumps(stored, indent=1), encoding="utf-8")
 
 
-def summary_page(home: Path | None = None) -> Page:
-    """One screen with every open item and the latest verdict of each: the photograph that closes the list."""
+def summary_page(home: Path | None = None, only: tuple[str, ...] | None = None) -> Page:
+    """One screen with every open item (or the `only` ones) and the latest verdict of each: the photograph that closes the list."""
     stored = load_verdicts(home)
     page = Page("SUMMARY OF THE OPEN ITEMS")
-    for item, meaning in ITEMS.items():
+    items = {item: meaning for item, meaning in ITEMS.items() if only is None or item in only}
+    for item, meaning in items.items():
         entry = stored.get(item)
         status = entry["status"] if entry else "NOT RUN"
         page.lines.append(f"{item:<5} {status:<7} {entry['line'] if entry else 'waiting: ' + meaning}")
     counts = {
-        status: sum(1 for item in ITEMS if (stored.get(item) or {"status": "NOT RUN"})["status"] == status)
+        status: sum(1 for item in items if (stored.get(item) or {"status": "NOT RUN"})["status"] == status)
         for status in STATUSES
     }
     page.lines += ["", "  ".join(f"{status} {count}" for status, count in counts.items())]

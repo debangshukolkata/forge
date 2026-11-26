@@ -28,11 +28,25 @@ def by_role(plan: dict[str, object]) -> dict[str, dict[str, str]]:
     return {entry["role"]: entry for entry in plan["roles"]}  # type: ignore[index, union-attr]
 
 
+def test_roles_chosen_by_hand_before_the_finalised_defaults_follow_the_proposals_once(tmp_path: Path) -> None:
+    """D-661: a plan saved before the role challenge's roles were shipped keeps no hand choice; a new one does."""
+    import json
+
+    path = tmp_path / "data" / store.FILE
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"plan": {"coder": "gpt54"}, "manual": ["coder"]}), encoding="utf-8")
+    assert store.load(tmp_path)["manual"] == [] and store.load(tmp_path)["plan"] == {"coder": "gpt54"}
+    store.save_plan(tmp_path, {"coder": "gpt54"}, ["coder"])
+    store.save_result(tmp_path, "azure", {"status": "ok"})  # a later test keeps the new hand choice
+    assert store.load(tmp_path)["manual"] == ["coder"]
+
+
 def test_store_round_trip_and_damaged_file(tmp_path: Path) -> None:
     assert store.load(tmp_path) == {
         "results": {},
         "plan": {},
         "manual": [],
+        "role_defaults": store.ROLE_DEFAULTS,
         "confirmed_at": None,
         "answers": {},
     }

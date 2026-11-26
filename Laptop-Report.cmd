@@ -1,7 +1,7 @@
 @echo off
-rem Double-click for everything the office laptop owes DebCraft (D-660): it asks a few things once, then runs the checks,
-rem holds the conversations in the WisdomNext project by itself, runs the live tests and ends with pages to photograph.
-rem About 2 to 3 hours with a requirement, 1 to 2 without. You may leave it running. Close DebCraft first.
+rem Double-click for what the office laptop owes DebCraft (D-660, D-661). No questions, nothing on WisdomNext: the roles,
+rem Gemini 4 Argon step by step, two conversations in a test project of the sample repository, the live tests, then pages
+rem to photograph. About 1 to 1.5 hours; you may leave it running. Close DebCraft first.
 title DebCraft laptop report
 cd /d "%~dp0"
 if not exist ".venv\Scripts\python.exe" (

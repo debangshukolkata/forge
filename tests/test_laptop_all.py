@@ -6,53 +6,30 @@ import json
 from pathlib import Path
 
 from forge.engine import laptop_all
-from forge.engine.laptop_pages import ITEMS, report_folder
+from forge.engine.laptop_pages import ITEMS, report_folder, summary_page
 from tests.test_laptop import Log, _write_conversation
 
 
-def _answers(*typed: str):  # type: ignore[no-untyped-def]
-    queue = list(typed)
-    return lambda _question: queue.pop(0) if queue else ""
+def test_no_question_and_nothing_on_wisdomnext() -> None:
+    """D-661: the run asks nothing and holds only the two planners and the crawl, in a test project."""
+    held = laptop_all.conversations_to_hold()
+    assert [items for items, _, _ in held] == ["DP1", "TV1"]
+    assert "planner" in held[0][1][0] and "tavily_crawl" in held[1][1][0]
+    assert not hasattr(laptop_all, "ask_inputs")
+    assert set(laptop_all.COVERED) <= set(ITEMS)
 
 
-def test_the_questions_are_asked_once_and_offered_again(isolated_forge_home: Path, tmp_path: Path) -> None:
-    project = tmp_path / "wisdom"
-    (project / ".forge").mkdir(parents=True)
-    first = laptop_all.ask_inputs(
-        isolated_forge_home, _answers(str(project), "", "argocd", "how many pods?", "", "")
-    )
-    assert (
-        first["agent"] == "argocd"
-        and first["site"] == "https://docs.python.org/3/"
-        and first["requirement"] == ""
-    )
-    again = laptop_all.ask_inputs(isolated_forge_home, _answers("", "", "", "", "", "Add a health endpoint"))
-    assert again["workspace"] == str(project) and again["question"] == "how many pods?"
-    assert again["requirement"] == "Add a health endpoint"
-    saved = json.loads(
-        (report_folder(isolated_forge_home) / laptop_all.INPUTS_FILE).read_text(encoding="utf-8")
-    )
-    assert saved == again
+def test_the_test_project_is_made_from_the_sample_repository(isolated_forge_home: Path) -> None:
+    root = laptop_all.make_test_project(isolated_forge_home, Path(__file__).resolve().parents[1])
+    assert (root / ".forge").is_dir() and root.parent == report_folder(isolated_forge_home)
 
 
-def test_a_folder_that_is_not_a_project_stops_at_once(isolated_forge_home: Path, tmp_path: Path) -> None:
-    try:
-        laptop_all.ask_inputs(isolated_forge_home, _answers(str(tmp_path), "", "a", "q", "", ""))
-    except SystemExit as stop:
-        assert "no .forge folder" in str(stop)
-    else:
-        raise AssertionError("a folder without .forge was taken")
-
-
-def test_the_conversations_cover_the_items_the_plan_asked_the_user_to_type() -> None:
-    held = laptop_all.conversations_to_hold(
-        {"agent": "argocd", "question": "how many pods?", "site": "https://a.example/", "requirement": ""}
-    )
-    items = {item for entry in held for item in entry[0].split()}
-    assert {"TK5", "TK6", "RN2", "KL6", "TV1", "RS9", "HT1"} <= items
-    assert any("argocd" in text and "how many pods?" in text for _, texts, _ in held for text in texts)
-    assert [texts[0] for _, texts, _ in held if texts[0].startswith("/")] == ["/learn"]
-    assert {"GM1", "DP1", "GQ1", "CP2"} <= set(ITEMS)
+def test_the_summary_shows_only_the_items_of_this_run(isolated_forge_home: Path) -> None:
+    lines = summary_page(isolated_forge_home, only=laptop_all.COVERED).lines
+    assert [line.split()[0] for line in lines if line.strip()][: len(laptop_all.COVERED)] == [
+        item for item in ITEMS if item in laptop_all.COVERED
+    ]
+    assert not any(line.startswith("RS7") for line in lines)
 
 
 def test_the_two_planner_page_counts_merged_plans_and_cards(tmp_path: Path) -> None:

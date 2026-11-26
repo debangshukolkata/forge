@@ -5252,3 +5252,28 @@ Options: keep the typed plan (the items stayed open for ten days), a script that
 held by the script (chosen). Checked here: one held conversation of two messages on the fixture repository with Azure. Found on
 the way: with Google's names in the .env file but no access, both planners failed and planning stopped; now the planner role
 plans alone then.
+
+## D-661: The laptop report asks nothing and runs nothing on WisdomNext; the finalised roles replace earlier hand choices once (2026-11-26)
+The user (2026-11-26): "I dont need the tests that run something on the wisdom next ... Please remove these tests. Make the
+Gemini models that we finalised as the default models." `Laptop-Report.cmd` (`forge laptop all`) no longer asks anything and
+no longer touches WisdomNext or its Development DB: gone are the questions (project folder, the application's Python, agent,
+question, site, requirement), the check with the TEMP table, the sign-in, agent, stream, `/learn` and requirement
+conversations. It now shows the roles (GM1), checks Gemini 4 Argon (GQ1), makes a test project of the shipped sample
+repository under `<DebCraft Home>/laptop_report/` and holds two conversations there (a task planned by the two planners, DP1;
+a Tavily crawl, TV1), runs the live tests (TR6) and ends with a summary of those five items only. The WisdomNext items stay
+open in TODO.md, to be checked by the user when they work on WisdomNext.
+Roles: the proposals already name Hydrogen (coder, planner), Argon (reviewer, judge, critic, vision, summariser) and GPT-5.4
+(fallback) (D-659), but roles the user had set by hand kept their old models. `environment.json` now carries
+`role_defaults`; a plan saved under an older number keeps no hand choice, so every role follows the proposals at the next
+session start; a choice made in the panel afterwards is kept again. Options: change `roles:` in the shipped config.yaml
+(rejected: on a machine where Gemini does not answer every call would go to an unreachable model; the proposals take a model
+only once it has answered its test), clear the hand choices once (chosen), ask the user to set eight roles by hand (what they
+asked not to do).
+
+## D-662: The file card in chat opens and copies the file itself (2026-11-26)
+The user (office screenshot, 2026-11-26): the card under a file path in chat should open the file and copy it, "no need to
+navigate to the file". Options shown with previews: Open and Copy content on the card (chosen), Open only, Open with a tab of
+changes against the original. The workspace-copy row now has Open (a window with the whole file, highlighted, Copy content,
+Copy path, Close, Escape), Copy content and Copy path; the original-repo row has Copy path. `/api/file-location` returns the
+file's path inside the project (`relative`), read through the existing `/api/file?root=repo` (jail and secret-file refusal
+as before). DebCraft still never writes into the original repository: the user pastes.

@@ -130,10 +130,17 @@ function filePathOf(text: string): string | null {
 }
 
 interface FileLocation {
+  relative?: string;
   workspace: string;
   original: string | null;
   exists_in_workspace: boolean;
   exists_in_original: boolean;
+}
+
+interface FileText {
+  text: string;
+  binary: boolean;
+  truncated?: boolean;
 }
 
 let openPopover: HTMLElement | null = null;
@@ -142,7 +149,110 @@ function closePopover() {
   openPopover = null;
 }
 
-/** A small card under a clicked file path: the absolute path in the workspace copy and in the original repo, each one click to copy. */
+function fileButton(label: string, action: (button: HTMLButtonElement) => void): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "file-location-action";
+  button.textContent = label;
+  button.onclick = (event) => {
+    event.stopPropagation();
+    action(button);
+  };
+  return button;
+}
+
+/** Copies, then says so on the button for a moment. */
+function copyFrom(button: HTMLButtonElement, text: () => Promise<string>) {
+  const label = button.textContent;
+  void text()
+    .then((value) => navigator.clipboard.writeText(value))
+    .then(
+      () => (button.textContent = "Copied"),
+      () => (button.textContent = "Could not copy"),
+    )
+    .finally(() => window.setTimeout(() => (button.textContent = label), 1200));
+}
+
+async function fileText(relative: string): Promise<FileText> {
+  return api<FileText>(`/api/file?root=repo&path=${encodeURIComponent(relative)}`);
+}
+
+async function fileContent(relative: string): Promise<string> {
+  const file = await fileText(relative);
+  if (file.binary) throw new Error("binary");
+  return file.text;
+}
+
+/** The whole workspace copy of a file in a window, with Copy content and Copy path: the user takes it from here (D-662). */
+async function openFileWindow(relative: string, path: string) {
+  closePopover();
+  const backdrop = document.createElement("div");
+  backdrop.className = "file-window-backdrop";
+  const panel = document.createElement("div");
+  panel.className = "file-window";
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-label", relative);
+  const header = document.createElement("div");
+  header.className = "file-window-header";
+  const title = document.createElement("span");
+  title.className = "file-window-title";
+  title.textContent = relative;
+  title.title = path;
+  const onKey = (event: KeyboardEvent) => {
+    if (event.key === "Escape") close();
+  };
+  const close = () => {
+    backdrop.remove();
+    document.removeEventListener("keydown", onKey);
+  };
+  const body = document.createElement("div");
+  body.className = "file-window-body";
+  body.textContent = "Loading ...";
+  let text = "";
+  const copyContent = fileButton("Copy content", (button) => copyFrom(button, async () => text || fileContent(relative)));
+  header.append(
+    title,
+    copyContent,
+    fileButton("Copy path", (button) => copyFrom(button, async () => path)),
+    fileButton("Close", close),
+  );
+  panel.append(header, body);
+  backdrop.appendChild(panel);
+  backdrop.onmousedown = (event) => {
+    if (event.target === backdrop) close();
+  };
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(backdrop);
+  try {
+    const file = await fileText(relative);
+    if (file.binary) {
+      body.textContent = "This is a binary file; copy it from the folder.";
+      copyContent.disabled = true;
+      return;
+    }
+    text = file.text;
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    const language = languageOf(relative);
+    if (language && hljs.getLanguage(language)) code.innerHTML = hljs.highlight(text, { language }).value;
+    else code.textContent = text;
+    pre.appendChild(code);
+    body.textContent = "";
+    body.appendChild(pre);
+    if (file.truncated) {
+      const note = document.createElement("p");
+      note.className = "file-window-note";
+      note.textContent = "Only the first part is shown and copied; the file is larger.";
+      body.appendChild(note);
+    }
+  } catch {
+    body.textContent = "The file could not be read.";
+    copyContent.disabled = true;
+  }
+}
+
+/** A small card under a clicked file path: the absolute path in the workspace copy and in the original repo; the
+ * workspace copy opens in a window or is copied whole from here, so nobody has to go to the folder (D-662). */
 async function showFileLocation(anchor: HTMLElement, file: string) {
   closePopover();
   let location: FileLocation;
@@ -153,14 +263,13 @@ async function showFileLocation(anchor: HTMLElement, file: string) {
   }
   const card = document.createElement("div");
   card.className = "file-location";
-  const rows: Array<[string, string, boolean]> = location.workspace
-    ? [["Workspace copy", location.workspace, location.exists_in_workspace]]
-    : [["Not found", `No file called ${file} in this project's workspace.`, true]];
-  if (location.original) rows.push(["Original repo", location.original, location.exists_in_original]);
-  for (const [label, path, exists] of rows) {
-    const row = document.createElement("button");
-    row.type = "button";
-    row.title = "Click to copy";
+  const rows: Array<[string, string, boolean, boolean]> = location.workspace
+    ? [["Workspace copy", location.workspace, location.exists_in_workspace, true]]
+    : [["Not found", `No file called ${file} in this project's workspace.`, true, false]];
+  if (location.original) rows.push(["Original repo", location.original, location.exists_in_original, false]);
+  for (const [label, path, exists, isWorkspace] of rows) {
+    const row = document.createElement("div");
+    row.className = "file-location-row";
     const heading = document.createElement("span");
     heading.className = "file-location-label";
     heading.textContent = exists ? label : `${label} (not there yet)`;
@@ -168,12 +277,19 @@ async function showFileLocation(anchor: HTMLElement, file: string) {
     value.className = "file-location-path";
     value.textContent = path;
     row.append(heading, value);
-    row.onclick = () => {
-      void navigator.clipboard.writeText(path).then(() => {
-        heading.textContent = "Copied";
-        window.setTimeout(closePopover, 700);
-      });
-    };
+    if (location.workspace) {
+      const actions = document.createElement("div");
+      actions.className = "file-location-actions";
+      const relative = location.relative;
+      if (isWorkspace && exists && relative) {
+        actions.append(
+          fileButton("Open", () => void openFileWindow(relative, path)),
+          fileButton("Copy content", (button) => copyFrom(button, () => fileContent(relative))),
+        );
+      }
+      actions.appendChild(fileButton("Copy path", (button) => copyFrom(button, async () => path)));
+      row.appendChild(actions);
+    }
     card.appendChild(row);
   }
   document.body.appendChild(card);

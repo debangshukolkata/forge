@@ -83,7 +83,17 @@ def test_chat_layout_follows_the_panel_pins_the_prompt_and_shows_paths(
         page.wait_for_selector(".file-location")
         card = page.inner_text(".file-location")
         assert "Workspace copy" in card and "README.md" in card, card
+        assert "Open" in card and "Copy content" in card and "Copy path" in card, card
         page.screenshot(path=str(shots / "chat-file-path-card.png"))
+        # D-662: Open shows the whole workspace copy in a window, with Copy content; Escape closes it.
+        page.click(".file-location .file-location-action:has-text('Open')")
+        page.wait_for_selector(".file-window pre")
+        expected = (workspace.repo_dir / "backend" / "README.md").read_text(encoding="utf-8").strip()
+        assert page.inner_text(".file-window pre").strip() == expected
+        assert page.locator(".file-window-header button:has-text('Copy content')").is_enabled()
+        page.screenshot(path=str(shots / "chat-file-window.png"))
+        page.keyboard.press("Escape")
+        page.wait_for_selector(".file-window", state="detached")
         assert page.problems == [], page.problems  # type: ignore[attr-defined]
         browser.close()
 

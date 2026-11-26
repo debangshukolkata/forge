@@ -641,8 +641,38 @@ kbd,
   flex-direction: column;
   @apply rounded-lg border border-border bg-surface p-1 text-[12px] shadow-lg;
 }
-.file-location button {
-  @apply flex flex-col items-start gap-0.5 rounded-md px-2.5 py-1.5 text-left hover:bg-raised;
+.file-location-row {
+  @apply flex flex-col items-start gap-0.5 rounded-md px-2.5 py-1.5;
+}
+.file-location-actions {
+  @apply mt-1 flex flex-wrap gap-1.5;
+}
+.file-location-action {
+  @apply rounded-md border border-border bg-surface px-2 py-0.5 text-[12px] font-medium text-fg hover:bg-raised disabled:opacity-50;
+}
+.file-window-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  @apply flex items-center justify-center bg-black/40 p-6;
+}
+.file-window {
+  @apply flex max-h-full w-full max-w-5xl flex-col rounded-lg border border-border bg-surface shadow-lg;
+}
+.file-window-header {
+  @apply flex items-center gap-2 border-b border-border px-3 py-2;
+}
+.file-window-title {
+  @apply min-w-0 flex-1 truncate font-mono text-[12px] text-fg-muted;
+}
+.file-window-body {
+  @apply min-h-0 overflow-auto p-3 text-[13px] text-fg-muted;
+}
+.file-window-body pre {
+  @apply m-0 font-mono text-[12.5px] leading-relaxed text-fg;
+}
+.file-window-note {
+  @apply mt-2 text-[12px];
 }
 .file-location-label {
   @apply text-[11px] font-medium text-fg-muted;

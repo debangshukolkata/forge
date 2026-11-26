@@ -150,7 +150,9 @@ def test_file_location_names_workspace_and_original(
     found = client.get("/api/file-location", params={"path": "backend/README.md"}).json()
     assert found["workspace"] == str(workspace.repo_dir / "backend" / "README.md")
     assert found["original"] == str(Path(workspace.info.repo_path) / "backend" / "README.md")
-    assert found["exists_in_workspace"]
+    assert found["exists_in_workspace"] and found["relative"] == "backend/README.md"
+    opened = client.get("/api/file", params={"root": "repo", "path": found["relative"]}).json()
+    assert opened["text"] == (workspace.repo_dir / "backend" / "README.md").read_text(encoding="utf-8")
     bare = client.get("/api/file-location", params={"path": "README.md"})
     assert (
         bare.status_code == 200 and bare.json()["workspace"] == found["workspace"]

@@ -354,6 +354,7 @@ def create_app(
         if workspace.info.repo_path:
             original = str(Path(workspace.info.repo_path) / chosen)
         return {
+            "relative": chosen,  # for /api/file?root=repo: the card opens and copies the file itself (D-662)
             "workspace": str(workspace.repo_dir / chosen),
             "original": original,
             "exists_in_workspace": (workspace.repo_dir / chosen).exists(),

@@ -402,34 +402,33 @@ def run_all(
     wait: Callable[[str], str],
     make_session: Callable[[Workspace], Any] | None,
 ) -> int:
-    """`Laptop-Report.cmd`: the questions once, then checks, conversations, live tests and the pages (D-660)."""
+    """`Laptop-Report.cmd`: no questions and nothing on WisdomNext (D-661): roles, Gemini, a test project, live tests."""
     from forge.engine import laptop_all as auto
 
     if make_session is None:
         write("all needs DebCraft's session builder; run it as: python -m forge.cli laptop all")
         return 2
-    write("A few questions first; Enter keeps the answer shown in brackets.")
-    answers = auto.ask_inputs(home, wait)
-    root = Path(answers["workspace"])
-    app_python = Path(answers["app_python"]) if answers["app_python"] else None
     began = time.monotonic()
-    write("== 1 of 4: checks (type yes when asked for the TEMP table) ==")
-    run("check", app_python, root, pause=False, home=home, write=write, wait=wait)
     repo = Path(__file__).resolve().parents[3]
+    write("== 1 of 4: the roles and Gemini 4 Argon (a few minutes) ==")
     first = [auto.roles_page(home, auto.load_config_router(home)), auto.gemini_page(repo, write)]
-    write("== 2 of 4: the conversations (you may leave now; about 2 to 3 hours with the requirement) ==")
-    held = asyncio.run(auto.hold_all(root, answers, make_session, write))
+    write("== 2 of 4: a test project of the sample repository, two conversations (up to 40 minutes) ==")
+    root = auto.make_test_project(home, repo)
+    held = asyncio.run(auto.hold_all(root, make_session, write))
     write("== 3 of 4: the live tests (up to 40 minutes) ==")
-    run("live", pause=False, home=home, write=write, wait=wait)
+    live_tests(home, write)
     write(f"== 4 of 4: the pages to photograph (after {(time.monotonic() - began) / 60:.0f} minutes) ==")
-    extra = [
+    pages = [
         Page("WHAT RAN", held),
         *first,
         auto.dual_plan_page(root),
+        auto.crawl_page(root),
+        live_tests_page(home),
         auto.role_challenge_page(home),
-        auto.own_part_page(),
     ]
-    return run("report", workspace=root, pause=pause, home=home, write=write, wait=wait, extra=extra)
+    _record(pages, home)
+    emit([*pages, summary_page(home, only=auto.COVERED)], "all", pause, home, write, wait)
+    return 0
 
 
 def _record(pages: list[Page], home: Path) -> None:
