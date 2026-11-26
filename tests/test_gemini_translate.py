@@ -55,6 +55,34 @@ def test_tool_results_merge_into_one_user_turn_matched_by_name() -> None:
     assert responses[1].function_response.response == {"output": "Y"}
 
 
+def test_a_note_added_after_the_answer_stays_last_so_the_request_never_ends_on_the_model() -> None:
+    """D-664 (office, 2026-11-26): the leftover review's note came after the final answer and was moved into the
+    system instruction; Gemini refused the request: 'Requests ending with a model turn are not supported'."""
+    messages = [
+        Message.system("be brief"),
+        Message.user("fix it"),
+        Message(role="assistant", content="Done: copy these files."),
+        Message.system("Name the temporary changes."),
+    ]
+    system, contents = to_gemini_request(messages, "gemini")
+    assert system == "be brief"
+    assert [content.role for content in contents] == ["user", "model", "user"]
+    assert "Name the temporary changes." in (contents[-1].parts or [])[0].text
+    after_results = [
+        Message.user("read"),
+        Message(
+            role="assistant",
+            tool_calls=[ToolCall(id="a", name="read_file", raw_arguments="{}", arguments={})],
+        ),
+        Message.tool_result("a", "X"),
+        Message.system("a note after a result"),
+    ]
+    _, contents = to_gemini_request(after_results, "gemini")
+    assert [content.role for content in contents] == ["user", "model", "user"]  # joined to the results' turn
+    parts = contents[-1].parts or []
+    assert parts[0].function_response and "a note after a result" in (parts[1].text or "")
+
+
 def test_image_data_url_becomes_inline_bytes() -> None:
     message = Message(role="user", content="what is this", images=[f"data:image/png;base64,{PNG}"])
     _, contents = to_gemini_request([message], "gemini")

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import random
 import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -173,6 +174,9 @@ async def plan_twice(
         return await plan_once()
     if len(plans) == 1:
         return plans[0]
+    # The merger may be one of the planners (D-663: Hydrogen plans and merges): the plans carry no model name and come
+    # in a random order, so it cannot simply prefer the first or recognise its own by position.
+    plans = random.sample(plans, len(plans))
     request = ChatRequest(
         messages=[
             Message.system(MERGE_PROMPT),

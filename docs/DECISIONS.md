@@ -5277,3 +5277,27 @@ changes against the original. The workspace-copy row now has Open (a window with
 Copy path, Close, Escape), Copy content and Copy path; the original-repo row has Copy path. `/api/file-location` returns the
 file's path inside the project (`relative`), read through the existing `/api/file?root=repo` (jail and secret-file refusal
 as before). DebCraft still never writes into the original repository: the user pastes.
+
+## D-663: Hydrogen and Argon plan, Hydrogen merges blind; a test of three plans judged blind (DP2) (2026-11-26)
+The user asked whether two planners are a good idea and rejected GPT-5.4 as the merger ("a poor model"). Planners are now
+the two best of the role challenge, Hydrogen (71) and Argon (62), instead of Neon and Carbon (Carbon built nothing that
+worked as coder; Neon was never scored as planner). Hydrogen merges. Because it also wrote one of the plans, the plans reach
+it without names and in a random order (`dual_plan.plan_twice`). Options for the merger: Hydrogen (chosen: the best planner
+decides, blind and shuffled), Argon (the same bias, a weaker planner), Neon as an outsider (unmeasured; its judge 0 came
+from our timeouts), GPT-5.4 (rejected by the user).
+DP2: `Plan-Compare.cmd` (`scripts/dev/plan_compare.py`) gives Hydrogen and Argon a very complex made-up task (the dashboard
+agent that submits jobs to the remote executor, from the user's real request of 2026-11-26, with every system fact in the
+text), merges the two plans exactly as DebCraft does, and shows the three plans on one page as Plan X, Y and Z in a random
+order. Claude judges them from the photographs against 16 criteria written before any plan was read (`JUDGE_CHECKS`), then
+the user shows `--key`. If the merged plan does not clearly beat Hydrogen alone, `plan_twice` goes back to `[]`.
+
+## D-664: A note DebCraft adds during a conversation reaches Gemini where it was written (2026-11-26)
+Office screenshot 2026-11-26: after "A second model is reading the changes for investigation leftovers" the turn ended with
+`400 INVALID_ARGUMENT: Requests ending with a model turn are not supported`. The checks before a turn ends (leftovers,
+hand-over, temporary changes, stop hooks) add their note as a system message after the model's final answer; the Gemini
+translator moved every system message into the system instruction, so the request ended on the model's answer. Azure
+accepts that order, so it was not seen before Gemini became the coder. Now only the system messages before the first turn
+are the system instruction; a later one becomes a user turn marked "[Note from DebCraft, not from the user]", joined to the
+previous user turn (also a turn of tool results) when there is one, so the turns still alternate. Options: drop the late
+notes for Gemini (the checks would do nothing), add an empty user turn after them (the note would still be out of place),
+keep them in place as marked user text (chosen).

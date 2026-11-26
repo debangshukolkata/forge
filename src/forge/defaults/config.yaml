@@ -153,8 +153,8 @@ llm:
   last_resort_patience_s: 60
   gemini_on_quota: never          # never | second | last: Gemini while Azure's quota is used up (needs a Gemini model that answered the Environment test; compare first, D-643)
   gemini_on_quota_model: gemini4argon
-  plan_twice: [gemini4neon, gemini4carbon]   # D-658: both plan a large task at once and plan_merger merges; [] = one planner (the planner role)
-  plan_merger: gemini4hydrogen                # D-659: merging is planning work (Hydrogen 71 as planner, Argon 62); not set up: the judge role
+  plan_twice: [gemini4hydrogen, gemini4argon]   # D-658, D-663: the two best planners of the role challenge (71, 62) plan a large task at once and plan_merger merges; [] = one planner (the planner role)
+  plan_merger: gemini4hydrogen                # D-659, D-663: the best planner merges; the plans reach it unnamed and in random order. Not set up: the judge role
 
   retry:
     max_attempts: 6

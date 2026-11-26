@@ -62,7 +62,16 @@ def to_gemini_request(messages: list[Message], model_key: str) -> tuple[str | No
             )
             continue
         flush_results()
-        if message.role == "system":
+        if message.role == "system" and contents:
+            # A note DebCraft adds during the conversation (the checks before a turn ends: leftovers, hand-over, stop
+            # hooks) stays where it was written. Moved into the system instruction, the request ended on the model's
+            # own answer and Gemini refused it: "Requests ending with a model turn are not supported" (office, D-664).
+            note = types.Part(text=f"[Note from DebCraft, not from the user]\n{message.content}")
+            if contents[-1].role == "user":
+                contents[-1].parts = [*(contents[-1].parts or []), note]
+            else:
+                contents.append(types.Content(role="user", parts=[note]))
+        elif message.role == "system":
             system_parts.append(message.content)
         elif message.role == "assistant":
             for call in message.tool_calls:
