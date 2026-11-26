@@ -207,7 +207,14 @@ def _coder(rows: list[Row], models: list[str]) -> str:
                     _cell(html.escape(", ".join(f"{k}: {'yes' if v else 'NO'}" for k, v in camera.items()))),
                     _cell(f"{r.get('build_seconds', 0) / 60:.1f} min", "n"),
                     _cell(f"{r.get('repair_seconds', 0) / 60:.1f} min", "n"),
-                    _cell(f"{len(failed)}" + ("" if r.get("finished") else "<br>not finished"), "n"),
+                    _cell(
+                        f"{len(failed)}"
+                        + ("" if r.get("finished") else "<br>not finished")
+                        + "".join(
+                            f"<br><small>{html.escape(f)}</small>" for f in failed if f.startswith("ERROR")
+                        ),
+                        "n",
+                    ),
                 ]
             )
     good = [r for r in runs if not r.get("error")]

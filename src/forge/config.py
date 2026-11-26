@@ -44,7 +44,8 @@ class GeminiProviderConfig(_Strict):
 
     project_env: str = "GOOGLE_CLOUD_PROJECT"
     location_env: str = "GOOGLE_CLOUD_LOCATION"
-    timeout_s: float = 180.0
+    # The SDK sends this to Google as the deadline of the whole answer; at 180 s a long thought ended in 504 (D-657).
+    timeout_s: float = 600.0
 
 
 class ProvidersConfig(_Strict):

@@ -5204,3 +5204,14 @@ before, 2 and 2 after (2 is what "not found" to everything gave); both plans arr
 words; one uses the model to index, none to answer; the coder and the verifier tried the one example of the request. The scores of the challenge were
 corrected: "April" counts, reading a file again is no fault, the model calls of the project never go through a proxy, and an
 application that never finds anything gets no points for what is not there. Saved answers are scored again (`--report`).
+
+## D-657: Role challenge on the office laptop, and Google's deadline (2026-11-25)
+Result (means of the runs): coder Hydrogen 100 (915 s), Neon 100 (1405 s), Argon 92 (1992 s), GPT-5.4 73 (1084 s), Carbon 8 (nothing
+built in either run, reason not yet known); planner Neon 79, Carbon 76, Hydrogen 71, GPT-5.4 66, Argon 62; reviewer 100 for all that
+answered; judge Argon 97, Carbon, Hydrogen and GPT-5.4 95, Neon 504 three times; critic all Gemini 100, GPT-5.4 88; vision Gemini 100,
+GPT-5.4 98; summariser Neon 100, Argon and Carbon 98, Hydrogen 95, GPT-5.4 87; fallback all 100. Proposed to the user, their decision is open: Hydrogen as coder and planner,
+Argon as reviewer, judge, critic, vision and summariser, GPT-5.4 as fallback (another provider).
+The google-genai SDK sends its timeout as `X-Server-Timeout`, so our 180 s was the deadline of the whole answer; a long
+thought would end in 504 and every retry would too. Default now 600 s. Options: no limit (a dead call never ends), 600 s (chosen). That
+this removes the 504 is not yet shown. Seven of eight Gemini coder runs were "not finished"; Carbon reached a time limit in both, the other five were far below it: there a turn
+ended with an error; the report now shows its text.

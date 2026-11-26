@@ -39,10 +39,18 @@ from forge.llm.base import ChatRequest, LLMResponse, Message
 from forge.llm.router import LLMRouter
 from forge.net import use_system_certificates
 
-MODELS = ("gemini-4-carbon", "gemini-4-neon", "gemini-4-hydrogen", "gemini-4-argon", "gpt54", "gpt51")
+MODELS = (
+    "gemini-4-carbon",
+    "gemini-4-neon",
+    "gemini-4-hydrogen",
+    "gemini-4-argon",
+    "gpt54",
+    "gpt52",
+    "gpt51",
+)
 DEFAULT = MODELS[
     :5
-]  # gpt-5.1 is the model inside the coder's project and a stand-in grader; test it with --models
+]  # gpt-5.2 only when named; gpt-5.1 is the model inside the coder's project and a stand-in grader; test it with --models
 GRADERS = ("gpt54", "gemini-4-carbon", "gpt51", "gemini-4-argon")  # two of them, never the author of the plan
 APP_MODELS = (
     "gpt51",
