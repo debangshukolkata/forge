@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import html
 import json
 import subprocess
 import sys
@@ -31,7 +32,7 @@ from forge.workspace.workspace import Workspace
 
 SessionFactory = Callable[[Workspace], SessionHost]
 # The items this run closes (D-661): none of them runs anything on WisdomNext or its Development DB.
-COVERED = ("GM1", "GQ1", "DP1", "TV1", "TR6")
+COVERED = ("GM1", "GQ1", "DP1", "TV1", "TR6", "LN1")
 PLAN_TASK = (
     "Plan this with the planner subagent (spawn_subagent, agent planner) and show me its plan; do not build it. "
     "Task: add an endpoint to the backend that answers questions about the stored records, also when a question "
@@ -236,3 +237,66 @@ def load_config_router(home: Path) -> Callable[[], Any]:
         return router
 
     return make
+
+
+def learnings_page(home: Path, show: Callable[[Path], None] | None = None) -> Page:
+    """LN1 (D-667): the candidates for general lessons, numbered L1, L2, ... so that the user and Claude can take them
+    one by one. Names of the company are hidden as in `/learnings export`; the page opens in its own browser tab."""
+    from forge.engine.learnings_export import build_export
+
+    page = Page("LEARNINGS TO GO THROUGH (LN1)")
+    try:
+        text = build_export(home)
+    except Exception as error:  # the rest of the report must not depend on it
+        page.verdicts.append(Verdict("LN1", "FAIL", f"{type(error).__name__}: {str(error)[:80]}"))
+        return page
+    sections: list[tuple[str, list[str]]] = []
+    for line in text.splitlines():
+        if line.startswith("## "):
+            sections.append((line[3:], []))
+        elif line.startswith("- ") and sections:
+            sections[-1][1].append(line[2:])
+    number = 0
+    parts = []
+    for title, items in sections:
+        rows = []
+        for item in items:
+            if item.startswith("and ") and item.endswith(" more"):
+                rows.append(f"<li class=more>{html.escape(item)}</li>")
+                continue
+            number += 1
+            rows.append(f"<li><b>L{number}</b> {html.escape(item)}</li>")
+        parts.append(
+            f"<h2>{html.escape(title)} ({len(items)})</h2><ol>{''.join(rows) or '<li class=more>none</li>'}</ol>"
+        )
+        page.lines.append(f"{title}: {len(items)}")
+    head = "".join(
+        f"<p class=warn>{html.escape(line)}</p>" for line in text.splitlines()[2:5] if line.strip()
+    )
+    target = report_folder(home) / "learnings.html"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "<!doctype html><meta charset=utf-8><title>DebCraft learnings</title>"
+        "<style>body{font:15px/1.5 Segoe UI,sans-serif;max-width:960px;margin:24px auto;padding:0 16px}"
+        "ol{list-style:none;padding:0}li{padding:6px 0;border-bottom:1px solid #e5e7eb}b{color:#2563eb;margin-right:6px}"
+        ".warn{color:#b45309}.more{color:#6b7280}</style>"
+        f"<h1>Learnings to go through, one by one ({number})</h1>{head}{''.join(parts)}",
+        encoding="utf-8",
+    )
+    page.lines += ["", f"{number} numbered learnings, in their own browser tab: {target}"]
+    page.verdicts.append(
+        Verdict("LN1", "CHECK" if number else "NOT RUN", f"{number} learnings ready to go through")
+    )
+    if show is not None:
+        show(target)
+    return page
+
+
+def open_in_browser(path: Path) -> None:
+    import os
+    import webbrowser
+
+    if sys.platform == "win32":
+        os.startfile(path)
+    else:
+        webbrowser.open(path.as_uri())

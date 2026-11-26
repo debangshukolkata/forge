@@ -236,6 +236,9 @@ GEMINI_STEPS = [
 ]
 
 
+GEMINI_PROBE_TIMEOUT_S = 120
+
+
 def _gemini_failed(detail: str) -> Outcome:
     return Outcome(
         "gemini", "fail", detail, "Gemini does not work on this computer; see the steps.", steps=GEMINI_STEPS
@@ -261,22 +264,54 @@ def gemini_models_to_test(config: ForgeConfig) -> list[tuple[str | None, Any]]:
     return models
 
 
-def check_gemini(config: ForgeConfig) -> Outcome:
-    """Only run when the user said Gemini is enabled (D-201): one short real call per Gemini model of the config and one for the small 2.5 model. The result says which models answered
-    (`models`, by config key), so the model lists of the panel offer exactly those (D-405)."""
+@dataclass
+class GeminiProbe:
+    """One Gemini model's answer to the test: shown on its own line of the panel while the others are still asked."""
+
+    id: str  # the config key, or "probe:<model name>" for the small 2.5 model that is not in the config
+    name: str
+    ok: bool = False
+    text: str = ""  # its answer, or why it did not answer (redacted)
+    seconds: float = 0.0
+
+    @property
+    def key(self) -> str | None:
+        return None if self.id.startswith("probe:") else self.id
+
+
+def gemini_probes(config: ForgeConfig) -> list[GeminiProbe]:
+    """What the Gemini test will ask, before it asks: the panel lists these with a spinner each."""
+    return [
+        GeminiProbe(key or f"probe:{m.model_name}", str(m.model_name))
+        for key, m in gemini_models_to_test(config)
+    ]
+
+
+async def probe_gemini(config: ForgeConfig, probe_id: str) -> GeminiProbe:
+    """One short real call to one Gemini model, at most GEMINI_PROBE_TIMEOUT_S. Never raises for a model that fails.
+
+    The limit is the test's own: a chat may wait 600 s (D-657), a model that needs more than two minutes to say one
+    word does not count as working (D-665)."""
+    import time
+
     from forge.errors import LLMError
     from forge.llm.base import ChatRequest, Message
 
-    provider_config = config.llm.providers.gemini
-    secrets = load_secrets(forge_home())
+    models = {key or f"probe:{m.model_name}": m for key, m in gemini_models_to_test(config)}
+    if probe_id not in models:
+        raise KeyError(probe_id)
+    model = models[probe_id]
+    result = GeminiProbe(probe_id, str(model.model_name))
     try:
-        from forge.llm.gemini import DEFAULT_LOCATION, GeminiProvider
+        from forge.llm.gemini import GeminiProvider
     except ImportError:
-        return _gemini_failed("The google-genai package is not installed.")
-    region = secrets.get(provider_config.location_env) or DEFAULT_LOCATION
+        result.text = "the google-genai package is not installed"
+        return result
 
-    async def probe(model: Any) -> str:
-        gemini = GeminiProvider("gemini_check", model, provider_config, secrets)
+    async def ask() -> str:
+        gemini = GeminiProvider(
+            "gemini_check", model, config.llm.providers.gemini, load_secrets(forge_home())
+        )
         try:
             # Room for the model's own thinking, which can use up a tight limit and leave no text.
             request = ChatRequest(
@@ -286,20 +321,29 @@ def check_gemini(config: ForgeConfig) -> Outcome:
         finally:
             await gemini.close()
 
-    answered: list[str] = []
-    failed: list[str] = []
-    by_key: dict[str, bool] = {}
-    for key, model in gemini_models_to_test(config):
-        try:
-            answer = asyncio.run(probe(model))
-        except LLMError as error:
-            failed.append(f"{model.model_name}: {str(error)[:120]}")
-            if key is not None:
-                by_key[key] = False
-            continue
-        answered.append(f"{model.model_name} answered: {answer or '(no text)'}")
-        if key is not None:
-            by_key[key] = True
+    began = time.monotonic()
+    try:
+        result.text = await asyncio.wait_for(ask(), GEMINI_PROBE_TIMEOUT_S) or "(no text)"
+        result.ok = True
+    except TimeoutError:
+        result.text = f"no answer within {GEMINI_PROBE_TIMEOUT_S} s"
+    except (LLMError, ForgeError) as error:
+        result.text = default_redactor.redact(str(error)[:120])
+    result.seconds = round(time.monotonic() - began, 1)
+    return result
+
+
+def gemini_outcome(config: ForgeConfig, probes: list[GeminiProbe]) -> Outcome:
+    """The row's result from every model's answer. The result says which models answered (`models`, by config key),
+    so the model lists of the panel offer exactly those (D-405)."""
+    try:
+        from forge.llm.gemini import DEFAULT_LOCATION
+    except ImportError:
+        return _gemini_failed("The google-genai package is not installed.")
+    region = load_secrets(forge_home()).get(config.llm.providers.gemini.location_env) or DEFAULT_LOCATION
+    answered = [f"{p.name} answered: {p.text}" for p in probes if p.ok]
+    failed = [f"{p.name}: {p.text}" for p in probes if not p.ok]
+    by_key = {p.key: p.ok for p in probes if p.key is not None}
     where = f"region {region}"
     if not answered:
         outcome = _gemini_failed(f"No Gemini model answered ({where}). " + " | ".join(failed))
@@ -315,6 +359,22 @@ def check_gemini(config: ForgeConfig) -> Outcome:
             steps=GEMINI_STEPS,
         )
     return Outcome("gemini", "ok", f"{'; '.join(answered)} ({where})", models=by_key)
+
+
+def check_gemini(config: ForgeConfig) -> Outcome:
+    """Only run when the user said Gemini is enabled (D-201): one short real call per Gemini model of the config and
+    one for the small 2.5 model, all at once (D-665: the test takes as long as the slowest model, not the sum). The
+    panel asks the models one call each to show them live (`probe_gemini`); this is the same test in one call."""
+    try:
+        import forge.llm.gemini  # noqa: F401
+    except ImportError:
+        return _gemini_failed("The google-genai package is not installed.")
+
+    async def all_models() -> list[GeminiProbe]:
+        probes = gemini_probes(config)
+        return list(await asyncio.gather(*(probe_gemini(config, p.id) for p in probes)))
+
+    return gemini_outcome(config, asyncio.run(all_models()))
 
 
 NODE_STEPS = [
@@ -564,11 +624,13 @@ async def run_check(check_id: str) -> Outcome:
             "node": check_node,
             "tesseract": check_tesseract,
         }[check_id]
-        return await asyncio.wait_for(asyncio.to_thread(blocking), CHECK_TIMEOUT_S)
+        # Gemini asks every model at once, each up to GEMINI_PROBE_TIMEOUT_S: the row must not be cut off before its
+        # own models are (office, 2026-11-26: "Timed out after 90 s" when the models were still asked one by one).
+        limit = GEMINI_PROBE_TIMEOUT_S + 15 if check_id == "gemini" else CHECK_TIMEOUT_S
+        return await asyncio.wait_for(asyncio.to_thread(blocking), limit)
     except TimeoutError:
-        return Outcome(
-            check_id, "fail", f"Timed out after {int(CHECK_TIMEOUT_S)} s.", "Check the network and retry."
-        )
+        limit = GEMINI_PROBE_TIMEOUT_S + 15 if check_id == "gemini" else CHECK_TIMEOUT_S
+        return Outcome(check_id, "fail", f"Timed out after {int(limit)} s.", "Check the network and retry.")
     except Exception as error:  # a check must never take the server down
         detail = f"{type(error).__name__}: {str(error)[:200]}"
         return Outcome(check_id, "fail", detail, "Retry; run `forge doctor` for details.")

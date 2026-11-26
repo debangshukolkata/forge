@@ -346,11 +346,34 @@ def test_optional_tools_are_asked_before_they_are_tested(
         calls.append("tesseract")
         return checks.Outcome("tesseract", "ok", "tesseract v5.4.0 read a test image correctly (fake)")
 
-    gemini_outcome = [checks.Outcome("gemini", "ok", "Credentials found (fake).")]
+    from forge.web import environment_routes
+
+    # D-666: the panel lists the Gemini models and asks each one with its own call; these fakes answer for Google.
+    gemini_mode = ["fail"]
+
+    def fake_probes(config: object) -> list[checks.GeminiProbe]:
+        return [
+            checks.GeminiProbe("gemini4hydrogen", "gemini-4-hydrogen"),
+            checks.GeminiProbe("gemini4argon", "gemini-4-argon"),
+            checks.GeminiProbe("probe:gemini-2.5-flash", "gemini-2.5-flash"),
+        ]
+
+    async def fake_probe(config: object, probe_id: str) -> checks.GeminiProbe:
+        import asyncio
+
+        calls.append("gemini")
+        name = {p.id: p.name for p in fake_probes(config)}[probe_id]
+        if gemini_mode[0] == "fail":
+            return checks.GeminiProbe(probe_id, name, False, "No credentials (fake).", 0.2)
+        delay = {"gemini4hydrogen": 0.3, "gemini4argon": 2.5}.get(probe_id, 1.2)
+        await asyncio.sleep(delay)
+        if probe_id == "gemini4argon":
+            return checks.GeminiProbe(probe_id, name, False, "no answer within 120 s", delay)
+        return checks.GeminiProbe(probe_id, name, True, "ready", delay)
 
     def fake_gemini(config: object) -> checks.Outcome:
         calls.append("gemini")
-        return gemini_outcome[0]
+        return checks.Outcome("gemini", "ok", "not used by the panel")
 
     tavily_outcome = [checks.Outcome("tavily", "ok", "The search service answered (1 result).")]
 
@@ -362,6 +385,8 @@ def test_optional_tools_are_asked_before_they_are_tested(
     monkeypatch.setattr(checks, "check_models", answers)
     monkeypatch.setattr(checks, "check_tesseract", fake_tesseract)
     monkeypatch.setattr(checks, "check_gemini", fake_gemini)
+    monkeypatch.setattr(environment_routes, "gemini_probes", fake_probes)
+    monkeypatch.setattr(environment_routes, "probe_gemini", fake_probe)
     shots = REPO_ROOT / "test-artifacts" / "react-ui"
     shots.mkdir(parents=True, exist_ok=True)
     with playwright_api.sync_playwright() as p:
@@ -423,15 +448,30 @@ def test_optional_tools_are_asked_before_they_are_tested(
         assert status == "off" and "gemini" not in calls
 
         # When Gemini does not run on this computer, an (i) icon opens the steps to fix it.
-        gemini_outcome[0] = checks.Outcome(
-            "gemini", "fail", "No credentials (fake).", "See the steps.", steps=checks.GEMINI_STEPS
-        )
         gemini.locator("button:has-text('Yes')").click()
-        page.wait_for_selector("text=No credentials (fake).")
+        page.wait_for_selector("[data-check=gemini] >> text=Failed")
+        assert (
+            "No credentials (fake)."
+            in drawer.locator("[data-check=gemini] [data-testid=live-models]").inner_text()
+        )
         assert drawer.locator("[data-testid=steps]").count() == 0
         drawer.locator("button[aria-label='How to fix Gemini']").click()
         assert "gcloud auth application-default login" in drawer.locator("[data-testid=steps]").inner_text()
         page.screenshot(path=str(shots / "environment-gemini-steps-light.png"))
+
+        # D-666: every model on its own line while the test runs; each turns green or red as soon as it answers.
+        gemini_mode[0] = "live"
+        row = drawer.locator("[data-check=gemini]")
+        row.locator("button[aria-label='Test Gemini']").click()
+        row.locator("[data-model=gemini4hydrogen][data-state=ok]").wait_for()
+        assert row.locator("[data-model=gemini4argon][data-state=asking]").count() == 1  # still asked
+        assert "answered" in row.locator("[data-testid=live-models]").inner_text()
+        page.screenshot(path=str(shots / "environment-gemini-live-light.png"))
+        row.locator("[data-model=gemini4argon][data-state=fail]").wait_for()
+        page.wait_for_selector("[data-check=gemini] >> text=Warning")
+        listed = row.locator("[data-testid=live-models]").inner_text()
+        assert "gemini-2.5-flash" in listed and "no answer within 120 s" in listed, listed
+        page.screenshot(path=str(shots / "environment-gemini-live-done-light.png"))
 
         # The Tavily service: when it does not work, an (i) icon says what goes in the .env file.
         tavily = drawer.locator(

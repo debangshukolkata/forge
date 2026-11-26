@@ -11,7 +11,17 @@ from pydantic import BaseModel
 
 from forge.config import ForgeConfig, load_config
 from forge.environment import store
-from forge.environment.checks import ASKED_IDS, CHECKS, KNOWN_IDS, not_in_use, run_check
+from forge.environment.checks import (
+    ASKED_IDS,
+    CHECKS,
+    KNOWN_IDS,
+    GeminiProbe,
+    gemini_outcome,
+    gemini_probes,
+    not_in_use,
+    probe_gemini,
+    run_check,
+)
 from forge.environment.plan import propose_plan, validate_plan
 from forge.errors import ForgeError
 from forge.tools.vision import ocr_tools
@@ -78,6 +88,41 @@ def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
         store.save_result(manager.home, check_id, result)
         if check_id == "tesseract":
             sync_ocr_tool()
+        return {"result": result, "plan": overview()["plan"]}
+
+    # The Gemini row shows every model live (D-666): the page asks for the list, tests each model with its own call (all
+    # at once), then asks for the row's result, which is built from the answers kept here, never from what the page says.
+    gemini_answers: dict[str, GeminiProbe] = {}
+
+    def gemini_allowed() -> None:
+        if store.load(manager.home)["answers"].get("gemini") is not True:
+            raise HTTPException(400, "Answer yes to the Gemini question first")
+
+    @app.get("/api/environment/gemini/models")
+    async def gemini_models() -> dict[str, Any]:
+        gemini_allowed()
+        gemini_answers.clear()
+        return {"models": [asdict(p) for p in gemini_probes(config())]}
+
+    @app.post("/api/environment/gemini/models/{probe_id}")
+    async def gemini_model(probe_id: str) -> dict[str, Any]:
+        gemini_allowed()
+        try:
+            answer = await probe_gemini(config(), probe_id)
+        except KeyError as error:
+            raise HTTPException(404, "No such Gemini model") from error
+        gemini_answers[probe_id] = answer
+        return asdict(answer)
+
+    @app.post("/api/environment/gemini/finish")
+    async def gemini_finish() -> dict[str, Any]:
+        gemini_allowed()
+        probes = [
+            gemini_answers.get(p.id) or GeminiProbe(p.id, p.name, text="not tested")
+            for p in gemini_probes(config())
+        ]
+        result = gemini_outcome(config(), probes).to_dict()
+        store.save_result(manager.home, "gemini", result)
         return {"result": result, "plan": overview()["plan"]}
 
     @app.post("/api/environment/answer")

@@ -5301,3 +5301,34 @@ are the system instruction; a later one becomes a user turn marked "[Note from D
 previous user turn (also a turn of tool results) when there is one, so the turns still alternate. Options: drop the late
 notes for Gemini (the checks would do nothing), add an empty user turn after them (the note would still be out of place),
 keep them in place as marked user text (chosen).
+
+## D-665: The Gemini test of the Environment panel asks every model at once, two minutes at most each (2026-11-26)
+The user: the Gemini test takes a long time. It asked each Gemini model of the config one after the other, and each call
+could wait the provider's 600 s (D-657) plus its retries. Now all models are asked at the same time (`asyncio.gather`) and
+each has a limit of its own for this test (`GEMINI_PROBE_TIMEOUT_S = 120`): the test takes as long as the slowest model,
+and a model that cannot say one word within two minutes is reported as not answering ("no answer within 120 s").
+Chats keep the 600 s. Options: parallel with the limit (chosen), parallel without a limit (a hanging model would still
+hold the panel for ten minutes), a lower provider timeout (would cut long real answers again).
+
+## D-666: The Gemini row of the Environment panel shows every model live (2026-11-26)
+The user: the test could be animated, showing what will be tested and marking each one green when it works. Options shown
+with previews: a list under the row (chosen), chips in a row, a progress bar only. The page asks
+`GET /api/environment/gemini/models` for the models (the config's Gemini models and the small 2.5 probe), lists them with a
+spinner and the seconds waited, asks each with `POST /api/environment/gemini/models/{id}` at the same time (each at most
+120 s, D-665), turns each line green with its seconds or red with the reason the moment its answer comes (a short pop,
+none with reduced motion), then `POST /api/environment/gemini/finish` saves the row's result, built from the answers the
+server kept, never from what the page sends. All three refuse before a yes to the Gemini question (D-201). `check_gemini`
+(Test all from elsewhere, the setup guide) runs the same per-model probes at once.
+Office photographs the same day (still the old code): "Timed out after 90 s", then Connected on the second press with all
+eight models: one after the other, the first test (with Google's sign-in) passed the 90 s limit of a check. The panel's
+live test has no total limit; the one-call route (`/api/environment/check/gemini`, the setup guide) now gives Gemini
+`GEMINI_PROBE_TIMEOUT_S + 15` s instead of 90.
+
+## D-667: The learnings in their own browser tab, numbered, from the laptop report (LN1) (2026-11-26)
+The user: we planned to take up the learnings one by one and build them into DebCraft; the report should make a separate
+tab that extracts them. `Laptop-Report.cmd` now ends by opening `learnings.html` (in `<DebCraft Home>\laptop_report\`) in
+its own browser tab: the same candidates as `/learnings export` (saved feedback, sentences in which the user corrected
+DebCraft, calls that failed the same way 3 times or more, checks that had to step in), with the company's names hidden,
+each numbered L1, L2, ... so the user and Claude can take them one at a time by number. A console page gives the counts
+and the LN1 verdict. `Learnings-Report.cmd` (`forge laptop learnings`) does only this, in about a minute. The full export
+(names kept) stays a chat command only: a photographed page should not carry company names.

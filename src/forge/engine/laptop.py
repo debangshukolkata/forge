@@ -425,6 +425,7 @@ def run_all(
         auto.crawl_page(root),
         live_tests_page(home),
         auto.role_challenge_page(home),
+        auto.learnings_page(home, auto.open_in_browser),  # LN1 (D-667): its own browser tab
     ]
     _record(pages, home)
     emit([*pages, summary_page(home, only=auto.COVERED)], "all", pause, home, write, wait)
@@ -454,6 +455,13 @@ def run(
     home = home or forge_home()
     if action == "all":
         return run_all(home, pause, write, wait, make_session)
+    if action == "learnings":  # LN1 alone, in a minute (D-667)
+        from forge.engine.laptop_all import learnings_page, open_in_browser
+
+        page = learnings_page(home, open_in_browser)
+        _record([page], home)
+        emit([page], "learnings", pause, home, write, wait)
+        return 0
     if action == "plan":
         emit([plan_page()], "plan", pause=False, home=home, write=write, wait=wait)
         return 0
@@ -493,5 +501,5 @@ def run(
         _record(pages, home)
         emit([*pages, summary_page(home)], "report", pause, home, write, wait)
         return 0
-    write(f"unknown action {action!r}: all, plan, check, live or report")
+    write(f"unknown action {action!r}: all, plan, check, live, report or learnings")
     return 2

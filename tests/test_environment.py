@@ -456,3 +456,33 @@ def test_a_session_follows_the_latest_proposals_except_for_the_roles_the_user_ch
     assert chosen["coder"] == "gpt54"  # saved as proposed, so it follows the new proposal
     assert chosen["vision"] == "gpt51"  # chosen by hand, so it stays
     assert chosen["reviewer"] == "gpt41"
+
+
+def test_the_live_gemini_test_needs_a_yes_and_builds_the_result_from_its_own_answers(
+    client: TestClient, isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-666: the page lists the models, asks each one, then asks for the row's result; the server keeps the answers."""
+    from forge.web import environment_routes
+
+    origin = {"origin": "http://127.0.0.1:8797"}
+    assert client.get("/api/environment/gemini/models").status_code == 400  # no yes yet
+    assert client.post("/api/environment/gemini/models/x", headers=origin).status_code == 400
+    client.post("/api/environment/answer", json={"check": "gemini", "enabled": True}, headers=origin)
+
+    probes = [checks.GeminiProbe("gemini4argon", "gemini-4-argon"), checks.GeminiProbe("probe:g", "g")]
+    monkeypatch.setattr(environment_routes, "gemini_probes", lambda config: probes)
+
+    async def answer(config: object, probe_id: str) -> checks.GeminiProbe:
+        if probe_id not in {p.id for p in probes}:
+            raise KeyError(probe_id)
+        return checks.GeminiProbe(probe_id, probe_id, probe_id == "gemini4argon", "ready", 0.5)
+
+    monkeypatch.setattr(environment_routes, "probe_gemini", answer)
+    listed = client.get("/api/environment/gemini/models").json()["models"]
+    assert [m["id"] for m in listed] == ["gemini4argon", "probe:g"]
+    assert client.post("/api/environment/gemini/models/nope", headers=origin).status_code == 404
+    assert client.post("/api/environment/gemini/models/gemini4argon", headers=origin).json()["ok"] is True
+    done = client.post("/api/environment/gemini/finish", headers=origin).json()["result"]
+    assert done["status"] == "warn" and done["models"] == {"gemini4argon": True}  # probe:g was never asked
+    assert "g: not tested" in done["detail"]
+    assert store.load(isolated_forge_home)["results"]["gemini"]["status"] == "warn"

@@ -10,7 +10,9 @@ import type { CheckInfo, CheckResultView, EnvironmentOverview, ModelPlan } from 
 import { Badge, Button, IconButton, Select, Spinner } from "./ui";
 import { YesNo } from "./YesNo";
 
-type Row = { result: CheckResultView | null; running: boolean };
+/** One Gemini model while the row is tested (D-666): listed before it is asked, green or red as soon as it answers. */
+type LiveProbe = { id: string; name: string; ok: boolean; text: string; seconds: number; asking: boolean };
+type Row = { result: CheckResultView | null; running: boolean; live?: LiveProbe[]; startedAt?: number };
 
 const ROLE_LABEL: Record<string, string> = { judge: "Judge (evals)", critic: "Design critic", planner: "Planner (plan mode)", fallback: "Fallback" };
 
@@ -61,8 +63,40 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
     });
   }, []);
 
+  // Gemini: every model on its own line, asked at once, each line updated the moment its answer comes (D-666).
+  const runGemini = useCallback(async () => {
+    const id = "gemini";
+    const startedAt = Date.now();
+    setRows((prev) => ({ ...prev, [id]: { result: prev[id]?.result ?? null, running: true, live: [], startedAt } }));
+    const setLive = (update: (live: LiveProbe[]) => LiveProbe[]) =>
+      setRows((prev) => ({ ...prev, [id]: { ...prev[id], live: update(prev[id]?.live ?? []) } }));
+    try {
+      const { models } = await api<{ models: LiveProbe[] }>("/api/environment/gemini/models");
+      setLive(() => models.map((m) => ({ ...m, asking: true })));
+      await Promise.all(
+        models.map(async (m) => {
+          let answer: LiveProbe;
+          try {
+            answer = { ...(await api<LiveProbe>(`/api/environment/gemini/models/${encodeURIComponent(m.id)}`, { method: "POST" })), asking: false };
+          } catch (failure) {
+            answer = { ...m, ok: false, text: (failure as Error).message, seconds: (Date.now() - startedAt) / 1000, asking: false };
+          }
+          setLive((live) => live.map((line) => (line.id === m.id ? answer : line)));
+        }),
+      );
+      const done = await api<{ result: CheckResultView; plan: ModelPlan }>("/api/environment/gemini/finish", { method: "POST" });
+      setRows((prev) => ({ ...prev, [id]: { ...prev[id], result: done.result, running: false } }));
+      adopt(done.plan);
+    } catch (failure) {
+      const detail = (failure as Error).message;
+      setRows((prev) => ({ ...prev, [id]: { ...prev[id], result: { id, status: "fail", detail, hint: "Test again.", models: {} }, running: false } }));
+    }
+    setTestedNow((prev) => ({ ...prev, [id]: true }));
+  }, [adopt]);
+
   const runCheck = useCallback(
     async (id: string) => {
+      if (id === "gemini") return runGemini();
       setRows((prev) => ({ ...prev, [id]: { result: prev[id]?.result ?? null, running: true } }));
       try {
         const done = await api<{ result: CheckResultView; plan: ModelPlan }>(`/api/environment/check/${id}`, { method: "POST" });
@@ -75,7 +109,7 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
         setTestedNow((prev) => ({ ...prev, [id]: true }));
       }
     },
-    [adopt],
+    [adopt, runGemini],
   );
 
   // Opening the drawer tests nothing: it shows the last results, each with when it was tested.
@@ -277,6 +311,14 @@ function CheckRow({
   const word = statusWord(check, row);
   const [showSteps, setShowSteps] = useState(false);
   const steps = result?.steps ?? [];
+  const live = row?.live ?? [];
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!running || live.length === 0) return;
+    const timer = window.setInterval(() => tick((n) => n + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [running, live.length]);
+  const waited = row?.startedAt ? Math.round((Date.now() - row.startedAt) / 1000) : 0;
   return (
     <div className="flex items-start gap-3 px-5 py-3.5" data-check={check.id}>
       <div className="mt-0.5 w-5 shrink-0" aria-live="polite">
@@ -319,7 +361,41 @@ function CheckRow({
             <YesNo question={check.ask} answer={answer} onAnswer={onAnswer} />
           </div>
         )}
-        {result && (
+        {live.length > 0 && (
+          <ul data-testid="live-models" className="mt-2 space-y-1 rounded-md border border-border bg-surface px-3 py-2">
+            {running && (
+              <li className="text-[12px] font-medium text-fg-muted">
+                Testing {live.filter((m) => !m.asking).length} of {live.length} answered…
+              </li>
+            )}
+            {live.map((m) => (
+              <li key={m.id} data-model={m.id} data-state={m.asking ? "asking" : m.ok ? "ok" : "fail"} className="flex items-start gap-2 text-[12.5px]">
+                <span className="mt-0.5 w-4 shrink-0">
+                  {m.asking ? (
+                    <Spinner className="h-3.5 w-3.5 text-fg-muted" />
+                  ) : m.ok ? (
+                    <CheckCircle2 className="check-pop h-4 w-4 text-ok" aria-hidden />
+                  ) : (
+                    <XCircle className="check-pop h-4 w-4 text-danger" aria-hidden />
+                  )}
+                </span>
+                <span className="font-mono text-[12px]">{m.name}</span>
+                <span className={cx("ml-auto shrink-0 text-right", m.asking ? "text-fg-muted" : m.ok ? "text-ok" : "text-danger")}>
+                  {m.asking ? `asking… ${waited} s` : m.ok ? `answered ${m.seconds.toFixed(1)} s` : "did not answer"}
+                </span>
+                {!m.asking && !m.ok && <span className="sr-only">{m.text}</span>}
+              </li>
+            ))}
+            {live
+              .filter((m) => !m.asking && !m.ok)
+              .map((m) => (
+                <li key={`${m.id}-why`} className="break-words pl-6 text-[11.5px] text-fg-muted">
+                  {m.name}: {m.text}
+                </li>
+              ))}
+          </ul>
+        )}
+        {result && live.length === 0 && (
           <div className="mt-1 break-words text-[12.5px]">
             {result.detail}
             {running && <span className="text-fg-muted"> (testing again…)</span>}

@@ -103,7 +103,7 @@ def build_parser() -> argparse.ArgumentParser:
         "laptop",
         help="close the items that need the office laptop: plan, check, live, report; pages to photograph (D-615)",
     )
-    laptop.add_argument("action", choices=["all", "plan", "check", "live", "report"])
+    laptop.add_argument("action", choices=["all", "plan", "check", "live", "report", "learnings"])
     laptop.add_argument(
         "--app-python", type=Path, help="check: the Python of the application's own environment (its venv)"
     )

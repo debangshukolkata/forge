@@ -52,6 +52,7 @@ ITEMS = {
     "GM1": "the eight roles as set (Hydrogen codes, Argon checks)",
     "DP1": "two planners plan at once and the plans are merged",
     "GQ1": "Gemini 4 Argon passes every step of the provider check",
+    "LN1": "the learnings, numbered, in their own browser tab, to go through one by one",
     "CP2": "the Copy token button on the real clipboard (by hand)",
 }
 

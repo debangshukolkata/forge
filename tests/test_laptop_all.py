@@ -69,3 +69,23 @@ def test_the_role_challenge_page_shows_why_a_coder_turn_ended(isolated_forge_hom
     (folder / "results.json").write_text(json.dumps({"facts": {}, "rows": rows}), encoding="utf-8")
     lines = laptop_all.role_challenge_page(isolated_forge_home).lines
     assert lines[0].startswith("gemini-4-neon 1: 12 of 12") and "ERROR 504" in lines[1] and len(lines) == 2
+
+
+def test_the_learnings_are_numbered_in_their_own_page(isolated_forge_home: Path, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """LN1 (D-667): every candidate gets a number to go through one by one; the page opens in its own tab."""
+    from forge.engine import learnings_export
+
+    text = (
+        "# Candidates for general lessons\n\nREAD THIS FIRST.\nhidden names\nmore words\n\n"
+        "## Feedback you gave (saved notes)\n\n- answer first\n- show the yaml\n\n"
+        "## Sentences in which you corrected DebCraft\n\nnone\n\n"
+        "## Calls that failed 3 times or more in the same way\n\n- 4x in 1 project(s), run_command: <b>Error</b>\n"
+    )
+    monkeypatch.setattr(learnings_export, "build_export", lambda home: text)
+    opened: list[Path] = []
+    page = laptop_all.learnings_page(isolated_forge_home, opened.append)
+    shown = opened[0].read_text(encoding="utf-8")
+    assert "<b>L1</b> answer first" in shown and "<b>L3</b> 4x in 1 project(s)" in shown
+    assert "&lt;b&gt;Error&lt;/b&gt;" in shown  # the text of a learning is never HTML
+    assert page.verdicts[0].item == "LN1" and "3 learnings" in page.verdicts[0].line
+    assert "LN1" in laptop_all.COVERED

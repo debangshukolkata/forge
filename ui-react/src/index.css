@@ -680,3 +680,16 @@ kbd,
 .file-location-path {
   @apply break-all font-mono text-[12px] text-fg;
 }
+
+/* D-666: a model's mark in the Environment panel pops in when its answer arrives. */
+@keyframes check-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.check-pop {
+  animation: check-pop 260ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .check-pop { animation: none; }
+}
