@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -21,6 +22,11 @@ from forge.llm.cost import CostTracker
 from forge.llm.retry import MAX_HONOURED_RETRY_AFTER_S, Sleeper, with_retries
 from forge.llm.tokens import count_request_tokens
 from forge.safety.redact import Redactor, default_redactor
+
+# (role, model) for the calls of one task (D-658): two planners run side by side, each in its own task with its model.
+forced_model: contextvars.ContextVar[tuple[str, str] | None] = contextvars.ContextVar(
+    "forced_model", default=None
+)
 
 ProviderFactory = Callable[[str], LLMProvider]
 NoticeCallback = Callable[[str, dict[str, Any]], Awaitable[None]]
@@ -210,7 +216,12 @@ class LLMRouter:
         self, role: str, request: ChatRequest, on_text_delta: TextDeltaCallback | None = None
     ) -> LLMResponse:
         self.cost.check_budget()
-        preferred = self.model_for_role(role)
+        forced = forced_model.get()
+        preferred = (
+            forced[1]
+            if forced is not None and forced[0] == role and forced[1] in self.config.llm.models
+            else self.model_for_role(role)
+        )
         model_key = self._start_model(preferred, request)
         if model_key == preferred and preferred in self._back_unannounced and not self._resting(preferred):
             self._back_unannounced.discard(preferred)  # said once, on the first call after the rest

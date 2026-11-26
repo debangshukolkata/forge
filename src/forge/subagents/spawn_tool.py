@@ -28,6 +28,7 @@ from forge.subagents.critic import (
     critic_verdict,
     has_blocking_fix,
 )
+from forge.subagents.dual_plan import plan_twice, planners
 from forge.subagents.review import REVIEWER_PROMPT
 from forge.subagents.security import SECURITY_AUDITOR_PROMPT
 from forge.subagents.subagent import (
@@ -160,9 +161,20 @@ class SpawnSubagent(Tool):
                 router, context, ToolRegistry(read_only, defer=True), EXPLORE_PROMPT, args.task, 25, "coder"
             )
         elif args.agent == "planner":
-            report = await _run_subagent(
-                router, context, ToolRegistry(read_only, defer=True), PLANNER_PROMPT, args.task, 25, "planner"
-            )
+
+            async def plan_once() -> str:
+                return await _run_subagent(
+                    router,
+                    context,
+                    ToolRegistry(read_only, defer=True),
+                    PLANNER_PROMPT,
+                    args.task,
+                    25,
+                    "planner",
+                )
+
+            keys = planners(router)
+            report = await (plan_twice(router, context, keys, plan_once, args.task) if keys else plan_once())
         elif args.agent == "art-director":
             everything = {t.name: t for t in default_tools()}
             looking = [everything["view_image"]]

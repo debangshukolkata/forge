@@ -49,6 +49,10 @@ ITEMS = {
     "KP8": "no installed libraries in the delivery folder",
     "KP7": "an index update stays fast late in a session",
     "KP0": "sizes of the knowledge store and the logs",
+    "GM1": "the eight roles as set (Hydrogen codes, Argon checks)",
+    "DP1": "two planners plan at once and the plans are merged",
+    "GQ1": "Gemini 4 Argon passes every step of the provider check",
+    "CP2": "the Copy token button on the real clipboard (by hand)",
 }
 
 

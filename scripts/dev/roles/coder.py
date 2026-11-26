@@ -331,6 +331,7 @@ def alone(config: ForgeConfig, key: str) -> ForgeConfig:
     mine.llm.rotation = []
     mine.llm.fallback_also = []
     mine.llm.gemini_on_quota = "never"
+    mine.llm.plan_twice = []  # one model in every role; two planners are measured separately (D-658)
     return mine
 
 

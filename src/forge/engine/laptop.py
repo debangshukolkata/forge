@@ -23,6 +23,7 @@ import sys
 import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlsplit
 
 from forge.config import forge_home, load_config, load_secrets
@@ -394,6 +395,43 @@ def plan_page() -> Page:
 # --- the commands ----------------------------------------------------------------------------------------------
 
 
+def run_all(
+    home: Path,
+    pause: bool,
+    write: Callable[[str], None],
+    wait: Callable[[str], str],
+    make_session: Callable[[Workspace], Any] | None,
+) -> int:
+    """`Laptop-Report.cmd`: the questions once, then checks, conversations, live tests and the pages (D-660)."""
+    from forge.engine import laptop_all as auto
+
+    if make_session is None:
+        write("all needs DebCraft's session builder; run it as: python -m forge.cli laptop all")
+        return 2
+    write("A few questions first; Enter keeps the answer shown in brackets.")
+    answers = auto.ask_inputs(home, wait)
+    root = Path(answers["workspace"])
+    app_python = Path(answers["app_python"]) if answers["app_python"] else None
+    began = time.monotonic()
+    write("== 1 of 4: checks (type yes when asked for the TEMP table) ==")
+    run("check", app_python, root, pause=False, home=home, write=write, wait=wait)
+    repo = Path(__file__).resolve().parents[3]
+    first = [auto.roles_page(home, auto.load_config_router(home)), auto.gemini_page(repo, write)]
+    write("== 2 of 4: the conversations (you may leave now; about 2 to 3 hours with the requirement) ==")
+    held = asyncio.run(auto.hold_all(root, answers, make_session, write))
+    write("== 3 of 4: the live tests (up to 40 minutes) ==")
+    run("live", pause=False, home=home, write=write, wait=wait)
+    write(f"== 4 of 4: the pages to photograph (after {(time.monotonic() - began) / 60:.0f} minutes) ==")
+    extra = [
+        Page("WHAT RAN", held),
+        *first,
+        auto.dual_plan_page(root),
+        auto.role_challenge_page(home),
+        auto.own_part_page(),
+    ]
+    return run("report", workspace=root, pause=pause, home=home, write=write, wait=wait, extra=extra)
+
+
 def _record(pages: list[Page], home: Path) -> None:
     """Keeps the verdicts for the summary page; a NOT RUN never replaces an earlier real verdict."""
     from forge.engine.laptop_pages import load_verdicts
@@ -411,8 +449,12 @@ def run(
     home: Path | None = None,
     write: Callable[[str], None] = print,
     wait: Callable[[str], str] = input,
+    make_session: Callable[[Workspace], Any] | None = None,
+    extra: list[Page] | None = None,
 ) -> int:
     home = home or forge_home()
+    if action == "all":
+        return run_all(home, pause, write, wait, make_session)
     if action == "plan":
         emit([plan_page()], "plan", pause=False, home=home, write=write, wait=wait)
         return 0
@@ -447,9 +489,10 @@ def run(
             calls_page(conversations, home),
             delivery_page(conversations, root or Path("."), home),
             live_tests_page(home),
+            *(extra or []),
         ]
         _record(pages, home)
         emit([*pages, summary_page(home)], "report", pause, home, write, wait)
         return 0
-    write(f"unknown action {action!r}: plan, check, live or report")
+    write(f"unknown action {action!r}: all, plan, check, live or report")
     return 2

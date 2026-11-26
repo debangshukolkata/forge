@@ -274,12 +274,16 @@ def test_a_gemini_test_that_passed_makes_gemini_the_critic_and_the_judge_and_lea
         "gemini": {"status": "ok", "models": {**GEMINI_ANSWERED["gemini"]["models"], "gemini4argon": True}}
     }
     plan = by_role(propose_plan(config, {**BOTH, **with_argon}, {}))
-    for role in ("critic", "judge", "reviewer"):
+    for role in ("critic", "judge", "reviewer", "summariser", "vision"):
         assert plan[role]["model"] == "gemini4argon" and "proposed by default" in plan[role]["reason"]
-    for role in ("coder", "summariser", "vision"):
-        assert plan[role]["model"] == getattr(
-            config.llm.roles, role
-        )  # the builder side keeps its Azure model
+    assert (
+        plan["coder"]["model"] == config.llm.roles.coder
+    )  # Hydrogen did not answer: the coder keeps its Azure model
+    hydrogen = {
+        "gemini": {"status": "ok", "models": {**with_argon["gemini"]["models"], "gemini4hydrogen": True}}
+    }
+    with_hydrogen = by_role(propose_plan(config, {**BOTH, **hydrogen}, {}))
+    assert with_hydrogen["coder"]["model"] == with_hydrogen["planner"]["model"] == "gemini4hydrogen"  # D-659
     no_argon = by_role(propose_plan(config, {**BOTH, **GEMINI_ANSWERED}, {}))
     assert no_argon["critic"]["model"] == "gemini31pro"  # Argon did not answer: the next one in line
 
@@ -358,9 +362,12 @@ def test_gpt_5_4_builds_and_reads_once_it_answers_and_the_fallback_is_another_fa
     both_54 = {"azure": {"status": "ok", "models": {**BOTH["azure"]["models"], "gpt54": True, "gpt52": True}}}
     gemini = {"gemini": {"status": "ok", "models": {"gemini4argon": True, "gemini31pro": True}}}
     plan = by_role(propose_plan(config, {**both_54, **gemini}, {}))
-    for role in ("coder", "summariser", "vision"):
-        assert plan[role]["model"] == "gpt54", role
-    assert plan["fallback"]["model"] == "gemini31pro"  # another family first (D-411)
+    assert plan["coder"]["model"] == "gpt54"
+    for role in ("summariser", "vision"):
+        assert plan[role]["model"] == "gemini4argon", (
+            role
+        )  # D-659: Argon reads and summarises once it answers
+    assert plan["fallback"]["model"] == "gemini31pro"  # gpt-5.4 is the coder: another family (D-411)
     azure_only = by_role(propose_plan(config, both_54, {}))
     assert azure_only["fallback"]["model"] == "gpt52"  # gpt-5.4 is the coder: the fallback is gpt-5.2
     without_54 = by_role(propose_plan(config, BOTH, {}))

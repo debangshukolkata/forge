@@ -103,7 +103,7 @@ def build_parser() -> argparse.ArgumentParser:
         "laptop",
         help="close the items that need the office laptop: plan, check, live, report; pages to photograph (D-615)",
     )
-    laptop.add_argument("action", choices=["plan", "check", "live", "report"])
+    laptop.add_argument("action", choices=["all", "plan", "check", "live", "report"])
     laptop.add_argument(
         "--app-python", type=Path, help="check: the Python of the application's own environment (its venv)"
     )
@@ -253,8 +253,15 @@ def main(argv: list[str] | None = None) -> int:
         return _run_report(args.report_workspace, args.out, args.conversation)
     if args.command == "laptop":
         from forge.engine.laptop import run as run_laptop
+        from forge.session import build_session
 
-        return run_laptop(args.action, args.app_python, args.laptop_workspace, pause=not args.no_pause)
+        return run_laptop(
+            args.action,
+            args.app_python,
+            args.laptop_workspace,
+            pause=not args.no_pause,
+            make_session=lambda workspace: build_session(workspace=workspace, orchestrated=True),
+        )
     if args.command == "facts":
         from forge.engine.facts_report import show
 

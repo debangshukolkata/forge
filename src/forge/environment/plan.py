@@ -24,15 +24,17 @@ class RoleRouter(Protocol):
 # family too (a rate limit usually hits one provider), else gpt-5.1 from the first resource. The summariser and vision follow the coder (D-446).
 PREFERENCE: dict[str, tuple[str, ...]] = {
     # the models that build and read: gpt-5.4 once it has answered its test (the user's choice of 2026-10-16, D-446; it measured better on pictures and on checking its own result), else the configured default gpt-5.1
-    "coder": ("gpt54",),
-    "summariser": ("gpt54",),
-    "vision": ("gpt54",),
-    "planner": ("gemini4argon", "gemini31pro"),
+    # D-659, the role challenge on the office laptop (D-657): Hydrogen builds and plans (100 in both coder runs, fastest);
+    # Argon checks, looks and summarises (as good or better, and fastest); GPT-5.4 falls back, from another provider.
+    "coder": ("gemini4hydrogen", "gpt54"),
+    "summariser": ("gemini4argon", "gpt54"),
+    "vision": ("gemini4argon", "gpt54"),
+    "planner": ("gemini4hydrogen", "gemini4argon", "gemini31pro"),
     "critic": ("gemini4argon", "gemini31pro", "gpt52"),
     # gpt-5.1 before the configured gpt-4.1: on the C1 run gpt-4.1 scored every task 5 of 5, gpt-5.1 tracked the hidden tests (D-545)
     "judge": ("gemini4argon", "gemini31pro", "gpt52", "gpt51"),
     "reviewer": ("gemini4argon", "gemini31pro", "gpt52"),
-    "fallback": ("gemini31pro", "gpt54", "gpt52", "gpt51"),
+    "fallback": ("gpt54", "gemini31pro", "gpt52", "gpt51"),
 }
 
 

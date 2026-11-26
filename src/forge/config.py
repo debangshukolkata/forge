@@ -143,6 +143,10 @@ class LLMConfig(_Strict):
     # Azure models are busy too). Only a Gemini model that answered the Environment test is used.
     gemini_on_quota: Literal["never", "second", "last"] = "never"
     gemini_on_quota_model: str = "gemini4argon"
+    # Two models plan a large task at once and the judge role merges the plans (D-658); fewer than two set up: one planner.
+    plan_twice: list[str] = ["gemini4neon", "gemini4carbon"]
+    # The model that merges the two plans; not set up: the judge role merges (D-659).
+    plan_merger: str = "gemini4hydrogen"
     retry: RetryConfig = RetryConfig()
 
     @model_validator(mode="after")

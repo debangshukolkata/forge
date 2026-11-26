@@ -5215,3 +5215,40 @@ The google-genai SDK sends its timeout as `X-Server-Timeout`, so our 180 s was t
 thought would end in 504 and every retry would too. Default now 600 s. Options: no limit (a dead call never ends), 600 s (chosen). That
 this removes the 504 is not yet shown. Seven of eight Gemini coder runs were "not finished"; Carbon reached a time limit in both, the other five were far below it: there a turn
 ended with an error; the report now shows its text.
+
+## D-658: Two planners, one plan (2026-11-26)
+The user's idea: let the best models plan twice, keep what they share and show the differences. Options discussed: A, two
+planners at once and a third model merges, a difference that changes what gets built becomes a question card (chosen by the
+user); B, both plans side by side for the user to choose; C, a third model picks the better plan. Built: `subagents/dual_plan.py`,
+`llm.plan_twice` (default `[gemini4neon, gemini4carbon]`; fewer than two set up in the .env file: one planner as before), the
+merge by the judge role, at most three cards (a run nobody watches takes the recommendation), the merged plan ends with
+"Decided between the two plans". When one planner fails the other's plan is used; when the merge is not JSON the coder gets both
+plans. `router.forced_model` gives each planner its model for the planner role only. Live check on the build machine (gpt-5.1
+and gpt-4.1 planning, gpt-4.1 merging, the recording task, 52 s): the merger first chose word matching "to save tokens"; the card
+asked exactly that. The merge prompt now decides by the better result for cases the request did not spell out and never by
+cost; the second run used the model in both choices (72 s). The role challenge keeps one model in every role (`plan_twice: []`).
+Not shown yet: that it improves what gets built (`DP1`, `DP2`).
+
+## D-659: The roles of the role challenge are the shipped proposals; Hydrogen merges the two plans (2026-11-26)
+The user asked to make the roles proposed after D-657 the default, and Hydrogen the merger. `environment/plan.py` PREFERENCE:
+coder and planner Gemini 4 Hydrogen, reviewer, judge, critic, vision and summariser Gemini 4 Argon, fallback GPT-5.4 (another
+provider; when GPT-5.4 is the coder, Gemini 3.1 Pro, then GPT-5.2). Each applies once the model has answered its Environment test;
+a role the user changed by hand keeps their choice. The configured defaults (`defaults/config.yaml`, gpt-5.1) stay, so a machine
+without Gemini behaves as before. New setting `llm.plan_merger` (default `gemini4hydrogen`; not set up: the judge role): merging
+is planning work (Hydrogen 71 as planner, Argon 62), Hydrogen is neither planner and its plans led to its two perfect builds;
+the cost is about two minutes per large plan (its judge calls took 118 s, Argon 6 s). Options: Argon as the judge role (fastest,
+weaker planner), GPT (another provider, weaker in the challenge), Hydrogen (chosen by the user). Not measured as a merger.
+
+## D-660: One double-click for everything the office laptop owes (2026-11-26)
+The user asked for one file that makes a report from which every laptop item is decided. `forge laptop` (D-615) needed three
+commands and seven conversations typed by hand. Now `Laptop-Report.cmd` runs `forge laptop all`: it asks the project folder,
+the application's Python, an agent with a question, a site to crawl and optionally a real requirement (kept for the next run),
+runs `check`, the Gemini provider check on Argon (`GQ1`), holds the seven conversations itself, each in a new conversation of the
+project through DebCraft's own session builder (ordinary cards approved as a run nobody watches does; a red card is refused),
+gives the requirement up to 90 minutes through `run_headless`, runs `live`, and ends with the `report` pages plus pages for the
+roles (`GM1`), two planners (`DP1`) and why the role challenge's coder turns ended. The user agreed that the requirement runs
+unattended. Left by hand: the clipboard (`CP2`), red cards (`SF2`, `DV8`, `DV10`), reading the learnings (`LN1`), `LA1`.
+Options: keep the typed plan (the items stayed open for ten days), a script that only wraps the three commands, the conversations
+held by the script (chosen). Checked here: one held conversation of two messages on the fixture repository with Azure. Found on
+the way: with Google's names in the .env file but no access, both planners failed and planning stopped; now the planner role
+plans alone then.
