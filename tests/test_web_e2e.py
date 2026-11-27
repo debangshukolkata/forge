@@ -857,7 +857,9 @@ def test_react_project_list_shows_what_forge_remembers(
     )
     profile = ProfileStore(isolated_forge_home).create("web-host")
     store = MemoryStore(isolated_forge_home, "profile:web-host")
-    store.save(STATE_MEMORY, "Where the work stands", "project", handoff)
+    MemoryStore.of_state(isolated_forge_home, "profile:web-host", tmp_path / "wsb").save(
+        STATE_MEMORY, "Where the work stands", "project", handoff
+    )  # the project's own state (D-668)
     store.save("prefers-pytest", "Uses pytest", "project", "Run python -m pytest -q.")
     (profile.root / "FORGE.md").write_text("# Host rules\n", encoding="utf-8")
     shots = REPO_ROOT / "test-artifacts" / "react-ui"

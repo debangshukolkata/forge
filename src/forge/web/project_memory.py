@@ -56,10 +56,11 @@ def project_memory(home: Path, root: Path, entry: dict[str, Any], mode: str) -> 
     if profile_name is not None:  # Mode B keeps FORGE.md in the host profile folder
         with contextlib.suppress(ProfileError):
             folder = ProfileStore(home).open(profile_name).root
-    state = store.get(STATE_MEMORY)
+    own = MemoryStore.of_state(home, key, root)  # where this project's work stands (D-668)
+    state = own.get(STATE_MEMORY)
     summary = None
     if state is not None:
-        saved = store.folder / f"{STATE_MEMORY}.md"
+        saved = own.folder / f"{STATE_MEMORY}.md"
         goal = _section_line(state.text, "goal")
         nxt = _section_line(state.text, "next")
         first = next(

@@ -175,7 +175,12 @@ def check_secrets(config: ForgeConfig, secrets: Secrets, home: Path) -> CheckRes
     return CheckResult("Secrets", "ok", f"{len(needed)} required values present in {source}")
 
 
-async def check_models(config: ForgeConfig, secrets: Secrets) -> list[CheckResult]:
+async def check_models(
+    config: ForgeConfig, secrets: Secrets, provider: str | None = None
+) -> list[CheckResult]:
+    """One short call per model in use (and per Azure model set up); `provider` keeps only that provider's models: the
+    Environment panel's Azure row tests Azure only, the Gemini row its own (office, 2026-11-26: Gemini models in the
+    Azure row, "via ? API", 39 s for one of them)."""
     router = LLMRouter(config, secrets)
     results = []
     # The Azure models no role uses (for example gpt54 on the second resource) are tested too when their .env values are set, so the model plan can offer them (D-411).
@@ -188,6 +193,8 @@ async def check_models(config: ForgeConfig, secrets: Secrets) -> list[CheckResul
     ]
     for model_key in [*_models_in_use(config), *unused]:
         model = config.llm.models[model_key]
+        if provider is not None and model.provider != provider:
+            continue
         if model_key in optional_models(config) and not _all_set(model_secret_names(config, model), secrets):
             continue  # an optional fallback that was never set up is not a failure
         started = time.perf_counter()
@@ -203,8 +210,8 @@ async def check_models(config: ForgeConfig, secrets: Secrets) -> list[CheckResul
             results.append(CheckResult(f"Model {model_key}", "fail", str(error)[:300]))
             continue
         seconds = time.perf_counter() - started
-        provider = router.provider(model_key)
-        api = getattr(provider, "api", "?")
+        model_provider = router.provider(model_key)
+        api = getattr(model_provider, "api", "?")
         served = response.served_model or "unknown"
         status: Status = "ok" if model.label in served or served == "unknown" else "warn"
         note = "" if status == "ok" else f" (config label is {model.label})"

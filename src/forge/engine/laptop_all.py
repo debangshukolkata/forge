@@ -87,7 +87,7 @@ async def hold(
     async def answer() -> None:
         async for event in subscription:
             if event.type == EventType.ERROR:
-                errors.append(str(event.payload.get("message"))[:120])
+                errors.append(str(event.payload.get("message"))[:600])  # the whole cause, D-669
             if (reply := auto_reply(event, auto_approve=True)) is not None:
                 await host.submit(reply)
 

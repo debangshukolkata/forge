@@ -187,7 +187,7 @@ def test_environment_screen_in_edge(
     from forge.doctor import CheckResult
     from forge.environment import checks, store
 
-    async def answers(config: object, secrets: object) -> list[CheckResult]:
+    async def answers(config: object, secrets: object, provider: object = None) -> list[CheckResult]:
         return [
             CheckResult("Model gpt41", "fail", "no answer from the deployment"),
             CheckResult("Model gpt51", "ok", "serves gpt-5.1 via responses API in 0.4s"),
@@ -339,7 +339,7 @@ def test_optional_tools_are_asked_before_they_are_tested(
 
     calls: list[str] = []
 
-    async def answers(config: object, secrets: object) -> list[CheckResult]:
+    async def answers(config: object, secrets: object, provider: object = None) -> list[CheckResult]:
         return [CheckResult("Model gpt51", "ok", "serves gpt-5.1 via responses API in 0.4s")]
 
     def fake_tesseract() -> checks.Outcome:

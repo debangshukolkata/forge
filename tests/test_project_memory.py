@@ -52,7 +52,10 @@ def test_a_repository_project_reports_its_notes_instructions_and_handoff(
     store = MemoryStore(isolated_forge_home, scope)
     store.save("prefers-pytest", "Uses pytest", "project", "Run python -m pytest -q.")
     store.save("port", "Dev server port", "reference", "Port 8100.")
-    store.save(STATE_MEMORY, "Where the work stands", "project", HANDOFF)
+    # the state of the work is the project's own (D-668)
+    MemoryStore.of_state(isolated_forge_home, scope, tmp_path).save(
+        STATE_MEMORY, "Where the work stands", "project", HANDOFF
+    )
     project_dir(isolated_forge_home, scope).joinpath("FORGE.md").write_text("# Rules\n", encoding="utf-8")
 
     entry = {"path": str(tmp_path), "repo": str(repo), "app_folder": "backend"}
@@ -70,7 +73,9 @@ def test_a_standalone_project_reads_its_profile(isolated_forge_home: Path, tmp_p
     assert created.info.python_env is not None
     created.info.python_env = created.info.python_env.model_copy(update={"python": sys.executable})
     created.save_info()
-    MemoryStore(isolated_forge_home, "profile:acme").save(STATE_MEMORY, "state", "project", HANDOFF)
+    MemoryStore.of_state(isolated_forge_home, "profile:acme", created.root).save(
+        STATE_MEMORY, "state", "project", HANDOFF
+    )
     (profile.root / "FORGE.md").write_text("# Host rules\n", encoding="utf-8")
     log = created.root / ".forge" / "transcripts"
     log.mkdir(parents=True, exist_ok=True)

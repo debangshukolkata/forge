@@ -486,3 +486,26 @@ def test_the_live_gemini_test_needs_a_yes_and_builds_the_result_from_its_own_ans
     assert done["status"] == "warn" and done["models"] == {"gemini4argon": True}  # probe:g was never asked
     assert "g: not tested" in done["detail"]
     assert store.load(isolated_forge_home)["results"]["gemini"]["status"] == "warn"
+
+
+async def test_the_azure_row_tests_azure_models_only(
+    isolated_forge_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Office photograph 2026-11-26: with Gemini roles, the Azure row tested the Gemini models too ("via ? API")."""
+    from forge.config import load_config, load_secrets
+    from forge.doctor import check_models
+    from forge.llm.base import LLMResponse
+    from forge.llm.router import LLMRouter
+
+    config = load_config(isolated_forge_home)
+    asked: list[str] = []
+
+    async def chat(self: LLMRouter, role: str, request: object, on_text_delta: object = None) -> LLMResponse:
+        asked.append(self.model_for_role(role))
+        return LLMResponse(text="ready")
+
+    monkeypatch.setattr(LLMRouter, "chat", chat)
+    monkeypatch.setattr(LLMRouter, "provider", lambda self, key: object())
+    config.llm.roles.coder = "gemini4hydrogen"
+    await check_models(config, load_secrets(isolated_forge_home), provider="azure")
+    assert asked and all(config.llm.models[key].provider == "azure" for key in asked)

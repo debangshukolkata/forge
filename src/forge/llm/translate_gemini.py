@@ -62,16 +62,18 @@ def to_gemini_request(messages: list[Message], model_key: str) -> tuple[str | No
             )
             continue
         flush_results()
-        if message.role == "system" and contents:
-            # A note DebCraft adds during the conversation (the checks before a turn ends: leftovers, hand-over, stop
-            # hooks) stays where it was written. Moved into the system instruction, the request ended on the model's
-            # own answer and Gemini refused it: "Requests ending with a model turn are not supported" (office, D-664).
+        if message.role == "system" and contents and _takes_a_note(contents[-1]):
+            # A note DebCraft adds after the model's own answer (the checks before a turn ends: leftovers, hand-over,
+            # to-do, stop hooks) stays there as a user turn: moved into the system instruction, the request ended on the
+            # model's answer and Gemini refused it, "Requests ending with a model turn are not supported" (D-664).
             note = types.Part(text=f"[Note from DebCraft, not from the user]\n{message.content}")
             if contents[-1].role == "user":
                 contents[-1].parts = [*(contents[-1].parts or []), note]
             else:
                 contents.append(types.Content(role="user", parts=[note]))
         elif message.role == "system":
+            # Before the conversation, and after tool results: the system instruction, as it always was. A note joined
+            # to a turn of tool results made Gemini refuse the very next call with the same 400 (office, D-670).
             system_parts.append(message.content)
         elif message.role == "assistant":
             for call in message.tool_calls:
@@ -91,6 +93,14 @@ def to_gemini_request(messages: list[Message], model_key: str) -> tuple[str | No
         contents.append(types.Content(role="user", parts=[types.Part(text=system_text or "Begin.")]))
         system_text = None
     return system_text, contents
+
+
+def _takes_a_note(last: types.Content) -> bool:
+    """A note becomes a turn of its own after the model's answer, or joins a turn of notes or user text; never a turn
+    that holds tool results (D-670)."""
+    if last.role == "model":
+        return True
+    return not any(part.function_response is not None for part in last.parts or [])
 
 
 def _assistant_content(message: Message, model_key: str) -> types.Content:

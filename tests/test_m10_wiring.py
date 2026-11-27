@@ -130,13 +130,16 @@ async def test_handoff_asks_the_model_to_write_the_project_state_memory(
 def test_a_saved_project_state_is_flagged_first_in_the_pinned_memory(isolated_forge_home: Path) -> None:
     from forge.memory.store import MemoryStore, combined_index
 
+    root = isolated_forge_home / "project"
     store = MemoryStore(isolated_forge_home, "repo:demo-1")
-    assert combined_index(isolated_forge_home, "repo:demo-1") is None
-    store.save("project-state", "where the work stands", "project", "## Next\n- finish the cart")
-    pinned = combined_index(isolated_forge_home, "repo:demo-1") or ""
+    assert combined_index(isolated_forge_home, "repo:demo-1", root) is None
+    store.save("run", "how to run", "project", "flask run")
+    MemoryStore.of_state(isolated_forge_home, "repo:demo-1", root).save(
+        "project-state", "where the work stands", "project", "## Next\n- finish the cart"
+    )  # the project's own state (D-668)
+    pinned = combined_index(isolated_forge_home, "repo:demo-1", root) or ""
     flag = "Work on this project was left unfinished or paused: read the memory 'project-state'"
     assert flag in pinned and pinned.index(flag) < pinned.index("About this project:")
-    assert "project-state (project): where the work stands" in pinned
 
 
 async def test_todo_write_updates_the_pinned_list_and_the_event_and_survives_a_reopen(

@@ -5332,3 +5332,43 @@ DebCraft, calls that failed the same way 3 times or more, checks that had to ste
 each numbered L1, L2, ... so the user and Claude can take them one at a time by number. A console page gives the counts
 and the LN1 verdict. `Learnings-Report.cmd` (`forge laptop learnings`) does only this, in about a minute. The full export
 (names kept) stays a chat command only: a photographed page should not carry company names.
+
+## D-668: The state of the work belongs to one DebCraft project, not to its repository (2026-11-26)
+Office, 2026-11-26: the user opened a project created minutes before and got the notices of another project (its paused
+work "for Monday"). Project memory is kept per repository (`scope_of`: one scope per repository app folder, shared by all
+projects made from it), which is right for what was learned about the code; but the `project-state` note a paused session
+leaves was kept there too, and every session start of any project of that repository pinned "Work on this project was left
+unfinished or paused: read 'project-state' first and carry on from there". Now `project-state` is kept per project under
+`<DebCraft Home>/memory/scopes/<scope>/states/<project-key>/` (still DebCraft Home only), written and read there by the
+memory tools, pinned only for its own project, and shown on the project list for its own project. A note saved before this
+change moves, at the next session start, to the project of that repository whose conversation was written within
+15 minutes of the note; when none was, it stays where it is and no project is told to carry it on. Options: a state per
+project below the repository's folder (chosen), the project's own `.forge` folder (would break "memories live in DebCraft
+Home only"), a line in the note naming its project (the model writes the note, the line could be lost).
+The token notice in the same photograph ("No valid DEV_INSTANCE_TOKEN for dev") is per machine by design (D-627): the
+environments of `app_logins.yaml` are DebCraft's, so every project shows them.
+
+## D-669: A request Gemini refuses names its shape; the cause of "ending with a model turn" is still open (2026-11-26)
+The laptop report (current code, D-664 included: its pages read "[1/9]") still got `400 INVALID_ARGUMENT: Requests ending
+with a model turn are not supported` in both held conversations. Reproduced here with a real DebCraft session whose
+Gemini coder was replaced by a stand-in that translates every request exactly as the provider does and answers through
+Azure: 23 requests, every one ending on a user turn (a to-do turn and a planner turn). Gemini 3.6 Flash and later refuse a
+request whose last turn is the model's (a "prefill"; public report: Zoo-Code issue 1052), which DebCraft does not send
+in any path found. So the next run must show what Gemini got: a 400 from Gemini now ends with
+`last turns sent: user[text] model[call] user[result,text]` (roles and kinds of parts, never text), and the laptop
+report keeps 600 characters of an error instead of 120. Open: the cause, from that line.
+Office photograph, same day: the Azure row of the Environment panel also tested the Gemini models the roles now use
+("serves gemini-4-neon via ? API in 39.3s"), which made it slow and repeated the Gemini row. `check_models` takes a
+`provider`; the Azure row passes "azure" (`forge doctor` still tests every model in use).
+
+## D-670: After tool results a note goes to Gemini's system instruction again; D-664 had broken every tool step (2026-11-27)
+Office photograph 2026-11-27: a new conversation's first call worked (the model called four tools), the next one, which
+returns their results, failed with `400 Requests ending with a model turn are not supported`; the laptop report's two
+conversations failed the same way right after their first tools. Cause: D-664 joined every system message after the
+first turn to the last user turn, and the pinned block that ends every request is one, so after tool results it was
+written into the turn holding the function responses; Gemini refuses that turn with this message. Before D-664 the
+pinned block went to the system instruction and Gemini tool loops worked for weeks (the role challenge's coder runs).
+Now a note becomes a user turn only after the model's own answer (the D-664 case) or joins a turn of user text; after
+tool results it goes to the system instruction as before. The stand-in run of D-669 could not show this: it checked
+only that the last turn was the user's, which it was. Wrong in D-664: changing where every request's pinned block goes,
+to fix one path, without a live Gemini call.

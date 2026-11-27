@@ -181,7 +181,7 @@ async def check_azure(config: ForgeConfig) -> Outcome:
             "Add them to the .env file (the setup guide shows where and what), then test again.",
             missing=missing_secret_names(config, secrets),
         )
-    models = await check_models(config, secrets)
+    models = await check_models(config, secrets, provider="azure")
     answered = {r.name.removeprefix("Model "): r.status != "fail" for r in models}
     outcome = _combine("azure", models, "Check the endpoint, key and deployment names in .env, then retry.")
     outcome.models = answered

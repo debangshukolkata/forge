@@ -8,14 +8,21 @@ from typing import Literal
 
 from forge.config import forge_home
 from forge.memory.scope import repo_level_dir, scope_of
-from forge.memory.store import KINDS, MemoryStore
+from forge.memory.store import KINDS, STATE_MEMORY, Memory, MemoryStore
 from forge.toolkit.base import Tool, ToolArgs, ToolContext, ToolResult
 
 ScopeName = Literal["user", "project"]
 
 
-def _store(context: ToolContext, scope: ScopeName) -> MemoryStore:
+def _store(context: ToolContext, scope: ScopeName, name: str | None = None) -> MemoryStore:
+    if scope == "project" and name == STATE_MEMORY:  # the state of the work is this project's own (D-668)
+        return MemoryStore.of_state(forge_home(), scope_of(context.workspace), context.workspace.root)
     return MemoryStore(forge_home(), scope_of(context.workspace) if scope == "project" else None)
+
+
+def _project_memories(context: ToolContext) -> list[Memory]:
+    shared = [m for m in _store(context, "project").all() if m.name != STATE_MEMORY]
+    return shared + _store(context, "project", STATE_MEMORY).all()
 
 
 class MemoryRead(Tool):
@@ -35,7 +42,7 @@ class MemoryRead(Tool):
         found = [
             m
             for scope in scopes
-            for m in _store(context, scope).all()
+            for m in (_project_memories(context) if scope == "project" else _store(context, scope).all())
             if not args.name or m.name == args.name
         ]
         if not found:
@@ -69,7 +76,9 @@ class MemoryWrite(Tool):
     async def run(self, args: MemoryWrite.Args, context: ToolContext) -> ToolResult:
         assert args.type in KINDS
         try:
-            memory = _store(context, args.scope).save(args.name, args.description, args.type, args.text)
+            memory = _store(context, args.scope, args.name).save(
+                args.name, args.description, args.type, args.text
+            )
         except ValueError as error:
             return ToolResult(ok=False, content=str(error))
         await context.emit(
@@ -92,7 +101,7 @@ class MemoryForget(Tool):
         scope: ScopeName = "project"
 
     async def run(self, args: MemoryForget.Args, context: ToolContext) -> ToolResult:
-        removed = _store(context, args.scope).delete(args.name)
+        removed = _store(context, args.scope, args.name).delete(args.name)
         return ToolResult(ok=removed, content="Forgotten." if removed else f"No memory {args.name}.")
 
 

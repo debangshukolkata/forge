@@ -36,7 +36,7 @@ from forge.llm.base import ChatRequest, Message
 from forge.llm.router import LLMRouter
 from forge.llm.usage_ledger import UsageLedger
 from forge.memory.scope import repo_level_dir, scope_of
-from forge.memory.store import combined_index
+from forge.memory.store import STATE_MEMORY, adopt_shared_state, combined_index
 from forge.modeb.profile import HostProfile, ProfileError, ProfileStore, host_identifying_terms
 from forge.modeb.workspace import profile_ref
 from forge.parity import skill_install, skill_sources
@@ -281,7 +281,38 @@ class SessionHost:
 
     def refresh_memory_pin(self) -> None:
         scope = scope_of(self.workspace) if self.workspace is not None else None
-        self.context_manager.pinned.set("memory_index", combined_index(forge_home(), scope))
+        root = self.workspace.root if self.workspace is not None else None
+        if scope is not None and root is not None:
+            self._adopt_shared_state(scope, root)
+        self.context_manager.pinned.set("memory_index", combined_index(forge_home(), scope, root))
+
+    @staticmethod
+    def _adopt_shared_state(scope: str, root: Path) -> None:
+        """A state note saved before D-668 goes to the project of this repository that wrote it; only when one exists."""
+        from forge.memory.scope import project_dir
+
+        home = forge_home()
+        if not (project_dir(home, scope) / f"{STATE_MEMORY}.md").exists():
+            return
+        import json
+
+        from forge.home_layout import data_path
+        from forge.workspace.workspace import Workspace
+
+        try:
+            recent = json.loads(data_path(home, "recent_workspaces.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            recent = []
+        same: list[Path] = []
+        for entry in recent if isinstance(recent, list) else []:
+            path = Path(str(entry.get("path", ""))) if isinstance(entry, dict) else None
+            if path is None:
+                continue
+            with contextlib.suppress(Exception):  # a project folder that is gone or damaged is left out
+                if scope_of(Workspace.open(path)) == scope:
+                    same.append(path)
+        with contextlib.suppress(OSError):
+            adopt_shared_state(home, scope, root, [*same, root] if root not in same else same)
 
     async def _prepare_database_quietly(self) -> None:
         """Session start in direct mode: not a turn (no status/cost events), and never fatal."""

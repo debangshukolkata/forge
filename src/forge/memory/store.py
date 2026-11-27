@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from forge.memory.scope import project_dir
+from forge.memory.scope import project_dir, state_dir
 from forge.safety.redact import default_redactor
 
 KINDS = ("user", "feedback", "project", "reference")
@@ -32,6 +32,9 @@ MAX_DESCRIPTION_CHARS = 150
 INDEX_FILE = "MEMORY.md"
 INSTRUCTIONS_FILE = "FORGE.md"  # shares the project folder with the notes but is not one of them (D-199)
 STATE_MEMORY = "project-state"  # where a session leaves the state of the work for the next one (D-171)
+WRITER_WINDOW_S = (
+    15 * 60
+)  # the project that saved a shared state note wrote its conversation within this time (D-668)
 _NAME = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")
 _FRONT = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.S)
 
@@ -58,6 +61,13 @@ class MemoryStore:
         base = home / "memory"
         self.scope = scope or "user"
         self.folder = base if scope is None else project_dir(home, scope)
+
+    @classmethod
+    def of_state(cls, home: Path, scope: str, root: Path | str) -> MemoryStore:
+        """The store of one project's `project-state` (D-668)."""
+        store = cls(home, scope)
+        store.folder = state_dir(home, scope, root)
+        return store
 
     def _parse(self, path: Path) -> Memory:
         text = path.read_text(encoding="utf-8")
@@ -127,17 +137,49 @@ class MemoryStore:
         return "\n".join(f"- {m.render()}" for m in memories) if memories else None
 
 
-def combined_index(home: Path, scope: str | None) -> str | None:
-    """The pinned memory index (spec §10.2): user memories plus this project's (names and descriptions)."""
+def adopt_shared_state(home: Path, scope: str, root: Path, projects: Sequence[Path]) -> None:
+    """A `project-state` saved before D-668 sits in the repository's folder, where every project of that repository read
+    it. It goes to the project that wrote it: the one of `projects` (all projects of this repository) whose last
+    conversation was written closest to the moment the note was saved. Only that project takes it; the others leave it."""
+    shared = project_dir(home, scope) / f"{STATE_MEMORY}.md"
+    if not shared.exists():
+        return
+    saved = shared.stat().st_mtime
+
+    def distance(project: Path) -> float:
+        logs = list((project / ".forge" / "conversations").glob("*/events.jsonl"))
+        logs += [project / ".forge" / "transcripts" / "events.jsonl"]
+        times = [log.stat().st_mtime for log in logs if log.exists()]
+        return min((abs(t - saved) for t in times), default=float("inf"))
+
+    writer = min(projects, key=distance, default=None)
+    if (
+        writer is None or distance(writer) > WRITER_WINDOW_S
+    ):  # nobody was at work when it was saved: it stays shared
+        return
+    if str(writer.resolve()).lower() != str(root.resolve()).lower():
+        return
+    target = MemoryStore.of_state(home, scope, root)
+    target.folder.mkdir(parents=True, exist_ok=True)
+    if not (target.folder / f"{STATE_MEMORY}.md").exists():
+        shared.replace(target.folder / f"{STATE_MEMORY}.md")
+        target._write_index()
+        MemoryStore(home, scope)._write_index()
+
+
+def combined_index(home: Path, scope: str | None, root: Path | None = None) -> str | None:
+    """The pinned memory index (spec §10.2): user memories plus this project's (names and descriptions). The state of
+    the work is this DebCraft project's own (D-668): a note another project of the same repository left is not shown."""
     parts = []
     user = MemoryStore(home).index()
     if user:
         parts.append("About the user (all projects):\n" + user)
     project_store = MemoryStore(home, scope) if scope else None
-    project = project_store.index() if project_store else None
-    if project:
-        parts.append("About this project:\n" + project)
-    if project_store is not None and project_store.get(STATE_MEMORY) is not None:
+    shared = [m for m in project_store.all() if m.name != STATE_MEMORY] if project_store else []
+    if shared:
+        parts.append("About this project:\n" + "\n".join(f"- {m.render()}" for m in shared))
+    state = MemoryStore.of_state(home, scope, root) if scope and root is not None else None
+    if state is not None and state.get(STATE_MEMORY) is not None:
         parts.insert(
             0,
             f"Work on this project was left unfinished or paused: read the memory '{STATE_MEMORY}' first "

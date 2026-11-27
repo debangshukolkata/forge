@@ -77,10 +77,12 @@ def test_a_note_added_after_the_answer_stays_last_so_the_request_never_ends_on_t
         Message.tool_result("a", "X"),
         Message.system("a note after a result"),
     ]
-    _, contents = to_gemini_request(after_results, "gemini")
-    assert [content.role for content in contents] == ["user", "model", "user"]  # joined to the results' turn
-    parts = contents[-1].parts or []
-    assert parts[0].function_response and "a note after a result" in (parts[1].text or "")
+    system, contents = to_gemini_request(after_results, "gemini")
+    # D-670 (office, 2026-11-27): text joined to a turn of tool results made Gemini refuse the next call; after results
+    # a note goes to the system instruction, as before D-664, and the results' turn holds results only
+    assert [content.role for content in contents] == ["user", "model", "user"]
+    assert all(part.function_response for part in contents[-1].parts or [])
+    assert system == "a note after a result"
 
 
 def test_image_data_url_becomes_inline_bytes() -> None:
@@ -161,3 +163,50 @@ def test_a_request_with_only_instructions_still_has_a_user_turn() -> None:
     assert system is None
     assert len(contents) == 1 and contents[0].role == "user"
     assert contents[0].parts is not None and contents[0].parts[0].text == "Write one short sentence."
+
+
+async def test_a_refused_request_names_the_shape_of_what_was_sent_never_its_text() -> None:
+    """D-669 (office, 2026-11-26): 'Requests ending with a model turn' came back although the translated request ends on
+    a user turn here; the error now says which turns and parts were sent, so the next photograph shows the cause."""
+    from types import SimpleNamespace
+
+    from forge.errors import LLMError
+    from forge.llm.base import ChatRequest
+    from forge.llm.gemini import GeminiProvider
+
+    refused = errors.ClientError(
+        400,
+        {
+            "error": {
+                "code": 400,
+                "message": "Requests ending with a model turn are not supported.",
+                "status": "INVALID_ARGUMENT",
+            }
+        },
+    )
+
+    async def generate_content(**_: object) -> None:
+        raise refused
+
+    provider = GeminiProvider.__new__(GeminiProvider)
+    provider.model_key, provider.model_name = "gemini4hydrogen", "gemini-4-hydrogen"
+    provider.model = SimpleNamespace(max_output=1000)  # type: ignore[assignment]
+    provider._client = SimpleNamespace(
+        aio=SimpleNamespace(models=SimpleNamespace(generate_content=generate_content))
+    )  # type: ignore[assignment]
+    messages = [
+        Message.system("be brief"),
+        Message.user("the secret plan"),
+        Message(
+            role="assistant",
+            tool_calls=[ToolCall(id="a", name="read_file", raw_arguments="{}", arguments={})],
+        ),
+        Message.tool_result("a", "file text"),
+        Message.system("a note"),
+    ]
+    with pytest.raises(LLMError) as raised:
+        await provider.chat(ChatRequest(messages=messages))
+    text = str(raised.value)
+    assert "Requests ending with a model turn" in text
+    assert "last turns sent: user[text] model[call] user[result]" in text
+    assert "secret plan" not in text and "file text" not in text

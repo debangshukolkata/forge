@@ -12,7 +12,7 @@ from google import genai
 from google.genai import types
 
 from forge.config import GeminiProviderConfig, ModelConfig, Secrets
-from forge.errors import ConfigError, LLMError
+from forge.errors import ConfigError, LLMBadRequestError, LLMError
 from forge.llm.base import ChatRequest, LLMResponse, StreamProgress, TextDeltaCallback
 from forge.llm.gemini_errors import SDK_ERRORS, map_gemini_error
 from forge.llm.translate_gemini import (
@@ -106,7 +106,14 @@ class GeminiProvider:
                         await on_text_delta(text)
                     await progress.tick()
         except SDK_ERRORS as error:
-            raise map_gemini_error(error) from error
+            mapped = map_gemini_error(error)
+            if type(mapped) is LLMBadRequestError:
+                # A refused request (office, 2026-11-26: "Requests ending with a model turn") says what was sent:
+                # the order of the turns and the kind of each part, never their text (D-669).
+                raise LLMBadRequestError(
+                    f"{mapped} | last turns sent: {request_shape(turns)}", status_code=400
+                ) from error
+            raise mapped from error
         if request.on_thinking is not None and thinking:
             await request.on_thinking(thinking)
         return accumulator.to_response()
@@ -131,3 +138,21 @@ class GeminiProvider:
 
     async def close(self) -> None:
         await self._client.aio.aclose()
+
+
+def request_shape(turns: list[types.Content], last: int = 6) -> str:
+    """`user[text] model[call] user[result,text]`: roles and kinds of parts only, for an error message."""
+
+    def kind(part: types.Part) -> str:
+        if part.function_call is not None:
+            return "call"
+        if part.function_response is not None:
+            return "result"
+        if part.thought:
+            return "thought"
+        if part.inline_data is not None:
+            return "image"
+        return "text" if part.text else "empty"
+
+    shown = [f"{c.role}[{','.join(kind(p) for p in c.parts or []) or 'none'}]" for c in turns[-last:]]
+    return f"{len(turns)} turns, ... " * (len(turns) > last) + " ".join(shown)

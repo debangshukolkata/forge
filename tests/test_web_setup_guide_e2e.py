@@ -34,7 +34,7 @@ def test_the_first_run_guide_and_the_drawer_after_it(
     env_file = isolated_forge_home / ".env"
     monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
 
-    async def answers(config: object, secrets: object) -> list[CheckResult]:
+    async def answers(config: object, secrets: object, provider: object = None) -> list[CheckResult]:
         return [CheckResult("Model gpt51", "ok", "serves gpt-5.1 via responses API in 0.4s")]
 
     monkeypatch.setattr(checks, "check_models", answers)

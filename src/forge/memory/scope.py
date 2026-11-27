@@ -35,6 +35,21 @@ def project_dir(home: Path, scope: str) -> Path:
     return home / "memory" / "scopes" / re.sub(r"[^A-Za-z0-9._-]", "-", scope)
 
 
+def project_key(root: Path | str) -> str:
+    """<folder-name>-<hash>: one DebCraft project (workspace), whatever repository it was made from."""
+    resolved = str(real_path(root)).lower()
+    digest = hashlib.sha256(resolved.encode()).hexdigest()[:10]
+    slug = "".join(c if c.isalnum() else "-" for c in Path(resolved).name)[:40].strip("-") or "project"
+    return f"{slug}-{digest}"
+
+
+def state_dir(home: Path, scope: str, root: Path | str) -> Path:
+    """Where one DebCraft project keeps the state of its work (`project-state`, D-668): below the repository's
+    folder, but one per project, because several projects made from the same repository are different pieces of work
+    (office, 2026-11-26: a new project was told to carry on another project's work 'on Monday')."""
+    return project_dir(home, scope) / "states" / project_key(root)
+
+
 def repo_level_dir(home: Path, workspace: Workspace, profile_root: Path | None) -> Path:
     """Where the repository-level FORGE.md and skills live: the host profile folder in Mode B, otherwise the
     project folder. A FORGE.md written into the old knowledge-base folder is copied over once."""
