@@ -650,6 +650,37 @@ kbd,
 .file-location-action {
   @apply rounded-md border border-border bg-surface px-2 py-0.5 text-[12px] font-medium text-fg hover:bg-raised disabled:opacity-50;
 }
+.file-location-action.file-location-danger {
+  @apply border-danger/50 text-danger hover:bg-danger-soft;
+}
+.file-window.repo-copy {
+  @apply max-w-2xl border-2 border-danger shadow-[0_0_0_3px_var(--danger-soft)];
+}
+.repo-copy-title {
+  @apply min-w-0 flex-1 font-semibold text-danger;
+}
+.repo-copy-body {
+  @apply flex flex-col gap-2 text-fg;
+}
+.repo-copy-lead,
+.repo-copy-note {
+  @apply m-0 text-[12.5px] text-fg-muted;
+}
+.repo-copy-command {
+  @apply m-0 whitespace-pre-wrap break-all rounded-md border border-border bg-bg p-2 font-mono text-[12px];
+}
+.repo-copy-warning {
+  @apply m-0 rounded-md bg-danger-soft px-2 py-1 text-[12.5px] text-danger;
+}
+.repo-copy-actions {
+  @apply mt-1 flex flex-wrap items-center justify-end gap-2;
+}
+.repo-copy-confirm {
+  @apply rounded-md bg-danger px-3 py-1 text-[12.5px] font-semibold text-white hover:opacity-90 disabled:opacity-50;
+}
+.repo-copy-done {
+  @apply m-0 mr-auto break-all text-[12.5px] text-fg;
+}
 .file-window-backdrop {
   position: fixed;
   inset: 0;

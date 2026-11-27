@@ -89,7 +89,9 @@ The rules below still describe what goes into briefs and summaries.
 - The fixture repo's own suite runs under its own venv (`scripts/dev/setup_fixture_venv.ps1`).
 
 ## Safety invariants (never break; each has a test)
-1. Forge never writes to the user's original repo (code-level jail + OS-level low-integrity sandbox, D-050).
+1. Forge never writes to the user's original repo (code-level jail + OS-level low-integrity sandbox, D-050). One exception,
+   set by the user (D-674): "Copy to source" in the file card replaces one delivered file there after the user's click in a red
+   card that shows the command (one-time code, the replaced file kept for Undo); nothing the model can call reaches it, never in Mode B.
 2. In Mode B, Forge never reads outside the workspace and the profile folder, except read-only places the user opened:
    the installed skills, and files or folders the user granted for this project (`/allow-read`, a path they typed or
    @-mentioned; D-208). The model cannot grant; writes are never opened up.

@@ -137,6 +137,19 @@ interface FileLocation {
   exists_in_original: boolean;
 }
 
+interface CopyPlan {
+  relative: string;
+  source: string;
+  target: string;
+  status: "added" | "modified";
+  target_exists: boolean;
+  state: "same" | "applied" | "differs" | "missing";
+  edited_lines: number;
+  temporary: boolean;
+  command: string;
+  code: string;
+}
+
 interface FileText {
   text: string;
   binary: boolean;
@@ -251,6 +264,99 @@ async function openFileWindow(relative: string, path: string) {
   }
 }
 
+function element(tag: string, className: string, text?: string): HTMLElement {
+  const node = document.createElement(tag);
+  node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+/** Copy to source (D-674): a red card that shows the exact command and, on the user's click only, replaces the file in
+ * the original repository with the delivered one; the replaced file is kept, so the copy can be undone. */
+async function openRepoCopyCard(relative: string) {
+  closePopover();
+  const backdrop = element("div", "file-window-backdrop");
+  const panel = element("div", "file-window repo-copy");
+  panel.setAttribute("role", "alertdialog");
+  panel.setAttribute("aria-label", "Replace a file in your repository");
+  const header = element("div", "file-window-header");
+  const title = element("span", "repo-copy-title", "Replace a file in your repository");
+  const onKey = (event: KeyboardEvent) => {
+    if (event.key === "Escape") close();
+  };
+  const close = () => {
+    backdrop.remove();
+    document.removeEventListener("keydown", onKey);
+  };
+  header.append(title, fileButton("Close", close));
+  const body = element("div", "file-window-body repo-copy-body", "Loading ...");
+  panel.append(header, body);
+  backdrop.appendChild(panel);
+  backdrop.onmousedown = (event) => {
+    if (event.target === backdrop) close();
+  };
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(backdrop);
+  let plan: CopyPlan;
+  try {
+    plan = await api<CopyPlan>(`/api/repo-copy?path=${encodeURIComponent(relative)}`);
+  } catch (error) {
+    body.textContent = error instanceof Error ? error.message : "This file cannot be copied from here.";
+    return;
+  }
+  body.textContent = "";
+  body.append(element("p", "repo-copy-lead", "This will run:"));
+  const command = element("pre", "repo-copy-command");
+  command.textContent = plan.command;
+  body.appendChild(command);
+  const warnings: string[] = [];
+  if (plan.state === "same") warnings.push("Your repository already has exactly this file: there is nothing to copy.");
+  else if (plan.state === "applied")
+    warnings.push("Every changed line is already in your repository (order or comments differ). Copying replaces it with DebCraft's version.");
+  if (plan.edited_lines > 0)
+    warnings.push(
+      plan.status === "added"
+        ? "A file with this name is already in your repository. It will be replaced."
+        : `You changed this file in your repository since the project began (${plan.edited_lines} line${plan.edited_lines === 1 ? "" : "s"}). Those edits will be lost.`,
+    );
+  if (!plan.target_exists) warnings.push("This adds a new file to your repository.");
+  if (plan.temporary) warnings.push("Temporary changes made only to investigate are left out, as in the output folder.");
+  for (const text of warnings) body.appendChild(element("p", "repo-copy-warning", text));
+  body.appendChild(element("p", "repo-copy-note", "The file now in your repository is kept, so you can undo this."));
+  const actions = element("div", "repo-copy-actions");
+  const replace = fileButton("Replace in my repo", () => void doCopy());
+  replace.className = "repo-copy-confirm";
+  replace.disabled = plan.state === "same";
+  actions.append(fileButton("Cancel", close), replace);
+  body.appendChild(actions);
+
+  async function doCopy() {
+    replace.disabled = true;
+    replace.textContent = "Replacing ...";
+    try {
+      const done = await api<{ copy_id: string; target: string }>("/api/repo-copy", { method: "POST", body: { code: plan.code } });
+      actions.textContent = "";
+      const result = element("p", "repo-copy-done", `Replaced: ${done.target}`);
+      const undo = fileButton("Undo", () => void doUndo(done.copy_id, result, undo));
+      actions.append(result, undo, fileButton("Close", close));
+    } catch (error) {
+      replace.textContent = "Replace in my repo";
+      body.appendChild(element("p", "repo-copy-warning", error instanceof Error ? error.message : "The copy failed."));
+    }
+  }
+
+  async function doUndo(copyId: string, result: HTMLElement, undo: HTMLButtonElement) {
+    undo.disabled = true;
+    try {
+      await api("/api/repo-copy/undo", { method: "POST", body: { copy_id: copyId } });
+      result.textContent = "Undone: your repository has its own file again.";
+      undo.remove();
+    } catch (error) {
+      result.textContent = error instanceof Error ? error.message : "Could not undo.";
+    }
+  }
+}
+
 /** A small card under a clicked file path: the absolute path in the workspace copy and in the original repo; the
  * workspace copy opens in a window or is copied whole from here, so nobody has to go to the folder (D-662). */
 async function showFileLocation(anchor: HTMLElement, file: string) {
@@ -288,6 +394,11 @@ async function showFileLocation(anchor: HTMLElement, file: string) {
         );
       }
       actions.appendChild(fileButton("Copy path", (button) => copyFrom(button, async () => path)));
+      if (!isWorkspace && relative && location.exists_in_workspace) {
+        const toSource = fileButton("Copy to source", () => void openRepoCopyCard(relative));
+        toSource.classList.add("file-location-danger");
+        actions.appendChild(toSource);
+      }
       row.appendChild(actions);
     }
     card.appendChild(row);

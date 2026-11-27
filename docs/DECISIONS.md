@@ -5429,3 +5429,20 @@ Live (Azure, build machine, tests/test_live_error_class.py: a platform client th
 break naive fixes): the model fixed the class at once with `repr`, so the note did not fire; turn 1 asked nobody to
 change the platform; turn 2 (suggestions) named the class ("data goes into data structures, not into code strings").
 Not measured: the note's effect on Gemini, where the dashboard run went wrong (TODO EC1).
+
+## D-674: Copy to source: the user's click replaces one file in the original repository (2026-11-27)
+The user asked for a "Copy to source" option on the file card of a changed file: a red card that shows the command and,
+when clicked, replaces the file in the real repository with the generated one. This is the first exception to safety
+invariant 1 (DebCraft never writes to the user's repository); the user chose it over showing the command only and over
+copying all changed files at once. Built: `workspace/to_repository.py` (`plan_copy`: refuses Mode B, secret files,
+unchanged and deleted files; the copy's state against the repository now, D-672; the lines the user changed in the
+repository since the project began, from the baseline; `copy_to_repository`: the delivered bytes without temporary
+changes, the replaced file kept under `.forge/repo_copies/<id>/`, written in one step with os.replace; `undo_copy`: puts
+it back, or removes an added file, only when the repository still holds what was written). `web/repo_copy_routes.py`:
+GET `/api/repo-copy` shows the plan and the PowerShell line and hands out a one-time code valid 5 minutes; POST copies
+only with that code; POST `/api/repo-copy/undo`. The routes sit behind the server token and the sign-in like every route;
+the agent has no tool for it, and its commands get neither the token nor the cookie. The field log records `repo_copy`
+and `repo_copy_undone` (file name, counts). The card warns when the user's own edits would be lost, when the repository
+already has the change, when a file is new, and when temporary changes are left out.
+Options: the user's click copies (chosen); the card shows the command only (safe, one more step for the user); copy all
+changed files at once (later, if wanted).
