@@ -3,6 +3,7 @@ project form) in light and dark, with screenshots in test-artifacts/react-ui/ to
 
 from __future__ import annotations
 
+import json
 import threading
 import time
 from collections.abc import Iterator
@@ -14,6 +15,7 @@ import uvicorn
 from forge.config import load_config
 from forge.doctor import required_secret_names
 from forge.engine.session_host import SessionHost
+from forge.home_layout import data_path
 from forge.protocol.events import EventBus
 from forge.safety.redact import Redactor
 from forge.safety.server_security import ServerSecurity
@@ -242,9 +244,23 @@ def test_environment_screen_in_edge(
         assert saved["plan"]["reviewer"] == "gpt51" and saved["confirmed_at"]
         assert saved["results"]["azure"]["models"] == {"gpt41": False, "gpt51": True}
 
-        # Next time the model lists stay locked until a full test has finished (D-415); then the saved plan is what they show.
+        # Opened again: the results of this build count as tested, so the lists and Save models are there at once
+        # (office, 2026-11-27: Save stayed disabled after every model was tested, D-677).
+        page.click("button:has-text('Environment')")
+        page.wait_for_selector("select[aria-label='Model for reviewer']")
+        assert page.locator("select[aria-label='Model for reviewer']").input_value() == "gpt51"
+        assert drawer.locator("button:has-text('Save models')").is_enabled()
+        page.click("button[aria-label='Close']")
+        drawer.wait_for(state="hidden")
+
+        # Results of an older build still lock the lists until a full test has finished (D-415).
+        data = json.loads(data_path(isolated_forge_home, "environment.json").read_text(encoding="utf-8"))
+        for result in data["results"].values():
+            result["build"] = "older"
+        data_path(isolated_forge_home, "environment.json").write_text(json.dumps(data), encoding="utf-8")
         page.click("button:has-text('Environment')")
         page.wait_for_selector("[data-models=locked] >> text=The model lists appear when every test is done")
+        page.wait_for_selector("[data-testid=save-needs-test] >> text=Press Test all to save models")
         assert page.locator("select[aria-label='Model for reviewer']").count() == 0
         drawer.locator("button:has-text('Test all')").click()
         page.wait_for_selector("select[aria-label='Model for reviewer']")

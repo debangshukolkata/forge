@@ -126,6 +126,35 @@ ENV_NEEDS_NO_STEP = (
 )
 
 
+# D-678 (office, 2026-11-27): after use_scratch_database failed, the model asked the user to write DB_HOST, DB_PORT,
+# DB_NAME, DB_USER_NAME and DB_PASSWORD of their local PostgreSQL into the application's .env, although DebCraft had
+# that database in its own .env (LOCAL_PG_URL) and use_scratch_database fills exactly these settings.
+_DATABASE_SETTINGS = re.compile(
+    r"(?i)\b(?:DB|DATABASE|PG|POSTGRES(?:QL)?)_(?:HOST|PORT|NAME|USER(?:_?NAME)?|PASS(?:WORD)?|URL)\b"
+    r"|\b(?:postgres(?:ql)?|database|db)\b[^.\n]{0,40}\b(?:connection settings|credentials|host and port|connection string)\b"
+)
+DATABASE_SETTINGS_KNOWN = (
+    "Not asked: this asks the user for database connection settings, and DebCraft already has a database in its own "
+    ".env file ({names}). Do it yourself: use_scratch_database with the application's setting names (for example "
+    '{{"DB_HOST": "host", "DB_PORT": "port", "DB_NAME": "database", "DB_USER_NAME": "user", "DB_PASSWORD": '
+    '"password"}}) gives every command those values for the scratch schema of DebCraft, created when needed; then '
+    "db_copy_table the rows the application needs and start it. If that tool fails, quote its exact error to the user "
+    "in your reply instead of asking for settings."
+)
+
+
+def database_settings_known(texts: list[str]) -> str:
+    """The note when a card asks for database connection settings while DebCraft's .env has a database URL; ""
+    otherwise. The file is read now: a URL the user saved a minute ago counts (D-569)."""
+    if not any(_DATABASE_SETTINGS.search(text) for text in texts):
+        return ""
+    from forge.config import forge_home, load_secrets
+
+    secrets = load_secrets(forge_home())
+    names = [name for name in ("LOCAL_PG_URL", "DEV_PG_URL") if secrets.get(name)]
+    return DATABASE_SETTINGS_KNOWN.format(names=", ".join(names)) if names else ""
+
+
 def asks_for_a_restart_or_copy(texts: list[str]) -> bool:
     """True when the user is told to restart DebCraft or to make a variable visible to it."""
     return any(_RESTART.search(text) or _INHERIT.search(text) for text in texts)
@@ -327,6 +356,9 @@ class RequestUserAction(Tool):
             return ToolResult(ok=False, content=SECRET_IN_CHAT)
         if asks_for_a_restart_or_copy(texts):
             return ToolResult(ok=False, content=ENV_NEEDS_NO_STEP)
+        known = database_settings_known(texts)
+        if known:
+            return ToolResult(ok=False, content=known)
         interaction = _interaction(context)
         if interaction is None:
             return NOT_AVAILABLE

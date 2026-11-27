@@ -23,6 +23,17 @@ NO_DB = ToolResult(
 )
 
 
+async def _ensure_scratch(context: ToolContext) -> None:
+    """Before saying that no scratch schema is available: read the .env file again, check the databases and prepare
+    the scratch schema (D-678). Nothing when one is in use or the session cannot do it."""
+    db = context.db
+    if (db is None or db.scratch is None) and context.refresh_database is not None:
+        try:
+            await context.refresh_database()
+        except (psycopg.Error, OSError, ValueError):
+            return  # the status line then says what is wrong
+
+
 async def _ensure_checked(context: ToolContext) -> None:
     """The access check normally runs when a requirement starts; a chat question, a standalone (Mode B) project or a reopened one
     reaches these tools before that, and "not checked yet" then looks like "unreachable" although the drawer's test says connected."""
@@ -171,6 +182,7 @@ class ScratchExec(Tool):
         return f"scratch sql: {' '.join(args.sql.split())[:100]}"
 
     async def run(self, args: ScratchExec.Args, context: ToolContext) -> ToolResult:
+        await _ensure_scratch(context)
         if context.db is None or context.db.scratch is None:
             return ToolResult(
                 ok=False,
@@ -309,6 +321,7 @@ class DbCopyTable(Tool):
         return f"copy table {args.table}" + (f" where {args.where[:60]}" if args.where else "")
 
     async def run(self, args: DbCopyTable.Args, context: ToolContext) -> ToolResult:
+        await _ensure_scratch(context)
         await _ensure_checked(context)
         db = context.db
         if db is None or db.scratch is None:
@@ -372,6 +385,7 @@ class UseScratchDatabase(Tool):
         return f"point the app at the scratch database: {', '.join(args.variables) or '(remove)'}"
 
     async def run(self, args: UseScratchDatabase.Args, context: ToolContext) -> ToolResult:
+        await _ensure_scratch(context)
         db = context.db
         if db is None or db.scratch is None:
             return ToolResult(

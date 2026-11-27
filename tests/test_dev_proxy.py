@@ -272,3 +272,52 @@ async def test_the_error_waits_for_the_answers_still_owed_to_earlier_batches() -
         sent.startswith(_ready(b"I")) and sent[len(_ready(b"I")) :][:1] == b"E"
     )  # its answer, then the error
     assert link.sent_early and not link.flush_seen
+
+
+def _sasl(*mechanisms: bytes) -> bytes:
+    body = struct.pack("!I", 10) + b"".join(m + b"\x00" for m in mechanisms) + b"\x00"
+    return b"R" + struct.pack("!I", len(body) + 4) + body
+
+
+def test_channel_binding_is_not_offered_on_the_plain_link_to_the_application() -> None:
+    """D-678 (office, 2026-11-27): over TLS the server offers SCRAM-SHA-256-PLUS; libpq refuses that offer on the
+    relay's plain local link, so the relay passes on only SCRAM-SHA-256."""
+    from forge.db.dev_proxy import without_channel_binding
+
+    assert without_channel_binding(_sasl(b"SCRAM-SHA-256-PLUS", b"SCRAM-SHA-256")) == _sasl(b"SCRAM-SHA-256")
+    assert without_channel_binding(_sasl(b"SCRAM-SHA-256")) == _sasl(b"SCRAM-SHA-256")  # unchanged
+    assert without_channel_binding(_sasl(b"SCRAM-SHA-256-PLUS")) == _sasl(
+        b"SCRAM-SHA-256-PLUS"
+    )  # nothing else
+    other = b"R" + struct.pack("!II", 8, 0)  # AuthenticationOk
+    assert without_channel_binding(other) == other
+
+
+async def test_the_relay_takes_the_offer_out_of_a_real_exchange() -> None:
+    """A stand-in server answers the startup with both mechanisms; what reaches the application has one."""
+    import asyncio
+
+    async def server(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+        (length,) = struct.unpack("!I", await reader.readexactly(4))
+        await reader.readexactly(length - 4)
+        writer.write(_sasl(b"SCRAM-SHA-256-PLUS", b"SCRAM-SHA-256"))
+        await writer.drain()
+        await asyncio.sleep(1)
+        writer.close()
+
+    upstream = await asyncio.start_server(server, "127.0.0.1", 0)
+    port = upstream.sockets[0].getsockname()[1]
+    proxy = DevProxy("127.0.0.1", port, sslmode="disable")
+    local = await proxy.start()
+    try:
+        reader, writer = await asyncio.open_connection("127.0.0.1", local)
+        startup = struct.pack("!I", 196608) + b"user\x00app\x00\x00"
+        writer.write(struct.pack("!I", len(startup) + 4) + startup)
+        await writer.drain()
+        head = await asyncio.wait_for(reader.readexactly(5), 5)
+        rest = await reader.readexactly(struct.unpack("!I", head[1:5])[0] - 4)
+        assert head + rest == _sasl(b"SCRAM-SHA-256")
+        writer.close()
+    finally:
+        await proxy.close()
+        upstream.close()

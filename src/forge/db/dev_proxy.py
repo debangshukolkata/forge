@@ -11,7 +11,8 @@ this relay passes its PostgreSQL traffic on. On the way it
 - remembers every writing statement and the row counts the server reports, for the report to the user.
 
 It reads only the frame of each message (type and length) and the text of Query and Parse messages; everything
-else, including the password exchange, is passed on untouched. The application talks to the relay without TLS
+else, including the password exchange, is passed on untouched (only the server's offer of channel binding,
+which needs TLS on the application's own link, is taken out, D-678). The application talks to the relay without TLS
 (it is on localhost); the relay uses TLS to the server when the server offers it.
 """
 
@@ -149,6 +150,26 @@ def _error(message: str) -> bytes:
 
 def _ready(status: bytes) -> bytes:
     return b"Z" + struct.pack("!I", 5) + status
+
+
+AUTH_SASL = 10
+CHANNEL_BINDING = b"SCRAM-SHA-256-PLUS"
+
+
+def without_channel_binding(message: bytes) -> bytes:
+    """The server's AuthenticationSASL without SCRAM-SHA-256-PLUS (D-678). The server offers it because the relay's
+    link to it is TLS; the application's link to the relay is plain, and libpq refuses that offer there ("server
+    offered SCRAM-SHA-256-PLUS authentication over a non-SSL connection", office 2026-11-27). Without it the
+    application picks SCRAM-SHA-256, which the server accepts; the password exchange itself is still passed on
+    untouched. Any other message is returned as it is."""
+    if message[:1] != b"R" or len(message) < 9 or struct.unpack("!I", message[5:9])[0] != AUTH_SASL:
+        return message
+    mechanisms = [name for name in message[9:].split(b"\x00") if name]
+    kept = [name for name in mechanisms if name != CHANNEL_BINDING]
+    if not kept or kept == mechanisms:
+        return message
+    body = struct.pack("!I", AUTH_SASL) + b"".join(name + b"\x00" for name in kept) + b"\x00"
+    return b"R" + struct.pack("!I", len(body) + 4) + body
 
 
 def _text(payload: bytes, start: int = 0) -> tuple[str, int]:
@@ -429,7 +450,9 @@ class DevProxy:
                     break
                 message, buffer = buffer[: length + 1], buffer[length + 1 :]
                 kind = message[:1]
-                if kind == b"C":
+                if kind == b"R":
+                    message = without_channel_binding(message)
+                elif kind == b"C":
                     tag, _ = _text(message[5:])
                     match = _ROWS.match(tag)
                     if match:

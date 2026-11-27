@@ -10,7 +10,7 @@ from openai import AsyncAzureOpenAI
 
 from forge.config import AzureProviderConfig, ModelConfig, Secrets
 from forge.errors import ConfigError, LLMError, LLMNotFoundError
-from forge.llm.azure_errors import map_openai_error
+from forge.llm.azure_errors import CALL_ERRORS, map_openai_error
 from forge.llm.base import ChatRequest, LLMResponse, ProgressCallback, StreamProgress, TextDeltaCallback
 from forge.llm.translate_chat import (
     ChatStreamAccumulator,
@@ -120,7 +120,7 @@ class AzureOpenAIProvider:
                     raise
                 params["reasoning"].pop("summary", None)  # this deployment does not offer summaries
                 return await self._stream_responses(params, on_text_delta, None, request.on_progress)
-        except openai.OpenAIError as error:
+        except CALL_ERRORS as error:
             raise map_openai_error(error) from error
 
     async def _stream_responses(
@@ -192,7 +192,7 @@ class AzureOpenAIProvider:
                 completion = await self._client.chat.completions.create(**params)
                 return from_chat_completion(completion.model_dump(exclude_none=True))
             return await self._stream_chat(params, on_text_delta)
-        except openai.OpenAIError as error:
+        except CALL_ERRORS as error:
             raise map_openai_error(error) from error
 
     async def _stream_chat(self, params: dict[str, Any], on_text_delta: TextDeltaCallback) -> LLMResponse:

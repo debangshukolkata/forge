@@ -542,3 +542,34 @@ async def test_a_turn_that_ended_is_not_resumed_on_reopen_but_a_killed_one_is(wo
     orchestrator.state.tasks = [Task(id="T1", title="open", status="pending")]
     assert not orchestrator.needs_resume  # waiting for the user: reopening does not call the model
     assert orchestrator.has_unfinished_work  # but `forge run` without a prompt continues the open task
+
+
+@pytest.mark.pg
+async def test_a_local_database_added_to_the_env_file_later_gives_the_scratch_schema_without_asking(
+    workspace: Workspace,
+    admin_url: str,
+    cleanup_schemas: list[str],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """D-678 (office, 2026-11-27): the session started without LOCAL_PG_URL (or never prepared the database before a
+    chat question reached the tools); use_scratch_database said 'No scratch schema is available' and the model asked
+    the user for connection details. The tool now reads the .env file again and prepares the scratch schema."""
+    from forge.tools.db import UseScratchDatabase
+
+    env_file = tmp_path / "debcraft.env"
+    env_file.write_text("", encoding="utf-8")
+    monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
+    host = _orchestrated_host(workspace, Secrets({}, None))
+    assert host.db is None and host.agent is not None
+    env_file.write_text(
+        f"LOCAL_PG_URL={admin_url}\n", encoding="utf-8"
+    )  # the user adds it while the session runs
+    cleanup_schemas.append(f"forge_{workspace.info.name}".lower())
+    context = host.agent.context
+    result = await UseScratchDatabase().run(UseScratchDatabase.Args(variables={"DB_HOST": "host"}), context)
+    assert result.ok, result.content
+    assert context.db is not None and context.db.scratch is not None
+    cleanup_schemas.append(context.db.scratch.schema)
+    assert _schema_exists(admin_url, context.db.scratch.schema)
+    assert context.db.command_environment()["DB_HOST"]

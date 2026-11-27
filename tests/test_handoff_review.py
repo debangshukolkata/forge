@@ -221,3 +221,25 @@ async def test_a_review_that_fails_or_answers_nonsense_never_hides_a_card(
     no_model = make_context(original_repo, tmp_path / "c")
     no_model.interaction = Shown()
     assert (await RequestUserAction().run(ACTION, no_model)).ok
+
+
+def test_a_card_asking_for_database_settings_is_sent_back_when_debcraft_has_a_database(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """D-678 (office, 2026-11-27): "Add local PostgreSQL settings to backend/.env: DB_HOST=..., DB_PASSWORD=...",
+    with LOCAL_PG_URL in DebCraft's .env. The card never reaches the user; the model is pointed at use_scratch_database."""
+    from forge.tools.interaction import database_settings_known
+
+    env_file = tmp_path / "debcraft.env"
+    monkeypatch.setenv("FORGE_ENV_FILE", str(env_file))
+    card = [
+        "Add local PostgreSQL settings to backend-biz-exec-flow/.env",
+        "Add your local PostgreSQL (`forge_dev`) connection settings:\nDB_HOST=<host>\nDB_PORT=<port>\nDB_NAME=forge_dev",
+    ]
+    env_file.write_text("", encoding="utf-8")
+    assert database_settings_known(card) == ""  # DebCraft has no database: the user is the one to ask
+    fake_url = "postgresql://u:p@localhost:5432/forge_dev"  # check_secrets: fake
+    env_file.write_text(f"LOCAL_PG_URL={fake_url}\n", encoding="utf-8")
+    note = database_settings_known(card)
+    assert "LOCAL_PG_URL" in note and "use_scratch_database" in note and "postgresql://" not in note
+    assert database_settings_known(["Grant SELECT on wnxt_agent.tools to the forge role"]) == ""

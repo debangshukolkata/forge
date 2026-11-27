@@ -25,6 +25,8 @@ SDK_ERRORS: tuple[type[BaseException], ...] = (
     errors.APIError,
     auth_exceptions.GoogleAuthError,
     httpx.HTTPError,
+    httpx.StreamError,
+    OSError,  # ssl.SSLError and a reset connection, raised raw by the transport (D-675)
 )
 
 _CONTEXT_MARKERS = ("exceeds the maximum number of tokens", "input token count", "too long", "context window")
@@ -41,7 +43,7 @@ def map_gemini_error(error: BaseException) -> LLMError:
         return LLMAuthError(f"{ADC_HELP}: {message}")
     if isinstance(error, httpx.TimeoutException):
         return LLMConnectionError(f"Request timed out: {message}")
-    if isinstance(error, httpx.HTTPError):
+    if isinstance(error, (httpx.HTTPError, httpx.StreamError, OSError)):
         cause = default_redactor.redact(root_cause(error))[:400]
         return LLMConnectionError(
             f"Could not reach Vertex AI: {message} Cause: {cause}. Next step: {connection_hint(cause)}."

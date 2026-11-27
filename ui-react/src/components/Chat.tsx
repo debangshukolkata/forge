@@ -1,5 +1,5 @@
 import {
-  AlertOctagon, ArrowDown, Check, ChevronDown, Hand, HelpCircle, Info, ShieldQuestion, Terminal, Upload,
+  AlertOctagon, ArrowDown, Check, ChevronDown, Hand, HelpCircle, Info, RotateCcw, ShieldQuestion, Terminal, Upload,
 } from "lucide-react";
 import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, Code, DRAFT_EVENT, Markdown, cx } from "../lib";
@@ -11,7 +11,7 @@ import { NoticedRisks, NoticedSection, splitNoticed } from "./Noticed";
 import { SlideStrip } from "./Slides";
 import { QuestionDialog, QuestionForm, QuestionPopup } from "./QuestionDialog";
 import { LookingGroup, ThinkingLine, ToolCard, groupLookingRuns } from "./ToolRows";
-import { Badge, Button, CopyButton, Textarea } from "./ui";
+import { Badge, Button, CopyButton, IconButton, Textarea } from "./ui";
 
 
 export const SHOW_ALL_EVENT = "forge:show-all"; // the Run map's jump asks the chat to draw every item
@@ -212,11 +212,14 @@ function groupIntoTurns(rows: ChatRow[]): Array<{ key: string; rows: ChatRow[] }
   return turns;
 }
 
-/** Your message, long ones cut to three lines while pinned; click to read all of it. */
+/** Your message, long ones cut to three lines while pinned; click to read all of it. On hover: Copy (the whole text,
+ * also when it is shown cut) and Send again (back into the message box, to edit or resend after an error). */
 function StickyPrompt({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
+  const sendAgain = () => window.dispatchEvent(new CustomEvent(DRAFT_EVENT, { detail: text }));
   return (
-    <div className="flex justify-end">
+    <div className="group flex flex-col items-end gap-0.5" data-testid="user-message">
+      <div className="flex w-full justify-end">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -226,6 +229,13 @@ function StickyPrompt({ text }: { text: string }) {
         {/* The cut is on an element without padding: in the padding the next line would show through, cut in half. */}
         <span data-testid="sticky-prompt-text" className={cx("whitespace-pre-wrap break-words", open ? "block" : "line-clamp-3")}>{text}</span>
       </button>
+      </div>
+      <div className="flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100" data-testid="user-message-actions">
+        <CopyButton text={text} label="Copy message" />
+        <IconButton label="Send again (puts it in the message box)" onClick={sendAgain} className="h-7 w-7">
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+        </IconButton>
+      </div>
     </div>
   );
 }

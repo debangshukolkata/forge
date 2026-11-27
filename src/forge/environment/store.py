@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from forge.buildinfo import build_id
 from forge.home_layout import data_path
 
 FILE = "environment.json"
@@ -64,7 +65,8 @@ def now() -> str:
 
 def save_result(home: Path, check_id: str, result: dict[str, Any]) -> None:
     data = load(home)
-    data["results"][check_id] = {**result, "checked_at": now()}
+    # The build that made the result (D-677): one from this build counts as tested when the panel is opened again.
+    data["results"][check_id] = {**result, "checked_at": now(), "build": build_id()}
     _write(home, data)
 
 

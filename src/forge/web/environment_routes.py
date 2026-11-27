@@ -3,12 +3,14 @@ Nothing here returns or stores a secret value; check details are redacted in `en
 
 from __future__ import annotations
 
+import threading
 from dataclasses import asdict
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from forge.buildinfo import build_id
 from forge.config import ForgeConfig, load_config
 from forge.environment import store
 from forge.environment.checks import (
@@ -38,6 +40,10 @@ class Answer(BaseModel):
 
 
 def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
+    # The build id hashes every source file once (about a second); done in a thread now, so the first request for the
+    # panel does not wait for it on the event loop (D-573, D-677).
+    threading.Thread(target=build_id, name="build-id", daemon=True).start()
+
     def sync_ocr_tool() -> None:
         """A yes (and a passing test) on the drawer gives the open session the `ocr_image` tool now; a no
         takes it away. A session started later gets it from the saved answer (D-203)."""
@@ -67,6 +73,8 @@ def add_environment_routes(app: FastAPI, manager: WebSessionManager) -> None:
         return {
             "checks": [asdict(check) for check in CHECKS],
             "saved": saved,
+            # Results made by this build need no new test to unlock Save models; an older build's do (D-415, D-677).
+            "current_build": build_id(),
             "plan": propose_plan(config(), saved["results"], manual_choices(saved)),
         }
 

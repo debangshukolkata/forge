@@ -206,6 +206,7 @@ export interface CheckResultView {
   missing?: string[]; // azure: names of required values that are not set (never values)
   steps?: string[]; // what to do when it does not work, shown under an (i) icon
   checked_at?: string;
+  build?: string; // the DebCraft build that made it (D-677)
 }
 
 export interface ModelPlan {
@@ -223,6 +224,7 @@ export interface EnvironmentOverview {
     answers: Record<string, boolean>; // optional tools: check id -> the user's yes/no
   };
   plan: ModelPlan;
+  current_build?: string; // results saved by this build count as tested (D-677)
 }
 
 export interface AgentStep {

@@ -447,3 +447,38 @@ def test_the_report_says_how_long_it_waited() -> None:
         )
     )
     assert "gpt54, quota (429): 2 waits, 60s in all, longest 40s" in text and "gpt54 -> gpt52: 1" in text
+
+
+async def test_a_broken_tls_record_is_retried_not_an_internal_error() -> None:
+    """D-675 (office, 2026-11-27): ssl.SSLError SSLV3_ALERT_BAD_RECORD_MAC while reading the response headers passed the
+    SDK's wrapping and stopped the turn as an internal error; it is a connection error and is retried."""
+    import ssl
+
+    calls: list[int] = []
+    sleeps: list[float] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        calls.append(1)
+        if len(calls) == 1:
+            raise ssl.SSLError(
+                1, "[SSL: SSLV3_ALERT_BAD_RECORD_MAC] sslv3 alert bad record mac (_ssl.c:2638)"
+            )
+        return json_response(200, responses_body([text_output("ok")]))
+
+    response = await mocked_router(handler, sleeps).chat("coder", HELLO)
+
+    assert response.text == "ok" and len(calls) == 2 and len(sleeps) == 1
+
+
+def test_gemini_maps_raw_transport_failures_to_connection_errors() -> None:
+    import ssl
+
+    import httpx
+
+    from forge.errors import LLMConnectionError
+    from forge.llm.gemini_errors import SDK_ERRORS, map_gemini_error
+
+    for raw in (ssl.SSLError(1, "bad record mac"), ConnectionResetError("reset"), httpx.StreamClosed()):
+        assert isinstance(raw, SDK_ERRORS)
+        mapped = map_gemini_error(raw)
+        assert isinstance(mapped, LLMConnectionError) and mapped.retryable, raw

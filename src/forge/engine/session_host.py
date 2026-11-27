@@ -20,7 +20,7 @@ from typing import Any
 import psycopg
 
 from forge.agent.loop import AgentLoop, system_prompt
-from forge.config import Secrets, forge_home, permission_rules
+from forge.config import Secrets, forge_home, load_secrets, permission_rules
 from forge.context.manager import ContextManager
 from forge.db.access import AccessLevel
 from forge.db.credential_tables import credential_tables
@@ -218,6 +218,25 @@ class SessionHost:
         )
         return DbSession(settings, self.secrets, workspace, forge_home(), tables)
 
+    async def refresh_database(self) -> None:
+        """D-678 (office, 2026-11-27): the session read the .env file once, at its start, and checked the databases
+        only when a requirement began. A local database added later, or a chat question that reached the database
+        tools first, left no scratch schema, and the model asked the user for connection details DebCraft had.
+        Read the .env file again (in a thread), build the database session if there was none, check again and
+        prepare the scratch schema (created when allowed), as at the start of a requirement."""
+        if self.workspace is None or self.agent is None:
+            return
+        secrets = await asyncio.to_thread(load_secrets, forge_home())
+        self.secrets = secrets
+        context = self.agent.context
+        if context.db is None:
+            context.db = await asyncio.to_thread(self._build_db, self.workspace)
+            if context.db is None:
+                return
+        else:
+            context.db.secrets = secrets
+        await self.prepare_database(force=True)
+
     async def prepare_database(self, force: bool = False) -> None:
         """Spec §9.5.2 at the start of work: access level per database, then the scratch schema (created
         by DebCraft only when its role may and config allows; otherwise the agent writes a DB request)."""
@@ -365,6 +384,7 @@ class SessionHost:
         )
         context.require_baseline = True
         context.db = self._build_db(workspace)
+        context.refresh_database = self.refresh_database
         self.refresh_profile_pin()
         web = self.router.config.web
         context.secrets = self.secrets

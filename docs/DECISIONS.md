@@ -5446,3 +5446,52 @@ and `repo_copy_undone` (file name, counts). The card warns when the user's own e
 already has the change, when a file is new, and when temporary changes are left out.
 Options: the user's click copies (chosen); the card shows the command only (safe, one more step for the user); copy all
 changed files at once (later, if wanted).
+
+## D-675: a broken TLS record or a dropped connection is retried, not an internal error (2026-11-27)
+Office photograph 2026-11-27: "DebCraft hit an internal error (SSLError: [SSL: SSLV3_ALERT_BAD_RECORD_MAC] sslv3 alert bad
+record mac)" during a model call through the Azure client (httpx2). The openai SDK 3.x wraps only httpx2.RequestError
+raised while sending; a TLS record broken by the network or the company proxy, a reset connection, or a read that fails
+in the middle of a stream is raised raw, passed `except openai.OpenAIError` and reached the loop as an internal error,
+so the turn stopped without a retry. `llm/azure_errors.py` `NETWORK_ERRORS` (httpx2.HTTPError, httpx2.StreamError,
+OSError, which includes ssl.SSLError) map to `LLMConnectionError` (retried with backoff, then the fallback model); both
+call sites of the Azure provider catch `CALL_ERRORS`. The Gemini client (httpx) had the same gap: `SDK_ERRORS` now holds
+httpx.StreamError and OSError. Test: a transport that raises the SSLError once, then answers (fails before the fix).
+
+## D-676: Copy and Send again under each of the user's messages (2026-11-27)
+The user asked for a way to copy an earlier prompt (office, after the SSL error stopped a turn). Under each of the user's
+messages in the chat, shown on hover or keyboard focus: Copy message (the whole text, also when the message is shown cut
+to three lines) and Send again (puts the text into the message box through DRAFT_EVENT, to edit or send; nothing is sent
+by itself). Options: Copy and Send again (chosen); Copy only (↑ in the empty box already recalls earlier prompts); a
+Retry button on the error card as well. Browser test tests/test_web_prompt_copy_e2e.py.
+
+## D-677: Save models stays open when the panel is opened again on the same build (2026-11-27)
+Office photographs 2026-11-27: every row said Connected ("Tested 34 minutes ago") and Save models was disabled, with no
+word why. D-415 locks the model lists until every test that applies has run since the panel was opened, because results
+saved by an older version did not know the newer models; so every reopening locked Save again. Each saved result now
+records the build that made it (`store.save_result`, `buildinfo.build_id`); the panel counts a result of the current build
+as tested, so only results of an older build (or none) need Test all, and a line under the buttons says so ("Press Test
+all to save models: N of M results are from an older DebCraft version or not tested yet"). Found on the way: the first
+call of `build_id()` (hashing every source file) ran on the event loop in the first panel request; it is warmed in a
+thread at start (D-573), and Test all is disabled until the panel has its list of checks (a click before did nothing).
+Options: per build (chosen); a time limit on saved results (an update within the limit would bring the D-415 problem
+back); no lock at all (D-415's wrong lists). Tests: tests/test_web_login_e2e.py (open again: unlocked; older build: locked).
+
+## D-678: the local database is found when it is needed; the relay passes SCRAM through TLS; no card for known settings (2026-11-27)
+Office photographs 2026-11-27 ("can you start the app on the local machine"): DebCraft asked the user to write DB_HOST,
+DB_PORT, DB_NAME, DB_USER_NAME and DB_PASSWORD of their local PostgreSQL into the application's .env, although its own
+.env has LOCAL_PG_URL (the Environment panel: L3, connected). Three causes, three fixes.
+(1) `use_scratch_database` answered "No scratch schema is available", with only the dev database in the status line: the
+session reads the .env file once, at its start, and prepares the scratch schema only when a requirement begins; a chat
+question, or a URL added later, left none. `SessionHost.refresh_database` reads the .env file again (in a thread), builds
+the database session if there was none, checks the databases and prepares the scratch schema (created when allowed);
+`ToolContext.refresh_database` lets `use_scratch_database`, `db_copy_table` and `scratch_exec` call it before refusing.
+(2) `use_dev_database` failed at connect: "server offered SCRAM-SHA-256-PLUS authentication over a non-SSL connection".
+The relay talks TLS to the server, which therefore offers channel binding; the application's link to the relay is plain,
+and libpq refuses that offer there. The relay now removes SCRAM-SHA-256-PLUS from the server's AuthenticationSASL
+message (`without_channel_binding`); the application picks SCRAM-SHA-256 and the exchange itself passes untouched.
+(3) `request_user_action` sends back a card that asks for database connection settings (DB_HOST, ..._PASSWORD, connection
+string) while DebCraft's .env has LOCAL_PG_URL or DEV_PG_URL, pointing the model at use_scratch_database and asking it to
+quote a tool's exact error instead.
+Tests: tests/test_db.py (pg: the URL is added after the session started; use_scratch_database works and the schema exists),
+tests/test_dev_proxy.py (the offer is removed, also through a stand-in server), tests/test_handoff_review.py.
+Not checked here: the local Postgres has TLS off, so (2) was not run against a real TLS server (laptop item DV10).

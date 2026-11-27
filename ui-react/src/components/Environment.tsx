@@ -127,6 +127,15 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
             ]),
           ),
         );
+        // A result this build saved earlier counts as tested: reopening the panel must not lock Save again (D-677).
+        // Results of an older build still need Test all (D-415).
+        setTestedNow(
+          Object.fromEntries(
+            overview.checks
+              .filter((c) => overview.current_build && overview.saved.results[c.id]?.build === overview.current_build)
+              .map((c) => [c.id, true]),
+          ),
+        );
         adopt(overview.plan);
       })
       .catch((failure: Error) => setError(failure.message));
@@ -281,11 +290,12 @@ export function EnvironmentDrawer({ onClose, onOpenGuide }: { onClose: () => voi
             {saving && <Spinner />}
             Save models
           </Button>
-          <Button variant="secondary" disabled={testing} icon={<RotateCw className="h-3.5 w-3.5" />} onClick={testAll}>
+          <Button variant="secondary" disabled={testing || checks.length === 0} icon={<RotateCw className="h-3.5 w-3.5" />} onClick={testAll}>
             Test all
           </Button>
         </div>
         {!canSave && !testing && plan && testsComplete && <p className="mt-2 text-[12px] text-fg-muted">Azure OpenAI has to answer before the models can be saved.</p>}
+        {!testing && !testsComplete && <p className="mt-2 text-[12px] text-fg-muted" data-testid="save-needs-test">Press Test all to save models: {required.length - finished} of {required.length} results are from an older DebCraft version or not tested yet.</p>}
       </div>
     </aside>
   );

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import httpx2
 import openai
 
 from forge.errors import (
@@ -29,8 +30,26 @@ _CONTEXT_MARKERS = (
 _FILTER_MARKERS = ("content_filter", "responsibleaipolicyviolation", "content management policy")
 
 
-def map_openai_error(error: Exception) -> LLMError:
+# Raised raw by the transport, outside what the SDK wraps: a TLS record the proxy or the network broke
+# (ssl.SSLError is an OSError), a reset connection, a read that failed in the middle of a stream (D-675).
+NETWORK_ERRORS: tuple[type[BaseException], ...] = (httpx2.HTTPError, httpx2.StreamError, OSError)
+# What a call of the Azure SDK can raise that is the provider's or the network's failure, not a bug.
+CALL_ERRORS: tuple[type[BaseException], ...] = (openai.OpenAIError, *NETWORK_ERRORS)
+
+
+def network_error(error: BaseException) -> LLMConnectionError:
+    """A transport failure as a connection error, which the retry layer repeats."""
+    cause = default_redactor.redact(root_cause(error))[:400]
+    return LLMConnectionError(
+        f"The connection failed during the call: {cause}. It is retried; if it keeps failing, next step: "
+        f"{connection_hint(cause)}."
+    )
+
+
+def map_openai_error(error: BaseException) -> LLMError:
     message = default_redactor.redact(str(error))[:800]
+    if isinstance(error, NETWORK_ERRORS):
+        return network_error(error)
     if isinstance(error, openai.APITimeoutError):
         return LLMConnectionError(f"Request timed out: {message}")
     if isinstance(error, openai.APIConnectionError):

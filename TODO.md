@@ -35,6 +35,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done · `[-]` dropped (c
 
 ## 2. Waiting for the office laptop (closed from photographs)
 Nobody builds these: each waits for the user's run and the photograph of the summary page.
+- [ ] `DV10` **The relay through TLS (D-678).** On the office laptop: `use_dev_database` connects (no 'SCRAM-SHA-256-PLUS over a non-SSL connection'), and a chat question that needs the local database gets the scratch schema without a card asking for DB_HOST and the like.
 - [ ] `EC1` **Error classes on Gemini (D-673).** On the office laptop: `pytest tests/test_live_error_class.py -m live -s` with Hydrogen as coder, and in a real project whose errors repeat: does the note ("... again, after 2 or more code changes") appear, does the reply name the cause, and does DebCraft stay away from outside systems until asked for suggestions.
 - [ ] `LN1` **Review the learnings with the user, one by one (D-650, D-667):** `Learnings-Report.cmd` (or the end of `Laptop-Report.cmd`) opens them numbered L1, L2, ... in a browser tab; the user photographs it, then each one becomes a check, a skill, a short rule or nothing, with a test.
 - [ ] `DP1` **Two planners on the laptop (D-658).** With Neon and Carbon set up, a large task shows two plans running at once and, where they differ in what gets built, one card per difference (at most three). Photo of a card and of the plan's section "Decided between the two plans"; then the measurement of `DP2`.

@@ -94,6 +94,9 @@ class ToolContext:
     shell: ShellSession | None = None
     background: BackgroundManager | None = None
     db: Any = None  # forge.db.session.DbSession, when a database is configured
+    # Reads DebCraft's .env again, checks the databases and prepares the scratch schema (set by the session host,
+    # D-678): a database tool calls it before saying that no scratch schema is available.
+    refresh_database: Callable[[], Awaitable[None]] | None = None
     image_candidates: dict[str, Any] = field(
         default_factory=dict
     )  # find_image results of this session, by id (for fetch_image)
