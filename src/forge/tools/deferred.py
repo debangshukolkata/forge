@@ -131,6 +131,11 @@ DEFERRED_GROUPS: dict[str, tuple[str, tuple[str, ...]]] = {
         "Earlier conversations of this project: what was asked and answered in them",
         ("conversation_recall",),
     ),
+    "self_review": (
+        "What went wrong in something DebCraft built and why: a report in three layers (the built program's failures, "
+        "DebCraft's decisions that allowed them, changes to DebCraft) from the conversation's record",
+        ("review_build",),
+    ),
     "code_intel": (
         "Exact Python lookups: where a name is defined, who uses it, the symbols of a file",
         ("find_definition", "find_references", "list_symbols"),

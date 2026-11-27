@@ -6,6 +6,7 @@ from __future__ import annotations
 import difflib
 import os
 import shutil
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
@@ -114,6 +115,37 @@ def compute_changes(workspace: Workspace) -> list[FileChange]:
         if change.op == "move" and change.path in changes and changes.get(change.from_path or ""):
             changes[change.path].moved_from = change.from_path
     return [changes[key] for key in sorted(changes)]
+
+
+def changes_of(workspace: Workspace, names: set[str]) -> list[FileChange]:
+    """`compute_changes` for the named files only (a path, or its end), without reading the whole copy (D-672)."""
+    manifest = workspace.manifest.files
+    edits = TemporaryEdits(workspace)
+    edited, _ = _marked_paths(edits)
+    found: list[FileChange] = []
+    for name in sorted(names):
+        candidates = [name] if (workspace.repo_dir / name).is_file() or name in manifest else []
+        candidates += [key for key in manifest if key.endswith("/" + name) and key not in candidates]
+        for relative in candidates:
+            path = workspace.repo_dir / relative
+            entry = manifest.get(relative)
+            if not path.is_file():
+                if entry is not None:
+                    found.append(FileChange(path=relative, status="deleted", secret=entry.secret))
+                continue
+            data = path.read_bytes()
+            if relative in edited:
+                data, _ = delivered_bytes(workspace, relative, data, edits)
+            if entry is None or entry.sha256 != sha256_of(data):
+                found.append(
+                    FileChange(
+                        path=relative,
+                        status="added" if entry is None else "modified",
+                        sha256=sha256_of(data),
+                        secret=workspace.is_secret(relative),
+                    )
+                )
+    return found
 
 
 def build_output(workspace: Workspace) -> OutputManifest:
@@ -260,6 +292,11 @@ def temporary_section(entries: list[Entry]) -> list[str]:
 
 
 def build_copy_instructions(workspace: Workspace, changes: list[FileChange]) -> str:
+    states = repository_states(workspace, changes)
+    already = [c for c in changes if states.get(c.path) in ("same", "applied") and not c.secret]
+    changes = [
+        c for c in changes if c not in already
+    ]  # nothing to do for what the repository already has (D-672)
     added = [c for c in changes if c.status == "added" and not c.secret]
     modified = [c for c in changes if c.status == "modified" and not c.secret]
     deleted = [
@@ -286,6 +323,21 @@ def build_copy_instructions(workspace: Workspace, changes: list[FileChange]) -> 
         *([f"- Delete `{c.path}`" for c in deleted] or ["None."]),
         "",
     ]
+    if already:
+        lines += [
+            f"## Already in your repository ({len(already)}): nothing to do",
+            "",
+            *[
+                f"- `{c.path}`"
+                + (
+                    " (the same file)"
+                    if states[c.path] == "same"
+                    else " (every changed line is there; order or comments may differ)"
+                )
+                for c in already
+            ],
+            "",
+        ]
     if secret:
         lines += ["## Secret/config files changed (not exported — apply by hand)", ""]
         lines += [f"- `{c.path}` ({c.status})" for c in secret] + [""]
@@ -360,6 +412,59 @@ def file_texts(workspace: Workspace, change: FileChange) -> tuple[str, str] | No
     except ValueError:  # decode_text refuses binary content
         return None
     return before, after
+
+
+COMMENT_LINE = ("#", "//", "--", "<!--", "/*", "*")
+
+
+def _plain_lines(text: str) -> list[str]:
+    """The lines that carry code: stripped, without blank and comment-only lines."""
+    return [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and not line.strip().startswith(COMMENT_LINE)
+    ]
+
+
+def repository_state(workspace: Workspace, change: FileChange) -> str | None:
+    """Is this change already in the user's repository as it is NOW (D-672)? "same": the file there is the delivered
+    one; "applied": every changed code line is there (order, spacing or comments may differ, as when the user pasted
+    only the line that matters); "differs": something is still to copy; "missing": the file is not there. None in
+    Mode B, where there is no repository to compare with. The baseline is the copy made when the project started; the
+    user applies changes after that, so a list of changes against the baseline alone asked the user to copy again
+    what was copied the day before (office, 2026-11-27)."""
+    if workspace.mode_b or not workspace.info.repo_path:
+        return None
+    original = Path(workspace.info.repo_path) / change.path
+    if change.status == "deleted":
+        return "same" if not original.exists() else "differs"
+    if not original.is_file():
+        return "missing"
+    texts = file_texts(workspace, change)
+    if texts is None:
+        return "differs"
+    before, after = texts
+    theirs = _decoded(original)
+    if theirs == after or theirs.replace("\r\n", "\n") == after.replace("\r\n", "\n"):
+        return "same"
+    before_lines, after_lines, their_lines = (
+        Counter(_plain_lines(before)),
+        Counter(_plain_lines(after)),
+        Counter(_plain_lines(theirs)),
+    )
+    added = after_lines - before_lines
+    removed = before_lines - after_lines
+    if not added and not removed:  # only comments or spacing changed: nothing that runs is missing there
+        return "applied"
+    has_added = all(their_lines[line] >= count for line, count in added.items())
+    lacks_removed = all(their_lines[line] <= after_lines[line] for line in removed)
+    return "applied" if has_added and lacks_removed else "differs"
+
+
+def repository_states(workspace: Workspace, changes: list[FileChange]) -> dict[str, str]:
+    """`repository_state` of every change that has one."""
+    states = {change.path: repository_state(workspace, change) for change in changes}
+    return {path: state for path, state in states.items() if state is not None}
 
 
 def _decoded(path: Path) -> str:

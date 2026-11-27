@@ -145,7 +145,7 @@ export interface NoticedRisk {
 /** One entry in the chat timeline, derived from events. */
 export type ChatItem =
   | { key: string; kind: "user"; text: string }
-  | { key: string; kind: "assistant"; text: string; streaming?: boolean; usage?: { input: number; output: number; cost: number } }
+  | { key: string; kind: "assistant"; text: string; streaming?: boolean; streamed?: boolean; usage?: { input: number; output: number; cost: number } }
   | {
       key: string;
       kind: "tool";

@@ -119,3 +119,39 @@ def made_up_note(context: ToolContext, reply: str) -> str:
         "real values, so do not call them verified. Say what the user has to expect with the real ones (for example, "
         "a token of the real environment is refused when the signing key is invented)."
     )
+
+
+COPY_WORDS = re.compile(
+    r"\b(?:re-?copy|copy|paste|apply|add (?:it|them|this|these|the line)|overwrite|replace)\b", re.I
+)
+NAMED_FILE = re.compile(r"[\w./\-]+\.[A-Za-z]{1,5}\b")
+
+
+def already_there_note(context: ToolContext, reply: str) -> str:
+    """For files the reply asks the user to copy that the user's repository already has (D-672, office 2026-11-27: the
+    agent code copied the day before was asked for again, "saying it has modified; nothing was modified")."""
+    if not COPY_WORDS.search(reply):
+        return ""
+    from forge.workspace.output import changes_of, repository_states
+
+    named = {name.replace("\\", "/").lstrip("./") for name in NAMED_FILE.findall(reply)}
+    if not named:
+        return ""
+    try:
+        states = repository_states(context.workspace, changes_of(context.workspace, named))
+    except (OSError, ValueError):
+        return ""
+    there = sorted(path for path, state in states.items() if state in ("same", "applied"))
+    fresh = [path for path in there if f"already:{path}" not in context.handover_told]
+    if not fresh:
+        return ""
+    context.handover_told.update(f"already:{path}" for path in fresh)
+    still = sorted(path for path, state in states.items() if state in ("differs", "missing"))
+    return (
+        "DebCraft compared the files your reply asks the user to copy with the user's repository as it is now: "
+        + ", ".join(fresh)
+        + " already have these changes there (the same file, or every changed line; order or comments may differ). "
+        "Correct your reply: say they are already in the repository and need nothing; do not ask the user to copy "
+        "or add them again, and do not call them changed since then. "
+        + (f"Still to copy: {', '.join(still)}." if still else "Nothing else you named needs copying.")
+    )

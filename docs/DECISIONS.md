@@ -5372,3 +5372,60 @@ Now a note becomes a user turn only after the model's own answer (the D-664 case
 tool results it goes to the system instruction as before. The stand-in run of D-669 could not show this: it checked
 only that the last turn was the user's, which it was. Wrong in D-664: changing where every request's pinned block goes,
 to fix one path, without a live Gemini call.
+
+## D-671: "What mistakes did you make?" gives a three-layer build review from the record (2026-11-27)
+The user: an agent DebCraft built (an HTML dashboard generator with a remote playground) produced wrong code again and
+again; DebCraft's correction loop fixed it, but the question is why DebCraft built it that way, as a report to send to
+whoever improves DebCraft: layer 1 what the built program did wrong, layer 2 which decision of DebCraft caused or allowed
+it, layer 3 what to change in DebCraft. A model asked why it did something writes a plausible story after the fact, so:
+`review_build` (tools/build_review.py, group `self_review`) collects the evidence by code from the event log, numbered
+E1.. (requests, skills loaded, subagent reports, plans and to-do lists, failed steps, errors in outputs, checks that
+stepped in, answers) plus the final content of the files written (most changed first, 70k characters); the reviewer
+role's model writes the three layers as JSON; the code drops evidence numbers that do not exist and marks a layer-2
+claim without evidence UNPROVEN; the page goes to `<DebCraft Home>/reports/build-review-<time>.html` and opens in its own
+tab (secrets masked, names not: the page says to read it before sending). Without ids it reads the active conversation
+up to the user's question and the 3 latest earlier conversations. Reached in the user's words: `agent/hints.py`
+`SELF_REVIEW_REQUEST` ("what mistakes ... you", "issues with your generation", "why did you build ...", "failure
+analysis") adds a note and loads the tool. Layer 3 from DebCraft on the laptop is a proposal: it cannot see its own
+source; Claude maps the findings to the code.
+Found on the way, fixed: no note of the loop (catalogue, variants, security, this one) fired on a project's first
+message, because the orchestrator puts that request inside a system brief; `AgentLoop._new_request` steps over trailing
+system messages and takes the user's own text when the conversation starts with the brief. Live (Azure, build machine):
+before the fix both questions were answered after 10 and 50 other steps, the tool found by search; after it, both called
+review_build as the first and only step, with the earlier conversations read by default. A review of a real run named
+the to-do check pushing on after "do only the first item, then stop" (learning L22) with evidence.
+
+## D-672: Gemini answers shown once; what the user's repository already has is not asked for again (2026-11-27)
+Office photographs 2026-11-27. (1) Every Gemini answer appeared twice in the chat with a thinking block between: Gemini
+reports its thinking after the streamed text, the thinking block ended the streamed item, and `message_done` then found
+no streaming item to replace and added the text again. `message_done` now replaces the latest streamed answer of its
+turn, looking past thinking blocks only, in its place (browser test test_web_stream_thinking_e2e.py). (2) The agent code
+the user had copied into the repository the day before was asked for again ("saying it has modified; nothing was
+modified"): changes are measured against the copy made when the project started, never against the repository as it is
+now. `workspace/output.repository_state` compares a change with the repository now: same, applied (every changed code
+line is there; order, spacing and comments may differ, as when the user pasted only the import at the end), differs,
+missing. COPY_INSTRUCTIONS.md lists same and applied files under "Already in your repository: nothing to do", and the
+hand-over check `already_there_note` reads a final reply that asks the user to copy, paste or apply files, checks only
+the files it names (`changes_of`, without reading the whole copy) and tells the model once to correct the reply.
+Options: compare with the repository at delivery and in the reply (chosen); move the baseline forward when the user
+says a change was copied (the user would have to say it each time); leave it to the model (it was the model's claim).
+
+## D-673: the same kind of error after fixes is named as a class; outside systems only when suggestions are asked (2026-11-27)
+The dashboard run (office, 2026-11-27): the generated agent failed four times on the playground with SyntaxErrors of one
+cause, HTML and JavaScript written inside Python strings. DebCraft fixed each instance and never named the class; the
+idea that removes it (can a job take files as inputs?) came from Claude. Built: `agent/error_class.py`. The output of a
+running tool (command, background output, http_request, scratch_exec) is read for error kinds (`SyntaxError`, `KeyError`,
+also inside a JSON answer; general ones such as RuntimeError and AssertionError are left out). A kind seen in three
+different code states (the first one and two fixes) gets one note in that result: name the common cause, change the
+design so the class cannot happen, say the cause in the reply. Before the turn ends, a raised kind the reply does not
+explain with a cause gets one hand-over note. **The user's rule:** a change to a system DebCraft does not own (a
+platform, another team's service, a library) is proposed only when the user asks for suggestions (`SUGGESTION_REQUEST`:
+suggest, recommend, ideas, how can we avoid ...). Then the notes allow it, after checking in the calling code what the
+interface accepts today, put as a question for the owners; a suggestion request in a session where a kind came back
+gets a note that asks for the class first. Otherwise the notes say to stay within the project.
+Options: a counted note in the result plus a finish check (chosen); a prompt rule (the model skips rules); a separate
+review subagent after each failure (slow, and the cause is usually visible to the model itself).
+Live (Azure, build machine, tests/test_live_error_class.py: a platform client that runs code strings, three pages that
+break naive fixes): the model fixed the class at once with `repr`, so the note did not fire; turn 1 asked nobody to
+change the platform; turn 2 (suggestions) named the class ("data goes into data structures, not into code strings").
+Not measured: the note's effect on Gemini, where the dashboard run went wrong (TODO EC1).

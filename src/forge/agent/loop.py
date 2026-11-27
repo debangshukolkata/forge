@@ -16,8 +16,15 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from forge.agent.handover_check import curl_note, failed_calls_note, made_up_note
-from forge.agent.hints import name_resolution_note, read_only_database_note, security_hint, variants_hint
+from forge.agent.error_class import ErrorClasses, asks_for_suggestions
+from forge.agent.handover_check import already_there_note, curl_note, failed_calls_note, made_up_note
+from forge.agent.hints import (
+    name_resolution_note,
+    read_only_database_note,
+    security_hint,
+    self_review_hint,
+    variants_hint,
+)
 from forge.agent.hooks import EVENTS as HOOK_EVENTS
 from forge.agent.hooks import HookRunner
 from forge.agent.parallel import MAX_PARALLEL_COMMANDS, is_parallel_safe_command, is_test_command
@@ -241,6 +248,7 @@ class AgentLoop:
         self.hit_iteration_limit = False  # the last run stopped at the step cap, not because it was done
         self._database_notes = 0  # how many read-only database notes were added to results (D-600)
         self._network_notes = 0  # how many name-resolution notes were added (D-601)
+        self.error_classes = ErrorClasses()  # D-673: the same kind of error again after fixes
         self.repeats = RepeatLedger()  # HW1: identical calls with identical answers
         self.after_step: Callable[[], Awaitable[None]] | None = None  # the session saves the history here
         self._history: list[Message] = []
@@ -266,20 +274,44 @@ class AgentLoop:
             ]
         return rules
 
+    def _new_request(self, history: list[Message]) -> str | None:
+        """The user's request this turn starts with, or None when the turn continues earlier work. Usually the last
+        message; but the orchestrator puts a project's first request inside a system brief, and a reopened session
+        adds its brief after the user's message, so system messages at the end are stepped over: a user message
+        before any answer of the model is the request, and the start of the conversation means the request is in the
+        brief, taken from what the user typed (D-671: no note of the loop fired on a project's first message)."""
+        for message in reversed(history):
+            if message.role == "user":
+                return message.content if isinstance(message.content, str) else None
+            if message.role != "system":
+                return None
+        said = self.context.recent_user_messages() if self.context.recent_user_messages is not None else []
+        return said[-1] if said else None
+
     def _add_catalogue_hint(self, history: list[Message]) -> None:
-        """Put the catalogue assets that match the user's new request in front of the model (D-518); nothing when the last message is not a request or nothing matches."""
-        last = history[-1] if history else None
-        if last is None or last.role != "user" or not isinstance(last.content, str):
+        """Put the catalogue assets that match the user's new request in front of the model (D-518); nothing when the turn continues earlier work or nothing matches."""
+        request = self._new_request(history)
+        if request is None:
             return
-        hint = catalogue_hint(self.context, last.content)
+        self.error_classes.suggestions_asked = asks_for_suggestions(
+            request
+        )  # D-673: outside systems only then
+        recurring = self.error_classes.suggestion_note() if self.error_classes.suggestions_asked else ""
+        if recurring:
+            history.append(Message.system(recurring))
+        hint = catalogue_hint(self.context, request)
         if hint:
             history.append(Message.system(hint))
-        several = variants_hint(last.content)  # BV1, D-527
+        several = variants_hint(request)  # BV1, D-527
         if several:
             history.append(Message.system(several))
-        security = security_hint(last.content)  # D-536
+        security = security_hint(request)  # D-536
         if security:
             history.append(Message.system(security))
+        review = self_review_hint(request)  # D-671
+        if review:
+            self.tools.attach(["review_build"])  # in the tool list at once: a live run searched for it first
+            history.append(Message.system(review))
 
     async def run(self, history: list[Message], on_text_delta: TextDeltaCallback) -> None:
         """Works until the model stops calling tools. Mutates history; keeps call/result pairs valid."""
@@ -416,6 +448,8 @@ class AgentLoop:
                             curl_note(self.context, response.text) if self.tools.get("http_request") else "",
                             failed_calls_note(self.context, turn_start_step),
                             made_up_note(self.context, response.text),
+                            already_there_note(self.context, response.text),
+                            self.error_classes.finish_note(response.text),
                         )
                         if note
                     )
@@ -532,6 +566,9 @@ class AgentLoop:
         if network:
             self._network_notes += 1
             content = content + "\n" + network
+        repeated = self.error_classes.observe(tool_name, content, self.context.last_code_edit_step)  # D-673
+        if repeated:
+            content = content + "\n" + repeated
         return content
 
     def _skill_proof_problem(self, turn_start_step: int) -> str:

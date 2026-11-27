@@ -52,6 +52,29 @@ SECURITY_NOTE = (
 )
 
 
+# D-671: the user asks what DebCraft did wrong in what it built, or why the generated code fails. The model would answer
+# from memory with a plausible story; the review is made from the record by review_build.
+SELF_REVIEW_REQUEST = re.compile(
+    r"\b(?:what|which) (?:mistakes?|errors?|went wrong)\b.{0,60}\byou\b|\byour (?:own )?(?:mistakes?|generation|"
+    r"methodology|(?:generation|build|design) process)\b|\b(?:issues?|problems?|faults?|flaws?) (?:with|in) (?:your|the) (?:generation|generated)|"
+    r"\bwhy (?:did|does|do) (?:you|debcraft|forge)\b.{0,60}\b(?:generate|create|build|write|produce)|"
+    r"\b(?:post-?mortem|failure analysis|root cause)\b.{0,80}\b(?:you|debcraft|forge|generat)",
+    re.IGNORECASE,
+)
+SELF_REVIEW_NOTE = (
+    "[note: the user asks what went wrong in what you built, or why. Your FIRST step is review_build, before any "
+    "other tool; do not investigate or answer from memory first. Pass the user's question as `focus`; it reads this "
+    "conversation and the recent earlier ones by itself (name others in `conversations` only when the user points "
+    "at them). "
+    "It writes a report in three layers from the record and opens it in the user's browser; then summarise its "
+    "layer-2 findings briefly.]"
+)
+
+
+def self_review_hint(request: str) -> str:
+    return SELF_REVIEW_NOTE if SELF_REVIEW_REQUEST.search(request[:HINT_REQUEST_CHARS]) else ""
+
+
 def security_hint(request: str) -> str:
     """The note for a security review or fix (D-536): in run c1-t15-23 neither security task opened the recipes the catalogue hint named,
     and both stopped when the existing tests passed (t22 70/93, t23 47/53)."""

@@ -5,10 +5,12 @@ The tool implementations the agent can call (files, search, shell wrappers, KB, 
 - **Web (D-209):** `web.py` (the tools and search providers), `web_chain.py` (fetch stages), `web_guard.py` (address policy),
   `web_extract.py` (HTML/PDF to text), `web_render.py` (read-only headless browser). A fetch never ends in nothing: see DECISIONS D-209.
 - **Web UI quality (D-245..D-254):** `browser.py` (`browser_screenshot` scrolls the page so scroll reveals play, saves the picture, runs the style audit, flags a picture identical to another page's, takes `width`/`height`), `ui_audit.py` (the in-page audit: unstyled CSS framework, contrast with oklch/color-mix read through a canvas, overflow, default controls, see-through sticky bars, invisible form fields, clipped text, taste checks, plus a static source scan and `tailwind_setup_problem`), `show_app.py` (opens the running app after proving it is the app; tries 127.0.0.1, localhost and [::1]), `vision.py` (`view_image` now reports the image path so the chat can show it).
-- **Depends on:** brand, config, db, deps, designsystem, doctor, documents, environment, errors, home_layout, knowledge, llm, memory, modeb, net, ooxml, parity, pdfs, safety, sheets, slides, toolkit, vision, workspace
+- **Depends on:** brand, config, db, deps, designsystem, doctor, documents, environment, errors, home_layout, knowledge, llm, memory, modeb, net, ooxml, parity, pdfs, protocol, safety, sheets, slides, toolkit, vision, workspace
 - **Invariants:** Each tool has pydantic Args, a one-line summary() and a read_only flag. Errors become ToolResult(ok=False). Tools that start agents live in forge.agent, not here.
 - **Tests:** test_context.py, test_contracts.py, test_db.py, test_frontend_setup.py, test_hardening.py (and others; see tests/)
 - **Decisions:** docs/DECISIONS.md (search the module's feature names); layering is enforced by tests/test_module_boundaries.py.
+
+- `build_review.py` (D-671): `review_build`, the three-layer report of why something DebCraft built went wrong, from the conversation's event log (numbered evidence collected by code, the reviewer model's layers, claims without evidence marked unproven); group `self_review`, reached from the note `agent/hints.py` adds to questions like "what mistakes did you make".
 
 Keep this file in step with the code: the `Depends on` line is checked against the real imports.
 - **Pictures (D-326..D-328):** `imagegen.py` (`generate_image`, Gemini/Imagen on Vertex AI), `findimage.py` (`find_image`, `fetch_image`), `image_sources.py` (Iconify, Openverse, Wikimedia, NASA, Pexels, Unsplash, Pixabay with licence filter), `picture_library.py` (pictures kept for offline reuse); `scripts/dev/reach_smoke.py` checks what the machine can reach.

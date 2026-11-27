@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from forge.agent.error_class import ErrorClasses
 from forge.agent.hints import (
     NAME_RESOLUTION_NOTE,
     READ_ONLY_DATABASE_NOTE,
@@ -47,9 +48,10 @@ def test_nothing_is_added_for_other_output_other_tools_or_after_the_switch_to_sc
 
 def _loop(db: object) -> AgentLoop:
     loop = AgentLoop.__new__(AgentLoop)  # only the note is under test
-    loop.context = SimpleNamespace(db=db)  # type: ignore[assignment]
+    loop.context = SimpleNamespace(db=db, last_code_edit_step=0)  # type: ignore[assignment]
     loop._database_notes = 0
     loop._network_notes = 0
+    loop.error_classes = ErrorClasses()
     return loop
 
 
@@ -108,3 +110,14 @@ def test_the_loop_adds_the_network_note_twice_at_most() -> None:
     assert loop._with_database_note("http_request", text).endswith(NAME_RESOLUTION_NOTE)
     assert loop._with_database_note("http_request", text).endswith(NAME_RESOLUTION_NOTE)
     assert loop._with_database_note("http_request", text) == text
+
+
+def test_the_loop_names_the_error_class_when_it_comes_back_after_fixes() -> None:
+    """D-673: the third code state with the same error kind gets the note in the result."""
+    loop = _loop(None)
+    answer = '{"error": "SyntaxError: unterminated string literal"}'
+    for step in (2, 5):
+        loop.context.last_code_edit_step = step  # type: ignore[misc]
+        assert "again" not in loop._with_database_note("http_request", answer)
+    loop.context.last_code_edit_step = 9  # type: ignore[misc]
+    assert "SyntaxError again" in loop._with_database_note("http_request", answer)

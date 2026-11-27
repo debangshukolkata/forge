@@ -14,6 +14,7 @@ from forge.tools.archive import archive_tools
 from forge.tools.assets import AddAsset, FindAsset
 from forge.tools.brand_file import SaveBrand
 from forge.tools.browser import browser_tools
+from forge.tools.build_review import ReviewBuild
 from forge.tools.code_intel import code_intel_tools
 from forge.tools.code_map_tool import CodeMapTool
 from forge.tools.code_outline import code_outline_tools
@@ -116,6 +117,7 @@ def default_tools() -> list[Tool]:
         AddAsset(),
         InstallSkill(),
         ConversationRecall(),
+        ReviewBuild(),
         AppLogin(),
         AppTokenStatus(),
         StartWithToken(),

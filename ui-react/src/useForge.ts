@@ -62,14 +62,26 @@ function applyEvent(state: Timeline, event: ForgeEvent): Timeline {
       if (last && last.kind === "assistant" && last.streaming) {
         return { ...state, items: [...items.slice(0, -1), { ...last, text: last.text + p.text }] };
       }
-      return { ...state, items: [...items, { key, kind: "assistant", text: p.text, streaming: true }] };
+      return { ...state, items: [...items, { key, kind: "assistant", text: p.text, streaming: true, streamed: true }] };
     case "message_done": {
-      const withoutStream = last && last.kind === "assistant" && last.streaming ? items.slice(0, -1) : items;
+      // The final text replaces the text streamed for it. Gemini reports its thinking after the stream, so a thinking
+      // block can sit between the streamed text and this event: look past thinking blocks, never past a tool or the
+      // user (office 2026-11-27: every Gemini answer was shown twice, D-672).
+      let streamedAt = -1;
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        if (item.kind === "thinking") continue;
+        if (item.kind === "assistant" && item.streamed && !item.usage) streamedAt = i;
+        break;
+      }
+      const withoutStream = streamedAt >= 0 ? [...items.slice(0, streamedAt), ...items.slice(streamedAt + 1)] : items;
       if (!p.text || !String(p.text).trim()) return { ...state, items: withoutStream };
       const usage = p.usage
         ? { input: p.usage.input_tokens ?? 0, output: p.usage.output_tokens ?? 0, cost: p.cost_usd ?? 0 }
         : undefined;
-      return { ...state, items: [...withoutStream, { key, kind: "assistant", text: p.text, usage }] };
+      const done: ChatItem = { key, kind: "assistant", text: p.text, usage };
+      // In the streamed text's place, so the answer stays above the thinking that arrived after it.
+      return { ...state, items: streamedAt >= 0 ? [...items.slice(0, streamedAt), done, ...items.slice(streamedAt + 1)] : [...items, done] };
     }
     case "tool_call_started":
       return {
